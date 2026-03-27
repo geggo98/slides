@@ -36,7 +36,7 @@ jobs:
             echo "::group::Building $name"
             bun run slidev build "$dir/slides.md" \
               --base "/${{ github.event.repository.name }}/$name/" \
-              --out "dist/$name"
+              --out "${{ github.workspace }}/dist/$name"
             echo "::endgroup::"
           done
 
