@@ -13,6 +13,6 @@ Neues Verzeichnis mit einer `slides.md` erstellen – wird automatisch beim Buil
 ```sh
 devenv shell                         # Entwicklungsumgebung starten
 bun install                          # Abhängigkeiten installieren
-bun run slidev talk-a/slides.md      # Dev-Server für eine Präsentation
+devenv tasks run slides:dev --input dir=20260327-gradle-dependency-resolution  # Dev-Server für eine Präsentation
 devenv tasks run slides:deploy       # Alle Präsentationen bauen
 ```
