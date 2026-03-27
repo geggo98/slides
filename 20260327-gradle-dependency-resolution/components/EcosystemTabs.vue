@@ -59,7 +59,7 @@ const ecosystems = {
         <button
           v-for="t in tabs" :key="t.id"
           class="eco-tab" :class="{ active: activeTab === t.id }"
-          @click="activeTab = t.id"
+          @click.stop="activeTab = t.id"
         >{{ t.label }}</button>
       </div>
 

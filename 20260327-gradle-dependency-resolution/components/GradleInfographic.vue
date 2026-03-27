@@ -15,9 +15,10 @@
 
 <style scoped>
 .infographic {
-  width: 100%;
-  overflow-y: auto;
-  max-height: 100%;
+  width: 154%;
+  transform: scale(0.65);
+  transform-origin: top left;
+  overflow: visible;
 }
-.spacer { height: 1.5rem; }
+.spacer { height: 1rem; }
 </style>

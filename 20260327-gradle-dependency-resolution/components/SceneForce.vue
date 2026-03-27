@@ -25,7 +25,7 @@ const activeRank = computed(() => mode.value === 'force' ? [8] : [9])
     </div>
     <div class="ctrl-row">
       <label>Modus:</label>
-      <select v-model="mode">
+      <select v-model="mode" @click.stop>
         <option value="force">force()</option>
         <option value="strict">strictly()</option>
       </select>

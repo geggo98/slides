@@ -42,7 +42,7 @@ const overrideResults = {
 
     <div class="ctrl-row">
       <label>Override-Variante:</label>
-      <select v-model="overrideMode">
+      <select v-model="overrideMode" @click.stop>
         <option value="none">-- Variante wählen --</option>
         <option value="ext">ext["jackson.version"] = "2.18.3"</option>
         <option value="force">force("...jackson:2.18.3")</option>
