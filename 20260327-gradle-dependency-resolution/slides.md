@@ -309,6 +309,75 @@ configurations.all {
 Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
 
 ---
+
+# Snapshot-Versionen: Der Sonderfall
+
+`1.3.0-SNAPSHOT` = **mutable** Version — jeder Build kann ein anderes Artefakt liefern.
+
+Gradle behandelt Snapshots als *dynamische Versionen* (wie `1.+`):
+
+| Aspekt | Release | Snapshot |
+|---|---|---|
+| Inhalt | Immutable | Mutable (neuer Timestamp = neuer Inhalt) |
+| Lock-File | Fixiert Version + Inhalt | Fixiert nur den Namen, nicht den Inhalt |
+| Verification Metadata | Funktioniert | Praktisch inkompatibel (Hash ändert sich) |
+| Dependency-Scanner | Verlässlich | Falsche Sicherheit |
+| "Highest Wins" | Deterministisch | Non-deterministisch |
+
+> ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata und Scanner-Verlässlichkeit.
+
+---
+
+# Snapshots: Repository & Caching
+
+### Repository-Trennung
+
+```kotlin
+repositories {
+    mavenCentral()  // Nur Releases
+    maven("https://repo.example.com/snapshots") {
+        mavenContent { snapshotsOnly() }  // Dependency-Confusion-Schutz
+    }
+}
+```
+
+### Caching steuern
+
+```kotlin
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor(0, TimeUnit.SECONDS)  // CI: immer frisch
+    }
+}
+```
+
+`--refresh-dependencies` umgeht den Cache komplett. Default-Caching: 24 Stunden.
+
+---
+
+# Snapshots in Produktion verhindern
+
+```kotlin
+tasks.register("noSnapshots") {
+    doLast {
+        configurations.compileClasspath.get().resolvedConfiguration
+            .resolvedArtifacts.forEach {
+                if (it.moduleVersion.id.version.endsWith("-SNAPSHOT"))
+                    throw GradleException("Snapshot: ${it.moduleVersion.id}")
+            }
+    }
+}
+```
+
+Als CI-Gate einbinden:
+
+```bash
+./gradlew noSnapshots  # Schlägt fehl wenn Snapshot-Deps vorhanden
+```
+
+> Snapshots nur in Feature-Branches / Integrations-Builds — nie Richtung Produktion.
+
+---
 clicks: false
 ---
 

@@ -12,11 +12,10 @@ Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell` 
 
 ## Common Commands
 
+Prefer **devenv tasks** over direct `bun run` commands — they handle dependencies automatically and simplify the Claude Code allow-list.
+
 ```sh
-bun install                          # install dependencies
-bun run dev                          # start Slidev dev server (interactive, picks slides.md)
-bun run slidev talk-a/slides.md      # dev server for a specific talk
-bun run slidev build talk-a/slides.md --out dist/talk-a  # build a single talk
+devenv tasks run slides:dev --input dir=<talk-directory>  # start Slidev dev server for a talk
 devenv tasks run slides:deploy       # full build pipeline: install → build all talks → landing page
 ```
 
