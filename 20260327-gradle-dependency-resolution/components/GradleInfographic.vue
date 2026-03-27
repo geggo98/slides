@@ -15,8 +15,8 @@
 
 <style scoped>
 .infographic {
-  width: 154%;
-  transform: scale(0.65);
+  width: 200%;
+  transform: scale(0.5);
   transform-origin: top left;
   overflow: visible;
 }

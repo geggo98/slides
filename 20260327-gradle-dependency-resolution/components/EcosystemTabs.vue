@@ -1,7 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const activeTab = ref('go')
+const activeEco = computed(() => ecosystems[activeTab.value])
 
 const tabs = [
   { id: 'go', label: 'Go' },
@@ -63,9 +64,9 @@ const ecosystems = {
         >{{ t.label }}</button>
       </div>
 
-      <div v-for="t in tabs" :key="t.id" v-show="activeTab === t.id" class="eco-card">
+      <div :key="activeTab" class="eco-card">
         <div class="eco-grid">
-          <div v-for="s in ecosystems[t.id].stats" :key="s.label" class="eco-stat">
+          <div v-for="s in activeEco.stats" :key="s.label" class="eco-stat">
             <div class="eco-stat-label">{{ s.label }}</div>
             <div class="eco-stat-value">
               <span v-if="s.cls" :class="s.cls">{{ s.value }}</span>
@@ -73,7 +74,7 @@ const ecosystems = {
             </div>
           </div>
         </div>
-        <div class="eco-detail" v-html="ecosystems[t.id].detail"></div>
+        <div class="eco-detail" v-html="activeEco.detail"></div>
       </div>
     </div>
   </GradleVars>
