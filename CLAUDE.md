@@ -15,9 +15,11 @@ Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell` 
 Prefer **devenv tasks** over direct `bun run` commands — they handle dependencies automatically and simplify the Claude Code allow-list.
 
 ```sh
-devenv tasks run slides:dev --input dir=<talk-directory>  # start Slidev dev server for a talk
+devenv tasks run local:dev --input dir=<talk-directory>  # start Slidev dev server for a talk
 devenv tasks run slides:deploy       # full build pipeline: install → build all talks → landing page
 ```
+
+Use the **/tmux** skill to run the dev server in a persistent tmux session so it stays alive across tool calls.
 
 ## Architecture
 
