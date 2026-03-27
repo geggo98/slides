@@ -1,7 +1,7 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
-  packages = [ pkgs.bun ];
+  packages = [ pkgs.bun pkgs.tmux ];
 
   tasks."slides:dev" = {
     exec = ''
