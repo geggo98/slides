@@ -3,6 +3,23 @@
 {
   packages = [ pkgs.bun ];
 
+  tasks."slides:dev" = {
+    exec = ''
+      dir="$(echo "$DEVENV_TASK_INPUT" | ${pkgs.jq}/bin/jq -r '.dir // empty')"
+      if [ -z "$dir" ]; then
+        echo "Usage: devenv tasks run slides:dev --input dir=<talk-directory>"
+        echo "Example: devenv tasks run slides:dev --input dir=20260327-gradle-dependency-resolution"
+        exit 1
+      fi
+      if [ ! -f "$DEVENV_ROOT/$dir/slides.md" ]; then
+        echo "Error: $dir/slides.md not found"
+        exit 1
+      fi
+      exec bun run slidev "$DEVENV_ROOT/$dir/slides.md"
+    '';
+    after = [ "slides:install" ];
+  };
+
   tasks."slides:install" = {
     exec = "bun install";
     status = "test -d $DEVENV_ROOT/node_modules";
