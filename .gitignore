@@ -8,3 +8,9 @@ devenv.local.yaml
 
 # pre-commit
 .pre-commit-config.yaml
+
+# Node
+node_modules/
+
+# Slidev build output
+dist/

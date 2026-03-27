@@ -1,0 +1,87 @@
+name: Deploy Slides
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build all presentations
+        run: |
+          mkdir -p dist
+          for dir in */; do
+            [ -f "$dir/slides.md" ] || continue
+            name="${dir%/}"
+            echo "::group::Building $name"
+            bun run slidev build "$dir/slides.md" \
+              --base "/${{ github.event.repository.name }}/$name/" \
+              --out "dist/$name"
+            echo "::endgroup::"
+          done
+
+      - name: Generate landing page
+        run: |
+          cat > dist/index.html << 'LANDING'
+          <!DOCTYPE html>
+          <html lang="de">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Slides</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+              a { display: block; padding: 0.5rem 0; }
+            </style>
+          </head>
+          <body>
+            <h1>Präsentationen</h1>
+            <ul>
+          LANDING
+
+          for dir in */; do
+            [ -f "$dir/slides.md" ] || continue
+            name="${dir%/}"
+            title=$(grep -m1 '^title:' "$dir/slides.md" | sed 's/^title: *//' || echo "$name")
+            [ -z "$title" ] && title="$name"
+            echo "      <li><a href=\"./$name/\">$title</a></li>" >> dist/index.html
+          done
+
+          cat >> dist/index.html << 'LANDING'
+            </ul>
+          </body>
+          </html>
+          LANDING
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
