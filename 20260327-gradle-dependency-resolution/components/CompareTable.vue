@@ -30,9 +30,9 @@ const rows = [
 </template>
 
 <style scoped>
-.compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.compare-table th { text-align: left; font-weight: 500; font-size: 11px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.compare-table td { padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; color: var(--color-text-secondary); }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.compare-table th { text-align: left; font-weight: 500; font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.compare-table td { padding: 5px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; color: var(--color-text-secondary); }
 .compare-table tr:last-child td { border-bottom: none; }
 .compare-table td:first-child { font-weight: 500; color: var(--color-text-primary); white-space: nowrap; }
 .y { color: var(--color-text-success); font-weight: 500; }
