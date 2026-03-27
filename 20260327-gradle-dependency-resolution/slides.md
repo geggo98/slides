@@ -24,6 +24,8 @@ Reproduzierbare Builds, Supply-Chain-Schutz und Ökosystem-Vergleich
 | **Version Catalog** | TOML-Datei (`libs.versions.toml`) — rein deklarativ, kein Einfluss auf Resolution |
 
 ---
+clicks: false
+---
 
 # Gradle Dependency Stack
 
@@ -307,6 +309,8 @@ configurations.all {
 Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
 
 ---
+clicks: false
+---
 
 # Ökosystem-Vergleich
 
@@ -319,14 +323,14 @@ Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für ein
 <CompareTable />
 
 ---
-
-# Gradle Dependency Ecosystem — Gesamtbild
+clicks: false
+---
 
 <GradleInfographic />
 
 ---
-
-# Resolution Simulator
+clicks: false
+---
 
 <ResolutionSimulator />
 

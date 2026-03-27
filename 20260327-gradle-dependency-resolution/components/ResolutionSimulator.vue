@@ -23,7 +23,7 @@ const tabs = [
         <button
           v-for="t in tabs" :key="t.id"
           class="sc-tab" :class="{ active: activeScene === t.id }"
-          @click="activeScene = t.id"
+          @click.stop="activeScene = t.id"
         >{{ t.label }}</button>
       </div>
 
@@ -38,9 +38,9 @@ const tabs = [
 </template>
 
 <style scoped>
-.simulator { width: 100%; overflow-y: auto; max-height: 100%; }
-.sim-title { font-size: 18px; font-weight: 500; margin: 0 0 4px; color: var(--color-text-primary); }
-.sim-subtitle { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 12px; }
+.simulator { width: 100%; overflow-y: auto; max-height: 460px; }
+.sim-title { font-size: 16px; font-weight: 500; margin: 0 0 2px; color: var(--color-text-primary); }
+.sim-subtitle { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 8px; }
 .sc-tabs { display: flex; gap: 4px; margin: 0 0 16px; flex-wrap: wrap; }
 .sc-tab { font-size: 12px; padding: 5px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: transparent; color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; font-family: inherit; }
 .sc-tab:hover { background: var(--color-background-secondary); }

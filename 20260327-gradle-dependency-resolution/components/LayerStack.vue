@@ -33,7 +33,7 @@ function toggleLayer(i) {
         <div
           v-for="(l, i) in layers" :key="i"
           class="layer" :class="{ active: activeLayer === i }"
-          @click="toggleLayer(i)"
+          @click.stop="toggleLayer(i)"
         >
           <div class="layer-icon"><span class="pill" :class="l.pill">{{ l.num }}</span></div>
           <div class="layer-content">
@@ -58,18 +58,18 @@ function toggleLayer(i) {
 .section-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px; }
 .section-hint { font-size: 12px; color: var(--color-text-tertiary); margin: 0 0 12px; }
 .layer-stack { display: flex; flex-direction: column; gap: 0; }
-.layer { display: flex; align-items: stretch; min-height: 52px; border: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 0.15s; }
+.layer { display: flex; align-items: stretch; min-height: 38px; border: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 0.15s; }
 .layer:first-child { border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; }
 .layer:last-child { border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); }
 .layer:not(:first-child) { border-top: none; }
 .layer:hover { background: var(--color-background-secondary); }
 .layer.active { background: var(--color-background-secondary); }
-.layer-icon { width: 48px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
-.layer-content { flex: 1; padding: 8px 12px 8px 0; display: flex; flex-direction: column; justify-content: center; }
-.layer-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
-.layer-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 1px; }
-.layer-file { font-size: 10px; font-family: var(--font-mono); color: var(--color-text-tertiary); margin-top: 2px; }
-.detail-panel { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.75rem 1rem; margin-top: 8px; font-size: 12px; line-height: 1.5; color: var(--color-text-secondary); }
+.layer-icon { width: 40px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.layer-content { flex: 1; padding: 5px 10px 5px 0; display: flex; flex-direction: column; justify-content: center; }
+.layer-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.layer-sub { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
+.layer-file { font-size: 9px; font-family: var(--font-mono); color: var(--color-text-tertiary); margin-top: 1px; }
+.detail-panel { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.5rem 0.75rem; margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--color-text-secondary); }
 .detail-panel strong { color: var(--color-text-primary); font-weight: 500; }
 .pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); font-weight: 500; }
 .pill-blue { background: var(--color-background-info); color: var(--color-text-info); }
