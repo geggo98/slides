@@ -1,7 +1,7 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
-  packages = [ pkgs.bun pkgs.tmux ];
+  packages = [ pkgs.bun ];
 
   tasks."local:dev" = {
     exec = ''
