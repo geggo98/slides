@@ -383,6 +383,14 @@ Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn
 clicks: false
 ---
 
+# Hysterese-Katalog — Interaktiv
+
+<HystereseCatalog />
+
+---
+clicks: false
+---
+
 # Systemdynamik — Interaktiv
 
 <SystemDynamicsSimulator />
