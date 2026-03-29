@@ -24,12 +24,17 @@ Use the **/tmux** skill to run the dev server in a persistent tmux session so it
 ## Architecture
 
 - **Talk directories**: Any top-level directory containing a `slides.md` is treated as a presentation. The build script in `devenv.nix` auto-discovers them.
+- **`playwright-tests/`**: Scratch directory for Playwright debug scripts and screenshots. Git-ignored by default; `git add -f` individual files to keep them.
 - **devenv.nix**: Defines the build pipeline as chained devenv tasks (`slides:install` → `slides:build` → `slides:landing-page` → `slides:deploy`). `SLIDES_BASE_PATH` env var controls the URL base path (defaults to `slides`, overridden in CI to the repo name).
 - **CI**: `.github/workflows/deploy.yml` builds via `devenv tasks run slides` and deploys to GitHub Pages.
 
 ## Adding a New Talk
 
 Create a new top-level directory with a `slides.md` file. It will be automatically discovered by the build pipeline. The frontmatter `title:` field is used for the landing page link text.
+
+## Debugging with Playwright
+
+Follow the guidelines in the **/slidev** skill for Playwright testing. Key rule: use the **Write tool** to create scripts in `playwright-tests/` and run them with `bun run` — never use heredocs, shell redirects, or `/tmp`.
 
 ## Tooling Preferences
 
