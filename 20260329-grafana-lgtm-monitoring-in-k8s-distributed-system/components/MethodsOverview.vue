@@ -56,9 +56,9 @@ const methods = [
 </script>
 
 <template>
-  <div :style="{ display: 'flex', gap: '8px', height: '100%' }">
-    <div v-for="(m, i) in methods" :key="i" :style="{ flex: 1 }">
-      <MethodBox v-bind="m" />
+  <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }">
+    <div v-for="(m, i) in methods" :key="i">
+      <MethodBox v-bind="m" :style="{ height: '100%' }" />
     </div>
   </div>
 </template>

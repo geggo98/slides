@@ -26,7 +26,7 @@ const useErrors = ['ECC Memory Corrections', 'Network Packet Drops/CRC', 'Disk I
     <div :style="{ fontSize: '8.4px', fontWeight: 700, color: C.text, marginBottom: '8px' }">
       Errors &ne; Errors: Zwei Perspektiven
     </div>
-    <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }">
+    <div :style="{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }">
       <!-- RED / Golden Signals errors -->
       <div :style="{ padding: '8px 10px', borderRadius: '6px', background: C.redDim, border: `1px solid ${C.red}20` }">
         <div

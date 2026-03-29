@@ -421,25 +421,22 @@ const takeaways = [
         </template>
       </div>
 
-      <!-- Charts row: Throughput + Buffer side by side -->
-      <div class="charts-row">
-        <!-- Throughput chart -->
-        <svg
-          :viewBox="`0 0 480 68`"
-          class="chart-svg"
-        >
+      <!-- Charts 2x2 grid: Throughput, Buffer, Drops -->
+      <div class="charts-grid">
+        <!-- Throughput chart (1,1) -->
+        <svg viewBox="0 0 480 58" class="chart-svg">
           <line
             v-for="f in [0.25, 0.5, 0.75]"
             :key="'tg' + f"
-            :x1="42" :y1="10 + 38 - (f * 38)"
-            :x2="470" :y2="10 + 38 - (f * 38)"
+            :x1="42" :y1="10 + 30 - (f * 30)"
+            :x2="470" :y2="10 + 30 - (f * 30)"
             :stroke="C.border" stroke-width="0.5"
           />
-          <line x1="42" :y1="48" x2="470" :y2="48" :stroke="C.dim" stroke-width="1" />
-          <line x1="42" y1="10" x2="42" :y2="48" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" :y1="40" x2="470" :y2="40" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" y1="10" x2="42" :y2="40" :stroke="C.dim" stroke-width="1" />
           <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Throughput (req/s)</text>
-          <text x="42" y="58" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-          <text x="470" y="58" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+          <text x="42" y="50" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+          <text x="470" y="50" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
           <path
             :d="(() => {
               const fullSeries = [result.inputs, ...sim.stages.map((_, i) => result.outputs[i])]
@@ -447,7 +444,7 @@ const takeaways = [
               const series = sliceArr(result.inputs)
               const xSteps = sim.steps
               const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-              const toY = (v) => 10 + 38 - (v / maxVal) * 38
+              const toY = (v) => 10 + 30 - (v / maxVal) * 30
               return miniChartPath(series, toX, toY)
             })()"
             fill="none" :stroke="C.green" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
@@ -461,36 +458,33 @@ const takeaways = [
               const series = sliceArr(result.outputs[si])
               const xSteps = sim.steps
               const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-              const toY = (v) => 10 + 38 - (v / maxVal) * 38
+              const toY = (v) => 10 + 30 - (v / maxVal) * 30
               return miniChartPath(series, toX, toY)
             })()"
             fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
           />
-          <line x1="50" y1="63" x2="60" y2="63" :stroke="C.green" stroke-width="1.5" />
-          <text x="62" y="65" style="font-size: 6px" :fill="C.green" font-family="'JetBrains Mono', monospace">Input</text>
+          <line x1="50" y1="55" x2="60" y2="55" :stroke="C.green" stroke-width="1.5" />
+          <text x="62" y="57" style="font-size: 6px" :fill="C.green" font-family="'JetBrains Mono', monospace">Input</text>
           <g v-for="(st, i) in sim.stages" :key="'tl' + i">
-            <line :x1="50 + (i + 1) * 90" y1="63" :x2="60 + (i + 1) * 90" y2="63" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-            <text :x="62 + (i + 1) * 90" y="65" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+            <line :x1="50 + (i + 1) * 90" y1="55" :x2="60 + (i + 1) * 90" y2="55" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+            <text :x="62 + (i + 1) * 90" y="57" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
           </g>
         </svg>
 
-        <!-- Buffer chart -->
-        <svg
-          :viewBox="`0 0 480 52`"
-          class="chart-svg"
-        >
+        <!-- Buffer chart (1,2) -->
+        <svg viewBox="0 0 480 58" class="chart-svg">
           <line
             v-for="f in [0.25, 0.5, 0.75]"
             :key="'bg' + f"
-            :x1="42" :y1="10 + 24 - (f * 24)"
-            :x2="470" :y2="10 + 24 - (f * 24)"
+            :x1="42" :y1="10 + 30 - (f * 30)"
+            :x2="470" :y2="10 + 30 - (f * 30)"
             :stroke="C.border" stroke-width="0.5"
           />
-          <line x1="42" :y1="34" x2="470" :y2="34" :stroke="C.dim" stroke-width="1" />
-          <line x1="42" y1="10" x2="42" :y2="34" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" :y1="40" x2="470" :y2="40" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" y1="10" x2="42" :y2="40" :stroke="C.dim" stroke-width="1" />
           <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Buffer-Füllstand</text>
-          <text x="42" y="44" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-          <text x="470" y="44" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+          <text x="42" y="50" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+          <text x="470" y="50" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
           <path
             v-for="(st, si) in sim.stages"
             :key="'bp' + si"
@@ -500,54 +494,51 @@ const takeaways = [
               const series = sliceArr(result.buffers[si])
               const xSteps = sim.steps
               const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-              const toY = (v) => 10 + 24 - (v / maxVal) * 24
+              const toY = (v) => 10 + 30 - (v / maxVal) * 30
               return miniChartPath(series, toX, toY)
             })()"
             fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
           />
           <g v-for="(st, i) in sim.stages" :key="'bl' + i">
-            <line :x1="50 + i * 90" y1="48" :x2="60 + i * 90" y2="48" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-            <text :x="62 + i * 90" y="50" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+            <line :x1="50 + i * 90" y1="55" :x2="60 + i * 90" y2="55" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+            <text :x="62 + i * 90" y="57" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+          </g>
+        </svg>
+
+        <!-- Drops chart (2,1) -->
+        <svg viewBox="0 0 480 58" class="chart-svg">
+          <line
+            v-for="f in [0.25, 0.5, 0.75]"
+            :key="'cg' + f"
+            :x1="42" :y1="10 + 30 - (f * 30)"
+            :x2="470" :y2="10 + 30 - (f * 30)"
+            :stroke="C.border" stroke-width="0.5"
+          />
+          <line x1="42" :y1="40" x2="470" :y2="40" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" y1="10" x2="42" :y2="40" :stroke="C.dim" stroke-width="1" />
+          <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Drops (req/s)</text>
+          <text x="42" y="50" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+          <text x="470" y="50" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+          <path
+            v-for="(st, si) in sim.stages"
+            :key="'cp' + si"
+            :d="(() => {
+              const fullSeries = sim.stages.map((_, i) => result.clipped[i])
+              const maxVal = computeMaxVal(fullSeries, 0, false)
+              const series = sliceArr(result.clipped[si])
+              const xSteps = sim.steps
+              const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
+              const toY = (v) => 10 + 30 - (v / maxVal) * 30
+              return miniChartPath(series, toX, toY)
+            })()"
+            fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
+          />
+          <g v-for="(st, i) in sim.stages" :key="'cl' + i">
+            <line :x1="50 + i * 90" y1="55" :x2="60 + i * 90" y2="55" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+            <text :x="62 + i * 90" y="57" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
           </g>
         </svg>
       </div>
-
-      <!-- Clipping chart -->
-      <svg
-        :viewBox="`0 0 480 42`"
-        class="chart-svg"
-      >
-        <line
-          v-for="f in [0.25, 0.5, 0.75]"
-          :key="'cg' + f"
-          :x1="42" :y1="10 + 18 - (f * 18)"
-          :x2="470" :y2="10 + 18 - (f * 18)"
-          :stroke="C.border" stroke-width="0.5"
-        />
-        <line x1="42" :y1="28" x2="470" :y2="28" :stroke="C.dim" stroke-width="1" />
-        <line x1="42" y1="10" x2="42" :y2="28" :stroke="C.dim" stroke-width="1" />
-        <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Drops (req/s)</text>
-        <text x="42" y="37" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-        <text x="470" y="37" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
-        <path
-          v-for="(st, si) in sim.stages"
-          :key="'cp' + si"
-          :d="(() => {
-            const fullSeries = sim.stages.map((_, i) => result.clipped[i])
-            const maxVal = computeMaxVal(fullSeries, 0, false)
-            const series = sliceArr(result.clipped[si])
-            const xSteps = sim.steps
-            const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-            const toY = (v) => 10 + 18 - (v / maxVal) * 18
-            return miniChartPath(series, toX, toY)
-          })()"
-          fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
-        />
-        <g v-for="(st, i) in sim.stages" :key="'cl' + i">
-          <line :x1="50 + i * 90" y1="39" :x2="60 + i * 90" y2="39" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-          <text :x="62 + i * 90" y="41" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
-        </g>
-      </svg>
 
       <!-- Bottom: phase space (conditional) + insight side by side -->
       <div class="sim-bottom-row">
@@ -767,10 +758,9 @@ const takeaways = [
 .input-node { background: rgba(34, 197, 94, 0.07); border-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
 .arrow { color: #3e4a63; font-size: 6px; }
 
-/* Charts */
-.charts-row { display: flex; gap: 6px; }
-.charts-row .chart-svg { flex: 1; min-width: 0; }
-.chart-svg { width: 100%; max-width: 520px; height: auto; display: block; overflow: visible; margin-top: 2px; }
+/* Charts 2x2 grid */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
 
 /* Bottom row: phase space + insight */
 .sim-bottom-row { display: flex; gap: 6px; margin-top: 4px; align-items: stretch; }
