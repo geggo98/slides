@@ -165,6 +165,7 @@ const SIMS = [
    REACTIVE STATE
    ================================================================ */
 
+const activeTab = ref('sim')
 const simId = ref('springs')
 const progress = ref(1)
 const playing = ref(false)
@@ -356,10 +357,16 @@ const takeaways = [
         <span class="tag-text">Systemdynamik-Simulator</span>
       </div>
       <h1 class="title">Warteschlangen, Oszillation, Hysterese</h1>
-      <p class="subtitle-text">
-        Interaktive Simulationen: wie sich Last durch eine Service-Kette ausbreitet, warum Queues wie Federn schwingen, und warum Systeme nach Überlast "kleben bleiben".
-      </p>
     </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn" :class="{ active: activeTab === 'sim' }" @click="activeTab = 'sim'">Simulation</button>
+      <button class="tab-btn" :class="{ active: activeTab === 'theory' }" @click="activeTab = 'theory'">M/M/1 &amp; Regeln</button>
+    </div>
+
+    <!-- TAB: Simulation -->
+    <template v-if="activeTab === 'sim'">
 
     <!-- Scenario selector -->
     <div class="scenario-grid">
@@ -414,120 +421,114 @@ const takeaways = [
         </template>
       </div>
 
-      <!-- Throughput chart -->
-      <svg
-        :viewBox="`0 0 480 78`"
-        class="chart-svg"
-      >
-        <!-- Grid -->
-        <line
-          v-for="f in [0.25, 0.5, 0.75]"
-          :key="'tg' + f"
-          :x1="42" :y1="10 + 44 - (f * 44)"
-          :x2="470" :y2="10 + 44 - (f * 44)"
-          :stroke="C.border" stroke-width="0.5"
-        />
-        <!-- Axes -->
-        <line x1="42" :y1="54" x2="470" :y2="54" :stroke="C.dim" stroke-width="1" />
-        <line x1="42" y1="10" x2="42" :y2="54" :stroke="C.dim" stroke-width="1" />
-        <!-- Title -->
-        <text x="46" y="6" font-size="10" :fill="C.muted" font-weight="600">Throughput (req/s)</text>
-        <!-- X labels -->
-        <text x="42" y="64" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-        <text x="470" y="64" text-anchor="end" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
-        <!-- Series: input + each stage output -->
-        <path
-          :d="(() => {
-            const fullSeries = [result.inputs, ...sim.stages.map((_, i) => result.outputs[i])]
-            const maxVal = computeMaxVal(fullSeries, 0, false)
-            const series = sliceArr(result.inputs)
-            const xSteps = sim.steps
-            const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-            const toY = (v) => 10 + 44 - (v / maxVal) * 44
-            return miniChartPath(series, toX, toY)
-          })()"
-          fill="none" :stroke="C.green" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
-        />
-        <path
-          v-for="(st, si) in sim.stages"
-          :key="'tp' + si"
-          :d="(() => {
-            const fullSeries = [result.inputs, ...sim.stages.map((_, i) => result.outputs[i])]
-            const maxVal = computeMaxVal(fullSeries, 0, false)
-            const series = sliceArr(result.outputs[si])
-            const xSteps = sim.steps
-            const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-            const toY = (v) => 10 + 44 - (v / maxVal) * 44
-            return miniChartPath(series, toX, toY)
-          })()"
-          fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
-        />
-        <!-- Legend -->
-        <line x1="50" y1="70" x2="60" y2="70" :stroke="C.green" stroke-width="1.5" />
-        <text x="62" y="72" font-size="6" :fill="C.green" font-family="'JetBrains Mono', monospace">Input</text>
-        <g v-for="(st, i) in sim.stages" :key="'tl' + i">
-          <line :x1="50 + (i + 1) * 90" y1="70" :x2="60 + (i + 1) * 90" y2="70" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-          <text :x="62 + (i + 1) * 90" y="72" font-size="6" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
-        </g>
-      </svg>
+      <!-- Charts row: Throughput + Buffer side by side -->
+      <div class="charts-row">
+        <!-- Throughput chart -->
+        <svg
+          :viewBox="`0 0 480 68`"
+          class="chart-svg"
+        >
+          <line
+            v-for="f in [0.25, 0.5, 0.75]"
+            :key="'tg' + f"
+            :x1="42" :y1="10 + 38 - (f * 38)"
+            :x2="470" :y2="10 + 38 - (f * 38)"
+            :stroke="C.border" stroke-width="0.5"
+          />
+          <line x1="42" :y1="48" x2="470" :y2="48" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" y1="10" x2="42" :y2="48" :stroke="C.dim" stroke-width="1" />
+          <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Throughput (req/s)</text>
+          <text x="42" y="58" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+          <text x="470" y="58" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+          <path
+            :d="(() => {
+              const fullSeries = [result.inputs, ...sim.stages.map((_, i) => result.outputs[i])]
+              const maxVal = computeMaxVal(fullSeries, 0, false)
+              const series = sliceArr(result.inputs)
+              const xSteps = sim.steps
+              const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
+              const toY = (v) => 10 + 38 - (v / maxVal) * 38
+              return miniChartPath(series, toX, toY)
+            })()"
+            fill="none" :stroke="C.green" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
+          />
+          <path
+            v-for="(st, si) in sim.stages"
+            :key="'tp' + si"
+            :d="(() => {
+              const fullSeries = [result.inputs, ...sim.stages.map((_, i) => result.outputs[i])]
+              const maxVal = computeMaxVal(fullSeries, 0, false)
+              const series = sliceArr(result.outputs[si])
+              const xSteps = sim.steps
+              const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
+              const toY = (v) => 10 + 38 - (v / maxVal) * 38
+              return miniChartPath(series, toX, toY)
+            })()"
+            fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
+          />
+          <line x1="50" y1="63" x2="60" y2="63" :stroke="C.green" stroke-width="1.5" />
+          <text x="62" y="65" style="font-size: 6px" :fill="C.green" font-family="'JetBrains Mono', monospace">Input</text>
+          <g v-for="(st, i) in sim.stages" :key="'tl' + i">
+            <line :x1="50 + (i + 1) * 90" y1="63" :x2="60 + (i + 1) * 90" y2="63" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+            <text :x="62 + (i + 1) * 90" y="65" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+          </g>
+        </svg>
 
-      <!-- Buffer chart -->
-      <svg
-        :viewBox="`0 0 480 58`"
-        class="chart-svg"
-      >
-        <line
-          v-for="f in [0.25, 0.5, 0.75]"
-          :key="'bg' + f"
-          :x1="42" :y1="10 + 28 - (f * 28)"
-          :x2="470" :y2="10 + 28 - (f * 28)"
-          :stroke="C.border" stroke-width="0.5"
-        />
-        <line x1="42" :y1="38" x2="470" :y2="38" :stroke="C.dim" stroke-width="1" />
-        <line x1="42" y1="10" x2="42" :y2="38" :stroke="C.dim" stroke-width="1" />
-        <text x="46" y="6" font-size="10" :fill="C.muted" font-weight="600">Buffer-Füllstand</text>
-        <text x="6" y="28" text-anchor="middle" font-size="8" :fill="C.dim" transform="rotate(-90, 6, 28)">items</text>
-        <text x="42" y="48" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-        <text x="470" y="48" text-anchor="end" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
-        <path
-          v-for="(st, si) in sim.stages"
-          :key="'bp' + si"
-          :d="(() => {
-            const fullSeries = sim.stages.map((_, i) => result.buffers[i])
-            const maxVal = computeMaxVal(fullSeries, 0, false)
-            const series = sliceArr(result.buffers[si])
-            const xSteps = sim.steps
-            const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-            const toY = (v) => 10 + 28 - (v / maxVal) * 28
-            return miniChartPath(series, toX, toY)
-          })()"
-          fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
-        />
-        <!-- Legend -->
-        <g v-for="(st, i) in sim.stages" :key="'bl' + i">
-          <line :x1="50 + i * 90" y1="52" :x2="60 + i * 90" y2="52" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-          <text :x="62 + i * 90" y="54" font-size="6" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
-        </g>
-      </svg>
+        <!-- Buffer chart -->
+        <svg
+          :viewBox="`0 0 480 52`"
+          class="chart-svg"
+        >
+          <line
+            v-for="f in [0.25, 0.5, 0.75]"
+            :key="'bg' + f"
+            :x1="42" :y1="10 + 24 - (f * 24)"
+            :x2="470" :y2="10 + 24 - (f * 24)"
+            :stroke="C.border" stroke-width="0.5"
+          />
+          <line x1="42" :y1="34" x2="470" :y2="34" :stroke="C.dim" stroke-width="1" />
+          <line x1="42" y1="10" x2="42" :y2="34" :stroke="C.dim" stroke-width="1" />
+          <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Buffer-Füllstand</text>
+          <text x="42" y="44" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+          <text x="470" y="44" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+          <path
+            v-for="(st, si) in sim.stages"
+            :key="'bp' + si"
+            :d="(() => {
+              const fullSeries = sim.stages.map((_, i) => result.buffers[i])
+              const maxVal = computeMaxVal(fullSeries, 0, false)
+              const series = sliceArr(result.buffers[si])
+              const xSteps = sim.steps
+              const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
+              const toY = (v) => 10 + 24 - (v / maxVal) * 24
+              return miniChartPath(series, toX, toY)
+            })()"
+            fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
+          />
+          <g v-for="(st, i) in sim.stages" :key="'bl' + i">
+            <line :x1="50 + i * 90" y1="48" :x2="60 + i * 90" y2="48" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+            <text :x="62 + i * 90" y="50" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+          </g>
+        </svg>
+      </div>
 
       <!-- Clipping chart -->
       <svg
-        :viewBox="`0 0 480 46`"
+        :viewBox="`0 0 480 42`"
         class="chart-svg"
       >
         <line
           v-for="f in [0.25, 0.5, 0.75]"
           :key="'cg' + f"
-          :x1="42" :y1="10 + 20 - (f * 20)"
-          :x2="470" :y2="10 + 20 - (f * 20)"
+          :x1="42" :y1="10 + 18 - (f * 18)"
+          :x2="470" :y2="10 + 18 - (f * 18)"
           :stroke="C.border" stroke-width="0.5"
         />
-        <line x1="42" :y1="30" x2="470" :y2="30" :stroke="C.dim" stroke-width="1" />
-        <line x1="42" y1="10" x2="42" :y2="30" :stroke="C.dim" stroke-width="1" />
-        <text x="46" y="6" font-size="10" :fill="C.muted" font-weight="600">Clipping / Drops (req/s)</text>
-        <text x="6" y="23" text-anchor="middle" font-size="8" :fill="C.dim" transform="rotate(-90, 6, 23)">dropped</text>
-        <text x="42" y="40" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
-        <text x="470" y="40" text-anchor="end" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
+        <line x1="42" :y1="28" x2="470" :y2="28" :stroke="C.dim" stroke-width="1" />
+        <line x1="42" y1="10" x2="42" :y2="28" :stroke="C.dim" stroke-width="1" />
+        <text x="46" y="6" style="font-size: 10px" :fill="C.muted" font-weight="600">Drops (req/s)</text>
+        <text x="42" y="37" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">0s</text>
+        <text x="470" y="37" text-anchor="end" style="font-size: 7px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ (sim.steps * dt).toFixed(0) }}s</text>
         <path
           v-for="(st, si) in sim.stages"
           :key="'cp' + si"
@@ -537,46 +538,31 @@ const takeaways = [
             const series = sliceArr(result.clipped[si])
             const xSteps = sim.steps
             const toX = (idx) => 42 + (idx / (xSteps - 1)) * 428
-            const toY = (v) => 10 + 20 - (v / maxVal) * 20
+            const toY = (v) => 10 + 18 - (v / maxVal) * 18
             return miniChartPath(series, toX, toY)
           })()"
           fill="none" :stroke="STAGE_COLORS[si]" stroke-width="1.2" stroke-linecap="round" opacity="0.85"
         />
         <g v-for="(st, i) in sim.stages" :key="'cl' + i">
-          <line :x1="50 + i * 90" y1="42" :x2="60 + i * 90" y2="42" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
-          <text :x="62 + i * 90" y="44" font-size="6" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
+          <line :x1="50 + i * 90" y1="39" :x2="60 + i * 90" y2="39" :stroke="STAGE_COLORS[i]" stroke-width="1.5" />
+          <text :x="62 + i * 90" y="41" style="font-size: 6px" :fill="STAGE_COLORS[i]" font-family="'JetBrains Mono', monospace">{{ st.name }}</text>
         </g>
       </svg>
 
-      <!-- Phase space for step scenario -->
-      <div v-if="sim.id === 'step'" class="phase-space-panel">
-        <div class="phase-title">PHASENRAUM: Input Rate vs. Output (letzter Stage)</div>
-        <div class="phase-content">
+      <!-- Bottom: phase space (conditional) + insight side by side -->
+      <div class="sim-bottom-row">
+        <!-- Phase space for step scenario -->
+        <div v-if="sim.id === 'step'" class="phase-space-panel">
+          <div class="phase-title">PHASENRAUM</div>
           <svg :viewBox="`0 0 ${psW} ${psH}`" class="phase-svg">
-            <!-- Grid -->
             <g v-for="f in [0.25, 0.5, 0.75]" :key="'pg' + f">
-              <line
-                :x1="psPad.l"
-                :y1="psPad.t + psCh - (f * psCh)"
-                :x2="psPad.l + psCw"
-                :y2="psPad.t + psCh - (f * psCh)"
-                :stroke="C.border" stroke-width="0.5"
-              />
-              <line
-                :x1="psPad.l + (f * psCw)"
-                :y1="psPad.t"
-                :x2="psPad.l + (f * psCw)"
-                :y2="psPad.t + psCh"
-                :stroke="C.border" stroke-width="0.5"
-              />
+              <line :x1="psPad.l" :y1="psPad.t + psCh - (f * psCh)" :x2="psPad.l + psCw" :y2="psPad.t + psCh - (f * psCh)" :stroke="C.border" stroke-width="0.5" />
+              <line :x1="psPad.l + (f * psCw)" :y1="psPad.t" :x2="psPad.l + (f * psCw)" :y2="psPad.t + psCh" :stroke="C.border" stroke-width="0.5" />
             </g>
-            <!-- Axes -->
             <line :x1="psPad.l" :y1="psPad.t + psCh" :x2="psPad.l + psCw" :y2="psPad.t + psCh" :stroke="C.dim" stroke-width="1" />
             <line :x1="psPad.l" :y1="psPad.t" :x2="psPad.l" :y2="psPad.t + psCh" :stroke="C.dim" stroke-width="1" />
-            <!-- Labels -->
-            <text :x="psPad.l + psCw / 2" :y="psH - 2" text-anchor="middle" font-size="10" :fill="C.muted" font-weight="600">Input (req/s)</text>
-            <text x="6" :y="psPad.t + psCh / 2" text-anchor="middle" font-size="10" :fill="C.muted" font-weight="600" :transform="`rotate(-90, 6, ${psPad.t + psCh / 2})`">Output (req/s)</text>
-            <!-- Trail -->
+            <text :x="psPad.l + psCw / 2" :y="psH - 2" text-anchor="middle" style="font-size: 9px" :fill="C.muted">Input</text>
+            <text x="6" :y="psPad.t + psCh / 2" text-anchor="middle" style="font-size: 9px" :fill="C.muted" :transform="`rotate(-90, 6, ${psPad.t + psCh / 2})`">Output</text>
             <path
               v-if="(() => { const d = Math.floor(progress * sim.steps); return d > 1; })()"
               :d="(() => {
@@ -591,57 +577,35 @@ const takeaways = [
               })()"
               fill="none" :stroke="C.yellow" stroke-width="1.2" opacity="0.7" stroke-linecap="round"
             />
-            <!-- Start dot -->
             <circle
               v-if="Math.floor(progress * sim.steps) > 0"
-              :cx="(() => {
-                const xData = result.inputs; const N = sim.steps
-                let xMax = 0; for (let i = 0; i < N; i++) if (xData[i] > xMax) xMax = xData[i]
-                xMax = xMax * 1.1 || 1
-                return psPad.l + (xData[0] / xMax) * psCw
-              })()"
-              :cy="(() => {
-                const yData = result.outputs[sim.stages.length - 1]; const N = sim.steps
-                let yMax = 0; for (let i = 0; i < N; i++) if (yData[i] > yMax) yMax = yData[i]
-                yMax = yMax * 1.1 || 1
-                return psPad.t + psCh - (yData[0] / yMax) * psCh
-              })()"
+              :cx="(() => { const xData = result.inputs; const N = sim.steps; let xMax = 0; for (let i = 0; i < N; i++) if (xData[i] > xMax) xMax = xData[i]; xMax = xMax * 1.1 || 1; return psPad.l + (xData[0] / xMax) * psCw })()"
+              :cy="(() => { const yData = result.outputs[sim.stages.length - 1]; const N = sim.steps; let yMax = 0; for (let i = 0; i < N; i++) if (yData[i] > yMax) yMax = yData[i]; yMax = yMax * 1.1 || 1; return psPad.t + psCh - (yData[0] / yMax) * psCh })()"
               r="2" :fill="C.green" :stroke="C.bg" stroke-width="0.5"
             />
-            <!-- Current dot -->
             <circle
               v-if="Math.floor(progress * sim.steps) > 0"
-              :cx="(() => {
-                const xData = result.inputs; const N = sim.steps
-                let xMax = 0; for (let i = 0; i < N; i++) if (xData[i] > xMax) xMax = xData[i]
-                xMax = xMax * 1.1 || 1
-                const cur = Math.max(0, Math.floor(progress * N) - 1)
-                return psPad.l + (xData[cur] / xMax) * psCw
-              })()"
-              :cy="(() => {
-                const yData = result.outputs[sim.stages.length - 1]; const N = sim.steps
-                let yMax = 0; for (let i = 0; i < N; i++) if (yData[i] > yMax) yMax = yData[i]
-                yMax = yMax * 1.1 || 1
-                const cur = Math.max(0, Math.floor(progress * N) - 1)
-                return psPad.t + psCh - (yData[cur] / yMax) * psCh
-              })()"
+              :cx="(() => { const xData = result.inputs; const N = sim.steps; let xMax = 0; for (let i = 0; i < N; i++) if (xData[i] > xMax) xMax = xData[i]; xMax = xMax * 1.1 || 1; const cur = Math.max(0, Math.floor(progress * N) - 1); return psPad.l + (xData[cur] / xMax) * psCw })()"
+              :cy="(() => { const yData = result.outputs[sim.stages.length - 1]; const N = sim.steps; let yMax = 0; for (let i = 0; i < N; i++) if (yData[i] > yMax) yMax = yData[i]; yMax = yMax * 1.1 || 1; const cur = Math.max(0, Math.floor(progress * N) - 1); return psPad.t + psCh - (yData[cur] / yMax) * psCh })()"
               r="3" :fill="C.yellow" :stroke="C.text" stroke-width="1"
             />
           </svg>
-          <div class="phase-explain">
-            <strong :style="{ color: C.yellow }">Hysterese-Schleife:</strong> Der Rückweg (Last sinkt) liegt unter dem Hinweg (Last steigt), weil die Puffer noch gefüllt sind und erst drainiert werden müssen. Die eingeschlossene Fläche = Recovery-Verlust.
-          </div>
         </div>
-      </div>
 
-      <!-- Insight -->
-      <div class="insight-box">
-        <div class="insight-label">BEOBACHTUNG</div>
-        <div class="insight-text">{{ sim.insight }}</div>
+        <!-- Insight -->
+        <div class="insight-box">
+          <div class="insight-label">BEOBACHTUNG</div>
+          <div class="insight-text">{{ sim.insight }}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Bottom row: M/M/1 + caveats -->
+    </template>
+
+    <!-- TAB: Theory -->
+    <template v-if="activeTab === 'theory'">
+
+    <!-- M/M/1 + caveats -->
     <div class="bottom-row">
       <div class="mm1-panel">
         <div class="section-title">M/M/1 Warteschlange: Warum 80%</div>
@@ -651,18 +615,18 @@ const takeaways = [
           <rect :x="mm1ToX(0.8)" :y="mm1Pad.t" :width="mm1ToX(0.98) - mm1ToX(0.8)" :height="mm1Ch" :fill="C.red" opacity="0.06" />
           <g v-for="f in [2, 5, 10]" :key="'mg' + f">
             <line :x1="mm1Pad.l" :y1="mm1ToY(f)" :x2="mm1Pad.l + mm1Cw" :y2="mm1ToY(f)" :stroke="C.border" stroke-width="0.5" />
-            <text :x="mm1Pad.l - 4" :y="mm1ToY(f) + 3" text-anchor="end" font-size="10" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ f }}x</text>
+            <text :x="mm1Pad.l - 4" :y="mm1ToY(f) + 3" text-anchor="end" style="font-size: 10px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ f }}x</text>
           </g>
           <line :x1="mm1Pad.l" :y1="mm1Pad.t + mm1Ch" :x2="mm1Pad.l + mm1Cw" :y2="mm1Pad.t + mm1Ch" :stroke="C.dim" stroke-width="1" />
           <line :x1="mm1Pad.l" :y1="mm1Pad.t" :x2="mm1Pad.l" :y2="mm1Pad.t + mm1Ch" :stroke="C.dim" stroke-width="1" />
           <line :x1="mm1ToX(0.8)" :y1="mm1Pad.t" :x2="mm1ToX(0.8)" :y2="mm1Pad.t + mm1Ch" :stroke="C.orange" stroke-width="1" stroke-dasharray="3,2" opacity="0.6" />
-          <text :x="mm1ToX(0.8) + 3" :y="mm1Pad.t + mm1Ch - 4" font-size="10" :fill="C.orange" font-weight="700" font-family="'JetBrains Mono', monospace">80%</text>
+          <text :x="mm1ToX(0.8) + 3" :y="mm1Pad.t + mm1Ch - 4" style="font-size: 10px" :fill="C.orange" font-weight="700" font-family="'JetBrains Mono', monospace">80%</text>
           <path :d="mm1PathD" fill="none" :stroke="C.blue" stroke-width="2" stroke-linecap="round" />
-          <text :x="mm1Pad.l + mm1Cw / 2" :y="mm1H - 4" text-anchor="middle" font-size="12" :fill="C.muted">Utilization</text>
-          <text :x="mm1Pad.l + mm1Cw - 4" :y="mm1Pad.t + 12" text-anchor="end" font-size="8" :fill="C.dim" font-family="'JetBrains Mono', monospace">T = S/(1-p)</text>
+          <text :x="mm1Pad.l + mm1Cw / 2" :y="mm1H - 4" text-anchor="middle" style="font-size: 12px" :fill="C.muted">Utilization</text>
+          <text :x="mm1Pad.l + mm1Cw - 4" :y="mm1Pad.t + 12" text-anchor="end" style="font-size: 8px" :fill="C.dim" font-family="'JetBrains Mono', monospace">T = S/(1-p)</text>
           <g v-if="hovU !== null && mm1HoverF !== null">
             <circle :cx="mm1ToX(hovU)" :cy="mm1ToY(mm1HoverF)" r="4" :fill="C.blue" :stroke="C.text" stroke-width="1" />
-            <text :x="mm1ToX(hovU)" :y="mm1ToY(mm1HoverF) - 8" text-anchor="middle" font-size="8" :fill="C.blue" font-weight="700" font-family="'JetBrains Mono', monospace">
+            <text :x="mm1ToX(hovU)" :y="mm1ToY(mm1HoverF) - 8" text-anchor="middle" style="font-size: 8px" :fill="C.blue" font-weight="700" font-family="'JetBrains Mono', monospace">
               {{ (hovU * 100).toFixed(0) }}%={{ mm1HoverF.toFixed(1) }}x
             </text>
           </g>
@@ -703,6 +667,8 @@ const takeaways = [
         </div>
       </div>
     </div>
+
+    </template>
   </div>
 </template>
 
@@ -736,6 +702,16 @@ const takeaways = [
 .title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 2px; }
 .subtitle-text { font-size: 8px; color: #64748b; line-height: 1.4; max-width: 500px; }
 
+/* Tabs */
+.tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
+.tab-btn {
+  padding: 4px 12px; border-radius: 4px; border: 1px solid #1e2536;
+  background: #111621; color: #64748b; font-size: 8px; font-weight: 700;
+  cursor: pointer; outline: none; font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s ease;
+}
+.tab-btn.active { background: rgba(249, 115, 22, 0.08); border-color: #f97316; color: #f97316; }
+
 /* Scenario selector */
 .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
 .scenario-btn {
@@ -759,14 +735,14 @@ const takeaways = [
   background: #111621;
   border: 1px solid #1e2536;
   border-radius: 6px;
-  padding: 8px 10px;
-  margin-bottom: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
   animation: fadeIn 0.3s ease;
 }
-.sim-desc { font-size: 7px; color: #64748b; line-height: 1.4; margin-bottom: 6px; }
+.sim-desc { font-size: 7px; color: #64748b; line-height: 1.3; margin-bottom: 4px; }
 
 /* Controls */
-.controls { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+.controls { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .play-btn {
   width: 22px; height: 22px; border-radius: 50%;
   border: 1px solid #f97316; background: rgba(249, 115, 22, 0.08);
@@ -786,25 +762,28 @@ const takeaways = [
 .time-label { font-size: 7px; color: #64748b; font-family: 'JetBrains Mono', monospace; min-width: 28px; }
 
 /* Pipeline */
-.pipeline { display: flex; align-items: center; gap: 3px; margin-bottom: 6px; flex-wrap: wrap; }
+.pipeline { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; flex-wrap: wrap; }
 .pipe-node { padding: 2px 6px; border-radius: 3px; font-size: 6px; font-weight: 600; border: 1px solid; white-space: nowrap; }
 .input-node { background: rgba(34, 197, 94, 0.07); border-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
 .arrow { color: #3e4a63; font-size: 6px; }
 
 /* Charts */
-.chart-svg { width: 100%; max-width: 520px; height: auto; display: block; }
+.charts-row { display: flex; gap: 6px; }
+.charts-row .chart-svg { flex: 1; min-width: 0; }
+.chart-svg { width: 100%; max-width: 520px; height: auto; display: block; overflow: visible; margin-top: 2px; }
+
+/* Bottom row: phase space + insight */
+.sim-bottom-row { display: flex; gap: 6px; margin-top: 4px; align-items: stretch; }
 
 /* Phase space */
-.phase-space-panel { margin-top: 6px; padding: 6px; background: #161c2a; border-radius: 5px; border: 1px solid #1e2536; }
-.phase-title { font-size: 7px; font-weight: 700; color: #eab308; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; }
-.phase-content { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.phase-svg { width: 100%; max-width: 200px; height: auto; }
-.phase-explain { flex: 1; min-width: 120px; font-size: 7px; color: #64748b; line-height: 1.5; }
+.phase-space-panel { flex: 0 0 180px; padding: 5px; background: #161c2a; border-radius: 4px; border: 1px solid #1e2536; }
+.phase-title { font-size: 6px; font-weight: 700; color: #eab308; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
+.phase-svg { width: 100%; height: auto; }
 
 /* Insight */
-.insight-box { margin-top: 6px; padding: 5px 7px; background: rgba(249, 115, 22, 0.02); border-radius: 4px; border: 1px solid rgba(249, 115, 22, 0.08); }
+.insight-box { flex: 1; padding: 5px 7px; background: rgba(249, 115, 22, 0.02); border-radius: 4px; border: 1px solid rgba(249, 115, 22, 0.08); }
 .insight-label { font-size: 6px; font-weight: 700; color: #f97316; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
-.insight-text { font-size: 7px; color: #e2e8f0; line-height: 1.5; }
+.insight-text { font-size: 7px; color: #e2e8f0; line-height: 1.4; }
 
 /* Bottom row */
 .bottom-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }

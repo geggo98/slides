@@ -67,7 +67,7 @@ const gridFracs = [2, 5, 10]
       <!-- Grid lines + Y labels -->
       <g v-for="f in gridFracs" :key="f">
         <line :x1="pad.l" :y1="toY(f)" :x2="pad.l + cw" :y2="toY(f)" :stroke="C.border" stroke-width="0.5" />
-        <text :x="pad.l - 4" :y="toY(f) + 3" text-anchor="end" font-size="10" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ f }}x</text>
+        <text :x="pad.l - 4" :y="toY(f) + 3" text-anchor="end" style="font-size: 10px" :fill="C.dim" font-family="'JetBrains Mono', monospace">{{ f }}x</text>
       </g>
 
       <!-- Axes -->
@@ -76,21 +76,21 @@ const gridFracs = [2, 5, 10]
 
       <!-- 80% threshold line -->
       <line :x1="toX(0.8)" :y1="pad.t" :x2="toX(0.8)" :y2="pad.t + ch" :stroke="C.orange" stroke-width="1" stroke-dasharray="3,2" opacity="0.6" />
-      <text :x="toX(0.8) + 3" :y="pad.t + ch - 4" font-size="10" :fill="C.orange" font-weight="700" font-family="'JetBrains Mono', monospace">80%</text>
+      <text :x="toX(0.8) + 3" :y="pad.t + ch - 4" style="font-size: 10px" :fill="C.orange" font-weight="700" font-family="'JetBrains Mono', monospace">80%</text>
 
       <!-- Curve -->
       <path :d="pathD" fill="none" :stroke="C.blue" stroke-width="2" stroke-linecap="round" />
 
       <!-- X-axis label -->
-      <text :x="pad.l + cw / 2" :y="H - 4" text-anchor="middle" font-size="13" :fill="C.muted">Utilization</text>
+      <text :x="pad.l + cw / 2" :y="H - 4" text-anchor="middle" style="font-size: 13px" :fill="C.muted">Utilization</text>
 
       <!-- Formula -->
-      <text :x="pad.l + cw - 4" :y="pad.t + 12" text-anchor="end" font-size="11" :fill="C.dim" font-family="'JetBrains Mono', monospace">T = S/(1-p)</text>
+      <text :x="pad.l + cw - 4" :y="pad.t + 12" text-anchor="end" style="font-size: 11px" :fill="C.dim" font-family="'JetBrains Mono', monospace">T = S/(1-p)</text>
 
       <!-- Hover indicator -->
       <g v-if="hoveredU !== null && hoverF !== null">
         <circle :cx="toX(hoveredU)" :cy="toY(hoverF)" r="4" :fill="C.blue" :stroke="C.text" stroke-width="1" />
-        <text :x="toX(hoveredU)" :y="toY(hoverF) - 8" text-anchor="middle" font-size="11" :fill="C.blue" font-weight="700" font-family="'JetBrains Mono', monospace">
+        <text :x="toX(hoveredU)" :y="toY(hoverF) - 8" text-anchor="middle" style="font-size: 11px" :fill="C.blue" font-weight="700" font-family="'JetBrains Mono', monospace">
           {{ (hoveredU * 100).toFixed(0) }}%={{ hoverF.toFixed(1) }}x
         </text>
       </g>
