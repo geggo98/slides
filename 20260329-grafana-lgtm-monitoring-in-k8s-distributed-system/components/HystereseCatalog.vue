@@ -1,21 +1,30 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12', surface: '#111621', surfaceAlt: '#161c2a',
   border: '#1e2536', text: '#e2e8f0', muted: '#64748b', dim: '#3e4a63',
   blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
   orange: '#f97316', red: '#ef4444', purple: '#a855f7', cyan: '#06b6d4',
   pink: '#ec4899', lime: '#84cc16', amber: '#f59e0b',
-}
+} : {
+  bg: '#f8fafc', surface: '#ffffff', surfaceAlt: '#f1f5f9',
+  border: '#e2e8f0', text: '#1e293b', muted: '#64748b', dim: '#94a3b8',
+  blue: '#2563eb', green: '#16a34a', yellow: '#ca8a04',
+  orange: '#ea580c', red: '#dc2626', purple: '#9333ea', cyan: '#0891b2',
+  pink: '#db2777', lime: '#65a30d', amber: '#d97706',
+})
 
-const CATEGORIES = [
-  { id: 'all', label: 'Alle', color: C.text },
-  { id: 'app', label: 'Applikation', color: C.orange },
-  { id: 'infra', label: 'Infrastruktur', color: C.purple },
-  { id: 'network', label: 'Netzwerk', color: C.cyan },
-  { id: 'k8s', label: 'Kubernetes', color: C.blue },
-]
+const CATEGORIES = computed(() => [
+  { id: 'all', label: 'Alle', color: C.value.text },
+  { id: 'app', label: 'Applikation', color: C.value.orange },
+  { id: 'infra', label: 'Infrastruktur', color: C.value.purple },
+  { id: 'network', label: 'Netzwerk', color: C.value.cyan },
+  { id: 'k8s', label: 'Kubernetes', color: C.value.blue },
+])
 
 function buildPath(points) {
   const result = []
@@ -32,9 +41,9 @@ function buildPath(points) {
   return result
 }
 
-const HYSTERESES = [
+const HYSTERESES = computed(() => [
   {
-    id: 'cache-stampede', name: 'Cache-Stampede', icon: '\u26A1', category: 'app', color: C.yellow,
+    id: 'cache-stampede', name: 'Cache-Stampede', icon: '\u26A1', category: 'app', color: C.value.yellow,
     x: 'Request Rate', y: 'P99 Latenz',
     upPath: [[0.05,0.04],[0.15,0.05],[0.3,0.07],[0.45,0.12],[0.6,0.22],[0.75,0.45],[0.85,0.72],[0.95,0.95]],
     downPath: [[0.95,0.95],[0.88,0.90],[0.78,0.82],[0.65,0.68],[0.50,0.52],[0.35,0.38],[0.20,0.20],[0.08,0.10]],
@@ -45,7 +54,7 @@ const HYSTERESES = [
     metrics: 'cache_hit_ratio, rate(http_client_requests_seconds_count[5m])',
   },
   {
-    id: 'gc-death-spiral', name: 'JVM GC Death Spiral', icon: '\uD83D\uDD04', category: 'app', color: C.red,
+    id: 'gc-death-spiral', name: 'JVM GC Death Spiral', icon: '\uD83D\uDD04', category: 'app', color: C.value.red,
     x: 'CPU-Auslastung', y: 'GC Pause (ms)',
     upPath: [[0.25,0.02],[0.35,0.03],[0.45,0.05],[0.55,0.10],[0.65,0.20],[0.75,0.40],[0.85,0.68],[0.95,0.95]],
     downPath: [[0.95,0.95],[0.90,0.92],[0.82,0.85],[0.72,0.72],[0.60,0.55],[0.48,0.38],[0.38,0.25],[0.28,0.15]],
@@ -56,7 +65,7 @@ const HYSTERESES = [
     metrics: 'jvm_gc_pause_seconds_sum, jvm_memory_used_bytes{area="heap"}',
   },
   {
-    id: 'heap-fragmentation', name: 'Heap-Fragmentierung', icon: '\uD83E\uDDE9', category: 'app', color: C.orange,
+    id: 'heap-fragmentation', name: 'Heap-Fragmentierung', icon: '\uD83E\uDDE9', category: 'app', color: C.value.orange,
     x: 'Allocation Rate', y: 'Full-GC Frequenz',
     upPath: [[0.08,0.02],[0.20,0.03],[0.35,0.05],[0.50,0.12],[0.65,0.30],[0.80,0.60],[0.92,0.90]],
     downPath: [[0.92,0.90],[0.82,0.85],[0.68,0.72],[0.52,0.55],[0.38,0.40],[0.25,0.28],[0.12,0.18]],
@@ -67,7 +76,7 @@ const HYSTERESES = [
     metrics: 'jvm_gc_pause_seconds_count{gc="G1 Old Generation"}, jvm_memory_pool_bytes_used',
   },
   {
-    id: 'hikari-backlog', name: 'Connection-Pool-Backlog', icon: '\uD83D\uDDC4\uFE0F', category: 'app', color: C.purple,
+    id: 'hikari-backlog', name: 'Connection-Pool-Backlog', icon: '\uD83D\uDDC4\uFE0F', category: 'app', color: C.value.purple,
     x: 'Eingehende Req/s', y: 'Pending Threads',
     upPath: [[0.05,0.0],[0.20,0.0],[0.35,0.01],[0.50,0.05],[0.65,0.18],[0.78,0.45],[0.88,0.75],[0.95,0.98]],
     downPath: [[0.95,0.98],[0.88,0.95],[0.78,0.85],[0.65,0.65],[0.52,0.42],[0.38,0.22],[0.25,0.08],[0.10,0.0]],
@@ -78,7 +87,7 @@ const HYSTERESES = [
     metrics: 'hikaricp_connections_pending, hikaricp_connections_timeout_total',
   },
   {
-    id: 'circuit-breaker', name: 'Circuit-Breaker-Recovery', icon: '\uD83D\uDEE1\uFE0F', category: 'app', color: C.cyan,
+    id: 'circuit-breaker', name: 'Circuit-Breaker-Recovery', icon: '\uD83D\uDEE1\uFE0F', category: 'app', color: C.value.cyan,
     x: 'Provider Error Rate', y: 'Quote Completeness',
     upPath: [[0.05,0.96],[0.15,0.90],[0.30,0.78],[0.50,0.58],[0.70,0.35],[0.85,0.18],[0.95,0.05]],
     downPath: [[0.95,0.05],[0.85,0.06],[0.70,0.10],[0.50,0.18],[0.30,0.35],[0.15,0.58],[0.05,0.78]],
@@ -89,7 +98,7 @@ const HYSTERESES = [
     metrics: 'resilience4j_circuitbreaker_state, provider_quote_success_total',
   },
   {
-    id: 'redis-eviction', name: 'Redis-Eviction-Kaskade', icon: '\uD83D\uDCA8', category: 'app', color: C.amber,
+    id: 'redis-eviction', name: 'Redis-Eviction-Kaskade', icon: '\uD83D\uDCA8', category: 'app', color: C.value.amber,
     x: 'Redis Memory %', y: 'Upstream API Calls/s',
     upPath: [[0.10,0.05],[0.25,0.06],[0.40,0.08],[0.55,0.12],[0.70,0.25],[0.82,0.50],[0.92,0.80],[0.98,0.95]],
     downPath: [[0.98,0.95],[0.90,0.88],[0.78,0.72],[0.62,0.55],[0.48,0.40],[0.35,0.28],[0.22,0.15],[0.10,0.08]],
@@ -100,7 +109,7 @@ const HYSTERESES = [
     metrics: 'redis_evicted_keys_total, redis_memory_used_bytes, redis_keyspace_hits_total',
   },
   {
-    id: 'tomcat-thread-saturation', name: 'Tomcat Thread-Saturation', icon: '\uD83E\uDDF5', category: 'app', color: C.pink,
+    id: 'tomcat-thread-saturation', name: 'Tomcat Thread-Saturation', icon: '\uD83E\uDDF5', category: 'app', color: C.value.pink,
     x: 'Request Rate', y: 'HTTP 503 Rate',
     upPath: [[0.05,0.0],[0.25,0.0],[0.45,0.0],[0.60,0.02],[0.72,0.10],[0.82,0.35],[0.90,0.65],[0.95,0.95]],
     downPath: [[0.95,0.95],[0.90,0.85],[0.82,0.62],[0.72,0.38],[0.60,0.18],[0.48,0.06],[0.30,0.01],[0.10,0.0]],
@@ -111,7 +120,7 @@ const HYSTERESES = [
     metrics: 'tomcat_threads_busy_threads, tomcat_threads_config_max_threads',
   },
   {
-    id: 'cfs-throttling', name: 'CPU-Throttling (CFS)', icon: '\uD83D\uDD25', category: 'infra', color: C.red,
+    id: 'cfs-throttling', name: 'CPU-Throttling (CFS)', icon: '\uD83D\uDD25', category: 'infra', color: C.value.red,
     x: 'CPU Usage / Limit', y: 'Throttled Periods %',
     upPath: [[0.10,0.0],[0.30,0.0],[0.50,0.02],[0.65,0.08],[0.75,0.22],[0.85,0.50],[0.92,0.78],[0.98,0.95]],
     downPath: [[0.98,0.95],[0.92,0.88],[0.85,0.72],[0.75,0.48],[0.65,0.28],[0.55,0.15],[0.40,0.05],[0.20,0.01]],
@@ -122,7 +131,7 @@ const HYSTERESES = [
     metrics: 'container_cpu_cfs_throttled_periods_total, container_cpu_cfs_periods_total',
   },
   {
-    id: 'oom-restart', name: 'OOMKill-Restart-Cycle', icon: '\uD83D\uDC80', category: 'infra', color: C.red,
+    id: 'oom-restart', name: 'OOMKill-Restart-Cycle', icon: '\uD83D\uDC80', category: 'infra', color: C.value.red,
     x: 'Memory / Limit %', y: 'Pod Restarts / h',
     upPath: [[0.30,0.0],[0.45,0.0],[0.60,0.0],[0.72,0.0],[0.80,0.05],[0.88,0.30],[0.94,0.65],[0.98,0.95]],
     downPath: [[0.98,0.95],[0.92,0.70],[0.84,0.45],[0.75,0.25],[0.65,0.12],[0.55,0.05],[0.42,0.01],[0.30,0.0]],
@@ -133,7 +142,7 @@ const HYSTERESES = [
     metrics: 'container_memory_working_set_bytes, kube_pod_container_status_restarts_total',
   },
   {
-    id: 'noisy-neighbor-cpu', name: 'Noisy-Neighbor CPU-Kopplung', icon: '\u2694\uFE0F', category: 'infra', color: C.orange,
+    id: 'noisy-neighbor-cpu', name: 'Noisy-Neighbor CPU-Kopplung', icon: '\u2694\uFE0F', category: 'infra', color: C.value.orange,
     x: 'Service B CPU %', y: 'Service A Throughput',
     upPath: [[0.08,0.92],[0.20,0.90],[0.35,0.82],[0.50,0.65],[0.65,0.42],[0.78,0.20],[0.92,0.08]],
     downPath: [[0.92,0.08],[0.82,0.10],[0.68,0.18],[0.52,0.32],[0.38,0.52],[0.22,0.70],[0.08,0.85]],
@@ -144,7 +153,7 @@ const HYSTERESES = [
     metrics: 'container_cpu_usage_seconds_total per pod, container_cpu_cfs_throttled_periods_total per pod',
   },
   {
-    id: 'node-imbalance', name: 'Node-Imbalance nach Rescheduling', icon: '\u2696\uFE0F', category: 'k8s', color: C.blue,
+    id: 'node-imbalance', name: 'Node-Imbalance nach Rescheduling', icon: '\u2696\uFE0F', category: 'k8s', color: C.value.blue,
     x: 'Cluster Avg CPU %', y: 'Max Node CPU %',
     upPath: [[0.10,0.12],[0.25,0.28],[0.40,0.48],[0.55,0.65],[0.68,0.78],[0.78,0.88],[0.88,0.95]],
     downPath: [[0.88,0.95],[0.78,0.90],[0.68,0.82],[0.55,0.72],[0.42,0.58],[0.30,0.42],[0.18,0.28]],
@@ -155,7 +164,7 @@ const HYSTERESES = [
     metrics: 'node_cpu_seconds_total per node, kube_pod_info aggregated per node',
   },
   {
-    id: 'hpa-oscillation', name: 'HPA-Oszillation', icon: '\uD83C\uDF0A', category: 'k8s', color: C.green,
+    id: 'hpa-oscillation', name: 'HPA-Oszillation', icon: '\uD83C\uDF0A', category: 'k8s', color: C.value.green,
     x: 'Request Rate', y: 'Pod Count',
     upPath: [[0.10,0.10],[0.25,0.12],[0.40,0.15],[0.55,0.25],[0.68,0.45],[0.80,0.70],[0.90,0.88],[0.95,0.95]],
     downPath: [[0.95,0.95],[0.90,0.92],[0.82,0.85],[0.70,0.72],[0.55,0.55],[0.40,0.38],[0.25,0.25],[0.12,0.15]],
@@ -166,7 +175,7 @@ const HYSTERESES = [
     metrics: 'kube_horizontalpodautoscaler_status_current_replicas, kube_horizontalpodautoscaler_spec_max_replicas',
   },
   {
-    id: 'tcp-slowstart', name: 'TCP Slow-Start nach Timeout', icon: '\uD83C\uDF10', category: 'network', color: C.cyan,
+    id: 'tcp-slowstart', name: 'TCP Slow-Start nach Timeout', icon: '\uD83C\uDF10', category: 'network', color: C.value.cyan,
     x: 'Packet Loss Rate', y: 'Effective Throughput',
     upPath: [[0.05,0.95],[0.15,0.90],[0.28,0.80],[0.42,0.62],[0.58,0.40],[0.72,0.22],[0.85,0.10],[0.95,0.05]],
     downPath: [[0.95,0.05],[0.82,0.08],[0.68,0.15],[0.52,0.30],[0.38,0.48],[0.25,0.62],[0.12,0.78],[0.05,0.88]],
@@ -177,7 +186,7 @@ const HYSTERESES = [
     metrics: 'node_netstat_Tcp_RetransSegs, node_netstat_Tcp_OutSegs',
   },
   {
-    id: 'dns-staleness', name: 'DNS/Service-Discovery Staleness', icon: '\uD83D\uDD0D', category: 'network', color: C.lime,
+    id: 'dns-staleness', name: 'DNS/Service-Discovery Staleness', icon: '\uD83D\uDD0D', category: 'network', color: C.value.lime,
     x: 'Endpoint Changes/min', y: 'Stale DNS %',
     upPath: [[0.05,0.02],[0.20,0.03],[0.35,0.06],[0.50,0.15],[0.65,0.35],[0.80,0.62],[0.92,0.88]],
     downPath: [[0.92,0.88],[0.80,0.78],[0.65,0.58],[0.50,0.38],[0.35,0.22],[0.20,0.12],[0.08,0.05]],
@@ -188,7 +197,7 @@ const HYSTERESES = [
     metrics: 'coredns_dns_requests_total, coredns_dns_responses_total{rcode="NXDOMAIN"}',
   },
   {
-    id: 'pv-io-saturation', name: 'PV I/O-Sättigung', icon: '\uD83D\uDCBE', category: 'infra', color: C.purple,
+    id: 'pv-io-saturation', name: 'PV I/O-Sättigung', icon: '\uD83D\uDCBE', category: 'infra', color: C.value.purple,
     x: 'IOPS / Provisioned', y: 'I/O Latenz (ms)',
     upPath: [[0.10,0.03],[0.25,0.04],[0.40,0.06],[0.55,0.12],[0.70,0.28],[0.82,0.55],[0.92,0.82],[0.98,0.95]],
     downPath: [[0.98,0.95],[0.90,0.88],[0.78,0.72],[0.65,0.52],[0.50,0.35],[0.38,0.22],[0.25,0.12],[0.12,0.06]],
@@ -198,7 +207,7 @@ const HYSTERESES = [
     severity: 'hoch',
     metrics: 'node_disk_io_time_seconds_total, node_disk_io_time_weighted_seconds_total',
   },
-]
+])
 
 const filter = ref('all')
 const expanded = ref(null)
@@ -226,12 +235,12 @@ function togglePlay() {
 }
 
 const filtered = computed(() =>
-  filter.value === 'all' ? HYSTERESES : HYSTERESES.filter(h => h.category === filter.value)
+  filter.value === 'all' ? HYSTERESES.value : HYSTERESES.value.filter(h => h.category === filter.value)
 )
 
-function catCount(id) { return HYSTERESES.filter(h => h.category === id).length }
-function sevColor(sev) { return sev === 'kritisch' ? C.red : sev === 'hoch' ? C.orange : C.yellow }
-function catColor(cat) { return CATEGORIES.find(c => c.id === cat)?.color || C.muted }
+function catCount(id) { return HYSTERESES.value.filter(h => h.category === id).length }
+function sevColor(sev) { return sev === 'kritisch' ? C.value.red : sev === 'hoch' ? C.value.orange : C.value.yellow }
+function catColor(cat) { return CATEGORIES.value.find(c => c.id === cat)?.color || C.value.muted }
 
 function toggle(id) { expanded.value = expanded.value === id ? null : id }
 
@@ -342,7 +351,20 @@ function startDot(h) {
 </script>
 
 <template>
-  <div class="hysterese-catalog">
+  <div class="hysterese-catalog" :style="{
+    '--c-bg': C.bg,
+    '--c-surface': C.surface,
+    '--c-surfaceAlt': C.surfaceAlt,
+    '--c-border': C.border,
+    '--c-text': C.text,
+    '--c-muted': C.muted,
+    '--c-dim': C.dim,
+    '--c-blue': C.blue,
+    '--c-green': C.green,
+    '--c-yellow': C.yellow,
+    '--c-orange': C.orange,
+    '--c-red': C.red,
+  }">
     <!-- Controls -->
     <div class="controls">
       <div class="filter-buttons">
@@ -461,7 +483,7 @@ function startDot(h) {
 <style scoped>
 .hysterese-catalog {
   font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
-  color: #e2e8f0;
+  color: var(--c-text);
   line-height: 1.4;
 }
 
@@ -500,9 +522,9 @@ function startDot(h) {
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid #1e2536;
+  border: 1px solid var(--c-border);
   background: transparent;
-  color: #64748b;
+  color: var(--c-muted);
   outline: none;
   font-family: inherit;
 }
@@ -512,7 +534,7 @@ function startDot(h) {
   gap: 14px;
   margin-bottom: 6px;
   font-size: 10px;
-  color: #3e4a63;
+  color: var(--c-dim);
   align-items: center;
 }
 
@@ -550,10 +572,10 @@ function startDot(h) {
 }
 
 .cards::-webkit-scrollbar { width: 4px; }
-.cards::-webkit-scrollbar-thumb { background: #1e2536; border-radius: 2px; }
+.cards::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 2px; }
 
 .card {
-  background: #111621;
+  background: var(--c-surface);
   border: 1px solid;
   border-radius: 6px;
   overflow: hidden;
@@ -600,7 +622,7 @@ function startDot(h) {
 }
 
 .card-icon { font-size: 13px; }
-.card-name { font-size: 12px; font-weight: 700; color: #e2e8f0; }
+.card-name { font-size: 12px; font-weight: 700; color: var(--c-text); }
 
 .severity-badge, .category-badge {
   font-size: 9px;
@@ -613,7 +635,7 @@ function startDot(h) {
 
 .card-mechanism {
   font-size: 10px;
-  color: #64748b;
+  color: var(--c-muted);
   line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
@@ -621,7 +643,7 @@ function startDot(h) {
 }
 
 .expand-arrow {
-  color: #3e4a63;
+  color: var(--c-dim);
   font-size: 12px;
   transition: transform 0.2s ease;
   flex-shrink: 0;
@@ -656,13 +678,13 @@ function startDot(h) {
 }
 
 .axes-box {
-  background: #161c2a;
-  border-color: #1e2536;
+  background: var(--c-surfaceAlt);
+  border-color: var(--c-border);
 }
 
 .metrics-box {
-  background: #161c2a;
-  border-color: #1e2536;
+  background: var(--c-surfaceAlt);
+  border-color: var(--c-border);
 }
 
 .detail-label {
@@ -674,21 +696,21 @@ function startDot(h) {
 
 .detail-text {
   font-size: 10px;
-  color: #64748b;
+  color: var(--c-muted);
   line-height: 1.4;
 }
 
 .axes-label {
   font-size: 9px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--c-muted);
   margin-bottom: 2px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .axes-text {
   font-size: 10px;
-  color: #e2e8f0;
+  color: var(--c-text);
   line-height: 1.4;
   font-family: 'JetBrains Mono', monospace;
 }
@@ -696,23 +718,23 @@ function startDot(h) {
 .metrics-label {
   font-size: 9px;
   font-weight: 700;
-  color: #3b82f6;
+  color: var(--c-blue);
   margin-bottom: 2px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .metrics-text {
   font-size: 10px;
-  color: #64748b;
+  color: var(--c-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 
 .summary {
   margin-top: 6px;
   padding: 6px 10px;
-  background: #111621;
+  background: var(--c-surface);
   border-radius: 6px;
-  border: 1px solid #1e2536;
+  border: 1px solid var(--c-border);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -742,6 +764,6 @@ function startDot(h) {
 
 .summary-label {
   font-size: 10px;
-  color: #64748b;
+  color: var(--c-muted);
 }
 </style>

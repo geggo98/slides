@@ -1,12 +1,15 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 import MethodBox from './MethodBox.vue'
 import DiagnosticFunnel from './DiagnosticFunnel.vue'
 import ErrorsPerspective from './ErrorsPerspective.vue'
 
 const activeTab = ref('overview')
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12',
   surface: '#111621',
   surfaceAlt: '#161c2a',
@@ -27,68 +30,93 @@ const C = {
   purple: '#a855f7',
   purpleDim: 'rgba(168,85,247,0.10)',
   cyan: '#06b6d4',
-}
+  codeBg: '#0d1117',
+  codeText: '#79c0ff',
+} : {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceAlt: '#f1f5f9',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  muted: '#64748b',
+  dim: '#94a3b8',
+  blue: '#2563eb',
+  blueDim: 'rgba(37,99,235,0.08)',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.08)',
+  yellow: '#ca8a04',
+  yellowDim: 'rgba(202,138,4,0.08)',
+  orange: '#ea580c',
+  orangeDim: 'rgba(234,88,12,0.08)',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.08)',
+  purple: '#9333ea',
+  purpleDim: 'rgba(147,51,234,0.08)',
+  cyan: '#0891b2',
+  codeBg: '#f1f5f9',
+  codeText: '#1e40af',
+})
 
 const tabs = [
   { id: 'overview', label: '\u00DCberblick & Zusammenhang' },
   { id: 'praxis', label: 'Monitoring-Praxis' },
 ]
 
-const redSignals = [
+const redSignals = computed(() => [
   {
     letter: 'R', name: 'Rate',
     desc: 'Requests pro Sekunde. Mathematisch die erste Ableitung (\u0394/\u0394t) eines monoton steigenden Counters.',
     detail: 'rate() in PromQL = (counter_now \u2212 counter_prev) / interval. Counter z\u00E4hlt nur hoch, rate() macht daraus eine Geschwindigkeit.',
-    accent: C.blue, color: C.blueDim,
+    accent: C.value.blue, color: C.value.blueDim,
   },
   {
     letter: 'E', name: 'Errors',
     desc: 'Fehlgeschlagene Requests pro Sekunde. Aus User-Sicht: HTTP 5xx, Timeouts, Business-Logik-Fehler.',
     detail: 'Perspektive User: \u201EHat mein Request funktioniert?\u201C Nicht zu verwechseln mit USE-Errors (Infrastruktur-Fehler wie ECC, Packet-Drops).',
-    accent: C.red, color: C.redDim,
+    accent: C.value.red, color: C.value.redDim,
   },
   {
     letter: 'D', name: 'Duration',
     desc: 'Latenz-Verteilung (p50, p95, p99). Steigt als Symptom von Saturation, aber auch durch langsame Dependencies oder schlechten Code.',
     detail: 'Kausalit\u00E4t: Saturation \u2192 Duration\u2191 (Warteschlangen). Aber: Duration\u2191 \u21CF immer Saturation. Auch Netzwerk, langsame DB-Queries, GC-Pausen.',
-    accent: C.orange, color: C.orangeDim,
+    accent: C.value.orange, color: C.value.orangeDim,
   },
-]
+])
 
-const useSignals = [
+const useSignals = computed(() => [
   {
     letter: 'U', name: 'Utilization',
     desc: 'Prozentsatz der genutzten Kapazit\u00E4t. CPU-Zeit, Memory vs. Limit, Connection-Pool active/max.',
     detail: 'Gemessen als Durchschnitt \u00FCber ein Intervall. Achtung: 60% Durchschnitt kann Spitzen von 100% verstecken.',
-    accent: C.orange, color: C.orangeDim,
+    accent: C.value.orange, color: C.value.orangeDim,
   },
   {
     letter: 'S', name: 'Saturation',
     desc: 'Grad der Warteschlange. Arbeit, die auf Verarbeitung wartet: CPU-Runqueue, HikariCP-Pending, Disk-I/O-Queue.',
     detail: 'Warteschlangentheorie (M/M/1): Ab ~70\u201380% Utilization steigt Wartezeit \u00FCberproportional. Bei 90%: Response-Time = 10\u00D7 Service-Time.',
-    accent: C.yellow, color: C.yellowDim,
+    accent: C.value.yellow, color: C.value.yellowDim,
   },
   {
     letter: 'E', name: 'Errors',
     desc: 'Infrastruktur-Fehler. ECC-Memory-Errors, Netzwerk-Packet-Drops, Disk-I/O-Errors, CRC-Fehler.',
     detail: 'Perspektive Maschine: \u201EIst die Hardware fehlerfrei?\u201C Nicht zu verwechseln mit RED-Errors (User-facing HTTP 5xx).',
-    accent: C.red, color: C.redDim,
+    accent: C.value.red, color: C.value.redDim,
   },
-]
+])
 
-const goldenSignals = [
-  { letter: 'L', name: 'Latency', desc: '= RED Duration. Erfolgreiche und fehlerhafte Requests getrennt messen.', accent: C.orange, color: C.orangeDim },
-  { letter: 'T', name: 'Traffic', desc: '= RED Rate. HTTP Requests/s, aber auch Domain-spezifisch: Quotes/s, Policen/s.', accent: C.blue, color: C.blueDim },
-  { letter: 'E', name: 'Errors', desc: '= RED Errors. Explizite (5xx), implizite (200er mit falschem Inhalt), Policy-basiert (>1s = Fehler).', accent: C.red, color: C.redDim },
-  { letter: 'S', name: 'Saturation', desc: 'Das Extra gegen\u00FCber RED. Misst, wie voll das System ist. Bester Fr\u00FChindikator vor User-Impact.', accent: C.purple, color: C.purpleDim },
-]
+const goldenSignals = computed(() => [
+  { letter: 'L', name: 'Latency', desc: '= RED Duration. Erfolgreiche und fehlerhafte Requests getrennt messen.', accent: C.value.orange, color: C.value.orangeDim },
+  { letter: 'T', name: 'Traffic', desc: '= RED Rate. HTTP Requests/s, aber auch Domain-spezifisch: Quotes/s, Policen/s.', accent: C.value.blue, color: C.value.blueDim },
+  { letter: 'E', name: 'Errors', desc: '= RED Errors. Explizite (5xx), implizite (200er mit falschem Inhalt), Policy-basiert (>1s = Fehler).', accent: C.value.red, color: C.value.redDim },
+  { letter: 'S', name: 'Saturation', desc: 'Das Extra gegen\u00FCber RED. Misst, wie voll das System ist. Bester Fr\u00FChindikator vor User-Impact.', accent: C.value.purple, color: C.value.purpleDim },
+])
 
-const equationMapping = [
-  { gs: 'Traffic', red: 'Rate', col: C.blue },
-  { gs: 'Errors', red: 'Errors', col: C.red },
-  { gs: 'Latency', red: 'Duration', col: C.orange },
-  { gs: 'Saturation', red: '\u2014', col: C.purple },
-]
+const equationMapping = computed(() => [
+  { gs: 'Traffic', red: 'Rate', col: C.value.blue },
+  { gs: 'Errors', red: 'Errors', col: C.value.red },
+  { gs: 'Latency', red: 'Duration', col: C.value.orange },
+  { gs: 'Saturation', red: '\u2014', col: C.value.purple },
+])
 
 const thresholds = [
   { res: 'CPU (Container)', warn: '70\u201380%', crit: '90%+', note: 'CFS-Throttling beachten, nicht nur Utilization' },
@@ -99,29 +127,29 @@ const thresholds = [
   { res: 'Disk I/O', warn: '70%', crit: '85%+', note: 'Queue-Depth > 1 = S\u00E4ttigung beginnt' },
 ]
 
-const xyCharts = [
+const xyCharts = computed(() => [
   {
     title: 'CPU vs. P99 Latenz (Saturation \u2192 Duration)',
     x: 'avg(rate(container_cpu_usage_seconds_total{pod=~"quote.*"}[5m]))',
     y: 'histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))',
     insight: 'Zeigt den Knickpunkt, ab dem CPU die Latenz \u00FCberproportional treibt. Hysterese sichtbar wenn Latenz nach Last-Reduktion nicht auf den gleichen Pfad zur\u00FCckkehrt.',
-    color: C.orange,
+    color: C.value.orange,
   },
   {
     title: 'Request Rate vs. Error Rate (Traffic \u2192 Errors)',
     x: 'sum(rate(http_server_requests_seconds_count[5m]))',
     y: 'sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m]))',
     insight: 'Ab welcher Rate beginnen Errors? Gehen sie bei niedrigerer Rate auf Null zur\u00FCck, oder bleiben sie (Hysterese)?',
-    color: C.red,
+    color: C.value.red,
   },
   {
     title: 'Cache-Hit-Ratio vs. Upstream-Call-Rate',
     x: 'rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))',
     y: 'sum(rate(http_client_requests_seconds_count[5m]))',
     insight: 'Cache-Miss-Amplification: Hit-Ratio sinkt \u2192 Upstream-Rate steigt \u2192 Rate-Limiting \u2192 Feedback-Loop.',
-    color: C.yellow,
+    color: C.value.yellow,
   },
-]
+])
 
 const provisioningYaml = `# Alert Rule Konfiguration
 Condition: Threshold > 500   (P99 Latenz in ms)
@@ -442,9 +470,9 @@ data:
               :style="{
                 margin: 0,
                 padding: '8px 11px',
-                background: '#0d1117',
+                background: C.codeBg,
                 fontSize: '7px',
-                color: '#79c0ff',
+                color: C.codeText,
                 fontFamily: `'JetBrains Mono', monospace`,
                 lineHeight: 1.6,
                 overflowX: 'auto',
@@ -476,14 +504,14 @@ data:
                 <div :style="{ fontSize: '8.4px', fontWeight: 700, color: item.color, marginBottom: '2px' }">{{ item.title }}</div>
                 <div :style="{ fontSize: '7.7px', color: C.muted, lineHeight: 1.5 }">{{ item.insight }}</div>
               </div>
-              <div :style="{ padding: '6px 10px', background: '#0d1117', borderTop: `1px solid ${C.border}`, display: 'flex', gap: '8px', flexWrap: 'wrap' }">
+              <div :style="{ padding: '6px 10px', background: C.codeBg, borderTop: `1px solid ${C.border}`, display: 'flex', gap: '8px', flexWrap: 'wrap' }">
                 <div :style="{ flex: 1, minWidth: '100px' }">
                   <div :style="{ fontSize: '6.3px', color: C.blue, fontFamily: `'JetBrains Mono', monospace`, marginBottom: '1px' }">X-Achse:</div>
-                  <pre :style="{ margin: 0, fontSize: '6.3px', color: '#79c0ff', fontFamily: `'JetBrains Mono', monospace`, lineHeight: 1.4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">{{ item.x }}</pre>
+                  <pre :style="{ margin: 0, fontSize: '6.3px', color: C.codeText, fontFamily: `'JetBrains Mono', monospace`, lineHeight: 1.4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">{{ item.x }}</pre>
                 </div>
                 <div :style="{ flex: 1, minWidth: '100px' }">
                   <div :style="{ fontSize: '6.3px', color: C.red, fontFamily: `'JetBrains Mono', monospace`, marginBottom: '1px' }">Y-Achse:</div>
-                  <pre :style="{ margin: 0, fontSize: '6.3px', color: '#79c0ff', fontFamily: `'JetBrains Mono', monospace`, lineHeight: 1.4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">{{ item.y }}</pre>
+                  <pre :style="{ margin: 0, fontSize: '6.3px', color: C.codeText, fontFamily: `'JetBrains Mono', monospace`, lineHeight: 1.4, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }">{{ item.y }}</pre>
                 </div>
               </div>
             </div>

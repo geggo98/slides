@@ -1,5 +1,10 @@
 <script setup>
-const C = {
+import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   surface: '#111621',
   border: '#1e2536',
   text: '#e2e8f0',
@@ -10,13 +15,24 @@ const C = {
   purple: '#a855f7',
   green: '#22c55e',
   greenDim: 'rgba(34,197,94,0.10)',
-}
+} : {
+  surface: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  muted: '#64748b',
+  dim: '#94a3b8',
+  red: '#dc2626',
+  yellow: '#ca8a04',
+  purple: '#9333ea',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.08)',
+})
 
-const steps = [
-  { from: 'RED', to: 'Duration\u2191', label: 'P99 springt auf 2s \u2014 Problem erkannt', color: C.red },
-  { from: 'Golden', to: 'Saturation\u2191', label: 'Thread-Pool bei 95% \u2014 Engpass lokalisiert', color: C.yellow },
-  { from: 'USE', to: 'CPU Throttle', label: 'CFS-Throttling 40% \u2014 Root Cause gefunden', color: C.purple },
-]
+const steps = computed(() => [
+  { from: 'RED', to: 'Duration\u2191', label: 'P99 springt auf 2s \u2014 Problem erkannt', color: C.value.red },
+  { from: 'Golden', to: 'Saturation\u2191', label: 'Thread-Pool bei 95% \u2014 Engpass lokalisiert', color: C.value.yellow },
+  { from: 'USE', to: 'CPU Throttle', label: 'CFS-Throttling 40% \u2014 Root Cause gefunden', color: C.value.purple },
+])
 </script>
 
 <template>

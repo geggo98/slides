@@ -4,13 +4,21 @@
  * Shows Response-Time = S/(1-rho) curve with hover interaction.
  */
 import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12', surface: '#111621', border: '#1e2536',
   text: '#e2e8f0', muted: '#64748b', dim: '#3e4a63',
   blue: '#3b82f6', green: '#22c55e', yellow: '#eab308',
   orange: '#f97316', red: '#ef4444',
-}
+} : {
+  bg: '#f8fafc', surface: '#ffffff', border: '#e2e8f0',
+  text: '#1e293b', muted: '#64748b', dim: '#94a3b8',
+  blue: '#2563eb', green: '#16a34a', yellow: '#ca8a04',
+  orange: '#ea580c', red: '#dc2626',
+})
 
 const W = 380
 const H = 180
@@ -57,7 +65,7 @@ const gridFracs = [2, 5, 10]
 
 <template>
   <div class="mm1-chart-wrap">
-    <div class="mm1-title">M/M/1 Warteschlange: Warum 80%</div>
+    <div class="mm1-title" :style="{ color: C.text }">M/M/1 Warteschlange: Warum 80%</div>
     <svg :viewBox="`0 0 ${W} ${H}`" class="mm1-svg">
       <!-- Zone backgrounds -->
       <rect :x="pad.l" :y="pad.t" :width="toX(0.7) - pad.l" :height="ch" :fill="C.green" opacity="0.04" />
@@ -103,7 +111,7 @@ const gridFracs = [2, 5, 10]
         @mouseleave="onMouseLeave"
       />
     </svg>
-    <div class="mm1-caption">
+    <div class="mm1-caption" :style="{ color: C.muted }">
       Response-Time = Service-Time / (1 - Utilization). Bei 50%: 2x, bei 80%: 5x, bei 90%: 10x. Die Kurve biegt ab ~70% merklich, wird ab 80% steil. Hover für Werte.
     </div>
   </div>

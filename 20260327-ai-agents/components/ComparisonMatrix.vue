@@ -1,5 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
 
 const tab = ref('files')
 const tabs = [
@@ -17,30 +20,68 @@ const tools = [
   { name: 'Gemini CLI', short: 'Gemini', key: 'gemini', instrFile: 'GEMINI.md', skills: 'Extension skills/', hooks: 'settings.json', mcp: 'settings.json', subagents: 'Preview' },
 ]
 
-const Y = '<span style="color:#639922;font-weight:600">✓</span>'
-const N = '<span style="color:#A32D2D">✗</span>'
-const P = '<span style="color:#BA7517;font-weight:500">◐</span>'
+const Y = computed(() => isDark.value
+  ? '<span style="color:#639922;font-weight:600">✓</span>'
+  : '<span style="color:#639922;font-weight:600">✓</span>')
+const N = computed(() => isDark.value
+  ? '<span style="color:#f06060">✗</span>'
+  : '<span style="color:#A32D2D">✗</span>')
+const Partial = computed(() => isDark.value
+  ? '<span style="color:#e0a030;font-weight:500">◐</span>'
+  : '<span style="color:#BA7517;font-weight:500">◐</span>')
 
-const features = [
-  { name: 'Hook-Events', claude: '12+', codex: '2', wind: '12', junie: N, oc: '30+', gemini: '10' },
-  { name: 'Pre-Tool-Block', claude: Y, codex: N, wind: Y, junie: N, oc: Y, gemini: Y },
-  { name: 'Worktrees nativ', claude: Y, codex: Y, wind: Y, junie: Y, oc: N, gemini: N },
-  { name: 'Plugin-System', claude: Y, codex: N, wind: P, junie: N, oc: Y, gemini: Y },
-  { name: 'AGENTS.md', claude: N, codex: Y, wind: Y, junie: Y, oc: Y, gemini: P },
-  { name: 'SKILL.md-Format', claude: Y, codex: Y, wind: Y, junie: Y, oc: Y, gemini: Y },
-  { name: 'MCP Support', claude: Y, codex: Y, wind: Y, junie: Y, oc: Y, gemini: Y },
-  { name: 'LSP nativ', claude: Y, codex: P, wind: Y, junie: Y, oc: Y, gemini: N },
-  { name: 'ACP-kompatibel', claude: Y, codex: Y, wind: N, junie: Y, oc: N, gemini: Y },
-]
+const C = computed(() => isDark.value ? {
+  tabBtnBorder: 'rgba(255,255,255,0.12)',
+  tabBtnColor: '#aaa',
+  tabActiveBg: '#2a2a2e',
+  tabActiveColor: '#e5e5e5',
+  tableBg: '#1e1e1e',
+  tableBorder: 'rgba(255,255,255,0.12)',
+  tableColor: '#e5e5e5',
+  thBg: '#2a2a2e',
+  thColor: '#999',
+  thBorderBottom: 'rgba(255,255,255,0.12)',
+  tdBorderBottom: 'rgba(255,255,255,0.06)',
+  tdColor: '#e5e5e5',
+  toolNameColor: '#e5e5e5',
+  monoColor: '#999',
+} : {
+  tabBtnBorder: 'rgba(0,0,0,0.1)',
+  tabBtnColor: '#888',
+  tabActiveBg: '#f3f2ee',
+  tabActiveColor: '#1a1a18',
+  tableBg: 'white',
+  tableBorder: 'rgba(0,0,0,0.1)',
+  tableColor: '#1a1a18',
+  thBg: '#f3f2ee',
+  thColor: '#5f5e5a',
+  thBorderBottom: 'rgba(0,0,0,0.1)',
+  tdBorderBottom: 'rgba(0,0,0,0.06)',
+  tdColor: '#1a1a18',
+  toolNameColor: '#1a1a18',
+  monoColor: '#5f5e5a',
+})
 
-const compatData = {
-  claude: { claude: '—', codex: P, wind: P, junie: Y, oc: Y, gemini: P },
-  codex: { claude: P, codex: '—', wind: Y, junie: Y, oc: Y, gemini: Y },
-  wind: { claude: P, codex: Y, wind: '—', junie: Y, oc: Y, gemini: Y },
-  junie: { claude: Y, codex: Y, wind: Y, junie: '—', oc: Y, gemini: Y },
-  oc: { claude: Y, codex: Y, wind: Y, junie: Y, oc: '—', gemini: Y },
-  gemini: { claude: P, codex: Y, wind: Y, junie: Y, oc: Y, gemini: '—' },
-}
+const features = computed(() => [
+  { name: 'Hook-Events', claude: '12+', codex: '2', wind: '12', junie: N.value, oc: '30+', gemini: '10' },
+  { name: 'Pre-Tool-Block', claude: Y.value, codex: N.value, wind: Y.value, junie: N.value, oc: Y.value, gemini: Y.value },
+  { name: 'Worktrees nativ', claude: Y.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: N.value, gemini: N.value },
+  { name: 'Plugin-System', claude: Y.value, codex: N.value, wind: Partial.value, junie: N.value, oc: Y.value, gemini: Y.value },
+  { name: 'AGENTS.md', claude: N.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: Y.value, gemini: Partial.value },
+  { name: 'SKILL.md-Format', claude: Y.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: Y.value, gemini: Y.value },
+  { name: 'MCP Support', claude: Y.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: Y.value, gemini: Y.value },
+  { name: 'LSP nativ', claude: Y.value, codex: Partial.value, wind: Y.value, junie: Y.value, oc: Y.value, gemini: N.value },
+  { name: 'ACP-kompatibel', claude: Y.value, codex: Y.value, wind: N.value, junie: Y.value, oc: N.value, gemini: Y.value },
+])
+
+const compatData = computed(() => ({
+  claude: { claude: '—', codex: Partial.value, wind: Partial.value, junie: Y.value, oc: Y.value, gemini: Partial.value },
+  codex: { claude: Partial.value, codex: '—', wind: Y.value, junie: Y.value, oc: Y.value, gemini: Y.value },
+  wind: { claude: Partial.value, codex: Y.value, wind: '—', junie: Y.value, oc: Y.value, gemini: Y.value },
+  junie: { claude: Y.value, codex: Y.value, wind: Y.value, junie: '—', oc: Y.value, gemini: Y.value },
+  oc: { claude: Y.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: '—', gemini: Y.value },
+  gemini: { claude: Partial.value, codex: Y.value, wind: Y.value, junie: Y.value, oc: Y.value, gemini: '—' },
+}))
 </script>
 
 <template>
@@ -102,25 +143,25 @@ const compatData = {
 .tabs { display: flex; gap: 4px; margin-bottom: 10px; }
 .tabs button {
   font-size: 10px; font-weight: 500; padding: 3px 10px;
-  border-radius: 4px; border: 1px solid rgba(0,0,0,0.1);
-  background: transparent; color: #888; cursor: pointer;
+  border-radius: 4px; border: 1px solid v-bind('C.tabBtnBorder');
+  background: transparent; color: v-bind('C.tabBtnColor'); cursor: pointer;
 }
-.tabs button.active { background: #f3f2ee; color: #1a1a18; }
+.tabs button.active { background: v-bind('C.tabActiveBg'); color: v-bind('C.tabActiveColor'); }
 .table-wrap { overflow-x: auto; }
 .mtx {
   width: 100%; border-collapse: collapse; font-size: 11px;
-  background: white; border-radius: 8px; overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.1); color: #1a1a18;
+  background: v-bind('C.tableBg'); border-radius: 8px; overflow: hidden;
+  border: 1px solid v-bind('C.tableBorder'); color: v-bind('C.tableColor');
 }
 .mtx th {
   text-align: left; padding: 6px 8px; font-weight: 600; font-size: 10px;
-  background: #f3f2ee; color: #5f5e5a; border-bottom: 1px solid rgba(0,0,0,0.1);
+  background: v-bind('C.thBg'); color: v-bind('C.thColor'); border-bottom: 1px solid v-bind('C.thBorderBottom');
 }
 .mtx td {
-  padding: 5px 8px; border-bottom: 1px solid rgba(0,0,0,0.06); vertical-align: top;
-  color: #1a1a18;
+  padding: 5px 8px; border-bottom: 1px solid v-bind('C.tdBorderBottom'); vertical-align: top;
+  color: v-bind('C.tdColor');
 }
 .mtx tr:last-child td { border-bottom: none; }
-.tool-name { font-weight: 600; white-space: nowrap; font-size: 10px; color: #1a1a18; }
-.mono { font-family: 'Fira Code', monospace; font-size: 9px; color: #5f5e5a; }
+.tool-name { font-weight: 600; white-space: nowrap; font-size: 10px; color: v-bind('C.toolNameColor'); }
+.mono { font-family: 'Fira Code', monospace; font-size: 9px; color: v-bind('C.monoColor'); }
 </style>

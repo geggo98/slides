@@ -1,5 +1,10 @@
 <script setup>
-const PALETTE = {
+import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
+
+const DARK_PALETTE = {
   bg: '#0b0e14',
   surface: '#131720',
   surfaceHover: '#1a1f2e',
@@ -15,6 +20,25 @@ const PALETTE = {
   yellow: '#eab308',
   purple: '#a855f7',
 }
+
+const LIGHT_PALETTE = {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceHover: '#f1f5f9',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  textDim: '#94a3b8',
+  accent: '#2563eb',
+  accentGlow: 'rgba(37,99,235,0.12)',
+  green: '#16a34a',
+  red: '#dc2626',
+  orange: '#ea580c',
+  yellow: '#ca8a04',
+  purple: '#9333ea',
+}
+
+const PALETTE = computed(() => isDark.value ? DARK_PALETTE : LIGHT_PALETTE)
 
 const LINK_MECHANISMS = [
   {
@@ -35,7 +59,7 @@ d/pod-details/pod-instance
   },
   {
     title: 'Data Links (Panel-Level)',
-    color: PALETTE.accent,
+    color: DARK_PALETTE.accent,
     desc: 'Panel > Field Overrides > Data Links. Klick auf einen Datenpunkt oder eine Zeile in einem Panel springt zum Ziel-Dashboard mit Kontext.',
     code: `# Panel Edit > Overrides > Data links
 Title: Drill-Down to Pod
@@ -51,7 +75,7 @@ URL: d/pod-details/pod-instance
   },
   {
     title: 'Externe Links (Runbooks, Wiki)',
-    color: PALETTE.green,
+    color: DARK_PALETTE.green,
     desc: 'Dashboard Links oder Data Links mit externer URL. Verweisen auf Runbooks, Confluence, PagerDuty oder Git-Repos. Template-Variablen funktionieren auch in externen URLs.',
     code: `# Dashboard Settings > Links
 Type: Link
@@ -69,10 +93,10 @@ Open in new tab: true
 ]
 
 const DRILL_DOWN_MAP = [
-  { from: 'Platform Overview', to: 'Service Dashboard', trigger: 'Klick auf Service in State-Timeline oder Service-Map', vars: 'var-service, var-namespace', method: 'Golden Signals \u2192 RED', color: PALETTE.red },
-  { from: 'Service (RED)', to: 'Pod / Instance (USE)', trigger: 'Data Link auf Latenz-Serie oder Pod-Name in Table', vars: 'var-pod, var-namespace, var-service', method: 'RED Duration \u2192 USE Utilization', color: PALETTE.orange },
-  { from: 'Service (RED)', to: 'Upstream Provider Detail', trigger: 'Data Link auf Provider-Name in Error-Table', vars: 'var-provider', method: 'RED Errors \u2192 Provider-Analyse', color: PALETTE.yellow },
-  { from: 'Pod / Instance (USE)', to: 'Infrastructure / Nodes', trigger: 'Dashboard Link oder Klick auf Node-Name', vars: 'var-node, var-cluster', method: 'USE (Pod) \u2192 USE (Node)', color: PALETTE.purple },
+  { from: 'Platform Overview', to: 'Service Dashboard', trigger: 'Klick auf Service in State-Timeline oder Service-Map', vars: 'var-service, var-namespace', method: 'Golden Signals \u2192 RED', color: DARK_PALETTE.red },
+  { from: 'Service (RED)', to: 'Pod / Instance (USE)', trigger: 'Data Link auf Latenz-Serie oder Pod-Name in Table', vars: 'var-pod, var-namespace, var-service', method: 'RED Duration \u2192 USE Utilization', color: DARK_PALETTE.orange },
+  { from: 'Service (RED)', to: 'Upstream Provider Detail', trigger: 'Data Link auf Provider-Name in Error-Table', vars: 'var-provider', method: 'RED Errors \u2192 Provider-Analyse', color: DARK_PALETTE.yellow },
+  { from: 'Pod / Instance (USE)', to: 'Infrastructure / Nodes', trigger: 'Dashboard Link oder Klick auf Node-Name', vars: 'var-node, var-cluster', method: 'USE (Pod) \u2192 USE (Node)', color: DARK_PALETTE.purple },
   { from: 'Any Dashboard', to: 'Tempo Trace View', trigger: 'Exemplar-Diamond auf Time-Series-Graph', vars: 'traceID (via Exemplar)', method: 'Metrik \u2192 Trace \u2192 Logs', color: '#f472b6' },
 ]
 
@@ -87,14 +111,14 @@ Owner: Team KFZ-IF
 
 SLO: p99 < 500ms, Error < 0.5%`,
     tip: 'Erste Zeile im Dashboard. Collapsible Row, default eingeklappt.',
-    color: PALETTE.accent,
+    color: DARK_PALETTE.accent,
   },
   {
     title: 'Architektur-Kontext',
     level: 'Level 1 \u2013 Platform',
     content: '```mermaid\ngraph LR\n  FE[Frontend] --> BFF\n  BFF --> QuoteAPI\n  QuoteAPI --> Provider-A\n  QuoteAPI --> Provider-B\n  QuoteAPI --> Redis\n```',
     tip: 'Mermaid-Diagramme rendern ab Grafana 10+ nativ im Text Panel.',
-    color: PALETTE.green,
+    color: DARK_PALETTE.green,
   },
   {
     title: 'Eskalations-Matrix',
@@ -105,7 +129,7 @@ SLO: p99 < 500ms, Error < 0.5%`,
 | Critical | PagerDuty + TL |
 | P1       | War Room + Mgmt |`,
     tip: 'Markdown-Tabellen. Direkt neben dem Alert-List-Panel platzieren.',
-    color: PALETTE.red,
+    color: DARK_PALETTE.red,
   },
   {
     title: 'Variablen-Kontext',
@@ -119,7 +143,7 @@ SLO: p99 < 500ms, Error < 0.5%`,
 Template-Variablen ($pod,
 $namespace) rendern dynamisch.`,
     tip: '$-Variablen funktionieren auch in Text Panels und Links darin.',
-    color: PALETTE.purple,
+    color: DARK_PALETTE.purple,
   },
 ]
 

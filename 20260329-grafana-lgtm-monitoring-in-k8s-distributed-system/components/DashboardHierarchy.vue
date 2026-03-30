@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
 const emit = defineEmits(['selectViz'])
 
-const PALETTE = {
+const { isDark } = useDarkMode()
+
+const DARK_PALETTE = {
   bg: '#0b0e14',
   surface: '#131720',
   surfaceHover: '#1a1f2e',
@@ -28,6 +31,33 @@ const PALETTE = {
   cyanDim: 'rgba(6,182,212,0.15)',
 }
 
+const LIGHT_PALETTE = {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceHover: '#f1f5f9',
+  border: '#e2e8f0',
+  borderActive: '#3b82f6',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  textDim: '#94a3b8',
+  accent: '#2563eb',
+  accentGlow: 'rgba(37,99,235,0.12)',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.10)',
+  yellow: '#ca8a04',
+  yellowDim: 'rgba(202,138,4,0.10)',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.10)',
+  orange: '#ea580c',
+  orangeDim: 'rgba(234,88,12,0.10)',
+  purple: '#9333ea',
+  purpleDim: 'rgba(147,51,234,0.10)',
+  cyan: '#0891b2',
+  cyanDim: 'rgba(8,145,178,0.10)',
+}
+
+const PALETTE = computed(() => isDark.value ? DARK_PALETTE : LIGHT_PALETTE)
+
 const VIZ_TYPES = [
   { id: 'timeseries', name: 'Time Series', icon: '\u{1F4C8}' },
   { id: 'stat', name: 'Stat Panel', icon: '\u{1F522}' },
@@ -46,17 +76,17 @@ const LEVELS = [
   {
     id: 1, name: 'Platform Overview', tag: '[Platform] Overview',
     question: 'Werde ich gerade gepaged?', timeRange: '6\u201312h', refresh: '1\u20135 min',
-    color: PALETTE.red, colorDim: PALETTE.redDim,
+    color: DARK_PALETTE.red, colorDim: DARK_PALETTE.redDim,
     description: 'SLO-Compliance \u00fcber alle Services, aggregierte RED-Metriken, Service-Map, Alert-Liste, State-Timeline f\u00fcr Verf\u00fcgbarkeit.',
     panels: [
       { type: 'text', label: 'Runbook + Eskalation', w: 4, h: 2, color: '#94a3b8' },
-      { type: 'stat', label: 'SLO Status', w: 2, h: 2, color: PALETTE.green },
-      { type: 'stat', label: 'Error Rate', w: 2, h: 2, color: PALETTE.red },
-      { type: 'stat', label: 'Req/s', w: 2, h: 2, color: PALETTE.accent },
-      { type: 'stat', label: 'Active Pods', w: 2, h: 2, color: PALETTE.cyan },
-      { type: 'statetimeline', label: 'Service Availability', w: 8, h: 3, color: PALETTE.green },
-      { type: 'alertlist', label: 'Active Alerts', w: 4, h: 3, color: PALETTE.red },
-      { type: 'timeseries', label: 'Platform Request Rate', w: 6, h: 4, color: PALETTE.accent },
+      { type: 'stat', label: 'SLO Status', w: 2, h: 2, color: DARK_PALETTE.green },
+      { type: 'stat', label: 'Error Rate', w: 2, h: 2, color: DARK_PALETTE.red },
+      { type: 'stat', label: 'Req/s', w: 2, h: 2, color: DARK_PALETTE.accent },
+      { type: 'stat', label: 'Active Pods', w: 2, h: 2, color: DARK_PALETTE.cyan },
+      { type: 'statetimeline', label: 'Service Availability', w: 8, h: 3, color: DARK_PALETTE.green },
+      { type: 'alertlist', label: 'Active Alerts', w: 4, h: 3, color: DARK_PALETTE.red },
+      { type: 'timeseries', label: 'Platform Request Rate', w: 6, h: 4, color: DARK_PALETTE.accent },
       { type: 'traces', label: 'Service Map (Tempo)', w: 6, h: 4, color: '#f472b6' },
     ],
     links: [
@@ -67,18 +97,18 @@ const LEVELS = [
   {
     id: 2, name: 'Service Dashboard', tag: '[Service] Quote-API',
     question: 'Welcher Service hat das Problem?', timeRange: '1\u20133h', refresh: '30s',
-    color: PALETTE.accent, colorDim: PALETTE.accentGlow,
+    color: DARK_PALETTE.accent, colorDim: DARK_PALETTE.accentGlow,
     description: 'RED-Metriken f\u00fcr einen Service, Latenz-Perzentile, Heatmap, Top-N Endpoints, Upstream-Dependency-Health, korrelierte Logs.',
     panels: [
       { type: 'text', label: 'Service-Info + Runbook', w: 3, h: 2, color: '#94a3b8' },
-      { type: 'stat', label: 'P99 Latenz', w: 3, h: 2, color: PALETTE.yellow },
-      { type: 'stat', label: 'Error %', w: 3, h: 2, color: PALETTE.red },
-      { type: 'stat', label: 'Req/s', w: 3, h: 2, color: PALETTE.accent },
-      { type: 'timeseries', label: 'Latenz p50/p95/p99', w: 6, h: 4, color: PALETTE.accent },
-      { type: 'timeseries', label: 'Error Rate by Status', w: 6, h: 4, color: PALETTE.red },
-      { type: 'heatmap', label: 'Latenz-Verteilung (Histogram)', w: 12, h: 4, color: PALETTE.yellow },
-      { type: 'table', label: 'Top-10 langsamste Endpoints', w: 6, h: 4, color: PALETTE.purple },
-      { type: 'logs', label: 'Error Logs (Loki)', w: 6, h: 4, color: PALETTE.cyan },
+      { type: 'stat', label: 'P99 Latenz', w: 3, h: 2, color: DARK_PALETTE.yellow },
+      { type: 'stat', label: 'Error %', w: 3, h: 2, color: DARK_PALETTE.red },
+      { type: 'stat', label: 'Req/s', w: 3, h: 2, color: DARK_PALETTE.accent },
+      { type: 'timeseries', label: 'Latenz p50/p95/p99', w: 6, h: 4, color: DARK_PALETTE.accent },
+      { type: 'timeseries', label: 'Error Rate by Status', w: 6, h: 4, color: DARK_PALETTE.red },
+      { type: 'heatmap', label: 'Latenz-Verteilung (Histogram)', w: 12, h: 4, color: DARK_PALETTE.yellow },
+      { type: 'table', label: 'Top-10 langsamste Endpoints', w: 6, h: 4, color: DARK_PALETTE.purple },
+      { type: 'logs', label: 'Error Logs (Loki)', w: 6, h: 4, color: DARK_PALETTE.cyan },
     ],
     links: [
       { target: '[Pod] Instance Details', vars: 'var-pod=$pod&var-namespace=$namespace', type: 'drilldown' },
@@ -89,19 +119,19 @@ const LEVELS = [
   {
     id: 3, name: 'Pod / Instance', tag: '[Pod] Instance Details',
     question: 'Welcher Pod ist betroffen?', timeRange: '30min\u20131h', refresh: '15s',
-    color: PALETTE.orange, colorDim: PALETTE.orangeDim,
+    color: DARK_PALETTE.orange, colorDim: DARK_PALETTE.orangeDim,
     description: 'CPU/Memory vs. Limits, JVM-Metriken (Heap, GC), HikariCP Connection-Pool, Netzwerk-I/O, Container-Restarts.',
     panels: [
-      { type: 'gauge', label: 'CPU %', w: 3, h: 2, color: PALETTE.orange },
-      { type: 'gauge', label: 'Memory %', w: 3, h: 2, color: PALETTE.yellow },
-      { type: 'gauge', label: 'Hikari Pool', w: 3, h: 2, color: PALETTE.purple },
-      { type: 'gauge', label: 'JVM Heap', w: 3, h: 2, color: PALETTE.green },
-      { type: 'timeseries', label: 'CPU: Request / Limit / Actual', w: 6, h: 4, color: PALETTE.orange },
-      { type: 'timeseries', label: 'Memory: WSS / Limit', w: 6, h: 4, color: PALETTE.yellow },
-      { type: 'timeseries', label: 'GC Pause Duration', w: 6, h: 4, color: PALETTE.red },
-      { type: 'timeseries', label: 'HikariCP Active / Pending', w: 6, h: 4, color: PALETTE.purple },
-      { type: 'table', label: 'Container Restarts', w: 6, h: 3, color: PALETTE.red },
-      { type: 'logs', label: 'Pod Logs', w: 6, h: 3, color: PALETTE.cyan },
+      { type: 'gauge', label: 'CPU %', w: 3, h: 2, color: DARK_PALETTE.orange },
+      { type: 'gauge', label: 'Memory %', w: 3, h: 2, color: DARK_PALETTE.yellow },
+      { type: 'gauge', label: 'Hikari Pool', w: 3, h: 2, color: DARK_PALETTE.purple },
+      { type: 'gauge', label: 'JVM Heap', w: 3, h: 2, color: DARK_PALETTE.green },
+      { type: 'timeseries', label: 'CPU: Request / Limit / Actual', w: 6, h: 4, color: DARK_PALETTE.orange },
+      { type: 'timeseries', label: 'Memory: WSS / Limit', w: 6, h: 4, color: DARK_PALETTE.yellow },
+      { type: 'timeseries', label: 'GC Pause Duration', w: 6, h: 4, color: DARK_PALETTE.red },
+      { type: 'timeseries', label: 'HikariCP Active / Pending', w: 6, h: 4, color: DARK_PALETTE.purple },
+      { type: 'table', label: 'Container Restarts', w: 6, h: 3, color: DARK_PALETTE.red },
+      { type: 'logs', label: 'Pod Logs', w: 6, h: 3, color: DARK_PALETTE.cyan },
     ],
     links: [
       { target: '[Service] $service', vars: 'var-service=$service', type: 'back' },
@@ -111,19 +141,19 @@ const LEVELS = [
   {
     id: 4, name: 'Infrastructure', tag: '[Infra] K8s Nodes',
     question: 'Ist die Infrastruktur der Engpass?', timeRange: '1\u20136h', refresh: '1 min',
-    color: PALETTE.purple, colorDim: PALETTE.purpleDim,
+    color: DARK_PALETTE.purple, colorDim: DARK_PALETTE.purpleDim,
     description: 'USE-Metriken auf Node-Level, Cluster-Ressourcen, PV-Usage, CoreDNS, Pod-Scheduling, CPU-Throttling cluster-weit.',
     panels: [
-      { type: 'stat', label: 'Nodes', w: 2, h: 2, color: PALETTE.green },
-      { type: 'stat', label: 'Pods Running', w: 2, h: 2, color: PALETTE.accent },
-      { type: 'stat', label: 'Pending', w: 2, h: 2, color: PALETTE.yellow },
-      { type: 'stat', label: 'OOMKilled', w: 2, h: 2, color: PALETTE.red },
-      { type: 'stat', label: 'CFS Throttled', w: 2, h: 2, color: PALETTE.orange },
-      { type: 'stat', label: 'Disk Pressure', w: 2, h: 2, color: PALETTE.purple },
-      { type: 'timeseries', label: 'Node CPU Utilization', w: 6, h: 4, color: PALETTE.orange },
-      { type: 'timeseries', label: 'Node Memory Utilization', w: 6, h: 4, color: PALETTE.yellow },
-      { type: 'timeseries', label: 'Disk I/O (IOPS + Queue)', w: 6, h: 4, color: PALETTE.purple },
-      { type: 'table', label: 'Node Resource Summary', w: 6, h: 4, color: PALETTE.cyan },
+      { type: 'stat', label: 'Nodes', w: 2, h: 2, color: DARK_PALETTE.green },
+      { type: 'stat', label: 'Pods Running', w: 2, h: 2, color: DARK_PALETTE.accent },
+      { type: 'stat', label: 'Pending', w: 2, h: 2, color: DARK_PALETTE.yellow },
+      { type: 'stat', label: 'OOMKilled', w: 2, h: 2, color: DARK_PALETTE.red },
+      { type: 'stat', label: 'CFS Throttled', w: 2, h: 2, color: DARK_PALETTE.orange },
+      { type: 'stat', label: 'Disk Pressure', w: 2, h: 2, color: DARK_PALETTE.purple },
+      { type: 'timeseries', label: 'Node CPU Utilization', w: 6, h: 4, color: DARK_PALETTE.orange },
+      { type: 'timeseries', label: 'Node Memory Utilization', w: 6, h: 4, color: DARK_PALETTE.yellow },
+      { type: 'timeseries', label: 'Disk I/O (IOPS + Queue)', w: 6, h: 4, color: DARK_PALETTE.purple },
+      { type: 'table', label: 'Node Resource Summary', w: 6, h: 4, color: DARK_PALETTE.cyan },
     ],
     links: [
       { target: '[Platform] Overview', vars: '', type: 'back' },
@@ -159,12 +189,13 @@ function getVizInfo(typeId) {
 }
 
 function getMethodColors(name) {
+  const p = PALETTE.value
   const colors = {
-    RED: { bg: PALETTE.redDim, fg: PALETTE.red, border: `${PALETTE.red}40` },
-    'Golden Signals': { bg: PALETTE.yellowDim, fg: PALETTE.yellow, border: `${PALETTE.yellow}40` },
-    USE: { bg: PALETTE.purpleDim, fg: PALETTE.purple, border: `${PALETTE.purple}40` },
+    RED: { bg: p.redDim, fg: p.red, border: `${p.red}40` },
+    'Golden Signals': { bg: p.yellowDim, fg: p.yellow, border: `${p.yellow}40` },
+    USE: { bg: p.purpleDim, fg: p.purple, border: `${p.purple}40` },
   }
-  return colors[name] || { bg: PALETTE.accentGlow, fg: PALETTE.accent, border: PALETTE.border }
+  return colors[name] || { bg: p.accentGlow, fg: p.accent, border: p.border }
 }
 
 function onPanelClick(type) {

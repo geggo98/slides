@@ -1,67 +1,136 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
 
 const openProto = ref(null)
 const toggle = (name) => { openProto.value = openProto.value === name ? null : name }
 
-const Y = '<span style="color:#639922;font-weight:600">✓</span>'
-const N = '<span style="color:#A32D2D">✗</span>'
-const P = '<span style="color:#BA7517;font-weight:500">◐</span>'
+const Yhtml = computed(() => isDark.value
+  ? '<span style="color:#639922;font-weight:600">✓</span>'
+  : '<span style="color:#639922;font-weight:600">✓</span>')
+const Nhtml = computed(() => isDark.value
+  ? '<span style="color:#f06060">✗</span>'
+  : '<span style="color:#A32D2D">✗</span>')
+const Phtml = computed(() => isDark.value
+  ? '<span style="color:#e0a030;font-weight:500">◐</span>'
+  : '<span style="color:#BA7517;font-weight:500">◐</span>')
 
-const protocols = [
-  {
-    name: 'LSP', icon: '👁', by: 'Microsoft, 2016',
-    purpose: 'Semantisches Code-Verständnis: Go-to-Definition, Find-References, Diagnostics. Gibt dem Agenten "IDE-Augen".',
-    bg: '#E6F1FB', color: '#0C447C', direction: 'Agent → Code', dirBg: '#E6F1FB', dirColor: '#0C447C',
-    transport: 'JSON-RPC stdio/socket',
-    support: [
-      { tool: 'Claude Code', level: Y, detail: 'Nativ seit v2.0.74, 22+ Sprachen' },
-      { tool: 'OpenCode', level: Y, detail: '30+ Language Server, Auto-Install' },
-      { tool: 'Windsurf', level: Y, detail: 'IDE-integriert (VS Code Fork)' },
-      { tool: 'Junie', level: Y, detail: 'JetBrains-eigene Code-Intelligence' },
-      { tool: 'Codex', level: P, detail: 'Kein expliziter LSP' },
-      { tool: 'Gemini CLI', level: N, detail: 'Terminal-basiert, kein LSP' },
-    ],
-  },
-  {
-    name: 'MCP', icon: '🔌', by: 'Anthropic, 2024',
-    purpose: 'Externe Tool-/Datenanbindung: Datenbanken, APIs, Issue-Tracker. "Hände für die Außenwelt".',
-    bg: '#E1F5EE', color: '#085041', direction: 'Agent → Externe Welt', dirBg: '#E1F5EE', dirColor: '#085041',
-    transport: 'JSON-RPC stdio/HTTP/SSE',
-    support: [
-      { tool: 'Claude Code', level: Y, detail: '.mcp.json, drei Scopes, CLI-Wizard' },
-      { tool: 'Codex', level: Y, detail: 'config.toml, OAuth-Flows' },
-      { tool: 'Windsurf', level: Y, detail: 'MCP Marketplace, 100-Tool-Limit' },
-      { tool: 'Junie', level: Y, detail: '.junie/mcp/, AI-powered Wizard' },
-      { tool: 'OpenCode', level: Y, detail: 'Remote-MCP via .well-known/opencode' },
-      { tool: 'Gemini CLI', level: Y, detail: 'settings.json, Extensions' },
-    ],
-  },
-  {
-    name: 'ACP', icon: '🤝', by: 'Zed + JetBrains, 2025',
-    purpose: 'Agent ↔ IDE-Kommunikation: jeder Agent in jeder IDE. "LSP für AI-Agenten".',
-    bg: '#EEEDFE', color: '#3C3489', direction: 'Agent ↔ IDE', dirBg: '#EEEDFE', dirColor: '#3C3489',
-    transport: 'JSON-RPC stdio',
-    support: [
-      { tool: 'Claude Code', level: Y, detail: 'In JetBrains-IDEs und Zed' },
-      { tool: 'Codex', level: Y, detail: 'In JetBrains ab 2026.1' },
-      { tool: 'Junie', level: Y, detail: 'JetBrains-nativ, ACP-kompatibel' },
-      { tool: 'Gemini CLI', level: Y, detail: 'Via ACP in JetBrains und Zed' },
-      { tool: 'Windsurf', level: N, detail: 'Eigene IDE, kein ACP' },
-      { tool: 'OpenCode', level: N, detail: 'Kein ACP dokumentiert' },
-    ],
-  },
-]
+const protocols = computed(() => {
+  const Y = Yhtml.value, N = Nhtml.value, P = Phtml.value
+  const d = isDark.value
+  return [
+    {
+      name: 'LSP', icon: '👁', by: 'Microsoft, 2016',
+      purpose: 'Semantisches Code-Verständnis: Go-to-Definition, Find-References, Diagnostics. Gibt dem Agenten "IDE-Augen".',
+      bg: d ? '#1a2840' : '#E6F1FB', color: d ? '#85b7eb' : '#0C447C',
+      direction: 'Agent → Code',
+      dirBg: d ? '#1a2840' : '#E6F1FB', dirColor: d ? '#85b7eb' : '#0C447C',
+      transport: 'JSON-RPC stdio/socket',
+      support: [
+        { tool: 'Claude Code', level: Y, detail: 'Nativ seit v2.0.74, 22+ Sprachen' },
+        { tool: 'OpenCode', level: Y, detail: '30+ Language Server, Auto-Install' },
+        { tool: 'Windsurf', level: Y, detail: 'IDE-integriert (VS Code Fork)' },
+        { tool: 'Junie', level: Y, detail: 'JetBrains-eigene Code-Intelligence' },
+        { tool: 'Codex', level: P, detail: 'Kein expliziter LSP' },
+        { tool: 'Gemini CLI', level: N, detail: 'Terminal-basiert, kein LSP' },
+      ],
+    },
+    {
+      name: 'MCP', icon: '🔌', by: 'Anthropic, 2024',
+      purpose: 'Externe Tool-/Datenanbindung: Datenbanken, APIs, Issue-Tracker. "Hände für die Außenwelt".',
+      bg: d ? '#1a3028' : '#E1F5EE', color: d ? '#5cc0a0' : '#085041',
+      direction: 'Agent → Externe Welt',
+      dirBg: d ? '#1a3028' : '#E1F5EE', dirColor: d ? '#5cc0a0' : '#085041',
+      transport: 'JSON-RPC stdio/HTTP/SSE',
+      support: [
+        { tool: 'Claude Code', level: Y, detail: '.mcp.json, drei Scopes, CLI-Wizard' },
+        { tool: 'Codex', level: Y, detail: 'config.toml, OAuth-Flows' },
+        { tool: 'Windsurf', level: Y, detail: 'MCP Marketplace, 100-Tool-Limit' },
+        { tool: 'Junie', level: Y, detail: '.junie/mcp/, AI-powered Wizard' },
+        { tool: 'OpenCode', level: Y, detail: 'Remote-MCP via .well-known/opencode' },
+        { tool: 'Gemini CLI', level: Y, detail: 'settings.json, Extensions' },
+      ],
+    },
+    {
+      name: 'ACP', icon: '🤝', by: 'Zed + JetBrains, 2025',
+      purpose: 'Agent ↔ IDE-Kommunikation: jeder Agent in jeder IDE. "LSP für AI-Agenten".',
+      bg: d ? '#2a2640' : '#EEEDFE', color: d ? '#a5a0e0' : '#3C3489',
+      direction: 'Agent ↔ IDE',
+      dirBg: d ? '#2a2640' : '#EEEDFE', dirColor: d ? '#a5a0e0' : '#3C3489',
+      transport: 'JSON-RPC stdio',
+      support: [
+        { tool: 'Claude Code', level: Y, detail: 'In JetBrains-IDEs und Zed' },
+        { tool: 'Codex', level: Y, detail: 'In JetBrains ab 2026.1' },
+        { tool: 'Junie', level: Y, detail: 'JetBrains-nativ, ACP-kompatibel' },
+        { tool: 'Gemini CLI', level: Y, detail: 'Via ACP in JetBrains und Zed' },
+        { tool: 'Windsurf', level: N, detail: 'Eigene IDE, kein ACP' },
+        { tool: 'OpenCode', level: N, detail: 'Kein ACP dokumentiert' },
+      ],
+    },
+  ]
+})
 
-const stack = [
+const stack = computed(() => isDark.value ? [
+  { name: 'ACP: Agent ↔ IDE', question: '"Welcher Agent arbeitet in welcher IDE?"', bg: '#2a2640', border: '#7c72d0', color: '#a5a0e0' },
+  { name: 'MCP: Agent → Externe Welt', question: '"Woher kommen die Daten?"', bg: '#1a3028', border: '#40a080', color: '#5cc0a0' },
+  { name: 'LSP: Agent → Code-Verständnis', question: '"Was bedeutet dieser Code semantisch?"', bg: '#1a2840', border: '#4a8fd0', color: '#85b7eb' },
+] : [
   { name: 'ACP: Agent ↔ IDE', question: '"Welcher Agent arbeitet in welcher IDE?"', bg: '#EEEDFE', border: '#534AB7', color: '#3C3489' },
   { name: 'MCP: Agent → Externe Welt', question: '"Woher kommen die Daten?"', bg: '#E1F5EE', border: '#0F6E56', color: '#085041' },
   { name: 'LSP: Agent → Code-Verständnis', question: '"Was bedeutet dieser Code semantisch?"', bg: '#E6F1FB', border: '#185FA5', color: '#0C447C' },
-]
+])
+
+const C = computed(() => isDark.value ? {
+  hintColor: '#aaa',
+  cardBg: '#1e1e1e',
+  cardBorder: 'rgba(255,255,255,0.12)',
+  cardColor: '#e5e5e5',
+  hoverBorder: '#aaa',
+  byColor: '#aaa',
+  purposeColor: '#ccc',
+  neutralBg: '#2a2a2e',
+  neutralColor: '#ccc',
+  detailBg: '#1e1e1e',
+  detailBorder: 'rgba(255,255,255,0.08)',
+  tableColor: '#e5e5e5',
+  thBorderBottom: 'rgba(255,255,255,0.12)',
+  thColor: '#aaa',
+  tdBorderBottom: 'rgba(255,255,255,0.04)',
+  tdColor: '#e5e5e5',
+  toolNameColor: '#e5e5e5',
+  detailTextColor: '#ccc',
+  stackLabelColor: '#aaa',
+  stackQ: '#ccc',
+  stackPlusColor: '#aaa',
+} : {
+  hintColor: '#888',
+  cardBg: 'white',
+  cardBorder: 'rgba(0,0,0,0.1)',
+  cardColor: '#1a1a18',
+  hoverBorder: '#888',
+  byColor: '#888',
+  purposeColor: '#333',
+  neutralBg: '#f3f2ee',
+  neutralColor: '#333',
+  detailBg: 'white',
+  detailBorder: 'rgba(0,0,0,0.08)',
+  tableColor: '#1a1a18',
+  thBorderBottom: 'rgba(0,0,0,0.1)',
+  thColor: '#555',
+  tdBorderBottom: 'rgba(0,0,0,0.04)',
+  tdColor: '#1a1a18',
+  toolNameColor: '#1a1a18',
+  detailTextColor: '#333',
+  stackLabelColor: '#888',
+  stackQ: '#333',
+  stackPlusColor: '#888',
+})
 </script>
 
 <template>
-  <p style="font-size: 11px; color: #888; margin-bottom: 8px;">
+  <p :style="{ fontSize: '11px', color: C.hintColor, marginBottom: '8px' }">
     Drei Protokolle, drei Schichten — <strong>orthogonal</strong>, nicht hierarchisch. Klick für Support-Details.
   </p>
 
@@ -114,11 +183,11 @@ const stack = [
 <style scoped>
 .proto-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .proto-card {
-  background: white; border: 1px solid rgba(0,0,0,0.1);
+  background: v-bind('C.cardBg'); border: 1px solid v-bind('C.cardBorder');
   border-radius: 8px; padding: 8px 10px; cursor: pointer;
-  color: #1a1a18;
+  color: v-bind('C.cardColor');
 }
-.proto-card:hover { border-color: #888; }
+.proto-card:hover { border-color: v-bind('C.hoverBorder'); }
 .proto-header { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
 .proto-icon {
   width: 24px; height: 24px; border-radius: 6px;
@@ -126,31 +195,31 @@ const stack = [
   font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
 .proto-title { font-size: 12px; font-weight: 600; }
-.proto-by { font-size: 8px; color: #888; }
-.proto-purpose { font-size: 9px; color: #333; line-height: 1.3; }
+.proto-by { font-size: 8px; color: v-bind('C.byColor'); }
+.proto-purpose { font-size: 9px; color: v-bind('C.purposeColor'); line-height: 1.3; }
 .proto-badges { margin-top: 3px; }
 .badge {
   display: inline-block; font-size: 8px; font-weight: 600;
   padding: 1px 5px; border-radius: 6px; margin-right: 2px;
 }
-.badge.neutral { background: #f3f2ee; color: #333; }
+.badge.neutral { background: v-bind('C.neutralBg'); color: v-bind('C.neutralColor'); }
 .proto-detail {
   margin-top: 6px; padding: 5px;
-  background: white; border-radius: 6px; border: 1px solid rgba(0,0,0,0.08);
+  background: v-bind('C.detailBg'); border-radius: 6px; border: 1px solid v-bind('C.detailBorder');
 }
 .support-table {
-  width: 100%; border-collapse: collapse; font-size: 8px; color: #1a1a18;
+  width: 100%; border-collapse: collapse; font-size: 8px; color: v-bind('C.tableColor');
 }
 .support-table th {
   text-align: left; padding: 2px 4px; font-weight: 600;
-  border-bottom: 1px solid rgba(0,0,0,0.1); font-size: 7px; color: #555;
+  border-bottom: 1px solid v-bind('C.thBorderBottom'); font-size: 7px; color: v-bind('C.thColor');
 }
-.support-table td { padding: 2px 4px; border-bottom: 1px solid rgba(0,0,0,0.04); color: #1a1a18; }
-.tool-name { font-weight: 600; font-size: 8px; white-space: nowrap; color: #1a1a18; }
-.detail-text { font-size: 7px; color: #333; }
+.support-table td { padding: 2px 4px; border-bottom: 1px solid v-bind('C.tdBorderBottom'); color: v-bind('C.tdColor'); }
+.tool-name { font-weight: 600; font-size: 8px; white-space: nowrap; color: v-bind('C.toolNameColor'); }
+.detail-text { font-size: 7px; color: v-bind('C.detailTextColor'); }
 .stack-label {
   font-size: 9px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.8px; color: #888; margin: 8px 0 4px;
+  letter-spacing: 0.8px; color: v-bind('C.stackLabelColor'); margin: 8px 0 4px;
 }
 .stack { display: flex; gap: 6px; align-items: stretch; }
 .stack > div { flex: 1; display: flex; flex-direction: column; align-items: center; }
@@ -159,6 +228,6 @@ const stack = [
   text-align: center; width: 100%;
 }
 .stack-name { font-weight: 600; font-size: 10px; }
-.stack-q { font-size: 8px; color: #333; }
-.stack-plus { text-align: center; color: #888; font-size: 10px; margin: 2px 0; display: none; }
+.stack-q { font-size: 8px; color: v-bind('C.stackQ'); }
+.stack-plus { text-align: center; color: v-bind('C.stackPlusColor'); font-size: 10px; margin: 2px 0; display: none; }
 </style>

@@ -6,6 +6,7 @@
  * Unit font: 8, at y=size/2+13
  */
 import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
 const props = defineProps({
   value: { type: Number, required: true },
@@ -18,13 +19,21 @@ const props = defineProps({
   invert: { type: Boolean, default: false },
 })
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   border: '#1e2536',
   muted: '#64748b',
   green: '#22c55e',
   orange: '#f97316',
   red: '#ef4444',
-}
+} : {
+  border: '#e2e8f0',
+  muted: '#64748b',
+  green: '#16a34a',
+  orange: '#ea580c',
+  red: '#dc2626',
+})
 
 function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v))
@@ -40,13 +49,13 @@ const rotation = 135
 
 const color = computed(() => {
   if (props.invert) {
-    if (props.value <= props.crit) return C.red
-    if (props.value <= props.warn) return C.orange
+    if (props.value <= props.crit) return C.value.red
+    if (props.value <= props.warn) return C.value.orange
   } else {
-    if (props.value >= props.crit) return C.red
-    if (props.value >= props.warn) return C.orange
+    if (props.value >= props.crit) return C.value.red
+    if (props.value >= props.warn) return C.value.orange
   }
-  return C.green
+  return C.value.green
 })
 
 const trackDasharray = computed(() => `${dashLen.value} ${circ.value - dashLen.value}`)
@@ -102,7 +111,7 @@ const unitFontSize = 8
         {{ unit }}
       </text>
     </svg>
-    <div class="gauge-label" :style="{ maxWidth: size + 20 + 'px' }">{{ label }}</div>
+    <div class="gauge-label" :style="{ maxWidth: size + 20 + 'px', color: C.muted }">{{ label }}</div>
   </div>
 </template>
 

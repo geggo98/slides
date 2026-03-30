@@ -1,5 +1,10 @@
 <script setup>
-const C = {
+import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   surface: '#111621',
   border: '#1e2536',
   text: '#e2e8f0',
@@ -8,7 +13,16 @@ const C = {
   redDim: 'rgba(239,68,68,0.10)',
   purple: '#a855f7',
   purpleDim: 'rgba(168,85,247,0.10)',
-}
+} : {
+  surface: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  muted: '#64748b',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.08)',
+  purple: '#9333ea',
+  purpleDim: 'rgba(147,51,234,0.08)',
+})
 
 const redErrors = ['HTTP 5xx Responses', 'Request-Timeouts', 'Business-Logic-Failures', 'Unvollständige Quotes']
 const useErrors = ['ECC Memory Corrections', 'Network Packet Drops/CRC', 'Disk I/O Errors', 'NIC Receive/Transmit Errors']
