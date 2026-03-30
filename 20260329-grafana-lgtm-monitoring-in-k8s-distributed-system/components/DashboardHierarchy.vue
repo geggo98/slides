@@ -193,206 +193,178 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 
 <template>
   <div class="hierarchy-root">
-    <!-- Level Selector -->
-    <div class="level-grid">
-      <button
-        v-for="l in LEVELS"
-        :key="l.id"
-        class="level-btn"
-        :style="{
-          background: activeLevel === l.id ? l.colorDim : PALETTE.surface,
-          borderColor: activeLevel === l.id ? l.color : PALETTE.border,
-        }"
-        @click="selectLevel(l.id)"
-      >
-        <div class="level-tag" :style="{ color: l.color }">LEVEL {{ l.id }}</div>
-        <div class="level-name" :style="{ color: activeLevel === l.id ? PALETTE.text : PALETTE.textMuted }">
-          {{ l.name }}
-        </div>
-      </button>
-    </div>
-
-    <!-- Drill-Down Flow -->
-    <div class="flow-bar">
-      <template v-for="(l, i) in LEVELS" :key="l.id">
-        <span
-          class="flow-tag"
-          :style="{
-            color: activeLevel === l.id ? l.color : PALETTE.textDim,
-            background: activeLevel === l.id ? l.colorDim : 'transparent',
-            border: activeLevel === l.id ? `1px solid ${l.color}40` : '1px solid transparent',
-          }"
-        >{{ l.tag }}</span>
-        <span v-if="i < LEVELS.length - 1" class="flow-arrow">&rarr;</span>
-      </template>
-    </div>
-
-    <!-- Active Level Detail -->
-    <div class="level-detail" :style="{ borderColor: `${level.color}30` }">
-      <!-- Level Header -->
-      <div class="level-header">
-        <div class="level-header-left">
-          <div class="level-header-title">
-            <span :style="{ fontSize: '12px', fontWeight: 800, color: level.color }">Level {{ level.id }}</span>
-            <span :style="{ fontSize: '10px', fontWeight: 700, color: PALETTE.text }">{{ level.name }}</span>
-          </div>
-          <div class="level-question">&bdquo;{{ level.question }}&ldquo;</div>
-          <div class="level-desc">{{ level.description }}</div>
-        </div>
-        <div class="level-header-right">
-          <div class="method-badges">
-            <span
-              v-for="m in methodInfo.methods"
-              :key="m"
-              class="method-badge"
-              :style="{
-                background: getMethodColors(m).bg,
-                color: getMethodColors(m).fg,
-                borderColor: getMethodColors(m).border,
-              }"
-            >{{ m }}</span>
-          </div>
-          <div class="range-info">Range: {{ level.timeRange }} &middot; Refresh: {{ level.refresh }}</div>
-          <div class="method-note">{{ methodInfo.note }}</div>
-        </div>
-      </div>
-
-      <!-- Mock Dashboard Grid -->
-      <div class="panel-section">
-        <div class="panel-section-title">Panel-Layout (Klick f&uuml;r Details)</div>
-        <div class="panel-grid">
+    <div class="hierarchy-columns">
+      <!-- Left: Level Selector + Sizing Ref -->
+      <div class="hierarchy-sidebar">
+        <div class="level-grid">
           <button
-            v-for="(p, i) in level.panels"
-            :key="i"
-            class="panel-mock"
+            v-for="l in LEVELS"
+            :key="l.id"
+            class="level-btn"
             :style="{
-              gridColumn: `span ${p.w}`,
-              gridRow: `span ${p.h}`,
-              background: highlightType === p.type ? `${p.color}18` : `${p.color}08`,
-              borderColor: highlightType === p.type ? p.color : PALETTE.border,
+              background: activeLevel === l.id ? l.colorDim : PALETTE.surface,
+              borderColor: activeLevel === l.id ? l.color : PALETTE.border,
             }"
-            @click="onPanelClick(p.type)"
-            @mouseenter="(e) => { e.currentTarget.style.background = `${p.color}20`; e.currentTarget.style.borderColor = p.color }"
-            @mouseleave="(e) => { e.currentTarget.style.background = highlightType === p.type ? `${p.color}18` : `${p.color}08`; e.currentTarget.style.borderColor = highlightType === p.type ? p.color : PALETTE.border }"
+            @click="selectLevel(l.id)"
           >
-            <div class="panel-type-label">{{ getVizInfo(p.type)?.icon }} {{ getVizInfo(p.type)?.name }}</div>
-            <div class="panel-name">{{ p.label }}</div>
-            <!-- Mini visualizations for taller panels -->
-            <div v-if="p.h >= 3" class="panel-mini">
-              <!-- TimeSeriesMini -->
-              <svg v-if="p.type === 'timeseries'" viewBox="0 0 100 30" class="mini-svg">
-                <polyline
-                  points="0,25 10,20 20,22 30,15 40,18 50,10 60,14 70,8 80,12 90,5 100,9"
-                  fill="none" :stroke="p.color" stroke-width="2"
-                />
-              </svg>
-              <!-- StatMini -->
-              <div v-if="p.type === 'stat'" class="mini-stat" :style="{ color: p.color }">99.7%</div>
-              <!-- GaugeMini -->
-              <svg v-if="p.type === 'gauge'" viewBox="0 0 60 35" class="mini-gauge">
-                <path d="M5,30 A25,25 0 0,1 55,30" fill="none" :stroke="PALETTE.border" stroke-width="5" stroke-linecap="round" />
-                <path d="M5,30 A25,25 0 0,1 42,10" fill="none" :stroke="p.color" stroke-width="5" stroke-linecap="round" />
-              </svg>
-              <!-- HeatmapMini -->
-              <svg v-if="p.type === 'heatmap'" viewBox="0 0 100 30" class="mini-svg">
-                <rect
-                  v-for="(op, idx) in heatmapCells"
-                  :key="idx"
-                  :x="(idx % 10) * 10"
-                  :y="Math.floor(idx / 10) * 10"
-                  width="9" height="9" rx="1"
-                  :fill="p.color" :opacity="op"
-                />
-              </svg>
-              <!-- TableMini -->
-              <div v-if="p.type === 'table'" class="mini-table">
-                <div v-for="(o, i) in [0.9, 0.7, 0.5]" :key="i" class="mini-table-row" :style="{ background: p.color, opacity: o, width: `${90 - i * 20}%` }" />
-              </div>
-              <!-- LogsMini -->
-              <div v-if="p.type === 'logs'" class="mini-logs" :style="{ color: p.color }">
-                <span>ERROR NullPointerExc&hellip;</span>
-                <span style="opacity: 0.5">WARN Connection timeout</span>
-              </div>
-              <!-- AlertMini -->
-              <div v-if="p.type === 'alertlist'" class="mini-alert">
-                <span class="mini-alert-dot" :style="{ background: p.color }" />
-                <span class="mini-alert-text" :style="{ color: p.color }">3 FIRING</span>
-              </div>
-              <!-- StateMini -->
-              <div v-if="p.type === 'statetimeline'" class="mini-state">
-                <div v-for="(c, i) in [PALETTE.green, PALETTE.green, PALETTE.yellow, PALETTE.green, PALETTE.red, PALETTE.green, PALETTE.green]" :key="i" :style="{ flex: 1, background: c, opacity: 0.7 }" />
-              </div>
-              <!-- TracesMini -->
-              <div v-if="p.type === 'traces'" class="mini-traces">
-                <div v-for="(s, i) in [{ w: '100%', c: PALETTE.accent, ml: '0' }, { w: '60%', c: PALETTE.orange, ml: '10%' }, { w: '30%', c: PALETTE.purple, ml: '25%' }]" :key="i" :style="{ height: '3px', background: s.c, borderRadius: '2px', width: s.w, marginLeft: s.ml, opacity: 0.6 }" />
-              </div>
-              <!-- TextMini -->
-              <div v-if="p.type === 'text'" class="mini-text-lines">
-                <div v-for="(o, i) in [0.7, 0.5, 0.3]" :key="i" :style="{ height: '2px', background: p.color || '#94a3b8', opacity: o, borderRadius: '1px', width: `${95 - i * 15}%` }" />
-                <div :style="{ height: '2px', background: PALETTE.accent, opacity: 0.5, borderRadius: '1px', width: '55%', marginTop: '1px' }" />
-              </div>
-              <!-- DashLinkMini -->
-              <div v-if="p.type === 'dashlink'" class="mini-dashlink">
-                <span style="font-size: 6px; color: #38bdf8; font-weight: 700">LINK</span>
-                <span style="font-size: 6px; color: #475569">-&gt;</span>
-              </div>
+            <div class="level-tag" :style="{ color: l.color }">L{{ l.id }}</div>
+            <div class="level-name" :style="{ color: activeLevel === l.id ? PALETTE.text : PALETTE.textMuted }">
+              {{ l.name }}
             </div>
           </button>
         </div>
-      </div>
 
-      <!-- Dashboard Links -->
-      <div v-if="level.links && level.links.length > 0" class="links-section">
-        <div class="links-title">Dashboard Links (Drill-Down Navigation)</div>
-        <div class="links-wrap">
-          <div
-            v-for="(link, i) in level.links"
-            :key="i"
-            class="link-item"
-            :style="{
-              background: link.type === 'back' ? 'rgba(148,163,184,0.08)' : 'rgba(56,189,248,0.08)',
-              borderColor: link.type === 'back' ? 'rgba(148,163,184,0.2)' : 'rgba(56,189,248,0.2)',
-            }"
-          >
-            <span :style="{ fontSize: '8px', color: link.type === 'back' ? '#94a3b8' : '#38bdf8' }">
-              {{ link.type === 'back' ? '\u2190' : '\u2192' }}
-            </span>
-            <span class="link-target">{{ link.target }}</span>
-            <span v-if="link.vars" class="link-vars">?{{ link.vars }}</span>
+        <!-- Drill-Down Flow -->
+        <div class="flow-bar">
+          <template v-for="(l, i) in LEVELS" :key="l.id">
+            <span
+              class="flow-tag"
+              :style="{
+                color: activeLevel === l.id ? l.color : PALETTE.textDim,
+                background: activeLevel === l.id ? l.colorDim : 'transparent',
+                border: activeLevel === l.id ? `1px solid ${l.color}40` : '1px solid transparent',
+              }"
+            >{{ l.tag }}</span>
+            <span v-if="i < LEVELS.length - 1" class="flow-arrow">&darr;</span>
+          </template>
+        </div>
+
+        <!-- Grid sizing legend -->
+        <div class="sizing-ref">
+          <div class="sizing-title">24-Spalten-Grid &middot; Sizing</div>
+          <div class="sizing-grid">
+            <div v-for="s in SIZING_REF" :key="s.type" class="sizing-item">
+              <span class="sizing-item-type">{{ s.type }}</span>
+              <span class="sizing-item-size">{{ s.size }}</span>
+            </div>
+          </div>
+          <div class="sizing-note">
+            Max. 10&ndash;20 Panels. Collapsible Rows / Tabs f&uuml;r Gruppierung.
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Drill-down hint -->
-    <div v-if="activeLevel < 4" class="drilldown-hint">
-      <div class="drilldown-arrow">
-        <svg width="16" height="14" viewBox="0 0 24 20">
-          <path d="M12 0 L12 14 M6 9 L12 15 L18 9" :stroke="PALETTE.textDim" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </div>
-      <button
-        class="drilldown-btn"
-        @click="drillDown"
-        @mouseenter="(e) => { e.currentTarget.style.borderColor = LEVELS[activeLevel].color; e.currentTarget.style.color = LEVELS[activeLevel].color }"
-        @mouseleave="(e) => { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.color = PALETTE.textMuted }"
-      >
-        Drill-Down &rarr; Level {{ activeLevel + 1 }}: {{ LEVELS[activeLevel].name }}
-      </button>
-    </div>
+      <!-- Right: Active Level Detail -->
+      <div class="hierarchy-main">
+        <div class="level-detail" :style="{ borderColor: `${level.color}30` }">
+          <!-- Level Header -->
+          <div class="level-header">
+            <div class="level-header-left">
+              <div class="level-header-title">
+                <span :style="{ fontSize: '11px', fontWeight: 800, color: level.color }">Level {{ level.id }}</span>
+                <span :style="{ fontSize: '9px', fontWeight: 700, color: PALETTE.text }">{{ level.name }}</span>
+                <span class="range-info">{{ level.timeRange }} &middot; {{ level.refresh }}</span>
+              </div>
+              <div class="level-question">&bdquo;{{ level.question }}&ldquo;</div>
+            </div>
+            <div class="level-header-right">
+              <div class="method-badges">
+                <span
+                  v-for="m in methodInfo.methods"
+                  :key="m"
+                  class="method-badge"
+                  :style="{
+                    background: getMethodColors(m).bg,
+                    color: getMethodColors(m).fg,
+                    borderColor: getMethodColors(m).border,
+                  }"
+                >{{ m }}</span>
+              </div>
+              <div class="method-note">{{ methodInfo.note }}</div>
+            </div>
+          </div>
 
-    <!-- Grid sizing legend -->
-    <div class="sizing-ref">
-      <div class="sizing-title">Grafana 24-Spalten-Grid &middot; Panel-Sizing-Referenz</div>
-      <div class="sizing-grid">
-        <div v-for="s in SIZING_REF" :key="s.type" class="sizing-item">
-          <div class="sizing-item-type">{{ s.type }}</div>
-          <div class="sizing-item-size">{{ s.size }}</div>
-          <div class="sizing-item-hint">{{ s.hint }}</div>
+          <!-- Mock Dashboard Grid -->
+          <div class="panel-section">
+            <div class="panel-grid">
+              <button
+                v-for="(p, i) in level.panels"
+                :key="i"
+                class="panel-mock"
+                :style="{
+                  gridColumn: `span ${p.w}`,
+                  gridRow: `span ${p.h}`,
+                  background: highlightType === p.type ? `${p.color}18` : `${p.color}08`,
+                  borderColor: highlightType === p.type ? p.color : PALETTE.border,
+                }"
+                @click="onPanelClick(p.type)"
+                @mouseenter="(e) => { e.currentTarget.style.background = `${p.color}20`; e.currentTarget.style.borderColor = p.color }"
+                @mouseleave="(e) => { e.currentTarget.style.background = highlightType === p.type ? `${p.color}18` : `${p.color}08`; e.currentTarget.style.borderColor = highlightType === p.type ? p.color : PALETTE.border }"
+              >
+                <div class="panel-type-label">{{ getVizInfo(p.type)?.icon }} {{ getVizInfo(p.type)?.name }}</div>
+                <div class="panel-name">{{ p.label }}</div>
+                <!-- Mini visualizations for taller panels -->
+                <div v-if="p.h >= 3" class="panel-mini">
+                  <svg v-if="p.type === 'timeseries'" viewBox="0 0 100 30" class="mini-svg">
+                    <polyline points="0,25 10,20 20,22 30,15 40,18 50,10 60,14 70,8 80,12 90,5 100,9" fill="none" :stroke="p.color" stroke-width="2" />
+                  </svg>
+                  <div v-if="p.type === 'stat'" class="mini-stat" :style="{ color: p.color }">99.7%</div>
+                  <svg v-if="p.type === 'gauge'" viewBox="0 0 60 35" class="mini-gauge">
+                    <path d="M5,30 A25,25 0 0,1 55,30" fill="none" :stroke="PALETTE.border" stroke-width="5" stroke-linecap="round" />
+                    <path d="M5,30 A25,25 0 0,1 42,10" fill="none" :stroke="p.color" stroke-width="5" stroke-linecap="round" />
+                  </svg>
+                  <svg v-if="p.type === 'heatmap'" viewBox="0 0 100 30" class="mini-svg">
+                    <rect v-for="(op, idx) in heatmapCells" :key="idx" :x="(idx % 10) * 10" :y="Math.floor(idx / 10) * 10" width="9" height="9" rx="1" :fill="p.color" :opacity="op" />
+                  </svg>
+                  <div v-if="p.type === 'table'" class="mini-table">
+                    <div v-for="(o, i) in [0.9, 0.7, 0.5]" :key="i" class="mini-table-row" :style="{ background: p.color, opacity: o, width: `${90 - i * 20}%` }" />
+                  </div>
+                  <div v-if="p.type === 'logs'" class="mini-logs" :style="{ color: p.color }">
+                    <span>ERROR NullPointerExc&hellip;</span>
+                    <span style="opacity: 0.5">WARN timeout</span>
+                  </div>
+                  <div v-if="p.type === 'alertlist'" class="mini-alert">
+                    <span class="mini-alert-dot" :style="{ background: p.color }" />
+                    <span class="mini-alert-text" :style="{ color: p.color }">3 FIRING</span>
+                  </div>
+                  <div v-if="p.type === 'statetimeline'" class="mini-state">
+                    <div v-for="(c, i) in [PALETTE.green, PALETTE.green, PALETTE.yellow, PALETTE.green, PALETTE.red, PALETTE.green, PALETTE.green]" :key="i" :style="{ flex: 1, background: c, opacity: 0.7 }" />
+                  </div>
+                  <div v-if="p.type === 'traces'" class="mini-traces">
+                    <div v-for="(s, i) in [{ w: '100%', c: PALETTE.accent, ml: '0' }, { w: '60%', c: PALETTE.orange, ml: '10%' }, { w: '30%', c: PALETTE.purple, ml: '25%' }]" :key="i" :style="{ height: '3px', background: s.c, borderRadius: '2px', width: s.w, marginLeft: s.ml, opacity: 0.6 }" />
+                  </div>
+                  <div v-if="p.type === 'text'" class="mini-text-lines">
+                    <div v-for="(o, i) in [0.7, 0.5, 0.3]" :key="i" :style="{ height: '2px', background: p.color || '#94a3b8', opacity: o, borderRadius: '1px', width: `${95 - i * 15}%` }" />
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Dashboard Links -->
+          <div v-if="level.links && level.links.length > 0" class="links-section">
+            <div class="links-title">Dashboard Links</div>
+            <div class="links-wrap">
+              <div
+                v-for="(link, i) in level.links"
+                :key="i"
+                class="link-item"
+                :style="{
+                  background: link.type === 'back' ? 'rgba(148,163,184,0.08)' : 'rgba(56,189,248,0.08)',
+                  borderColor: link.type === 'back' ? 'rgba(148,163,184,0.2)' : 'rgba(56,189,248,0.2)',
+                }"
+              >
+                <span :style="{ fontSize: '7px', color: link.type === 'back' ? '#94a3b8' : '#38bdf8' }">
+                  {{ link.type === 'back' ? '\u2190' : '\u2192' }}
+                </span>
+                <span class="link-target">{{ link.target }}</span>
+                <span v-if="link.vars" class="link-vars">?{{ link.vars }}</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="sizing-note">
-        Max. 10&ndash;20 Panels pro Dashboard. Mehr als 25 beeintr&auml;chtigt Performance. Collapsible Rows und Tabs (Grafana 12) f&uuml;r logische Gruppierung nutzen.
+
+        <!-- Drill-down hint -->
+        <div v-if="activeLevel < 4" class="drilldown-hint">
+          <button
+            class="drilldown-btn"
+            @click="drillDown"
+            @mouseenter="(e) => { e.currentTarget.style.borderColor = LEVELS[activeLevel].color; e.currentTarget.style.color = LEVELS[activeLevel].color }"
+            @mouseleave="(e) => { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.color = PALETTE.textMuted }"
+          >
+            &darr; Drill-Down Level {{ activeLevel + 1 }}: {{ LEVELS[activeLevel].name }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -408,118 +380,128 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.hierarchy-columns {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.hierarchy-sidebar {
+  width: 150px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hierarchy-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .level-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-  margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .level-btn {
   border: 1px solid;
-  border-radius: 5px;
-  padding: 7px 7px;
+  border-radius: 4px;
+  padding: 4px 6px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
   outline: none;
   font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .level-tag {
   font-size: 7px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
-  margin-bottom: 1px;
 }
 
 .level-name {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
 }
 
 .flow-bar {
   display: flex;
-  justify-content: center;
-  gap: 3px;
+  flex-direction: column;
   align-items: center;
-  margin: 3px 0 10px;
-  flex-wrap: wrap;
+  gap: 1px;
 }
 
 .flow-tag {
-  font-size: 7px;
+  font-size: 6px;
   font-weight: 700;
-  padding: 1px 5px;
+  padding: 1px 4px;
   border-radius: 3px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .flow-arrow {
   color: v-bind('PALETTE.textDim');
-  font-size: 8px;
+  font-size: 7px;
+  line-height: 1;
 }
 
 .level-detail {
   background: v-bind('PALETTE.surface');
   border: 1px solid;
-  border-radius: 7px;
+  border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 10px;
 }
 
 .level-header {
-  padding: 10px 12px;
+  padding: 6px 8px;
   border-bottom: 1px solid v-bind('PALETTE.border');
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  flex-wrap: wrap;
   gap: 8px;
 }
 
 .level-header-left {
   flex: 1;
-  min-width: 140px;
+  min-width: 0;
 }
 
 .level-header-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 3px;
+  gap: 5px;
+  margin-bottom: 1px;
 }
 
 .level-question {
-  font-size: 8px;
+  font-size: 7px;
   color: v-bind('PALETTE.textMuted');
-  margin-bottom: 4px;
-  line-height: 1.4;
+  line-height: 1.3;
   font-style: italic;
-}
-
-.level-desc {
-  font-size: 8px;
-  color: v-bind('PALETTE.text');
-  line-height: 1.4;
 }
 
 .level-header-right {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   align-items: flex-end;
   flex-shrink: 0;
 }
 
 .method-badges {
   display: flex;
-  gap: 4px;
+  gap: 3px;
 }
 
 .method-badge {
   display: inline-block;
-  padding: 2px 7px;
+  padding: 1px 5px;
   border-radius: 3px;
   font-size: 7px;
   font-weight: 700;
@@ -528,13 +510,13 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 }
 
 .range-info {
-  font-size: 7px;
+  font-size: 6px;
   color: v-bind('PALETTE.textDim');
   font-family: 'JetBrains Mono', monospace;
 }
 
 .method-note {
-  font-size: 7px;
+  font-size: 6px;
   color: v-bind('PALETTE.textMuted');
   max-width: 180px;
   text-align: right;
@@ -542,29 +524,20 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 }
 
 .panel-section {
-  padding: 10px;
-}
-
-.panel-section-title {
-  font-size: 7px;
-  font-weight: 700;
-  color: v-bind('PALETTE.textDim');
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  margin-bottom: 6px;
+  padding: 6px;
 }
 
 .panel-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  gap: 4px;
-  grid-auto-rows: minmax(24px, auto);
+  gap: 3px;
+  grid-auto-rows: minmax(20px, auto);
 }
 
 .panel-mock {
   border: 1px solid;
-  border-radius: 4px;
-  padding: 4px 6px;
+  border-radius: 3px;
+  padding: 3px 5px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -579,17 +552,16 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 }
 
 .panel-type-label {
-  font-size: 7px;
+  font-size: 6px;
   color: v-bind('PALETTE.textMuted');
   font-weight: 500;
   letter-spacing: 0.2px;
 }
 
 .panel-name {
-  font-size: 8px;
+  font-size: 7px;
   color: v-bind('PALETTE.text');
   font-weight: 600;
-  margin-top: 1px;
   line-height: 1.2;
 }
 
@@ -680,43 +652,43 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 }
 
 .links-section {
-  padding: 8px 10px;
+  padding: 4px 6px;
   border-top: 1px solid v-bind('PALETTE.border');
 }
 
 .links-title {
-  font-size: 7px;
+  font-size: 6px;
   font-weight: 700;
   color: #38bdf8;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  margin-bottom: 5px;
+  margin-bottom: 3px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .links-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 3px;
 }
 
 .link-item {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 6px;
+  gap: 3px;
+  padding: 2px 5px;
   border-radius: 3px;
   border: 1px solid;
 }
 
 .link-target {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 600;
   color: v-bind('PALETTE.text');
 }
 
 .link-vars {
-  font-size: 6px;
+  font-size: 5px;
   color: v-bind('PALETTE.textDim');
   font-family: 'JetBrains Mono', monospace;
   background: rgba(59,130,246,0.06);
@@ -726,77 +698,66 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 
 .drilldown-hint {
   text-align: center;
-}
-
-.drilldown-arrow {
-  display: flex;
-  justify-content: center;
-  padding: 2px 0;
+  margin-top: 4px;
 }
 
 .drilldown-btn {
   background: transparent;
   border: 1px solid v-bind('PALETTE.border');
   border-radius: 4px;
-  padding: 3px 10px;
+  padding: 2px 8px;
   color: v-bind('PALETTE.textMuted');
-  font-size: 8px;
+  font-size: 7px;
   cursor: pointer;
   transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .sizing-ref {
-  margin-top: 14px;
-  padding: 10px;
+  padding: 5px 6px;
   background: v-bind('PALETTE.surface');
-  border-radius: 5px;
+  border-radius: 4px;
   border: 1px solid v-bind('PALETTE.border');
 }
 
 .sizing-title {
-  font-size: 7px;
+  font-size: 6px;
   font-weight: 700;
   color: v-bind('PALETTE.textDim');
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
 }
 
 .sizing-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .sizing-item {
-  padding: 5px 7px;
-  background: rgba(59,130,246,0.04);
-  border-radius: 3px;
-  border: 1px solid v-bind('PALETTE.border');
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+  padding: 1px 0;
 }
 
 .sizing-item-type {
-  font-size: 8px;
+  font-size: 6px;
   font-weight: 600;
   color: v-bind('PALETTE.text');
 }
 
 .sizing-item-size {
-  font-size: 7px;
+  font-size: 6px;
   color: v-bind('PALETTE.accent');
   font-family: 'JetBrains Mono', monospace;
 }
 
-.sizing-item-hint {
-  font-size: 7px;
-  color: v-bind('PALETTE.textDim');
-}
-
 .sizing-note {
-  margin-top: 6px;
-  font-size: 7px;
+  margin-top: 3px;
+  font-size: 6px;
   color: v-bind('PALETTE.textDim');
-  line-height: 1.4;
+  line-height: 1.3;
 }
 </style>
