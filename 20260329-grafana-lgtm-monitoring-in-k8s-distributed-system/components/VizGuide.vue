@@ -165,90 +165,97 @@ function getLevelInfo(levelId) {
 
 <template>
   <div class="vizguide-root">
-    <!-- Viz Type Cards Grid -->
-    <div class="viz-grid">
-      <button
-        v-for="viz in VIZ_TYPES"
-        :key="viz.id"
-        class="viz-card"
-        :style="{
-          background: selectedViz === viz.id ? viz.colorDim : PALETTE.surface,
-          borderColor: selectedViz === viz.id ? viz.color : PALETTE.border,
-        }"
-        @click="selectViz(viz.id)"
-        @mouseenter="(e) => { if (selectedViz !== viz.id) { e.currentTarget.style.borderColor = `${viz.color}80`; e.currentTarget.style.background = PALETTE.surfaceHover } }"
-        @mouseleave="(e) => { if (selectedViz !== viz.id) { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.background = PALETTE.surface } }"
-      >
-        <div class="viz-card-top">
-          <span class="viz-icon">{{ viz.icon }}</span>
-          <span class="viz-sizing">{{ viz.sizing }}</span>
-        </div>
-        <div class="viz-card-name" :style="{ color: selectedViz === viz.id ? viz.color : PALETTE.text }">{{ viz.name }}</div>
-        <div class="viz-card-usefor">{{ viz.useFor }}</div>
-        <div class="viz-card-levels">
-          <span
-            v-for="l in viz.levels"
-            :key="l"
-            class="viz-level-badge"
-            :style="{ background: getLevelInfo(l).colorDim, color: getLevelInfo(l).color }"
-          >L{{ l }}</span>
-        </div>
-      </button>
-    </div>
-
-    <!-- Viz Detail -->
-    <div v-if="vizDetail" class="viz-detail" :style="{ background: vizDetail.colorDim, borderColor: `${vizDetail.color}40` }">
-      <div class="viz-detail-header">
-        <span class="viz-detail-icon">{{ vizDetail.icon }}</span>
-        <div>
-          <div class="viz-detail-name" :style="{ color: vizDetail.color }">{{ vizDetail.name }}</div>
-          <div class="viz-detail-sizing">Sizing: {{ vizDetail.sizing }}</div>
+    <div class="vizguide-columns">
+      <!-- Left: Decision Matrix -->
+      <div class="decision-matrix">
+        <div class="dm-title">Entscheidungsmatrix</div>
+        <div class="dm-list">
+          <button
+            v-for="(item, i) in DECISION_MATRIX"
+            :key="i"
+            class="dm-item"
+            @click="selectByName(item.a)"
+            @mouseenter="(e) => { e.currentTarget.style.borderColor = PALETTE.accent; e.currentTarget.style.background = PALETTE.surfaceHover }"
+            @mouseleave="(e) => { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.background = `${PALETTE.accent}05` }"
+          >
+            <span class="dm-question">{{ item.q }}</span>
+            <span class="dm-answer">{{ item.icon }} {{ item.a }}</span>
+          </button>
         </div>
       </div>
-      <div class="viz-detail-usefor">{{ vizDetail.useFor }}</div>
-      <div class="viz-detail-examples">
-        <div class="section-label">Beispiele</div>
-        <div class="examples-list">
-          <div v-for="(ex, i) in vizDetail.examples" :key="i" class="example-item">
-            <span class="example-marker" :style="{ color: vizDetail.color }">&rsaquo;</span>
-            {{ ex }}
+
+      <!-- Right: Viz Grid + Detail -->
+      <div class="vizguide-main">
+        <!-- Viz Type Cards Grid -->
+        <div class="viz-grid">
+          <button
+            v-for="viz in VIZ_TYPES"
+            :key="viz.id"
+            class="viz-card"
+            :style="{
+              background: selectedViz === viz.id ? viz.colorDim : PALETTE.surface,
+              borderColor: selectedViz === viz.id ? viz.color : PALETTE.border,
+            }"
+            @click="selectViz(viz.id)"
+            @mouseenter="(e) => { if (selectedViz !== viz.id) { e.currentTarget.style.borderColor = `${viz.color}80`; e.currentTarget.style.background = PALETTE.surfaceHover } }"
+            @mouseleave="(e) => { if (selectedViz !== viz.id) { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.background = PALETTE.surface } }"
+          >
+            <div class="viz-card-top">
+              <span class="viz-icon">{{ viz.icon }}</span>
+              <span class="viz-sizing">{{ viz.sizing }}</span>
+            </div>
+            <div class="viz-card-name" :style="{ color: selectedViz === viz.id ? viz.color : PALETTE.text }">{{ viz.name }}</div>
+            <div class="viz-card-usefor">{{ viz.useFor }}</div>
+            <div class="viz-card-levels">
+              <span
+                v-for="l in viz.levels"
+                :key="l"
+                class="viz-level-badge"
+                :style="{ background: getLevelInfo(l).colorDim, color: getLevelInfo(l).color }"
+              >L{{ l }}</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Viz Detail -->
+        <div v-if="vizDetail" class="viz-detail" :style="{ background: vizDetail.colorDim, borderColor: `${vizDetail.color}40` }">
+          <div class="viz-detail-header">
+            <span class="viz-detail-icon">{{ vizDetail.icon }}</span>
+            <div>
+              <div class="viz-detail-name" :style="{ color: vizDetail.color }">{{ vizDetail.name }}</div>
+              <div class="viz-detail-sizing">Sizing: {{ vizDetail.sizing }}</div>
+            </div>
+          </div>
+          <div class="viz-detail-body">
+            <div class="viz-detail-usefor">{{ vizDetail.useFor }}</div>
+            <div class="viz-detail-examples">
+              <div class="section-label">Beispiele</div>
+              <div class="examples-list">
+                <div v-for="(ex, i) in vizDetail.examples" :key="i" class="example-item">
+                  <span class="example-marker" :style="{ color: vizDetail.color }">&rsaquo;</span>
+                  {{ ex }}
+                </div>
+              </div>
+            </div>
+            <div class="viz-detail-tip" :style="{ background: `${vizDetail.color}10`, borderColor: `${vizDetail.color}20` }">
+              <div class="tip-label" :style="{ color: vizDetail.color }">Praxis-Tipp</div>
+              <div class="tip-text">{{ vizDetail.tips }}</div>
+            </div>
+          </div>
+          <div class="viz-detail-levels-used">
+            <span class="levels-prefix">Eingesetzt auf:</span>
+            <span
+              v-for="l in vizDetail.levels"
+              :key="l"
+              class="level-used-badge"
+              :style="{ background: getLevelInfo(l).colorDim, color: getLevelInfo(l).color, borderColor: `${getLevelInfo(l).color}30` }"
+            >Level {{ l }} &ndash; {{ getLevelInfo(l).name }}</span>
           </div>
         </div>
-      </div>
-      <div class="viz-detail-tip" :style="{ background: `${vizDetail.color}10`, borderColor: `${vizDetail.color}20` }">
-        <div class="tip-label" :style="{ color: vizDetail.color }">Praxis-Tipp</div>
-        <div class="tip-text">{{ vizDetail.tips }}</div>
-      </div>
-      <div class="viz-detail-levels-used">
-        <span class="levels-prefix">Eingesetzt auf:</span>
-        <span
-          v-for="l in vizDetail.levels"
-          :key="l"
-          class="level-used-badge"
-          :style="{ background: getLevelInfo(l).colorDim, color: getLevelInfo(l).color, borderColor: `${getLevelInfo(l).color}30` }"
-        >Level {{ l }} &ndash; {{ getLevelInfo(l).name }}</span>
-      </div>
-    </div>
 
-    <div v-if="!vizDetail" class="viz-placeholder">
-      Klick auf einen Visualisierungstyp f&uuml;r Details, Beispiele und Praxis-Tipps.
-    </div>
-
-    <!-- Decision Matrix -->
-    <div class="decision-matrix">
-      <div class="dm-title">Entscheidungsmatrix: Welche Visualisierung wof&uuml;r?</div>
-      <div class="dm-list">
-        <button
-          v-for="(item, i) in DECISION_MATRIX"
-          :key="i"
-          class="dm-item"
-          @click="selectByName(item.a)"
-          @mouseenter="(e) => { e.currentTarget.style.borderColor = PALETTE.accent; e.currentTarget.style.background = PALETTE.surfaceHover }"
-          @mouseleave="(e) => { e.currentTarget.style.borderColor = PALETTE.border; e.currentTarget.style.background = `${PALETTE.accent}05` }"
-        >
-          <span class="dm-question">{{ item.q }}</span>
-          <span class="dm-answer">{{ item.icon }} {{ item.a }}</span>
-        </button>
+        <div v-if="!vizDetail" class="viz-placeholder">
+          Klick auf einen Visualisierungstyp f&uuml;r Details, Beispiele und Praxis-Tipps.
+        </div>
       </div>
     </div>
   </div>
@@ -264,11 +271,22 @@ function getLevelInfo(levelId) {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.vizguide-columns {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.vizguide-main {
+  flex: 1;
+  min-width: 0;
+}
+
 .viz-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
-  gap: 5px;
-  margin-bottom: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
 .viz-card {
@@ -330,41 +348,49 @@ function getLevelInfo(levelId) {
 .viz-detail {
   border: 1px solid;
   border-radius: 5px;
-  padding: 12px;
+  padding: 8px 10px;
   animation: fadeSlideIn 0.25s ease;
 }
 
 .viz-detail-header {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 7px;
+  gap: 6px;
+  margin-bottom: 5px;
 }
 
 .viz-detail-icon {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .viz-detail-name {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
 }
 
 .viz-detail-sizing {
-  font-size: 8px;
+  font-size: 7px;
   color: v-bind('PALETTE.textMuted');
   font-family: monospace;
 }
 
+.viz-detail-body {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .viz-detail-usefor {
-  font-size: 9px;
+  font-size: 8px;
   color: v-bind('PALETTE.text');
-  margin-bottom: 8px;
-  line-height: 1.4;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  flex-shrink: 0;
 }
 
 .viz-detail-examples {
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .section-label {
@@ -442,36 +468,37 @@ function getLevelInfo(levelId) {
 
 /* Decision Matrix */
 .decision-matrix {
-  margin-top: 12px;
-  padding: 10px;
+  width: 210px;
+  flex-shrink: 0;
+  padding: 6px;
   background: v-bind('PALETTE.surface');
   border-radius: 5px;
   border: 1px solid v-bind('PALETTE.border');
 }
 
 .dm-title {
-  font-size: 7px;
+  font-size: 6px;
   font-weight: 700;
   color: v-bind('PALETTE.textDim');
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .dm-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .dm-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 8px;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 5px;
   background: rgba(59,130,246,0.02);
   border: 1px solid v-bind('PALETTE.border');
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   transition: all 0.15s ease;
   text-align: left;
@@ -480,15 +507,15 @@ function getLevelInfo(levelId) {
 }
 
 .dm-question {
-  font-size: 8px;
+  font-size: 7px;
   color: v-bind('PALETTE.text');
+  line-height: 1.2;
 }
 
 .dm-answer {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
   color: v-bind('PALETTE.accent');
   white-space: nowrap;
-  margin-left: 8px;
 }
 </style>
