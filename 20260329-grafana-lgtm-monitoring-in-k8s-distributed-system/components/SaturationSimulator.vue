@@ -69,7 +69,7 @@ const SCENARIOS = [
     id: 'hikari-exhaust', name: 'HikariCP-Ersch\u00f6pfung', icon: '\u{1F5C4}\uFE0F',
     subtitle: 'DB-Connection-Pool leer \u2192 Thread-Blockade', category: 'pool',
     description: 'Alle Connections im HikariCP-Pool sind belegt. Neue Requests blockieren auf pool.getConnection() bis connectionTimeout (Default: 30s) abl\u00e4uft \u2192 SQLTransientConnectionException. Blockierte Threads k\u00f6nnen den Tomcat-Thread-Pool mitrei\u00dfen (Kaskadeneffekt).',
-    trigger: 'Langsame SQL-Query (fehlender Index auf brokerresult-Join) h\u00e4lt Connections 5x l\u00e4nger als normal \u2192 Pool l\u00e4uft leer',
+    trigger: 'Langsame SQL-Query (fehlender Index auf Datenbank-Join) h\u00e4lt Connections 5x l\u00e4nger als normal \u2192 Pool l\u00e4uft leer',
     phases: [
       { t: 0, severity: 'healthy', label: 'Normal', desc: 'Pool 40% belegt, keine Pending-Threads, Acquire-Time <1ms' },
       { t: 0.25, severity: 'degraded', label: 'Pool f\u00fcllt sich', desc: 'Pool 75% belegt, Acquire-Time steigt auf 50ms' },
