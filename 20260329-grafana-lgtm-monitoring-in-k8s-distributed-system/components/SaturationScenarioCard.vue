@@ -1,11 +1,14 @@
 <script setup>
 import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
 const props = defineProps({
   scenarioId: { type: String, required: true },
 })
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12',
   surface: '#111621',
   surfaceAlt: '#161c2a',
@@ -25,7 +28,27 @@ const C = {
   redDim: 'rgba(239,68,68,0.12)',
   purple: '#a855f7',
   cyan: '#06b6d4',
-}
+} : {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceAlt: '#f1f5f9',
+  border: '#e2e8f0',
+  borderHi: '#cbd5e1',
+  text: '#1e293b',
+  muted: '#64748b',
+  dim: '#94a3b8',
+  blue: '#2563eb',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.08)',
+  yellow: '#ca8a04',
+  yellowDim: 'rgba(202,138,4,0.08)',
+  orange: '#ea580c',
+  orangeDim: 'rgba(234,88,12,0.08)',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.08)',
+  purple: '#9333ea',
+  cyan: '#0891b2',
+})
 
 const SCENARIOS = [
   {
@@ -151,7 +174,7 @@ const SCENARIOS = [
 ]
 
 function severityColor(s) {
-  return s === 'critical' ? C.red : s === 'warning' ? C.orange : s === 'degraded' ? C.yellow : C.green
+  return s === 'critical' ? C.value.red : s === 'warning' ? C.value.orange : s === 'degraded' ? C.value.yellow : C.value.green
 }
 function severityLabel(s) {
   return s === 'critical' ? 'CRITICAL' : s === 'warning' ? 'WARNING' : s === 'degraded' ? 'DEGRADED' : 'HEALTHY'
@@ -161,7 +184,15 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 </script>
 
 <template>
-  <div class="scenario-card">
+  <div class="scenario-card" :style="{
+    '--c-surface': C.surface,
+    '--c-surfaceAlt': C.surfaceAlt,
+    '--c-border': C.border,
+    '--c-text': C.text,
+    '--c-muted': C.muted,
+    '--c-dim': C.dim,
+    '--c-orange': C.orange,
+  }">
     <!-- Header -->
     <div class="card-header">
       <span class="card-icon">{{ scenario.icon }}</span>
@@ -212,12 +243,12 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 
 <style scoped>
 .scenario-card {
-  background: #111621;
-  border: 1px solid #1e2536;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 7px;
   padding: 10px 12px;
   font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
-  color: #e2e8f0;
+  color: var(--c-text);
   max-width: 420px;
 }
 .card-header {
@@ -239,7 +270,7 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 }
 .card-subtitle {
   font-size: 8px;
-  color: #64748b;
+  color: var(--c-muted);
   line-height: 1.3;
 }
 .card-trigger {
@@ -252,13 +283,13 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 .trigger-label {
   font-size: 7px;
   font-weight: 700;
-  color: #f97316;
+  color: var(--c-orange);
   font-family: 'JetBrains Mono', monospace;
   margin-right: 4px;
 }
 .trigger-text {
   font-size: 8px;
-  color: #e2e8f0;
+  color: var(--c-text);
   line-height: 1.4;
 }
 .card-phases {
@@ -286,7 +317,7 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 }
 .phase-label {
   font-size: 7px;
-  color: #64748b;
+  color: var(--c-muted);
 }
 .card-metrics {
   display: flex;
@@ -294,8 +325,8 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
   gap: 3px;
 }
 .metric-pill {
-  background: #161c2a;
-  border: 1px solid #1e2536;
+  background: var(--c-surfaceAlt);
+  border: 1px solid var(--c-border);
   border-radius: 3px;
   padding: 3px 6px;
   display: flex;
@@ -305,12 +336,12 @@ const scenario = computed(() => SCENARIOS.find(s => s.id === props.scenarioId) |
 .metric-name {
   font-size: 7px;
   font-weight: 600;
-  color: #64748b;
+  color: var(--c-muted);
   font-family: 'JetBrains Mono', monospace;
 }
 .metric-range {
   font-size: 7px;
-  color: #e2e8f0;
+  color: var(--c-text);
   font-family: 'JetBrains Mono', monospace;
 }
 </style>

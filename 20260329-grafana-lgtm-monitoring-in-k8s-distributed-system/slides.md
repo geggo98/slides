@@ -12,7 +12,7 @@ info: |
 
 Loki · Grafana · Tempo · Mimir · OpenTelemetry
 
-<div style="margin-top: 2em; font-size: 0.85em; color: #64748b;">
+<div class="text-slate-500" style="margin-top: 2em; font-size: 0.85em;">
 B2C-Versicherungsintegrator · Spring Boot Microservices · Percona MySQL · Redis · Traefik Gateway API
 </div>
 
@@ -30,13 +30,13 @@ RED · USE · Golden Signals
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 1.5em 0; flex-wrap: wrap;">
   <span style="font-size: 1.3em; font-weight: 800; color: #eab308; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
-  <span style="font-size: 1.4em; color: #3e4a63;">=</span>
+  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">=</span>
   <span style="font-size: 1.3em; font-weight: 800; color: #ef4444; padding: 8px 20px; border-radius: 8px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);">RED</span>
-  <span style="font-size: 1.4em; color: #3e4a63;">+</span>
+  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">+</span>
   <span style="font-size: 1.3em; font-weight: 800; color: #a855f7; padding: 8px 20px; border-radius: 8px; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);">Saturation</span>
 </div>
 
-<p style="text-align: center; font-size: 0.8em; color: #64748b; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
+<p class="text-slate-500" style="text-align: center; font-size: 0.8em; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
 
 | Golden Signal | RED-Equivalent | Perspektive |
 |---|---|---|
@@ -410,11 +410,11 @@ Grafana Recovery Thresholds
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
 <div style="padding: 16px; border-radius: 8px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
 <h4 style="color: #ef4444; margin: 0 0 8px;">Naiver Alert</h4>
-<p style="font-size: 0.85em; color: #94a3b8;">"P99 > 500ms" feuert beim Hinaufgehen und resolved beim Heruntergehen. Bei 500ms auf dem Rückweg ist das System noch degradiert. Erzeugt Flapping.</p>
+<p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em;">"P99 > 500ms" feuert beim Hinaufgehen und resolved beim Heruntergehen. Bei 500ms auf dem Rückweg ist das System noch degradiert. Erzeugt Flapping.</p>
 </div>
 <div style="padding: 16px; border-radius: 8px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
 <h4 style="color: #22c55e; margin: 0 0 8px;">Mit Recovery Threshold</h4>
-<p style="font-size: 0.85em; color: #94a3b8;">Feuert bei P99 > 500ms, resolved erst bei P99 < 200ms. Asymmetrische Schwellen verhindern Flapping und stellen sicher, dass das System wirklich erholt ist.</p>
+<p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em;">Feuert bei P99 > 500ms, resolved erst bei P99 < 200ms. Asymmetrische Schwellen verhindern Flapping und stellen sicher, dass das System wirklich erholt ist.</p>
 </div>
 </div>
 

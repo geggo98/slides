@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
 const props = defineProps({
   color: String,
   colorDim: String,
@@ -8,12 +11,19 @@ const props = defineProps({
   description: String,
 })
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   surface: '#111621',
   border: '#1e2536',
   text: '#e2e8f0',
   muted: '#64748b',
-}
+} : {
+  surface: '#ffffff',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  muted: '#64748b',
+})
 </script>
 
 <template>

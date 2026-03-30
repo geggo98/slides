@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
 const props = defineProps({
   initialSelectedViz: { type: String, default: null },
 })
 
-const PALETTE = {
+const { isDark } = useDarkMode()
+
+const DARK_PALETTE = {
   bg: '#0b0e14',
   surface: '#131720',
   surfaceHover: '#1a1f2e',
@@ -29,6 +32,32 @@ const PALETTE = {
   cyanDim: 'rgba(6,182,212,0.15)',
 }
 
+const LIGHT_PALETTE = {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceHover: '#f1f5f9',
+  border: '#e2e8f0',
+  text: '#1e293b',
+  textMuted: '#64748b',
+  textDim: '#94a3b8',
+  accent: '#2563eb',
+  accentGlow: 'rgba(37,99,235,0.12)',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.10)',
+  yellow: '#ca8a04',
+  yellowDim: 'rgba(202,138,4,0.10)',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.10)',
+  orange: '#ea580c',
+  orangeDim: 'rgba(234,88,12,0.10)',
+  purple: '#9333ea',
+  purpleDim: 'rgba(147,51,234,0.10)',
+  cyan: '#0891b2',
+  cyanDim: 'rgba(8,145,178,0.10)',
+}
+
+const PALETTE = computed(() => isDark.value ? DARK_PALETTE : LIGHT_PALETTE)
+
 const LEVELS = [
   { id: 1, name: 'Platform Overview', color: '#ef4444', colorDim: 'rgba(239,68,68,0.15)' },
   { id: 2, name: 'Service Dashboard', color: '#3b82f6', colorDim: 'rgba(59,130,246,0.15)' },
@@ -39,7 +68,7 @@ const LEVELS = [
 const VIZ_TYPES = [
   {
     id: 'timeseries', name: 'Time Series', icon: '\u{1F4C8}',
-    color: PALETTE.accent, colorDim: PALETTE.accentGlow,
+    color: DARK_PALETTE.accent, colorDim: DARK_PALETTE.accentGlow,
     useFor: 'Kontinuierliche Metriken \u00fcber die Zeit',
     examples: ['Request-Rate (req/s)', 'Latenz-Perzentile (p50/p95/p99)', 'CPU/Memory-Trends', 'Error-Rate \u00fcber Zeit'],
     tips: 'Max. 4\u20135 Serien pro Panel. Exemplar-Diamonds aktivieren f\u00fcr Trace-Links. Thresholds als farbige Regionen f\u00fcr SLO-Grenzen.',
@@ -47,7 +76,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'stat', name: 'Stat Panel', icon: '\u{1F522}',
-    color: PALETTE.green, colorDim: PALETTE.greenDim,
+    color: DARK_PALETTE.green, colorDim: DARK_PALETTE.greenDim,
     useFor: 'Einzelne aktuelle KPIs als gro\u00dfe Zahlen',
     examples: ['SLO-Compliance (99.7%)', 'Aktuelle Error-Rate', 'Aktive Pods', 'Request-Rate aktuell'],
     tips: 'Mit Sparkline f\u00fcr Trend. Farbcodierung: gr\u00fcn/gelb/rot nach Schwellwerten. Ideal f\u00fcr die Header-Zeile.',
@@ -55,7 +84,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'gauge', name: 'Gauge', icon: '\u23F1\uFE0F',
-    color: PALETTE.orange, colorDim: PALETTE.orangeDim,
+    color: DARK_PALETTE.orange, colorDim: DARK_PALETTE.orangeDim,
     useFor: 'Utilization relativ zu Min/Max-Grenzen',
     examples: ['CPU-Auslastung (0\u2013100%)', 'Memory vs. Limit', 'Connection-Pool-Nutzung', 'JVM Heap %'],
     tips: 'Gelb ab 70%, rot ab 90%. Nur f\u00fcr bounded Werte, nicht f\u00fcr unbounded Metriken wie Request-Count.',
@@ -63,7 +92,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'heatmap', name: 'Heatmap', icon: '\u{1F7E7}',
-    color: PALETTE.yellow, colorDim: PALETTE.yellowDim,
+    color: DARK_PALETTE.yellow, colorDim: DARK_PALETTE.yellowDim,
     useFor: 'Verteilung von Werten \u00fcber die Zeit (Histogramm-Buckets)',
     examples: ['Latenz-Verteilung', 'Request-Duration-Buckets', 'Bimodale Verteilungen erkennen'],
     tips: 'Unverzichtbar f\u00fcr Latenz-Analyse. Zeigt Outlier und Muster, die Perzentile verstecken. Braucht volle Breite.',
@@ -71,7 +100,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'table', name: 'Table', icon: '\u{1F4CB}',
-    color: PALETTE.purple, colorDim: PALETTE.purpleDim,
+    color: DARK_PALETTE.purple, colorDim: DARK_PALETTE.purpleDim,
     useFor: 'Vergleiche, Top-N-Listen, sortierbare Daten',
     examples: ['Top-10 langsamste Endpoints', 'Pod-Ressourcenverbrauch', 'Provider-API-Status', 'Service-Matrix'],
     tips: 'Field Overrides f\u00fcr farbige Hintergr\u00fcnde. Gradient-Gauge in Zellen. Sortierbar nach Spalten.',
@@ -79,7 +108,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'logs', name: 'Logs Panel', icon: '\u{1F4DC}',
-    color: PALETTE.cyan, colorDim: PALETTE.cyanDim,
+    color: DARK_PALETTE.cyan, colorDim: DARK_PALETTE.cyanDim,
     useFor: 'Korrelierte Logs aus Loki',
     examples: ['Fehler-Logs eines Service', 'Logs zu einer Trace-ID', 'Exception Stack-Traces'],
     tips: 'Filter via Template-Variablen: {namespace="$namespace", app="$service"}. Volle Breite. Log-to-Trace-Links konfigurieren.',
@@ -95,7 +124,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'statetimeline', name: 'State Timeline', icon: '\u{1F6A6}',
-    color: PALETTE.green, colorDim: PALETTE.greenDim,
+    color: DARK_PALETTE.green, colorDim: DARK_PALETTE.greenDim,
     useFor: 'Diskrete Zustands\u00e4nderungen als farbige B\u00e4nder',
     examples: ['Service-Verf\u00fcgbarkeit (24h)', 'Deployment-Rollout-Status', 'Carrier-API-Verf\u00fcgbarkeit'],
     tips: 'Gr\u00fcn = healthy, gelb = degraded, rot = down. Ideal f\u00fcr Status-Historien auf dem Platform-Overview.',
@@ -103,7 +132,7 @@ const VIZ_TYPES = [
   },
   {
     id: 'alertlist', name: 'Alert List', icon: '\u{1F514}',
-    color: PALETTE.red, colorDim: PALETTE.redDim,
+    color: DARK_PALETTE.red, colorDim: DARK_PALETTE.redDim,
     useFor: 'Aktive Alarme anzeigen',
     examples: ['Critical Alerts (Firing)', 'Service-spezifische Alerts', 'SLO-Burn-Rate-Alerts'],
     tips: 'Platform-Overview: severity=critical. Service-Dashboard: nach service filtern. Nur Firing/Error-States.',

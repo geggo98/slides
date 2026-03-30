@@ -1,7 +1,74 @@
 <script setup>
+import { computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
 import PrimitiveCard from './PrimitiveCard.vue'
 
-const primitives = [
+const { isDark } = useDarkMode()
+
+const P = computed(() => isDark.value ? {
+  hintColor: '#aaa',
+} : {
+  hintColor: '#888',
+})
+
+const primitives = computed(() => isDark.value ? [
+  {
+    icon: '📋', name: 'Instruktionsdatei', analogy: 'Firmenhandbuch',
+    bg: '#2a2640', color: '#a5a0e0',
+    purpose: 'Statischer Projektkontext — Architektur, Konventionen, Build-Befehle. Wird bei jeder Session in den System-Prompt geladen.',
+    type: 'Beratend', typeBg: '#332810', typeColor: '#d4a050', context: 'Immer geladen',
+    when: 'Fakten, die in <em>jeder</em> Konversation gelten. Coding-Standards, verbotene Patterns, Tech-Stack. Unter 200 Zeilen halten.',
+    whenNot: 'Workflows > 20 Zeilen → <strong>Skill</strong>. Dinge die garantiert laufen müssen → <strong>Hook</strong>. Dynamische Info → <strong>MCP</strong>.',
+  },
+  {
+    icon: '📐', name: 'Rules', analogy: 'Abteilungsrichtlinien',
+    bg: '#1a2840', color: '#85b7eb',
+    purpose: 'Modulare .md-Dateien mit YAML-Frontmatter. Laden konditional basierend auf Dateipfad oder Modell-Entscheidung.',
+    type: 'Beratend', typeBg: '#332810', typeColor: '#d4a050', context: 'Konditional',
+    when: 'Pfad-spezifische Konventionen. Z.B. "Im /api-Ordner immer OpenAPI-Schemas generieren".',
+    whenNot: 'Wenn die Regel <em>immer</em> gilt → gehört in die Instruktionsdatei.',
+  },
+  {
+    icon: '🔧', name: 'Skills (SKILL.md)', analogy: 'Verfahrensanleitung',
+    bg: '#1a3028', color: '#5cc0a0',
+    purpose: 'Wiederverwendbare Workflows und Domänenwissen. Nur Beschreibung laden initial.',
+    type: 'On-Demand', typeBg: '#1a2810', typeColor: '#80c050', context: 'Bei Bedarf',
+    when: 'Wiederkehrende Workflows (Code-Review, Deployment), Domänenwissen, Prozeduren die Urteilsvermögen erfordern.',
+    whenNot: 'Immer gültige Regeln → <strong>Instruktionsdatei</strong>. Deterministische Aktionen → <strong>Hook</strong>.',
+  },
+  {
+    icon: '⚡', name: 'Hooks', analogy: 'Git-Hooks',
+    bg: '#331810', color: '#e09060',
+    purpose: 'Deterministische Shell-Befehle bei Lifecycle-Events. Laufen GARANTIERT — ohne KI-Urteil.',
+    type: 'Deterministisch', typeBg: '#301818', typeColor: '#f09090', context: 'Bei Event',
+    when: 'Linter/Formatter nach File-Write. Unit-Tests. Commit-Validierung. Schreibschutz (Exit-Code 2).',
+    whenNot: 'Dinge die Urteilsvermögen erfordern → <strong>Skill</strong>.',
+  },
+  {
+    icon: '🔌', name: 'MCP Server', analogy: 'USB-C-Adapter',
+    bg: '#1a2840', color: '#85b7eb',
+    purpose: 'Externe Tool-Anbindung via Model Context Protocol. Gibt dem Modell Fähigkeiten die es sonst nicht hat.',
+    type: 'Verbindung', typeBg: '#1a2840', typeColor: '#85b7eb', context: 'Pro Session',
+    when: 'Datenbankzugriff, Issue-Tracker, aktuelle API-Docs, Browser-Automation.',
+    whenNot: 'Statische Info → <strong>Skill</strong>. Token-Kosten monitoren!',
+  },
+  {
+    icon: '👤', name: 'Subagents', analogy: 'Praktikant',
+    bg: '#301820', color: '#e080a0',
+    purpose: 'Isolierte Agent-Instanzen mit eigenem Kontextfenster. Geben nur Zusammenfassung zurück.',
+    type: 'Isoliert', typeBg: '#301820', typeColor: '#e080a0', context: 'Pro Task',
+    when: 'Codebase-Scan (50 Dateien → 20-Zeilen-Summary). Parallele Arbeit. Kontextfenster voll.',
+    whenNot: 'Aufgabe < 5 Tool-Calls → Overhead lohnt nicht.',
+  },
+  {
+    icon: '📦', name: 'Plugins', analogy: 'npm-Paket',
+    bg: '#1a2810', color: '#80c050',
+    purpose: 'Bündelung von Skills + Hooks + Subagents + MCP als verteilbare Einheit.',
+    type: 'Paket', typeBg: '#1a2810', typeColor: '#80c050', context: 'Installiert',
+    when: 'Gleiche Config in mehreren Repos. Team-Standardisierung. Community-Beitrag.',
+    whenNot: 'Einmaliger projektspezifischer Workflow → einfacher Skill reicht.',
+  },
+] : [
   {
     icon: '📋', name: 'Instruktionsdatei', analogy: 'Firmenhandbuch',
     bg: '#EEEDFE', color: '#3C3489',
@@ -58,11 +125,11 @@ const primitives = [
     when: 'Gleiche Config in mehreren Repos. Team-Standardisierung. Community-Beitrag.',
     whenNot: 'Einmaliger projektspezifischer Workflow → einfacher Skill reicht.',
   },
-]
+])
 </script>
 
 <template>
-  <p style="font-size: 11px; color: #888; margin-bottom: 8px;">
+  <p :style="{ fontSize: '11px', color: P.hintColor, marginBottom: '8px' }">
     Grundregel: Instruktionsdateien sind <em>beratend</em>, Hooks sind <em>deterministisch</em>. Klick für Details.
   </p>
   <div class="grid">

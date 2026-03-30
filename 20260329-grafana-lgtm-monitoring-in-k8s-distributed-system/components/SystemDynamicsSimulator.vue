@@ -5,12 +5,15 @@
  * Scaled to ~65% for 960x540 Slidev viewport.
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useDarkMode } from '@slidev/client'
 
 /* ================================================================
    COLOR CONSTANTS
    ================================================================ */
 
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12', surface: '#111621', surfaceAlt: '#161c2a',
   border: '#1e2536', text: '#e2e8f0', muted: '#64748b', dim: '#3e4a63',
   blue: '#3b82f6', blueDim: 'rgba(59,130,246,0.12)',
@@ -20,9 +23,19 @@ const C = {
   red: '#ef4444', redDim: 'rgba(239,68,68,0.10)',
   purple: '#a855f7', purpleDim: 'rgba(168,85,247,0.10)',
   cyan: '#06b6d4', cyanDim: 'rgba(6,182,212,0.10)',
-}
+} : {
+  bg: '#f8fafc', surface: '#ffffff', surfaceAlt: '#f1f5f9',
+  border: '#e2e8f0', text: '#1e293b', muted: '#64748b', dim: '#94a3b8',
+  blue: '#2563eb', blueDim: 'rgba(37,99,235,0.08)',
+  green: '#16a34a', greenDim: 'rgba(22,163,74,0.08)',
+  yellow: '#ca8a04', yellowDim: 'rgba(202,138,4,0.08)',
+  orange: '#ea580c', orangeDim: 'rgba(234,88,12,0.08)',
+  red: '#dc2626', redDim: 'rgba(220,38,38,0.08)',
+  purple: '#9333ea', purpleDim: 'rgba(147,51,234,0.08)',
+  cyan: '#0891b2', cyanDim: 'rgba(8,145,178,0.08)',
+})
 
-const STAGE_COLORS = [C.blue, C.orange, C.purple, C.cyan, C.green]
+const STAGE_COLORS = computed(() => [C.value.blue, C.value.orange, C.value.purple, C.value.cyan, C.value.green])
 
 /* ================================================================
    SIMULATION ENGINE
@@ -334,22 +347,35 @@ function phaseSpacePath(xData, yData, xMax, yMax, drawn) {
    KEY TAKEAWAYS & CAVEATS DATA
    ================================================================ */
 
-const caveats = [
-  { t: 'Bursty Traffic', d: 'Verschiebt den Knick nach links. Versicherungs-Peaks (November) sind bursty.', c: C.orange },
-  { t: 'Parallelisierung (M/M/c)', d: '200 Tomcat-Threads verschieben den Knick nach rechts (~90-95%), aber der Absturz ist steiler.', c: C.blue },
-  { t: 'CFS-Throttling', d: 'Binär, nicht graduell. 80% CPU kann plötzlich 40% Throttling bedeuten bei Bursts.', c: C.red },
-  { t: 'Trotzdem: 80% ist gut', d: 'Genug Headroom für Schwankungen. Lieber bei 80% warnen als bei 95% überrascht werden.', c: C.green },
-]
+const caveats = computed(() => [
+  { t: 'Bursty Traffic', d: 'Verschiebt den Knick nach links. Versicherungs-Peaks (November) sind bursty.', c: C.value.orange },
+  { t: 'Parallelisierung (M/M/c)', d: '200 Tomcat-Threads verschieben den Knick nach rechts (~90-95%), aber der Absturz ist steiler.', c: C.value.blue },
+  { t: 'CFS-Throttling', d: 'Binär, nicht graduell. 80% CPU kann plötzlich 40% Throttling bedeuten bei Bursts.', c: C.value.red },
+  { t: 'Trotzdem: 80% ist gut', d: 'Genug Headroom für Schwankungen. Lieber bei 80% warnen als bei 95% überrascht werden.', c: C.value.green },
+])
 
-const takeaways = [
-  { title: 'Excess Capacity ist Pflicht', desc: 'Systeme brauchen Headroom (~20%) um Puffer nach Schwankungen wieder aufzufüllen. Ohne Headroom kaskadieren Rolling Bottlenecks.', icon: '\u{1F3CB}\uFE0F', color: C.green },
-  { title: 'Gleichmäßiger Flow statt Batches', desc: 'Große Batches = Dirac-Impuls = maximale Oszillation. TTL+Jitter, Leaky Bucket, Staggered Rollout vermeiden Resonanz.', icon: '\u{1F30A}', color: C.yellow },
-  { title: 'Hysterese einplanen', desc: 'Systeme kehren nicht sofort zurück. Cache-Warmup, Queue-Drain, GC-Recovery brauchen Zeit. Alerting mit asymmetrischen Schwellen (Grafana Recovery Threshold).', icon: '\u{1F504}', color: C.red },
-]
+const takeaways = computed(() => [
+  { title: 'Excess Capacity ist Pflicht', desc: 'Systeme brauchen Headroom (~20%) um Puffer nach Schwankungen wieder aufzufüllen. Ohne Headroom kaskadieren Rolling Bottlenecks.', icon: '\u{1F3CB}\uFE0F', color: C.value.green },
+  { title: 'Gleichmäßiger Flow statt Batches', desc: 'Große Batches = Dirac-Impuls = maximale Oszillation. TTL+Jitter, Leaky Bucket, Staggered Rollout vermeiden Resonanz.', icon: '\u{1F30A}', color: C.value.yellow },
+  { title: 'Hysterese einplanen', desc: 'Systeme kehren nicht sofort zurück. Cache-Warmup, Queue-Drain, GC-Recovery brauchen Zeit. Alerting mit asymmetrischen Schwellen (Grafana Recovery Threshold).', icon: '\u{1F504}', color: C.value.red },
+])
 </script>
 
 <template>
-  <div class="sim-root">
+  <div class="sim-root" :style="{
+    '--c-bg': C.bg,
+    '--c-surface': C.surface,
+    '--c-surfaceAlt': C.surfaceAlt,
+    '--c-border': C.border,
+    '--c-text': C.text,
+    '--c-muted': C.muted,
+    '--c-dim': C.dim,
+    '--c-blue': C.blue,
+    '--c-green': C.green,
+    '--c-yellow': C.yellow,
+    '--c-orange': C.orange,
+    '--c-red': C.red,
+  }">
     <!-- Header -->
     <div class="header">
       <div class="header-tag">
@@ -672,8 +698,8 @@ const takeaways = [
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .sim-root {
-  background: #0a0d12;
-  color: #e2e8f0;
+  background: var(--c-bg);
+  color: var(--c-text);
   font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
   padding: 10px 12px 16px;
   max-width: 960px;
@@ -683,80 +709,80 @@ const takeaways = [
 }
 
 .sim-root ::-webkit-scrollbar { width: 4px; }
-.sim-root ::-webkit-scrollbar-thumb { background: #1e2536; border-radius: 2px; }
+.sim-root ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 2px; }
 
 /* Header */
 .header { margin-bottom: 8px; }
 .header-tag { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
-.tag-dot { width: 5px; height: 5px; border-radius: 50%; background: #f97316; box-shadow: 0 0 6px #f97316; }
-.tag-text { font-size: 7px; font-weight: 700; color: #f97316; text-transform: uppercase; letter-spacing: 1.5px; font-family: 'JetBrains Mono', monospace; }
+.tag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--c-orange); box-shadow: 0 0 6px var(--c-orange); }
+.tag-text { font-size: 7px; font-weight: 700; color: var(--c-orange); text-transform: uppercase; letter-spacing: 1.5px; font-family: 'JetBrains Mono', monospace; }
 .title { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 2px; }
-.subtitle-text { font-size: 8px; color: #64748b; line-height: 1.4; max-width: 500px; }
+.subtitle-text { font-size: 8px; color: var(--c-muted); line-height: 1.4; max-width: 500px; }
 
 /* Tabs */
 .tab-bar { display: flex; gap: 4px; margin-bottom: 8px; }
 .tab-btn {
-  padding: 4px 12px; border-radius: 4px; border: 1px solid #1e2536;
-  background: #111621; color: #64748b; font-size: 8px; font-weight: 700;
+  padding: 4px 12px; border-radius: 4px; border: 1px solid var(--c-border);
+  background: var(--c-surface); color: var(--c-muted); font-size: 8px; font-weight: 700;
   cursor: pointer; outline: none; font-family: 'JetBrains Mono', monospace;
   transition: all 0.2s ease;
 }
-.tab-btn.active { background: rgba(249, 115, 22, 0.08); border-color: #f97316; color: #f97316; }
+.tab-btn.active { background: rgba(249, 115, 22, 0.08); border-color: var(--c-orange); color: var(--c-orange); }
 
 /* Scenario selector */
 .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px; }
 .scenario-btn {
-  background: #111621;
-  border: 1px solid #1e2536;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 5px;
   padding: 5px 7px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease;
   outline: none;
-  color: #e2e8f0;
+  color: var(--c-text);
 }
-.scenario-btn.active { background: rgba(249, 115, 22, 0.06); border-color: #f97316; }
+.scenario-btn.active { background: rgba(249, 115, 22, 0.06); border-color: var(--c-orange); }
 .scenario-name { font-size: 10px; margin-bottom: 1px; }
 .scenario-name span { font-size: 8px; font-weight: 700; }
-.scenario-sub { font-size: 6px; color: #64748b; }
+.scenario-sub { font-size: 6px; color: var(--c-muted); }
 
 /* Simulation panel */
 .sim-panel {
-  background: #111621;
-  border: 1px solid #1e2536;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 6px;
   padding: 6px 10px;
   margin-bottom: 4px;
   animation: fadeIn 0.3s ease;
 }
-.sim-desc { font-size: 7px; color: #64748b; line-height: 1.3; margin-bottom: 4px; }
+.sim-desc { font-size: 7px; color: var(--c-muted); line-height: 1.3; margin-bottom: 4px; }
 
 /* Controls */
 .controls { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .play-btn {
   width: 22px; height: 22px; border-radius: 50%;
-  border: 1px solid #f97316; background: rgba(249, 115, 22, 0.08);
-  color: #f97316; font-size: 9px; cursor: pointer;
+  border: 1px solid var(--c-orange); background: rgba(249, 115, 22, 0.08);
+  color: var(--c-orange); font-size: 9px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; outline: none;
 }
 .slider {
   flex: 1;
   -webkit-appearance: none; appearance: none;
-  background: #1e2536; height: 3px; border-radius: 2px; outline: none;
+  background: var(--c-border); height: 3px; border-radius: 2px; outline: none;
 }
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 10px; height: 10px; border-radius: 50%;
-  background: #3b82f6; cursor: pointer; border: 1.5px solid #0a0d12;
+  background: var(--c-blue); cursor: pointer; border: 1.5px solid var(--c-bg);
 }
-.time-label { font-size: 7px; color: #64748b; font-family: 'JetBrains Mono', monospace; min-width: 28px; }
+.time-label { font-size: 7px; color: var(--c-muted); font-family: 'JetBrains Mono', monospace; min-width: 28px; }
 
 /* Pipeline */
 .pipeline { display: flex; align-items: center; gap: 3px; margin-bottom: 3px; flex-wrap: wrap; }
 .pipe-node { padding: 2px 6px; border-radius: 3px; font-size: 6px; font-weight: 600; border: 1px solid; white-space: nowrap; }
-.input-node { background: rgba(34, 197, 94, 0.07); border-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
-.arrow { color: #3e4a63; font-size: 6px; }
+.input-node { background: rgba(34, 197, 94, 0.07); border-color: rgba(34, 197, 94, 0.15); color: var(--c-green); }
+.arrow { color: var(--c-dim); font-size: 6px; }
 
 /* Charts 2x2 grid */
 .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -766,32 +792,32 @@ const takeaways = [
 .sim-bottom-row { display: flex; gap: 6px; margin-top: 4px; align-items: stretch; }
 
 /* Phase space */
-.phase-space-panel { flex: 0 0 180px; padding: 5px; background: #161c2a; border-radius: 4px; border: 1px solid #1e2536; }
-.phase-title { font-size: 6px; font-weight: 700; color: #eab308; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
+.phase-space-panel { flex: 0 0 180px; padding: 5px; background: var(--c-surfaceAlt); border-radius: 4px; border: 1px solid var(--c-border); }
+.phase-title { font-size: 6px; font-weight: 700; color: var(--c-yellow); margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
 .phase-svg { width: 100%; height: auto; }
 
 /* Insight */
 .insight-box { flex: 1; padding: 5px 7px; background: rgba(249, 115, 22, 0.02); border-radius: 4px; border: 1px solid rgba(249, 115, 22, 0.08); }
-.insight-label { font-size: 6px; font-weight: 700; color: #f97316; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
-.insight-text { font-size: 7px; color: #e2e8f0; line-height: 1.4; }
+.insight-label { font-size: 6px; font-weight: 700; color: var(--c-orange); margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; }
+.insight-text { font-size: 7px; color: var(--c-text); line-height: 1.4; }
 
 /* Bottom row */
 .bottom-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.mm1-panel { flex: 1 1 250px; background: #111621; border: 1px solid #1e2536; border-radius: 6px; padding: 7px 8px; }
+.mm1-panel { flex: 1 1 250px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 7px 8px; }
 .mm1-svg { width: 100%; height: auto; }
-.mm1-caption { font-size: 6px; color: #64748b; line-height: 1.4; margin-top: 3px; }
-.caveats-panel { flex: 1 1 180px; background: #111621; border: 1px solid #1e2536; border-radius: 6px; padding: 7px 8px; }
-.section-title { font-size: 8px; font-weight: 700; color: #e2e8f0; margin-bottom: 5px; }
+.mm1-caption { font-size: 6px; color: var(--c-muted); line-height: 1.4; margin-top: 3px; }
+.caveats-panel { flex: 1 1 180px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 7px 8px; }
+.section-title { font-size: 8px; font-weight: 700; color: var(--c-text); margin-bottom: 5px; }
 .caveats-list { display: flex; flex-direction: column; gap: 3px; }
 .caveat-item { padding: 3px 5px; border-radius: 3px; border: 1px solid; }
 .caveat-title { font-size: 6px; font-weight: 700; }
-.caveat-desc { font-size: 6px; color: #64748b; line-height: 1.3; }
+.caveat-desc { font-size: 6px; color: var(--c-muted); line-height: 1.3; }
 
 /* Key takeaways */
-.takeaways-panel { background: #111621; border: 1px solid #1e2536; border-radius: 6px; padding: 8px 10px; }
+.takeaways-panel { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 6px; padding: 8px 10px; }
 .takeaways-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .takeaway-item { padding: 6px 7px; border-radius: 5px; border: 1px solid; }
 .takeaway-title { font-size: 9px; margin-bottom: 2px; }
 .takeaway-title span { font-size: 7px; font-weight: 700; }
-.takeaway-desc { font-size: 6px; color: #64748b; line-height: 1.4; }
+.takeaway-desc { font-size: 6px; color: var(--c-muted); line-height: 1.4; }
 </style>

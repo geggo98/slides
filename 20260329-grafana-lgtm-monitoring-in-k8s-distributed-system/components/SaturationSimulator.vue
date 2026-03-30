@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useDarkMode } from '@slidev/client'
 import GaugeRing from './GaugeRing.vue'
 
 // --- Color constants ---
-const C = {
+const { isDark } = useDarkMode()
+
+const C = computed(() => isDark.value ? {
   bg: '#0a0d12',
   surface: '#111621',
   surfaceAlt: '#161c2a',
@@ -25,13 +28,39 @@ const C = {
   purpleDim: 'rgba(168,85,247,0.12)',
   cyan: '#06b6d4',
   cyanDim: 'rgba(6,182,212,0.12)',
-}
+  codeBg: '#0d1117',
+  codeText: '#79c0ff',
+} : {
+  bg: '#f8fafc',
+  surface: '#ffffff',
+  surfaceAlt: '#f1f5f9',
+  border: '#e2e8f0',
+  borderHi: '#cbd5e1',
+  text: '#1e293b',
+  muted: '#64748b',
+  dim: '#94a3b8',
+  blue: '#2563eb',
+  green: '#16a34a',
+  greenDim: 'rgba(22,163,74,0.08)',
+  yellow: '#ca8a04',
+  yellowDim: 'rgba(202,138,4,0.08)',
+  orange: '#ea580c',
+  orangeDim: 'rgba(234,88,12,0.08)',
+  red: '#dc2626',
+  redDim: 'rgba(220,38,38,0.08)',
+  purple: '#9333ea',
+  purpleDim: 'rgba(147,51,234,0.08)',
+  cyan: '#0891b2',
+  cyanDim: 'rgba(8,145,178,0.08)',
+  codeBg: '#f1f5f9',
+  codeText: '#1e40af',
+})
 
 function severityColor(s) {
-  return s === 'critical' ? C.red : s === 'warning' ? C.orange : s === 'degraded' ? C.yellow : C.green
+  return s === 'critical' ? C.value.red : s === 'warning' ? C.value.orange : s === 'degraded' ? C.value.yellow : C.value.green
 }
 function severityBg(s) {
-  return s === 'critical' ? C.redDim : s === 'warning' ? C.orangeDim : s === 'degraded' ? C.yellowDim : C.greenDim
+  return s === 'critical' ? C.value.redDim : s === 'warning' ? C.value.orangeDim : s === 'degraded' ? C.value.yellowDim : C.value.greenDim
 }
 function severityLabel(s) {
   return s === 'critical' ? 'CRITICAL' : s === 'warning' ? 'WARNING' : s === 'degraded' ? 'DEGRADED' : 'HEALTHY'
@@ -349,15 +378,15 @@ function sparklineArea(points, width, height) {
 
 // --- Gauge color helper ---
 function gaugeColor(m, curVal) {
-  if (Number.isNaN(curVal)) return C.red
+  if (Number.isNaN(curVal)) return C.value.red
   if (m.invert) {
-    if (curVal <= m.thresholdCrit) return C.red
-    if (curVal <= m.thresholdWarn) return C.orange
+    if (curVal <= m.thresholdCrit) return C.value.red
+    if (curVal <= m.thresholdWarn) return C.value.orange
   } else {
-    if (curVal >= m.thresholdCrit) return C.red
-    if (curVal >= m.thresholdWarn) return C.orange
+    if (curVal >= m.thresholdCrit) return C.value.red
+    if (curVal >= m.thresholdWarn) return C.value.orange
   }
-  return C.green
+  return C.value.green
 }
 
 // Phase timeline helpers
@@ -378,7 +407,23 @@ function phaseFilled(phases, idx, prog) {
 </script>
 
 <template>
-  <div class="sim-root">
+  <div class="sim-root" :style="{
+    '--c-bg': C.bg,
+    '--c-surface': C.surface,
+    '--c-surfaceAlt': C.surfaceAlt,
+    '--c-border': C.border,
+    '--c-borderHi': C.borderHi,
+    '--c-text': C.text,
+    '--c-muted': C.muted,
+    '--c-dim': C.dim,
+    '--c-blue': C.blue,
+    '--c-green': C.green,
+    '--c-yellow': C.yellow,
+    '--c-orange': C.orange,
+    '--c-red': C.red,
+    '--c-codeBg': C.codeBg,
+    '--c-codeText': C.codeText,
+  }">
     <div class="sim-container">
       <!-- Header -->
       <div class="sim-header">
@@ -605,8 +650,8 @@ function phaseFilled(phases, idx, prog) {
 }
 
 .sim-root {
-  background: #0a0d12;
-  color: #e2e8f0;
+  background: var(--c-bg);
+  color: var(--c-text);
   font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
   width: 100%;
   height: 100%;
@@ -615,7 +660,7 @@ function phaseFilled(phases, idx, prog) {
 }
 .sim-root ::-webkit-scrollbar { width: 3px; height: 3px; }
 .sim-root ::-webkit-scrollbar-track { background: transparent; }
-.sim-root ::-webkit-scrollbar-thumb { background: #1e2536; border-radius: 2px; }
+.sim-root ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 2px; }
 
 .sim-container {
   max-width: 650px;
@@ -628,16 +673,16 @@ function phaseFilled(phases, idx, prog) {
 .sim-header-top { display: flex; align-items: center; gap: 5px; margin-bottom: 1px; }
 .pulse-dot {
   width: 5px; height: 5px; border-radius: 50%;
-  background: #ef4444; box-shadow: 0 0 6px #ef4444;
+  background: var(--c-red); box-shadow: 0 0 6px var(--c-red);
 }
 .pulse-dot.animating { animation: pulse 1.5s infinite; }
 .sim-label {
-  font-size: 7px; font-weight: 700; color: #ef4444;
+  font-size: 7px; font-weight: 700; color: var(--c-red);
   text-transform: uppercase; letter-spacing: 1.3px;
   font-family: 'JetBrains Mono', monospace;
 }
 .sim-title { font-size: 13px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 1px; }
-.sim-desc { font-size: 7.5px; color: #64748b; max-width: 420px; line-height: 1.4; }
+.sim-desc { font-size: 7.5px; color: var(--c-muted); max-width: 420px; line-height: 1.4; }
 
 /* Layout */
 .sim-layout { display: flex; gap: 8px; }
@@ -648,29 +693,29 @@ function phaseFilled(phases, idx, prog) {
 .cat-filter { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 5px; }
 .cat-btn {
   padding: 2px 5px; border-radius: 3px; font-size: 6.5px; font-weight: 600;
-  cursor: pointer; border: 1px solid #1e2536; background: transparent;
-  color: #64748b; transition: all 0.15s ease;
+  cursor: pointer; border: 1px solid var(--c-border); background: transparent;
+  color: var(--c-muted); transition: all 0.15s ease;
 }
-.cat-btn.active { border-color: #3b82f6; color: #3b82f6; }
+.cat-btn.active { border-color: var(--c-blue); color: var(--c-blue); }
 
 /* Scenario list */
 .scenario-list { display: flex; flex-direction: column; gap: 3px; }
 .scenario-btn {
-  background: #111621; border: 1px solid #1e2536; border-radius: 5px;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 5px;
   padding: 6px 7px; cursor: pointer; text-align: left;
-  transition: all 0.2s ease; outline: none; width: 100%; color: #e2e8f0;
+  transition: all 0.2s ease; outline: none; width: 100%; color: var(--c-text);
 }
-.scenario-btn.active { border-color: #3b82f6; }
-.scenario-btn:hover:not(.active) { border-color: #2a3350; background: #161c2a; }
+.scenario-btn.active { border-color: var(--c-blue); }
+.scenario-btn:hover:not(.active) { border-color: var(--c-borderHi); background: var(--c-surfaceAlt); }
 .scenario-btn-header { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
 .scenario-icon { font-size: 11px; }
 .scenario-name { font-size: 8px; font-weight: 700; }
-.scenario-name.text-blue { color: #3b82f6; }
-.scenario-subtitle { font-size: 6.5px; color: #64748b; line-height: 1.3; }
+.scenario-name.text-blue { color: var(--c-blue); }
+.scenario-subtitle { font-size: 6.5px; color: var(--c-muted); line-height: 1.3; }
 
 /* Scenario header card */
 .scenario-header-card {
-  background: #111621; border: 1px solid; border-radius: 7px;
+  background: var(--c-surface); border: 1px solid; border-radius: 7px;
   padding: 8px 10px; margin-bottom: 6px; animation: fadeIn 0.3s ease;
 }
 .scenario-header-top {
@@ -684,9 +729,9 @@ function phaseFilled(phases, idx, prog) {
   font-size: 6.5px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
   border: 1px solid; font-family: 'JetBrains Mono', monospace;
 }
-.scenario-header-desc { font-size: 7.5px; color: #64748b; line-height: 1.4; max-width: 340px; }
+.scenario-header-desc { font-size: 7.5px; color: var(--c-muted); line-height: 1.4; max-width: 340px; }
 .dashboard-level {
-  font-size: 6.5px; color: #3e4a63; font-family: 'JetBrains Mono', monospace;
+  font-size: 6.5px; color: var(--c-dim); font-family: 'JetBrains Mono', monospace;
   text-align: right; flex-shrink: 0;
 }
 
@@ -696,32 +741,32 @@ function phaseFilled(phases, idx, prog) {
   border-radius: 4px; padding: 4px 6px; margin-bottom: 7px;
 }
 .trigger-label {
-  font-size: 6.5px; font-weight: 700; color: #f97316;
+  font-size: 6.5px; font-weight: 700; color: var(--c-orange);
   font-family: 'JetBrains Mono', monospace;
 }
-.trigger-text { font-size: 7.5px; color: #e2e8f0; }
+.trigger-text { font-size: 7.5px; color: var(--c-text); }
 
 /* Controls */
 .controls-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
 .play-btn {
   width: 22px; height: 22px; border-radius: 50%;
-  border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6; font-size: 9px; cursor: pointer;
+  border: 1px solid var(--c-blue); background: rgba(59, 130, 246, 0.1);
+  color: var(--c-blue); font-size: 9px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s ease; flex-shrink: 0;
 }
 .play-btn:hover { background: rgba(59, 130, 246, 0.2); }
 .progress-slider {
   flex: 1; -webkit-appearance: none; appearance: none;
-  background: #1e2536; height: 3px; border-radius: 1.5px; outline: none;
+  background: var(--c-border); height: 3px; border-radius: 1.5px; outline: none;
 }
 .progress-slider::-webkit-slider-thumb {
   -webkit-appearance: none; width: 9px; height: 9px;
-  border-radius: 50%; background: #3b82f6; cursor: pointer;
-  border: 1.5px solid #0a0d12;
+  border-radius: 50%; background: var(--c-blue); cursor: pointer;
+  border: 1.5px solid var(--c-bg);
 }
 .progress-pct {
-  font-size: 7px; color: #64748b; font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; color: var(--c-muted); font-family: 'JetBrains Mono', monospace;
   min-width: 22px; text-align: right;
 }
 
@@ -729,7 +774,7 @@ function phaseFilled(phases, idx, prog) {
 .phase-timeline { position: relative; }
 .phase-track {
   display: flex; gap: 0; height: 4px; border-radius: 2px;
-  overflow: hidden; background: #1e2536;
+  overflow: hidden; background: var(--c-border);
 }
 .phase-track-segment { position: relative; }
 .phase-track-fill {
@@ -746,8 +791,8 @@ function phaseFilled(phases, idx, prog) {
   font-size: 6px; font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
 }
-.phase-name { font-size: 7px; font-weight: 600; color: #e2e8f0; margin-bottom: 1px; }
-.phase-desc { font-size: 6.5px; color: #64748b; line-height: 1.3; }
+.phase-name { font-size: 7px; font-weight: 600; color: var(--c-text); margin-bottom: 1px; }
+.phase-desc { font-size: 6.5px; color: var(--c-muted); line-height: 1.3; }
 
 /* Metrics grid */
 .metrics-grid {
@@ -755,51 +800,51 @@ function phaseFilled(phases, idx, prog) {
   gap: 4px; margin-bottom: 6px;
 }
 .metric-card {
-  background: #111621; border: 1px solid #1e2536; border-radius: 5px;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 5px;
   padding: 6px; display: flex; flex-direction: column;
   align-items: center; gap: 2px; transition: border-color 0.3s ease;
 }
 .sparkline-svg { width: 100%; height: 16px; }
 .metric-thresholds { display: flex; justify-content: space-between; width: 100%; margin-top: 1px; }
-.threshold-warn { font-size: 5.5px; color: #3e4a63; font-family: 'JetBrains Mono', monospace; }
-.threshold-crit { font-size: 5.5px; color: #3e4a63; font-family: 'JetBrains Mono', monospace; }
+.threshold-warn { font-size: 5.5px; color: var(--c-dim); font-family: 'JetBrains Mono', monospace; }
+.threshold-crit { font-size: 5.5px; color: var(--c-dim); font-family: 'JetBrains Mono', monospace; }
 
 /* Fix + PromQL */
 .fix-promql-area { display: flex; flex-direction: column; gap: 4px; }
 .fix-box {
-  background: #111621; border: 1px solid rgba(34, 197, 94, 0.12);
+  background: var(--c-surface); border: 1px solid rgba(34, 197, 94, 0.12);
   border-radius: 5px; padding: 6px 8px;
 }
 .fix-label {
-  font-size: 7px; font-weight: 700; color: #22c55e; text-transform: uppercase;
+  font-size: 7px; font-weight: 700; color: var(--c-green); text-transform: uppercase;
   letter-spacing: 0.7px; margin-bottom: 3px; font-family: 'JetBrains Mono', monospace;
 }
-.fix-text { font-size: 7.5px; color: #e2e8f0; line-height: 1.5; }
+.fix-text { font-size: 7.5px; color: var(--c-text); line-height: 1.5; }
 
 .promql-toggle {
-  background: #111621; border: 1px solid #1e2536; border-radius: 5px;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 5px;
   padding: 5px 8px; cursor: pointer; display: flex;
   justify-content: space-between; align-items: center;
-  color: #3b82f6; font-size: 7.5px; font-weight: 600;
+  color: var(--c-blue); font-size: 7.5px; font-weight: 600;
   transition: all 0.15s ease; outline: none;
 }
-.promql-toggle:hover { border-color: #3b82f6; }
+.promql-toggle:hover { border-color: var(--c-blue); }
 .promql-arrow { transition: transform 0.2s ease; display: inline-block; }
 .promql-arrow.open { transform: rotate(180deg); }
 
 .promql-block {
-  background: #111621; border: 1px solid #1e2536; border-radius: 5px;
+  background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 5px;
   padding: 6px 8px; animation: fadeIn 0.2s ease;
   display: flex; flex-direction: column; gap: 5px;
 }
 .promql-item {}
 .promql-label {
-  font-size: 6.5px; font-weight: 700; color: #3b82f6;
+  font-size: 6.5px; font-weight: 700; color: var(--c-blue);
   margin-bottom: 2px; font-family: 'JetBrains Mono', monospace;
 }
 .promql-code {
-  background: #0d1117; border: 1px solid #1e2536; border-radius: 4px;
-  padding: 5px 6px; font-size: 7px; color: #79c0ff;
+  background: var(--c-codeBg); border: 1px solid var(--c-border); border-radius: 4px;
+  padding: 5px 6px; font-size: 7px; color: var(--c-codeText);
   font-family: 'JetBrains Mono', monospace; line-height: 1.4;
   overflow-x: auto; margin: 0; white-space: pre-wrap; word-break: break-all;
 }

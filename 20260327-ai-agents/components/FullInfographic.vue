@@ -1,5 +1,28 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useDarkMode } from '@slidev/client'
+
+const { isDark } = useDarkMode()
+
+const P = computed(() => isDark.value ? {
+  btnBg: '#1e1e1e',
+  btnColor: '#aaa',
+  btnBorder: 'rgba(255,255,255,0.12)',
+  btnHoverBorder: '#aaa',
+  btnHoverColor: '#e5e5e5',
+  activeBg: '#e5e5e5',
+  activeColor: '#1e1e1e',
+  activeBorder: '#e5e5e5',
+} : {
+  btnBg: 'white',
+  btnColor: '#888',
+  btnBorder: 'rgba(0,0,0,0.1)',
+  btnHoverBorder: '#888',
+  btnHoverColor: '#1a1a18',
+  activeBg: '#1a1a18',
+  activeColor: 'white',
+  activeBorder: '#1a1a18',
+})
 
 const currentView = ref('primitives')
 const views = [
@@ -47,10 +70,10 @@ const views = [
 .nav { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
 .nav button {
   font-size: 10px; font-weight: 500; padding: 4px 12px;
-  border-radius: 16px; border: 1px solid rgba(0,0,0,0.1);
-  background: white; color: #888; cursor: pointer; transition: all 0.15s;
+  border-radius: 16px; border: 1px solid v-bind('P.btnBorder');
+  background: v-bind('P.btnBg'); color: v-bind('P.btnColor'); cursor: pointer; transition: all 0.15s;
 }
-.nav button:hover { border-color: #888; color: #1a1a18; }
-.nav button.active { background: #1a1a18; color: white; border-color: #1a1a18; }
+.nav button:hover { border-color: v-bind('P.btnHoverBorder'); color: v-bind('P.btnHoverColor'); }
+.nav button.active { background: v-bind('P.activeBg'); color: v-bind('P.activeColor'); border-color: v-bind('P.activeBorder'); }
 .view-content { min-height: 200px; }
 </style>
