@@ -302,7 +302,7 @@ const metricValues = computed(() =>
   scenario.value.metrics.map((m) => {
     const sevKeys = ['healthy', 'degraded', 'warning', 'critical']
     const vals = sevKeys.map(k => m[k])
-    const pIdx = currentPhaseIdx.value
+    const pIdx = Math.min(currentPhaseIdx.value, vals.length - 1)
     const nextIdx = Math.min(pIdx + 1, vals.length - 1)
     return lerp(vals[pIdx], vals[nextIdx], clamp(phaseProgress.value, 0, 1))
   })
@@ -322,8 +322,9 @@ const sparklines = computed(() =>
         : (t - scenario.value.phases[pIdx2].t) / (1 - scenario.value.phases[pIdx2].t)
       const sevKeys2 = ['healthy', 'degraded', 'warning', 'critical']
       const vals2 = sevKeys2.map(k => m[k])
-      const nxtIdx2 = Math.min(pIdx2 + 1, vals2.length - 1)
-      const base = lerp(vals2[pIdx2], vals2[nxtIdx2], clamp(pp2, 0, 1))
+      const clampedIdx2 = Math.min(pIdx2, vals2.length - 1)
+      const nxtIdx2 = Math.min(clampedIdx2 + 1, vals2.length - 1)
+      const base = lerp(vals2[clampedIdx2], vals2[nxtIdx2], clamp(pp2, 0, 1))
       const maxVal = Math.max(...vals2)
       const noise = Math.sin(i * 5.1 + idx * 7) * 0.03 + Math.sin(i * 11.3 + idx * 3) * 0.02
       pts.push(clamp((base / maxVal) + noise, 0, 1))
@@ -348,6 +349,7 @@ function sparklineArea(points, width, height) {
 
 // --- Gauge color helper ---
 function gaugeColor(m, curVal) {
+  if (Number.isNaN(curVal)) return C.red
   if (m.invert) {
     if (curVal <= m.thresholdCrit) return C.red
     if (curVal <= m.thresholdWarn) return C.orange
