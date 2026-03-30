@@ -226,7 +226,7 @@ function toggle(id) { expanded.value = expanded.value === id ? null : id }
 
 // SVG helpers
 const SVG_W = 160, SVG_H = 120
-const pad = { t: 8, r: 8, b: 8, l: 8 }
+const pad = { t: 8, r: 8, b: 10, l: 14 }
 const cw = SVG_W - pad.l - pad.r
 const ch = SVG_H - pad.t - pad.b
 
@@ -237,7 +237,8 @@ function mkPath(pts) { return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${toX(p.x
 function areaPath(h) {
   const up = buildPath(h.upPath)
   const down = buildPath(h.downPath)
-  return mkPath(up) + ' ' + [...down].reverse().map(p => `L${toX(p.x).toFixed(1)},${toY(p.y).toFixed(1)}`).join(' ') + ' Z'
+  // downPath already goes from end back to start, no need to reverse
+  return mkPath(up) + ' ' + down.map(p => `L${toX(p.x).toFixed(1)},${toY(p.y).toFixed(1)}`).join(' ') + ' Z'
 }
 
 function upPathD(h) { return mkPath(buildPath(h.upPath)) }
@@ -275,17 +276,43 @@ function showDownArrow(h) {
   return Math.max(0, drawn - up.length) > down.length / 2
 }
 
+function pathDirection(pathPts) {
+  const pts = buildPath(pathPts)
+  const mid = Math.floor(pts.length / 2)
+  const before = pts[Math.max(0, mid - 3)]
+  const after = pts[Math.min(pts.length - 1, mid + 3)]
+  const dx = after.x - before.x
+  const dy = after.y - before.y  // positive = up in data space
+  if (dx >= 0 && dy >= 0) return '↗'
+  if (dx >= 0 && dy < 0) return '↘'
+  if (dx < 0 && dy >= 0) return '↖'
+  return '↙'
+}
+
+function arrowOffset(arrow) {
+  const offsets = { '↗': [6, -6], '↘': [6, 10], '↖': [-10, -6], '↙': [-10, 10] }
+  return offsets[arrow] || [0, 0]
+}
+
 function upArrowPos(h) {
   const up = buildPath(h.upPath)
   const mid = up[Math.floor(up.length / 2)]
-  return { x: toX(mid.x) + 6, y: toY(mid.y) - 4 }
+  const arrow = pathDirection(h.upPath)
+  const [dx, dy] = arrowOffset(arrow)
+  return { x: toX(mid.x) + dx, y: toY(mid.y) + dy }
 }
+
+function upArrowChar(h) { return pathDirection(h.upPath) }
 
 function downArrowPos(h) {
   const down = buildPath(h.downPath)
   const mid = down[Math.floor(down.length / 2)]
-  return { x: toX(mid.x) - 10, y: toY(mid.y) + 10 }
+  const arrow = pathDirection(h.downPath)
+  const [dx, dy] = arrowOffset(arrow)
+  return { x: toX(mid.x) + dx, y: toY(mid.y) + dy }
 }
+
+function downArrowChar(h) { return pathDirection(h.downPath) }
 
 function dotPos(h) {
   const up = buildPath(h.upPath)
@@ -361,12 +388,12 @@ function startDot(h) {
               <line :x1="pad.l" :y1="pad.t" :x2="pad.l" :y2="pad.t + ch" :stroke="C.dim" stroke-width="0.5" />
               <path v-if="drawnUpPath(h)" :d="drawnUpPath(h)" fill="none" :stroke="C.red" stroke-width="2" stroke-linecap="round" />
               <path v-if="drawnDownPath(h)" :d="drawnDownPath(h)" fill="none" :stroke="C.blue" stroke-width="2" stroke-linecap="round" />
-              <text v-if="showUpArrow(h)" :x="upArrowPos(h).x" :y="upArrowPos(h).y" font-size="9" :fill="C.red">↗</text>
-              <text v-if="showDownArrow(h)" :x="downArrowPos(h).x" :y="downArrowPos(h).y" font-size="9" :fill="C.blue">↙</text>
+              <text v-if="showUpArrow(h)" :x="upArrowPos(h).x" :y="upArrowPos(h).y" font-size="9" :fill="C.red">{{ upArrowChar(h) }}</text>
+              <text v-if="showDownArrow(h)" :x="downArrowPos(h).x" :y="downArrowPos(h).y" font-size="9" :fill="C.blue">{{ downArrowChar(h) }}</text>
               <circle :cx="dotPos(h).x" :cy="dotPos(h).y" r="3.5" :fill="C.bg" :stroke="dotPos(h).isDown ? C.blue : C.red" stroke-width="2" />
               <circle :cx="startDot(h).x" :cy="startDot(h).y" r="2" :fill="C.green" />
-              <text :x="pad.l + cw / 2" :y="SVG_H" text-anchor="middle" font-size="7" :fill="C.dim">{{ h.x }}</text>
-              <text :x="2" :y="pad.t + ch / 2" text-anchor="middle" font-size="7" :fill="C.dim" :transform="`rotate(-90,2,${pad.t + ch / 2})`">{{ h.y }}</text>
+              <text :x="pad.l + cw / 2" :y="SVG_H - 1" text-anchor="middle" font-size="3.8" :fill="C.dim">{{ h.x }}</text>
+              <text :x="4" :y="pad.t + ch / 2" text-anchor="middle" dominant-baseline="central" font-size="3.8" :fill="C.dim" :transform="`rotate(-90,4,${pad.t + ch / 2})`">{{ h.y }}</text>
             </svg>
           </div>
           <!-- Text -->
@@ -385,7 +412,7 @@ function startDot(h) {
 
         <!-- Expanded -->
         <div v-if="expanded === h.id" class="card-detail">
-          <div class="detail-boxes">
+          <div class="detail-grid">
             <div class="detail-box why-box">
               <div class="detail-label" :style="{ color: C.red }">WARUM KLEBT ES?</div>
               <div class="detail-text">{{ h.whyStick }}</div>
@@ -394,10 +421,14 @@ function startDot(h) {
               <div class="detail-label" :style="{ color: C.green }">RECOVERY</div>
               <div class="detail-text">{{ h.recovery }}</div>
             </div>
-          </div>
-          <div class="metrics-box">
-            <span class="metrics-label">METRIKEN: </span>
-            <span class="metrics-text">{{ h.metrics }}</span>
+            <div class="detail-box axes-box">
+              <div class="axes-label">ACHSEN</div>
+              <div class="axes-text">X = {{ h.x }}<br/>Y = {{ h.y }}</div>
+            </div>
+            <div class="detail-box metrics-box">
+              <div class="metrics-label">METRIKEN</div>
+              <div class="metrics-text">{{ h.metrics }}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -591,14 +622,13 @@ function startDot(h) {
   padding: 0 10px 8px;
 }
 
-.detail-boxes {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
 }
 
 .detail-box {
-  flex: 1 1 200px;
   padding: 6px 10px;
   border-radius: 5px;
   border: 1px solid;
@@ -614,6 +644,16 @@ function startDot(h) {
   border-color: rgba(34, 197, 94, 0.1);
 }
 
+.axes-box {
+  background: #161c2a;
+  border-color: #1e2536;
+}
+
+.metrics-box {
+  background: #161c2a;
+  border-color: #1e2536;
+}
+
 .detail-label {
   font-size: 9px;
   font-weight: 700;
@@ -627,18 +667,26 @@ function startDot(h) {
   line-height: 1.4;
 }
 
-.metrics-box {
-  margin-top: 5px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: #161c2a;
-  border: 1px solid #1e2536;
+.axes-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.axes-text {
+  font-size: 10px;
+  color: #e2e8f0;
+  line-height: 1.4;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .metrics-label {
   font-size: 9px;
   font-weight: 700;
   color: #3b82f6;
+  margin-bottom: 2px;
   font-family: 'JetBrains Mono', monospace;
 }
 
