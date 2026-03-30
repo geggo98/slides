@@ -6,16 +6,21 @@
   tasks."local:dev" = {
     exec = ''
       dir="$(echo "$DEVENV_TASK_INPUT" | ${pkgs.jq}/bin/jq -r '.dir // empty')"
+      port="$(echo "$DEVENV_TASK_INPUT" | ${pkgs.jq}/bin/jq -r '.port // empty')"
       if [ -z "$dir" ]; then
-        echo "Usage: devenv tasks run local:dev --input dir=<talk-directory>"
-        echo "Example: devenv tasks run local:dev --input dir=20260327-gradle-dependency-resolution"
+        echo "Usage: devenv tasks run local:dev --input dir=<talk-directory> [--input port=<port>]"
+        echo "Example: devenv tasks run local:dev --input dir=20260327-gradle-dependency-resolution --input port=3030"
         exit 1
       fi
       if [ ! -f "$DEVENV_ROOT/$dir/slides.md" ]; then
         echo "Error: $dir/slides.md not found"
         exit 1
       fi
-      exec bun run slidev "$DEVENV_ROOT/$dir/slides.md"
+      port_args=""
+      if [ -n "$port" ]; then
+        port_args="--port $port"
+      fi
+      exec bun run slidev $port_args "$DEVENV_ROOT/$dir/slides.md"
     '';
     after = [ "slides:install" ];
   };
