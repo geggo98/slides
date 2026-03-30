@@ -133,6 +133,17 @@ const HYSTERESES = [
     metrics: 'container_memory_working_set_bytes, kube_pod_container_status_restarts_total',
   },
   {
+    id: 'noisy-neighbor-cpu', name: 'Noisy-Neighbor CPU-Kopplung', icon: '\u2694\uFE0F', category: 'infra', color: C.orange,
+    x: 'Service B CPU %', y: 'Service A Throughput',
+    upPath: [[0.08,0.92],[0.20,0.90],[0.35,0.82],[0.50,0.65],[0.65,0.42],[0.78,0.20],[0.92,0.08]],
+    downPath: [[0.92,0.08],[0.82,0.10],[0.68,0.18],[0.52,0.32],[0.38,0.52],[0.22,0.70],[0.08,0.85]],
+    mechanism: 'A sendet rechenintensive Aufträge an B, beide auf demselben Node. B-Last verdrängt A von der CPU \u2192 R\u00e4uber-Beute-Oszillation.',
+    whyStick: 'Gekoppeltes System: A erholt sich \u2192 flutet B erneut \u2192 n\u00e4chster Zyklus. Ohne Entkopplung oszilliert das System endlos (Lotka-Volterra-Dynamik).',
+    recovery: 'Pod Anti-Affinity (Pods auf verschiedene Nodes). CPU-Requests/Limits korrekt setzen. Rate-Limiting A\u2192B. Dedicated Node-Pools pro Workload-Typ.',
+    severity: 'hoch',
+    metrics: 'container_cpu_usage_seconds_total per pod, container_cpu_cfs_throttled_periods_total per pod',
+  },
+  {
     id: 'node-imbalance', name: 'Node-Imbalance nach Rescheduling', icon: '\u2696\uFE0F', category: 'k8s', color: C.blue,
     x: 'Cluster Avg CPU %', y: 'Max Node CPU %',
     upPath: [[0.10,0.12],[0.25,0.28],[0.40,0.48],[0.55,0.65],[0.68,0.78],[0.78,0.88],[0.88,0.95]],
