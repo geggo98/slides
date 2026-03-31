@@ -43,14 +43,14 @@ function toggleLayer(i) {
           </div>
         </div>
 
-        <Transition name="fade">
-          <div v-if="activeLayer >= 0" class="detail-panel" :key="activeLayer">
+        <div class="detail-area">
+          <div v-if="activeLayer >= 0" class="detail-panel">
             <strong>{{ layers[activeLayer].title }}</strong>
             <p>{{ layers[activeLayer].detail }}</p>
           </div>
-        </Transition>
-        <div v-if="activeLayer < 0" class="detail-placeholder">
-          ← Schicht auswählen
+          <div v-else class="detail-placeholder">
+            ← Schicht auswählen
+          </div>
         </div>
       </div>
     </div>
@@ -80,6 +80,8 @@ function toggleLayer(i) {
 .layer-sub { font-size: 9.5px; color: var(--color-text-secondary); line-height: 1.3; }
 .layer-file { font-size: 8.5px; font-family: var(--font-mono); color: var(--color-text-tertiary); }
 
+.detail-area { min-height: 100px; }
+
 .detail-panel {
   background: var(--color-background-secondary);
   border-radius: var(--border-radius-lg);
@@ -101,7 +103,4 @@ function toggleLayer(i) {
 .pill-green { background: var(--color-background-success); color: var(--color-text-success); }
 .pill-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
 .pill-red { background: var(--color-background-danger); color: var(--color-text-danger); }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
