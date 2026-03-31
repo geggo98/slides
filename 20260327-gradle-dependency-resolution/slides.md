@@ -236,6 +236,50 @@ Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompr
 
 ---
 
+# Minimum Release Age (Cooldown)
+
+Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen entdeckt — ein **Cooldown von 7 Tagen** filtert die Mehrheit opportunistischer Supply-Chain-Angriffe.
+
+| Tool | Einheit | Config-Key | 7 Tage = | Exclude-Liste |
+|------|---------|------------|----------|---------------|
+| **Gradle** | — | *(nicht nativ)* | Renovate / Dependabot | — |
+| **npm** | Tage | `min-release-age` | `7` | *(nicht vorhanden)* |
+| **pnpm** | Minuten | `minimumReleaseAge` | `10080` | `minimumReleaseAgeExclude` |
+| **Bun** | Sekunden | `minimumReleaseAge` | `604800` | `minimumReleaseAgeExcludes` |
+| **Yarn** ≥ 4.10 | Minuten | `npmMinimalAgeGate` | `10080` | `npmPreapprovedPackages` |
+| **uv** | Dauer | `exclude-newer` | `"7 days"` | `exclude-newer-package` |
+| **Deno** | CLI-Flag | `--minimum-dependency-age` | — | — |
+
+> Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
+
+---
+
+# Cooldown: Gradle-Ökosystem
+
+Gradle hat **kein natives Minimum Release Age**. Stattdessen:
+
+### Renovate / Dependabot
+
+```json
+// renovate.json
+{ "minimumReleaseAge": "7 days" }
+```
+
+```yaml
+# dependabot.yml
+cooldown:
+  default-days: 7
+```
+
+### Ergänzende Maßnahmen
+
+- **Verification Metadata** (SHA-256 + PGP) schützt gegen nachträgliche Manipulation
+- **Lock-Files** fixieren aufgelöste Versionen
+- **Repository Filtering** verhindert Dependency Confusion
+- Renovate/Dependabot-Cooldown **synchron** mit Paketmanager-Cooldown konfigurieren, sonst entstehen PRs für nicht-installierbare Versionen
+
+---
+
 # Version Catalogs (`libs.versions.toml`)
 
 ```toml
@@ -414,7 +458,8 @@ clicks: false
 | **Verification Metadata** | Artefakt-Manipulation | `verification-metadata.xml` |
 | **Repository Filtering** | Dependency Confusion | `build.gradle.kts` |
 | **BOM (Spring)** | Inkonsistente transitive Versionen | BOM POM |
-| **Renovate `minimumReleaseAge`** | Frische kompromittierte Releases | `renovate.json` |
+| **Minimum Release Age** | Frische kompromittierte Releases | Nativ in npm/pnpm/Bun/Yarn/uv/Deno |
+| **Renovate/Dependabot Cooldown** | Frische Releases (Gradle-Ökosystem) | `renovate.json` / `dependabot.yml` |
 | **Dependency Scanner** | Bekannte CVEs | CI-Pipeline |
 | **Build-Sandbox** | Code Execution durch Deps/Plugins | Container, Network-Policies |
 
@@ -426,6 +471,11 @@ clicks: false
 - [Gradle: Version Catalogs](https://docs.gradle.org/current/userguide/version_catalogs.html)
 - [Gradle: Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html)
 - [Renovate: minimumReleaseAge](https://docs.renovatebot.com/configuration-options/#minimumreleaseage)
+- [Package Managers Need to Cool Down](https://nesbitt.io/2026/03/04/package-managers-need-to-cool-down.html) — Andrew Nesbitt
+- [npm: min-release-age](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age)
+- [pnpm: minimumReleaseAge](https://pnpm.io/settings#minimumreleaseage)
+- [Bun: minimumReleaseAge](https://bun.com/docs/pm/cli/install#minimum-release-age)
+- [Supply-Chain Guardrails (Coinspect)](https://www.coinspect.com/blog/supply-chain-guardrails/)
 - [SLSA Framework](https://slsa.dev/)
 - [Spring Boot: Dependency Management Plugin](https://docs.spring.io/dependency-management-plugin/docs/current/reference/html/)
 - [Go: How Go Mitigates Supply Chain Attacks](https://go.dev/blog/supply-chain)
