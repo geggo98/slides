@@ -8,6 +8,8 @@ provide('activeRanks', activeRanks)
 
 const tabs = [
   { id: 'highest', label: 'Highest wins' },
+  { id: 'direct', label: 'Direkte Version' },
+  { id: 'constraint', label: 'Dependency Constraints' },
   { id: 'bom', label: 'BOM override' },
   { id: 'bomdown', label: 'BOM downgrade' },
   { id: 'catalog', label: 'Catalog vs BOM' },
@@ -17,7 +19,9 @@ const tabs = [
 
 // Default ranks per scene (scenes can override via inject)
 const defaultRanks = {
-  highest: [3],
+  highest: [2],
+  direct: [3],
+  constraint: [4],
   bom: [6],
   bomdown: [6],
   catalog: [6],
@@ -51,6 +55,8 @@ function switchScene(id) {
         </div>
         <div class="sim-right">
           <SceneHighest v-if="activeScene === 'highest'" />
+          <SceneDirect v-if="activeScene === 'direct'" />
+          <SceneConstraint v-if="activeScene === 'constraint'" />
           <SceneBom v-if="activeScene === 'bom'" />
           <SceneBomDown v-if="activeScene === 'bomdown'" />
           <SceneCatalog v-if="activeScene === 'catalog'" />
