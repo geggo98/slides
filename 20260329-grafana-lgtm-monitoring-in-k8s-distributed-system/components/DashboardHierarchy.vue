@@ -163,7 +163,7 @@ const LEVELS = [
 ]
 
 const METHOD_MAPPING = {
-  1: { methods: ['Golden Signals'], note: 'Alle 4 Signale aggregiert: Latency, Traffic, Errors, Saturation' },
+  1: { methods: ['RED'], note: 'Alle 3 Signale aggregiert: Rate, Errors, Durations. Saturation kommt meist erst auf der nächsten Detailstufe.' },
   2: { methods: ['RED', 'Golden Signals'], note: 'RED f\u00fcr jeden Service einheitlich. Saturation f\u00fcr kritische Pfade.' },
   3: { methods: ['USE'], note: 'Utilization, Saturation, Errors pro Ressource (CPU, Memory, Disk, Pool)' },
   4: { methods: ['USE'], note: 'USE auf Node-/Cluster-Level f\u00fcr Kapazit\u00e4tsplanung' },
