@@ -472,6 +472,11 @@ clicks: false
 
 # Schutzmatrix
 
+<style>
+table { font-size: 0.75em; }
+th, td { padding: 0.25em 0.5em !important; }
+</style>
+
 | Mechanismus | Schützt gegen | Datei / Ort |
 |---|---|---|
 | **Version Catalog** | Wartbarkeit, IDE-Support | `libs.versions.toml` |
@@ -479,8 +484,8 @@ clicks: false
 | **Verification Metadata** | Artefakt-Manipulation | `verification-metadata.xml` |
 | **Repository Filtering** | Dependency Confusion | `build.gradle.kts` |
 | **BOM (Spring)** | Inkonsistente transitive Versionen | BOM POM |
-| **Minimum Release Age** | Frische kompromittierte Releases | Nativ in npm/pnpm/Bun/Yarn/uv/Deno |
-| **Renovate/Dependabot Cooldown** | Frische Releases (Gradle-Ökosystem) | `renovate.json` / `dependabot.yml` |
+| **Minimum Release Age** | Frische kompromittierte Releases | npm/pnpm/Bun/Yarn/uv/Deno |
+| **Renovate/Dependabot Cooldown** | Frische Releases (Gradle) | `renovate.json` / `dependabot.yml` |
 | **Dependency Scanner** | Bekannte CVEs | CI-Pipeline |
 | **Build-Sandbox** | Code Execution durch Deps/Plugins | Container, Network-Policies |
 
