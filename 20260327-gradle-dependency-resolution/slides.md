@@ -179,6 +179,27 @@ Erzeugt `gradle/verification-metadata.xml`:
 
 ---
 
+# Verification Metadata: Fallstrick bei der Generierung
+
+`--write-verification-metadata` erfasst nur Konfigurationen, die beim jeweiligen Task aufgelöst werden.
+
+```bash
+# ❌ Unvollständig — erfasst nicht alle Konfigurationen
+./gradlew --write-verification-metadata sha256 classpath
+
+# ✅ Alle CI-relevanten Tasks ausführen, Caching deaktivieren
+./gradlew --write-verification-metadata sha256 --no-build-cache \
+    build check --dry-run
+```
+
+**Achtung:** `--dry-run` reicht nicht immer! Manche Plugins (z.B. Checkstyle) erzeugen *detached configurations*, die erst bei tatsächlicher Task-Ausführung aufgelöst werden. Solche Tasks müssen echt laufen — nicht nur `--dry-run`.
+
+**Regel:** Beim Generieren *alle Tasks ausführen, die auch in der CI laufen* — sonst fehlen Artefakte für Konfigurationen, die nur bestimmte Tasks auflösen.
+
+**Typisches Symptom:** `Dependency verification failed for configuration 'classpath'`
+
+---
+
 # Supply-Chain-Schutz: Repository Filtering
 
 ```kotlin
