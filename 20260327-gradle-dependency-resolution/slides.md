@@ -526,6 +526,10 @@ th, td { padding: 0.25em 0.5em !important; }
 
 # Weiterführende Links
 
+<style>
+ul { font-size: 0.9em; }
+</style>
+
 - [Gradle: Dependency Locking](https://docs.gradle.org/current/userguide/dependency_locking.html)
 - [Gradle: Version Catalogs](https://docs.gradle.org/current/userguide/version_catalogs.html)
 - [Gradle: Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html)
