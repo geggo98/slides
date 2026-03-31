@@ -29,53 +29,79 @@ function toggleLayer(i) {
       <p class="section-label">Gradle dependency stack</p>
       <p class="section-hint">Klick auf eine Schicht für Details. Oben Deklaration, unten Schutz.</p>
 
-      <div class="layer-stack">
-        <div
-          v-for="(l, i) in layers" :key="i"
-          class="layer" :class="{ active: activeLayer === i }"
-          @click.stop="toggleLayer(i)"
-        >
-          <div class="layer-icon"><span class="pill" :class="l.pill">{{ l.num }}</span></div>
-          <div class="layer-content">
+      <div class="layer-layout">
+        <div class="layer-grid">
+          <div
+            v-for="(l, i) in layers" :key="i"
+            class="layer" :class="{ active: activeLayer === i }"
+            @click.stop="toggleLayer(i)"
+          >
+            <span class="pill" :class="l.pill">{{ l.num }}</span>
             <div class="layer-title">{{ l.title }}</div>
             <div class="layer-sub">{{ l.sub }}</div>
             <div class="layer-file">{{ l.file }}</div>
           </div>
         </div>
-      </div>
 
-      <Transition name="fade">
-        <div v-if="activeLayer >= 0" class="detail-panel">
-          <strong>{{ layers[activeLayer].title }}:</strong> {{ layers[activeLayer].detail }}
+        <Transition name="fade">
+          <div v-if="activeLayer >= 0" class="detail-panel" :key="activeLayer">
+            <strong>{{ layers[activeLayer].title }}</strong>
+            <p>{{ layers[activeLayer].detail }}</p>
+          </div>
+        </Transition>
+        <div v-if="activeLayer < 0" class="detail-placeholder">
+          ← Schicht auswählen
         </div>
-      </Transition>
+      </div>
     </div>
   </GradleVars>
 </template>
 
 <style scoped>
 .layer-stack-wrap { width: 100%; }
-.section-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px; }
-.section-hint { font-size: 12px; color: var(--color-text-tertiary); margin: 0 0 12px; }
-.layer-stack { display: flex; flex-direction: column; gap: 0; }
-.layer { display: flex; align-items: stretch; min-height: 38px; border: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 0.15s; }
-.layer:first-child { border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0; }
-.layer:last-child { border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg); }
-.layer:not(:first-child) { border-top: none; }
+.section-label { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 4px; }
+.section-hint { font-size: 12px; color: var(--color-text-tertiary); margin: 0 0 10px; }
+
+.layer-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+
+.layer-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 6px; }
+
+.layer {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+}
 .layer:hover { background: var(--color-background-secondary); }
-.layer.active { background: var(--color-background-secondary); }
-.layer-icon { width: 40px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
-.layer-content { flex: 1; padding: 5px 10px 5px 0; display: flex; flex-direction: column; justify-content: center; }
-.layer-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
-.layer-sub { font-size: 10px; color: var(--color-text-secondary); margin-top: 1px; }
-.layer-file { font-size: 9px; font-family: var(--font-mono); color: var(--color-text-tertiary); margin-top: 1px; }
-.detail-panel { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.5rem 0.75rem; margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--color-text-secondary); }
-.detail-panel strong { color: var(--color-text-primary); font-weight: 500; }
-.pill { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); font-weight: 500; }
+.layer.active { background: var(--color-background-secondary); border-color: var(--color-text-secondary); }
+
+.layer-title { font-size: 11px; font-weight: 500; color: var(--color-text-primary); margin-top: 2px; }
+.layer-sub { font-size: 9.5px; color: var(--color-text-secondary); line-height: 1.3; }
+.layer-file { font-size: 8.5px; font-family: var(--font-mono); color: var(--color-text-tertiary); }
+
+.detail-panel {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-lg);
+  padding: 10px 12px;
+  font-size: 12px; line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.detail-panel strong { color: var(--color-text-primary); font-weight: 600; display: block; margin-bottom: 4px; }
+.detail-panel p { margin: 0; }
+
+.detail-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-tertiary); font-size: 12px; font-style: italic;
+  min-height: 100px;
+}
+
+.pill { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: var(--border-radius-md); font-weight: 500; width: fit-content; }
 .pill-blue { background: var(--color-background-info); color: var(--color-text-info); }
 .pill-green { background: var(--color-background-success); color: var(--color-text-success); }
 .pill-amber { background: var(--color-background-warning); color: var(--color-text-warning); }
 .pill-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

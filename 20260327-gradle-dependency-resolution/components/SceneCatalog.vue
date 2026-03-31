@@ -39,7 +39,18 @@ watch(overrideMode, (val) => {
         <GraphNode name="jackson" version="2.17.2" variant="winner" />
       </div>
     </div>
+    <div class="ctrl-row">
+      <label>Override-Variante:</label>
+      <select v-model="overrideMode" @click.stop>
+        <option value="none">Keine (BOM gewinnt)</option>
+        <option value="ext">ext["jackson.version"]</option>
+        <option value="force">force()</option>
+        <option value="strict">strictly()</option>
+      </select>
+    </div>
+
     <ResultBox
+      v-if="overrideMode === 'none'"
       value="jackson:2.17.2"
       value-color="warning"
       explain="Der Catalog ist Textersatz (Prio 3). Das Spring-Plugin (Prio 6) übersteuert ihn. Nur das Lock-File zeigt die Wahrheit."
@@ -48,16 +59,6 @@ watch(overrideMode, (val) => {
         <span style="margin-left: 8px; font-size: 12px;">(Catalog ignoriert!)</span>
       </template>
     </ResultBox>
-
-    <div class="ctrl-row">
-      <label>Override-Variante:</label>
-      <select v-model="overrideMode" @click.stop>
-        <option value="none">-- Variante wählen --</option>
-        <option value="ext">ext["jackson.version"]</option>
-        <option value="force">force()</option>
-        <option value="strict">strictly()</option>
-      </select>
-    </div>
 
     <ResultBox
       v-if="overrideMode !== 'none'"
