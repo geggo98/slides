@@ -140,6 +140,39 @@ configurations.all {
 
 ---
 
+# Extra Properties (`ext["..."]`)
+
+`ext` ist eine `Map<String, Any?>` an jedem Gradle-Projekt — Spring Boot nutzt sie als **BOM-Override-Mechanismus**.
+
+```kotlin
+// Root build.gradle.kts
+ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-BOM
+```
+
+Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
+
+> Bekannte Property-Namen: `jackson.version`, `slf4j.version`, `kotlin.version`, …
+> Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
+
+---
+
+# Extra Properties: Alternativen
+
+| Ansatz | Typsicher | IDE-Support | BOM-Override |
+|---|---|---|---|
+| `ext["jackson.version"]` | ❌ `Any?` + Cast | ❌ | ✅ Spring-BOM |
+| Version Catalog (`libs.versions.toml`) | ✅ | ✅ | ❌ BOM gewinnt |
+| `buildSrc` / Convention Plugin | ✅ | ✅ | ❌ manuell |
+| `resolutionStrategy.force(...)` | — | — | ✅ jede BOM |
+
+<br>
+
+- **Spring-BOM-Override:** `ext["..."]` oder `force()`
+- **Alles andere:** Version Catalog
+- **Nicht mischen:** Catalog + `ext["..."]` = doppelte Wahrheitsquelle
+
+---
+
 # Dependency Scanning
 
 Lock-File als **Single Source of Truth** für Scanner (Snyk, Trivy, OWASP, Dependabot):
