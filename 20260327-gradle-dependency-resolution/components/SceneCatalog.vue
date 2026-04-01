@@ -34,9 +34,11 @@ watch(overrideMode, (val) => {
         <div class="g-gap" />
         <GraphNode name="BOM" version="jackson = 2.17.2" variant="bom-node" />
       </div>
-      <TreeConnector type="single" />
+      <TreeConnector type="left-single" :width="180" />
       <div class="g-row">
         <GraphNode name="jackson" version="2.17.2" variant="winner" />
+        <div class="g-gap" />
+        <div class="g-placeholder" />
       </div>
     </div>
     <div class="ctrl-row">
@@ -76,6 +78,7 @@ watch(overrideMode, (val) => {
 .graph { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 10px; }
 .g-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .g-gap { width: 24px; }
+.g-placeholder { min-width: 100px; padding: 8px 16px; visibility: hidden; }
 .ctrl-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; flex-wrap: wrap; }
 .ctrl-row label { font-size: 12px; color: var(--color-text-secondary); }
 .ctrl-row select { font-family: inherit; font-size: 12px; padding: 4px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); }

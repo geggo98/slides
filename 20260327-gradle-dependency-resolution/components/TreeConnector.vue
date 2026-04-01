@@ -1,6 +1,6 @@
 <script setup>
 defineProps({
-  type: { type: String, default: 'single' }, // single, fork, parallel
+  type: { type: String, default: 'single' }, // single, fork, parallel, left-single, right-single
   width: { type: Number, default: 180 },
 })
 </script>
@@ -18,6 +18,16 @@ defineProps({
   <div
     v-else-if="type === 'parallel'"
     class="tc tc-parallel"
+    :style="{ width: width + 'px' }"
+  />
+  <div
+    v-else-if="type === 'left-single'"
+    class="tc tc-left-single"
+    :style="{ width: width + 'px' }"
+  />
+  <div
+    v-else-if="type === 'right-single'"
+    class="tc tc-right-single"
     :style="{ width: width + 'px' }"
   />
 </template>
@@ -64,6 +74,20 @@ defineProps({
   height: 20px;
   position: relative;
   border-left: 1.5px solid var(--color-text-tertiary);
+  border-right: 1.5px solid var(--color-text-tertiary);
+}
+
+/* Single vertical line on the left side only */
+.tc-left-single {
+  height: 20px;
+  position: relative;
+  border-left: 1.5px solid var(--color-text-tertiary);
+}
+
+/* Single vertical line on the right side only */
+.tc-right-single {
+  height: 20px;
+  position: relative;
   border-right: 1.5px solid var(--color-text-tertiary);
 }
 </style>
