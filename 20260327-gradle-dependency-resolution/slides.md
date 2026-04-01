@@ -20,7 +20,8 @@ Reproduzierbare Builds, Supply-Chain-Schutz und Ökosystem-Vergleich
 | **Resolution Strategy** | "highest version wins" — Spring Boot BOM überschreibt mit festen Versionen |
 | **Lock State** | `gradle.lockfile` pro (Sub-)Projekt — exakter Abhängigkeitsbaum |
 | **Verification Metadata** | SHA-256 + PGP pro Artefakt in `verification-metadata.xml` |
-| **BOM** | POM, die Versionen vorgibt, ohne transitive Deps einzuziehen |
+| **BOM** | POM, die Versionen vorgibt — importiert via `platform()` (nativ) oder Spring-Plugin |
+| **`platform()`** | Nativer Gradle-BOM-Import (seit 5.0) — nutzt Gradles Constraint-Engine |
 | **Version Catalog** | TOML-Datei (`libs.versions.toml`) — rein deklarativ, kein Einfluss auf Resolution |
 
 ---
@@ -83,6 +84,58 @@ plugins {
 4. Lock-File fixiert das Gesamtergebnis
 
 Spring-Boot-Version ändern → BOM ändert sich → Dutzende transitive Versionen ändern sich → Lock-Datei neu generieren!
+
+---
+
+# BOM-Import: Spring-Plugin vs. Native Gradle
+
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+</style>
+
+| | Spring Dependency Management Plugin | Native Gradle (`platform()`) |
+|---|---|---|
+| **Seit** | Gradle 2.x (vor nativem BOM-Support) | Gradle 5.0 (2018) |
+| **Syntax** | `dependencyManagement { imports { mavenBom(...) } }` | `implementation(platform(...))` |
+| **Mechanismus** | Interne Map `group:artifact → version`, injiziert vor Resolution | Gradle Constraint-Engine (Teil der Resolution) |
+| **Einzelne Constraints** | `dependencyManagement { dependencies { dependency(...) } }` | `constraints { implementation(...) }` |
+| **Overrides** | `ext["jackson.version"]` (Maven-Property-Mapping) | `constraints { }` oder `enforcedPlatform()` |
+| **Priorität** | Rang 6 (übersteuert `platform()`) | Rang 5 / Rang 7 (`enforcedPlatform()`) |
+| **Idiomatisch** | Legacy — aber in Spring-Boot-Projekten weit verbreitet | Empfohlen seit Gradle 5.x |
+
+> **Historischer Kontext:** Das Spring-Plugin entstand, weil Gradle vor 5.0 keinen BOM-Import konnte.
+> Heute ist `platform()` der idiomatische Weg — Spring-Boot-Projekte bringen das Plugin aber implizit mit.
+
+---
+
+# Ansätze nicht mischen
+
+### Spring-Plugin (Rang 6)
+
+```kotlin
+plugins { id("io.spring.dependency-management") version "1.1.7" }
+dependencyManagement {
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.4") }
+    dependencies { dependency("com.google.guava:guava:33.4.0-jre") }
+}
+```
+
+### Native Gradle (Rang 5 / 7)
+
+```kotlin
+dependencies {
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.4"))
+    constraints { implementation("com.google.guava:guava:33.4.0-jre") }
+}
+```
+
+> ⚠️ **Beide Ansätze im selben Build = schwer vorhersagbare Resolution.**
+> Das Spring-Plugin (Rang 6) übersteuert `platform()` (Rang 5) stillschweigend.
+>
+> ⚠️ **Wer Versionen überschreibt, übernimmt die Kompatibilitäts-Verantwortung.**
+> Die BOM garantiert Zusammenspiel ihrer Versionen — ein Override bricht diese Garantie.
+> Beim nächsten BOM-Upgrade prüfen, ob die gepinnten Versionen noch kompatibel sind.
 
 ---
 
@@ -164,12 +217,14 @@ Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.versio
 | Ansatz | Typsicher | IDE-Support | BOM-Override |
 |---|---|---|---|
 | `ext["jackson.version"]` | ❌ `Any?` + Cast | ❌ | ✅ Spring-BOM |
+| `platform()` + `constraints {}` | ✅ | ✅ | ✅ jede BOM (nativ) |
 | Version Catalog (`libs.versions.toml`) | ✅ | ✅ | ❌ BOM gewinnt |
 | `buildSrc` / Convention Plugin | ✅ | ✅ | ❌ manuell |
 | `resolutionStrategy.force(...)` | — | — | ✅ jede BOM |
 
 <br>
 
+- **Native Gradle BOM-Override:** `constraints { }` oder `enforcedPlatform()`
 - **Spring-BOM-Override:** `ext["..."]` oder `force()`
 - **Alles andere:** Version Catalog
 - **Nicht mischen:** Catalog + `ext["..."]` = doppelte Wahrheitsquelle
