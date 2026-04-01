@@ -136,7 +136,9 @@ configurations.all {
 }
 ```
 
-> ⚠️ Eingriff in die BOM-Kohärenz — ab hier bist du selbst für Kompatibilität verantwortlich.
+> ⚠️ Eingriff in die BOM-Kohärenz — ab hier bist du selbst für Kompatibilität verantwortlich. 
+> 
+> Denk daran, die Version beim näschten Spring update zu prüfen und ggf. den Override wieder zu entfernen.
 
 ---
 
@@ -151,7 +153,8 @@ ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-
 
 Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
 
-> Bekannte Property-Namen: `jackson.version`, `slf4j.version`, `kotlin.version`, …
+> Bekannte Property-Namen: `jackson.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
+> 
 > Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
 
 ---
