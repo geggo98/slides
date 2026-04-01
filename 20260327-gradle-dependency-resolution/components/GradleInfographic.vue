@@ -7,6 +7,7 @@ const tabs = [
   { key: 'layers', label: 'Dependency Stack' },
   { key: 'ecosystem', label: 'Ökosystem-Vergleich' },
   { key: 'table', label: 'Feature-Vergleich' },
+  { key: 'simulator', label: 'Resolution Simulator' },
 ]
 </script>
 
@@ -24,6 +25,7 @@ const tabs = [
         <LayerStack v-if="activeTab === 'layers'" />
         <EcosystemTabs v-if="activeTab === 'ecosystem'" />
         <CompareTable v-if="activeTab === 'table'" />
+        <ResolutionSimulator v-if="activeTab === 'simulator'" />
       </div>
     </div>
   </GradleVars>
