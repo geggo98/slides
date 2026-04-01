@@ -10,7 +10,7 @@ defineProps({
 <template>
   <div class="result-box">
     <div class="result-label">{{ label }}</div>
-    <div class="result-val" :style="{ color: `var(--color-text-${valueColor})` }">
+    <div v-if="value" class="result-val" :style="{ color: `var(--color-text-${valueColor})` }">
       <code>{{ value }}</code>
       <slot name="suffix" />
     </div>

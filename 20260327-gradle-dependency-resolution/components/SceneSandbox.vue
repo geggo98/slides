@@ -24,12 +24,12 @@ const legend = [
     </div>
 
     <ResultBox label="Praxis-Checkliste">
-      <div class="checklist">
-        <code>./gradlew dependencies --configuration compileClasspath</code> zeigt Konflikte<br>
-        <code>./gradlew dependencies --write-locks</code> fixiert das Ergebnis<br>
-        <code>git diff gradle.lockfile</code> macht Änderungen sichtbar<br>
-        <code>failOnVersionConflict()</code> erzwingt bewusste Auflösung
-      </div>
+      <ul class="checklist">
+        <li><code>./gradlew dependencies --configuration compileClasspath</code> zeigt Konflikte</li>
+        <li><code>./gradlew dependencies --write-locks</code> fixiert das Ergebnis</li>
+        <li><code>git diff gradle.lockfile</code> macht Änderungen sichtbar</li>
+        <li><code>failOnVersionConflict()</code> erzwingt bewusste Auflösung</li>
+      </ul>
     </ResultBox>
   </div>
 </template>
@@ -41,6 +41,8 @@ const legend = [
 .legend { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 0.75rem 1rem; margin: 0 0 10px; display: flex; flex-direction: column; gap: 4px; }
 .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--color-text-secondary); }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.checklist { font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; }
+.checklist { font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; list-style: none; padding: 0; margin: 0; }
+.checklist li { display: flex; align-items: baseline; gap: 8px; }
+.checklist li::before { content: '\2713'; display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; min-width: 12px; border: 1.5px solid var(--color-text-success, #4ade80); border-radius: 2px; position: relative; top: 1px; font-size: 9px; line-height: 1; color: var(--color-text-success, #4ade80); background: color-mix(in srgb, var(--color-text-success, #4ade80) 10%, transparent); }
 .checklist code { font-family: var(--font-mono); font-size: 11px; background: var(--color-background-tertiary); padding: 1px 4px; border-radius: 4px; }
 </style>
