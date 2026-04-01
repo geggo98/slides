@@ -18,9 +18,11 @@
         <div class="g-gap" />
         <GraphNode name="jackson" version="2.18.3 (direkt)" variant="winner" />
       </div>
-      <TreeConnector type="single" />
+      <TreeConnector type="left-single" :width="180" />
       <div class="g-row">
         <GraphNode name="jackson" version="2.15.0 (transitiv)" variant="loser" />
+        <div class="g-gap" />
+        <div class="g-placeholder" />
       </div>
     </div>
     <ResultBox
@@ -36,4 +38,5 @@
 .graph { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 10px; }
 .g-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .g-gap { width: 24px; }
+.g-placeholder { min-width: 100px; padding: 8px 16px; visibility: hidden; }
 </style>

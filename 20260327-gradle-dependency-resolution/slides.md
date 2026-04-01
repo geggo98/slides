@@ -230,6 +230,12 @@ Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.versio
 - **Nicht mischen:** Catalog + `ext["..."]` = doppelte Wahrheitsquelle
 
 ---
+clicks: false
+---
+
+<ResolutionSimulator />
+
+---
 
 # Dependency Scanning
 
@@ -552,12 +558,6 @@ clicks: false
 ---
 
 <GradleInfographic />
-
----
-clicks: false
----
-
-<ResolutionSimulator />
 
 ---
 

@@ -40,11 +40,13 @@ watch(mode, (val) => {
       <div class="g-row">
         <GraphNode name="BOM" version="jackson = 2.17.2" variant="loser" />
         <div class="g-gap" />
-        <GraphNode name="lib-a (transitiv)" version="jackson = 2.16.0" variant="loser" />
+        <GraphNode name="lib-a" version="1.0" />
       </div>
-      <TreeConnector type="single" />
+      <TreeConnector type="right-single" :width="180" />
       <div class="g-row">
-        <GraphNode name="jackson" version="2.18.3" variant="winner" />
+        <div class="g-placeholder" />
+        <div class="g-gap" />
+        <GraphNode name="jackson" version="2.16.0" variant="loser" />
       </div>
     </div>
     <ResultBox
@@ -61,6 +63,7 @@ watch(mode, (val) => {
 .graph { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 10px; }
 .g-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .g-gap { width: 24px; }
+.g-placeholder { min-width: 100px; padding: 8px 16px; visibility: hidden; }
 .ctrl-row { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; }
 .ctrl-row label { font-size: 12px; color: var(--color-text-secondary); }
 .ctrl-row select { font-family: inherit; font-size: 12px; padding: 4px 8px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); }
