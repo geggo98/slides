@@ -1,14 +1,13 @@
 <script setup>
-import { ref, inject, onMounted, onBeforeUnmount, computed, watchEffect } from 'vue'
-import { useDarkMode } from '@slidev/client'
+import { ref, inject, computed } from 'vue'
 import CrossRefLink from './CrossRefLink.vue'
+import MonacoBlock from './MonacoBlock.vue'
 
 const skillNav = inject('skillNav', null)
-const { isDark } = useDarkMode()
 
 const activeFile = ref('skill')
 const activeDetail = ref(null)
-const editorContainer = ref(null)
+const monacoBlockRef = ref(null)
 
 let editor = null
 let monaco = null
@@ -296,111 +295,16 @@ const currentDetail = computed(() => {
   return currentAnnotations[activeDetail.value].detail
 })
 
-onMounted(async () => {
-  // Import monaco-editor directly; Slidev's setup uses the same package
-  const monacoModule = await import('monaco-editor')
-  monaco = monacoModule
+const editorOptions = {
+  lineHeight: 26,
+  padding: { top: 8, bottom: 8 },
+}
 
-  if (!editorContainer.value) return
-
-  // Define GitHub Dark & Light themes
-  monaco.editor.defineTheme('github-dark', {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-      { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
-      { token: 'constant', foreground: '79b8ff' },
-      { token: 'entity.name', foreground: 'b392f0' },
-      { token: 'keyword', foreground: 'f97583' },
-      { token: 'storage', foreground: 'f97583' },
-      { token: 'string', foreground: '9ecbff' },
-      { token: 'support', foreground: '79b8ff' },
-      { token: 'variable', foreground: 'ffab70' },
-      { token: 'tag', foreground: '85e89d' },
-      { token: 'type', foreground: '79b8ff' },
-      { token: 'number', foreground: '79b8ff' },
-    ],
-    colors: {
-      'editor.background': '#24292e',
-      'editor.foreground': '#e1e4e8',
-      'editorLineNumber.foreground': '#444d56',
-      'editorLineNumber.activeForeground': '#e1e4e8',
-      'editor.selectionBackground': '#3392FF44',
-      'editor.lineHighlightBackground': '#2b3036',
-      'editorWidget.background': '#1f2428',
-      'editorGutter.background': '#24292e',
-      'editorCodeLens.foreground': '#8b949e',
-    },
-  })
-
-  monaco.editor.defineTheme('github-light', {
-    base: 'vs',
-    inherit: true,
-    rules: [
-      { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
-      { token: 'constant', foreground: '005cc5' },
-      { token: 'entity.name', foreground: '6f42c1' },
-      { token: 'keyword', foreground: 'd73a49' },
-      { token: 'storage', foreground: 'd73a49' },
-      { token: 'string', foreground: '032f62' },
-      { token: 'support', foreground: '005cc5' },
-      { token: 'variable', foreground: 'e36209' },
-      { token: 'tag', foreground: '22863a' },
-      { token: 'type', foreground: '005cc5' },
-      { token: 'number', foreground: '005cc5' },
-    ],
-    colors: {
-      'editor.background': '#ffffff',
-      'editor.foreground': '#24292e',
-      'editorLineNumber.foreground': '#1b1f234d',
-      'editorLineNumber.activeForeground': '#24292e',
-      'editor.selectionBackground': '#0366d625',
-      'editor.lineHighlightBackground': '#f6f8fa',
-      'editorWidget.background': '#f6f8fa',
-      'editorGutter.background': '#ffffff',
-      'editorCodeLens.foreground': '#6a737d',
-    },
-  })
-
-  editor = monaco.editor.create(editorContainer.value, {
-    value: getPlainText('skill'),
-    language: 'yaml',
-    theme: isDark.value ? 'github-dark' : 'github-light',
-    readOnly: true,
-    automaticLayout: true,
-    fontSize: 12,
-    lineHeight: 26,
-    fontFamily: 'var(--font-mono)',
-    lineNumbers: 'on',
-    lineNumbersMinChars: 3,
-    minimap: { enabled: false },
-    scrollBeyondLastLine: false,
-    glyphMargin: false,
-    folding: false,
-    renderLineHighlight: 'none',
-    codeLens: false,
-    scrollbar: { vertical: 'auto', horizontal: 'auto' },
-    padding: { top: 8, bottom: 8 },
-    overviewRulerLanes: 0,
-    overviewRulerBorder: false,
-    hideCursorInOverviewRuler: true,
-    contextmenu: false,
-    wordWrap: 'off',
-    lineDecorationsWidth: 0,
-    bracketPairColorization: { enabled: false },
-  })
-
-  // Switch theme when dark mode changes
-  watchEffect(() => {
-    monaco.editor.setTheme(isDark.value ? 'github-dark' : 'github-light')
-  })
-
+function onEditorReady({ editor: ed, monaco: mo }) {
+  editor = ed
+  monaco = mo
   applyAnnotations('skill')
-})
-
-onBeforeUnmount(() => {
-  editor?.dispose()
-})
+}
 </script>
 
 <template>
@@ -450,7 +354,16 @@ onBeforeUnmount(() => {
         <div v-if="FILES[activeFile].type === 'welcome'" class="welcome" v-html="FILES[activeFile].content" />
 
         <!-- Monaco editor for files -->
-        <div v-else-if="FILES[activeFile].lines" ref="editorContainer" class="editor-container" />
+        <MonacoBlock
+          v-else-if="FILES[activeFile].lines"
+          ref="monacoBlockRef"
+          :code="getPlainText('skill')"
+          :language="'yaml'"
+          height="100%"
+          :editor-options="editorOptions"
+          class="editor-container"
+          @ready="onEditorReady"
+        />
       </div>
     </div>
   </div>
@@ -476,7 +389,8 @@ onBeforeUnmount(() => {
 .file-header { font-size: 13px; font-weight: 500; margin-bottom: 12px; }
 .file-path { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); }
 .welcome { font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; padding: 20px 0; }
-.editor-container { flex: 1; min-height: 0; border-radius: var(--sk-radm); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); }
+.editor-container { flex: 1; min-height: 0; }
+.editor-container :deep(.monaco-block) { border-radius: var(--sk-radm); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); margin: 0; height: 100%; }
 .detail-pan { border: 0.5px solid var(--color-border-info); border-radius: var(--sk-radm); padding: 10px 14px; margin-top: auto; background: var(--color-background-info); font-size: 11px; line-height: 1.5; color: var(--color-text-info); flex-shrink: 0; overflow-y: auto; }
 .detail-pan .dt { font-weight: 500; margin-bottom: 4px; font-size: 13px; }
 .detail-pan :deep(code) { font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; }
