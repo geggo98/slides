@@ -86,7 +86,7 @@ onMounted(async () => {
     readOnly: true,
     automaticLayout: true,
     fontSize: 12,
-    fontFamily: 'var(--font-mono)',
+    fontFamily: "'0xProto', monospace",
     lineNumbers: 'on',
     lineNumbersMinChars: 3,
     minimap: { enabled: false },
@@ -111,6 +111,10 @@ onMounted(async () => {
     monaco.editor.setTheme(isDark.value ? 'mb-dark' : 'mb-light')
   })
 
+  document.fonts.ready.then(() => {
+    editor?.remeasureFonts()
+  })
+
   emit('ready', { editor, monaco })
 })
 
@@ -131,6 +135,13 @@ defineExpose({
 </template>
 
 <style scoped>
+@font-face {
+  font-family: '0xProto';
+  src: url('/fonts/0xProto-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 .monaco-block {
   border-radius: var(--sk-radm);
   overflow: hidden;
