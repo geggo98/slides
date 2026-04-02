@@ -102,7 +102,7 @@ onMounted(async () => {
     hideCursorInOverviewRuler: true,
     contextmenu: false,
     wordWrap: 'off',
-    lineDecorationsWidth: 0,
+    lineDecorationsWidth: 8,
     bracketPairColorization: { enabled: false },
     ...props.editorOptions,
   })
