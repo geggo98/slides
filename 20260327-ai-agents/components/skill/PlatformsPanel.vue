@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="platform-overview" title="Plattform-Übersicht" :open="true">
+    <CollapsibleSection id="platform-overview" title="Plattform-Übersicht" :open="false">
       <table class="tbl">
         <tr><th>Plattform</th><th>Bereitstellung</th><th>Features</th><th>Einschränkungen</th></tr>
         <tr><td><b>Claude Code (CLI)</b></td><td>~/.claude/skills/ oder .claude/skills/</td><td>Auto-Discovery, Slash-Commands, Subagents, Hooks</td><td><span class="dng">Kein AGENTS.md-Support (Stand April 2026)</span></td></tr>

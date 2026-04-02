@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="skills-mcp" title="Skills + MCP = Rezept + Küche" :open="true">
+    <CollapsibleSection id="skills-mcp" title="Skills + MCP = Rezept + Küche" :open="false">
       <b>MCP</b> stellt Werkzeuge bereit. <b>Skills</b> definieren, <em>wie</em> diese eingesetzt werden. Die Kombination ist das leistungsfähigste Pattern für agentenbasierte Workflows.
       <div class="code">---
 name: issue-workflow

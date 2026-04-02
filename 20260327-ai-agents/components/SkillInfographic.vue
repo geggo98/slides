@@ -134,6 +134,11 @@ const tabs = [
 
 <style scoped>
 .skill-infographic {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 430px;
+  overflow: hidden;
   font-family: v-bind('P.fontSans');
   --color-text-primary: v-bind('P.textPrimary');
   --color-text-secondary: v-bind('P.textSecondary');
@@ -165,6 +170,7 @@ const tabs = [
   flex-wrap: wrap;
   margin-bottom: 8px;
   align-items: center;
+  flex-shrink: 0;
 }
 .nav-sep {
   width: 1px;
@@ -196,6 +202,7 @@ const tabs = [
 }
 .panel-container {
   overflow-y: auto;
-  max-height: calc(100vh - 160px);
+  flex: 1;
+  min-height: 0;
 }
 </style>

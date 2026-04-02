@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="permission-hierarchy" title="Permission-Hierarchie" :open="true">
+    <CollapsibleSection id="permission-hierarchy" title="Permission-Hierarchie" :open="false">
       Claude Code evaluiert: <span class="dng">deny</span> → <span class="warn">ask</span> → <span class="succ">allow</span> (deny gewinnt immer).
       <div class="flow">
         <div class="flow-box fb-purple">User Settings<br><span class="flow-sub">~/.claude/settings.json</span></div>
