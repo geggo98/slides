@@ -1,5 +1,28 @@
 <script setup>
 import CollapsibleSection from './CollapsibleSection.vue'
+import MonacoBlock from './MonacoBlock.vue'
+
+const codeSkillDir = `# Im SKILL.md referenzieren:
+Nutze das Skript unter
+\${CLAUDE_SKILL_DIR}/scripts/extract_pdf.py`
+
+const codeBad = `data = process_invoices(...)
+# 500 KB JSON direkt auf stdout
+print(json.dumps(data, indent=2))
+print(f"DEBUG: {len(data)} Rechnungen")
+print(f"Verarbeitung in {elapsed}s")`
+
+const codeGood = `data = process_invoices(...)
+out = Path("/tmp/invoices.json")
+out.write_text(json.dumps(data))
+
+# Nur das Nötigste auf stdout
+print(f"Ergebnis: {out}")
+print(f"{len(data)} Rechnungen OK")`
+
+const codeDynamic = `# Statt:    !\`kubectl get pods -o json\`          (kann >100KB sein)
+# Besser:   !\`kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase\`
+# Oder:     !\`./scripts/pod-summary.sh\`           (Wrapper, der filtert)`
 </script>
 
 <template>
@@ -25,37 +48,23 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
     <CollapsibleSection id="token-hygiene" title="Scripts — Ausführung & Token-Hygiene" :open="false">
       Skills können beliebige ausführbare Skripte enthalten. Claude führt sie via Bash aus — nur das <b>Output</b> gelangt in den Kontext.
-      <div class="code"># Im SKILL.md referenzieren:
-Nutze das Skript unter
-${CLAUDE_SKILL_DIR}/scripts/extract_pdf.py</div>
+      <MonacoBlock :code="codeSkillDir" language="markdown" height="76px" />
       <div class="callout callout-d"><b>Token-Hygiene: stdout/stderr = Kontextverbrauch!</b><br>Alles, was ein Skript auf die Konsole schreibt, landet im Kontextfenster und frisst Token-Budget. Verbose Logging, Debug-Output, lange JSON-Dumps — häufigster stiller Budgetkiller.</div>
       <b>Regel:</b> Nur das absolute Minimum auf stdout/stderr. Umfangreiche Ergebnisse in Dateien schreiben, nur Pfad referenzieren.
       <div class="vs-row">
         <div class="vs-col">
           <div class="vs-label dng">Schlecht — alles auf stdout</div>
-          <div class="code code-sm">data = process_invoices(...)
-# 500 KB JSON direkt auf stdout
-print(json.dumps(data, indent=2))
-print(f"DEBUG: {len(data)} Rechnungen")
-print(f"Verarbeitung in {elapsed}s")</div>
+          <MonacoBlock :code="codeBad" language="python" height="120px" />
         </div>
         <div class="vs-mid">vs.</div>
         <div class="vs-col">
           <div class="vs-label succ">Gut — Datei schreiben, Pfad ausgeben</div>
-          <div class="code code-sm">data = process_invoices(...)
-out = Path("/tmp/invoices.json")
-out.write_text(json.dumps(data))
-
-# Nur das Nötigste auf stdout
-print(f"Ergebnis: {out}")
-print(f"{len(data)} Rechnungen OK")</div>
+          <MonacoBlock :code="codeGood" language="python" height="160px" />
         </div>
       </div>
       <div class="callout callout-i"><b>Tipp: Dateityp je nach Anwendungsfall</b><br>Logs → <code>.log</code> | Strukturierte Daten → <code>.json</code>, <code>.parquet</code> | Reports → <code>.pdf</code>, <code>.md</code> | Tabellen → <code>.csv</code><br>Auf stdout: nur Pfad + Zusammenfassung + Fehlermeldungen.</div>
       <p>Dasselbe gilt für <b>Dynamic Context Injection</b> (<code>!`command`</code>):</p>
-      <div class="code code-sm"># Statt:    !`kubectl get pods -o json`          (kann &gt;100KB sein)
-# Besser:   !`kubectl get pods -o custom-columns=NAME:.metadata.name,STATUS:.status.phase`
-# Oder:     !`./scripts/pod-summary.sh`           (Wrapper, der filtert)</div>
+      <MonacoBlock :code="codeDynamic" language="bash" height="76px" />
     </CollapsibleSection>
 
     <CollapsibleSection id="cross-refs" title="Querverweise zwischen Skills">
@@ -82,8 +91,6 @@ print(f"{len(data)} Rechnungen OK")</div>
 .pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
 .pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-secondary); }
 .sep { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 12px 0; }
-.code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 12px 16px; border-radius: var(--sk-radm); overflow-x: auto; white-space: pre; line-height: 1.6; margin: 8px 0; border: 0.5px solid var(--color-border-tertiary); }
-.code-sm { font-size: 11px; }
 .callout { border-left: 3px solid var(--color-border-warning); background: var(--color-background-warning); padding: 10px 14px; border-radius: 0 var(--sk-radm) var(--sk-radm) 0; margin: 10px 0; font-size: 12px; line-height: 1.6; color: var(--color-text-warning); }
 .callout-d { border-left-color: var(--color-border-danger); background: var(--color-background-danger); color: var(--color-text-danger); }
 .callout-i { border-left-color: var(--color-border-info); background: var(--color-background-info); color: var(--color-text-info); }
