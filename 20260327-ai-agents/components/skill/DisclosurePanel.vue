@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="load-system" title="Dreistufiges Ladesystem" :open="true">
+    <CollapsibleSection id="load-system" title="Dreistufiges Ladesystem" :open="false">
       <div class="flow">
         <div class="flow-box fb-purple">Level 1<br><span class="flow-sub">Metadaten</span></div>
         <span class="flow-arrow">&rarr;</span>

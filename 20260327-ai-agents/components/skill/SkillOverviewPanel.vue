@@ -11,7 +11,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
       <div class="metric"><div class="metric-label">Community-Schwachstellen</div><div class="metric-val dng">36,8%</div></div>
     </div>
 
-    <CollapsibleSection id="what-are-skills" title="Was sind Agent Skills?" :open="true">
+    <CollapsibleSection id="what-are-skills" title="Was sind Agent Skills?" :open="false">
       <b>Agent Skills</b> sind ein offener Standard (agentskills.io) für modulare, wiederverwendbare KI-Anweisungen. Im Kern: ein Verzeichnis mit einer <span class="hl">SKILL.md</span>-Datei plus optionalen Scripts, Referenzen und Assets. Skills laden <em>kontexteffizient on-demand</em> — im Gegensatz zu Projektanweisungen (CLAUDE.md / AGENTS.md), die dauerhaft geladen werden.
       <div class="flow">
         <div class="flow-box fb-purple">Metadaten<br><span class="flow-sub">~100 Tokens</span></div>

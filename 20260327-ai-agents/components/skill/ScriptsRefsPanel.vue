@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="patterns" title="Drei Implementierungsmuster" :open="true">
+    <CollapsibleSection id="patterns" title="Drei Implementierungsmuster" :open="false">
       <div class="cmp-grid">
         <div class="cmp-card"><h4><span class="badge badge-opt">A</span> Prompt-Only</h4><p>Nur Markdown-Anweisungen. Für Brand-Guidelines, Coding-Standards, Review-Checklisten.</p></div>
         <div class="cmp-card"><h4><span class="badge badge-ext">B</span> Prompt + Scripts</h4><p>Markdown plus Python/JS-Skripte. Für PDF/Excel-Manipulation, Datenverarbeitung.</p></div>
@@ -23,7 +23,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
       <b>Best Practices:</b> Dateien &gt;300 Zeilen: Inhaltsverzeichnis einfügen. Maximal eine Ebene tief verlinkt. Ungenutztes Material: entweder unnötig oder schlecht signalisiert.
     </CollapsibleSection>
 
-    <CollapsibleSection id="token-hygiene" title="Scripts — Ausführung & Token-Hygiene" :open="true">
+    <CollapsibleSection id="token-hygiene" title="Scripts — Ausführung & Token-Hygiene" :open="false">
       Skills können beliebige ausführbare Skripte enthalten. Claude führt sie via Bash aus — nur das <b>Output</b> gelangt in den Kontext.
       <div class="code"># Im SKILL.md referenzieren:
 Nutze das Skript unter

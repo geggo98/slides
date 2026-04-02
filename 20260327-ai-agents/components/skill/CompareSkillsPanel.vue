@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="agents-claude-skill" title="AGENTS.md vs. CLAUDE.md vs. SKILL.md" :open="true">
+    <CollapsibleSection id="agents-claude-skill" title="AGENTS.md vs. CLAUDE.md vs. SKILL.md" :open="false">
       <table class="tbl">
         <tr><th>Merkmal</th><th>AGENTS.md</th><th>CLAUDE.md</th><th>SKILL.md</th></tr>
         <tr><td>Zweck</td><td>Projektanweisungen</td><td>Projektanweisungen</td><td>Modulares Domänenwissen</td></tr>

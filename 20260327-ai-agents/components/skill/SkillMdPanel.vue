@@ -4,7 +4,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
 <template>
   <div>
-    <CollapsibleSection id="directory-structure" title="Verzeichnisstruktur" :open="true">
+    <CollapsibleSection id="directory-structure" title="Verzeichnisstruktur" :open="false">
       <div class="tree-root">skill-name/</div>
       <div class="tree-list">
         <div class="tree-item"><span class="fname">SKILL.md</span><span class="fdesc">— Pflicht: YAML-Frontmatter + Markdown-Instruktionen</span></div>
@@ -14,7 +14,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
       </div>
     </CollapsibleSection>
 
-    <CollapsibleSection id="yaml-frontmatter" title="YAML-Frontmatter — Schema" :open="true">
+    <CollapsibleSection id="yaml-frontmatter" title="YAML-Frontmatter — Schema" :open="false">
       <p style="margin-bottom:8px"><b>Pflichtfelder</b> <span class="badge badge-req">required</span></p>
       <table class="tbl">
         <tr><th>Feld</th><th>Constraints</th></tr>
