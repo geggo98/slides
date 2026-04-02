@@ -6,7 +6,10 @@ const props = defineProps({
   code: { type: String, required: true },
   language: { type: String, default: 'yaml' },
   height: { type: String, default: '180px' },
+  editorOptions: { type: Object, default: () => ({}) },
 })
+
+const emit = defineEmits(['ready'])
 
 const { isDark } = useDarkMode()
 const container = ref(null)
@@ -24,8 +27,12 @@ onMounted(async () => {
     rules: [
       { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
       { token: 'constant', foreground: '79b8ff' },
+      { token: 'entity.name', foreground: 'b392f0' },
       { token: 'keyword', foreground: 'f97583' },
+      { token: 'storage', foreground: 'f97583' },
       { token: 'string', foreground: '9ecbff' },
+      { token: 'support', foreground: '79b8ff' },
+      { token: 'variable', foreground: 'ffab70' },
       { token: 'tag', foreground: '85e89d' },
       { token: 'type', foreground: '79b8ff' },
       { token: 'number', foreground: '79b8ff' },
@@ -34,9 +41,12 @@ onMounted(async () => {
       'editor.background': '#24292e',
       'editor.foreground': '#e1e4e8',
       'editorLineNumber.foreground': '#444d56',
+      'editorLineNumber.activeForeground': '#e1e4e8',
       'editor.selectionBackground': '#3392FF44',
       'editor.lineHighlightBackground': '#2b3036',
+      'editorWidget.background': '#1f2428',
       'editorGutter.background': '#24292e',
+      'editorCodeLens.foreground': '#8b949e',
     },
   })
 
@@ -46,8 +56,12 @@ onMounted(async () => {
     rules: [
       { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
       { token: 'constant', foreground: '005cc5' },
+      { token: 'entity.name', foreground: '6f42c1' },
       { token: 'keyword', foreground: 'd73a49' },
+      { token: 'storage', foreground: 'd73a49' },
       { token: 'string', foreground: '032f62' },
+      { token: 'support', foreground: '005cc5' },
+      { token: 'variable', foreground: 'e36209' },
       { token: 'tag', foreground: '22863a' },
       { token: 'type', foreground: '005cc5' },
       { token: 'number', foreground: '005cc5' },
@@ -56,13 +70,15 @@ onMounted(async () => {
       'editor.background': '#ffffff',
       'editor.foreground': '#24292e',
       'editorLineNumber.foreground': '#1b1f234d',
+      'editorLineNumber.activeForeground': '#24292e',
       'editor.selectionBackground': '#0366d625',
       'editor.lineHighlightBackground': '#f6f8fa',
+      'editorWidget.background': '#f6f8fa',
       'editorGutter.background': '#ffffff',
+      'editorCodeLens.foreground': '#6a737d',
     },
   })
 
-  const lineCount = props.code.split('\n').length
   editor = monaco.editor.create(container.value, {
     value: props.code,
     language: props.language,
@@ -89,15 +105,23 @@ onMounted(async () => {
     wordWrap: 'off',
     lineDecorationsWidth: 0,
     bracketPairColorization: { enabled: false },
+    ...props.editorOptions,
   })
 
   watchEffect(() => {
     monaco.editor.setTheme(isDark.value ? 'mb-dark' : 'mb-light')
   })
+
+  emit('ready', { editor, monaco })
 })
 
 onBeforeUnmount(() => {
   editor?.dispose()
+})
+
+defineExpose({
+  getEditor: () => editor,
+  getMonaco: () => monaco,
 })
 </script>
 
