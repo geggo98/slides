@@ -296,7 +296,6 @@ const currentDetail = computed(() => {
 })
 
 const editorOptions = {
-  lineHeight: 26,
   padding: { top: 8, bottom: 8 },
 }
 
