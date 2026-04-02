@@ -194,3 +194,11 @@ clicks: false
 # Gesamtübersicht — Interaktiv
 
 <FullInfographic />
+
+---
+clicks: false
+---
+
+# Agent Skills — Deep Dive
+
+<SkillInfographic />
