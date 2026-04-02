@@ -86,7 +86,6 @@ onMounted(async () => {
     readOnly: true,
     automaticLayout: true,
     fontSize: 12,
-    lineHeight: 22,
     fontFamily: 'var(--font-mono)',
     lineNumbers: 'on',
     lineNumbersMinChars: 3,
