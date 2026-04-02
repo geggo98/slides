@@ -1,5 +1,16 @@
 <script setup>
 import CollapsibleSection from './CollapsibleSection.vue'
+import MonacoBlock from './MonacoBlock.vue'
+
+const scriptTrickCode = `# Dynamic Context Injection (Claude Code only)
+---
+name: pr-summary
+context: fork
+agent: Explore
+---
+## Kontext
+- PR diff: !\`gh pr diff\`
+- Geänderte Dateien: !\`gh pr diff --name-only\``
 </script>
 
 <template>
@@ -27,15 +38,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
 
     <CollapsibleSection id="script-trick" title="Script-Trick: nur Output in Kontext">
       Claude führt Skripte via Bash aus. Der <b>Quellcode</b> des Skripts wird <span class="succ">nicht in den Kontext geladen</span> — nur sein <b>Output</b>. Ein 2.000-Zeilen Python-Skript verbraucht null Kontextbudget.
-      <div class="code"># Dynamic Context Injection (Claude Code only)
----
-name: pr-summary
-context: fork
-agent: Explore
----
-## Kontext
-- PR diff: !`gh pr diff`
-- Geänderte Dateien: !`gh pr diff --name-only`</div>
+      <MonacoBlock :code="scriptTrickCode" language="yaml" height="220px" />
       <div class="note">Die !`command`-Syntax ist eine Claude-Code-Erweiterung und nicht Teil des offenen Standards.</div>
     </CollapsibleSection>
   </div>
@@ -55,7 +58,6 @@ agent: Explore
 .warn { color: var(--color-text-warning); }
 .dng { color: var(--color-text-danger); }
 .note { font-size: 12px; color: var(--color-text-tertiary); font-style: italic; margin-top: 6px; }
-.code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 12px 16px; border-radius: var(--sk-radm); overflow-x: auto; white-space: pre; line-height: 1.6; margin: 8px 0; border: 0.5px solid var(--color-border-tertiary); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
 .tbl th { text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-tertiary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
 .tbl td { padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }

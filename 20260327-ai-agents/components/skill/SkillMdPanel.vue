@@ -1,5 +1,6 @@
 <script setup>
 import CollapsibleSection from './CollapsibleSection.vue'
+import CrossRefLink from './CrossRefLink.vue'
 </script>
 
 <template>
@@ -48,21 +49,10 @@ import CollapsibleSection from './CollapsibleSection.vue'
     </CollapsibleSection>
 
     <CollapsibleSection id="cc-extensions" title="Beispiel SKILL.md">
-      <div class="code">---
-name: explain-code
-description: Explains code with visual diagrams and
-  analogies. Use when explaining how code works,
-  teaching about a codebase, or when the user
-  asks "how does this work?"
----
-
-When explaining code, always include:
-
-1. **Start with an analogy**
-2. **Draw a diagram**: Use ASCII art
-3. **Walk through the code**: Step-by-step
-4. **Highlight a gotcha**: Common mistake</div>
       <div class="note">Die Description ist das kritischste Element — Claude entscheidet allein anhand ~100 Tokens Metadaten, ob ein Skill relevant ist.</div>
+      <div style="margin-top: 8px">
+        <CrossRefLink tab="explorer" label="Vollständiges Beispiel im Example Explorer ansehen" />
+      </div>
     </CollapsibleSection>
   </div>
 </template>
@@ -81,7 +71,6 @@ When explaining code, always include:
 .badge-ext { background: var(--color-background-warning); color: var(--color-text-warning); }
 .sep { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 12px 0; }
 .note { font-size: 12px; color: var(--color-text-tertiary); font-style: italic; margin-top: 6px; }
-.code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 12px 16px; border-radius: var(--sk-radm); overflow-x: auto; white-space: pre; line-height: 1.6; margin: 8px 0; border: 0.5px solid var(--color-border-tertiary); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
 .tbl th { text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-tertiary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
 .tbl td { padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }

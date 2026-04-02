@@ -1,12 +1,8 @@
 <script setup>
 import CollapsibleSection from './CollapsibleSection.vue'
-</script>
+import MonacoBlock from './MonacoBlock.vue'
 
-<template>
-  <div>
-    <CollapsibleSection id="skills-mcp" title="Skills + MCP = Rezept + Küche" :open="false">
-      <b>MCP</b> stellt Werkzeuge bereit. <b>Skills</b> definieren, <em>wie</em> diese eingesetzt werden. Die Kombination ist das leistungsfähigste Pattern für agentenbasierte Workflows.
-      <div class="code">---
+const codeMcp = `---
 name: issue-workflow
 allowed-tools:
   - mcp__jira__create_issue
@@ -15,7 +11,14 @@ allowed-tools:
 ## Workflow
 1. Sammle Issue-Details vom Nutzer
 2. Nutze mcp__jira__create_issue
-3. Erstelle Branch mit mcp__github__create_branch</div>
+3. Erstelle Branch mit mcp__github__create_branch`
+</script>
+
+<template>
+  <div>
+    <CollapsibleSection id="skills-mcp" title="Skills + MCP = Rezept + Küche" :open="false">
+      <b>MCP</b> stellt Werkzeuge bereit. <b>Skills</b> definieren, <em>wie</em> diese eingesetzt werden. Die Kombination ist das leistungsfähigste Pattern für agentenbasierte Workflows.
+      <MonacoBlock :code="codeMcp" language="yaml" height="240px" />
       <b>Namenskonvention:</b> <code>mcp__&lt;server_name&gt;__&lt;tool_name&gt;</code>
     </CollapsibleSection>
 
@@ -32,7 +35,6 @@ allowed-tools:
 </template>
 
 <style scoped>
-.code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 12px 16px; border-radius: var(--sk-radm); overflow-x: auto; white-space: pre; line-height: 1.6; margin: 8px 0; border: 0.5px solid var(--color-border-tertiary); }
 .dng { color: var(--color-text-danger); }
 .succ { color: var(--color-text-success); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }

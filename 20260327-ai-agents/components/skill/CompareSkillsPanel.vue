@@ -1,5 +1,18 @@
 <script setup>
 import CollapsibleSection from './CollapsibleSection.vue'
+import MonacoBlock from './MonacoBlock.vue'
+
+const codeAgentsMd = `# Beispiel AGENTS.md
+## Project overview
+E-commerce platform: Next.js 14, Postgres, Stripe.
+
+## Code style
+- TypeScript strict, no \`any\` types
+- Functional components with named exports
+
+## Commands
+- pnpm dev — Start dev server
+- pnpm test — Run Vitest`
 </script>
 
 <template>
@@ -33,17 +46,7 @@ import CollapsibleSection from './CollapsibleSection.vue'
         <tr><td>Adoption</td><td>60.000+ Projekte, 20.000+ Repos auf GitHub</td></tr>
         <tr><td>CC Status</td><td><span class="dng">Nicht nativ.</span> Issue #6235 mit 3.200+ Upvotes. Workaround: <code>@AGENTS.md</code></td></tr>
       </table>
-      <div class="code"># Beispiel AGENTS.md
-## Project overview
-E-commerce platform: Next.js 14, Postgres, Stripe.
-
-## Code style
-- TypeScript strict, no `any` types
-- Functional components with named exports
-
-## Commands
-- pnpm dev — Start dev server
-- pnpm test — Run Vitest</div>
+      <MonacoBlock :code="codeAgentsMd" language="markdown" height="240px" />
       <div class="note">Kein YAML-Frontmatter nötig — reines Markdown. Die Einfachheit ist Designziel.</div>
     </CollapsibleSection>
 
@@ -66,7 +69,6 @@ E-commerce platform: Next.js 14, Postgres, Stripe.
 .sep { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 12px 0; }
 .note { font-size: 12px; color: var(--color-text-tertiary); font-style: italic; margin-top: 6px; }
 .callout { border-left: 3px solid var(--color-border-warning); background: var(--color-background-warning); padding: 10px 14px; border-radius: 0 var(--sk-radm) var(--sk-radm) 0; margin: 10px 0; font-size: 12px; line-height: 1.6; color: var(--color-text-warning); }
-.code { font-family: var(--font-mono); font-size: 12px; background: var(--color-background-secondary); padding: 12px 16px; border-radius: var(--sk-radm); overflow-x: auto; white-space: pre; line-height: 1.6; margin: 8px 0; border: 0.5px solid var(--color-border-tertiary); }
 .tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
 .tbl th { text-align: left; padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-tertiary); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
 .tbl td { padding: 6px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: top; }
