@@ -407,7 +407,7 @@ onBeforeUnmount(() => {
   <div class="ex">
     <div class="ex-hint">
       <span class="dot" />
-      Annotationen sind klickbar und zeigen Erkl&auml;rungen
+      &#x1F4A1; Annotationen sind klickbar und zeigen Erkl&auml;rungen
     </div>
     <div class="ex-layout">
       <div class="tree-pan">
@@ -427,6 +427,18 @@ onBeforeUnmount(() => {
           </span>
           <span class="tn-label">{{ item.label }}</span>
         </div>
+        <!-- Detail panel below tree -->
+        <div v-if="currentDetail" class="detail-pan">
+          <div class="dt">{{ currentDetail.t }}</div>
+          <span v-html="currentDetail.b" />
+          <div v-if="currentDetail.ref" class="ref">
+            <CrossRefLink
+              :tab="currentDetail.ref.tab"
+              :section="currentDetail.ref.section"
+              :label="currentDetail.ref.label"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="content-pan">
@@ -438,22 +450,7 @@ onBeforeUnmount(() => {
         <div v-if="FILES[activeFile].type === 'welcome'" class="welcome" v-html="FILES[activeFile].content" />
 
         <!-- Monaco editor for files -->
-        <template v-else-if="FILES[activeFile].lines">
-          <div ref="editorContainer" class="editor-container" />
-
-          <!-- Detail panel -->
-          <div v-if="currentDetail" class="detail-pan">
-            <div class="dt">{{ currentDetail.t }}</div>
-            <span v-html="currentDetail.b" />
-            <div v-if="currentDetail.ref" class="ref">
-              <CrossRefLink
-                :tab="currentDetail.ref.tab"
-                :section="currentDetail.ref.section"
-                :label="currentDetail.ref.label"
-              />
-            </div>
-          </div>
-        </template>
+        <div v-else-if="FILES[activeFile].lines" ref="editorContainer" class="editor-container" />
       </div>
     </div>
   </div>
@@ -463,8 +460,8 @@ onBeforeUnmount(() => {
 .ex { padding: 0.5rem 0; }
 .ex-hint { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-background-info); border: 0.5px solid var(--color-border-info); flex-shrink: 0; }
-.ex-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 0; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--sk-rad); overflow: hidden; min-height: 420px; }
-.tree-pan { background: var(--color-background-secondary); padding: 12px; border-right: 0.5px solid var(--color-border-tertiary); font-size: 12px; }
+.ex-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 0; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--sk-rad); overflow: hidden; min-height: 420px; }
+.tree-pan { background: var(--color-background-secondary); padding: 12px; border-right: 0.5px solid var(--color-border-tertiary); font-size: 12px; display: flex; flex-direction: column; }
 .tp-title { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px; }
 .tn { padding: 3px 0; cursor: pointer; color: var(--color-text-secondary); transition: color .1s; display: flex; align-items: center; gap: 5px; user-select: none; }
 .tn:hover { color: var(--color-text-primary); }
@@ -475,12 +472,12 @@ onBeforeUnmount(() => {
 .file-ico { color: var(--color-text-tertiary); }
 .skill-ico { color: var(--color-text-info); }
 .tn-label { font-family: var(--font-mono); font-size: 12px; }
-.content-pan { padding: 16px; overflow-y: auto; background: var(--color-background-primary); display: flex; flex-direction: column; }
+.content-pan { padding: 16px; overflow-y: auto; background: var(--color-background-primary); display: flex; flex-direction: column; min-height: 0; }
 .file-header { font-size: 13px; font-weight: 500; margin-bottom: 12px; }
 .file-path { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); }
 .welcome { font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; padding: 20px 0; }
 .editor-container { flex: 1; min-height: 360px; border-radius: var(--sk-radm); overflow: hidden; border: 0.5px solid var(--color-border-tertiary); }
-.detail-pan { border: 0.5px solid var(--color-border-info); border-radius: var(--sk-radm); padding: 10px 14px; margin-top: 12px; background: var(--color-background-info); font-size: 12px; line-height: 1.6; color: var(--color-text-info); flex-shrink: 0; }
+.detail-pan { border: 0.5px solid var(--color-border-info); border-radius: var(--sk-radm); padding: 10px 14px; margin-top: auto; background: var(--color-background-info); font-size: 11px; line-height: 1.5; color: var(--color-text-info); flex-shrink: 0; overflow-y: auto; }
 .detail-pan .dt { font-weight: 500; margin-bottom: 4px; font-size: 13px; }
 .detail-pan :deep(code) { font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; }
 .detail-pan :deep(.badge-s) { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: var(--sk-radm); font-weight: 500; margin-left: 4px; vertical-align: middle; }
