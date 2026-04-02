@@ -4,6 +4,7 @@ title: "AI Coding Agent Configuration"
 info: |
   Systematischer Vergleich: Claude Code, Codex, Windsurf, Junie, OpenCode, Gemini CLI.
   Primitive, Protokolle, Worktrees und Cross-Tool-Kompatibilität.
+monaco: true
 ---
 
 # AI Coding Agent Configuration
