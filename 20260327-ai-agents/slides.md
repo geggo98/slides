@@ -203,3 +203,27 @@ clicks: false
 # Agent Skills — Deep Dive
 
 <SkillInfographic />
+
+---
+clicks: false
+---
+
+# Clinejection -- Anatomie eines Supply-Chain-Angriffs
+
+<ClinejectionAttackChain />
+
+---
+clicks: false
+---
+
+# Clinejection -- Zeitverlauf und vereitelte Eskalation
+
+<ClinejectionTimeline />
+
+---
+clicks: false
+---
+
+# Clinejection -- Willisons "Lethal Trifecta"
+
+<ClinejectionTrifecta />
