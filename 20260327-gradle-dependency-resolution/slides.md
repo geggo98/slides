@@ -329,17 +329,28 @@ Die JVM-Welt hat keine Lifecycle-Scripts — aber Fremdcode wird dennoch ausgef�
 
 ---
 
-# Fallbeispiel: Trivy Supply-Chain-Angriff (März 2026)
+# Fallbeispiel: Trivy → LiteLLM Supply-Chain-Angriff (März 2026)
 
 Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompromittiert.
 
-- Angreifer übernahmen 76 von 77 Version-Tags der `trivy-action` GitHub Action
-- Manipulierte Binary lief **vor** der Scan-Logik
-- CI/CD-Secrets (GitHub-Tokens, Cloud-Credentials) wurden exfiltriert
-- Über **1.000 Cloud-Umgebungen** betroffen
-- LiteLLM nachgelagert infiziert (Trivy in deren CI/CD-Pipeline)
+- Angreifer (TeamPCP) übernahmen 76 von 77 Version-Tags der `trivy-action` GitHub Action
+- Manipulierte Binary lief **vor** der Scan-Logik → CI/CD-Secrets exfiltriert
+
+**Kettenreaktion — LiteLLM** (~95 Mio. Downloads/Monat):
+
+- LiteLLM nutzte Trivy in der CI/CD-Pipeline → PyPI-Publishing-Tokens gestohlen
+- Zwei kompromittierte Releases (v1.82.7, v1.82.8) mit dreistufigem Payload:
+  Credential-Harvesting → Kubernetes Lateral Movement → persistente Backdoor
+- Gestohlene Credentials ermöglichten Zugriff auf nachgelagerte Systeme (u.a. **Mercor**, KI-Daten-Zulieferer für Meta, OpenAI, Anthropic)
+- Meta pausierte alle Mercor-Projekte, proprietäre KI-Trainingsdaten potenziell exponiert
 
 > Die Ironie: Ein Security-Scanner wurde zum Angriffsvektor — weil er mit denselben Privilegien lief wie der Build.
+
+---
+clicks: false
+---
+
+<AxiosAttack />
 
 ---
 
@@ -603,3 +614,6 @@ ul { font-size: 0.9em; }
 - [pnpm: Mitigating Supply Chain Attacks](https://pnpm.io/supply-chain-security)
 - [uv: Locking and Syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
 - [Trivy Supply-Chain-Angriff (Aqua Security, März 2026)](https://www.aquasec.com/blog/trivy-supply-chain-attack-what-you-need-to-know/)
+- [LiteLLM Security Update (März 2026)](https://docs.litellm.ai/blog/security-update-march-2026)
+- [Supply-Chain-Attacke auf LiteLLM (heise online)](https://www.heise.de/-11223618)
+- [Meta Pauses Work With Mercor After Data Breach (WIRED)](https://www.wired.com/story/meta-pauses-work-with-mercor-after-data-breach-puts-ai-industry-secrets-at-risk/)
