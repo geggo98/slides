@@ -189,12 +189,10 @@ clicks: false
 7. **Projekt-Level-Configs versionieren** — Secrets nur in User-Level oder Env-Vars
 
 ---
-clicks: false
+layout: center
 ---
 
-# Gesamtübersicht — Interaktiv
-
-<FullInfographic />
+# Bonusmaterial
 
 ---
 clicks: false
@@ -227,3 +225,12 @@ clicks: false
 # Clinejection -- Willisons "Lethal Trifecta"
 
 <ClinejectionTrifecta />
+
+---
+clicks: false
+---
+
+# Gesamtübersicht — Interaktiv
+
+<FullInfographic />
+
