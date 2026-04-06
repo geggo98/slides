@@ -219,7 +219,7 @@ clicks: false
 <ClinejectionTimeline />
 
 ---
-clicks: false
+clicks: 1
 ---
 
 # Clinejection -- Willisons "Lethal Trifecta"
