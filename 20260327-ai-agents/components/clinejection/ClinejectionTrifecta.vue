@@ -1,9 +1,14 @@
 <script setup>
 import { computed } from 'vue'
-import { useDarkMode } from '@slidev/client'
+import { useDarkMode, useNav } from '@slidev/client'
 import { TRIFECTA } from './data'
 
 const { isDark } = useDarkMode()
+const nav = useNav()
+const showFourth = computed(() => nav.clicks.value >= 1)
+
+const baseTrifecta = TRIFECTA.filter(t => !t.extended)
+const extendedItem = TRIFECTA.find(t => t.extended)
 
 const P = computed(() => isDark.value ? {
   textPrimary: '#e5e5e5',
@@ -53,22 +58,24 @@ function badgeBorder(t) {
   return t.extended ? P.value.borderWarning : P.value.borderSuccess
 }
 function badgeText(t) {
-  return t.extended ? 'ERWEITERUNG' : 'ERF\u00dcLLT'
+  return t.extended ? 'ERWEITERUNG' : 'ERFÜLLT'
 }
 </script>
 
 <template>
   <div class="trifecta-slide">
     <p class="intro">
-      Simon Willison identifiziert drei F&auml;higkeiten, deren Kombination KI-Agenten verwundbar macht:
-      <strong>Zugang zu privaten Daten</strong>, <strong>Kontakt mit nicht-vertrauensw&uuml;rdigen Inhalten</strong>
+      Simon Willison identifiziert drei Fähigkeiten, deren Kombination KI-Agenten verwundbar macht:
+      <strong>Zugang zu privaten Daten</strong>, <strong>Kontakt mit nicht-vertrauenswürdigen Inhalten</strong>
       und <strong>externe Kommunikation</strong>.
-      Clinejection erf&uuml;llt alle drei &mdash; und offenbart ein viertes Element, das im Modell fehlt.
+      <span v-if="!showFourth">Clinejection erfüllt alle drei.</span>
+      <span v-else>Clinejection erfüllt alle drei &mdash; und offenbart ein viertes Element, das im Modell fehlt.</span>
     </p>
 
     <div class="trifecta-grid">
+      <!-- Row 1: Private Data + Untrusted Content -->
       <div
-        v-for="t in TRIFECTA"
+        v-for="t in baseTrifecta.slice(0, 2)"
         :key="t.label"
         class="trifecta-cell"
         :style="{
@@ -77,7 +84,7 @@ function badgeText(t) {
         }"
       >
         <div class="cell-header">
-          <span class="cell-label" :style="{ color: t.extended ? P.textWarning : P.textPrimary }">
+          <span class="cell-label" :style="{ color: P.textPrimary }">
             {{ t.label }}
           </span>
           <span
@@ -92,6 +99,61 @@ function badgeText(t) {
           </span>
         </div>
         <p class="cell-desc">{{ t.desc }}</p>
+      </div>
+
+      <!-- Row 2: External Comms (animated centering) -->
+      <div
+        class="trifecta-cell external-comms"
+        :class="{ centered: !showFourth }"
+        :style="{
+          borderColor: cellBorder(baseTrifecta[2]),
+          borderStyle: cellBorderStyle(baseTrifecta[2]),
+        }"
+      >
+        <div class="cell-header">
+          <span class="cell-label" :style="{ color: P.textPrimary }">
+            {{ baseTrifecta[2].label }}
+          </span>
+          <span
+            class="cell-badge"
+            :style="{
+              color: badgeColor(baseTrifecta[2]),
+              background: badgeBg(baseTrifecta[2]),
+              borderColor: badgeBorder(baseTrifecta[2]),
+            }"
+          >
+            {{ badgeText(baseTrifecta[2]) }}
+          </span>
+        </div>
+        <p class="cell-desc">{{ baseTrifecta[2].desc }}</p>
+      </div>
+
+      <!-- Row 2: Modify Trusted Artifacts (fade in) -->
+      <div
+        v-if="extendedItem"
+        class="trifecta-cell extended-cell"
+        :class="{ visible: showFourth }"
+        :style="{
+          borderColor: cellBorder(extendedItem),
+          borderStyle: cellBorderStyle(extendedItem),
+        }"
+      >
+        <div class="cell-header">
+          <span class="cell-label" :style="{ color: P.textWarning }">
+            {{ extendedItem.label }}
+          </span>
+          <span
+            class="cell-badge"
+            :style="{
+              color: badgeColor(extendedItem),
+              background: badgeBg(extendedItem),
+              borderColor: badgeBorder(extendedItem),
+            }"
+          >
+            {{ badgeText(extendedItem) }}
+          </span>
+        </div>
+        <p class="cell-desc">{{ extendedItem.desc }}</p>
       </div>
     </div>
 
@@ -121,6 +183,23 @@ function badgeText(t) {
   border-radius: 8px;
   padding: 10px 12px;
   background: v-bind('P.bgPrimary');
+}
+.external-comms {
+  transition: transform 0.5s ease;
+}
+.external-comms.centered {
+  transform: translateX(calc(50% + 4px));
+}
+.extended-cell {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s ease 0.2s, transform 0.4s ease 0.2s;
+  pointer-events: none;
+}
+.extended-cell.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
 }
 .cell-header {
   display: flex; justify-content: space-between;
