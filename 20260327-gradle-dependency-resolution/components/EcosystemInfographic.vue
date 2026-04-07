@@ -38,6 +38,7 @@ const maxRel = Math.max(...sizeData.map(d => d.releases))
 const dlData = [
   { name: 'Maven Central', value: 839.05e9, growth: '+19,42 %', cls: 'maven' },
   { name: 'npm', value: 7970e9, growth: '+65,43 %', cls: 'npm' },
+  { name: '  ↳ davon Axios', value: 5200e9, growth: '~100 Mio./Woche', cls: 'npm', indent: true },
   { name: 'PyPI', value: 804.97e9, growth: '+50,64 %', cls: 'pypi' },
   { name: 'Go Modules*', value: null, growth: 'k.\u00A0A.', cls: 'go' },
 ]
@@ -159,8 +160,8 @@ function ecoLabel(eco) {
             <button class="scale-btn" :class="{ active: downloadScale === 'log' }" @click.stop="downloadScale = 'log'">Logarithmisch</button>
           </div>
           <div class="dl-bars">
-            <div v-for="d in dlData" :key="d.name" class="bar-row">
-              <div class="bar-name">{{ d.name }}</div>
+            <div v-for="d in dlData" :key="d.name" class="bar-row" :class="{ 'indent-row': d.indent }">
+              <div class="bar-name" :class="{ 'indent-name': d.indent }">{{ d.name }}</div>
               <div class="bar-track">
                 <template v-if="d.value">
                   <div class="bar" :class="d.cls" :style="{ width: dlWidth(d) + '%' }"></div>
@@ -341,6 +342,8 @@ function ecoLabel(eco) {
   color: var(--color-text-primary); font-weight: 500;
 }
 .dl-bars .bar-row { grid-template-columns: 100px 1fr 160px; }
+.dl-bars .indent-row { height: 22px; opacity: 0.75; }
+.indent-name { font-size: 10px; font-weight: 400; padding-left: 8px; }
 .growth { font-size: 9px; color: var(--color-text-tertiary); margin-left: 4px; }
 
 /* ── Tab 3: Malware ── */
