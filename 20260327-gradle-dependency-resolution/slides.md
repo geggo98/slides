@@ -550,6 +550,12 @@ Als CI-Gate einbinden:
 
 > Snapshots nur in Feature-Branches / Integrations-Builds — nie Richtung Produktion.
 
+--- 
+layout: center 
+--- 
+
+# Bonusmaterial
+
 ---
 clicks: false
 ---
@@ -563,12 +569,6 @@ clicks: false
 # Feature-Vergleich
 
 <CompareTable />
-
----
-clicks: false
----
-
-<GradleInfographic />
 
 ---
 
@@ -591,7 +591,14 @@ th, td { padding: 0.25em 0.5em !important; }
 | **Dependency Scanner** | Bekannte CVEs | CI-Pipeline |
 | **Build-Sandbox** | Code Execution durch Deps/Plugins | Container, Network-Policies |
 
+
 ---
+clicks: false
+---
+
+<EcosystemInfographic />
+
+--- 
 
 # Weiterführende Links
 
@@ -622,4 +629,11 @@ ul { font-size: 0.9em; }
 clicks: false
 ---
 
-<EcosystemInfographic />
+<GradleInfographic />
+
+--- 
+layout: end 
+--- 
+
+# Danke 
+
