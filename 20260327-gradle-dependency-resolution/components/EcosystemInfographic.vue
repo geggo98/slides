@@ -78,7 +78,8 @@ const secRows = [
   { m: 'Namespace-Verifikation', maven: ['✓ DNS TXT / GitHub', 'good'], npm: ['✗ flach, frei', 'bad'], go: ['~ via Git-Repo', 'warn'] },
   { m: 'Signatur-Pflicht (Publish)', maven: ['✓ PGP verpflichtend', 'good'], npm: ['✗ keine', 'bad'], go: ['~ Git-Commit-Sig', 'warn'] },
   { m: 'Signatur-Verif. downstream', maven: ['~ opt-in (Gradle)', 'warn'], npm: ['✗ keine', 'bad'], go: ['✓ Checksum-DB', 'good'] },
-  { m: 'Install-Hooks (Code-Exec)', maven: ['✓ keine', 'good'], npm: ['✗ pre/postinstall', 'bad'], go: ['✓ keine', 'good'] },
+  { m: 'Code-Exec beim Install', maven: ['✓ keine', 'good'], npm: ['✗ pre/postinstall', 'bad'], go: ['✓ keine', 'good'] },
+  { m: 'Code-Exec beim Build²', maven: ['✗ Plugins, Ann.-Proc.', 'bad'], npm: ['✗ Build-Tools, Tests', 'bad'], go: ['~ nur test/generate', 'warn'] },
   { m: 'Immutabilität (Publisher)', maven: ['✓ absolut\u00B9', 'good'], npm: ['~ 72h Unpublish', 'warn'], go: ['✓ Proxy-Cache', 'good'] },
   { m: 'Security-Removal (Operator)', maven: ['~ informell', 'warn'], npm: ['~ aktiv, schnell', 'warn'], go: ['~ Proxy blocken', 'warn'] },
   { m: 'Sigstore-Integration', maven: ['~ opt. seit 01/25', 'warn'], npm: ['~ Provenance', 'warn'], go: ['✗ keine', 'bad'] },
@@ -222,7 +223,7 @@ function ecoLabel(eco) {
               </tr>
             </tbody>
           </table>
-          <p class="note">✓ stark · ~ teilweise · ✗ fehlend — ¹ Immutabilität gilt nur für Publisher. Sonatype entfernt Artifacts bei aktiver Malware, Brandjacking oder rechtlichen Anordnungen.</p>
+          <p class="note">✓ stark · ~ teilweise · ✗ fehlend — ¹ Immutabilität gilt nur für Publisher; Sonatype entfernt bei Malware/Brandjacking. — ² Ann.-Processors (Lombok, MapStruct) werden implizit beim Compile geladen, auch transitiv ohne Konfiguration. Gradle-Skripte sind ausführbarer Code. Go: <code>go build</code> führt keinen Dep-Code aus; <code>go test</code>/<code>go generate</code> explizit.</p>
         </div>
 
         <!-- Tab 5: Timeline -->
@@ -368,7 +369,7 @@ function ecoLabel(eco) {
   padding: 5px 6px; border-bottom: 1px solid var(--color-border-tertiary);
   color: var(--color-text-tertiary);
 }
-.sec-table td { padding: 4px 6px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: middle; }
+.sec-table td { padding: 3px 6px; border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: middle; }
 .sec-table tr:last-child td { border-bottom: none; }
 .th-maven { color: #d4691a !important; }
 .th-npm { color: #cb3837 !important; }
