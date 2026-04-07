@@ -617,3 +617,9 @@ ul { font-size: 0.9em; }
 - [LiteLLM Security Update (März 2026)](https://docs.litellm.ai/blog/security-update-march-2026)
 - [Supply-Chain-Attacke auf LiteLLM (heise online)](https://www.heise.de/-11223618)
 - [Meta Pauses Work With Mercor After Data Breach (WIRED)](https://www.wired.com/story/meta-pauses-work-with-mercor-after-data-breach-puts-ai-industry-secrets-at-risk/)
+
+---
+clicks: false
+---
+
+<EcosystemInfographic />
