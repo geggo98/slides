@@ -15,14 +15,19 @@ Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell` 
 Prefer **devenv tasks** over direct `bun run` commands — they handle dependencies automatically and simplify the Claude Code allow-list.
 
 ```sh
-devenv tasks run local:dev --input dir=<talk-directory>                    # start Slidev dev server (auto-picks port)
-devenv tasks run local:dev --input dir=<talk-directory> --input port=3030  # start on a specific port
 devenv tasks run slides:deploy       # full build pipeline: install → build all talks → landing page
 ```
 
-**Always specify `--input port=<port>`** so the server URL is known. Without it, Slidev auto-picks a free port in 3030–4000. To find a running instance's port, use the `find-slidev-port.sh` script from the **/slidev** skill.
+### Starting the Dev Server
 
-Use the **/tmux** skill to run the dev server in a persistent tmux session so it stays alive across tool calls.
+The Slidev dev server requires a full TTY and **will not start as a sub-process of the agent**. Use this workflow instead:
+
+1. **Check for a running server** using the `find-slidev-port.sh` script from the **/slidev** skill.
+2. **If no server is running**, use the **/tmux** skill to start one in a persistent tmux session:
+   ```sh
+   bun run dev -- --port 3031 ./<talk-directory>/slides.md
+   ```
+   Always specify `--port` so the server URL is known.
 
 **Dev console**: In the devenv tasks TUI, select a task with the cursor keys and press **Ctrl-e** to expand its logs.
 
