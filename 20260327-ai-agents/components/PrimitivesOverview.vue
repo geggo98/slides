@@ -21,7 +21,7 @@ const primitives = computed(() =>
         {
           icon: "📋",
           name: "Instruktionsdatei",
-          analogy: "Firmenhandbuch",
+          analogy: "Projekthandbuch",
           bg: "#2a2640",
           color: "#a5a0e0",
           purpose:
@@ -37,7 +37,7 @@ const primitives = computed(() =>
         {
           icon: "📐",
           name: "Rules",
-          analogy: "Abteilungsrichtlinien",
+          analogy: "Programmierrichtlinien",
           bg: "#1a2840",
           color: "#85b7eb",
           purpose:
@@ -53,7 +53,7 @@ const primitives = computed(() =>
         {
           icon: "🔧",
           name: "Skills (SKILL.md)",
-          analogy: "Verfahrensanleitung",
+          analogy: "Run-Book",
           bg: "#1a3028",
           color: "#5cc0a0",
           purpose:
@@ -85,7 +85,7 @@ const primitives = computed(() =>
         {
           icon: "🔌",
           name: "MCP Server",
-          analogy: "USB-C-Adapter",
+          analogy: "Datenbank",
           bg: "#1a2840",
           color: "#85b7eb",
           purpose:
@@ -134,7 +134,7 @@ const primitives = computed(() =>
         {
           icon: "📋",
           name: "Instruktionsdatei",
-          analogy: "Firmenhandbuch",
+          analogy: "Projekthandbuch",
           bg: "#EEEDFE",
           color: "#3C3489",
           purpose:
@@ -150,7 +150,7 @@ const primitives = computed(() =>
         {
           icon: "📐",
           name: "Rules",
-          analogy: "Abteilungsrichtlinien",
+          analogy: "Programmierrichtlinien",
           bg: "#E6F1FB",
           color: "#0C447C",
           purpose:
@@ -166,7 +166,7 @@ const primitives = computed(() =>
         {
           icon: "🔧",
           name: "Skills (SKILL.md)",
-          analogy: "Verfahrensanleitung",
+          analogy: "Run-Book",
           bg: "#E1F5EE",
           color: "#085041",
           purpose:
@@ -198,7 +198,7 @@ const primitives = computed(() =>
         {
           icon: "🔌",
           name: "MCP Server",
-          analogy: "USB-C-Adapter",
+          analogy: "Datenbank",
           bg: "#E6F1FB",
           color: "#0C447C",
           purpose:
