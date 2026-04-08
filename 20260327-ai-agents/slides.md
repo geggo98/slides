@@ -101,7 +101,7 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
 ---
 clicks: false
---- 
+---
 
 # LSP · MCP · ACP
 
@@ -171,7 +171,7 @@ clicks: false
 
 ---
 clicks: false
---- 
+---
 
 # Git Worktrees für Agenten
 
@@ -197,7 +197,7 @@ layout: center
 
 ---
 clicks: false
---- 
+---
 
 # Agent Skills — Deep Dive
 
@@ -213,7 +213,7 @@ clicks: 1
 
 ---
 clicks: false
---- 
+---
 
 # Clinejection -- Zeitverlauf und vereitelte Eskalation
 

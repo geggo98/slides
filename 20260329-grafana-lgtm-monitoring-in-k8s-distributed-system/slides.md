@@ -38,12 +38,12 @@ RED · USE · Golden Signals
 
 <p class="text-slate-500" style="text-align: center; font-size: 0.8em; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
 
-| Golden Signal | RED-Equivalent | Perspektive |
-|---|---|---|
-| **Traffic** | Rate | User-facing |
-| **Errors** | Errors | User-facing |
-| **Latency** | Duration | User-facing |
-| **Saturation** | — | Infrastruktur (nur Golden Signals) |
+| Golden Signal  | RED-Equivalent | Perspektive                        |
+| -------------- | -------------- | ---------------------------------- |
+| **Traffic**    | Rate           | User-facing                        |
+| **Errors**     | Errors         | User-facing                        |
+| **Latency**    | Duration       | User-facing                        |
+| **Saturation** | —              | Infrastruktur (nur Golden Signals) |
 
 ---
 
@@ -77,7 +77,7 @@ layout: section
 
 # Golden Signals nach Google SRE
 
-*"If you can only measure four metrics of your user-facing system, focus on these four."*
+_"If you can only measure four metrics of your user-facing system, focus on these four."_
 
 ---
 
@@ -87,11 +87,11 @@ Misst die Zeit bis zur Beantwortung eines Requests. **Verteilung** (p50, p90, p9
 
 Drei Latenz-Ebenen im Versicherungsintegrator:
 
-| Ebene | Ziel | Typisch |
-|---|---|---|
-| **Interne Service-Latenz** | p99 < 200ms | Frontend-BFF, Quote-Aggregation |
-| **Externe B2B-API-Latenz** | 500ms–5s | Allianz, AXA etc. — stark schwankend |
-| **Cache-Hit vs. Cache-Miss** | Hit < 10ms | Miss triggert B2B-Call |
+| Ebene                        | Ziel        | Typisch                              |
+| ---------------------------- | ----------- | ------------------------------------ |
+| **Interne Service-Latenz**   | p99 < 200ms | Frontend-BFF, Quote-Aggregation      |
+| **Externe B2B-API-Latenz**   | 500ms–5s    | Allianz, AXA etc. — stark schwankend |
+| **Cache-Hit vs. Cache-Miss** | Hit < 10ms  | Miss triggert B2B-Call               |
 
 ```sql
 -- P99 Latenz für erfolgreiche interne Requests
@@ -143,7 +143,7 @@ sum(rate(http_client_requests_seconds_count{status="0"}[5m])) by (clientName)
 
 Misst, wie nahe das System an seinen Kapazitätsgrenzen ist.
 
-*"Many systems degrade in performance before achieving 100% utilization."* — SRE Book
+_"Many systems degrade in performance before achieving 100% utilization."_ — SRE Book
 
 Beste Indikatoren: **Queuing** — Arbeit, die auf Verarbeitung wartet.
 
@@ -165,18 +165,18 @@ layout: section
 
 # RED-Methode
 
-*"The RED Method is a good proxy to how happy your customers will be."*
+_"The RED Method is a good proxy to how happy your customers will be."_
 — Tom Wilkie, 2015
 
 ---
 
 # RED: Rate, Errors, Duration
 
-| Signal | Was | Wie (PromQL) |
-|---|---|---|
-| **Rate** | Requests/s — erste Ableitung eines Counters | `rate()` = (counter_now − counter_prev) / interval |
-| **Errors** | Fehlgeschlagene Requests/s — User-Sicht | HTTP 5xx, Timeouts, Business-Logik-Fehler |
-| **Duration** | Latenz-Verteilung (p50, p95, p99) | Steigt als Symptom von Saturation |
+| Signal       | Was                                         | Wie (PromQL)                                       |
+| ------------ | ------------------------------------------- | -------------------------------------------------- |
+| **Rate**     | Requests/s — erste Ableitung eines Counters | `rate()` = (counter_now − counter_prev) / interval |
+| **Errors**   | Fehlgeschlagene Requests/s — User-Sicht     | HTTP 5xx, Timeouts, Business-Logik-Fehler          |
+| **Duration** | Latenz-Verteilung (p50, p95, p99)           | Steigt als Symptom von Saturation                  |
 
 **Kausalität einseitig**: Saturation → Duration↑, aber Duration↑ ⇏ immer Saturation.
 
@@ -191,7 +191,7 @@ layout: section
 
 # USE-Methode
 
-*"Like an emergency checklist in a flight manual."*
+_"Like an emergency checklist in a flight manual."_
 — Brendan Gregg, 2012
 
 ---
@@ -274,16 +274,16 @@ tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
 
 # Prioritätsmatrix
 
-| Prio | Signal | Business-Impact |
-|---|---|---|
-| **P1** | HikariCP-Timeouts, Tomcat-Thread-Pool voll | Direkte User-Facing-Failures |
-| **P1** | HTTP 429 von Upstream-B2B-APIs | Keine Quotes lieferbar |
-| **P1** | OOMKilled Pods | Service-Neustarts, Datenverlust |
-| **P2** | CPU-Throttling >25% | JVM-GC-Verstärkung → Latenz-Spikes |
-| **P2** | P99-Latenz über SLO | Erstes Signal vor Kaskaden |
-| **P2** | Redis Cache-Hit-Ratio <80% | Mehr Upstream-Calls → Rate-Limiting |
-| **P3** | HPA am Maximum | Keine Auto-Skalierung mehr |
-| **P3** | Disk-I/O-Saturation, DNS-Fehler | Infrastruktur-Bottlenecks |
+| Prio   | Signal                                     | Business-Impact                     |
+| ------ | ------------------------------------------ | ----------------------------------- |
+| **P1** | HikariCP-Timeouts, Tomcat-Thread-Pool voll | Direkte User-Facing-Failures        |
+| **P1** | HTTP 429 von Upstream-B2B-APIs             | Keine Quotes lieferbar              |
+| **P1** | OOMKilled Pods                             | Service-Neustarts, Datenverlust     |
+| **P2** | CPU-Throttling >25%                        | JVM-GC-Verstärkung → Latenz-Spikes  |
+| **P2** | P99-Latenz über SLO                        | Erstes Signal vor Kaskaden          |
+| **P2** | Redis Cache-Hit-Ratio <80%                 | Mehr Upstream-Calls → Rate-Limiting |
+| **P3** | HPA am Maximum                             | Keine Auto-Skalierung mehr          |
+| **P3** | Disk-I/O-Saturation, DNS-Fehler            | Infrastruktur-Bottlenecks           |
 
 ---
 clicks: false
@@ -313,14 +313,14 @@ Faustregel: **T = S / (1 − ρ)**. Bei 80% Utilization: Response-Time = **5×**
 
 # Schwellwerte für Kubernetes / Spring Boot
 
-| Ressource | Warning | Critical | Hinweis |
-|---|---|---|---|
-| CPU (Container) | 70–80% | 90%+ | CFS-Throttling beachten, nicht nur Utilization |
-| Memory (Container) | 80% | 90%+ | `container_memory_working_set_bytes` |
-| HikariCP Pool | 80% | 95%+ | Pending > 0 ist bereits Saturation |
-| Tomcat Threads | 75% | 90%+ | Gepaart mit Upstream-Timeout-Check |
-| Redis Memory | 80% | 95%+ | Evictions = aktive Sättigung |
-| Disk I/O | 70% | 85%+ | Queue-Depth > 1 = Sättigung beginnt |
+| Ressource          | Warning | Critical | Hinweis                                        |
+| ------------------ | ------- | -------- | ---------------------------------------------- |
+| CPU (Container)    | 70–80%  | 90%+     | CFS-Throttling beachten, nicht nur Utilization |
+| Memory (Container) | 80%     | 90%+     | `container_memory_working_set_bytes`           |
+| HikariCP Pool      | 80%     | 95%+     | Pending > 0 ist bereits Saturation             |
+| Tomcat Threads     | 75%     | 90%+     | Gepaart mit Upstream-Timeout-Check             |
+| Redis Memory       | 80%     | 95%+     | Evictions = aktive Sättigung                   |
+| Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Sättigung beginnt            |
 
 ### Einschränkungen der 80%-Faustregel
 
@@ -358,12 +358,12 @@ Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstell
 
 ### Steady Flow statt Batch-Peaks
 
-| Anti-Pattern | Pattern |
-|---|---|
+| Anti-Pattern                                  | Pattern                                       |
+| --------------------------------------------- | --------------------------------------------- |
 | Cronjob refresht alle Cache-Keys gleichzeitig | Cache-Refresh mit Jitter (TTL + random 0–60s) |
-| Batch-Import: 10.000 Quotes auf einmal | Rate-Limiter: Leaky Bucket |
-| HPA skaliert 10 Pods gleichzeitig hoch | Staggered Rollout (maxSurge: 1) |
-| Retry-Storm nach Upstream-Recovery | Exponential Backoff mit Jitter |
+| Batch-Import: 10.000 Quotes auf einmal        | Rate-Limiter: Leaky Bucket                    |
+| HPA skaliert 10 Pods gleichzeitig hoch        | Staggered Rollout (maxSurge: 1)               |
+| Retry-Storm nach Upstream-Recovery            | Exponential Backoff mit Jitter                |
 
 ---
 
@@ -371,13 +371,13 @@ Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstell
 
 Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn die externe Last sinkt:
 
-| Mechanismus | Feedback-Loop |
-|---|---|
-| **Cache-Stampede** | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch |
-| **GC Death Spiral** | Memory-Pressure → mehr GC → CPU verbraucht → Requests langsamer → mehr GC |
-| **Queue-Backlog** | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate) |
-| **Circuit-Breaker** | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr |
-| **Autoscaler-Lag** | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch |
+| Mechanismus         | Feedback-Loop                                                               |
+| ------------------- | --------------------------------------------------------------------------- |
+| **Cache-Stampede**  | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch  |
+| **GC Death Spiral** | Memory-Pressure → mehr GC → CPU verbraucht → Requests langsamer → mehr GC   |
+| **Queue-Backlog**   | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate) |
+| **Circuit-Breaker** | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr         |
+| **Autoscaler-Lag**  | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch       |
 
 ---
 clicks: false
@@ -429,10 +429,10 @@ data:
       conditions:
         - evaluator:
             type: gt
-            params: [0.5]        # 500ms: Alert feuert
+            params: [0.5] # 500ms: Alert feuert
           unloadEvaluator:
             type: lt
-            params: [0.2]        # 200ms: Alert resolved
+            params: [0.2] # 200ms: Alert resolved
 ```
 
 ---
@@ -441,11 +441,11 @@ data:
 
 Statt zwei Metriken gegen die Zeit zu plotten, plottet man sie **gegeneinander** (X-Y). Die Trajektorie zeigt die Hysterese-Schleife.
 
-| Kombination | X-Achse | Y-Achse | Insight |
-|---|---|---|---|
-| CPU vs. Latenz | CPU-Usage | P99 Latenz | Knickpunkt CPU → Latenz, Hysterese bei Recovery |
-| Rate vs. Errors | Request-Rate | Error-Rate | Ab welcher Rate beginnen Errors? |
-| Cache vs. Upstream | Hit-Ratio | Upstream-Calls/s | Cache-Miss-Amplification sichtbar |
+| Kombination        | X-Achse      | Y-Achse          | Insight                                         |
+| ------------------ | ------------ | ---------------- | ----------------------------------------------- |
+| CPU vs. Latenz     | CPU-Usage    | P99 Latenz       | Knickpunkt CPU → Latenz, Hysterese bei Recovery |
+| Rate vs. Errors    | Request-Rate | Error-Rate       | Ab welcher Rate beginnen Errors?                |
+| Cache vs. Upstream | Hit-Ratio    | Upstream-Calls/s | Cache-Miss-Amplification sichtbar               |
 
 **Praxis-Tipp**: XY Charts sind für Post-Incident-Reviews. Zeitbereich auf die Incident-Dauer setzen. Die eingeschlossene Fläche quantifiziert den Recovery-Verlust.
 
@@ -546,6 +546,7 @@ sum by (app) (rate({namespace="production"} |= "error" [5m]))
 ### Metrics-Generator
 
 Erzeugt automatisch RED-Metriken aus Spans:
+
 - `traces_spanmetrics_calls_total`
 - `traces_spanmetrics_latency_bucket`
 
@@ -568,10 +569,10 @@ Erzeugt automatisch RED-Metriken aus Spans:
 ```yaml
 # Alloy → Mimir
 prometheus.remote_write "default" {
-  endpoint {
-    url = "http://mimir:9009/api/v1/push"
-    send_exemplars = true
-  }
+endpoint {
+url = "http://mimir:9009/api/v1/push"
+send_exemplars = true
+}
 }
 ```
 

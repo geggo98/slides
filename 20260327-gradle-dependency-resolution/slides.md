@@ -14,15 +14,15 @@ Reproduzierbare Builds, Supply-Chain-Schutz und Ökosystem-Vergleich
 
 # Kernbegriffe
 
-| Begriff | Bedeutung |
-|---|---|
-| **Dependency Locking** | Fixiert aufgelöste Versionen in einer Lock-Datei |
-| **Resolution Strategy** | "highest version wins" — Spring Boot BOM überschreibt mit festen Versionen |
-| **Lock State** | `gradle.lockfile` pro (Sub-)Projekt — exakter Abhängigkeitsbaum |
-| **Verification Metadata** | SHA-256 + PGP pro Artefakt in `verification-metadata.xml` |
-| **BOM** | POM, die Versionen vorgibt — importiert via `platform()` (nativ) oder Spring-Plugin |
-| **`platform()`** | Nativer Gradle-BOM-Import (seit 5.0) — nutzt Gradles Constraint-Engine |
-| **Version Catalog** | TOML-Datei (`libs.versions.toml`) — rein deklarativ, kein Einfluss auf Resolution |
+| Begriff                   | Bedeutung                                                                           |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| **Dependency Locking**    | Fixiert aufgelöste Versionen in einer Lock-Datei                                    |
+| **Resolution Strategy**   | "highest version wins" — Spring Boot BOM überschreibt mit festen Versionen          |
+| **Lock State**            | `gradle.lockfile` pro (Sub-)Projekt — exakter Abhängigkeitsbaum                     |
+| **Verification Metadata** | SHA-256 + PGP pro Artefakt in `verification-metadata.xml`                           |
+| **BOM**                   | POM, die Versionen vorgibt — importiert via `platform()` (nativ) oder Spring-Plugin |
+| **`platform()`**          | Nativer Gradle-BOM-Import (seit 5.0) — nutzt Gradles Constraint-Engine              |
+| **Version Catalog**       | TOML-Datei (`libs.versions.toml`) — rein deklarativ, kein Einfluss auf Resolution   |
 
 ---
 clicks: false
@@ -56,14 +56,14 @@ configurations.compileClasspath {
 
 # Wichtigste Befehle
 
-| Aktion | Befehl |
-|---|---|
-| Lock-Datei erzeugen / aktualisieren | `./gradlew dependencies --write-locks` |
-| Nur eine Konfiguration locken | `./gradlew dependencies --configuration compileClasspath --write-locks` |
-| Verification Metadata erzeugen | `./gradlew --write-verification-metadata sha256,pgp` |
-| Abhängigkeitsbaum anzeigen | `./gradlew dependencies --configuration compileClasspath` |
-| Veraltete Deps prüfen | `./gradlew dependencyUpdates` |
-| Lock-Datei-Diff prüfen | `git diff gradle.lockfile` |
+| Aktion                              | Befehl                                                                  |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| Lock-Datei erzeugen / aktualisieren | `./gradlew dependencies --write-locks`                                  |
+| Nur eine Konfiguration locken       | `./gradlew dependencies --configuration compileClasspath --write-locks` |
+| Verification Metadata erzeugen      | `./gradlew --write-verification-metadata sha256,pgp`                    |
+| Abhängigkeitsbaum anzeigen          | `./gradlew dependencies --configuration compileClasspath`               |
+| Veraltete Deps prüfen               | `./gradlew dependencyUpdates`                                           |
+| Lock-Datei-Diff prüfen              | `git diff gradle.lockfile`                                              |
 
 ---
 
@@ -94,15 +94,15 @@ table { font-size: 0.78em; }
 th, td { padding: 0.25em 0.5em !important; }
 </style>
 
-| | Spring Dependency Management Plugin | Native Gradle (`platform()`) |
-|---|---|---|
-| **Seit** | Gradle 2.x (vor nativem BOM-Support) | Gradle 5.0 (2018) |
-| **Syntax** | `dependencyManagement { imports { mavenBom(...) } }` | `implementation(platform(...))` |
-| **Mechanismus** | Interne Map `group:artifact → version`, injiziert vor Resolution | Gradle Constraint-Engine (Teil der Resolution) |
-| **Einzelne Constraints** | `dependencyManagement { dependencies { dependency(...) } }` | `constraints { implementation(...) }` |
-| **Overrides** | `ext["jackson.version"]` (Maven-Property-Mapping) | `constraints { }` oder `enforcedPlatform()` |
-| **Priorität** | Rang 6 (übersteuert `platform()`) | Rang 5 / Rang 7 (`enforcedPlatform()`) |
-| **Idiomatisch** | Legacy — aber in Spring-Boot-Projekten weit verbreitet | Empfohlen seit Gradle 5.x |
+|                          | Spring Dependency Management Plugin                              | Native Gradle (`platform()`)                   |
+| ------------------------ | ---------------------------------------------------------------- | ---------------------------------------------- |
+| **Seit**                 | Gradle 2.x (vor nativem BOM-Support)                             | Gradle 5.0 (2018)                              |
+| **Syntax**               | `dependencyManagement { imports { mavenBom(...) } }`             | `implementation(platform(...))`                |
+| **Mechanismus**          | Interne Map `group:artifact → version`, injiziert vor Resolution | Gradle Constraint-Engine (Teil der Resolution) |
+| **Einzelne Constraints** | `dependencyManagement { dependencies { dependency(...) } }`      | `constraints { implementation(...) }`          |
+| **Overrides**            | `ext["jackson.version"]` (Maven-Property-Mapping)                | `constraints { }` oder `enforcedPlatform()`    |
+| **Priorität**            | Rang 6 (übersteuert `platform()`)                                | Rang 5 / Rang 7 (`enforcedPlatform()`)         |
+| **Idiomatisch**          | Legacy — aber in Spring-Boot-Projekten weit verbreitet           | Empfohlen seit Gradle 5.x                      |
 
 > **Historischer Kontext:** Das Spring-Plugin entstand, weil Gradle vor 5.0 keinen BOM-Import konnte.
 > Heute ist `platform()` der idiomatische Weg — Spring-Boot-Projekte bringen das Plugin aber implizit mit.
@@ -160,7 +160,7 @@ git add gradle.lockfile && git commit -m "Add spring-boot-starter-data-jpa"
 implementation("com.google.cloud:google-cloud-storage:2.46.0")
 ```
 
-Gleicher Workflow — Version explizit, aber *transitive* Deps werden im Lock-File erfasst.
+Gleicher Workflow — Version explizit, aber _transitive_ Deps werden im Lock-File erfasst.
 
 ---
 
@@ -189,8 +189,8 @@ configurations.all {
 }
 ```
 
-> ⚠️ Eingriff in die BOM-Kohärenz — ab hier bist du selbst für Kompatibilität verantwortlich. 
-> 
+> ⚠️ Eingriff in die BOM-Kohärenz — ab hier bist du selbst für Kompatibilität verantwortlich.
+>
 > Denk daran, die Version beim näschten Spring update zu prüfen und ggf. den Override wieder zu entfernen.
 
 ---
@@ -207,20 +207,20 @@ ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-
 Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
 
 > Bekannte Property-Namen: `jackson.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
-> 
+>
 > Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
 
 ---
 
 # Extra Properties: Alternativen
 
-| Ansatz | Typsicher | IDE-Support | BOM-Override |
-|---|---|---|---|
-| `ext["jackson.version"]` | ❌ `Any?` + Cast | ❌ | ✅ Spring-BOM |
-| `platform()` + `constraints {}` | ✅ | ✅ | ✅ jede BOM (nativ) |
-| Version Catalog (`libs.versions.toml`) | ✅ | ✅ | ❌ BOM gewinnt |
-| `buildSrc` / Convention Plugin | ✅ | ✅ | ❌ manuell |
-| `resolutionStrategy.force(...)` | — | — | ✅ jede BOM |
+| Ansatz                                 | Typsicher        | IDE-Support | BOM-Override        |
+| -------------------------------------- | ---------------- | ----------- | ------------------- |
+| `ext["jackson.version"]`               | ❌ `Any?` + Cast | ❌          | ✅ Spring-BOM       |
+| `platform()` + `constraints {}`        | ✅               | ✅          | ✅ jede BOM (nativ) |
+| Version Catalog (`libs.versions.toml`) | ✅               | ✅          | ❌ BOM gewinnt      |
+| `buildSrc` / Convention Plugin         | ✅               | ✅          | ❌ manuell          |
+| `resolutionStrategy.force(...)`        | —                | —           | ✅ jede BOM         |
 
 <br>
 
@@ -289,9 +289,9 @@ Erzeugt `gradle/verification-metadata.xml`:
     build check --dry-run
 ```
 
-**Achtung:** `--dry-run` reicht nicht immer! Manche Plugins (z.B. Checkstyle) erzeugen *detached configurations*, die erst bei tatsächlicher Task-Ausführung aufgelöst werden. Solche Tasks müssen echt laufen — nicht nur `--dry-run`.
+**Achtung:** `--dry-run` reicht nicht immer! Manche Plugins (z.B. Checkstyle) erzeugen _detached configurations_, die erst bei tatsächlicher Task-Ausführung aufgelöst werden. Solche Tasks müssen echt laufen — nicht nur `--dry-run`.
 
-**Regel:** Beim Generieren *alle Tasks ausführen, die auch in der CI laufen* — sonst fehlen Artefakte für Konfigurationen, die nur bestimmte Tasks auflösen.
+**Regel:** Beim Generieren _alle Tasks ausführen, die auch in der CI laufen_ — sonst fehlen Artefakte für Konfigurationen, die nur bestimmte Tasks auflösen.
 
 **Typisches Symptom:** `Dependency verification failed for configuration 'classpath'`
 
@@ -324,7 +324,7 @@ Die JVM-Welt hat keine Lifecycle-Scripts — aber Fremdcode wird dennoch ausgef�
 - **Code-Generatoren** (OpenAPI Generator, Protobuf, JOOQ): voller Dateisystem-/Netzwerkzugriff
 - **Test-Frameworks** (JUnit, Testcontainers): Code aus Test-Dependencies
 - **Security-Scanner/Linter** (SpotBugs, Trivy): Zugriff auf Build-Secrets
-- **Gradle-Plugins**: Code bei Build-*Konfiguration*, nicht erst beim Task-Run
+- **Gradle-Plugins**: Code bei Build-_Konfiguration_, nicht erst beim Task-Run
 - **Annotation Processors** (Lombok, MapStruct): Compile-Zeit-Ausführung
 
 ---
@@ -369,15 +369,15 @@ clicks: false
 
 Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen entdeckt — ein **Cooldown von 7 Tagen** filtert die Mehrheit opportunistischer Supply-Chain-Angriffe.
 
-| Tool | Einheit | Config-Key | 7 Tage = | Exclude-Liste |
-|------|---------|------------|----------|---------------|
-| **Gradle** | — | *(nicht nativ)* | Renovate / Dependabot | — |
-| **npm** | Tage | `min-release-age` | `7` | *(nicht vorhanden)* |
-| **pnpm** | Minuten | `minimumReleaseAge` | `10080` | `minimumReleaseAgeExclude` |
-| **Bun** | Sekunden | `minimumReleaseAge` | `604800` | `minimumReleaseAgeExcludes` |
-| **Yarn** ≥ 4.10 | Minuten | `npmMinimalAgeGate` | `10080` | `npmPreapprovedPackages` |
-| **uv** | Dauer | `exclude-newer` | `"7 days"` | `exclude-newer-package` |
-| **Deno** | CLI-Flag | `--minimum-dependency-age` | — | — |
+| Tool            | Einheit  | Config-Key                 | 7 Tage =              | Exclude-Liste               |
+| --------------- | -------- | -------------------------- | --------------------- | --------------------------- |
+| **Gradle**      | —        | _(nicht nativ)_            | Renovate / Dependabot | —                           |
+| **npm**         | Tage     | `min-release-age`          | `7`                   | _(nicht vorhanden)_         |
+| **pnpm**        | Minuten  | `minimumReleaseAge`        | `10080`               | `minimumReleaseAgeExclude`  |
+| **Bun**         | Sekunden | `minimumReleaseAge`        | `604800`              | `minimumReleaseAgeExcludes` |
+| **Yarn** ≥ 4.10 | Minuten  | `npmMinimalAgeGate`        | `10080`               | `npmPreapprovedPackages`    |
+| **uv**          | Dauer    | `exclude-newer`            | `"7 days"`            | `exclude-newer-package`     |
+| **Deno**        | CLI-Flag | `--minimum-dependency-age` | —                     | —                           |
 
 > Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
 
@@ -435,17 +435,17 @@ dependencies {
 
 # Catalog, BOM, Lock-File, Verification
 
-| Mechanismus | Funktion | Analogie |
-|---|---|---|
-| **Version Catalog** | *Deklaration*: Welche Deps mit welchen Koordinaten? | Einkaufsliste |
-| **BOM (Spring)** | *Resolution-Constraint*: Welche Version wird aufgelöst? | Preisliste des Lieferanten |
-| **Lock-File** | *Fixierung*: Welche Versionen konkret aufgelöst? | Kassenbon |
-| **Verification Metadata** | *Integritätsprüfung*: Artefakt unverändert? | Siegel auf der Verpackung |
+| Mechanismus               | Funktion                                                | Analogie                   |
+| ------------------------- | ------------------------------------------------------- | -------------------------- |
+| **Version Catalog**       | _Deklaration_: Welche Deps mit welchen Koordinaten?     | Einkaufsliste              |
+| **BOM (Spring)**          | _Resolution-Constraint_: Welche Version wird aufgelöst? | Preisliste des Lieferanten |
+| **Lock-File**             | _Fixierung_: Welche Versionen konkret aufgelöst?        | Kassenbon                  |
+| **Verification Metadata** | _Integritätsprüfung_: Artefakt unverändert?             | Siegel auf der Verpackung  |
 
 <br>
 
-- **Catalog** → definiert *was* du deklarierst
-- **Lock-File** → fixiert *was tatsächlich aufgelöst wird* (inkl. transitiver Deps)
+- **Catalog** → definiert _was_ du deklarierst
+- **Lock-File** → fixiert _was tatsächlich aufgelöst wird_ (inkl. transitiver Deps)
 - Catalog ersetzt Lock-File **nicht** — Catalog kennt keine transitiven Deps
 
 ---
@@ -487,15 +487,15 @@ Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für ein
 
 `1.3.0-SNAPSHOT` = **mutable** Version — jeder Build kann ein anderes Artefakt liefern.
 
-Gradle behandelt Snapshots als *dynamische Versionen* (wie `1.+`):
+Gradle behandelt Snapshots als _dynamische Versionen_ (wie `1.+`):
 
-| Aspekt | Release | Snapshot |
-|---|---|---|
-| Inhalt | Immutable | Mutable (neuer Timestamp = neuer Inhalt) |
-| Lock-File | Fixiert Version + Inhalt | Fixiert nur den Namen, nicht den Inhalt |
-| Verification Metadata | Funktioniert | Praktisch inkompatibel (Hash ändert sich) |
-| Dependency-Scanner | Verlässlich | Falsche Sicherheit |
-| "Highest Wins" | Deterministisch | Non-deterministisch |
+| Aspekt                | Release                  | Snapshot                                  |
+| --------------------- | ------------------------ | ----------------------------------------- |
+| Inhalt                | Immutable                | Mutable (neuer Timestamp = neuer Inhalt)  |
+| Lock-File             | Fixiert Version + Inhalt | Fixiert nur den Namen, nicht den Inhalt   |
+| Verification Metadata | Funktioniert             | Praktisch inkompatibel (Hash ändert sich) |
+| Dependency-Scanner    | Verlässlich              | Falsche Sicherheit                        |
+| "Highest Wins"        | Deterministisch          | Non-deterministisch                       |
 
 > ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata und Scanner-Verlässlichkeit.
 
@@ -550,9 +550,9 @@ Als CI-Gate einbinden:
 
 > Snapshots nur in Feature-Branches / Integrations-Builds — nie Richtung Produktion.
 
---- 
-layout: center 
---- 
+---
+layout: center
+---
 
 # Bonusmaterial
 
@@ -579,18 +579,17 @@ table { font-size: 0.75em; }
 th, td { padding: 0.25em 0.5em !important; }
 </style>
 
-| Mechanismus | Schützt gegen | Datei / Ort |
-|---|---|---|
-| **Version Catalog** | Wartbarkeit, IDE-Support | `libs.versions.toml` |
-| **Lock-File** | Unbeabsichtigte Versionsänderungen | `gradle.lockfile` |
-| **Verification Metadata** | Artefakt-Manipulation | `verification-metadata.xml` |
-| **Repository Filtering** | Dependency Confusion | `build.gradle.kts` |
-| **BOM (Spring)** | Inkonsistente transitive Versionen | BOM POM |
-| **Minimum Release Age** | Frische kompromittierte Releases | npm/pnpm/Bun/Yarn/uv/Deno |
-| **Renovate/Dependabot Cooldown** | Frische Releases (Gradle) | `renovate.json` / `dependabot.yml` |
-| **Dependency Scanner** | Bekannte CVEs | CI-Pipeline |
-| **Build-Sandbox** | Code Execution durch Deps/Plugins | Container, Network-Policies |
-
+| Mechanismus                      | Schützt gegen                      | Datei / Ort                        |
+| -------------------------------- | ---------------------------------- | ---------------------------------- |
+| **Version Catalog**              | Wartbarkeit, IDE-Support           | `libs.versions.toml`               |
+| **Lock-File**                    | Unbeabsichtigte Versionsänderungen | `gradle.lockfile`                  |
+| **Verification Metadata**        | Artefakt-Manipulation              | `verification-metadata.xml`        |
+| **Repository Filtering**         | Dependency Confusion               | `build.gradle.kts`                 |
+| **BOM (Spring)**                 | Inkonsistente transitive Versionen | BOM POM                            |
+| **Minimum Release Age**          | Frische kompromittierte Releases   | npm/pnpm/Bun/Yarn/uv/Deno          |
+| **Renovate/Dependabot Cooldown** | Frische Releases (Gradle)          | `renovate.json` / `dependabot.yml` |
+| **Dependency Scanner**           | Bekannte CVEs                      | CI-Pipeline                        |
+| **Build-Sandbox**                | Code Execution durch Deps/Plugins  | Container, Network-Policies        |
 
 ---
 clicks: false
@@ -598,7 +597,7 @@ clicks: false
 
 <EcosystemInfographic />
 
---- 
+---
 
 # Weiterführende Links
 
@@ -631,9 +630,8 @@ clicks: false
 
 <GradleInfographic />
 
---- 
-layout: end 
---- 
+---
+layout: end
+---
 
-# Danke 
-
+# Danke
