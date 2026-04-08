@@ -1,4 +1,6 @@
 import pluginVue from "eslint-plugin-vue";
+import tseslint from "typescript-eslint";
+import vueParser from "vue-eslint-parser";
 
 export default [
   ...pluginVue.configs["flat/recommended"],
@@ -8,6 +10,14 @@ export default [
       "**/layouts/**/*.vue",
       "**/pages/**/*.vue",
     ],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tseslint.parser,
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+    },
     rules: {
       // Formatting rules — handled by prettier, not eslint
       "vue/max-attributes-per-line": "off",
@@ -23,6 +33,16 @@ export default [
 
       // Slidev layouts are single-word by convention (e.g. end.vue)
       "vue/multi-word-component-names": "off",
+    },
+  },
+  {
+    files: ["**/components/**/*.ts"],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
     },
   },
 ];
