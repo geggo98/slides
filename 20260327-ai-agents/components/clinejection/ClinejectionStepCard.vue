@@ -15,53 +15,50 @@ const isDanger = computed(
   () => props.step.phase === "INITIAL ACCESS" || props.step.phase === "IMPACT",
 );
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        cardBg: "#1e1e1e",
-        cardBorder: "rgba(255,255,255,0.12)",
-        hoverBorder: "#555",
-        textPrimary: "#e5e5e5",
-        textSecondary: "#aaa",
-        textTertiary: "#666",
-        accentColor: isDanger.value ? "#f06060" : "#e0a030",
-        accentBg: isDanger.value
-          ? "rgba(240,96,96,0.12)"
-          : "rgba(224,160,48,0.12)",
-        accentBorder: isDanger.value
-          ? "rgba(240,96,96,0.25)"
-          : "rgba(224,160,48,0.25)",
-        activeShadow: isDanger.value
-          ? "rgba(240,96,96,0.08)"
-          : "rgba(224,160,48,0.08)",
-        codeBg: "#2a2a2e",
-        prereqBg: "#2a2a2e",
-        prereqBorder: "rgba(224,160,48,0.25)",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      }
-    : {
-        cardBg: "white",
-        cardBorder: "rgba(0,0,0,0.1)",
-        hoverBorder: "#aaa",
-        textPrimary: "#1a1a18",
-        textSecondary: "#555",
-        textTertiary: "#888",
-        accentColor: isDanger.value ? "#c04040" : "#a07020",
-        accentBg: isDanger.value
-          ? "rgba(192,64,64,0.08)"
-          : "rgba(160,112,32,0.08)",
-        accentBorder: isDanger.value
-          ? "rgba(192,64,64,0.25)"
-          : "rgba(160,112,32,0.25)",
-        activeShadow: isDanger.value
-          ? "rgba(192,64,64,0.05)"
-          : "rgba(160,112,32,0.05)",
-        codeBg: "#f5f5f5",
-        prereqBg: "#f5f5f5",
-        prereqBorder: "rgba(160,112,32,0.25)",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  const danger = isDanger.value;
+  return {
+    cardBg: d ? "#1e1e1e" : "white",
+    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    hoverBorder: d ? "#555" : "#aaa",
+    textPrimary: d ? "#e5e5e5" : "#1a1a18",
+    textSecondary: d ? "#aaa" : "#555",
+    textTertiary: d ? "#666" : "#888",
+    accentColor: danger
+      ? d
+        ? "#f06060"
+        : "#c04040"
+      : d
+        ? "#e0a030"
+        : "#a07020",
+    accentBg: danger
+      ? d
+        ? "rgba(240,96,96,0.12)"
+        : "rgba(192,64,64,0.08)"
+      : d
+        ? "rgba(224,160,48,0.12)"
+        : "rgba(160,112,32,0.08)",
+    accentBorder: danger
+      ? d
+        ? "rgba(240,96,96,0.25)"
+        : "rgba(192,64,64,0.25)"
+      : d
+        ? "rgba(224,160,48,0.25)"
+        : "rgba(160,112,32,0.25)",
+    activeShadow: danger
+      ? d
+        ? "rgba(240,96,96,0.08)"
+        : "rgba(192,64,64,0.05)"
+      : d
+        ? "rgba(224,160,48,0.08)"
+        : "rgba(160,112,32,0.05)",
+    codeBg: d ? "#2a2a2e" : "#f5f5f5",
+    prereqBg: d ? "#2a2a2e" : "#f5f5f5",
+    prereqBorder: d ? "rgba(224,160,48,0.25)" : "rgba(160,112,32,0.25)",
+    fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+  };
+});
 
 const truncated = computed(() => {
   const t = props.step.detail;

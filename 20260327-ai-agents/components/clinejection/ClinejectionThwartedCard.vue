@@ -10,37 +10,23 @@ const props = defineProps({
 });
 const emit = defineEmits(["toggle"]);
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        cardBg: "#1e1e1e",
-        cardBorder: "rgba(92,192,160,0.18)",
-        hoverBorder: "rgba(92,192,160,0.35)",
-        textPrimary: "#e5e5e5",
-        textSecondary: "#aaa",
-        textDanger: "#f06060",
-        textSuccess: "#5cc0a0",
-        bgSuccess: "rgba(92,192,160,0.08)",
-        badgeBg: "rgba(92,192,160,0.12)",
-        badgeBorder: "rgba(92,192,160,0.25)",
-        reasonBg: "rgba(92,192,160,0.08)",
-        reasonBorder: "rgba(92,192,160,0.2)",
-      }
-    : {
-        cardBg: "white",
-        cardBorder: "rgba(48,128,96,0.18)",
-        hoverBorder: "rgba(48,128,96,0.35)",
-        textPrimary: "#1a1a18",
-        textSecondary: "#555",
-        textDanger: "#c04040",
-        textSuccess: "#308060",
-        bgSuccess: "rgba(48,128,96,0.04)",
-        badgeBg: "rgba(48,128,96,0.08)",
-        badgeBorder: "rgba(48,128,96,0.25)",
-        reasonBg: "rgba(48,128,96,0.06)",
-        reasonBorder: "rgba(48,128,96,0.2)",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  return {
+    cardBg: d ? "#1e1e1e" : "white",
+    cardBorder: d ? "rgba(92,192,160,0.18)" : "rgba(48,128,96,0.18)",
+    hoverBorder: d ? "rgba(92,192,160,0.35)" : "rgba(48,128,96,0.35)",
+    textPrimary: d ? "#e5e5e5" : "#1a1a18",
+    textSecondary: d ? "#aaa" : "#555",
+    textDanger: d ? "#f06060" : "#c04040",
+    textSuccess: d ? "#5cc0a0" : "#308060",
+    bgSuccess: d ? "rgba(92,192,160,0.08)" : "rgba(48,128,96,0.04)",
+    badgeBg: d ? "rgba(92,192,160,0.12)" : "rgba(48,128,96,0.08)",
+    badgeBorder: d ? "rgba(92,192,160,0.25)" : "rgba(48,128,96,0.25)",
+    reasonBg: d ? "rgba(92,192,160,0.08)" : "rgba(48,128,96,0.06)",
+    reasonBorder: d ? "rgba(92,192,160,0.2)" : "rgba(48,128,96,0.2)",
+  };
+});
 </script>
 
 <template>

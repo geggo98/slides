@@ -6,45 +6,27 @@ import { TIMELINE, THWARTED } from "./data";
 
 const { isDark } = useDarkMode();
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        textPrimary: "#e5e5e5",
-        textSecondary: "#aaa",
-        textTertiary: "#666",
-        textDanger: "#f06060",
-        textSuccess: "#5cc0a0",
-        textWarning: "#e0a030",
-        textInfo: "#7c9fff",
-        bgPrimary: "#1e1e1e",
-        bgSecondary: "#2a2a2e",
-        borderTertiary: "rgba(255,255,255,0.12)",
-        bgAttack: "rgba(240,96,96,0.06)",
-        bgDefense: "rgba(92,192,160,0.06)",
-        bgFail: "rgba(224,160,48,0.06)",
-        bgVuln: "rgba(124,159,255,0.06)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      }
-    : {
-        textPrimary: "#1a1a18",
-        textSecondary: "#555",
-        textTertiary: "#888",
-        textDanger: "#c04040",
-        textSuccess: "#308060",
-        textWarning: "#a07020",
-        textInfo: "#4a6fd0",
-        bgPrimary: "white",
-        bgSecondary: "#f5f5f5",
-        borderTertiary: "rgba(0,0,0,0.1)",
-        bgAttack: "rgba(192,64,64,0.04)",
-        bgDefense: "rgba(48,128,96,0.04)",
-        bgFail: "rgba(160,112,32,0.04)",
-        bgVuln: "rgba(74,111,208,0.04)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  return {
+    textPrimary: d ? "#e5e5e5" : "#1a1a18",
+    textSecondary: d ? "#aaa" : "#555",
+    textTertiary: d ? "#666" : "#888",
+    textDanger: d ? "#f06060" : "#c04040",
+    textSuccess: d ? "#5cc0a0" : "#308060",
+    textWarning: d ? "#e0a030" : "#a07020",
+    textInfo: d ? "#7c9fff" : "#4a6fd0",
+    bgPrimary: d ? "#1e1e1e" : "white",
+    bgSecondary: d ? "#2a2a2e" : "#f5f5f5",
+    borderTertiary: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    bgAttack: d ? "rgba(240,96,96,0.06)" : "rgba(192,64,64,0.04)",
+    bgDefense: d ? "rgba(92,192,160,0.06)" : "rgba(48,128,96,0.04)",
+    bgFail: d ? "rgba(224,160,48,0.06)" : "rgba(160,112,32,0.04)",
+    bgVuln: d ? "rgba(124,159,255,0.06)" : "rgba(74,111,208,0.04)",
+    fontSans: "'DM Sans', sans-serif",
+    fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+  };
+});
 
 const activeThwarted = ref(null);
 

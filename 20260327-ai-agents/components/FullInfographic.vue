@@ -4,29 +4,19 @@ import { useDarkMode } from "@slidev/client";
 
 const { isDark } = useDarkMode();
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        btnBg: "#1e1e1e",
-        btnColor: "#aaa",
-        btnBorder: "rgba(255,255,255,0.12)",
-        btnHoverBorder: "#aaa",
-        btnHoverColor: "#e5e5e5",
-        activeBg: "#e5e5e5",
-        activeColor: "#1e1e1e",
-        activeBorder: "#e5e5e5",
-      }
-    : {
-        btnBg: "white",
-        btnColor: "#888",
-        btnBorder: "rgba(0,0,0,0.1)",
-        btnHoverBorder: "#888",
-        btnHoverColor: "#1a1a18",
-        activeBg: "#1a1a18",
-        activeColor: "white",
-        activeBorder: "#1a1a18",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  return {
+    btnBg: d ? "#1e1e1e" : "white",
+    btnColor: d ? "#aaa" : "#888",
+    btnBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    btnHoverBorder: d ? "#aaa" : "#888",
+    btnHoverColor: d ? "#e5e5e5" : "#1a1a18",
+    activeBg: d ? "#e5e5e5" : "#1a1a18",
+    activeColor: d ? "#1e1e1e" : "white",
+    activeBorder: d ? "#e5e5e5" : "#1a1a18",
+  };
+});
 
 const currentView = ref("primitives");
 const views = [

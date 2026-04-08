@@ -6,35 +6,22 @@ import { STEPS } from "./data";
 
 const { isDark } = useDarkMode();
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        textPrimary: "#e5e5e5",
-        textSecondary: "#aaa",
-        textTertiary: "#666",
-        textDanger: "#f06060",
-        textWarning: "#e0a030",
-        bgSecondary: "#2a2a2e",
-        borderTertiary: "rgba(255,255,255,0.12)",
-        connectorColor: "rgba(255,255,255,0.08)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-        statBg: "#2a2a2e",
-      }
-    : {
-        textPrimary: "#1a1a18",
-        textSecondary: "#555",
-        textTertiary: "#888",
-        textDanger: "#c04040",
-        textWarning: "#a07020",
-        bgSecondary: "#f5f5f5",
-        borderTertiary: "rgba(0,0,0,0.1)",
-        connectorColor: "rgba(0,0,0,0.06)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-        statBg: "#f5f5f5",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  return {
+    textPrimary: d ? "#e5e5e5" : "#1a1a18",
+    textSecondary: d ? "#aaa" : "#555",
+    textTertiary: d ? "#666" : "#888",
+    textDanger: d ? "#f06060" : "#c04040",
+    textWarning: d ? "#e0a030" : "#a07020",
+    bgSecondary: d ? "#2a2a2e" : "#f5f5f5",
+    borderTertiary: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    connectorColor: d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+    fontSans: "'DM Sans', sans-serif",
+    fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+    statBg: d ? "#2a2a2e" : "#f5f5f5",
+  };
+});
 
 const activeStep = ref(null);
 

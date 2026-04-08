@@ -9,21 +9,18 @@ const toggle = (name) => {
   openProto.value = openProto.value === name ? null : name;
 };
 
-const Yhtml = computed(() =>
-  isDark.value
-    ? '<span style="color:#639922;font-weight:600">✓</span>'
-    : '<span style="color:#639922;font-weight:600">✓</span>',
-);
-const Nhtml = computed(() =>
-  isDark.value
-    ? '<span style="color:#f06060">✗</span>'
-    : '<span style="color:#A32D2D">✗</span>',
-);
-const Phtml = computed(() =>
-  isDark.value
-    ? '<span style="color:#e0a030;font-weight:500">◐</span>'
-    : '<span style="color:#BA7517;font-weight:500">◐</span>',
-);
+const Yhtml = computed(() => {
+  const c = isDark.value ? "#639922" : "#639922";
+  return `<span style="color:${c};font-weight:600">✓</span>`;
+});
+const Nhtml = computed(() => {
+  const c = isDark.value ? "#f06060" : "#A32D2D";
+  return `<span style="color:${c}">✗</span>`;
+});
+const Phtml = computed(() => {
+  const c = isDark.value ? "#e0a030" : "#BA7517";
+  return `<span style="color:${c};font-weight:500">◐</span>`;
+});
 
 const protocols = computed(() => {
   const Y = Yhtml.value,
@@ -125,105 +122,59 @@ const protocols = computed(() => {
   ];
 });
 
-const stack = computed(() =>
-  isDark.value
-    ? [
-        {
-          name: "ACP: Agent ↔ IDE",
-          question: '"Welcher Agent arbeitet in welcher IDE?"',
-          bg: "#2a2640",
-          border: "#7c72d0",
-          color: "#a5a0e0",
-        },
-        {
-          name: "MCP: Agent → Externe Welt",
-          question: '"Woher kommen die Daten?"',
-          bg: "#1a3028",
-          border: "#40a080",
-          color: "#5cc0a0",
-        },
-        {
-          name: "LSP: Agent → Code-Verständnis",
-          question: '"Was bedeutet dieser Code semantisch?"',
-          bg: "#1a2840",
-          border: "#4a8fd0",
-          color: "#85b7eb",
-        },
-      ]
-    : [
-        {
-          name: "ACP: Agent ↔ IDE",
-          question: '"Welcher Agent arbeitet in welcher IDE?"',
-          bg: "#EEEDFE",
-          border: "#534AB7",
-          color: "#3C3489",
-        },
-        {
-          name: "MCP: Agent → Externe Welt",
-          question: '"Woher kommen die Daten?"',
-          bg: "#E1F5EE",
-          border: "#0F6E56",
-          color: "#085041",
-        },
-        {
-          name: "LSP: Agent → Code-Verständnis",
-          question: '"Was bedeutet dieser Code semantisch?"',
-          bg: "#E6F1FB",
-          border: "#185FA5",
-          color: "#0C447C",
-        },
-      ],
-);
+const stack = computed(() => {
+  const d = isDark.value;
+  return [
+    {
+      name: "ACP: Agent ↔ IDE",
+      question: '"Welcher Agent arbeitet in welcher IDE?"',
+      bg: d ? "#2a2640" : "#EEEDFE",
+      border: d ? "#7c72d0" : "#534AB7",
+      color: d ? "#a5a0e0" : "#3C3489",
+    },
+    {
+      name: "MCP: Agent → Externe Welt",
+      question: '"Woher kommen die Daten?"',
+      bg: d ? "#1a3028" : "#E1F5EE",
+      border: d ? "#40a080" : "#0F6E56",
+      color: d ? "#5cc0a0" : "#085041",
+    },
+    {
+      name: "LSP: Agent → Code-Verständnis",
+      question: '"Was bedeutet dieser Code semantisch?"',
+      bg: d ? "#1a2840" : "#E6F1FB",
+      border: d ? "#4a8fd0" : "#185FA5",
+      color: d ? "#85b7eb" : "#0C447C",
+    },
+  ];
+});
 
-const C = computed(() =>
-  isDark.value
-    ? {
-        hintColor: "#aaa",
-        cardBg: "#1e1e1e",
-        cardBorder: "rgba(255,255,255,0.12)",
-        cardColor: "#e5e5e5",
-        hoverBorder: "#aaa",
-        byColor: "#aaa",
-        purposeColor: "#ccc",
-        neutralBg: "#2a2a2e",
-        neutralColor: "#ccc",
-        detailBg: "#1e1e1e",
-        detailBorder: "rgba(255,255,255,0.08)",
-        tableColor: "#e5e5e5",
-        thBorderBottom: "rgba(255,255,255,0.12)",
-        thColor: "#aaa",
-        tdBorderBottom: "rgba(255,255,255,0.04)",
-        tdColor: "#e5e5e5",
-        toolNameColor: "#e5e5e5",
-        detailTextColor: "#ccc",
-        stackLabelColor: "#aaa",
-        stackQ: "#ccc",
-        stackPlusColor: "#aaa",
-      }
-    : {
-        hintColor: "#888",
-        cardBg: "white",
-        cardBorder: "rgba(0,0,0,0.1)",
-        cardColor: "#1a1a18",
-        hoverBorder: "#888",
-        byColor: "#888",
-        purposeColor: "#333",
-        neutralBg: "#f3f2ee",
-        neutralColor: "#333",
-        detailBg: "white",
-        detailBorder: "rgba(0,0,0,0.08)",
-        tableColor: "#1a1a18",
-        thBorderBottom: "rgba(0,0,0,0.1)",
-        thColor: "#555",
-        tdBorderBottom: "rgba(0,0,0,0.04)",
-        tdColor: "#1a1a18",
-        toolNameColor: "#1a1a18",
-        detailTextColor: "#333",
-        stackLabelColor: "#888",
-        stackQ: "#333",
-        stackPlusColor: "#888",
-      },
-);
+const C = computed(() => {
+  const d = isDark.value;
+  return {
+    hintColor: d ? "#aaa" : "#888",
+    cardBg: d ? "#1e1e1e" : "white",
+    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    cardColor: d ? "#e5e5e5" : "#1a1a18",
+    hoverBorder: d ? "#aaa" : "#888",
+    byColor: d ? "#aaa" : "#888",
+    purposeColor: d ? "#ccc" : "#333",
+    neutralBg: d ? "#2a2a2e" : "#f3f2ee",
+    neutralColor: d ? "#ccc" : "#333",
+    detailBg: d ? "#1e1e1e" : "white",
+    detailBorder: d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+    tableColor: d ? "#e5e5e5" : "#1a1a18",
+    thBorderBottom: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    thColor: d ? "#aaa" : "#555",
+    tdBorderBottom: d ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+    tdColor: d ? "#e5e5e5" : "#1a1a18",
+    toolNameColor: d ? "#e5e5e5" : "#1a1a18",
+    detailTextColor: d ? "#ccc" : "#333",
+    stackLabelColor: d ? "#aaa" : "#888",
+    stackQ: d ? "#ccc" : "#333",
+    stackPlusColor: d ? "#aaa" : "#888",
+  };
+});
 </script>
 
 <template>
