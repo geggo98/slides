@@ -21,7 +21,7 @@ Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode 
 | **Rules / Regeln**    | Modulare `.md`-Dateien, konditional oder immer geladen                            | Programmierrichtlinien |
 | **Skills**            | `SKILL.md` + Skripte/Templates, laden on-demand                                   | Run-Book               |
 | **Hooks**             | Shell-Befehle bei Lifecycle-Events, deterministisch                               | Git-Hooks              |
-| **MCP Server**        | Externe Tool-Anbindung via Model Context Protocol                                 | Confluence             |
+| **MCP Server**        | Externe Tool-Anbindung via Model Context Protocol                                 | Datenbank              |
 | **Subagents**         | Isolierte Agent-Instanzen mit eigenem Kontextfenster                              | Praktikant             |
 | **Plugins**           | Bündelung von Skills + Hooks + MCP in ein Paket                                   | npm-Paket              |
 
@@ -116,7 +116,7 @@ clicks: false
 | **Zweck**    | Semantisches Code-Verständnis | Externe Tool-/Datenanbindung |
 | **Richtung** | Agent → Code                  | Agent → Externe Welt         |
 | **Erstellt** | Microsoft, 2016               | Anthropic, 2024              |
-| **Analogie** | IDE-Intelligenz               | USB-C-Adapter                |
+| **Analogie** | IDE-Intelligenz               | Datenbank                    |
 
 **LSP** gibt dem Agenten _Augen für Code_ — 50ms statt Sekunden für Symbol-Suche.
 
