@@ -15,15 +15,15 @@ Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode 
 
 # Kernbegriffe
 
-| Primitiv | Was es ist | Analogie |
-|---|---|---|
-| **Instruktionsdatei** | Markdown-Datei mit Projektkonventionen, bei Sessionstart in System-Prompt geladen | Firmenhandbuch |
-| **Rules / Regeln** | Modulare `.md`-Dateien, konditional oder immer geladen | Abteilungsrichtlinien |
-| **Skills** | `SKILL.md` + Skripte/Templates, laden on-demand | Verfahrensanleitung |
-| **Hooks** | Shell-Befehle bei Lifecycle-Events, deterministisch | Git-Hooks |
-| **MCP Server** | Externe Tool-Anbindung via Model Context Protocol | USB-C-Adapter |
-| **Subagents** | Isolierte Agent-Instanzen mit eigenem Kontextfenster | Praktikant |
-| **Plugins** | Bündelung von Skills + Hooks + MCP in ein Paket | npm-Paket |
+| Primitiv              | Was es ist                                                                        | Analogie               |
+| --------------------- | --------------------------------------------------------------------------------- | ---------------------- |
+| **Instruktionsdatei** | Markdown-Datei mit Projektkonventionen, bei Sessionstart in System-Prompt geladen | Projekthandbuch        |
+| **Rules / Regeln**    | Modulare `.md`-Dateien, konditional oder immer geladen                            | Programmierrichtlinien |
+| **Skills**            | `SKILL.md` + Skripte/Templates, laden on-demand                                   | Run-Book               |
+| **Hooks**             | Shell-Befehle bei Lifecycle-Events, deterministisch                               | Git-Hooks              |
+| **MCP Server**        | Externe Tool-Anbindung via Model Context Protocol                                 | Confluence             |
+| **Subagents**         | Isolierte Agent-Instanzen mit eigenem Kontextfenster                              | Praktikant             |
+| **Plugins**           | Bündelung von Skills + Hooks + MCP in ein Paket                                   | npm-Paket              |
 
 ---
 
@@ -40,16 +40,16 @@ Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode 
 **Subagents** lösen Kontextfenster-Probleme.
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Primitive im Überblick
 
 <PrimitivesOverview />
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Vergleichsmatrix
 
@@ -61,13 +61,13 @@ clicks: false
 
 Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
-| Tool | Hierarchie |
-|---|---|
+| Tool            | Hierarchie                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------- |
 | **Claude Code** | `~/.claude/` → Elternverzeichnisse → Projekt-Root → Unterverzeichnisse + `.claude/rules/*.md` |
-| **Codex** | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert |
-| **Windsurf** | System → Global → Workspace → AGENTS.md (4 Stufen) |
-| **Gemini CLI** | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine |
-| **OpenCode** | Remote-Config via `.well-known/opencode` |
+| **Codex**       | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert            |
+| **Windsurf**    | System → Global → Workspace → AGENTS.md (4 Stufen)                                            |
+| **Gemini CLI**  | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine            |
+| **OpenCode**    | Remote-Config via `.well-known/opencode`                                                      |
 
 **Universell: Deny gewinnt immer** — keine niedrigere Ebene kann ein Verbot aufheben.
 
@@ -75,14 +75,14 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
 # Hook-Systeme: Die größte Divergenz
 
-| Tool | Events | Pre-Tool-Block | Besonderheit |
-|---|---|---|---|
-| **Claude Code** | 12+ | ✓ (Exit 2) | 3 Handler-Typen: Shell, LLM-Prompt, Agent |
-| **Gemini CLI** | 10 | ✓ | Retry-Trigger via `AfterAgent` (Exit 2) |
-| **Windsurf** | 12 | ✓ | Cloud-managed Hook-Deployment |
-| **OpenCode** | 30+ | ✓ | JS/TS-Plugins statt Shell-Skripte |
-| **Codex** | 2 | ✗ | Nur `notify` + `userpromptsubmit` |
-| **Junie** | — | ✗ | Approval Gates + Live Prompting |
+| Tool            | Events | Pre-Tool-Block | Besonderheit                              |
+| --------------- | ------ | -------------- | ----------------------------------------- |
+| **Claude Code** | 12+    | ✓ (Exit 2)     | 3 Handler-Typen: Shell, LLM-Prompt, Agent |
+| **Gemini CLI**  | 10     | ✓              | Retry-Trigger via `AfterAgent` (Exit 2)   |
+| **Windsurf**    | 12     | ✓              | Cloud-managed Hook-Deployment             |
+| **OpenCode**    | 30+    | ✓              | JS/TS-Plugins statt Shell-Skripte         |
+| **Codex**       | 2      | ✗              | Nur `notify` + `userpromptsubmit`         |
+| **Junie**       | —      | ✗              | Approval Gates + Live Prompting           |
 
 **Architekturprinzip:** Hooks sind Quality Gates — sie fangen die letzten 10% auf, die das Modell trotz guter Instruktionen übersieht.
 
@@ -90,18 +90,18 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
 # Sandboxing und Permissions
 
-| Tool | Technologie | Besonderheit |
-|---|---|---|
-| **Codex** | Seatbelt / Landlock+seccomp | `.git/`, `.codex/` immer gesperrt |
-| **Claude Code** | Seatbelt / bubblewrap | Drei-Tier: Deny → Ask → Allow mit Prefix-Matching |
-| **Gemini CLI** | Seatbelt, Docker, Podman, LXC | Breiteste Backend-Auswahl + TOML Policy Engine |
-| **Windsurf** | Turbo-Mode Auto-Execution | `.codeiumignore` für Dateirestriktionen |
-| **Junie** | Safe/Sensitive-Klassifikation | Regex-basierte Allowlist pro Kommando |
-| **OpenCode** | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable |
+| Tool            | Technologie                    | Besonderheit                                      |
+| --------------- | ------------------------------ | ------------------------------------------------- |
+| **Codex**       | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                 |
+| **Claude Code** | Seatbelt / bubblewrap          | Drei-Tier: Deny → Ask → Allow mit Prefix-Matching |
+| **Gemini CLI**  | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine    |
+| **Windsurf**    | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen           |
+| **Junie**       | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando             |
+| **OpenCode**    | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                      |
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # LSP · MCP · ACP
 
@@ -111,16 +111,16 @@ clicks: false
 
 # LSP vs. MCP — Keine Verwechslung
 
-| | LSP | MCP |
-|---|---|---|
-| **Zweck** | Semantisches Code-Verständnis | Externe Tool-/Datenanbindung |
-| **Richtung** | Agent → Code | Agent → Externe Welt |
-| **Erstellt** | Microsoft, 2016 | Anthropic, 2024 |
-| **Analogie** | IDE-Intelligenz | USB-C-Adapter |
+|              | LSP                           | MCP                          |
+| ------------ | ----------------------------- | ---------------------------- |
+| **Zweck**    | Semantisches Code-Verständnis | Externe Tool-/Datenanbindung |
+| **Richtung** | Agent → Code                  | Agent → Externe Welt         |
+| **Erstellt** | Microsoft, 2016               | Anthropic, 2024              |
+| **Analogie** | IDE-Intelligenz               | USB-C-Adapter                |
 
-**LSP** gibt dem Agenten *Augen für Code* — 50ms statt Sekunden für Symbol-Suche.
+**LSP** gibt dem Agenten _Augen für Code_ — 50ms statt Sekunden für Symbol-Suche.
 
-**MCP** gibt ihm *Hände für die Außenwelt* — Zugriff auf Systeme die er sonst nicht erreicht.
+**MCP** gibt ihm _Hände für die Außenwelt_ — Zugriff auf Systeme die er sonst nicht erreicht.
 
 Ein Agent profitiert von **beiden gleichzeitig**.
 
@@ -134,13 +134,13 @@ Vor ACP: Jede IDE brauchte für jeden Agenten eine Custom-Integration.
 
 Mit ACP: Ein Agent implementiert ACP einmal → funktioniert in JetBrains, Zed, und jedem ACP-kompatiblen Editor.
 
-| Tool | ACP | Details |
-|---|---|---|
-| Claude Code | ✓ | JetBrains-IDEs + Zed |
-| Codex | ✓ | JetBrains ab 2026.1 |
-| Junie | ✓ | JetBrains-nativ |
-| Gemini CLI | ✓ | JetBrains + Zed |
-| Windsurf | ✗ | Eigene IDE |
+| Tool        | ACP | Details              |
+| ----------- | --- | -------------------- |
+| Claude Code | ✓   | JetBrains-IDEs + Zed |
+| Codex       | ✓   | JetBrains ab 2026.1  |
+| Junie       | ✓   | JetBrains-nativ      |
+| Gemini CLI  | ✓   | JetBrains + Zed      |
+| Windsurf    | ✗   | Eigene IDE           |
 
 **MCP-Durchreichung:** JetBrains reicht konfigurierte MCP-Server an ACP-Agenten durch — einmal konfigurieren, alle Agenten nutzen es.
 
@@ -155,22 +155,23 @@ Mit ACP: Ein Agent implementiert ACP einmal → funktioniert in JetBrains, Zed, 
 **Settings und Hooks** — NICHT portabel. JSON vs. TOML vs. JS-Plugins.
 
 Praktische Interop heute:
+
 - **Junie** importiert automatisch `.claude/`, `.codex/`, `.cursor/`
 - **OpenCode** fällt auf `CLAUDE.md` zurück
 - **Windsurf** entdeckt Skills aus `.agents/skills/`
 - **Gemini CLI** erlaubt mehrere Dateinamen-Alternativen
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Zusammenspiel der Primitive
 
 <FlowLayers />
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Git Worktrees für Agenten
 
@@ -189,54 +190,55 @@ clicks: false
 7. **Projekt-Level-Configs versionieren** — Secrets nur in User-Level oder Env-Vars
 
 ---
-layout: center
----
+
+## layout: center
 
 # Bonusmaterial
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Agent Skills — Deep Dive
 
 <SkillInfographic />
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Clinejection -- Anatomie eines Supply-Chain-Angriffs
 
 <ClinejectionAttackChain />
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Clinejection -- Zeitverlauf und vereitelte Eskalation
 
 <ClinejectionTimeline />
 
 ---
-clicks: 1
----
+
+## clicks: 1
 
 # Clinejection -- Willisons "Lethal Trifecta"
 
 <ClinejectionTrifecta />
 
 ---
-clicks: false
----
+
+## clicks: false
 
 # Gesamtübersicht — Interaktiv
 
 <FullInfographic />
 
 ---
-layout: end 
---- 
+
+layout: end
+
+---
 
 # Danke
-
