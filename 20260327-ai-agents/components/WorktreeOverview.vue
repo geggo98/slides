@@ -4,157 +4,89 @@ import { useDarkMode } from "@slidev/client";
 
 const { isDark } = useDarkMode();
 
-const worktrees = computed(() =>
-  isDark.value
-    ? [
-        {
-          tool: "Claude Code",
-          level: "Erstklassig",
-          desc: "claude --worktree name. Subagents: isolation: worktree. Auto-Cleanup.",
-          badgeBg: "#1a2810",
-          badgeColor: "#80c050",
-        },
-        {
-          tool: "Codex App",
-          level: "Erstklassig",
-          desc: 'Thread-Typ "Worktree". Handoff Local ↔ Worktree. Background-Automations.',
-          badgeBg: "#1a2810",
-          badgeColor: "#80c050",
-        },
-        {
-          tool: "Windsurf",
-          level: "Erstklassig",
-          desc: "Seit Wave 13. Side-by-side Cascade-Panes. Git Worktrees als Backend.",
-          badgeBg: "#1a2810",
-          badgeColor: "#80c050",
-        },
-        {
-          tool: "Junie / IntelliJ",
-          level: "Nativ (ab 2026.1)",
-          desc: "Nativer Worktree-Support seit IntelliJ IDEA 2026.1. Für AI-Agent-Workflows.",
-          badgeBg: "#1a2810",
-          badgeColor: "#80c050",
-        },
-        {
-          tool: "Gemini CLI",
-          level: "Manuell",
-          desc: "Kein --worktree-Flag. Manuell: git worktree add + cd + gemini.",
-          badgeBg: "#332810",
-          badgeColor: "#d4a050",
-        },
-        {
-          tool: "OpenCode",
-          level: "Manuell",
-          desc: "Kein automatisches Management. Manuelles Setup funktioniert.",
-          badgeBg: "#332810",
-          badgeColor: "#d4a050",
-        },
-      ]
-    : [
-        {
-          tool: "Claude Code",
-          level: "Erstklassig",
-          desc: "claude --worktree name. Subagents: isolation: worktree. Auto-Cleanup.",
-          badgeBg: "#EAF3DE",
-          badgeColor: "#27500A",
-        },
-        {
-          tool: "Codex App",
-          level: "Erstklassig",
-          desc: 'Thread-Typ "Worktree". Handoff Local ↔ Worktree. Background-Automations.',
-          badgeBg: "#EAF3DE",
-          badgeColor: "#27500A",
-        },
-        {
-          tool: "Windsurf",
-          level: "Erstklassig",
-          desc: "Seit Wave 13. Side-by-side Cascade-Panes. Git Worktrees als Backend.",
-          badgeBg: "#EAF3DE",
-          badgeColor: "#27500A",
-        },
-        {
-          tool: "Junie / IntelliJ",
-          level: "Nativ (ab 2026.1)",
-          desc: "Nativer Worktree-Support seit IntelliJ IDEA 2026.1. Für AI-Agent-Workflows.",
-          badgeBg: "#EAF3DE",
-          badgeColor: "#27500A",
-        },
-        {
-          tool: "Gemini CLI",
-          level: "Manuell",
-          desc: "Kein --worktree-Flag. Manuell: git worktree add + cd + gemini.",
-          badgeBg: "#FAEEDA",
-          badgeColor: "#633806",
-        },
-        {
-          tool: "OpenCode",
-          level: "Manuell",
-          desc: "Kein automatisches Management. Manuelles Setup funktioniert.",
-          badgeBg: "#FAEEDA",
-          badgeColor: "#633806",
-        },
-      ],
-);
+const worktrees = computed(() => {
+  const d = isDark.value;
+  const erstklassig = {
+    badgeBg: d ? "#1a2810" : "#EAF3DE",
+    badgeColor: d ? "#80c050" : "#27500A",
+  };
+  const manuell = {
+    badgeBg: d ? "#332810" : "#FAEEDA",
+    badgeColor: d ? "#d4a050" : "#633806",
+  };
+  return [
+    {
+      tool: "Claude Code",
+      level: "Erstklassig",
+      desc: "claude --worktree name. Subagents: isolation: worktree. Auto-Cleanup.",
+      ...erstklassig,
+    },
+    {
+      tool: "Codex App",
+      level: "Erstklassig",
+      desc: 'Thread-Typ "Worktree". Handoff Local ↔ Worktree. Background-Automations.',
+      ...erstklassig,
+    },
+    {
+      tool: "Windsurf",
+      level: "Erstklassig",
+      desc: "Seit Wave 13. Side-by-side Cascade-Panes. Git Worktrees als Backend.",
+      ...erstklassig,
+    },
+    {
+      tool: "Junie / IntelliJ",
+      level: "Nativ (ab 2026.1)",
+      desc: "Nativer Worktree-Support seit IntelliJ IDEA 2026.1. Für AI-Agent-Workflows.",
+      ...erstklassig,
+    },
+    {
+      tool: "Gemini CLI",
+      level: "Manuell",
+      desc: "Kein --worktree-Flag. Manuell: git worktree add + cd + gemini.",
+      ...manuell,
+    },
+    {
+      tool: "OpenCode",
+      level: "Manuell",
+      desc: "Kein automatisches Management. Manuelles Setup funktioniert.",
+      ...manuell,
+    },
+  ];
+});
 
-const combo = computed(() =>
-  isDark.value
-    ? {
-        subBg: "#1a3028",
-        subBorder: "#40a080",
-        subName: "#5cc0a0",
-        subText: "#ccc",
-        wtBg: "#2a2640",
-        wtBorder: "#7c72d0",
-        wtName: "#a5a0e0",
-        bothBg: "#331810",
-        bothBorder: "#e08050",
-        bothName: "#e09060",
-        bothText: "#e09060",
-        codeBg: "rgba(255,255,255,0.08)",
-        codeColor: "#e09060",
-      }
-    : {
-        subBg: "#E1F5EE",
-        subBorder: "#0F6E56",
-        subName: "#085041",
-        subText: "#333",
-        wtBg: "#EEEDFE",
-        wtBorder: "#534AB7",
-        wtName: "#3C3489",
-        bothBg: "#FAECE7",
-        bothBorder: "#D85A30",
-        bothName: "#712B13",
-        bothText: "#712B13",
-        codeBg: "rgba(0,0,0,0.08)",
-        codeColor: "#4a1a0a",
-      },
-);
+const combo = computed(() => {
+  const d = isDark.value;
+  return {
+    subBg: d ? "#1a3028" : "#E1F5EE",
+    subBorder: d ? "#40a080" : "#0F6E56",
+    subName: d ? "#5cc0a0" : "#085041",
+    subText: d ? "#ccc" : "#333",
+    wtBg: d ? "#2a2640" : "#EEEDFE",
+    wtBorder: d ? "#7c72d0" : "#534AB7",
+    wtName: d ? "#a5a0e0" : "#3C3489",
+    bothBg: d ? "#331810" : "#FAECE7",
+    bothBorder: d ? "#e08050" : "#D85A30",
+    bothName: d ? "#e09060" : "#712B13",
+    bothText: d ? "#e09060" : "#712B13",
+    codeBg: d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+    codeColor: d ? "#e09060" : "#4a1a0a",
+  };
+});
 
-const C = computed(() =>
-  isDark.value
-    ? {
-        sectionLabelColor: "#aaa",
-        cardBg: "#1e1e1e",
-        cardBorder: "rgba(255,255,255,0.12)",
-        cardColor: "#e5e5e5",
-        cardH4: "#e5e5e5",
-        cardP: "#ccc",
-        comboSub: "#ccc",
-        comboArrow: "#aaa",
-        limitsColor: "#aaa",
-      }
-    : {
-        sectionLabelColor: "#888",
-        cardBg: "white",
-        cardBorder: "rgba(0,0,0,0.1)",
-        cardColor: "#1a1a18",
-        cardH4: "#1a1a18",
-        cardP: "#333",
-        comboSub: "#333",
-        comboArrow: "#888",
-        limitsColor: "#aaa",
-      },
-);
+const C = computed(() => {
+  const d = isDark.value;
+  return {
+    sectionLabelColor: d ? "#aaa" : "#888",
+    cardBg: d ? "#1e1e1e" : "white",
+    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    cardColor: d ? "#e5e5e5" : "#1a1a18",
+    cardH4: d ? "#e5e5e5" : "#1a1a18",
+    cardP: d ? "#ccc" : "#333",
+    comboSub: d ? "#ccc" : "#333",
+    comboArrow: d ? "#aaa" : "#888",
+    limitsColor: "#aaa",
+  };
+});
 
 const orchestrators = [
   {

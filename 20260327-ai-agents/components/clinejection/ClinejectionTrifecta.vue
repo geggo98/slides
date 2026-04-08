@@ -10,41 +10,25 @@ const showFourth = computed(() => nav.clicks.value >= 1);
 const baseTrifecta = TRIFECTA.filter((t) => !t.extended);
 const extendedItem = TRIFECTA.find((t) => t.extended);
 
-const P = computed(() =>
-  isDark.value
-    ? {
-        textPrimary: "#e5e5e5",
-        textSecondary: "#aaa",
-        textTertiary: "#666",
-        textSuccess: "#5cc0a0",
-        textWarning: "#e0a030",
-        bgPrimary: "#1e1e1e",
-        bgSecondary: "#2a2a2e",
-        borderTertiary: "rgba(255,255,255,0.12)",
-        bgSuccess: "rgba(92,192,160,0.12)",
-        bgWarning: "rgba(224,160,48,0.12)",
-        borderSuccess: "rgba(92,192,160,0.25)",
-        borderWarning: "rgba(224,160,48,0.25)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      }
-    : {
-        textPrimary: "#1a1a18",
-        textSecondary: "#555",
-        textTertiary: "#888",
-        textSuccess: "#308060",
-        textWarning: "#a07020",
-        bgPrimary: "white",
-        bgSecondary: "#f5f5f5",
-        borderTertiary: "rgba(0,0,0,0.1)",
-        bgSuccess: "rgba(48,128,96,0.08)",
-        bgWarning: "rgba(160,112,32,0.08)",
-        borderSuccess: "rgba(48,128,96,0.25)",
-        borderWarning: "rgba(160,112,32,0.25)",
-        fontSans: "'DM Sans', sans-serif",
-        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-      },
-);
+const P = computed(() => {
+  const d = isDark.value;
+  return {
+    textPrimary: d ? "#e5e5e5" : "#1a1a18",
+    textSecondary: d ? "#aaa" : "#555",
+    textTertiary: d ? "#666" : "#888",
+    textSuccess: d ? "#5cc0a0" : "#308060",
+    textWarning: d ? "#e0a030" : "#a07020",
+    bgPrimary: d ? "#1e1e1e" : "white",
+    bgSecondary: d ? "#2a2a2e" : "#f5f5f5",
+    borderTertiary: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    bgSuccess: d ? "rgba(92,192,160,0.12)" : "rgba(48,128,96,0.08)",
+    bgWarning: d ? "rgba(224,160,48,0.12)" : "rgba(160,112,32,0.08)",
+    borderSuccess: d ? "rgba(92,192,160,0.25)" : "rgba(48,128,96,0.25)",
+    borderWarning: d ? "rgba(224,160,48,0.25)" : "rgba(160,112,32,0.25)",
+    fontSans: "'DM Sans', sans-serif",
+    fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+  };
+});
 
 function cellBorder(t) {
   return t.extended ? P.value.borderWarning : P.value.borderTertiary;

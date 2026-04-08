@@ -9,199 +9,106 @@ const toggle = (id) => {
   openLayer.value = openLayer.value === id ? null : id;
 };
 
-const layers = computed(() =>
-  isDark.value
-    ? [
-        {
-          id: "plugin",
-          name: "Plugin / Extension",
-          question: "Wie verteile ich alles?",
-          bg: "#1a2810",
-          border: "#80c050",
-          color: "#80c050",
-          detail:
-            "Bündelt Skills, Hooks, Subagents, MCP in ein installierbares Paket. Claude Code: <code>.claude-plugin/</code>, Gemini CLI: <code>gemini-extension.json</code>, OpenCode: <code>.opencode/plugins/*.js</code>.",
-        },
-        {
-          id: "instr",
-          name: "Instruktionsdatei",
-          question: "Was gilt immer?",
-          bg: "#2a2640",
-          border: "#7c72d0",
-          color: "#a5a0e0",
-          detail:
-            "Statischer Projektkontext. CLAUDE.md / AGENTS.md / GEMINI.md. Unter 200 Zeilen. Deny-Regeln haben Vorrang über alle Ebenen.",
-        },
-        {
-          id: "rules",
-          name: "Rules (konditional)",
-          question: "Was gilt hier?",
-          bg: "#1a2840",
-          border: "#4a8fd0",
-          color: "#85b7eb",
-          detail:
-            "Pfad-/dateibasiert geladene Regeln. Windsurf: <code>glob</code>, <code>model_decision</code>. Claude Code: <code>globs</code> in YAML-Frontmatter.",
-        },
-        {
-          id: "skills",
-          name: "Skills",
-          question: "Wie mache ich X?",
-          bg: "#1a3028",
-          border: "#40a080",
-          color: "#5cc0a0",
-          detail:
-            "On-Demand Workflows. Nur Beschreibung lädt initial → voller Inhalt bei Aktivierung. Cross-Tool-Standard.",
-        },
-        {
-          id: "mcp",
-          name: "MCP Server",
-          question: "Woher die Daten?",
-          bg: "#1a2840",
-          border: "#4a8fd0",
-          color: "#85b7eb",
-          detail:
-            "Externe Fähigkeiten via Model Context Protocol. Alle 6 Tools unterstützen MCP. Token-Kosten monitoren.",
-        },
-        {
-          id: "sub",
-          name: "Subagents",
-          question: "Wer arbeitet isoliert?",
-          bg: "#301820",
-          border: "#c06080",
-          color: "#e080a0",
-          detail:
-            "Eigenes Kontextfenster. Gibt Zusammenfassung zurück. Mit <code>isolation: worktree</code> auch Dateisystem-Isolation.",
-        },
-        {
-          id: "hooks",
-          name: "Hooks",
-          question: "Was MUSS passieren?",
-          bg: "#331810",
-          border: "#e08050",
-          color: "#e09060",
-          detail:
-            "Deterministisch. Kein KI-Urteil. Quality Gates: Linter, Formatter, Tests. <code>PreToolUse</code> kann blockieren (Exit 2).",
-        },
-      ]
-    : [
-        {
-          id: "plugin",
-          name: "Plugin / Extension",
-          question: "Wie verteile ich alles?",
-          bg: "#EAF3DE",
-          border: "#639922",
-          color: "#27500A",
-          detail:
-            "Bündelt Skills, Hooks, Subagents, MCP in ein installierbares Paket. Claude Code: <code>.claude-plugin/</code>, Gemini CLI: <code>gemini-extension.json</code>, OpenCode: <code>.opencode/plugins/*.js</code>.",
-        },
-        {
-          id: "instr",
-          name: "Instruktionsdatei",
-          question: "Was gilt immer?",
-          bg: "#EEEDFE",
-          border: "#534AB7",
-          color: "#3C3489",
-          detail:
-            "Statischer Projektkontext. CLAUDE.md / AGENTS.md / GEMINI.md. Unter 200 Zeilen. Deny-Regeln haben Vorrang über alle Ebenen.",
-        },
-        {
-          id: "rules",
-          name: "Rules (konditional)",
-          question: "Was gilt hier?",
-          bg: "#E6F1FB",
-          border: "#185FA5",
-          color: "#0C447C",
-          detail:
-            "Pfad-/dateibasiert geladene Regeln. Windsurf: <code>glob</code>, <code>model_decision</code>. Claude Code: <code>globs</code> in YAML-Frontmatter.",
-        },
-        {
-          id: "skills",
-          name: "Skills",
-          question: "Wie mache ich X?",
-          bg: "#E1F5EE",
-          border: "#0F6E56",
-          color: "#085041",
-          detail:
-            "On-Demand Workflows. Nur Beschreibung lädt initial → voller Inhalt bei Aktivierung. Cross-Tool-Standard.",
-        },
-        {
-          id: "mcp",
-          name: "MCP Server",
-          question: "Woher die Daten?",
-          bg: "#E6F1FB",
-          border: "#185FA5",
-          color: "#0C447C",
-          detail:
-            "Externe Fähigkeiten via Model Context Protocol. Alle 6 Tools unterstützen MCP. Token-Kosten monitoren.",
-        },
-        {
-          id: "sub",
-          name: "Subagents",
-          question: "Wer arbeitet isoliert?",
-          bg: "#FBEAF0",
-          border: "#993556",
-          color: "#72243E",
-          detail:
-            "Eigenes Kontextfenster. Gibt Zusammenfassung zurück. Mit <code>isolation: worktree</code> auch Dateisystem-Isolation.",
-        },
-        {
-          id: "hooks",
-          name: "Hooks",
-          question: "Was MUSS passieren?",
-          bg: "#FAECE7",
-          border: "#D85A30",
-          color: "#712B13",
-          detail:
-            "Deterministisch. Kein KI-Urteil. Quality Gates: Linter, Formatter, Tests. <code>PreToolUse</code> kann blockieren (Exit 2).",
-        },
-      ],
-);
+const layers = computed(() => {
+  const d = isDark.value;
+  return [
+    {
+      id: "plugin",
+      name: "Plugin / Extension",
+      question: "Wie verteile ich alles?",
+      bg: d ? "#1a2810" : "#EAF3DE",
+      border: d ? "#80c050" : "#639922",
+      color: d ? "#80c050" : "#27500A",
+      detail:
+        "Bündelt Skills, Hooks, Subagents, MCP in ein installierbares Paket. Claude Code: <code>.claude-plugin/</code>, Gemini CLI: <code>gemini-extension.json</code>, OpenCode: <code>.opencode/plugins/*.js</code>.",
+    },
+    {
+      id: "instr",
+      name: "Instruktionsdatei",
+      question: "Was gilt immer?",
+      bg: d ? "#2a2640" : "#EEEDFE",
+      border: d ? "#7c72d0" : "#534AB7",
+      color: d ? "#a5a0e0" : "#3C3489",
+      detail:
+        "Statischer Projektkontext. CLAUDE.md / AGENTS.md / GEMINI.md. Unter 200 Zeilen. Deny-Regeln haben Vorrang über alle Ebenen.",
+    },
+    {
+      id: "rules",
+      name: "Rules (konditional)",
+      question: "Was gilt hier?",
+      bg: d ? "#1a2840" : "#E6F1FB",
+      border: d ? "#4a8fd0" : "#185FA5",
+      color: d ? "#85b7eb" : "#0C447C",
+      detail:
+        "Pfad-/dateibasiert geladene Regeln. Windsurf: <code>glob</code>, <code>model_decision</code>. Claude Code: <code>globs</code> in YAML-Frontmatter.",
+    },
+    {
+      id: "skills",
+      name: "Skills",
+      question: "Wie mache ich X?",
+      bg: d ? "#1a3028" : "#E1F5EE",
+      border: d ? "#40a080" : "#0F6E56",
+      color: d ? "#5cc0a0" : "#085041",
+      detail:
+        "On-Demand Workflows. Nur Beschreibung lädt initial → voller Inhalt bei Aktivierung. Cross-Tool-Standard.",
+    },
+    {
+      id: "mcp",
+      name: "MCP Server",
+      question: "Woher die Daten?",
+      bg: d ? "#1a2840" : "#E6F1FB",
+      border: d ? "#4a8fd0" : "#185FA5",
+      color: d ? "#85b7eb" : "#0C447C",
+      detail:
+        "Externe Fähigkeiten via Model Context Protocol. Alle 6 Tools unterstützen MCP. Token-Kosten monitoren.",
+    },
+    {
+      id: "sub",
+      name: "Subagents",
+      question: "Wer arbeitet isoliert?",
+      bg: d ? "#301820" : "#FBEAF0",
+      border: d ? "#c06080" : "#993556",
+      color: d ? "#e080a0" : "#72243E",
+      detail:
+        "Eigenes Kontextfenster. Gibt Zusammenfassung zurück. Mit <code>isolation: worktree</code> auch Dateisystem-Isolation.",
+    },
+    {
+      id: "hooks",
+      name: "Hooks",
+      question: "Was MUSS passieren?",
+      bg: d ? "#331810" : "#FAECE7",
+      border: d ? "#e08050" : "#D85A30",
+      color: d ? "#e09060" : "#712B13",
+      detail:
+        "Deterministisch. Kein KI-Urteil. Quality Gates: Linter, Formatter, Tests. <code>PreToolUse</code> kann blockieren (Exit 2).",
+    },
+  ];
+});
 
-const C = computed(() =>
-  isDark.value
-    ? {
-        hintColor: "#aaa",
-        layerQ: "#999",
-        detailBg: "#1e1e1e",
-        detailColor: "#e5e5e5",
-        detailBorder: "rgba(255,255,255,0.12)",
-        codeBg: "#2a2a2e",
-        codeColor: "#e5e5e5",
-        arrowColor: "#aaa",
-        sectionLabelColor: "#aaa",
-        tableBg: "#1e1e1e",
-        tableBorder: "rgba(255,255,255,0.12)",
-        tableColor: "#e5e5e5",
-        thBg: "#2a2a2e",
-        thColor: "#ccc",
-        thBorderBottom: "rgba(255,255,255,0.12)",
-        tdBorderBottom: "rgba(255,255,255,0.06)",
-        tdColor: "#e5e5e5",
-        toolNameColor: "#e5e5e5",
-        exUsageColor: "#ccc",
-      }
-    : {
-        hintColor: "#888",
-        layerQ: "#5f5e5a",
-        detailBg: "white",
-        detailColor: "#1a1a18",
-        detailBorder: "rgba(0,0,0,0.1)",
-        codeBg: "#f3f2ee",
-        codeColor: "#1a1a18",
-        arrowColor: "#888",
-        sectionLabelColor: "#888",
-        tableBg: "white",
-        tableBorder: "rgba(0,0,0,0.1)",
-        tableColor: "#1a1a18",
-        thBg: "#f3f2ee",
-        thColor: "#333",
-        thBorderBottom: "rgba(0,0,0,0.1)",
-        tdBorderBottom: "rgba(0,0,0,0.06)",
-        tdColor: "#1a1a18",
-        toolNameColor: "#1a1a18",
-        exUsageColor: "#333",
-      },
-);
+const C = computed(() => {
+  const d = isDark.value;
+  return {
+    hintColor: d ? "#aaa" : "#888",
+    layerQ: d ? "#999" : "#5f5e5a",
+    detailBg: d ? "#1e1e1e" : "white",
+    detailColor: d ? "#e5e5e5" : "#1a1a18",
+    detailBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    codeBg: d ? "#2a2a2e" : "#f3f2ee",
+    codeColor: d ? "#e5e5e5" : "#1a1a18",
+    arrowColor: d ? "#aaa" : "#888",
+    sectionLabelColor: d ? "#aaa" : "#888",
+    tableBg: d ? "#1e1e1e" : "white",
+    tableBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    tableColor: d ? "#e5e5e5" : "#1a1a18",
+    thBg: d ? "#2a2a2e" : "#f3f2ee",
+    thColor: d ? "#ccc" : "#333",
+    thBorderBottom: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
+    tdBorderBottom: d ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+    tdColor: d ? "#e5e5e5" : "#1a1a18",
+    toolNameColor: d ? "#e5e5e5" : "#1a1a18",
+    exUsageColor: d ? "#ccc" : "#333",
+  };
+});
 
 const examples = [
   {
