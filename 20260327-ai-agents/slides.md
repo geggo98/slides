@@ -204,7 +204,7 @@ clicks: false
 <SkillInfographic />
 
 ---
-clicks: 1
+clicks: false
 ---
 
 # Clinejection -- Anatomie eines Supply-Chain-Angriffs
@@ -220,7 +220,7 @@ clicks: false
 <ClinejectionTimeline />
 
 ---
-clicks: false
+clicks: 1
 ---
 
 # Clinejection -- Willisons "Lethal Trifecta"
