@@ -1,23 +1,28 @@
 <script setup>
-import { ref, watch, inject } from 'vue'
+import { ref, watch, inject } from "vue";
 
 const props = defineProps({
   id: { type: String, required: true },
   title: { type: String, required: true },
   open: { type: Boolean, default: false },
-})
+});
 
-const isOpen = ref(props.open)
-const toggle = () => { isOpen.value = !isOpen.value }
+const isOpen = ref(props.open);
+const toggle = () => {
+  isOpen.value = !isOpen.value;
+};
 
-const skillNav = inject('skillNav', null)
+const skillNav = inject("skillNav", null);
 
 if (skillNav) {
-  watch(() => skillNav.activeSection.value, (newSection) => {
-    if (newSection === props.id) {
-      isOpen.value = true
-    }
-  })
+  watch(
+    () => skillNav.activeSection.value,
+    (newSection) => {
+      if (newSection === props.id) {
+        isOpen.value = true;
+      }
+    },
+  );
 }
 </script>
 
