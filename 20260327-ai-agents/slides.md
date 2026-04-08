@@ -204,7 +204,7 @@ clicks: false
 <SkillInfographic />
 
 ---
-clicks: false
+clicks: 1
 ---
 
 # Clinejection -- Anatomie eines Supply-Chain-Angriffs
