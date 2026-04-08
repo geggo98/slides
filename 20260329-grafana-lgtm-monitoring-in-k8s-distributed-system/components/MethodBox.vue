@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { useDarkMode } from '@slidev/client'
+import { computed } from "vue";
+import { useDarkMode } from "@slidev/client";
 
 const props = defineProps({
   color: String,
@@ -9,21 +9,19 @@ const props = defineProps({
   tag: String,
   signals: Array,
   description: String,
-})
+});
 
-const { isDark } = useDarkMode()
+const { isDark } = useDarkMode();
 
-const C = computed(() => isDark.value ? {
-  surface: '#111621',
-  border: '#1e2536',
-  text: '#e2e8f0',
-  muted: '#64748b',
-} : {
-  surface: '#ffffff',
-  border: '#e2e8f0',
-  text: '#1e293b',
-  muted: '#64748b',
-})
+const C = computed(() => {
+  const d = isDark.value;
+  return {
+    surface: d ? "#111621" : "#ffffff",
+    border: d ? "#1e2536" : "#e2e8f0",
+    text: d ? "#e2e8f0" : "#1e293b",
+    muted: "#64748b",
+  };
+});
 </script>
 
 <template>
@@ -36,8 +34,17 @@ const C = computed(() => isDark.value ? {
       transition: 'border-color 0.2s ease',
     }"
   >
-    <div :style="{ padding: '10px 13px', borderBottom: `1px solid ${C.border}` }">
-      <div :style="{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }">
+    <div
+      :style="{ padding: '10px 13px', borderBottom: `1px solid ${C.border}` }"
+    >
+      <div
+        :style="{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          marginBottom: '4px',
+        }"
+      >
         <span
           :style="{
             fontSize: '7px',
@@ -50,15 +57,27 @@ const C = computed(() => isDark.value ? {
             fontFamily: `'JetBrains Mono', monospace`,
             letterSpacing: '0.7px',
           }"
-        >{{ tag }}</span>
-        <span :style="{ fontSize: '10.5px', fontWeight: 800, color: C.text }">{{ title }}</span>
+          >{{ tag }}</span
+        >
+        <span :style="{ fontSize: '10.5px', fontWeight: 800, color: C.text }">{{
+          title
+        }}</span>
       </div>
-      <div :style="{ fontSize: '8.4px', color: C.muted, lineHeight: 1.5 }">{{ description }}</div>
+      <div :style="{ fontSize: '8.4px', color: C.muted, lineHeight: 1.5 }">
+        {{ description }}
+      </div>
     </div>
     <div :style="{ padding: '10px 13px' }">
       <div :style="{ display: 'flex', flexDirection: 'column', gap: '7px' }">
         <div v-for="(s, i) in signals" :key="i">
-          <div :style="{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }">
+          <div
+            :style="{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              marginBottom: '3px',
+            }"
+          >
             <span
               :style="{
                 width: '13px',
@@ -71,12 +90,23 @@ const C = computed(() => isDark.value ? {
                 fontSize: '7px',
                 fontWeight: 800,
                 color: s.accent || color,
-                border: `1px solid ${(s.accent || color)}30`,
+                border: `1px solid ${s.accent || color}30`,
               }"
-            >{{ s.letter }}</span>
-            <span :style="{ fontSize: '9px', fontWeight: 700, color: C.text }">{{ s.name }}</span>
+              >{{ s.letter }}</span
+            >
+            <span
+              :style="{ fontSize: '9px', fontWeight: 700, color: C.text }"
+              >{{ s.name }}</span
+            >
           </div>
-          <div :style="{ fontSize: '8.4px', color: C.muted, lineHeight: 1.5, paddingLeft: '17px' }">
+          <div
+            :style="{
+              fontSize: '8.4px',
+              color: C.muted,
+              lineHeight: 1.5,
+              paddingLeft: '17px',
+            }"
+          >
             {{ s.desc }}
           </div>
           <div
