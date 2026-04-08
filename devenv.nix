@@ -122,6 +122,23 @@
     after = [ "slides:landing-page" ];
   };
 
+  git-hooks.hooks = {
+    # Formatter — built-in Nix package, works for Vue/JS/TS/CSS/HTML/JSON/YAML
+    prettier.enable = true;
+
+    # Linter — custom hook so eslint-plugin-vue from node_modules is used
+    eslint = {
+      enable = true;
+      name = "eslint";
+      entry = "bun run eslint --fix";
+      files = "\\.vue$";
+      language = "system";
+      pass_filenames = true;
+    };
+
+    check-merge-conflicts.enable = true;
+  };
+
   env.SLIDES_BASE_PATH = "slides";
 
   enterShell = ''

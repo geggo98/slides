@@ -1,17 +1,17 @@
 <script setup>
-import { inject } from 'vue'
+import { inject } from "vue";
 
 const props = defineProps({
   tab: { type: String, required: true },
   section: { type: String, default: null },
   label: { type: String, required: true },
-})
+});
 
-const skillNav = inject('skillNav', null)
+const skillNav = inject("skillNav", null);
 
 function navigate() {
   if (skillNav) {
-    skillNav.navigateTo(props.tab, props.section)
+    skillNav.navigateTo(props.tab, props.section);
   }
 }
 </script>

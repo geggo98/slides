@@ -1,61 +1,75 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useDarkMode } from '@slidev/client'
-import ClinejectionThwartedCard from './ClinejectionThwartedCard.vue'
-import { TIMELINE, THWARTED } from './data'
+import { ref, computed } from "vue";
+import { useDarkMode } from "@slidev/client";
+import ClinejectionThwartedCard from "./ClinejectionThwartedCard.vue";
+import { TIMELINE, THWARTED } from "./data";
 
-const { isDark } = useDarkMode()
+const { isDark } = useDarkMode();
 
-const P = computed(() => isDark.value ? {
-  textPrimary: '#e5e5e5',
-  textSecondary: '#aaa',
-  textTertiary: '#666',
-  textDanger: '#f06060',
-  textSuccess: '#5cc0a0',
-  textWarning: '#e0a030',
-  textInfo: '#7c9fff',
-  bgPrimary: '#1e1e1e',
-  bgSecondary: '#2a2a2e',
-  borderTertiary: 'rgba(255,255,255,0.12)',
-  bgAttack: 'rgba(240,96,96,0.06)',
-  bgDefense: 'rgba(92,192,160,0.06)',
-  bgFail: 'rgba(224,160,48,0.06)',
-  bgVuln: 'rgba(124,159,255,0.06)',
-  fontSans: "'DM Sans', sans-serif",
-  fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-} : {
-  textPrimary: '#1a1a18',
-  textSecondary: '#555',
-  textTertiary: '#888',
-  textDanger: '#c04040',
-  textSuccess: '#308060',
-  textWarning: '#a07020',
-  textInfo: '#4a6fd0',
-  bgPrimary: 'white',
-  bgSecondary: '#f5f5f5',
-  borderTertiary: 'rgba(0,0,0,0.1)',
-  bgAttack: 'rgba(192,64,64,0.04)',
-  bgDefense: 'rgba(48,128,96,0.04)',
-  bgFail: 'rgba(160,112,32,0.04)',
-  bgVuln: 'rgba(74,111,208,0.04)',
-  fontSans: "'DM Sans', sans-serif",
-  fontMono: "'Fira Code', 'JetBrains Mono', monospace",
-})
+const P = computed(() =>
+  isDark.value
+    ? {
+        textPrimary: "#e5e5e5",
+        textSecondary: "#aaa",
+        textTertiary: "#666",
+        textDanger: "#f06060",
+        textSuccess: "#5cc0a0",
+        textWarning: "#e0a030",
+        textInfo: "#7c9fff",
+        bgPrimary: "#1e1e1e",
+        bgSecondary: "#2a2a2e",
+        borderTertiary: "rgba(255,255,255,0.12)",
+        bgAttack: "rgba(240,96,96,0.06)",
+        bgDefense: "rgba(92,192,160,0.06)",
+        bgFail: "rgba(224,160,48,0.06)",
+        bgVuln: "rgba(124,159,255,0.06)",
+        fontSans: "'DM Sans', sans-serif",
+        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+      }
+    : {
+        textPrimary: "#1a1a18",
+        textSecondary: "#555",
+        textTertiary: "#888",
+        textDanger: "#c04040",
+        textSuccess: "#308060",
+        textWarning: "#a07020",
+        textInfo: "#4a6fd0",
+        bgPrimary: "white",
+        bgSecondary: "#f5f5f5",
+        borderTertiary: "rgba(0,0,0,0.1)",
+        bgAttack: "rgba(192,64,64,0.04)",
+        bgDefense: "rgba(48,128,96,0.04)",
+        bgFail: "rgba(160,112,32,0.04)",
+        bgVuln: "rgba(74,111,208,0.04)",
+        fontSans: "'DM Sans', sans-serif",
+        fontMono: "'Fira Code', 'JetBrains Mono', monospace",
+      },
+);
 
-const activeThwarted = ref(null)
+const activeThwarted = ref(null);
 
 function toggleThwarted(id) {
-  activeThwarted.value = activeThwarted.value === id ? null : id
+  activeThwarted.value = activeThwarted.value === id ? null : id;
 }
 
 function dotColor(type) {
-  const map = { attack: 'textDanger', defense: 'textSuccess', fail: 'textWarning', vuln: 'textInfo' }
-  return P.value[map[type] || 'textTertiary']
+  const map = {
+    attack: "textDanger",
+    defense: "textSuccess",
+    fail: "textWarning",
+    vuln: "textInfo",
+  };
+  return P.value[map[type] || "textTertiary"];
 }
 
 function itemBg(type) {
-  const map = { attack: 'bgAttack', defense: 'bgDefense', fail: 'bgFail', vuln: 'bgVuln' }
-  return P.value[map[type] || 'bgSecondary']
+  const map = {
+    attack: "bgAttack",
+    defense: "bgDefense",
+    fail: "bgFail",
+    vuln: "bgVuln",
+  };
+  return P.value[map[type] || "bgSecondary"];
 }
 </script>
 
@@ -69,22 +83,41 @@ function itemBg(type) {
         class="timeline-item"
         :style="{ background: itemBg(t.type) }"
       >
-        <div class="dot" :style="{ background: dotColor(t.type), boxShadow: `0 0 4px ${dotColor(t.type)}` }" />
+        <div
+          class="dot"
+          :style="{
+            background: dotColor(t.type),
+            boxShadow: `0 0 4px ${dotColor(t.type)}`,
+          }"
+        />
         <div class="tl-date">{{ t.date }}</div>
         <div class="tl-event">{{ t.event }}</div>
       </div>
     </div>
     <div class="legend">
-      <span><span class="legend-dot" :style="{ background: P.textDanger }" /> Angriff</span>
-      <span><span class="legend-dot" :style="{ background: P.textSuccess }" /> Verteidigung</span>
-      <span><span class="legend-dot" :style="{ background: P.textWarning }" /> Fehlgeschlagen</span>
-      <span><span class="legend-dot" :style="{ background: P.textInfo }" /> Schwachstelle</span>
+      <span
+        ><span class="legend-dot" :style="{ background: P.textDanger }" />
+        Angriff</span
+      >
+      <span
+        ><span class="legend-dot" :style="{ background: P.textSuccess }" />
+        Verteidigung</span
+      >
+      <span
+        ><span class="legend-dot" :style="{ background: P.textWarning }" />
+        Fehlgeschlagen</span
+      >
+      <span
+        ><span class="legend-dot" :style="{ background: P.textInfo }" />
+        Schwachstelle</span
+      >
     </div>
 
     <div class="section-label thwarted-label">Vereitelte Eskalation</div>
     <p class="thwarted-intro">
       Der Angreifer besa&szlig; zeitweise Zugang zu allen drei Publish-Tokens.
-      Nur rechtzeitige Rotation und schnelle Erkennung verhinderten eine Eskalation um Gr&ouml;&szlig;enordnungen.
+      Nur rechtzeitige Rotation und schnelle Erkennung verhinderten eine
+      Eskalation um Gr&ouml;&szlig;enordnungen.
     </p>
     <div class="thwarted-grid">
       <ClinejectionThwartedCard
@@ -100,54 +133,81 @@ function itemBg(type) {
 
 <style scoped>
 .timeline-slide {
-  font-family: v-bind('P.fontSans');
-  max-height: 430px; overflow-y: auto;
+  font-family: v-bind("P.fontSans");
+  max-height: 430px;
+  overflow-y: auto;
 }
 .section-label {
-  font-size: 9px; font-weight: 600;
-  letter-spacing: 1.5px; text-transform: uppercase;
-  color: v-bind('P.textTertiary');
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: v-bind("P.textTertiary");
   margin-bottom: 6px;
 }
-.thwarted-label { margin-top: 14px; color: v-bind('P.textSuccess'); }
+.thwarted-label {
+  margin-top: 14px;
+  color: v-bind("P.textSuccess");
+}
 .thwarted-intro {
-  font-size: 9px; color: v-bind('P.textSecondary');
-  line-height: 1.4; margin-bottom: 6px;
+  font-size: 9px;
+  color: v-bind("P.textSecondary");
+  line-height: 1.4;
+  margin-bottom: 6px;
 }
 .timeline-bar {
-  display: flex; align-items: stretch; gap: 0;
-  border: 1px solid v-bind('P.borderTertiary');
-  border-radius: 8px; overflow: hidden;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid v-bind("P.borderTertiary");
+  border-radius: 8px;
+  overflow: hidden;
   overflow-x: auto;
 }
 .timeline-item {
-  flex: 1; min-width: 80px;
+  flex: 1;
+  min-width: 80px;
   padding: 6px 6px;
-  border-right: 1px solid v-bind('P.borderTertiary');
+  border-right: 1px solid v-bind("P.borderTertiary");
   font-size: 9px;
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.timeline-item:last-child { border-right: none; }
+.timeline-item:last-child {
+  border-right: none;
+}
 .dot {
-  width: 5px; height: 5px; border-radius: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 .tl-date {
-  font-weight: 600; color: v-bind('P.textSecondary');
-  font-size: 8px; font-family: v-bind('P.fontMono');
+  font-weight: 600;
+  color: v-bind("P.textSecondary");
+  font-size: 8px;
+  font-family: v-bind("P.fontMono");
 }
 .tl-event {
-  color: v-bind('P.textTertiary');
-  line-height: 1.3; font-size: 8px;
+  color: v-bind("P.textTertiary");
+  line-height: 1.3;
+  font-size: 8px;
 }
 .legend {
-  display: flex; gap: 10px; margin-top: 5px;
-  font-size: 8px; color: v-bind('P.textTertiary');
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 8px;
+  color: v-bind("P.textTertiary");
 }
 .legend-dot {
   display: inline-block;
-  width: 6px; height: 6px; border-radius: 50%;
-  margin-right: 2px; vertical-align: middle;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 2px;
+  vertical-align: middle;
 }
 .thwarted-grid {
   display: grid;
