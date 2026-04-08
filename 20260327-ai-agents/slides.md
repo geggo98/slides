@@ -100,8 +100,8 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 | **OpenCode**    | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                      |
 
 ---
-
-## clicks: false
+clicks: false
+--- 
 
 # LSP · MCP · ACP
 
@@ -162,16 +162,16 @@ Praktische Interop heute:
 - **Gemini CLI** erlaubt mehrere Dateinamen-Alternativen
 
 ---
-
-## clicks: false
+clicks: false
+---
 
 # Zusammenspiel der Primitive
 
 <FlowLayers />
 
 ---
-
-## clicks: false
+clicks: false
+--- 
 
 # Git Worktrees für Agenten
 
@@ -190,55 +190,53 @@ Praktische Interop heute:
 7. **Projekt-Level-Configs versionieren** — Secrets nur in User-Level oder Env-Vars
 
 ---
-
-## layout: center
+layout: center
+---
 
 # Bonusmaterial
 
 ---
-
-## clicks: false
+clicks: false
+--- 
 
 # Agent Skills — Deep Dive
 
 <SkillInfographic />
 
 ---
-
-## clicks: false
+clicks: false
+---
 
 # Clinejection -- Anatomie eines Supply-Chain-Angriffs
 
 <ClinejectionAttackChain />
 
 ---
-
-## clicks: false
+clicks: false
+--- 
 
 # Clinejection -- Zeitverlauf und vereitelte Eskalation
 
 <ClinejectionTimeline />
 
 ---
-
-## clicks: 1
+clicks: false
+---
 
 # Clinejection -- Willisons "Lethal Trifecta"
 
 <ClinejectionTrifecta />
 
 ---
-
-## clicks: false
+clicks: false
+---
 
 # Gesamtübersicht — Interaktiv
 
 <FullInfographic />
 
 ---
-
 layout: end
-
 ---
 
 # Danke
