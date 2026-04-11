@@ -86,6 +86,106 @@ export const MCP_DATA = [
   { name: "MCP Docker (135 Tools)", tokens: 126000 },
 ];
 
+// ── MCP Optimization Strategies ────────────────────────────────────────────
+export interface McpOptStrategy {
+  agent: string;
+  color: string;
+  lazyLoading: "auto" | "file" | "none" | "n/a";
+  allowDeny: boolean;
+  hardLimit: string | null;
+  measuredReduction: number | null;
+  approach: string;
+}
+
+export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
+  {
+    agent: "Claude Code",
+    color: "#fb923c",
+    lazyLoading: "auto",
+    allowDeny: false,
+    hardLimit: null,
+    measuredReduction: 90,
+    approach: "Deferred Tools + BM25/Regex (ToolSearch)",
+  },
+  {
+    agent: "Cursor",
+    color: "#f472b6",
+    lazyLoading: "file",
+    allowDeny: true,
+    hardLimit: "40/80",
+    measuredReduction: 47,
+    approach: "Schemas auf Disk, on-demand lesen",
+  },
+  {
+    agent: "Codex CLI",
+    color: "#10b981",
+    lazyLoading: "none",
+    allowDeny: true,
+    hardLimit: null,
+    measuredReduction: null,
+    approach: "Manuelles Allow/Deny (TOML)",
+  },
+  {
+    agent: "Gemini CLI",
+    color: "#60a5fa",
+    lazyLoading: "none",
+    allowDeny: true,
+    hardLimit: null,
+    measuredReduction: null,
+    approach: "includeTools / excludeTools",
+  },
+  {
+    agent: "OpenCode",
+    color: "#facc15",
+    lazyLoading: "none",
+    allowDeny: true,
+    hardLimit: null,
+    measuredReduction: null,
+    approach: "Re-fetch bei jedem Call (kein Cache!)",
+  },
+  {
+    agent: "Pi",
+    color: "#a78bfa",
+    lazyLoading: "n/a",
+    allowDeny: false,
+    hardLimit: null,
+    measuredReduction: null,
+    approach: "Kein MCP-Support",
+  },
+];
+
+// ── ToolSearch Impact Stats ────────────────────────────────────────────────
+export interface ToolSearchStat {
+  value: string;
+  label: string;
+  desc: string;
+  highlight?: boolean;
+}
+
+export const TOOLSEARCH_STATS: ToolSearchStat[] = [
+  {
+    value: "85–95%",
+    label: "Token-Reduktion",
+    desc: "Schema-Tokens pro Request. Nur ~968 Tokens für ToolSearch-Tool selbst.",
+    highlight: true,
+  },
+  {
+    value: "49% → 74%",
+    label: "Opus 4 Accuracy",
+    desc: "Tool-Selection bei 50+ Tools — weniger im Kontext = bessere Auswahl.",
+  },
+  {
+    value: "v2.1.69+",
+    label: "System-Tool-Deferral",
+    desc: "Auch Built-in-Tools (Bash, Read, Edit, ...) hinter ToolSearch deferred. ~14K Tokens gespart.",
+  },
+  {
+    value: "79,5% → 88,1%",
+    label: "Opus 4.5 Accuracy",
+    desc: "Weniger Tools im Kontext verbessert auch stärkere Modelle.",
+  },
+];
+
 // ── Skills vs MCP ───────────────────────────────────────────────────────────
 export const SKILLS_VS_MCP = {
   categories: ["1", "5", "10", "20", "50"],
