@@ -281,6 +281,36 @@ Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem
 
 ---
 
+# MCP Token-Bloat: Wer löst das Problem?
+
+<div class="text-sm opacity-70 mb-2">
+
+Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manuelles Filtern — oder ignorieren das Problem.
+
+</div>
+
+<McpOptTable />
+
+---
+
+# Claude Code ToolSearch: State of the Art
+
+<div class="text-sm opacity-70 mb-2">
+
+Seit v2.1.7 (Jan 2026): Aktiviert automatisch wenn MCP-Tools >10% des Context belegen. Seit v2.1.69: auch System-Tools deferred.
+
+</div>
+
+<ToolSearchImpact />
+
+<div class="mt-4 text-sm opacity-60">
+
+Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) · Speakeasy Dynamic Toolsets (100×) · ToolHive MCP Optimizer (85%).
+
+</div>
+
+---
+
 # KV-Cache: 90% Discount
 
 <div class="grid grid-cols-2 gap-6">
