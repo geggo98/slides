@@ -417,35 +417,6 @@ cooldown:
 
 ---
 
-# Cooldown: Nexus & Python (PEP 503 vs. 691)
-
-<style>
-table { font-size: 0.78em; }
-th, td { padding: 0.25em 0.5em !important; }
-blockquote { font-size: 0.85em; }
-p, li { font-size: 0.9em; }
-</style>
-
-|                     | **PEP 503** (Simple HTML)       | **PEP 691** (JSON Metadata)       |
-| ------------------- | ------------------------------- | --------------------------------- |
-| **Format**          | HTML-Seite mit Download-Links   | JSON mit strukturierten Metadaten |
-| **Upload-Datum**    | ❌ nicht enthalten              | ✅ `upload-time` pro Release      |
-| **Provenance**      | ❌ nicht enthalten              | ✅ Attestations (PEP 740)         |
-| **Unterstützt von** | PyPI, Nexus, Artifactory, devpi | PyPI _(nur PyPI.org)_             |
-
-### Konsequenz für Nexus
-
-Nexus (und andere Mirrors/Proxies) implementiert **nur PEP 503** — die HTML-Variante ohne Metadaten.
-
-- **`--exclude-newer` funktioniert nicht**: uv kann das Upload-Datum nicht ermitteln → Cooldown greift nicht
-- **Provenance nicht verfügbar**: Keine Attestations über Herkunft des Pakets
-- **Betrifft alle Nexus-PyPI-Repositories**: Hosted, Proxy und Group
-
-> ⚠️ In Unternehmensumgebungen mit Nexus als PyPI-Proxy ist Cooldown für Python-Pakete **wirkungslos**.
-> Alternativer Schutz: Renovate/Dependabot-Cooldown auf Repository-Ebene + Hash-Pinning in `uv.lock`.
-
----
-
 # Version Catalogs (`libs.versions.toml`)
 
 ```toml
@@ -592,6 +563,35 @@ layout: center
 ---
 
 # Bonusmaterial
+
+---
+
+# Cooldown: Nexus & Python (PEP 503 vs. 691)
+
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+blockquote { font-size: 0.85em; }
+p, li { font-size: 0.9em; }
+</style>
+
+|                     | **PEP 503** (Simple HTML)       | **PEP 691** (JSON Metadata)       |
+| ------------------- | ------------------------------- | --------------------------------- |
+| **Format**          | HTML-Seite mit Download-Links   | JSON mit strukturierten Metadaten |
+| **Upload-Datum**    | ❌ nicht enthalten              | ✅ `upload-time` pro Release      |
+| **Provenance**      | ❌ nicht enthalten              | ✅ Attestations (PEP 740)         |
+| **Unterstützt von** | PyPI, Nexus, Artifactory, devpi | PyPI _(nur PyPI.org)_             |
+
+### Konsequenz für Nexus
+
+Nexus (und andere Mirrors/Proxies) implementiert **nur PEP 503** — die HTML-Variante ohne Metadaten.
+
+- **`--exclude-newer` funktioniert nicht**: uv kann das Upload-Datum nicht ermitteln → Cooldown greift nicht
+- **Provenance nicht verfügbar**: Keine Attestations über Herkunft des Pakets
+- **Betrifft alle Nexus-PyPI-Repositories**: Hosted, Proxy und Group
+
+> ⚠️ In Unternehmensumgebungen mit Nexus als PyPI-Proxy ist Cooldown für Python-Pakete **wirkungslos**.
+> Alternativer Schutz: Renovate/Dependabot-Cooldown auf Repository-Ebene + Hash-Pinning in `uv.lock`.
 
 ---
 clicks: false
