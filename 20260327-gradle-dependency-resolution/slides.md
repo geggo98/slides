@@ -12,6 +12,26 @@ Reproduzierbare Builds, Supply-Chain-Schutz und Ökosystem-Vergleich
 
 ---
 
+# Agenda
+
+1. **Grundlagen** — Kernbegriffe & Dependency Stack
+2. **Dependency Locking** — Aktivierung & Befehle
+3. **BOM & Resolution-Strategien** — Spring BOM, Plugin vs. Native, Extra Properties
+4. **Version Catalogs** — TOML, Zusammenspiel & Fallstricke
+5. **Praxis-Workflows** — Neue Library, Library-Update
+6. **Snapshot-Versionen** — Sonderfall, Caching & Produktions-Gate
+7. **Supply-Chain-Schutz** — Scanning, Verification, Cooldown & Angriffe
+
+---
+layout: section
+---
+
+# 1. Grundlagen
+
+Kernbegriffe & Dependency Stack
+
+---
+
 # Kernbegriffe
 
 | Begriff                   | Bedeutung                                                                           |
@@ -31,6 +51,14 @@ clicks: false
 # Gradle Dependency Stack
 
 <LayerStack />
+
+---
+layout: section
+---
+
+# 2. Dependency Locking
+
+Aktivierung & Befehle
 
 ---
 
@@ -64,6 +92,14 @@ configurations.compileClasspath {
 | Abhängigkeitsbaum anzeigen          | `./gradlew dependencies --configuration compileClasspath`               |
 | Veraltete Deps prüfen               | `./gradlew dependencyUpdates`                                           |
 | Lock-Datei-Diff prüfen              | `git diff gradle.lockfile`                                              |
+
+---
+layout: section
+---
+
+# 3. BOM & Resolution-Strategien
+
+Spring BOM, Plugin vs. Native, Extra Properties
 
 ---
 
@@ -139,6 +175,138 @@ dependencies {
 
 ---
 
+# Extra Properties (`ext["..."]`)
+
+`ext` ist eine `Map<String, Any?>` an jedem Gradle-Projekt — Spring Boot nutzt sie als **BOM-Override-Mechanismus**.
+
+```kotlin
+// Root build.gradle.kts
+ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-BOM
+```
+
+Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
+
+> Bekannte Property-Namen: `jackson.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
+>
+> Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
+
+---
+
+# Extra Properties: Alternativen
+
+| Ansatz                                 | Typsicher        | IDE-Support | BOM-Override        |
+| -------------------------------------- | ---------------- | ----------- | ------------------- |
+| `ext["jackson.version"]`               | ❌ `Any?` + Cast | ❌          | ✅ Spring-BOM       |
+| `platform()` + `constraints {}`        | ✅               | ✅          | ✅ jede BOM (nativ) |
+| Version Catalog (`libs.versions.toml`) | ✅               | ✅          | ❌ BOM gewinnt      |
+| `buildSrc` / Convention Plugin         | ✅               | ✅          | ❌ manuell          |
+| `resolutionStrategy.force(...)`        | —                | —           | ✅ jede BOM         |
+
+<br>
+
+- **Native Gradle BOM-Override:** `constraints { }` oder `enforcedPlatform()`
+- **Spring-BOM-Override:** `ext["..."]` oder `force()`
+- **Alles andere:** Version Catalog
+- **Nicht mischen:** Catalog + `ext["..."]` = doppelte Wahrheitsquelle
+
+---
+clicks: false
+---
+
+<ResolutionSimulator />
+
+---
+layout: section
+---
+
+# 4. Version Catalogs
+
+TOML, Zusammenspiel & Fallstricke
+
+---
+
+# Version Catalogs (`libs.versions.toml`)
+
+```toml
+[versions]
+spring-boot = "3.4.4"
+jackson = "2.17.2"
+
+[libraries]
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+```
+
+```kotlin
+dependencies {
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.jackson.databind)
+}
+```
+
+---
+
+# Catalog, BOM, Lock-File, Verification
+
+| Mechanismus               | Funktion                                                | Analogie                   |
+| ------------------------- | ------------------------------------------------------- | -------------------------- |
+| **Version Catalog**       | _Deklaration_: Welche Deps mit welchen Koordinaten?     | Einkaufsliste              |
+| **BOM (Spring)**          | _Resolution-Constraint_: Welche Version wird aufgelöst? | Preisliste des Lieferanten |
+| **Lock-File**             | _Fixierung_: Welche Versionen konkret aufgelöst?        | Kassenbon                  |
+| **Verification Metadata** | _Integritätsprüfung_: Artefakt unverändert?             | Siegel auf der Verpackung  |
+
+<br>
+
+- **Catalog** → definiert _was_ du deklarierst
+- **Lock-File** → fixiert _was tatsächlich aufgelöst wird_ (inkl. transitiver Deps)
+- Catalog ersetzt Lock-File **nicht** — Catalog kennt keine transitiven Deps
+
+---
+
+# Catalog-Fallstricke
+
+### Version im Catalog vs. Version aus der BOM
+
+```toml
+[versions]
+jackson = "2.18.3"   # Catalog sagt 2.18.3
+```
+
+```kotlin
+implementation(libs.jackson.databind)  // Aufgelöst: 2.17.2 (BOM gewinnt!)
+```
+
+**Pragmatische Lösung:** Für BOM-gemanagte Deps keine Version im Catalog angeben.
+
+### Catalog ist kein Constraint-Mechanismus
+
+Für echte Version-Enforcement:
+
+```kotlin
+configurations.all {
+    resolutionStrategy {
+        force(libs.jackson.databind.get().toString())
+    }
+}
+```
+
+### Doppelte Wahrheitsquellen vermeiden
+
+Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
+
+---
+layout: section
+---
+
+# 5. Praxis-Workflows
+
+Neue Library & Library-Update
+
+---
+
 # Workflow: Neue Library (Spring-gemanagt)
 
 ```kotlin
@@ -194,46 +362,89 @@ configurations.all {
 > Denk daran, die Version beim näschten Spring update zu prüfen und ggf. den Override wieder zu entfernen.
 
 ---
+layout: section
+---
 
-# Extra Properties (`ext["..."]`)
+# 6. Snapshot-Versionen
 
-`ext` ist eine `Map<String, Any?>` an jedem Gradle-Projekt — Spring Boot nutzt sie als **BOM-Override-Mechanismus**.
+Sonderfall, Caching & Produktions-Gate
+
+---
+
+# Snapshot-Versionen: Der Sonderfall
+
+`1.3.0-SNAPSHOT` = **mutable** Version — jeder Build kann ein anderes Artefakt liefern.
+
+Gradle behandelt Snapshots als _dynamische Versionen_ (wie `1.+`):
+
+| Aspekt                | Release                  | Snapshot                                  |
+| --------------------- | ------------------------ | ----------------------------------------- |
+| Inhalt                | Immutable                | Mutable (neuer Timestamp = neuer Inhalt)  |
+| Lock-File             | Fixiert Version + Inhalt | Fixiert nur den Namen, nicht den Inhalt   |
+| Verification Metadata | Funktioniert             | Praktisch inkompatibel (Hash ändert sich) |
+| Dependency-Scanner    | Verlässlich              | Falsche Sicherheit                        |
+| "Highest Wins"        | Deterministisch          | Non-deterministisch                       |
+
+> ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata und Scanner-Verlässlichkeit.
+
+---
+
+# Snapshots: Repository & Caching
+
+### Repository-Trennung
 
 ```kotlin
-// Root build.gradle.kts
-ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-BOM
+repositories {
+    mavenCentral()  // Nur Releases
+    maven("https://repo.example.com/snapshots") {
+        mavenContent { snapshotsOnly() }  // Dependency-Confusion-Schutz
+    }
+}
 ```
 
-Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
+### Caching steuern
 
-> Bekannte Property-Namen: `jackson.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
->
-> Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
+```kotlin
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor(0, TimeUnit.SECONDS)  // CI: immer frisch
+    }
+}
+```
 
----
-
-# Extra Properties: Alternativen
-
-| Ansatz                                 | Typsicher        | IDE-Support | BOM-Override        |
-| -------------------------------------- | ---------------- | ----------- | ------------------- |
-| `ext["jackson.version"]`               | ❌ `Any?` + Cast | ❌          | ✅ Spring-BOM       |
-| `platform()` + `constraints {}`        | ✅               | ✅          | ✅ jede BOM (nativ) |
-| Version Catalog (`libs.versions.toml`) | ✅               | ✅          | ❌ BOM gewinnt      |
-| `buildSrc` / Convention Plugin         | ✅               | ✅          | ❌ manuell          |
-| `resolutionStrategy.force(...)`        | —                | —           | ✅ jede BOM         |
-
-<br>
-
-- **Native Gradle BOM-Override:** `constraints { }` oder `enforcedPlatform()`
-- **Spring-BOM-Override:** `ext["..."]` oder `force()`
-- **Alles andere:** Version Catalog
-- **Nicht mischen:** Catalog + `ext["..."]` = doppelte Wahrheitsquelle
+`--refresh-dependencies` umgeht den Cache komplett. Default-Caching: 24 Stunden.
 
 ---
-clicks: false
+
+# Snapshots in Produktion verhindern
+
+```kotlin
+tasks.register("noSnapshots") {
+    doLast {
+        configurations.compileClasspath.get().resolvedConfiguration
+            .resolvedArtifacts.forEach {
+                if (it.moduleVersion.id.version.endsWith("-SNAPSHOT"))
+                    throw GradleException("Snapshot: ${it.moduleVersion.id}")
+            }
+    }
+}
+```
+
+Als CI-Gate einbinden:
+
+```bash
+./gradlew noSnapshots  # Schlägt fehl wenn Snapshot-Deps vorhanden
+```
+
+> Snapshots nur in Feature-Branches / Integrations-Builds — nie Richtung Produktion.
+
+---
+layout: section
 ---
 
-<ResolutionSimulator />
+# 7. Supply-Chain-Schutz
+
+Scanning, Verification, Cooldown & Angriffe
 
 ---
 
@@ -317,54 +528,6 @@ Verhindert **Dependency Confusion**: interne Paketnamen werden nicht von Maven C
 
 ---
 
-# Build-Time Code Execution
-
-Die JVM-Welt hat keine Lifecycle-Scripts — aber Fremdcode wird dennoch ausgeführt:
-
-- **Code-Generatoren** (OpenAPI Generator, Protobuf, JOOQ): voller Dateisystem-/Netzwerkzugriff
-- **Test-Frameworks** (JUnit, Testcontainers): Code aus Test-Dependencies
-- **Security-Scanner/Linter** (SpotBugs, Trivy): Zugriff auf Build-Secrets
-- **Gradle-Plugins**: Code bei Build-_Konfiguration_, nicht erst beim Task-Run
-- **Annotation Processors** (Lombok, MapStruct): Compile-Zeit-Ausführung
-
----
-
-# Fallbeispiel: Trivy → LiteLLM Supply-Chain-Angriff (März 2026)
-
-Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompromittiert.
-
-- Angreifer (TeamPCP) übernahmen 76 von 77 Version-Tags der `trivy-action` GitHub Action
-- Manipulierte Binary lief **vor** der Scan-Logik → CI/CD-Secrets exfiltriert
-
-**Kettenreaktion — LiteLLM** (~95 Mio. Downloads/Monat):
-
-- LiteLLM nutzte Trivy in der CI/CD-Pipeline → PyPI-Publishing-Tokens gestohlen
-- Zwei kompromittierte Releases (v1.82.7, v1.82.8) mit dreistufigem Payload:
-  Credential-Harvesting → Kubernetes Lateral Movement → persistente Backdoor
-- Gestohlene Credentials ermöglichten Zugriff auf nachgelagerte Systeme (u.a. **Mercor**, KI-Daten-Zulieferer für Meta, OpenAI, Anthropic)
-- Meta pausierte alle Mercor-Projekte, proprietäre KI-Trainingsdaten potenziell exponiert
-
-> Die Ironie: Ein Security-Scanner wurde zum Angriffsvektor — weil er mit denselben Privilegien lief wie der Build.
-
----
-clicks: false
----
-
-<AxiosAttack />
-
----
-
-# Build-Sandbox: Empfehlungen
-
-- CI/CD-Runner: **keinen Zugriff auf Produktions-Secrets**, die sie nicht benötigen
-- Secrets nur für den jeweiligen Deployment-Step injizieren
-- **Gradle-Builds in isolierten Containern** (ephemere Runner, kein persistenter Zustand)
-- **Network-Policies**: nur Artefakt-Repository und nötige Endpunkte
-- **GitHub Actions auf Commit-SHA pinnen** statt mutable Tags
-- **Secrets nach Verdachtsfällen sofort rotieren**
-
----
-
 # Minimum Release Age (Cooldown)
 
 <style>
@@ -417,146 +580,51 @@ cooldown:
 
 ---
 
-# Version Catalogs (`libs.versions.toml`)
+# Build-Time Code Execution
 
-```toml
-[versions]
-spring-boot = "3.4.4"
-jackson = "2.17.2"
+Die JVM-Welt hat keine Lifecycle-Scripts — aber Fremdcode wird dennoch ausgeführt:
 
-[libraries]
-spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
-jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
-
-[plugins]
-spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
-```
-
-```kotlin
-dependencies {
-    implementation(libs.spring.boot.starter.web)
-    implementation(libs.jackson.databind)
-}
-```
+- **Code-Generatoren** (OpenAPI Generator, Protobuf, JOOQ): voller Dateisystem-/Netzwerkzugriff
+- **Test-Frameworks** (JUnit, Testcontainers): Code aus Test-Dependencies
+- **Security-Scanner/Linter** (SpotBugs, Trivy): Zugriff auf Build-Secrets
+- **Gradle-Plugins**: Code bei Build-_Konfiguration_, nicht erst beim Task-Run
+- **Annotation Processors** (Lombok, MapStruct): Compile-Zeit-Ausführung
 
 ---
 
-# Catalog, BOM, Lock-File, Verification
+# Fallbeispiel: Trivy → LiteLLM Supply-Chain-Angriff (März 2026)
 
-| Mechanismus               | Funktion                                                | Analogie                   |
-| ------------------------- | ------------------------------------------------------- | -------------------------- |
-| **Version Catalog**       | _Deklaration_: Welche Deps mit welchen Koordinaten?     | Einkaufsliste              |
-| **BOM (Spring)**          | _Resolution-Constraint_: Welche Version wird aufgelöst? | Preisliste des Lieferanten |
-| **Lock-File**             | _Fixierung_: Welche Versionen konkret aufgelöst?        | Kassenbon                  |
-| **Verification Metadata** | _Integritätsprüfung_: Artefakt unverändert?             | Siegel auf der Verpackung  |
+Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompromittiert.
 
-<br>
+- Angreifer (TeamPCP) übernahmen 76 von 77 Version-Tags der `trivy-action` GitHub Action
+- Manipulierte Binary lief **vor** der Scan-Logik → CI/CD-Secrets exfiltriert
 
-- **Catalog** → definiert _was_ du deklarierst
-- **Lock-File** → fixiert _was tatsächlich aufgelöst wird_ (inkl. transitiver Deps)
-- Catalog ersetzt Lock-File **nicht** — Catalog kennt keine transitiven Deps
+**Kettenreaktion — LiteLLM** (~95 Mio. Downloads/Monat):
+
+- LiteLLM nutzte Trivy in der CI/CD-Pipeline → PyPI-Publishing-Tokens gestohlen
+- Zwei kompromittierte Releases (v1.82.7, v1.82.8) mit dreistufigem Payload:
+  Credential-Harvesting → Kubernetes Lateral Movement → persistente Backdoor
+- Gestohlene Credentials ermöglichten Zugriff auf nachgelagerte Systeme (u.a. **Mercor**, KI-Daten-Zulieferer für Meta, OpenAI, Anthropic)
+- Meta pausierte alle Mercor-Projekte, proprietäre KI-Trainingsdaten potenziell exponiert
+
+> Die Ironie: Ein Security-Scanner wurde zum Angriffsvektor — weil er mit denselben Privilegien lief wie der Build.
+
+---
+clicks: false
+---
+
+<AxiosAttack />
 
 ---
 
-# Catalog-Fallstricke
+# Build-Sandbox: Empfehlungen
 
-### Version im Catalog vs. Version aus der BOM
-
-```toml
-[versions]
-jackson = "2.18.3"   # Catalog sagt 2.18.3
-```
-
-```kotlin
-implementation(libs.jackson.databind)  // Aufgelöst: 2.17.2 (BOM gewinnt!)
-```
-
-**Pragmatische Lösung:** Für BOM-gemanagte Deps keine Version im Catalog angeben.
-
-### Catalog ist kein Constraint-Mechanismus
-
-Für echte Version-Enforcement:
-
-```kotlin
-configurations.all {
-    resolutionStrategy {
-        force(libs.jackson.databind.get().toString())
-    }
-}
-```
-
-### Doppelte Wahrheitsquellen vermeiden
-
-Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
-
----
-
-# Snapshot-Versionen: Der Sonderfall
-
-`1.3.0-SNAPSHOT` = **mutable** Version — jeder Build kann ein anderes Artefakt liefern.
-
-Gradle behandelt Snapshots als _dynamische Versionen_ (wie `1.+`):
-
-| Aspekt                | Release                  | Snapshot                                  |
-| --------------------- | ------------------------ | ----------------------------------------- |
-| Inhalt                | Immutable                | Mutable (neuer Timestamp = neuer Inhalt)  |
-| Lock-File             | Fixiert Version + Inhalt | Fixiert nur den Namen, nicht den Inhalt   |
-| Verification Metadata | Funktioniert             | Praktisch inkompatibel (Hash ändert sich) |
-| Dependency-Scanner    | Verlässlich              | Falsche Sicherheit                        |
-| "Highest Wins"        | Deterministisch          | Non-deterministisch                       |
-
-> ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata und Scanner-Verlässlichkeit.
-
----
-
-# Snapshots: Repository & Caching
-
-### Repository-Trennung
-
-```kotlin
-repositories {
-    mavenCentral()  // Nur Releases
-    maven("https://repo.example.com/snapshots") {
-        mavenContent { snapshotsOnly() }  // Dependency-Confusion-Schutz
-    }
-}
-```
-
-### Caching steuern
-
-```kotlin
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, TimeUnit.SECONDS)  // CI: immer frisch
-    }
-}
-```
-
-`--refresh-dependencies` umgeht den Cache komplett. Default-Caching: 24 Stunden.
-
----
-
-# Snapshots in Produktion verhindern
-
-```kotlin
-tasks.register("noSnapshots") {
-    doLast {
-        configurations.compileClasspath.get().resolvedConfiguration
-            .resolvedArtifacts.forEach {
-                if (it.moduleVersion.id.version.endsWith("-SNAPSHOT"))
-                    throw GradleException("Snapshot: ${it.moduleVersion.id}")
-            }
-    }
-}
-```
-
-Als CI-Gate einbinden:
-
-```bash
-./gradlew noSnapshots  # Schlägt fehl wenn Snapshot-Deps vorhanden
-```
-
-> Snapshots nur in Feature-Branches / Integrations-Builds — nie Richtung Produktion.
+- CI/CD-Runner: **keinen Zugriff auf Produktions-Secrets**, die sie nicht benötigen
+- Secrets nur für den jeweiligen Deployment-Step injizieren
+- **Gradle-Builds in isolierten Containern** (ephemere Runner, kein persistenter Zustand)
+- **Network-Policies**: nur Artefakt-Repository und nötige Endpunkte
+- **GitHub Actions auf Commit-SHA pinnen** statt mutable Tags
+- **Secrets nach Verdachtsfällen sofort rotieren**
 
 ---
 layout: center
@@ -635,6 +703,12 @@ clicks: false
 <EcosystemInfographic />
 
 ---
+clicks: false
+---
+
+<GradleInfographic />
+
+---
 
 # Weiterführende Links
 
@@ -663,12 +737,6 @@ ul { font-size: 0.9em; }
 - [LiteLLM Security Update (März 2026)](https://docs.litellm.ai/blog/security-update-march-2026)
 - [Supply-Chain-Attacke auf LiteLLM (heise online)](https://www.heise.de/-11223618)
 - [Meta Pauses Work With Mercor After Data Breach (WIRED)](https://www.wired.com/story/meta-pauses-work-with-mercor-after-data-breach-puts-ai-industry-secrets-at-risk/)
-
----
-clicks: false
----
-
-<GradleInfographic />
 
 ---
 layout: end
