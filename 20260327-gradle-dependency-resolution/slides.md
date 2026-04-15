@@ -367,6 +367,12 @@ clicks: false
 
 # Minimum Release Age (Cooldown)
 
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+blockquote { font-size: 0.85em; }
+</style>
+
 Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen entdeckt — ein **Cooldown von 7 Tagen** filtert die Mehrheit opportunistischer Supply-Chain-Angriffe.
 
 | Tool            | Einheit  | Config-Key                 | 7 Tage =              | Exclude-Liste               |
@@ -376,10 +382,12 @@ Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen ent
 | **pnpm**        | Minuten  | `minimumReleaseAge`        | `10080`               | `minimumReleaseAgeExclude`  |
 | **Bun**         | Sekunden | `minimumReleaseAge`        | `604800`              | `minimumReleaseAgeExcludes` |
 | **Yarn** ≥ 4.10 | Minuten  | `npmMinimalAgeGate`        | `10080`               | `npmPreapprovedPackages`    |
-| **uv**          | Dauer    | `exclude-newer`            | `"7 days"`            | `exclude-newer-package`     |
+| **uv** ¹        | Dauer    | `exclude-newer`            | `"7 days"`            | `exclude-newer-package`     |
 | **Deno**        | CLI-Flag | `--minimum-dependency-age` | —                     | —                           |
 
 > Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
+>
+> ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe nächste Slides.
 
 ---
 
@@ -406,6 +414,35 @@ cooldown:
 - **Lock-Files** fixieren aufgelöste Versionen
 - **Repository Filtering** verhindert Dependency Confusion
 - Renovate/Dependabot-Cooldown **synchron** mit Paketmanager-Cooldown konfigurieren, sonst entstehen PRs für nicht-installierbare Versionen
+
+---
+
+# Cooldown: Nexus & Python (PEP 503 vs. 691)
+
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+blockquote { font-size: 0.85em; }
+p, li { font-size: 0.9em; }
+</style>
+
+|                     | **PEP 503** (Simple HTML)       | **PEP 691** (JSON Metadata)       |
+| ------------------- | ------------------------------- | --------------------------------- |
+| **Format**          | HTML-Seite mit Download-Links   | JSON mit strukturierten Metadaten |
+| **Upload-Datum**    | ❌ nicht enthalten              | ✅ `upload-time` pro Release      |
+| **Provenance**      | ❌ nicht enthalten              | ✅ Attestations (PEP 740)         |
+| **Unterstützt von** | PyPI, Nexus, Artifactory, devpi | PyPI _(nur PyPI.org)_             |
+
+### Konsequenz für Nexus
+
+Nexus (und andere Mirrors/Proxies) implementiert **nur PEP 503** — die HTML-Variante ohne Metadaten.
+
+- **`--exclude-newer` funktioniert nicht**: uv kann das Upload-Datum nicht ermitteln → Cooldown greift nicht
+- **Provenance nicht verfügbar**: Keine Attestations über Herkunft des Pakets
+- **Betrifft alle Nexus-PyPI-Repositories**: Hosted, Proxy und Group
+
+> ⚠️ In Unternehmensumgebungen mit Nexus als PyPI-Proxy ist Cooldown für Python-Pakete **wirkungslos**.
+> Alternativer Schutz: Renovate/Dependabot-Cooldown auf Repository-Ebene + Hash-Pinning in `uv.lock`.
 
 ---
 
@@ -619,6 +656,9 @@ ul { font-size: 0.9em; }
 - [Go: How Go Mitigates Supply Chain Attacks](https://go.dev/blog/supply-chain)
 - [pnpm: Mitigating Supply Chain Attacks](https://pnpm.io/supply-chain-security)
 - [uv: Locking and Syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
+- [PEP 503 — Simple Repository API](https://peps.python.org/pep-0503/)
+- [PEP 691 — JSON-based Simple API for Python Package Indexes](https://peps.python.org/pep-0691/)
+- [PEP 740 — Index Support for Digital Attestations](https://peps.python.org/pep-0740/)
 - [Trivy Supply-Chain-Angriff (Aqua Security, März 2026)](https://www.aquasec.com/blog/trivy-supply-chain-attack-what-you-need-to-know/)
 - [LiteLLM Security Update (März 2026)](https://docs.litellm.ai/blog/security-update-march-2026)
 - [Supply-Chain-Attacke auf LiteLLM (heise online)](https://www.heise.de/-11223618)
