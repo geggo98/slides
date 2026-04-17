@@ -550,7 +550,7 @@ Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen ent
 
 > Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
 >
-> ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe nächste Slides.
+> ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe separate Slides.
 
 ---
 
@@ -707,6 +707,12 @@ clicks: false
 ---
 
 <GradleInfographic />
+
+---
+clicks: false
+---
+
+<JavaVersionsMatrix />
 
 ---
 
