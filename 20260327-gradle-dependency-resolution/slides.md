@@ -1,5 +1,6 @@
 ---
 theme: default
+transition: slide-left
 title: Gradle Dependency Resolution & Locking
 info: |
   Gradle Dependency Locking, Resolution-Strategien, Supply-Chain-Schutz
@@ -636,6 +637,14 @@ layout: center
 # Bonusmaterial
 
 ---
+clicks: false
+---
+
+# Java-Versionen mit Gradle Verwalten
+
+<JavaVersionsMatrix />
+
+---
 
 # Cooldown: Nexus & Python (PEP 503 vs. 691)
 
@@ -705,14 +714,6 @@ title: Ökosysteme
 ---
 
 <EcosystemInfographic />
-
----
-clicks: false
----
-
-# Java-Versionen in Gradle
-
-<JavaVersionsMatrix />
 
 ---
 clicks: false
