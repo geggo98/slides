@@ -211,6 +211,7 @@ Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.versio
 
 ---
 clicks: false
+title: Resolution Simulator
 ---
 
 <ResolutionSimulator />
@@ -613,6 +614,8 @@ Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompr
 clicks: false
 ---
 
+# Axios Supply-Chain-Angriff
+
 <AxiosAttack />
 
 ---
@@ -698,6 +701,7 @@ th, td { padding: 0.25em 0.5em !important; }
 
 ---
 clicks: false
+title: Ökosysteme
 ---
 
 <EcosystemInfographic />
@@ -706,13 +710,16 @@ clicks: false
 clicks: false
 ---
 
-<GradleInfographic />
+# Java-Versionen in Gradle
+
+<JavaVersionsMatrix />
 
 ---
 clicks: false
+title: Alle Gradle Info-Grafiken
 ---
 
-<JavaVersionsMatrix />
+<GradleInfographic />
 
 ---
 
