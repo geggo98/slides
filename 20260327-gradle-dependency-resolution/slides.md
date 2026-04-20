@@ -556,12 +556,6 @@ Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen ent
 
 ---
 
-# Cooldown: Tool-Beispiele
-
-<CooldownTabs />
-
----
-
 # Cooldown: Gradle-Ökosystem
 
 Gradle hat **kein natives Minimum Release Age**. Stattdessen:
@@ -649,6 +643,12 @@ clicks: false
 # Java-Versionen mit Gradle Verwalten
 
 <JavaVersionsMatrix />
+
+---
+
+# Cooldown: Tool-Beispiele
+
+<CooldownTabs />
 
 ---
 
