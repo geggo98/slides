@@ -543,16 +543,22 @@ Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen ent
 | Tool            | Einheit  | Config-Key                 | 7 Tage =              | Exclude-Liste               |
 | --------------- | -------- | -------------------------- | --------------------- | --------------------------- |
 | **Gradle**      | —        | _(nicht nativ)_            | Renovate / Dependabot | —                           |
-| **npm**         | Tage     | `min-release-age`          | `7`                   | _(nicht vorhanden)_         |
+| **npm**         | Tage     | `min-release-age`          | `7`                   | —                           |
 | **pnpm**        | Minuten  | `minimumReleaseAge`        | `10080`               | `minimumReleaseAgeExclude`  |
 | **Bun**         | Sekunden | `minimumReleaseAge`        | `604800`              | `minimumReleaseAgeExcludes` |
 | **Yarn** ≥ 4.10 | Minuten  | `npmMinimalAgeGate`        | `10080`               | `npmPreapprovedPackages`    |
 | **uv** ¹        | Dauer    | `exclude-newer`            | `"7 days"`            | `exclude-newer-package`     |
-| **Deno**        | CLI-Flag | `--minimum-dependency-age` | —                     | —                           |
+| **Deno**        | CLI-Flag | `--minimum-dependency-age` | —                     | explizite Version setzen    |
 
 > Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
 >
 > ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe separate Slides.
+
+---
+
+# Cooldown: Tool-Beispiele
+
+<CooldownTabs />
 
 ---
 
