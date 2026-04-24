@@ -46,6 +46,32 @@ Create a new top-level directory with a `slides.md` file. It will be automatical
 
 Follow the guidelines in the **/slidev** skill for Playwright testing. Key rule: use the **Write tool** to create scripts in `playwright-tests/` and run them with `bun run` — never use heredocs, shell redirects, or `/tmp`.
 
+### Slide-Canvas-Skalierung und Overflow-Checks
+
+Slidev rendert jede Slide auf einem **logischen Canvas** (Default `980×552` CSS-Pixel) und skaliert diesen per CSS-Transform auf die Viewport-Größe. Bei einem 1280×720-Viewport beträgt der Skalierungsfaktor ≈ **1.3** — d.h. `max-height: 480px` in einer Komponente wird real als `~624px` gerendert.
+
+**Konsequenzen:**
+
+- Vertikale `max-height`-Werte müssen in **logischen Pixeln** gerechnet werden, nicht in Viewport-Pixeln. Für den Default-Canvas stehen nach Abzug von Titel + Padding meist nur **~400px** für den Body zur Verfügung.
+- `element.getBoundingClientRect()` liefert **reale** Pixel (post-scale); `getComputedStyle().maxHeight` liefert **logische**. Für Overflow-Debugging beide vergleichen.
+- Content jenseits der Slide-Boundary wird im Präsentationsmodus **abgeschnitten** — ohne Scrollbar, ohne Warnung.
+
+**Pflicht-Check für neue oder geänderte Slides mit viel Inhalt:**
+
+Nutze das dedizierte Skript:
+
+```sh
+bun run playwright-tests/check-slide-overflow.ts <slide-nummer> [port]
+```
+
+Es cycled durch alle Tabs (`.tab-bar button`, `.tabs button`, `.eco-tabs button`, `[role=tab]`), togglet Light + Dark, scrollt interne Container ans Ende und meldet jedes Element mit `bottom > 720`. Exit-Code ≠ 0 bei Overflow. Port wird via `find-slidev-port.sh` auto-detektiert, wenn nicht übergeben.
+
+Bei komplexeren Szenarien (spezifische Tab-Navigation, eigene Scroll-Logik) stattdessen ein Ad-hoc-Playwright-Script in `playwright-tests/` schreiben, das die Slide auf `http://localhost:<port>/<n>` öffnet, in beiden Themes screenshottet und Panel-Bottoms gegen `720px` prüft.
+
+### Hook: Stop-Reminder
+
+`.claude/hooks/slide-overflow-reminder.sh` (konfiguriert in `.claude/settings.json` als `Stop`-Hook) erinnert am Turn-Ende daran, den Overflow-Check zu fahren, sobald unstaged Änderungen an `<talk>/slides.md`, `<talk>/components/*.vue` oder `<talk>/layouts/*.vue` existieren. Der Hook läuft Playwright **nicht** selbst (zu langsam, braucht laufenden Server) — er zeigt nur den konkreten `bun run`-Aufruf pro betroffenem Talk an.
+
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
