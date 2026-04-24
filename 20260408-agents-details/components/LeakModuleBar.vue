@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { useDarkMode, useNav } from "@slidev/client";
 import EChartWrapper from "./EChartWrapper.vue";
 import { getAxis, getTooltip } from "./chartConfig";
 import { MODULE_SIZES } from "./chartData";
 
 const { isDark } = useDarkMode();
+const nav = useNav();
+const showPiLine = computed(() => nav.clicks.value >= 1);
 
 const option = computed(() => ({
   tooltip: {
@@ -62,19 +64,22 @@ const option = computed(() => ({
       markLine: {
         symbol: "none",
         silent: true,
-        data: [
-          {
-            xAxis: 3000,
-            label: {
-              formatter: "Pi (gesamt) ~3K",
-              color: "#a78bfa",
-              position: "insideStartTop",
-              fontSize: 12,
-              fontWeight: "bold",
-            },
-            lineStyle: { color: "#a78bfa", type: "dashed", width: 2 },
-          },
-        ],
+        animationDuration: 600,
+        data: showPiLine.value
+          ? [
+              {
+                xAxis: 3000,
+                label: {
+                  formatter: "Pi (gesamt) ~3K",
+                  color: "#a78bfa",
+                  position: "insideStartTop",
+                  fontSize: 12,
+                  fontWeight: "bold",
+                },
+                lineStyle: { color: "#a78bfa", type: "dashed", width: 2 },
+              },
+            ]
+          : [],
       },
     },
   ],

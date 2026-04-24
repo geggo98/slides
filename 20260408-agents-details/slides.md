@@ -550,12 +550,15 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 <LeakStatsGrid />
 
 ---
+clicks: 1
+---
 
 # Source Leak: Codebase-Größen
 
 <div class="text-sm opacity-70 mb-2">
 
-Violette Linie = Pi's gesamte Codebase (~3K Zeilen). Claude Code's Bash-Security allein ist 3× so groß.
+<span v-click.hide>Balken zeigen die größten Module im Claude-Code-Leak.</span>
+<span v-after>Violette Linie = Pi's gesamte Codebase (~3K Zeilen). Claude Code's Bash-Security allein ist 3× so groß.</span>
 
 </div>
 
