@@ -14,3 +14,7 @@ node_modules/
 
 # Slidev build output
 dist/
+
+# Claude Code runtime state
+.claude/scheduled_tasks.lock
+.claude/settings.local.json
