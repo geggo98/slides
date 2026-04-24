@@ -1,0 +1,1953 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Engineering-Schichten für LLM-Agenten</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #14110e;
+        --bg-soft: #1c1813;
+        --bg-card: #1f1a14;
+        --bg-deep: #0b0907;
+        --fg: #f0e8dc;
+        --fg-muted: #9a9086;
+        --fg-dim: #6b6358;
+        --line: #2a2520;
+        --line-strong: #3a342d;
+
+        --prompt: #e8a23b;
+        --context: #5fc7b8;
+        --harness: #e85a7c;
+        --evolution: #a8d55a;
+        --intent: #7a736a;
+
+        --prompt-soft: rgba(232, 162, 59, 0.08);
+        --context-soft: rgba(95, 199, 184, 0.08);
+        --harness-soft: rgba(232, 90, 124, 0.08);
+        --evolution-soft: rgba(168, 213, 90, 0.08);
+
+        --serif: "Fraunces", Georgia, serif;
+        --body: "Newsreader", Georgia, serif;
+        --mono: "JetBrains Mono", "Courier New", monospace;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background: var(--bg);
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--body);
+        font-size: 17px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* Film-grain overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+        opacity: 0.035;
+        pointer-events: none;
+        z-index: 1000;
+        mix-blend-mode: overlay;
+      }
+
+      ::selection {
+        background: var(--prompt);
+        color: var(--bg);
+      }
+
+      /* ---------- LAYOUT PRIMITIVES ---------- */
+
+      .container {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      .container-narrow {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 0 32px;
+      }
+
+      section {
+        padding: 120px 0;
+        position: relative;
+      }
+
+      /* ---------- TYPOGRAPHY ---------- */
+
+      .kicker {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin-bottom: 24px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .kicker::before {
+        content: "";
+        width: 18px;
+        height: 1px;
+        background: var(--fg-dim);
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      h1 {
+        font-size: clamp(48px, 7vw, 108px);
+        font-variation-settings: "opsz" 144;
+        margin-bottom: 32px;
+      }
+
+      h1 em {
+        font-style: italic;
+        font-weight: 300;
+        color: var(--fg-muted);
+      }
+
+      h2 {
+        font-size: clamp(36px, 4.5vw, 58px);
+        font-variation-settings: "opsz" 96;
+        margin-bottom: 16px;
+      }
+
+      h2 em {
+        font-style: italic;
+        font-weight: 300;
+      }
+
+      h3 {
+        font-size: 24px;
+        font-variation-settings: "opsz" 36;
+        margin-bottom: 12px;
+      }
+
+      .lead {
+        font-family: var(--body);
+        font-size: 22px;
+        line-height: 1.45;
+        font-weight: 300;
+        color: var(--fg-muted);
+        max-width: 720px;
+        margin-bottom: 48px;
+      }
+
+      .lead em {
+        font-style: italic;
+        color: var(--fg);
+      }
+
+      p {
+        margin-bottom: 1em;
+        color: var(--fg-muted);
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .mono {
+        font-family: var(--mono);
+        font-size: 0.9em;
+      }
+
+      /* ---------- NAV ---------- */
+
+      .topnav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 20px 32px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        backdrop-filter: blur(12px);
+        background: rgba(20, 17, 14, 0.7);
+        border-bottom: 1px solid transparent;
+        transition: border-color 0.3s;
+      }
+
+      .topnav.scrolled {
+        border-bottom-color: var(--line);
+      }
+
+      .topnav-brand {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--fg);
+      }
+
+      .topnav-brand span {
+        color: var(--prompt);
+      }
+
+      .topnav-links {
+        display: flex;
+        gap: 28px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+      }
+
+      .topnav-links a {
+        color: var(--fg-muted);
+        text-decoration: none;
+        transition: color 0.2s;
+        padding: 4px 0;
+        border-bottom: 1px solid transparent;
+      }
+
+      .topnav-links a:hover {
+        color: var(--fg);
+        border-bottom-color: var(--prompt);
+      }
+
+      @media (max-width: 780px) {
+        .topnav-links {
+          display: none;
+        }
+      }
+
+      /* ---------- HERO ---------- */
+
+      .hero {
+        min-height: 100vh;
+        padding-top: 140px;
+        padding-bottom: 80px;
+        display: flex;
+        align-items: center;
+        position: relative;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 80px;
+        align-items: end;
+      }
+
+      @media (max-width: 900px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+      }
+
+      .hero-tags {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--fg-dim);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: right;
+        padding-bottom: 24px;
+      }
+
+      .hero-tag-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .hero-tag-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--prompt);
+      }
+
+      .hero-meta {
+        position: absolute;
+        bottom: 40px;
+        left: 32px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+      }
+
+      /* ---------- STACK VISUALIZATION ---------- */
+
+      .stack-viz {
+        position: relative;
+        margin: 60px auto 0;
+        max-width: 860px;
+      }
+
+      .stack-layer {
+        position: relative;
+        border: 1px solid;
+        padding: 32px 40px;
+        cursor: pointer;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        background: var(--bg-card);
+      }
+
+      .stack-layer:not(:last-child) {
+        margin-bottom: -1px;
+      }
+
+      .stack-layer--evolution {
+        border-color: var(--evolution);
+        border-style: dashed;
+        background: linear-gradient(180deg, var(--evolution-soft), transparent);
+        padding: 44px 40px 24px;
+      }
+
+      .stack-layer--harness {
+        border-color: var(--harness);
+        background: var(--harness-soft);
+        margin: 0 32px;
+        padding: 40px;
+      }
+      .stack-layer--context {
+        border-color: var(--context);
+        background: var(--context-soft);
+        margin: 0 64px;
+        padding: 36px;
+      }
+      .stack-layer--prompt {
+        border-color: var(--prompt);
+        background: var(--prompt-soft);
+        margin: 0 96px;
+        padding: 32px;
+      }
+
+      .stack-layer:hover {
+        transform: translateX(-4px);
+        box-shadow: 4px 4px 0 0 currentColor;
+      }
+
+      .stack-layer--evolution:hover {
+        color: var(--evolution);
+      }
+      .stack-layer--harness:hover {
+        color: var(--harness);
+      }
+      .stack-layer--context:hover {
+        color: var(--context);
+      }
+      .stack-layer--prompt:hover {
+        color: var(--prompt);
+      }
+
+      .stack-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 24px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+      }
+
+      .stack-title {
+        font-family: var(--serif);
+        font-size: 28px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        color: var(--fg);
+      }
+
+      .stack-layer--evolution .stack-title {
+        color: var(--evolution);
+      }
+      .stack-layer--harness .stack-title {
+        color: var(--harness);
+      }
+      .stack-layer--context .stack-title {
+        color: var(--context);
+      }
+      .stack-layer--prompt .stack-title {
+        color: var(--prompt);
+      }
+
+      .stack-scope {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+      }
+
+      .stack-desc {
+        color: var(--fg-muted);
+        font-size: 15px;
+        line-height: 1.5;
+        max-width: 640px;
+      }
+
+      .stack-badge {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--evolution);
+        background: var(--bg);
+        padding: 2px 8px;
+        border: 1px solid var(--evolution);
+      }
+
+      .stack-formula {
+        text-align: center;
+        margin-top: 48px;
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--fg-muted);
+        letter-spacing: 0.08em;
+      }
+
+      .stack-formula strong {
+        color: var(--fg);
+        font-weight: 400;
+      }
+
+      /* ---------- INTENT SIDEBAR ---------- */
+
+      .intent-sidebar {
+        margin-top: 56px;
+        padding: 28px 32px;
+        border: 1px solid var(--line);
+        background: var(--bg-soft);
+        position: relative;
+        opacity: 0.75;
+        transition: opacity 0.3s;
+        max-width: 680px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .intent-sidebar:hover {
+        opacity: 1;
+      }
+
+      .intent-sidebar::before {
+        content: "⚠ MARKETING-BEGRIFF";
+        position: absolute;
+        top: -10px;
+        left: 24px;
+        background: var(--bg);
+        padding: 2px 12px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        color: var(--intent);
+        border: 1px solid var(--line);
+      }
+
+      .intent-sidebar-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .intent-sidebar-title {
+        font-family: var(--serif);
+        font-size: 20px;
+        color: var(--intent);
+        font-style: italic;
+        font-weight: 300;
+      }
+
+      .intent-sidebar-scope {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+      }
+
+      .intent-sidebar p {
+        font-size: 14px;
+        margin-bottom: 0;
+      }
+
+      /* ---------- TIMELINE ---------- */
+
+      .timeline {
+        position: relative;
+        margin-top: 60px;
+        padding-left: 32px;
+        border-left: 1px solid var(--line);
+      }
+
+      .tl-event {
+        position: relative;
+        padding: 20px 0 20px 32px;
+        border-bottom: 1px solid var(--line);
+        cursor: default;
+        transition: background 0.2s;
+      }
+
+      .tl-event:hover {
+        background: var(--bg-soft);
+      }
+
+      .tl-event:last-child {
+        border-bottom: none;
+      }
+
+      .tl-event::before {
+        content: "";
+        position: absolute;
+        left: -40px;
+        top: 30px;
+        width: 16px;
+        height: 1px;
+        background: var(--line-strong);
+      }
+
+      .tl-event::after {
+        content: "";
+        position: absolute;
+        left: -37px;
+        top: 24px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--fg-dim);
+        transition: all 0.2s;
+      }
+
+      .tl-event--prompt::after {
+        border-color: var(--prompt);
+        box-shadow: 0 0 0 3px var(--prompt-soft);
+      }
+      .tl-event--context::after {
+        border-color: var(--context);
+        box-shadow: 0 0 0 3px var(--context-soft);
+      }
+      .tl-event--harness::after {
+        border-color: var(--harness);
+        box-shadow: 0 0 0 3px var(--harness-soft);
+      }
+      .tl-event--evolution::after {
+        border-color: var(--evolution);
+        box-shadow: 0 0 0 3px var(--evolution-soft);
+      }
+
+      .tl-event:hover::after {
+        transform: scale(1.3);
+      }
+
+      .tl-date {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .tl-title {
+        font-family: var(--serif);
+        font-size: 20px;
+        color: var(--fg);
+        margin-bottom: 4px;
+        line-height: 1.25;
+      }
+
+      .tl-actor {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--fg-muted);
+      }
+
+      .tl-actor .tag-prompt {
+        color: var(--prompt);
+      }
+      .tl-actor .tag-context {
+        color: var(--context);
+      }
+      .tl-actor .tag-harness {
+        color: var(--harness);
+      }
+      .tl-actor .tag-evolution {
+        color: var(--evolution);
+      }
+
+      /* ---------- DISCIPLINE CARDS ---------- */
+
+      .disciplines {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--line);
+        margin-top: 60px;
+        border: 1px solid var(--line);
+      }
+
+      @media (max-width: 780px) {
+        .disciplines {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .disc-card {
+        background: var(--bg);
+        padding: 40px 36px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .disc-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: currentColor;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .disc-card:hover::before {
+        transform: scaleX(1);
+      }
+      .disc-card:hover {
+        background: var(--bg-soft);
+      }
+
+      .disc-card--prompt {
+        color: var(--prompt);
+      }
+      .disc-card--context {
+        color: var(--context);
+      }
+      .disc-card--harness {
+        color: var(--harness);
+      }
+      .disc-card--evolution {
+        color: var(--evolution);
+      }
+
+      .disc-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 16px;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .disc-number {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        color: var(--fg-dim);
+      }
+
+      .disc-substance {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+
+      .disc-substance-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .disc-substance-dot--off {
+        background: transparent;
+        border: 1px solid var(--fg-dim);
+      }
+
+      .disc-title {
+        font-family: var(--serif);
+        font-size: 32px;
+        font-weight: 400;
+        line-height: 1.1;
+        color: var(--fg);
+        margin-bottom: 4px;
+      }
+
+      .disc-title em {
+        font-style: italic;
+        font-weight: 300;
+        color: currentColor;
+      }
+
+      .disc-subtitle {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--fg-muted);
+        letter-spacing: 0.06em;
+        margin-bottom: 24px;
+      }
+
+      .disc-body p {
+        font-size: 15px;
+        margin-bottom: 14px;
+      }
+
+      .disc-meta {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px dashed var(--line-strong);
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 8px 20px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+
+      .disc-meta dt {
+        color: var(--fg-dim);
+        text-transform: uppercase;
+      }
+      .disc-meta dd {
+        color: var(--fg);
+      }
+
+      .disc-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        font-family: var(--mono);
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        border: 1px solid currentColor;
+        margin-left: 8px;
+        vertical-align: 2px;
+      }
+
+      .disc-card--evolution {
+        border: 1px dashed var(--evolution);
+        grid-column: span 2;
+        background: linear-gradient(
+          180deg,
+          var(--evolution-soft),
+          transparent 60%
+        );
+      }
+
+      @media (max-width: 780px) {
+        .disc-card--evolution {
+          grid-column: span 1;
+        }
+      }
+
+      /* ---------- EVOLUTION COMPARISON TABLE ---------- */
+
+      .evo-table-wrap {
+        overflow-x: auto;
+        margin-top: 48px;
+        border: 1px solid var(--line);
+      }
+
+      .evo-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 720px;
+      }
+
+      .evo-table thead {
+        background: var(--bg-soft);
+      }
+
+      .evo-table th {
+        text-align: left;
+        padding: 16px 18px;
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+        font-weight: 500;
+        border-bottom: 1px solid var(--line-strong);
+      }
+
+      .evo-table td {
+        padding: 18px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        color: var(--fg-muted);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .evo-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .evo-table tr:hover td {
+        background: var(--bg-soft);
+      }
+
+      .evo-system {
+        font-family: var(--serif);
+        font-size: 18px;
+        color: var(--fg);
+        font-weight: 400;
+        line-height: 1.2;
+        margin-bottom: 2px;
+      }
+
+      .evo-year {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--fg-dim);
+        letter-spacing: 0.08em;
+      }
+
+      .gate {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        display: inline-block;
+        border: 1px solid;
+      }
+
+      .gate--none {
+        color: var(--harness);
+        border-color: var(--harness);
+      }
+      .gate--sandbox {
+        color: var(--prompt);
+        border-color: var(--prompt);
+      }
+      .gate--pr {
+        color: var(--context);
+        border-color: var(--context);
+      }
+      .gate--offline {
+        color: var(--evolution);
+        border-color: var(--evolution);
+      }
+
+      .evo-highlight {
+        background: var(--evolution-soft) !important;
+        border-left: 2px solid var(--evolution);
+      }
+
+      .evo-highlight td:first-child {
+        border-left: 2px solid var(--evolution);
+      }
+
+      /* ---------- VERDICT / FAZIT ---------- */
+
+      .verdict-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: var(--line);
+        margin-top: 48px;
+        border: 1px solid var(--line);
+      }
+
+      @media (max-width: 780px) {
+        .verdict-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .verdict-cell {
+        background: var(--bg);
+        padding: 36px 32px;
+        position: relative;
+      }
+
+      .verdict-cell--bleibt {
+        border-top: 2px solid var(--context);
+      }
+      .verdict-cell--etabliert {
+        border-top: 2px solid var(--harness);
+      }
+      .verdict-cell--offen {
+        border-top: 2px solid var(--evolution);
+      }
+      .verdict-cell--marketing {
+        border-top: 2px solid var(--intent);
+        opacity: 0.78;
+      }
+
+      .verdict-stamp {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+        margin-bottom: 16px;
+      }
+
+      .verdict-cell--bleibt .verdict-stamp {
+        color: var(--context);
+      }
+      .verdict-cell--etabliert .verdict-stamp {
+        color: var(--harness);
+      }
+      .verdict-cell--offen .verdict-stamp {
+        color: var(--evolution);
+      }
+      .verdict-cell--marketing .verdict-stamp {
+        color: var(--intent);
+      }
+
+      .verdict-title {
+        font-family: var(--serif);
+        font-size: 24px;
+        font-weight: 400;
+        margin-bottom: 12px;
+        color: var(--fg);
+        font-style: italic;
+        line-height: 1.15;
+      }
+
+      .verdict-cell p {
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      /* ---------- FOOTER ---------- */
+
+      .footer {
+        padding: 60px 0 40px;
+        border-top: 1px solid var(--line);
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: var(--fg-dim);
+      }
+
+      .footer-grid {
+        display: flex;
+        justify-content: space-between;
+        gap: 32px;
+        flex-wrap: wrap;
+      }
+
+      /* ---------- REVEAL ANIMATION ---------- */
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.9s ease,
+          transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .reveal.is-visible {
+        opacity: 1;
+        transform: none;
+      }
+
+      .reveal-delay-1 {
+        transition-delay: 0.1s;
+      }
+      .reveal-delay-2 {
+        transition-delay: 0.2s;
+      }
+      .reveal-delay-3 {
+        transition-delay: 0.3s;
+      }
+      .reveal-delay-4 {
+        transition-delay: 0.4s;
+      }
+
+      /* ---------- SECTION DIVIDER ---------- */
+
+      .section-mark {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 48px;
+      }
+
+      .section-mark::before,
+      .section-mark::after {
+        content: "";
+        height: 1px;
+        background: var(--line);
+        flex: 1;
+        max-width: 80px;
+      }
+
+      /* ---------- INLINE CODE STYLING ---------- */
+
+      code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: var(--bg-soft);
+        padding: 1px 6px;
+        border: 1px solid var(--line);
+        color: var(--fg);
+      }
+
+      .accent-prompt {
+        color: var(--prompt);
+      }
+      .accent-context {
+        color: var(--context);
+      }
+      .accent-harness {
+        color: var(--harness);
+      }
+      .accent-evolution {
+        color: var(--evolution);
+      }
+
+      /* ---------- MOBILE ADJUSTMENTS ---------- */
+
+      @media (max-width: 640px) {
+        section {
+          padding: 80px 0;
+        }
+        .container,
+        .container-narrow {
+          padding: 0 20px;
+        }
+        .stack-layer--harness {
+          margin: 0 10px;
+        }
+        .stack-layer--context {
+          margin: 0 22px;
+        }
+        .stack-layer--prompt {
+          margin: 0 34px;
+        }
+        .stack-layer {
+          padding: 24px 20px !important;
+        }
+        .stack-title {
+          font-size: 22px;
+        }
+        .disc-card {
+          padding: 28px 22px;
+        }
+        .disc-title {
+          font-size: 26px;
+        }
+        .hero-meta {
+          display: none;
+        }
+        .topnav {
+          padding: 16px 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ TOP NAV ============ -->
+    <nav class="topnav" id="topnav">
+      <div class="topnav-brand">ENG<span>·</span>SCHICHTEN</div>
+      <div class="topnav-links">
+        <a href="#stack">Schichtung</a>
+        <a href="#timeline">Zeitachse</a>
+        <a href="#disciplines">Disziplinen</a>
+        <a href="#evolution">Evolution</a>
+        <a href="#verdict">Fazit</a>
+      </div>
+    </nav>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <div class="kicker reveal">Ein Überblick · April 2026</div>
+            <h1 class="reveal reveal-delay-1">
+              Vier Schichten.<br /><em>Ein Spektrum.</em>
+            </h1>
+            <p class="lead reveal reveal-delay-2">
+              Prompt, Context, Harness — <em>und vielleicht Evolution</em>. Ein
+              praktischer Überblick über die Engineering-Disziplinen, die sich
+              um LLM-Agenten gebildet haben — wer meint was, was davon hat
+              Substanz, und wo passt Nous Researchs
+              <span class="mono accent-evolution">hermes-agent</span> hinein.
+            </p>
+          </div>
+          <div class="hero-tags reveal reveal-delay-3">
+            <div class="hero-tag-item">
+              Prompt Engineering<span
+                class="hero-tag-dot"
+                style="background: var(--prompt)"
+              ></span>
+            </div>
+            <div class="hero-tag-item">
+              Context Engineering<span
+                class="hero-tag-dot"
+                style="background: var(--context)"
+              ></span>
+            </div>
+            <div class="hero-tag-item">
+              Harness Engineering<span
+                class="hero-tag-dot"
+                style="background: var(--harness)"
+              ></span>
+            </div>
+            <div class="hero-tag-item">
+              Evolution Engineering<span
+                class="hero-tag-dot"
+                style="background: var(--evolution)"
+              ></span>
+            </div>
+            <div class="hero-tag-item" style="opacity: 0.4">
+              Intent Engineering<span
+                class="hero-tag-dot"
+                style="background: var(--intent)"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta mono">// Scroll für die Schichtung ↓</div>
+    </section>
+
+    <!-- ============ STACK ============ -->
+    <section id="stack">
+      <div class="container">
+        <div class="section-mark reveal">01 · Die Schichtung</div>
+        <h2 class="reveal reveal-delay-1">
+          Jede Schicht löst, <em>was die darunter nicht mehr greift.</em>
+        </h2>
+        <p class="lead reveal reveal-delay-2" style="margin-top: 24px">
+          Prompt ⊂ Context ⊂ Harness. Evolution umschließt das Ganze —
+          experimentell. Hover über eine Schicht für die Kurzfassung.
+        </p>
+
+        <div class="stack-viz reveal reveal-delay-3">
+          <!-- EVOLUTION -->
+          <div
+            class="stack-layer stack-layer--evolution"
+            data-layer="evolution"
+          >
+            <span class="stack-badge">Experimentell</span>
+            <div class="stack-head">
+              <div class="stack-title">Evolution Engineering</div>
+              <div class="stack-scope">Das Meta-System</div>
+            </div>
+            <div class="stack-desc">
+              Der Agent verändert sich selbst — Skills, Prompts, Memory, in
+              radikalen Varianten sogar den Loop-Code. Potentieller nächster
+              Schritt, nicht etablierte Disziplin.
+            </div>
+
+            <!-- HARNESS -->
+            <div
+              class="stack-layer stack-layer--harness"
+              data-layer="harness"
+              style="margin-top: 20px"
+            >
+              <div class="stack-head">
+                <div class="stack-title">Harness Engineering</div>
+                <div class="stack-scope">Das System</div>
+              </div>
+              <div class="stack-desc">
+                Alles um das Modell herum: Agent-Loop, Tool-Registry,
+                Sandboxing, Middleware, HITL-Gates, Observability. Empirisch oft
+                wichtiger als das Modell selbst.
+              </div>
+
+              <!-- CONTEXT -->
+              <div
+                class="stack-layer stack-layer--context"
+                data-layer="context"
+                style="margin-top: 20px"
+              >
+                <div class="stack-head">
+                  <div class="stack-title">Context Engineering</div>
+                  <div class="stack-scope">Das Fenster</div>
+                </div>
+                <div class="stack-desc">
+                  Kuration des gesamten Token-Inhalts pro Turn — System-Prompt,
+                  Tools, Retrieval, Memory, Sub-Agent-Outputs. Das
+                  Context-Window als endliche Ressource.
+                </div>
+
+                <!-- PROMPT -->
+                <div
+                  class="stack-layer stack-layer--prompt"
+                  data-layer="prompt"
+                  style="margin-top: 20px"
+                >
+                  <div class="stack-head">
+                    <div class="stack-title">Prompt Engineering</div>
+                    <div class="stack-scope">Der String</div>
+                  </div>
+                  <div class="stack-desc">
+                    Der einzelne Input und seine Struktur —
+                    System-/User-Message, Few-Shot, Chain-of-Thought, XML-Tags,
+                    Prefill. Als Jobtitel tot, als Handwerk echte Teilmenge von
+                    Context.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack-formula">
+            <strong class="accent-prompt">Prompt</strong> ⊂
+            <strong class="accent-context">Context</strong> ⊂
+            <strong class="accent-harness">Harness</strong> &nbsp;·&nbsp;
+            umschlossen von <strong class="accent-evolution">Evolution</strong>
+            <span style="color: var(--fg-dim)">(experimentell)</span>
+          </div>
+
+          <!-- INTENT SIDEBAR -->
+          <aside class="intent-sidebar">
+            <div class="intent-sidebar-head">
+              <div class="intent-sidebar-title">Intent Engineering</div>
+              <div class="intent-sidebar-scope">Nicht in der Schichtung</div>
+            </div>
+            <p>
+              Taucht in Vendor-Decks auf. Meint praktisch
+              <em>Spec-driven Development</em> oder klassisches Requirements
+              Engineering — ohne eigenständige Methode, empirische Evidenz oder
+              kanonische Referenz. Wer den Begriff nutzt, sollte meist nur
+              präziser werden.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TIMELINE ============ -->
+    <section id="timeline" style="background: var(--bg-deep)">
+      <div class="container-narrow">
+        <div class="section-mark reveal">02 · Zeitachse</div>
+        <h2 class="reveal reveal-delay-1">
+          Fünfeinhalb Jahre, <em>drei Verschiebungen.</em>
+        </h2>
+        <p class="lead reveal reveal-delay-2" style="margin-top: 24px">
+          Von GPT-3 zum selbstverbessernden Agenten. Jede Schicht folgt einem
+          Muster: empirischer Schmerzpunkt, Begriffsprägung, Industrie-Adoption.
+        </p>
+
+        <div class="timeline reveal reveal-delay-3">
+          <div class="tl-event tl-event--prompt">
+            <div class="tl-date">Juni 2020</div>
+            <div class="tl-title">GPT-3 · In-Context-Learning wird Ding</div>
+            <div class="tl-actor">
+              <span class="tag-prompt">// Prompt Engineering</span> entsteht als
+              Praxis-Begriff
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--prompt">
+            <div class="tl-date">Januar 2022</div>
+            <div class="tl-title">Chain-of-Thought (Wei et al.)</div>
+            <div class="tl-actor">
+              „Let's think step by step" · Prompt-Hype beginnt
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--prompt">
+            <div class="tl-date">März 2023</div>
+            <div class="tl-title">Lilian Wengs kanonischer Lil'Log-Post</div>
+            <div class="tl-actor">
+              Prompt Engineering als Disziplin definiert
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--context">
+            <div class="tl-date">18. Juni 2025</div>
+            <div class="tl-title">Tobi Lütke prägt „Context Engineering"</div>
+            <div class="tl-actor">
+              <span class="tag-context"
+                >// the art of providing all the context</span
+              >
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--context">
+            <div class="tl-date">25. Juni 2025</div>
+            <div class="tl-title">Karpathy verstärkt den Begriff</div>
+            <div class="tl-actor">
+              Willison prognostiziert „sticking power" — zu Recht
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--context">
+            <div class="tl-date">29. September 2025</div>
+            <div class="tl-title">
+              Anthropic: „Effective context engineering for AI agents"
+            </div>
+            <div class="tl-actor">
+              <span class="tag-context"
+                >// Sonnet 4.5 + Memory Tool · Industrie-Adoption</span
+              >
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--harness">
+            <div class="tl-date">Februar 2026</div>
+            <div class="tl-title">
+              OpenAI Codex-Team · Harness Engineering Report
+            </div>
+            <div class="tl-actor">
+              <span class="tag-harness"
+                >// 1M+ LoC ohne manuellen Code · „it's all about the
+                harness"</span
+              >
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--harness">
+            <div class="tl-date">Februar 2026</div>
+            <div class="tl-title">Mitchell Hashimoto · Leitmaxime</div>
+            <div class="tl-actor">
+              „engineer a solution so it can never make that mistake again"
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--harness">
+            <div class="tl-date">März 2026</div>
+            <div class="tl-title">
+              LangChain · Deep Agents Harness Engineering
+            </div>
+            <div class="tl-actor">
+              <span class="tag-harness"
+                >// Terminal Bench 2.0: Platz 30 → Platz 5 ohne
+                Modellwechsel</span
+              >
+            </div>
+          </div>
+
+          <div class="tl-event tl-event--evolution">
+            <div class="tl-date">April 2026</div>
+            <div class="tl-title">
+              Hermes Agent v0.10 ·
+              <span class="mono" style="font-size: 0.7em">skill_manage</span> in
+              der Wildnis
+            </div>
+            <div class="tl-actor">
+              <span class="tag-evolution"
+                >// prozedurales Memory als erste produktive
+                Self-Evolution</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DISCIPLINES ============ -->
+    <section id="disciplines">
+      <div class="container">
+        <div class="section-mark reveal">03 · Die Disziplinen</div>
+        <h2 class="reveal reveal-delay-1">
+          Was jede Schicht <em>wirklich leistet.</em>
+        </h2>
+        <p class="lead reveal reveal-delay-2" style="margin-top: 24px">
+          Jeder Begriff mit Substanzurteil:
+          <span class="mono accent-context">●●●</span> solide ·
+          <span class="mono accent-prompt">●●○</span> Handwerks-Teilmenge ·
+          <span class="mono accent-evolution">●○○</span> experimentell ·
+          <span class="mono" style="color: var(--intent)">○○○</span> Marketing.
+        </p>
+
+        <div class="disciplines reveal reveal-delay-3">
+          <!-- PROMPT -->
+          <article class="disc-card disc-card--prompt">
+            <div class="disc-head">
+              <div class="disc-number">/01 · PROMPT</div>
+              <div class="disc-substance">
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+              </div>
+            </div>
+            <div class="disc-title">Prompt <em>Engineering</em></div>
+            <div class="disc-subtitle">
+              // Als Jobtitel tot — als Handwerk lebt es weiter
+            </div>
+            <div class="disc-body">
+              <p>
+                Arbeitet mit einem <em>diskreten String</em>. Klare
+                Instruktionen, XML-Tags (Claude wurde explizit darauf
+                trainiert), Few-Shot-Kuration, strukturierte CoT,
+                Response-Prefilling, Long-Context-Anordnung.
+              </p>
+              <p>
+                Anthropics Position: Prompt Engineering ist nicht tot, sondern
+                <strong style="color: var(--prompt)">echte Teilmenge</strong>
+                von Context Engineering — Tool-Descriptions und System-Prompts
+                verdienen weiterhin die volle Sorgfalt.
+              </p>
+            </div>
+            <dl class="disc-meta">
+              <dt>Geprägt</dt>
+              <dd>Juni 2020 · GPT-3</dd>
+              <dt>Kanon</dt>
+              <dd>Lilian Weng · Anthropic Docs · DAIR.AI</dd>
+              <dt>Scope</dt>
+              <dd>Ein einzelner Input-String</dd>
+            </dl>
+          </article>
+
+          <!-- CONTEXT -->
+          <article class="disc-card disc-card--context">
+            <div class="disc-head">
+              <div class="disc-number">/02 · CONTEXT</div>
+              <div class="disc-substance">
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot"></span>
+              </div>
+            </div>
+            <div class="disc-title">Context <em>Engineering</em></div>
+            <div class="disc-subtitle">
+              // Der einzige Begriff mit klarer Neuheit
+            </div>
+            <div class="disc-body">
+              <p>
+                Iterative Kuration aller Token pro Turn: System-Prompt, Tools,
+                MCP-Server, Retrieval, Memory, History, Sub-Agent-Outputs. Das
+                Window ist endliche Ressource.
+              </p>
+              <p>
+                Empirischer Schmerzpunkt:
+                <strong style="color: var(--context)">Context Rot</strong>.
+                Recall degradiert mit Länge — bei 1M-Fenstern oft schon ab
+                ~256k. Jentic-Daten: Tool-Selection fällt von 43% (&lt;10 Tools)
+                auf 14% (&gt;50 Tools).
+              </p>
+              <p>
+                Kernpraktiken: Compaction, Structured Note-Taking,
+                Sub-Agent-Isolation (Anthropic) · Write/Select/Compress/Isolate
+                (LangChain) · Just-in-Time Retrieval statt Upfront-Load.
+              </p>
+            </div>
+            <dl class="disc-meta">
+              <dt>Geprägt</dt>
+              <dd>18. Juni 2025 · Tobi Lütke</dd>
+              <dt>Kanon</dt>
+              <dd>Anthropic · Karpathy · LangChain · Willison</dd>
+              <dt>Scope</dt>
+              <dd>Das gesamte Context-Window</dd>
+            </dl>
+          </article>
+
+          <!-- HARNESS -->
+          <article class="disc-card disc-card--harness">
+            <div class="disc-head">
+              <div class="disc-number">/03 · HARNESS</div>
+              <div class="disc-substance">
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot"></span>
+              </div>
+            </div>
+            <div class="disc-title">Harness <em>Engineering</em></div>
+            <div class="disc-subtitle">
+              // Die jüngste, aber sauber motivierte Ebene
+            </div>
+            <div class="disc-body">
+              <p>
+                Modell = CPU · Context = RAM ·
+                <strong style="color: var(--harness)">Harness = OS</strong> ·
+                Agent = Applikation. Agent-Loop, Tools, Sandboxing, Middleware,
+                HITL, Observability.
+              </p>
+              <p>
+                Empirie: LangChains <code>deepagents-cli</code> sprang von Platz
+                30 auf Platz 5 auf Terminal Bench 2.0
+                <strong style="color: var(--harness)"
+                  >ohne Modellwechsel</strong
+                >
+                — nur Harness. Cursor hat Vollzeit-Engineers für Prompts und
+                Tool-Descriptions pro Modell-Release.
+              </p>
+              <p>
+                Fowler/Böckelers <em>Guides-and-Sensors</em>-Matrix:
+                computational (Linter, Tests) × inferential (LLM-Judge,
+                AI-Review) bilden vier Quadranten.
+              </p>
+            </div>
+            <dl class="disc-meta">
+              <dt>Geprägt</dt>
+              <dd>Anfang 2026 · Codex-Team, Hashimoto, Fowler</dd>
+              <dt>Kanon</dt>
+              <dd>LangChain · Martin Fowler · Phil Schmid</dd>
+              <dt>Scope</dt>
+              <dd>Das System um das Modell herum</dd>
+            </dl>
+          </article>
+
+          <!-- INTENT -->
+          <article
+            class="disc-card"
+            style="color: var(--intent); opacity: 0.72"
+          >
+            <div class="disc-head">
+              <div class="disc-number" style="color: var(--intent)">
+                /04 · INTENT <span class="disc-badge">Marketing</span>
+              </div>
+              <div class="disc-substance">
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+              </div>
+            </div>
+            <div class="disc-title" style="color: var(--fg-muted)">
+              Intent <em style="color: var(--intent)">Engineering</em>
+            </div>
+            <div class="disc-subtitle">// Kein eigenständiges Feld</div>
+            <div class="disc-body">
+              <p>
+                Taucht auf bei Cloud-Vendors, in GitHub Spec-Kit-Kontext
+                (Oktober 2025), in Karpathys „Software 3.0"-Reden. Ihm fehlt
+                alles, was Context und Harness tragen: Abgrenzungskriterium,
+                Community, empirische Evidenz, kanonische Referenz.
+              </p>
+              <p>
+                Substanziell sind die Nachbarn, auf die verwiesen wird:
+                <em>Spec-driven Development</em>, Requirements Engineering,
+                Willisons Kritik am „vibe coding". „Intent Engineering" addiert
+                nichts über diesen Kanon hinaus.
+              </p>
+            </div>
+            <dl class="disc-meta">
+              <dt>Geprägt</dt>
+              <dd>Uneinheitlich · 2024–</dd>
+              <dt>Kanon</dt>
+              <dd>— (existiert nicht)</dd>
+              <dt>Scope</dt>
+              <dd>Umetikettierung für Vortragsfolien</dd>
+            </dl>
+          </article>
+
+          <!-- EVOLUTION (full width) -->
+          <article class="disc-card disc-card--evolution">
+            <div class="disc-head">
+              <div class="disc-number">
+                /05 · EVOLUTION
+                <span
+                  class="disc-badge"
+                  style="
+                    border-color: var(--evolution);
+                    color: var(--evolution);
+                  "
+                  >Potentieller Nächster Schritt</span
+                >
+              </div>
+              <div class="disc-substance">
+                <span class="disc-substance-dot"></span>
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+                <span class="disc-substance-dot disc-substance-dot--off"></span>
+              </div>
+            </div>
+            <div class="disc-title">Evolution <em>Engineering</em></div>
+            <div class="disc-subtitle">
+              // Wenn der Agent zum Harness-Engineer wird
+            </div>
+            <div
+              class="disc-body"
+              style="
+                columns: 2;
+                column-gap: 48px;
+                column-rule: 1px dashed var(--line-strong);
+              "
+            >
+              <p>
+                Sobald der Agent Teile seines Harness anpasst, wird er selbst
+                zum Harness-Engineer — bei
+                <span class="accent-evolution">Hermes</span> auf Skills- und
+                Memory-Ebene, bei <span class="accent-evolution">DGM</span> auf
+                Python-Code-Ebene. Theoretisch interessant, praktisch riskant.
+              </p>
+              <p>
+                Das Spektrum reicht von <em>self-improving light</em> (Hermes:
+                Markdown-Skills, PR-Gate für Code) bis zur radikalen
+                <em>Gödel-Machine-Tradition</em> (Monkey-Patching, evolutionäres
+                Archiv). Safety-Gates bilden die entscheidende Achse.
+              </p>
+              <p>
+                Dokumentierte Failure-Modes:
+                <strong style="color: var(--evolution)">Reward Hacking</strong>
+                (DGM lügt über Test-Resultate),
+                <strong style="color: var(--evolution)"
+                  >Skill-Junk-Drawer</strong
+                >
+                (redundante, vage Skills), Goodhart-Effekte. Gates sind nur so
+                gut wie die Metriken dahinter.
+              </p>
+              <p>
+                Praktisches Urteil: Für Produktionscode bleibt Harness
+                Engineering mit Guides-and-Sensors-Disziplin sinnvoller als jede
+                Self-Evolution-Träumerei. Aber die Richtung ist ernst zu nehmen.
+              </p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EVOLUTION DETAIL ============ -->
+    <section id="evolution" style="background: var(--bg-deep)">
+      <div class="container">
+        <div class="section-mark reveal">04 · Evolution im Detail</div>
+        <h2 class="reveal reveal-delay-1">
+          Sieben Systeme, <em>zwei Achsen.</em>
+        </h2>
+        <p class="lead reveal reveal-delay-2" style="margin-top: 24px">
+          <em>Was wird modifiziert?</em> (Prompts → Memory → Skills → Code) und
+          <em>wie streng ist das Gate?</em> (none → sandbox → PR → offline).
+          Hermes Agent sitzt bewusst in der Mitte — pragmatisches
+          Self-Improvement, kein akademischer Gödel.
+        </p>
+
+        <div class="evo-table-wrap reveal reveal-delay-3">
+          <table class="evo-table">
+            <thead>
+              <tr>
+                <th>System</th>
+                <th>Modifiziert</th>
+                <th>Mechanismus</th>
+                <th>Safety-Gate</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="evo-system">AutoGPT</div>
+                  <div class="evo-year">April 2023</div>
+                </td>
+                <td>Plan, Memory</td>
+                <td>GPT-4-Loop · Vector-DB</td>
+                <td><span class="gate gate--none">Keines</span></td>
+                <td>
+                  Weitgehend gescheitert · infinite loops, halluzinierte
+                  Capabilities
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">Voyager</div>
+                  <div class="evo-year">Mai 2023 · NVIDIA</div>
+                </td>
+                <td>Skills-Library (JS)</td>
+                <td>Auto-Curriculum · Self-Verification-Critic</td>
+                <td><span class="gate gate--sandbox">Minecraft</span></td>
+                <td>
+                  Konzeptueller Großvater von Hermes · „training is code
+                  execution"
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">Letta / MemGPT</div>
+                  <div class="evo-year">Oktober 2023</div>
+                </td>
+                <td>Eigener Memory-State</td>
+                <td>Self-editing via <code>memory_replace</code></td>
+                <td><span class="gate gate--sandbox">Tool-API fix</span></td>
+                <td>Nächster Verwandter von Hermes · file-based memory</td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">Gödel Agent</div>
+                  <div class="evo-year">Oktober 2024</div>
+                </td>
+                <td>Python-Code (Monkey-Patching)</td>
+                <td>LLM-Reflection · echte Selbst-Referenz</td>
+                <td><span class="gate gate--none">Minimal</span></td>
+                <td>Akademisch · Proof-of-Concept</td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">Darwin Gödel Machine</div>
+                  <div class="evo-year">Mai 2025 · Sakana</div>
+                </td>
+                <td>Agent-Code</td>
+                <td>Evolutionäres Archiv · SWE-bench als Fitness</td>
+                <td>
+                  <span class="gate gate--sandbox">Sandbox + Web-Limits</span>
+                </td>
+                <td>SWE-bench 20→50% · dokumentierte Goodhart-Fälle</td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">DSPy + GEPA</div>
+                  <div class="evo-year">2024–2025 · Stanford/MIT</div>
+                </td>
+                <td>Prompts, Few-Shots, Weights</td>
+                <td>Compiler: MIPROv2, GEPA, SIMBA</td>
+                <td>
+                  <span class="gate gate--offline">Offline · testbasiert</span>
+                </td>
+                <td>GEPA: ICLR-2026-Oral · reflective prompt evolution</td>
+              </tr>
+
+              <tr>
+                <td>
+                  <div class="evo-system">AlphaEvolve</div>
+                  <div class="evo-year">Mai 2025 · DeepMind</div>
+                </td>
+                <td>Ziel-Algorithmen (nicht Agent selbst)</td>
+                <td>Gemini-Ensemble · MAP-Elites · Evaluators</td>
+                <td>
+                  <span class="gate gate--offline">Offline · Benchmark</span>
+                </td>
+                <td>
+                  Borg +0,7% · Matrix-Mul 4×4 in 48 muls (schlägt Strassen 1969)
+                </td>
+              </tr>
+
+              <tr class="evo-highlight">
+                <td>
+                  <div class="evo-system accent-evolution">Hermes Agent</div>
+                  <div class="evo-year">Februar 2026 · Nous Research</div>
+                </td>
+                <td>Skills, Memory-Files · Prompts/Tools (Schwester-Repo)</td>
+                <td>
+                  <code>skill_manage</code> · FTS5-Recall · Honcho · DSPy+GEPA
+                  für Code
+                </td>
+                <td><span class="gate gate--pr">PR-Gate + Sandbox</span></td>
+                <td>
+                  <strong style="color: var(--evolution)"
+                    >Pragmatisches Self-Improvement-Light</strong
+                  >
+                  · Produktionstauglich
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          style="
+            margin-top: 48px;
+            padding: 28px 32px;
+            border: 1px solid var(--line);
+            background: var(--bg-soft);
+          "
+        >
+          <div
+            class="mono"
+            style="
+              font-size: 11px;
+              letter-spacing: 0.14em;
+              color: var(--evolution);
+              margin-bottom: 12px;
+            "
+          >
+            // HERMES · ZUSAMMENGEFASST
+          </div>
+          <p style="color: var(--fg); font-size: 16px; line-height: 1.55">
+            Der Agent schreibt sich
+            <strong class="accent-evolution">Markdown-Prozeduren</strong>, nicht
+            seinen Python-Code. Skills entstehen nach komplexen Tasks durch
+            Reflection (typisch ≥5 Tool-Calls), landen in
+            <code>~/.hermes/skills/</code>, werden bei erneuter Nutzung
+            verfeinert. Radikale Code-Modifikation ist bewusst in
+            <code>hermes-agent-self-evolution</code> ausgelagert und durchläuft
+            dort PR-Gate plus menschliches Review.
+            <strong style="color: var(--harness)"
+              >Approval-Policies für destruktive Commands sind default
+              aus</strong
+            >
+            — wer das produktiv einsetzt, schaltet sie aktiv ein und nimmt
+            Container-Backends statt local.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VERDICT / FAZIT ============ -->
+    <section id="verdict">
+      <div class="container">
+        <div class="section-mark reveal">05 · Fazit</div>
+        <h2 class="reveal reveal-delay-1">Was bleibt, <em>was fällt.</em></h2>
+        <p class="lead reveal reveal-delay-2" style="margin-top: 24px">
+          Das idiomatische Denken: Probleme der richtigen Schicht zuordnen.
+          Tool-Fehlauswahl ist selten ein Prompt-Problem, häufiger Context,
+          manchmal Harness.
+        </p>
+
+        <div class="verdict-grid reveal reveal-delay-3">
+          <div class="verdict-cell verdict-cell--bleibt">
+            <div class="verdict-stamp">Bleibt</div>
+            <div class="verdict-title">Context Engineering</div>
+            <p>
+              Benennt präzise eine Systemebene, die Prompt Engineering
+              strukturell nicht erreicht. Industrie-Adoption (Anthropic,
+              LangChain, Shopify), empirische Grundlage (Context Rot), klare
+              Abgrenzung. Willisons Juni-2025-Prognose „sticking power" hat sich
+              bewahrheitet.
+            </p>
+          </div>
+
+          <div class="verdict-cell verdict-cell--etabliert">
+            <div class="verdict-stamp">Etabliert sich</div>
+            <div class="verdict-title">Harness Engineering</div>
+            <p>
+              Benennt, was Cursor, Claude Code und SWE-agent tatsächlich tun —
+              Systems Engineering ums Modell. Jung, aber fundiert (Fowler,
+              LangChain, Codex-Report). Mit stärkeren Modellen wird Harness
+              dünner, nicht null — analog zu „Prompt Engineering verschiebt
+              sich, stirbt nicht".
+            </p>
+          </div>
+
+          <div class="verdict-cell verdict-cell--offen">
+            <div class="verdict-stamp">Offen · Potentiell</div>
+            <div class="verdict-title">Evolution Engineering</div>
+            <p>
+              Ernst zu nehmende Richtung, aber noch kein etabliertes Feld.
+              Hermes zeigt den konservativen Weg (Markdown-Skills, PR-Gate für
+              Code), DGM und AlphaEvolve den ambitionierten. Die Gates sind nur
+              so gut wie die Metriken — Reward Hacking ist dokumentiert. Für
+              Produktion: Harness mit Disziplin vor Self-Evolution mit Hoffnung.
+            </p>
+          </div>
+
+          <div class="verdict-cell verdict-cell--marketing">
+            <div class="verdict-stamp">Marketing</div>
+            <div class="verdict-title">Intent Engineering</div>
+            <p>
+              Wird als Vendor-Vokabel überleben, ohne eigenständig zu werden.
+              Wer es nutzt, meint meistens Spec-driven Development oder
+              Requirements Engineering — dann sollte man das auch so nennen.
+              Kein substanzieller Beitrag über den Basis-Kanon hinaus.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            // Quellen: Anthropic Engineering · Martin Fowler · LangChain Blog ·
+            Nous Research · arXiv (Voyager, GEPA, DGM)
+          </div>
+          <div>// Hermes Agent v0.10 · April 2026</div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Scroll-based nav border
+      const topnav = document.getElementById("topnav");
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (window.scrollY > 10) topnav.classList.add("scrolled");
+          else topnav.classList.remove("scrolled");
+        },
+        { passive: true },
+      );
+
+      // Reveal on scroll (IntersectionObserver)
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("is-visible");
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { rootMargin: "0px 0px -50px 0px", threshold: 0.05 },
+      );
+
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+      // Stack layer hover enhancement: highlight corresponding tag in hero
+      const stackLayers = document.querySelectorAll(".stack-layer");
+      const layerLabels = {
+        prompt: "Prompt Engineering",
+        context: "Context Engineering",
+        harness: "Harness Engineering",
+        evolution: "Evolution Engineering",
+      };
+      stackLayers.forEach((layer) => {
+        layer.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const which = layer.dataset.layer;
+          const el = document.querySelector("#disciplines");
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      // Timeline event: click to expand/highlight briefly
+      document.querySelectorAll(".tl-event").forEach((ev) => {
+        ev.addEventListener("click", () => {
+          ev.style.transition = "background 0.4s";
+          ev.style.background = "var(--bg-soft)";
+          setTimeout(() => {
+            ev.style.background = "";
+          }, 800);
+        });
+      });
+
+      // Discipline cards: subtle click-to-scroll-back behavior
+      document.querySelectorAll(".disc-card").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          // no-op, but could toggle an expanded state in the future
+        });
+      });
+    </script>
+  </body>
+</html>

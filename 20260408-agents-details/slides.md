@@ -598,6 +598,30 @@ RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert. Die Harne
 </div>
 
 ---
+layout: center
+---
+
+# Bonus: Engineering-Schichten
+
+<div class="text-lg opacity-70 mt-4">
+
+Prompt, Context, Harness — **und vielleicht Evolution.**
+
+</div>
+
+<div class="text-sm opacity-50 mt-8">
+
+Ein Überblick über die Engineering-Disziplinen, die sich um LLM-Agenten gebildet haben.
+
+</div>
+
+---
+
+# Vier Schichten. Ein Spektrum.
+
+<EngineeringSchichten />
+
+---
 layout: end
 ---
 
