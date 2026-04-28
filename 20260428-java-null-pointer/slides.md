@@ -1,0 +1,942 @@
+---
+theme: default
+title: "Java Null-Sicherheit 2026"
+info: |
+  Pragmatischer Stack für Spring Boot 4 — JSpecify, NullAway, Lombok, JPA.
+  Plus: Was kommt nativ? Wie machen es Kotlin & andere JVM-Sprachen?
+monaco: true
+mdc: true
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
+---
+
+# Java Null-Sicherheit 2026
+
+Pragmatischer Stack für Spring Boot 4 — und wo es hingeht
+
+<div class="mt-8 text-sm opacity-60">
+
+Zielgruppe: Java-/Spring-Boot-4-Entwicklerinnen und -Entwickler, die NPEs satt haben
+
+</div>
+
+<!--
+- Stand: April 2026.
+- Wir reden Klartext: Trade-offs werden benannt, nicht weichgespült.
+- Der Vortrag hat 4 Teile: Pragmatischer 2026-Stack, Spring-Specifics, JVM-Sprachen-Vergleich, Bonus-Tabellen.
+-->
+
+---
+layout: center
+---
+
+# TL;DR
+
+<div class="text-left mt-8 max-w-3xl mx-auto space-y-4">
+
+1. **`Optional<T>` ist Rückgabetyp. Punkt.** Kein Feld, kein Parameter, kein Generic-Element.
+2. **JSpecify 1.0 + `@NullMarked` + NullAway** ist der pragmatische 2026-Standard. Spring Boot 4 (Nov 2025) liefert es ab Werk.
+3. **Native `String!`/`String?`** bleibt mehrere LTS-Zyklen entfernt — JEP 8303099 ist Draft, realistisch frühestens **JDK 31** stable.
+4. **Records ersetzen `@Data`/`@Value`**, nicht `@Builder`/`@Slf4j`. Lombok-Migration ist partiell, nicht binär.
+
+</div>
+
+<!--
+- Wer JSR-305 oder org.springframework.lang.* heute neu einführt, verliert Zeit.
+- Wer auf JEP 8303099 wartet, wartet falsch.
+-->
+
+---
+
+# Annotation-Chaos: Wie wir hierhin gekommen sind
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Das Problem
+
+Über 15 Jahre haben Hersteller eigene Null-Annotationen gebaut — alle mit subtil verschiedener Semantik:
+
+- **JSR-305** (2006) nie standardisiert, 2012 abgebrochen
+- **Spring**, **JetBrains**, **Eclipse**, **Checker FW**, **Lombok** — jede Lösung im eigenen Silo
+- Kein Tool versteht alle Varianten gleich
+- Generics-Annotationen (`List<@Nullable T>`) inkompatibel oder fehlend
+
+</div>
+<div>
+
+### Der Konsolidierungspunkt
+
+**JSpecify 1.0** (August 2024) — getragen von **Google, Oracle, JetBrains, Broadcom/VMware (Spring), Sonar, Uber**:
+
+- Vier Annotationen, klare Type-Use-Semantik
+- Kein Checker — nur die Spezifikation
+- Spring Framework 7 / Boot 4: vollständig adoptiert
+- Kotlin 2.x liest JSpecify nativ
+
+</div>
+</div>
+
+<!--
+- 2024 ist der erste echte Konsens. Davor: jeder gegen jeden.
+- Kein Tool unter den Hauptanbietern, das JSpecify nicht versteht.
+-->
+
+---
+
+# Quellen-Übersicht: Welche Annotationen sind aktiv?
+
+<AnnotationCompatTable variant="annotations" />
+
+<div class="mt-4 text-sm opacity-70">
+
+OpenRewrite-Recipes (`org.openrewrite.java.jspecify.MigrateToJspecify`) automatisieren ~80 % der Migration.
+
+</div>
+
+<!--
+- "Bridge" = nur sinnvoll für die Sprache, mit der das Tool kommt (z.B. JetBrains-Annotationen für Kotlin-Compiler-Hints).
+- JetBrains-Annotationen werden ab IntelliJ 2025.3 zugunsten JSpecify deprecated.
+-->
+
+---
+
+# JSpecify in vier Annotationen
+
+```java
+import org.jspecify.annotations.*;
+
+@NullMarked                       // Default für das ganze Package
+package com.example.service;
+```
+
+| Annotation      | Wirkung                                                              |
+| --------------- | -------------------------------------------------------------------- |
+| `@NullMarked`   | Scope: Default = **non-null** in Modul / Package / Class             |
+| `@Nullable`     | Type-Use: dieser Type Use **darf** `null` sein                       |
+| `@NonNull`      | Type-Use: dieser Type Use schließt `null` **aus** (selten gebraucht) |
+| `@NullUnmarked` | Lokale Aufhebung von `@NullMarked` (z. B. für Test-Klassen)          |
+
+<div class="mt-4 text-sm opacity-70">
+
+**Idiomatik 2026:** `@NullMarked` aufs Package. Innerhalb explizit nur das Nullable markieren.
+
+</div>
+
+<!--
+- "Type Use" heißt: die Annotation gehört zum Typ, nicht zum Element. Das ist der Schlüssel für Generics.
+- @NonNull braucht man kaum, weil @NullMarked das schon impliziert.
+-->
+
+---
+
+# Type-Use ist die Pointe
+
+```java {monaco}
+// Liste, deren *Elemente* null sein dürfen
+List<@Nullable String> tags;
+
+// Das ganze List-Feld kann null sein, Elemente non-null
+@Nullable List<String> maybeNoTagsAtAll;
+
+// Beides erlaubt
+@Nullable List<@Nullable String> mostPermissive;
+
+// JSR-305 konnte das nicht ausdrücken — Hauptgrund für 6 Jahre Spec-Arbeit
+```
+
+<div class="mt-4 text-sm opacity-70">
+
+`Map<@NonNull K, @Nullable V>` — Wert darf null sein, Key nicht. **Diese Präzision** war die JSR-305-Lücke.
+
+</div>
+
+<!--
+- Wer JSpecify nutzt, sollte hier 2-3 Minuten verbringen — das ist der Mehrwert gegenüber JSR-305.
+- Demo-Effekt: NullAway-Fehlermeldungen zeigen exakt diese Position.
+-->
+
+---
+
+# `@NullMarked` aufs Package — Opt-out statt Opt-in
+
+````md magic-move {lines: true}
+```java
+// src/main/java/com/example/service/OrderService.java
+public class OrderService {
+    public Order place(@Nonnull Customer c, @Nullable PromoCode p) { ... }
+    public Optional<Order> findById(@Nonnull String id) { ... }
+    public List<@Nonnull Order> all() { ... }
+}
+// Jede Methode wiederholt @Nonnull. Vergessen = stille Lücke.
+```
+
+```java
+// src/main/java/com/example/service/package-info.java
+@NullMarked
+package com.example.service;
+import org.jspecify.annotations.NullMarked;
+```
+
+```java
+// src/main/java/com/example/service/OrderService.java
+public class OrderService {
+    public Order place(Customer c, @Nullable PromoCode p) { ... }
+    public Optional<Order> findById(String id) { ... }
+    public List<Order> all() { ... }
+}
+// Default ist non-null. Nur das Nullable wird markiert.
+```
+````
+
+<!--
+- Magic-move zeigt: dieselbe API, weniger Lärm, vergessen unmöglich.
+- @NullMarked auf Modul-Ebene geht auch (module-info.java) — für Multi-Modul-Projekte sinnvoll.
+-->
+
+---
+
+# JSpecify ≠ Checker
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+JSpecify ist **nur** die Sprache:
+
+- Das `org.jspecify:jspecify:1.0.0` JAR
+- Die Spezifikation (was `@Nullable T` semantisch bedeutet)
+
+**Wer prüft das?**
+
+- **NullAway** — pragmatisch, schnell, CI-tauglich
+- **Checker Framework** — formal sound, langsamer Compile
+- **IntelliJ IDEA** — best-effort, aber sofortiges Feedback in der IDE
+- **Eclipse JDT** — solide, Eclipse-spezifisch
+
+</div>
+<div>
+
+### Konsequenz für die Praxis
+
+```bash
+# Build bricht bei Null-Verstoß
+./gradlew build
+> Task :compileJava FAILED
+NullAway: dereferenced expression
+  promo may be null
+  at OrderService.java:42
+```
+
+Null-Sicherheit wird **Build-Property**, nicht Code-Review-Diskussion.
+
+</div>
+</div>
+
+<!--
+- Wichtig: NullAway läuft als ErrorProne-Plugin im Compile.
+- Checker Framework ist 5–20× langsamer — nur einsetzen, wo Soundness formal nötig ist (Sicherheit, Krypto).
+-->
+
+---
+layout: quote
+---
+
+# „Optional was added with a clear intent: it was meant as a return type for methods that need to communicate clearly that they may have no result."
+
+<div class="mt-4 text-sm opacity-70">— Brian Goetz, Java Language Architect, Stack Overflow 2014</div>
+
+<!--
+- Goetz hat das später 2018 nochmal explizit bestätigt.
+- "Wert für Abwesenheit" — ein identitätsfreier Wrapper.
+-->
+
+---
+
+# `Optional<T>` — Anti-Patterns konkret
+
+````md magic-move {lines: true}
+```java
+// ❌ Optional als Feld: nicht serialisierbar, JPA-feindlich
+class User {
+    private Optional<String> email;
+}
+
+// ❌ Optional als Parameter: Aufrufer kann immer noch null übergeben
+public void register(User u, Optional<String> referral) { ... }
+
+// ❌ Optional in Collections: leere Liste ist die richtige Antwort
+List<Optional<String>> tags;
+Optional<List<Order>> orders;
+
+// ❌ get() ohne Refinement: NoSuchElementException statt NPE — nichts gewonnen
+String e = findById(id).get();
+```
+
+```java
+// ✅ Optional NUR als Rückgabetyp
+class User {
+    private @Nullable String email;
+    public Optional<String> email() {
+        return Optional.ofNullable(email);
+    }
+}
+
+// ✅ Parameter-Overload statt Optional
+public void register(User u) { register(u, null); }
+public void register(User u, @Nullable String referral) { ... }
+
+// ✅ List<@Nullable T> bzw. leere Liste
+List<@Nullable String> tags;
+List<Order> orders;   // leere Liste statt Optional.empty()
+
+// ✅ Funktionale Komposition
+findById(id)
+    .map(User::email)
+    .filter(Email::isVerified)
+    .orElseThrow(() -> new UserNotFoundException(id));
+```
+````
+
+<!--
+- Brian Goetz hätte Optional am liebsten primitiv-only, ohne Box-Variante.
+- Mit JEP 401 wird Optional eine value class — Heap-Overhead verschwindet.
+-->
+
+---
+
+# Trade-offs `Optional<T>` — was gilt 2026
+
+| Aspekt                          | Status                                                   |
+| ------------------------------- | -------------------------------------------------------- |
+| Compile-Time-Garantie           | ✅ Typsystem zwingt explizite Behandlung                 |
+| Runtime-Overhead                | ⚠️ ~16–32 Byte Heap pro `Optional`, in Hot Paths messbar |
+| Serialisierbar                  | ❌ `Serializable` nicht implementiert                    |
+| JPA / Jackson als Feldtyp       | ❌ de facto nein                                         |
+| Funktionale Komposition         | ✅ exzellent (`map`, `flatMap`, `filter`)                |
+| Primitives (`OptionalInt` etc.) | ⚠️ umständlich                                           |
+| **JEP 401 (Value Classes)**     | 🔮 löst Heap-Overhead — preview ab JDK 27/28             |
+
+<div class="mt-4 text-sm opacity-70">
+
+**Komplementär zu JSpecify:** `Optional<T>` als Rückgabetyp, `@Nullable T` als Parameter / Feld.
+
+</div>
+
+<!--
+- "16-32 Byte" ist die Größenordnung im Heap mit Object-Header.
+- Mit Skalarisierung im JIT ist der Overhead in Hot Paths schon heute oft weg.
+-->
+
+---
+
+# Build-Setup — Gradle (Kotlin DSL)
+
+<GradleBuildSetup />
+
+<!--
+- OnlyNullMarked=true ist der Schlüssel: schrittweise Einführung pro Package, ohne den ganzen Codebase auf einmal zu fixen.
+- JSpecifyMode=true aktiviert die Generics-Präzision.
+-->
+
+---
+
+# Build-Setup — Maven
+
+<MavenBuildSetup />
+
+<!--
+- Spring-Initializr generiert das nicht out of the box; muss manuell rein.
+- Spring Boot 4 Parent-POM definiert die Versionen — nur die NullAway-Version selbst pinnen.
+-->
+
+---
+
+# Lombok — Mythen vs. Realität
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+### Mythen ❌
+
+- „Lombok ist für NullAway unsichtbar"
+- „Lombok wirft `IllegalArgument`, nicht NPE"
+- „`@Builder` ist mit Null-Sicherheit unverträglich"
+- „Lombok und Records schließen sich aus"
+
+</div>
+<div>
+
+### Fakten ✅
+
+- NullAway sieht generierten Code via `LombokHandler`
+- **Default seit 1.16.20: `NullPointerException`**
+- `@Builder` braucht Wrapper-Pattern, das ist kein Typ-Problem
+- **Records** ersetzen `@Data`/`@Value` — `@Slf4j`/`@SneakyThrows` bleiben
+
+</div>
+</div>
+
+<div class="mt-4 text-sm opacity-70">
+
+**Voraussetzung:** korrekte `lombok.config`. Ohne sie bricht die Tooling-Integration.
+
+</div>
+
+<!--
+- Lombok kennt @NullMarked noch nicht (Issue #3861, accepted), aber funktioniert über addNullAnnotations=jspecify.
+- Wer heute Greenfield startet: Records, nicht @Data.
+-->
+
+---
+
+# `lombok.config` — leer vs. korrekt
+
+````md magic-move {lines: true}
+```properties
+# lombok.config — Default
+# (leer)
+```
+
+```properties
+# lombok.config — JSpecify-aware
+config.stopBubbling = true
+
+lombok.addLombokGeneratedAnnotation = true
+lombok.addNullAnnotations = jspecify
+
+lombok.nonNull.exceptionType = JDK
+# generiert java.util.Objects.requireNonNull(...) statt Lombok-eigener Klasse
+```
+
+```java
+// Resultat im generierten Code
+@NullMarked
+@Data
+public class User {
+    private final String id;
+    private final @Nullable String email;
+}
+
+// Lombok generiert (vereinfacht):
+public User(String id, @Nullable String email) {
+    this.id = Objects.requireNonNull(id, "id is marked non-null but is null");
+    this.email = email;
+}
+public @Nullable String getEmail() { return email; }
+```
+````
+
+<!--
+- addLombokGeneratedAnnotation: NullAway respektiert generierten Code.
+- exceptionType=JDK: keine Lombok-Runtime-Klasse mehr nötig.
+- Für JPA-Entities lieber @Getter/@Setter statt @Data — equals/hashCode mit JPA-Reflection ist eine eigene Falle.
+-->
+
+---
+
+# Spring Boot 4 — Was 2025/2026 dazu kam
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Spring Framework 7 (Nov 2025)
+
+- **Alle** Public-APIs `@NullMarked`
+- `org.springframework.lang.@Nullable` deprecated
+- Reactor / Spring Data / Spring Security: rolling adoption
+- Kotlin 2.x: Spring-APIs sind **nativ nullsafe** sichtbar
+
+### Migration-Recipe (OpenRewrite)
+
+```bash
+mvn rewrite:run \
+  -Drewrite.activeRecipes=\
+    org.openrewrite.java.jspecify.MigrateToJspecify
+```
+
+</div>
+<div>
+
+### Spring Boot 4 Highlights
+
+- Liefert JSpecify im Parent-POM
+- Auto-Konfiguration ist `@NullMarked`
+- ConfigurationProperties via Records empfohlen
+- Reactor Mono/Flux: wenn leer = `Mono.empty()`, **nicht** `Mono<Optional<T>>`
+
+### Kompatibilitäts-Snapshot
+
+| Komponente      | JSpecify-Status |
+| --------------- | --------------- |
+| Spring Core     | ✅ vollständig  |
+| Spring Data     | 🟡 in Arbeit    |
+| Spring Security | 🟡 in Arbeit    |
+| Reactor         | ✅              |
+
+</div>
+</div>
+
+<!--
+- Boot 4 = Framework 7 + Web-Stacks + Auto-Config.
+- "in Arbeit" heißt: Public-API-Pakete sind annotiert, interne Pakete folgen.
+-->
+
+---
+
+# Service-Layer-Beispiel
+
+```java {monaco} {height: '320px'}
+package com.example.shop.order;
+
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Service;
+
+@NullMarked
+@Service
+public class OrderService {
+
+    private final OrderRepository repo;
+    private final PaymentGateway gateway;
+
+    public OrderService(OrderRepository repo, PaymentGateway gateway) {
+        this.repo = repo;
+        this.gateway = gateway;
+    }
+
+    public Optional<Order> findById(String id) {
+        return repo.findById(id);                 // Optional ist Rückgabe
+    }
+
+    public Order place(Customer customer, @Nullable PromoCode promo) {
+        var order = new Order(customer);
+        if (promo != null) order.applyPromo(promo);
+        gateway.charge(order);
+        return order;
+    }
+}
+```
+
+<!--
+- @NullMarked auf der Klasse oder package-info.java.
+- Constructor-Injection: keine Optional-Felder, kein @Nullable für Pflicht-Beans.
+- promo darf null sein → explizit annotiert.
+-->
+
+---
+
+# Spring-Boot-4-Pitfalls
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Lazy-init und `@Autowired`-Felder
+
+```java
+@SuppressWarnings("NullAway.Init")
+@Autowired
+private @Nullable OptionalCache cache;
+```
+
+- Field-Injection ist `null` zwischen Konstruktor und Spring-Init
+- NullAway erkennt das nicht — `Init`-Suppress nötig
+- **Besser:** Constructor-Injection benutzen
+
+### `@ConfigurationProperties`
+
+```java
+@ConfigurationProperties("app.shop")
+public record ShopConfig(
+    String tenantId,
+    @Nullable String fallbackLocale,
+    Duration timeout
+) {}
+```
+
+</div>
+<div>
+
+### JPA-Entities ehrlich annotieren
+
+```java
+@NullMarked
+@Entity
+public class Customer {
+    @Id
+    private @Nullable Long id;          // Reflection setzt das
+
+    @Column(nullable = false)
+    private String email;
+
+    @ManyToOne
+    private @Nullable Address address;
+}
+```
+
+- Reflection-Init = `null` möglich
+- `@Column(nullable=false)` ≠ Java-Typ-Garantie
+- Records oft besser geeignet (immutable, kein Init-Problem)
+
+</div>
+</div>
+
+<!--
+- @SuppressWarnings("NullAway.Init") nicht missbrauchen — nur dort, wo Spring/JPA reflektion-induziert null setzt.
+- Records + @ConstructorBinding: Default-Werte mit Constructor-Defaults oder Compact Constructor.
+-->
+
+---
+
+# Testing — Mockito skipped Constructor
+
+```java {monaco} {height: '300px'}
+@NullMarked
+public class OrderService {
+    private final PaymentGateway gateway;
+    public OrderService(PaymentGateway gateway) {
+        this.gateway = Objects.requireNonNull(gateway);  // wird im Mock nicht aufgerufen
+    }
+    public void process(Order o) { gateway.charge(o); }
+}
+
+// In Tests:
+class OrderServiceTest {
+    @Test
+    void mockBypassesConstructor() {
+        var svc = mock(OrderService.class);
+        // svc.gateway ist null, weil Mockito den Constructor überspringt!
+    }
+
+    @Test
+    void useSmartNulls() {
+        var svc = mock(OrderService.class, RETURNS_SMART_NULLS);
+        // Smart-null wirft eine SmartNullPointerException mit Stacktrace
+    }
+}
+```
+
+<div class="mt-4 text-sm opacity-70">
+
+**Pragma:** `@NullUnmarked` für Test-Klassen, NullAway in Tests auf `WARN` statt `ERROR` setzen.
+
+</div>
+
+<!--
+- Mockito v5+ unterstützt RETURNS_SMART_NULLS als Default per Settings.
+- AssertJ 3.24+ versteht JSpecify nativ — assertThat(...).isNotNull() ist nicht mehr nötig.
+-->
+
+---
+layout: section
+---
+
+# Andere JVM-Sprachen
+
+Wie Kotlin, Scala & Co. das gleiche Problem lösen
+
+---
+
+# Sprach-Mechanismen im Vergleich
+
+<AnnotationCompatTable variant="languages" />
+
+<div class="mt-6 text-sm opacity-70">
+
+**Take-away:** Kotlin hat das stärkste statische Typsystem für Null. Java holt mit Annotationen nach. Native Sprach-Lösung kommt — aber dauert.
+
+</div>
+
+<!--
+- Scala 3 -Yexplicit-nulls ist opt-in, in der Praxis selten aktiviert.
+- Clojure NPE-Fragen treten nur an Java-Boundaries auf — innerhalb der Sprache ist nil ein konsistenter Wert.
+-->
+
+---
+
+# Kotlin im direkten Vergleich
+
+<JavaKotlinCompare />
+
+<div class="mt-2 text-sm opacity-70 grid grid-cols-2 gap-4">
+<div>
+
+- `@Nullable` ist Annotation, Compile-Tool prüft
+- Optional als „leeres Ergebnis"-Vehikel
+- Boilerplate: explizite Null-Checks
+
+</div>
+<div>
+
+- `?` ist Teil des **Typsystems**, nicht Annotation
+- `?.`, `?:`, `!!` sind Sprach-Konstrukte
+- Smart-Casts: nach `if (x != null)` ist x non-null
+
+</div>
+</div>
+
+<!--
+- Beide Stile sind heute valide. Kotlin ist eleganter, Java ist mit JSpecify nicht mehr weit weg.
+- Auch wichtig: Optional<T> in Kotlin praktisch unbenutzt — T? reicht.
+-->
+
+---
+
+# Java ↔ Kotlin Interop mit JSpecify
+
+<KotlinInteropDiagram />
+
+<div class="mt-2 text-sm opacity-70">
+
+**Konsequenz:** Wer Java-Bibliotheken für Kotlin-Konsumenten baut, sollte `@NullMarked` setzen — Kotlin 2.x liest das automatisch.
+
+</div>
+
+<!--
+- Platform-Type T! ist Kotlins "weiß-ich-nicht" — er checkt nicht und der Aufrufer kann hineingreifen.
+- Kotlin 2.0 (Mai 2024) hat JSpecify-Support standardmäßig aktiviert.
+- Vor JSpecify: JetBrains-Annotationen am Java-Code waren der einzige Weg — heute überholt.
+-->
+
+---
+layout: section
+---
+
+# Was kommt nativ?
+
+JEPs, Roadmap und Realität
+
+---
+
+# Die vier relevanten JEPs
+
+<AnnotationCompatTable variant="jeps" />
+
+<div class="mt-4 text-sm opacity-70">
+
+JEP 8303099 ist Draft **ohne Target-Release**. „Frühestens" ist Lese-Hinweis: das ist die optimistische Lesart der derzeitigen OpenJDK-Mailinglisten.
+
+</div>
+
+<!--
+- JEP 401 wird VOR JEP 8303099 stabilisieren — Value Classes brauchen kein null-restriction-Syntax.
+- JEP 8316779 ist abhängig von 8303099 — es gibt wenig Sinn, isoliert zu landen.
+-->
+
+---
+
+# JDK-Roadmap & Realität
+
+<JepTimeline />
+
+<div class="mt-4 text-sm opacity-70 italic">
+
+> „Since this feature is still in the proposal stage and will likely take several years to materialize, JSpecify and NullAway currently represent the most practical and powerful way to improve the stability of Java applications." — Sébastien Deleuze, Spring Team, März 2025
+
+</div>
+
+<!--
+- LTS-Zyklen sind 2 Jahre — JDK 25 (2025), 29 (2027), 31 (2029).
+- Wer heute auf 8303099 wartet: 2-3 LTS-Zyklen Wartezeit.
+-->
+
+---
+
+# Geplante Syntax — Vorschau
+
+```java
+// JEP 8303099 (Draft) — kann sich noch ändern
+String!  s1 = "x";       // null-restricted: Compiler verbietet null
+String?  s2 = null;      // explizit nullable
+String   s3 = readFromUnannotatedApi();  // unmarked: backward-compat
+
+List<String!> allNonNull;
+List<String?> mayHaveNulls;
+
+// Migration JSpecify → native Marker ist mechanisch (gleiche Semantik)
+@Nullable String x;       // 2026
+String? x;                // 2029+
+```
+
+<div class="mt-4 text-sm opacity-70">
+
+**Mechanische Migration:** OpenRewrite (oder Nachfolger) wird `@Nullable T` → `T?` automatisieren. Der Aufwand „heute" und „später" ist vergleichbar — und „heute" gibt es schon Build-Sicherheit.
+
+</div>
+
+<!--
+- Syntax kann sich vor Final ändern (?! oder !? oder anderes Sigil).
+- JEP 8316779 ist die Value-Class-Variante — gleiches Konzept, andere Semantik (Identity).
+-->
+
+---
+layout: section
+---
+
+# Bonus
+
+Vergleichstabellen & Kompatibilitätsmatrizen
+
+---
+
+# Static Analyzer im Vergleich
+
+<AnnotationCompatTable variant="analyzers" />
+
+<div class="mt-4 text-sm opacity-70">
+
+**2026-Konsens:** NullAway in CI, IntelliJ in der IDE. Checker FW nur, wo formale Soundness gefordert ist.
+
+</div>
+
+<!--
+- "Praktisch" bei NullAway heißt: pragmatische Heuristiken, keine formale Garantie für jede Code-Pfad.
+- Eclipse JDT braucht für JSpecify manuelle Konfiguration über externalAnnotations.
+-->
+
+---
+
+# Spring-Boot-Kompatibilitätsmatrix
+
+<AnnotationCompatTable variant="springboot" />
+
+<div class="mt-4 text-sm opacity-70">
+
+Boot 2.x ist seit Mai 2025 Out-of-Support. Boot 3.x bekommt JSpecify-Adoption nicht mehr in den Hauptzweig — nur Boot 4 ist „native".
+
+</div>
+
+<!--
+- Boot 3.x kann JSpecify-Code konsumieren — die org.springframework.lang.* APIs sind nicht inkompatibel.
+- Spring Initializr erzeugt für Boot 4 inzwischen JSpecify-Imports im pom.xml.
+-->
+
+---
+
+# Migrations-Cheatsheet
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Annotations-Migration
+
+| Von                          | Nach                                    |
+| ---------------------------- | --------------------------------------- |
+| `javax.annotation.@Nonnull`  | `org.jspecify.@NullMarked` (package)    |
+| `javax.annotation.@Nullable` | `org.jspecify.@Nullable`                |
+| `org.springframework.lang.*` | `org.jspecify.*`                        |
+| `org.jetbrains.@NotNull`     | `org.jspecify.@NullMarked` (impliziert) |
+| `lombok.@NonNull` (Runtime)  | bleiben — komplementär                  |
+
+### Lombok-Strategie
+
+| Annotation                            | Heute                        |
+| ------------------------------------- | ---------------------------- |
+| `@Data`, `@Value`                     | → Records                    |
+| `@Builder`                            | bleibt (mit Wrapper-Pattern) |
+| `@Slf4j`, `@SneakyThrows`, `@Cleanup` | bleiben                      |
+| `@EqualsAndHashCode` für JPA          | **vermeiden**                |
+
+</div>
+<div>
+
+### Code-Pattern-Migration
+
+| Von                           | Nach                         |
+| ----------------------------- | ---------------------------- |
+| `Optional<T>` als Feld        | `@Nullable T`                |
+| `Optional<T>` als Parameter   | Method-Overload              |
+| `Optional<List<T>>`           | leere `List<T>`              |
+| `obj.get()`                   | `obj.orElseThrow(...)`       |
+| `if (obj.isPresent())`        | `obj.ifPresent(...)`         |
+| `List<String>` als API-Return | `List<String>` (nie `null`!) |
+
+### Null-Frei-Heuristik
+
+- **Collections:** leer statt null
+- **Strings:** leer (`""`) statt null, wenn semantisch passt
+- **Optional:** ausschließlich Rückgabetyp
+- **Defaults:** Constructor-Validation mit `Objects.requireNonNull`
+
+</div>
+</div>
+
+<!--
+- Wichtig: nicht alle Lombok-Annotations sind böse. Records lösen 70% des Use-Cases.
+- @EqualsAndHashCode für JPA-Entities ist eine Falle — Hibernate-Reflection setzt id auf null, dann ungleich gleich.
+-->
+
+---
+layout: center
+---
+
+# Action Plan — Greenfield 2026
+
+<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
+
+1. **JSpecify 1.0.0** als einzige Annotation-Quelle in `pom.xml` / `build.gradle.kts`
+2. **`@NullMarked`** auf jedes `package-info.java`
+3. **NullAway + ErrorProne** im Build, `OnlyNullMarked=true`, `JSpecifyMode=true`, **`error("NullAway")`**
+4. **Records** für Datenklassen (nicht `@Data`/`@Value`)
+5. **`Optional<T>`** ausschließlich als Rückgabetyp
+6. **IntelliJ IDEA 2025.3+** für sofortiges IDE-Feedback
+7. **Spring Boot 4** mit Constructor-Injection — keine `@Autowired`-Felder
+
+</div>
+
+<!--
+- Wer einen dieser Punkte überspringt, verliert den Großteil der Sicherheit.
+- Greenfield ist einfach. Brownfield ist die eigentliche Arbeit.
+-->
+
+---
+layout: center
+---
+
+# Action Plan — Brownfield (Spring Boot 3 → 4)
+
+<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
+
+1. **Upgrade auf Spring Boot 4** (eigener PR, ohne Null-Migration mischen)
+2. **OpenRewrite-Recipes** für 80 % der Annotation-Migration
+3. **Pro Package**: `@NullMarked` setzen → NullAway-Output ansehen → fixen → Warnung auf Error
+4. **Lombok schrittweise zurückbauen**: `@Data` → Records, `@Slf4j` bleibt
+5. **JPA-Entities**: `@Getter`/`@Setter` reichen, `@EqualsAndHashCode` raus
+6. **`@SuppressWarnings("NullAway.Init")`** akzeptieren — aber nur an Spring-Lifecycle-Stellen
+
+</div>
+
+<div class="mt-4 text-sm opacity-70 text-center">
+
+**Was NICHT tun:** kein neuer JSR-305-Code · kein `Optional` als Feld/Parameter · kein `@Data`/`@Value` mehr · kein Checker FW „weil es sauberer wirkt"
+
+</div>
+
+<!--
+- Schritt 3 ist der eigentliche Aufwand. Pro Package-Wave 0,5–2 Tage je nach Größe.
+- Schritt 1 vor Schritt 2 — Boot-Upgrade-PRs reviewen sich anders als Null-Migration-PRs.
+-->
+
+---
+layout: end
+---
+
+# Danke
+
+<div class="mt-6 text-base opacity-80">
+
+Fragen? Diskussion?
+
+</div>
+
+<div class="mt-12 text-xs opacity-50">
+
+Quellen: jspecify.dev · github.com/uber/NullAway · spring.io/blog · openjdk.org/jeps/8303099 · openjdk.org/jeps/401
+
+</div>
+
+<!--
+- Backup-Folien (Bonus-Sektion) für Q&A bereithalten — wer nach JEP-Detail fragt, will die Roadmap sehen.
+-->
