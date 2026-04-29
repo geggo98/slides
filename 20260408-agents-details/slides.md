@@ -5,6 +5,7 @@ info: |
   Architektur, Gemeinsamkeiten und Token-Verbrauch.
   Deep-Dive in Agent-Loop, Tool-Use, Context Management und die Erkenntnisse aus dem Claude-Code-Source-Leak.
 monaco: true
+hideInToc: true
 ---
 
 # Wie funktioniert ein Coding-Agent?
@@ -18,7 +19,22 @@ Zielgruppe: Software-Entwickler
 </div>
 
 ---
+hideInToc: true
+---
+
+# Inhalt
+
+<Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
+
+---
+layout: section
+---
+
+# 1. Grundlagen
+
+---
 layout: center
+hideInToc: true
 ---
 
 # Eine While-Schleife — das ist alles.
@@ -37,6 +53,8 @@ Kein Classifier, kein Router, keine State-Machine — **das Modell entscheidet**
 </div>
 
 ---
+hideInToc: true
+---
 
 # Der Agent-Loop
 
@@ -51,11 +69,21 @@ Kein Classifier, kein Router, keine State-Machine — **das Modell entscheidet**
 </div>
 
 ---
+hideInToc: true
+---
 
 # Agent-Loop im Detail
 
 <AgentSimulation />
 
+---
+layout: section
+---
+
+# 2. Tool-Use
+
+---
+hideInToc: true
 ---
 
 # Tool-Use: Wie funktionieren Tool-Calls?
@@ -89,11 +117,15 @@ Kein Classifier, kein Router, keine State-Machine — **das Modell entscheidet**
 </div>
 
 ---
+hideInToc: true
+---
 
 # Tool-Definitionen: Provider-Vergleich
 
 <ToolDefinitions />
 
+---
+hideInToc: true
 ---
 
 # Wie viele Tools braucht ein Agent?
@@ -107,6 +139,8 @@ Pi's 4 Tools (Read/Write/Edit/Bash) genügen — weil das Modell weiß, was `rg`
 <ToolCountBar />
 
 ---
+hideInToc: true
+---
 
 # Tool-Selection-Accuracy
 
@@ -118,6 +152,14 @@ Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** (Jan 2026
 
 <ToolAccuracyLine />
 
+---
+layout: section
+---
+
+# 3. Context Management
+
+---
+hideInToc: true
 ---
 
 # Context Management
@@ -154,6 +196,8 @@ Eine produktive Session füllt das **schnell** — Datei-Inhalte, Tool-Ergebniss
 </div>
 </div>
 
+---
+hideInToc: true
 ---
 
 # Context Compaction
@@ -197,6 +241,8 @@ Re-inject kürzlich gelesene Dateien (≤5K/Datei). Budget auf 50K zurück.
 </div>
 
 ---
+hideInToc: true
+---
 
 # System Prompts: Statisch vs. Dynamisch
 
@@ -235,6 +281,14 @@ Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antw
 </div>
 
 ---
+layout: section
+---
+
+# 4. Token-Ökonomie
+
+---
+hideInToc: true
+---
 
 # Token-Ökonomie: Wohin gehen die Tokens?
 
@@ -255,6 +309,7 @@ MCP-Server saugen **17K–126K Tokens** bevor der erste Tool-Call passiert.
 
 ---
 clicks: 1
+hideInToc: true
 ---
 
 # MCP Token-Bloat
@@ -268,6 +323,8 @@ Tool-Definitionen werden bei JEDEM Request injiziert — das ist der direkte Gru
 <McpTokenBar />
 
 ---
+hideInToc: true
+---
 
 # Skills vs MCP: Faktor 40–1100×
 
@@ -280,6 +337,8 @@ Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem
 <SkillsVsMcpLine />
 
 ---
+hideInToc: true
+---
 
 # MCP Token-Bloat: Wer löst das Problem?
 
@@ -291,6 +350,8 @@ Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manu
 
 <McpOptTable />
 
+---
+hideInToc: true
 ---
 
 # Claude Code ToolSearch: State of the Art
@@ -309,6 +370,14 @@ Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) ·
 
 </div>
 
+---
+layout: section
+---
+
+# 5. Cache & Sessions
+
+---
+hideInToc: true
 ---
 
 # KV-Cache: 90% Discount
@@ -339,6 +408,8 @@ Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) ·
 </div>
 </div>
 
+---
+hideInToc: true
 ---
 
 # Das Session-Resume-Problem
@@ -374,6 +445,8 @@ Google verlangt **Storage-Kosten**: $1–4.50/MTok/h. Min. 32.768 Tokens.
 </div>
 </div>
 
+---
+hideInToc: true
 ---
 
 # Claude Code CLI: Drei Modi, drei Cache-Profile
@@ -427,6 +500,14 @@ Stand verifiziert: 29.04.2026 — Anthropic schaltet Cache-Defaults serverseitig
 </div>
 
 ---
+layout: section
+---
+
+# 6. Sandbox & Sub-Agents
+
+---
+hideInToc: true
+---
 
 # Sandboxing im Vergleich
 
@@ -443,6 +524,8 @@ Bekannte Schwäche Claude Code: Bei >50 Sub-Commands in einer Pipeline fällt di
 
 </div>
 
+---
+hideInToc: true
 ---
 
 # Sub-Agents
@@ -475,6 +558,14 @@ Stattdessen: Spawn pi-Instanzen via tmux.
 </div>
 
 ---
+layout: section
+---
+
+# 7. Memory
+
+---
+hideInToc: true
+---
 
 # Memory-Systeme
 
@@ -500,6 +591,8 @@ Stattdessen: Spawn pi-Instanzen via tmux.
 </div>
 
 ---
+hideInToc: true
+---
 
 # Memory: Einfach schlägt komplex
 
@@ -511,6 +604,14 @@ Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, ho
 
 <MemoryScatter />
 
+---
+layout: section
+---
+
+# 8. Architektur-Vergleich
+
+---
+hideInToc: true
 ---
 
 # Architektur-Radar
@@ -524,11 +625,15 @@ Sechs Harnesses, sechs Philosophien. Klick in der Legende zum Ein-/Ausblenden. H
 <RadarCompare />
 
 ---
+hideInToc: true
+---
 
 # Harness-Vergleich
 
 <HarnessTable />
 
+---
+hideInToc: true
 ---
 
 # Harness vs. Framework vs. Modell
@@ -571,6 +676,7 @@ Anthropic warnt: _"Frameworks create extra layers that obscure prompts and respo
 
 ---
 layout: center
+hideInToc: true
 ---
 
 # Die Bitter Lesson
@@ -590,6 +696,14 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 </div>
 
 ---
+layout: section
+---
+
+# 9. Source-Leak & Brand
+
+---
+hideInToc: true
+---
 
 # Source Leak: Highlights
 
@@ -603,6 +717,7 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 
 ---
 clicks: 1
+hideInToc: true
 ---
 
 # Source Leak: Codebase-Größen
@@ -617,6 +732,8 @@ clicks: 1
 <LeakModuleBar />
 
 ---
+hideInToc: true
+---
 
 # Taxonomie: Brand-Verwirrung
 
@@ -628,6 +745,14 @@ clicks: 1
 
 <TaxonomyTreemap />
 
+---
+layout: section
+---
+
+# 10. Takeaways
+
+---
+hideInToc: true
 ---
 
 # Takeaways
@@ -653,7 +778,7 @@ RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert. Die Harne
 </div>
 
 ---
-layout: center
+layout: section
 ---
 
 # Bonus: Engineering-Schichten
@@ -671,6 +796,8 @@ Ein Überblick über die Engineering-Disziplinen, die sich um LLM-Agenten gebild
 </div>
 
 ---
+hideInToc: true
+---
 
 # Vier Schichten. Ein Spektrum.
 
@@ -678,6 +805,7 @@ Ein Überblick über die Engineering-Disziplinen, die sich um LLM-Agenten gebild
 
 ---
 layout: end
+hideInToc: true
 ---
 
 # Danke
