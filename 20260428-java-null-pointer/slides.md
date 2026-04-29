@@ -633,6 +633,203 @@ class OrderServiceTest {
 layout: section
 ---
 
+# Refinement (alias „Narrowing")
+
+Wie der Build entscheidet, ob `x` jetzt wirklich nicht null ist
+
+---
+
+# „Narrowing" — Begriff & Architektur
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Der Begriff
+
+- „Narrowing" steht **nicht** in der JSpecify-Spec
+- Korrekt: _flow-sensitive type refinement_ (NullAway-Paper, FSE 2019)
+- Synonyme: Kotlin/TS „smart-cast", Compiler-Theorie „dataflow narrowing"
+- JSpecify erwähnt Refinement nur indirekt — schreibt es Tools zu
+
+</div>
+<div>
+
+### Die Schichten — keine Konkurrenz
+
+- **JSpecify** — Spezifikation: was `@Nullable T` _bedeutet_. Kein Checker.
+- **ErrorProne** — javac-Plugin-Framework von Google. Stellt CFG- und Dataflow-Infrastruktur. Macht selbst kein Refinement.
+- **NullAway** — ErrorProne-Plugin von Uber. Hier wohnt die Refinement-Logik. ~10 % Build-Overhead, **bewusst unsound**.
+
+</div>
+</div>
+
+<!--
+- Wer auf einer JSpecify-Issue nach Narrowing-Semantik fragt, ist auf der falschen Mailingliste.
+- ErrorProne ist nur das Framework — alle Nullness-Checks laufen im NullAway-Plugin.
+-->
+
+---
+
+# Was NullAway als Refinement erkennt
+
+```java
+@Nullable Foo f = lookup();
+
+if (f != null)                   f.use();   // ✅ Vergleich (auch ternär, negiert)
+Objects.requireNonNull(f);       f.use();   // ✅ JDK
+Preconditions.checkNotNull(f);   f.use();   // ✅ Guava
+assert f != null;                f.use();   // ✅ nur mit -ea
+if (f instanceof Bar b)          b.use();   // ✅ instanceof + Pattern
+
+Optional<Foo> o = find();
+if (o.isPresent())               o.get();   // ✅ Optional-Idiom
+```
+
+<div class="mt-4 text-sm opacity-70">
+
+**Interprozedural eingeschränkt:** `@Contract` (JetBrains, Korrektheits-Check buggy), `@EnsuresNonNull` / `@RequiresNonNull`, ~95 mitgelieferte Library Models für JDK und Guava.
+
+</div>
+
+<!--
+- Whitelist ist nicht ad hoc — explizite Transferfunktionen über Access Paths (a.b().c).
+- Quelle: NullAway-Wiki "How NullAway Works".
+- Im Konstruktor wird zusätzlich über Initialisierungs-Pfade gefolgert.
+-->
+
+---
+
+# Die unsichere Annahme
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+### Das Problem
+
+```java
+class OrderService {
+  @Nullable Foo field;
+
+  void m() {
+    if (this.field != null) {
+      someMethod();          // könnte field nullen
+      this.field.doStuff();  // OK. Sound? Nein.
+    }
+  }
+}
+```
+
+<div class="mt-2 text-xs opacity-70 italic">
+
+„NullAway makes the simplifying (but unsound) assumption that callees perform no mutation …" — NullAway-Wiki
+
+</div>
+
+</div>
+<div>
+
+### Das Standard-Idiom
+
+```java
+void m() {
+  Foo local = this.field;     // atomarer Read
+  if (local != null) {
+    someMethod();
+    local.doStuff();          // ✅ kein Field-Read
+  }
+}
+```
+
+- Lokale Kopie macht **Read-Atomizität explizit**
+- Pattern in **Spring, Chromium, Uber**
+- Wer Soundness will: **Checker Framework** (5–20× langsamer)
+
+</div>
+</div>
+
+<!--
+- Häufigste Restursache von NPEs in NullAway-Audits: genau dieses Pattern.
+- Refinement-Store wird über Methodenaufrufe NICHT invalidiert — explizit dokumentierter Trade-off.
+-->
+
+---
+
+# Limitationen, die in der Praxis beißen
+
+| Limitation                                     | Symptom                                                 | Workaround                              |
+| ---------------------------------------------- | ------------------------------------------------------- | --------------------------------------- |
+| **Boolean-Indirection** (Issue #98, seit 2017) | `boolean nn = x != null; if (nn) x.foo();` → ERROR      | Direkt `if (x != null)`                 |
+| **Generics-Mode** in Entwicklung               | `Map<String, @Nullable V>` mit `JSpecifyMode=true` → FP | Default-Mode oder Suppress              |
+| **Type-Use-Position** strikt seit 0.12         | `@Nullable String[]` ≠ `String @Nullable []`            | `LegacyAnnotationLocations` Compat-Flag |
+| **JPA / Hibernate Reflection-Init**            | Default-Constructor + Reflection setzt non-null         | `@SuppressWarnings("NullAway.Init")`    |
+
+<div class="mt-4 text-sm opacity-70">
+
+Die meisten realen NPEs in NullAway-Audits kommen aus **Initialisierung, Library Models und Generics** — nicht aus Refinement-Lücken.
+
+</div>
+
+<!--
+- Spring-7-Migration hat bei Type-Use-Position Wellen geschlagen.
+- NullAway 0.11 vermeidet das temporär; ist aber kein Zukunftspfad.
+- Issue #98 ist die kanonische Limitation — bekannt, akzeptiert, instruktiv.
+-->
+
+---
+
+# Pragmatisch vs. idiomatisch
+
+<div class="grid grid-cols-2 gap-6">
+<div>
+
+### Pragmatisch — Build durchbekommen
+
+- `Objects.requireNonNull(x)` als **Ausdruck** (`return Objects.requireNonNull(maybe);`)
+- Lokale Kopie aus Feld + `if`-Check
+- `Nullness.castToNonNull` (NullAway-API) als bewusster Escape-Hatch
+- `@SuppressWarnings("NullAway")` punktuell — **mit Begründungs-Kommentar**
+
+</div>
+<div>
+
+### Idiomatisch — Langfristig sauber
+
+- `@NullMarked` aufs `package-info.java` (non-null als Default)
+- JSpecify als type-use, **korrekte syntaktische Position**
+- Lokale Kopie aus Feld vor Null-Check als Standard-Pattern
+- `@EnsuresNonNull("field")` auf Initialisierungs-Methoden
+- Konstruktor-Vollständigkeit statt nachträglicher Setter
+
+</div>
+</div>
+
+<div class="mt-4 text-sm opacity-70 italic">
+
+Refinement ist die einfachste Komponente — nicht der harte Teil. Die meisten realen NPEs kommen aus **Initialisierung**, **Library Models** und **Generics-Nullness**.
+
+</div>
+
+<!--
+- Cheatsheet wandert in den Build-PR.
+- Nächste Sektion zeigt: Kotlin löst genau diese Punkte als Sprach-Feature, nicht als Plugin-Mechanik.
+-->
+
+---
+
+# Dataflow-Store live — sechs Szenarien
+
+<NarrowingExplorer />
+
+<!--
+- Live-Recap aller Refinement-Themen aus den vorigen Folien.
+- Reihenfolge der Szenarien folgt der Komplexität: Basis → Boolean-Indirektion → Field+Call → Lokale Kopie → requireNonNull → @EnsuresNonNull.
+- Triangles ▲/▼ steppen durch Code-Zeilen, Tabs oben wechseln das Szenario.
+-->
+
+---
+layout: section
+---
+
 # Andere JVM-Sprachen
 
 Wie Kotlin, Scala & Co. das gleiche Problem lösen
