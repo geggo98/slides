@@ -376,6 +376,58 @@ Google verlangt **Storage-Kosten**: $1–4.50/MTok/h. Min. 32.768 Tokens.
 
 ---
 
+# Claude Code CLI: Drei Modi, drei Cache-Profile
+
+<div class="text-sm opacity-70 mb-2">
+
+Derselbe Harness, drei Cache-Charakteristiken — wer das ignoriert, zahlt schnell 10×.
+
+</div>
+
+<div class="grid grid-cols-3 gap-4 mt-2 text-xs">
+<div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Interaktiv (`claude`)
+
+**TTL: 1 h** auf Max · **5 min** auf Pro/API.
+
+Server-controlled — März-2026-Regression drückte 1h → 5m für viele User (#46829, ~17–25% Mehrkosten).
+
+Seit **v2.1.108** explizit via `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHING_5M`.
+
+</div>
+<div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Background-Subagent
+
+**TTL: 5 min — fix.**
+
+Lange Tool-Calls oder verspätete Permission-Prompts → Cache verfällt → voller Cache-Write.
+
+**Fork-Mode** (`CLAUDE_CODE_FORK_SUBAGENT=1`, v2.1.117): Kind erbt Parent-Prefix → ~**90% Discount** bei parallelen Subagenten. Seit **v2.1.121** auch in `-p` und SDK.
+
+</div>
+<div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Pipe (`claude -p`)
+
+**Kein Cache** zwischen Aufrufen.
+
+Escape: `--resume <id>` oder `--continue` reaktiviert den On-Disk-Prefix (innerhalb TTL = 5 min).
+
+Anti-Pattern: Wrapper, die `claude -p` ohne `--resume` loopen — **OpenClaw #19989** (10× Kosten durch invalidierten Cache).
+
+</div>
+</div>
+
+<div class="mt-2 text-xs opacity-60">
+
+Stand verifiziert: 29.04.2026 — Anthropic schaltet Cache-Defaults serverseitig ohne Changelog um.
+
+</div>
+
+---
+
 # Sandboxing im Vergleich
 
 | Agent           | Ansatz         | Details                                                                   |
