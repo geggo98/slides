@@ -638,7 +638,7 @@ public record ShopConfig(
 @Entity
 public class Customer {
     @Id
-    private @Nullable Long id;          // Reflection setzt das
+    private @Nullable Long id; // Reflection setzt das
 
     @Column(nullable = false)
     private String email;
