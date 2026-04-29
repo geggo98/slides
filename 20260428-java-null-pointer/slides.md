@@ -11,6 +11,7 @@ colorSchema: auto
 fonts:
   sans: Inter
   mono: 0xProto
+hideInToc: true
 ---
 
 # Java Null-Sicherheit 2026
@@ -31,6 +32,7 @@ Zielgruppe: Java-/Spring-Boot-4-Entwicklerinnen und -Entwickler, die NPEs satt h
 
 ---
 layout: center
+hideInToc: true
 ---
 
 # TL;DR
@@ -49,6 +51,24 @@ layout: center
 - Wer auf JEP 8303099 wartet, wartet falsch.
 -->
 
+---
+hideInToc: true
+---
+
+# Inhalt
+
+<Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
+
+---
+layout: section
+---
+
+# 1. JSpecify — Was und Warum
+
+Annotation-Konsens 2026 und seine vier Annotationen
+
+---
+hideInToc: true
 ---
 
 # Annotation-Chaos: Wie wir hierhin gekommen sind
@@ -86,6 +106,8 @@ layout: center
 -->
 
 ---
+hideInToc: true
+---
 
 # Quellen-Übersicht: Welche Annotationen sind aktiv?
 
@@ -102,6 +124,8 @@ OpenRewrite-Recipes (`org.openrewrite.java.jspecify.MigrateToJspecify`) automati
 - JetBrains-Annotationen werden ab IntelliJ 2025.3 zugunsten JSpecify deprecated.
 -->
 
+---
+hideInToc: true
 ---
 
 # JSpecify in vier Annotationen
@@ -132,6 +156,8 @@ package com.example.service;
 -->
 
 ---
+hideInToc: true
+---
 
 # Type-Use ist die Pointe
 
@@ -159,6 +185,8 @@ List<@Nullable String> tags;
 - Demo-Effekt: NullAway-Fehlermeldungen zeigen exakt diese Position.
 -->
 
+---
+hideInToc: true
 ---
 
 # `@NullMarked` aufs Package — Opt-out statt Opt-in
@@ -197,6 +225,8 @@ public class OrderService {
 - @NullMarked auf Modul-Ebene geht auch (module-info.java) — für Multi-Modul-Projekte sinnvoll.
 -->
 
+---
+hideInToc: true
 ---
 
 # JSpecify ≠ Checker
@@ -241,7 +271,16 @@ Null-Sicherheit wird **Build-Property**, nicht Code-Review-Diskussion.
 -->
 
 ---
+layout: section
+---
+
+# 2. Optional idiomatisch
+
+Rückgabetyp, kein Feld — Brian Goetz hatte Recht
+
+---
 layout: quote
+hideInToc: true
 ---
 
 # „Optional was added with a clear intent: it was meant as a return type for methods that need to communicate clearly that they may have no result."
@@ -253,6 +292,8 @@ layout: quote
 - "Wert für Abwesenheit" — ein identitätsfreier Wrapper.
 -->
 
+---
+hideInToc: true
 ---
 
 # `Optional<T>` — Anti-Patterns konkret
@@ -306,6 +347,8 @@ findById(id)
 -->
 
 ---
+hideInToc: true
+---
 
 # Trade-offs `Optional<T>` — was gilt 2026
 
@@ -331,6 +374,16 @@ findById(id)
 -->
 
 ---
+layout: section
+---
+
+# 3. Build & Lombok
+
+NullAway in den Build, Lombok-Konfig richtig setzen
+
+---
+hideInToc: true
+---
 
 # Build-Setup — Gradle (Kotlin DSL)
 
@@ -342,6 +395,8 @@ findById(id)
 -->
 
 ---
+hideInToc: true
+---
 
 # Build-Setup — Maven
 
@@ -352,6 +407,8 @@ findById(id)
 - Spring Boot 4 Parent-POM definiert die Versionen — nur die NullAway-Version selbst pinnen.
 -->
 
+---
+hideInToc: true
 ---
 
 # Lombok — Mythen vs. Realität
@@ -390,6 +447,8 @@ findById(id)
 - Wer heute Greenfield startet: Records, nicht @Data.
 -->
 
+---
+hideInToc: true
 ---
 
 # `lombok.config` — leer vs. korrekt
@@ -436,6 +495,16 @@ public @Nullable String getEmail() { return email; }
 -->
 
 ---
+layout: section
+---
+
+# 4. Spring Boot 4
+
+Was 2025/2026 dazu kam und welche Fallen bleiben
+
+---
+hideInToc: true
+---
 
 # Spring Boot 4 — Was 2025/2026 dazu kam
 
@@ -469,12 +538,11 @@ mvn rewrite:run \
 
 ### Kompatibilitäts-Snapshot
 
-| Komponente      | JSpecify-Status |
-| --------------- | --------------- |
-| Spring Core     | ✅ vollständig  |
-| Spring Data     | 🟡 in Arbeit    |
-| Spring Security | 🟡 in Arbeit    |
-| Reactor         | ✅              |
+| Komponente            | JSpecify-Status |
+| --------------------- | --------------- |
+| Spring Core           | ✅ vollständig  |
+| Spring Data, Security | 🟡 in Arbeit    |
+| Reactor               | ✅              |
 
 </div>
 </div>
@@ -484,6 +552,8 @@ mvn rewrite:run \
 - "in Arbeit" heißt: Public-API-Pakete sind annotiert, interne Pakete folgen.
 -->
 
+---
+hideInToc: true
 ---
 
 # Service-Layer-Beispiel
@@ -526,6 +596,8 @@ public class OrderService {
 - promo darf null sein → explizit annotiert.
 -->
 
+---
+hideInToc: true
 ---
 
 # Spring-Boot-4-Pitfalls
@@ -589,6 +661,8 @@ public class Customer {
 -->
 
 ---
+hideInToc: true
+---
 
 # Testing — Mockito skipped Constructor
 
@@ -633,10 +707,12 @@ class OrderServiceTest {
 layout: section
 ---
 
-# Refinement (alias „Narrowing")
+# 5. Refinement (alias „Narrowing")
 
 Wie der Build entscheidet, ob `x` jetzt wirklich nicht null ist
 
+---
+hideInToc: true
 ---
 
 # „Narrowing" — Begriff & Architektur
@@ -669,6 +745,8 @@ Wie der Build entscheidet, ob `x` jetzt wirklich nicht null ist
 -->
 
 ---
+hideInToc: true
+---
 
 # Was NullAway als Refinement erkennt
 
@@ -697,6 +775,8 @@ if (o.isPresent())               o.get();   // ✅ Optional-Idiom
 - Im Konstruktor wird zusätzlich über Initialisierungs-Pfade gefolgert.
 -->
 
+---
+hideInToc: true
 ---
 
 # Die unsichere Annahme
@@ -753,6 +833,8 @@ void m() {
 -->
 
 ---
+hideInToc: true
+---
 
 # Limitationen, die in der Praxis beißen
 
@@ -775,6 +857,8 @@ Die meisten realen NPEs in NullAway-Audits kommen aus **Initialisierung, Library
 - Issue #98 ist die kanonische Limitation — bekannt, akzeptiert, instruktiv.
 -->
 
+---
+hideInToc: true
 ---
 
 # Pragmatisch vs. idiomatisch
@@ -815,6 +899,8 @@ Refinement ist die einfachste Komponente — nicht der harte Teil. Die meisten r
 -->
 
 ---
+hideInToc: true
+---
 
 # Dataflow-Store live — sechs Szenarien
 
@@ -830,10 +916,12 @@ Refinement ist die einfachste Komponente — nicht der harte Teil. Die meisten r
 layout: section
 ---
 
-# Andere JVM-Sprachen
+# 6. Andere JVM-Sprachen
 
 Wie Kotlin, Scala & Co. das gleiche Problem lösen
 
+---
+hideInToc: true
 ---
 
 # Sprach-Mechanismen im Vergleich
@@ -851,6 +939,8 @@ Wie Kotlin, Scala & Co. das gleiche Problem lösen
 - Clojure NPE-Fragen treten nur an Java-Boundaries auf — innerhalb der Sprache ist nil ein konsistenter Wert.
 -->
 
+---
+hideInToc: true
 ---
 
 # Kotlin im direkten Vergleich
@@ -880,6 +970,8 @@ Wie Kotlin, Scala & Co. das gleiche Problem lösen
 -->
 
 ---
+hideInToc: true
+---
 
 # Java ↔ Kotlin Interop mit JSpecify
 
@@ -901,10 +993,12 @@ Wie Kotlin, Scala & Co. das gleiche Problem lösen
 layout: section
 ---
 
-# Was kommt nativ?
+# 7. Was kommt nativ?
 
 JEPs, Roadmap und Realität
 
+---
+hideInToc: true
 ---
 
 # Die vier relevanten JEPs
@@ -923,6 +1017,8 @@ JEP 8303099 ist Draft **ohne Target-Release**. „Frühestens" ist Lese-Hinweis:
 -->
 
 ---
+hideInToc: true
+---
 
 # JDK-Roadmap & Realität
 
@@ -939,6 +1035,8 @@ JEP 8303099 ist Draft **ohne Target-Release**. „Frühestens" ist Lese-Hinweis:
 - Wer heute auf 8303099 wartet: 2-3 LTS-Zyklen Wartezeit.
 -->
 
+---
+hideInToc: true
 ---
 
 # Geplante Syntax — Vorschau
@@ -972,10 +1070,73 @@ String? x;                // 2029+
 layout: section
 ---
 
-# Bonus
+# 8. Action Plan
+
+Konkrete Schritte für Greenfield und Brownfield
+
+---
+layout: center
+hideInToc: true
+---
+
+# Action Plan — Greenfield 2026
+
+<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
+
+1. **JSpecify 1.0.0** als einzige Annotation-Quelle in `pom.xml` / `build.gradle.kts`
+2. **`@NullMarked`** auf jedes `package-info.java`
+3. **NullAway + ErrorProne** im Build, `OnlyNullMarked=true`, `JSpecifyMode=true`, **`error("NullAway")`**
+4. **Records** für Datenklassen (nicht `@Data`/`@Value`)
+5. **`Optional<T>`** ausschließlich als Rückgabetyp
+6. **IntelliJ IDEA 2025.3+** für sofortiges IDE-Feedback
+7. **Spring Boot 4** mit Constructor-Injection — keine `@Autowired`-Felder
+
+</div>
+
+<!--
+- Wer einen dieser Punkte überspringt, verliert den Großteil der Sicherheit.
+- Greenfield ist einfach. Brownfield ist die eigentliche Arbeit.
+-->
+
+---
+layout: center
+hideInToc: true
+---
+
+# Action Plan — Brownfield (Spring Boot 3 → 4)
+
+<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
+
+1. **Upgrade auf Spring Boot 4** (eigener PR, ohne Null-Migration mischen)
+2. **OpenRewrite-Recipes** für 80 % der Annotation-Migration
+3. **Pro Package**: `@NullMarked` setzen → NullAway-Output ansehen → fixen → Warnung auf Error
+4. **Lombok schrittweise zurückbauen**: `@Data` → Records, `@Slf4j` bleibt
+5. **JPA-Entities**: `@Getter`/`@Setter` reichen, `@EqualsAndHashCode` raus
+6. **`@SuppressWarnings("NullAway.Init")`** akzeptieren — aber nur an Spring-Lifecycle-Stellen
+
+</div>
+
+<div class="mt-4 text-sm opacity-70 text-center">
+
+**Was NICHT tun:** kein neuer JSR-305-Code · kein `Optional` als Feld/Parameter · kein `@Data`/`@Value` mehr · kein Checker FW „weil es sauberer wirkt"
+
+</div>
+
+<!--
+- Schritt 3 ist der eigentliche Aufwand. Pro Package-Wave 0,5–2 Tage je nach Größe.
+- Schritt 1 vor Schritt 2 — Boot-Upgrade-PRs reviewen sich anders als Null-Migration-PRs.
+-->
+
+---
+layout: section
+---
+
+# 9. Bonus
 
 Vergleichstabellen & Kompatibilitätsmatrizen
 
+---
+hideInToc: true
 ---
 
 # Static Analyzer im Vergleich
@@ -994,6 +1155,8 @@ Vergleichstabellen & Kompatibilitätsmatrizen
 -->
 
 ---
+hideInToc: true
+---
 
 # Spring-Boot-Kompatibilitätsmatrix
 
@@ -1011,10 +1174,12 @@ Boot 2.x ist seit Mai 2025 Out-of-Support. Boot 3.x bekommt JSpecify-Adoption ni
 -->
 
 ---
+hideInToc: true
+---
 
 # Migrations-Cheatsheet
 
-<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="grid grid-cols-2 gap-3 text-xs leading-snug [&_h3]:text-base [&_h3]:mt-2 [&_h3]:mb-1 [&_table]:my-1 [&_th]:py-1 [&_td]:py-1 [&_li]:my-0">
 <div>
 
 ### Annotations-Migration
@@ -1066,58 +1231,8 @@ Boot 2.x ist seit Mai 2025 Out-of-Support. Boot 3.x bekommt JSpecify-Adoption ni
 -->
 
 ---
-layout: center
----
-
-# Action Plan — Greenfield 2026
-
-<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
-
-1. **JSpecify 1.0.0** als einzige Annotation-Quelle in `pom.xml` / `build.gradle.kts`
-2. **`@NullMarked`** auf jedes `package-info.java`
-3. **NullAway + ErrorProne** im Build, `OnlyNullMarked=true`, `JSpecifyMode=true`, **`error("NullAway")`**
-4. **Records** für Datenklassen (nicht `@Data`/`@Value`)
-5. **`Optional<T>`** ausschließlich als Rückgabetyp
-6. **IntelliJ IDEA 2025.3+** für sofortiges IDE-Feedback
-7. **Spring Boot 4** mit Constructor-Injection — keine `@Autowired`-Felder
-
-</div>
-
-<!--
-- Wer einen dieser Punkte überspringt, verliert den Großteil der Sicherheit.
-- Greenfield ist einfach. Brownfield ist die eigentliche Arbeit.
--->
-
----
-layout: center
----
-
-# Action Plan — Brownfield (Spring Boot 3 → 4)
-
-<div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
-
-1. **Upgrade auf Spring Boot 4** (eigener PR, ohne Null-Migration mischen)
-2. **OpenRewrite-Recipes** für 80 % der Annotation-Migration
-3. **Pro Package**: `@NullMarked` setzen → NullAway-Output ansehen → fixen → Warnung auf Error
-4. **Lombok schrittweise zurückbauen**: `@Data` → Records, `@Slf4j` bleibt
-5. **JPA-Entities**: `@Getter`/`@Setter` reichen, `@EqualsAndHashCode` raus
-6. **`@SuppressWarnings("NullAway.Init")`** akzeptieren — aber nur an Spring-Lifecycle-Stellen
-
-</div>
-
-<div class="mt-4 text-sm opacity-70 text-center">
-
-**Was NICHT tun:** kein neuer JSR-305-Code · kein `Optional` als Feld/Parameter · kein `@Data`/`@Value` mehr · kein Checker FW „weil es sauberer wirkt"
-
-</div>
-
-<!--
-- Schritt 3 ist der eigentliche Aufwand. Pro Package-Wave 0,5–2 Tage je nach Größe.
-- Schritt 1 vor Schritt 2 — Boot-Upgrade-PRs reviewen sich anders als Null-Migration-PRs.
--->
-
----
 layout: end
+hideInToc: true
 ---
 
 # Danke
