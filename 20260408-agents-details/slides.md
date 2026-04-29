@@ -456,7 +456,7 @@ Bekannte Schwäche Claude Code: Bei >50 Sub-Commands in einer Pipeline fällt di
 - Jeder startet mit **frischer Conversation** (kein Parent-History)
 - Lädt eigenes System-Prompt und CLAUDE.md
 - Nur das **finale Summary** geht zurück an den Parent
-- Modi: Fork (Standard), Teammate, Worktree
+- Modi: Standard, Worktree-Isolation, Fork (opt-in via `CLAUDE_CODE_FORK_SUBAGENT=1`)
 
 </div>
 <div>
