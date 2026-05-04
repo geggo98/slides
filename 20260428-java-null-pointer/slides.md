@@ -203,13 +203,6 @@ public class OrderService {
 ```
 
 ```java
-// src/main/java/com/example/service/package-info.java
-@NullMarked
-package com.example.service;
-import org.jspecify.annotations.NullMarked;
-```
-
-```java
 // src/main/java/com/example/service/OrderService.java
 public class OrderService {
     public Order place(Customer c, @Nullable PromoCode p) { ... }
@@ -219,6 +212,17 @@ public class OrderService {
 // Default ist non-null. Nur das Nullable wird markiert.
 ```
 ````
+
+<div v-click class="mt-4">
+
+```java
+// src/main/java/com/example/service/package-info.java
+@NullMarked
+package com.example.service;
+import org.jspecify.annotations.NullMarked;
+```
+
+</div>
 
 <!--
 - Magic-move zeigt: dieselbe API, weniger Lärm, vergessen unmöglich.
