@@ -510,6 +510,52 @@ Erzeugt `gradle/verification-metadata.xml`:
 
 ---
 
+# Escape Hatch 1: Frisches `GRADLE_USER_HOME`
+
+`--write-verification-metadata` erfasst nur Artefakte, die **während der Invocation tatsächlich heruntergeladen** werden — gecachte Files in `~/.gradle/caches` werden übersprungen.
+
+```bash
+# Nuclear Option: Lädt wirklich alles neu
+export GRADLE_USER_HOME=$(mktemp -d)
+./gradlew --write-verification-metadata sha256,pgp build check
+./gradlew --stop                # Daemon herunterfahren
+rm -rf "$GRADLE_USER_HOME"      # ⚠️ Cleanup nicht vergessen!
+```
+
+**Was wird neu gezogen:** Wrapper-Distribution (~150 MB), alle Plugin-Marker-POMs, Toolchain-JDKs (falls auto-download aktiv), PGP-Keyring.
+
+> ⚠️ **Wann einsetzen:** Wenn Gradles offizieller Weg (alle CI-Tasks ausführen + `--refresh-dependencies`) nicht reicht. Reproducible-Builds-Communities (F-Droid, Reproducible Central) nutzen diese Technik standardmäßig.
+>
+> ⚠️ **`--refresh-dependencies` reicht alleine nicht** — es forciert nur Re-Check changing modules, löst aber Konfigurationen, die du nicht aufrufst, nicht neu auf.
+
+---
+
+# Escape Hatch 2: `.pom` / `.module` trusten
+
+Wenn detached configurations (Checkstyle, JaCoCo, ErrorProne) auf manchen Systemen Artefakte ziehen, die woanders nicht reproduzierbar sind — letzter Ausweg:
+
+```xml
+<!-- gradle/verification-metadata.xml -->
+<verification-metadata>
+    <configuration>
+        <trusted-artifacts>
+            <trust file=".*\.pom" regex="true"
+                   reason="Mirror-Variationen / dynamisch generierte POMs"/>
+            <trust file=".*\.module" regex="true"
+                   reason="Gradle Module Metadata, oft non-reproducible"/>
+        </trusted-artifacts>
+    </configuration>
+</verification-metadata>
+```
+
+**Warum vertretbar:** JAR-Inhalte (der ausführbare Code) werden weiterhin per SHA-256 verifiziert — nur die volatilen Metadaten-Files werden großzügiger getrustet.
+
+**Warum POMs/Module-Files variieren:** Mirror-Whitespace/-Encoding, dynamisch generierte POMs (JitPack, Snapshot-Repos), Plugin-Marker-Artefakte aus dem Gradle Plugin Portal.
+
+> ⚠️ **Nicht der Default!** Wenn möglich, einzelne Artefakte mit `<trust group="..." name="..."/>` granular trusten statt Glob-Pattern.
+
+---
+
 # Supply-Chain-Schutz: Repository Filtering
 
 ```kotlin
@@ -707,6 +753,7 @@ th, td { padding: 0.25em 0.5em !important; }
 | **Version Catalog**              | Wartbarkeit, IDE-Support           | `libs.versions.toml`               |
 | **Lock-File**                    | Unbeabsichtigte Versionsänderungen | `gradle.lockfile`                  |
 | **Verification Metadata**        | Artefakt-Manipulation              | `verification-metadata.xml`        |
+| **Trusted Artifacts (Escape)**   | Detached-Config-Flakiness          | `verification-metadata.xml`        |
 | **Repository Filtering**         | Dependency Confusion               | `build.gradle.kts`                 |
 | **BOM (Spring)**                 | Inkonsistente transitive Versionen | BOM POM                            |
 | **Minimum Release Age**          | Frische kompromittierte Releases   | npm/pnpm/Bun/Yarn/uv/Deno          |
@@ -739,6 +786,8 @@ ul { font-size: 0.9em; }
 - [Gradle: Dependency Locking](https://docs.gradle.org/current/userguide/dependency_locking.html)
 - [Gradle: Version Catalogs](https://docs.gradle.org/current/userguide/version_catalogs.html)
 - [Gradle: Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html)
+- [Gradle: Bootstrapping Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification)
+- [Gradle: Trusting Some Particular Artifacts](https://docs.gradle.org/current/userguide/dependency_verification.html#sec:trusting-some-artifacts)
 - [Renovate: minimumReleaseAge](https://docs.renovatebot.com/configuration-options/#minimumreleaseage)
 - [Package Managers Need to Cool Down](https://nesbitt.io/2026/03/04/package-managers-need-to-cool-down.html) — Andrew Nesbitt
 - [npm: min-release-age](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age)
