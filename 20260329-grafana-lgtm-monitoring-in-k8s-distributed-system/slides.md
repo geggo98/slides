@@ -459,6 +459,44 @@ Vier Ebenen vom Platform-Overview zur Root-Cause-Analyse
 
 ---
 
+# Was gehört nach oben?
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 0.6em;">
+
+  <div style="padding: 16px 18px; border-left: 3px solid #a855f7; background: rgba(168,85,247,0.08); border-radius: 6px;">
+    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 4px; line-height: 1.35;">
+      «Все счастливые семьи похожи друг на друга, каждая несчастливая семья несчастлива по-своему.»
+    </p>
+    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
+      „Alle glücklichen Familien sind einander ähnlich, jede unglückliche Familie ist auf ihre eigene Weise unglücklich."
+    </p>
+    <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
+      — Lew Tolstoi, <em>Anna Karenina</em> (1878), Teil I, Kap. 1 · Übers. R. Tietze (2009) · Begriff „Anna-Karenina-Prinzip": J. Diamond, <em>Guns, Germs, and Steel</em> (1997)
+    </p>
+    <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
+      <strong>Glück hat eine Form, Unglück viele.</strong> Auf dem Haupt-Dashboard nicht alle Fehlerklassen auflisten — zeige <em>einen</em> Indikator: Ist der Service glücklich aus Sicht von End-Nutzern und SLOs?
+    </p>
+  </div>
+
+  <div style="padding: 16px 18px; border-left: 3px solid #3b82f6; background: rgba(59,130,246,0.08); border-radius: 6px;">
+    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 4px; line-height: 1.35;">
+      "A man with a watch knows what time it is. A man with two watches is never sure."
+    </p>
+    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
+      „Wer eine Uhr hat, weiß, wie spät es ist. Wer zwei Uhren hat, ist sich nie sicher."
+    </p>
+    <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
+      — Segal's Law (apokryph; häufig Lee Segall, KIXL Dallas, zugeschrieben)
+    </p>
+    <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
+      <strong>Ein Status, eine Ampel.</strong> Zwei „Top-Level"-Statusanzeigen stiften Zweifel. Alles Diagnostische gehört tiefer ins Dashboard oder auf verlinkte Detail-Dashboards.
+    </p>
+  </div>
+
+</div>
+
+---
+
 # Dashboard-Hierarchie
 
 <DashboardHierarchy />
