@@ -466,6 +466,38 @@ Veraltete Lock-Dateien → Scanner meldet keine neuen transitiven Deps → **bli
 
 ---
 
+# CVE-Pinning mit Audit-Trail (`because`)
+
+Scanner meldet CVE → Version pinnen, **Begründung gleich mit-committen**.
+
+```kotlin
+dependencies {
+    constraints {
+        implementation("org.apache.logging.log4j:log4j-core:2.17.1") {
+            because("CVE-2021-44228 (Log4Shell) — RCE via JNDI-Lookup")
+        }
+    }
+}
+```
+
+### Plugin-Classpath (`buildscript`)
+
+```kotlin
+buildscript {
+    dependencies {
+        classpath("org.apache.logging.log4j:log4j-core:2.17.1") {
+            because("CVE-2021-44228 (Log4Shell) — Plugin zog verwundbare Version transitiv")
+        }
+    }
+}
+```
+
+- `because`-String erscheint in `./gradlew dependencyInsight` → Audit-Trail
+- Beim nächsten Upgrade: _Warum_ wurde gepinnt? Antwort steht im Build-File
+- Konvention: CVE-ID + 1-Zeilen-Beschreibung + Datum
+
+---
+
 # Supply-Chain-Schutz: Verification Metadata
 
 ```bash
