@@ -226,7 +226,125 @@ import org.jspecify.annotations.NullMarked;
 
 <!--
 - Magic-move zeigt: dieselbe API, weniger Lärm, vergessen unmöglich.
-- @NullMarked auf Modul-Ebene geht auch (module-info.java) — für Multi-Modul-Projekte sinnvoll.
+-->
+
+---
+hideInToc: true
+---
+
+# `@NullMarked` kaskadiert _nicht_ in Sub-Packages
+
+```java
+// com/example/service/package-info.java     ← markiert
+@NullMarked package com.example.service;
+
+// com/example/service/repo/CustomerRepo.java ← NICHT markiert!
+class CustomerRepo { Customer findById(String id) { ... } }
+```
+
+<div v-click class="mt-3 text-sm">
+
+JLS-Sicht: `com.foo` und `com.foo.bar` sind **zwei unabhängige Packages** — keine Hierarchie. Gilt für Sichtbarkeit, `sealed`-Permits, **und Annotationen**.
+
+JSpecify-Javadoc: _„This annotation has no effect on 'subpackages'."_
+
+**Konsequenz:** Jedes Java-Package braucht sein **eigenes** `package-info.java` mit `@NullMarked`.
+
+</div>
+
+<!--
+- DER häufigste Bug beim JSpecify-Onboarding bestehender Codebases.
+- "Sub-Package" ist ein menschliches Konzept; die JLS kennt nur flache Packages.
+- IntelliJ macht's bei Refactorings einfach — "New > package-info.java" auf jedem Package-Knoten.
+-->
+
+---
+hideInToc: true
+---
+
+# Geltungsbereiche: Modul, Package, lokal
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+| Scope               | Wirkung                                    |
+| ------------------- | ------------------------------------------ |
+| `module-info.java`  | **transitiv** auf alle Packages des Moduls |
+| `package-info.java` | nur auf genau dieses Package               |
+| Klasse / Methode    | lexikalisch umschlossener Code             |
+
+`@NullUnmarked` kann jeden Scope **lokal** aufheben.
+`@NullMarked` schaltet ihn innerhalb wieder ein.
+
+```java
+@NullMarked
+module com.example.kfzif { /* requires … */ }
+```
+
+</div>
+<div>
+
+### ⚠️ JPMS-Realität bei Spring Boot
+
+`module-info.java` setzt ein **aktiv genutztes JPMS-Modulsystem** voraus. Der typische Spring-Boot-Classpath nutzt **kein** JPMS — dann fällt diese Option komplett weg.
+
+**Empfehlung für den Spring-Boot-Stack:**
+`package-info.java` pro Package. Tool-agnostisch — IntelliJ, NullAway, Checker Framework und Eclipse JDT verstehen es alle gleich.
+
+<div v-click class="mt-3 text-sm opacity-80">
+
+**Brownfield-Brücke:** NullAway kennt
+
+```shell
+ -XepOpt:NullAway:AnnotatedPackages=com.example
+```
+
+(markiert Packages transitiv). Aber: **kein JSpecify-Standard**. IntelliJ sieht es nicht — inkonsistente Warnungen je nach Tool. Nur als Übergang.
+
+</div>
+
+</div>
+</div>
+
+<!--
+- JPMS-Migration eines Spring-Boot-Monorepos ist Wochen Arbeit für nichts — package-info ist hier richtig.
+- AnnotatedPackages: praktisch, aber genau die Inkonsistenz, die man mit JSpecify gerade vermeiden wollte.
+- Multi-Modul-Setups (Maven Reactor) sind NICHT JPMS — da hilft die Modul-Annotation auch nicht.
+-->
+
+---
+hideInToc: true
+---
+
+# Stolperfalle: Generierter Code liegt außerhalb
+
+Quellgeneratoren erzeugen Klassen, die **nicht automatisch** im gleichen `package-info.java`-Scope landen:
+
+- **MapStruct** → `target/generated-sources/annotations/...Mapper`
+- **JPA-Metamodel** (`*_.java`)
+- **QueryDSL** (`Q*.java`)
+- **Lombok-Delombok-Output**
+
+<div v-click>
+
+Ohne JPMS-Modul kann zudem eine `package-info` aus dem Test-Sourcepath die aus dem Main-Sourcepath verdecken — oder fehlen ganz.
+
+</div>
+
+<div v-click class="mt-4">
+
+### Drei Optionen
+
+1. Generator-Konfiguration prüfen: kann sie ein `@NullMarked`-`package-info` mit erzeugen?
+2. Generated-Sources-Package per **eigenem** `package-info.java` mit `@NullUnmarked` ausnehmen — explizit ist besser als implizit.
+3. NullAway: `-XepOpt:NullAway:UnannotatedSubPackages=...generated...` ergänzen.
+
+</div>
+
+<!--
+- Lombok-Delombok ist die hinterhältigste Quelle — Annotationen werden teilweise propagiert, teilweise nicht.
+- @NullUnmarked auf generierte Sources ist sicherer als sie zu ignorieren — Verstöße werden dann beim Konsumenten sichtbar.
+- Spring Boot 4 erzeugt selbst keine generated-sources mit JSpecify-Markern; das ist Build-Plugin-Sache.
 -->
 
 ---
