@@ -5,11 +5,17 @@
 <template>
   <div class="scene-wrap">
     <div class="scene-desc">
-      Die Spring Boot BOM pinnt jackson auf eine feste Version. Auch wenn keine Dependency eine höhere Version anfordert, übersteuert die BOM die transitive Auflösung.
+      Die Spring Boot BOM pinnt jackson auf eine feste Version. Auch wenn keine
+      Dependency eine höhere Version anfordert, übersteuert die BOM die
+      transitive Auflösung.
     </div>
     <div class="graph">
       <div class="g-row">
-        <GraphNode name="Your project" version="+ Spring BOM 3.4.4" variant="source" />
+        <GraphNode
+          name="Your project"
+          version="+ Spring BOM 4.0.6"
+          variant="source"
+        />
       </div>
       <TreeConnector type="fork" :width="180" />
       <div class="g-row">
@@ -32,10 +38,34 @@
 </template>
 
 <style scoped>
-.scene-wrap { width: 100%; }
-.scene-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; margin: 0 0 10px; }
-.graph { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 10px; }
-.g-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.g-gap { width: 24px; }
-.g-placeholder { min-width: 100px; padding: 8px 16px; visibility: hidden; }
+.scene-wrap {
+  width: 100%;
+}
+.scene-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+.graph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 0 0 10px;
+}
+.g-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.g-gap {
+  width: 24px;
+}
+.g-placeholder {
+  min-width: 100px;
+  padding: 8px 16px;
+  visibility: hidden;
+}
 </style>
