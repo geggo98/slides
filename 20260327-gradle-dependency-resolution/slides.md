@@ -108,7 +108,7 @@ Spring BOM, Plugin vs. Native, Extra Properties
 
 ```kotlin
 plugins {
-    id("org.springframework.boot") version "3.4.4"
+    id("org.springframework.boot") version "4.0.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
 ```
@@ -116,7 +116,7 @@ plugins {
 **Resolution-Ablauf:**
 
 1. `implementation("...spring-boot-starter-web")` — keine Version
-2. `spring-boot-dependencies` BOM liefert die Version (z.B. `3.4.4`)
+2. `spring-boot-dependencies` BOM liefert die Version (z.B. `4.0.6`)
 3. Transitive Deps (Jackson, Tomcat, SLF4J, ...) werden durch BOM gepinnt
 4. Lock-File fixiert das Gesamtergebnis
 
@@ -153,7 +153,7 @@ th, td { padding: 0.25em 0.5em !important; }
 ```kotlin
 plugins { id("io.spring.dependency-management") version "1.1.7" }
 dependencyManagement {
-    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:3.4.4") }
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:4.0.6") }
     dependencies { dependency("com.google.guava:guava:33.4.0-jre") }
 }
 ```
@@ -162,7 +162,7 @@ dependencyManagement {
 
 ```kotlin
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.4"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.6"))
     constraints { implementation("com.google.guava:guava:33.4.0-jre") }
 }
 ```
@@ -173,6 +173,42 @@ dependencies {
 > ⚠️ **Wer Versionen überschreibt, übernimmt die Kompatibilitäts-Verantwortung.**
 > Die BOM garantiert Zusammenspiel ihrer Versionen — ein Override bricht diese Garantie.
 > Beim nächsten BOM-Upgrade prüfen, ob die gepinnten Versionen noch kompatibel sind.
+
+---
+
+# Empfehlung 2026 — Spring BOM einbinden
+
+<style>
+pre { font-size: 0.82em; line-height: 1.35; }
+blockquote { font-size: 0.85em; }
+</style>
+
+### Variante A — Native BOM (Default: schneller, idiomatisch)
+
+```kotlin
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
+plugins { id("org.springframework.boot") version "4.0.6" apply false }
+
+dependencies {
+    implementation(platform(SpringBootPlugin.BOM_COORDINATES))   // 4.0.6 BOM
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+}
+```
+
+### Variante B — Plugin (nur wenn Property-Overrides gebraucht werden)
+
+```kotlin
+plugins {
+    id("org.springframework.boot") version "4.0.6" apply false
+    id("io.spring.dependency-management") version "1.1.7"
+}
+ext["jackson.version"] = "2.18.3"   // Maven-Property-Mapping → BOM-Override
+```
+
+> **`apply false` + `BOM_COORDINATES`:** Plugin-Classpath ohne Apply (kein `bootJar`/`bootRun`) — Plugin-Version und BOM-Version bleiben typsicher gekoppelt, kein String-Drift bei Upgrades.
+>
+> **Default ist A.** B nur bei `ext`-Property-Overrides — siehe nächste Slide.
 
 ---
 
@@ -231,7 +267,7 @@ TOML, Zusammenspiel & Fallstricke
 
 ```toml
 [versions]
-spring-boot = "3.4.4"
+spring-boot = "4.0.6"
 jackson = "2.17.2"
 
 [libraries]
@@ -339,7 +375,7 @@ Gleicher Workflow — Version explizit, aber _transitive_ Deps werden im Lock-Fi
 ### Spring-gemanagt (BOM-Version anheben)
 
 ```kotlin
-id("org.springframework.boot") version "3.5.0"  // war 3.4.4
+id("org.springframework.boot") version "4.0.6"  // war 4.0.0
 ```
 
 ```bash
