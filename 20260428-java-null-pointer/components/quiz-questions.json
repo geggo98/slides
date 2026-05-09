@@ -1,0 +1,788 @@
+{
+  "questions": [
+    {
+      "id": "jspecify-marker",
+      "difficulty": 1,
+      "section": "JSpecify",
+      "stem": "Welche Aussagen zu @NullMarked treffen zu?",
+      "explanation": "@NullMarked ist der JSpecify-1.0-Block-Marker (Aug 2024). Er deklariert für eine Code-Einheit (Package, Modul, Klasse): nicht annotierte Typen sind @NonNull. Es ist kein Type-Marker pro Variable.",
+      "answers": [
+        {
+          "text": "Deklariert: alle nicht annotierten Typen sind @NonNull.",
+          "verdict": "correct",
+          "rationale": "Genau das ist die Wirkung von @NullMarked auf eine Code-Einheit."
+        },
+        {
+          "text": "Kann auf package-info.java, module-info.java oder einer Klasse stehen.",
+          "verdict": "correct",
+          "rationale": "JSpecify 1.0 erlaubt diese drei Anbringungsorte."
+        },
+        {
+          "text": "Ist Teil der JSpecify-Spezifikation 1.0 (August 2024).",
+          "verdict": "correct",
+          "rationale": "Stable seit JSpecify 1.0, August 2024."
+        },
+        {
+          "text": "Synonym für @NonNull, gilt pro Variable.",
+          "verdict": "wrong",
+          "rationale": "@NullMarked ist ein Block-Marker, kein Type-Marker auf einer Variable."
+        },
+        {
+          "text": "Macht alle Typen automatisch nullable.",
+          "verdict": "wrong",
+          "rationale": "Genau umgekehrt: ohne Annotation gelten Typen als @NonNull."
+        },
+        {
+          "text": "Muss auf jede einzelne Methode geschrieben werden.",
+          "verdict": "wrong",
+          "rationale": "Nein — der Block-Effekt ist gerade, dass Methoden ohne Annotation profitieren."
+        },
+        {
+          "text": "@NullMarked auf module-info ist die schnellste Migration.",
+          "verdict": "depends",
+          "rationale": "Mit JPMS ja, ohne JPMS (Spring-Boot-Realität) ist package-info pragmatischer."
+        },
+        {
+          "text": "Auf Klassenebene reicht das im Service-Layer vollkommen aus.",
+          "verdict": "depends",
+          "rationale": "Funktioniert, aber package-info ist sauberer und vermeidet Wiederholung pro Klasse."
+        }
+      ]
+    },
+    {
+      "id": "optional-intent",
+      "difficulty": 1,
+      "section": "Optional",
+      "stem": "Welche Aussagen zur idiomatischen Verwendung von Optional<T> stimmen?",
+      "explanation": "Brian Goetz' Design-Intent: Optional<T> kommuniziert ‚may have no result' als Rückgabetyp. Felder, Parameter und Sammlungen sind Anti-Patterns.",
+      "answers": [
+        {
+          "text": "Optional<T> ist als Rückgabetyp von Methoden gedacht, die kein Ergebnis liefern können.",
+          "verdict": "correct",
+          "rationale": "Brian Goetz' explizites Design-Ziel."
+        },
+        {
+          "text": "Empty Collection ist die idiomatische Alternative zu Optional<List<T>>.",
+          "verdict": "correct",
+          "rationale": "Eine leere Liste ist semantisch ‚kein Ergebnis' und einfacher zu konsumieren."
+        },
+        {
+          "text": "orElseThrow(Supplier) erlaubt eine kontextuelle Exception statt NoSuchElementException.",
+          "verdict": "correct",
+          "rationale": "Empfohlenes Idiom mit aussagekräftigem Stack-Trace."
+        },
+        {
+          "text": "Optional<T> sollte als Klassenfeld stehen — es ist serialisierbar wie String.",
+          "verdict": "wrong",
+          "rationale": "Optional ist nicht Serializable und nicht als Feld gedacht."
+        },
+        {
+          "text": "Optional<T> ist als Methodenparameter empfohlen, damit null wegfällt.",
+          "verdict": "wrong",
+          "rationale": "Aufrufer können Optional ebenfalls null setzen — Anti-Pattern."
+        },
+        {
+          "text": "List<Optional<T>> ist die idiomatische Sammlung mit fehlenden Werten.",
+          "verdict": "wrong",
+          "rationale": "Verschachtelung ist verwirrend; meist genügt eine gefilterte Liste."
+        },
+        {
+          "text": "Optional in REST-DTOs vermeidet null-Probleme an der API-Grenze.",
+          "verdict": "depends",
+          "rationale": "Serialisierung ist tückisch (Jackson), aber als Service-Rückgabe akzeptabel."
+        },
+        {
+          "text": "Optional.get() ohne isPresent() ist heute akzeptabel — NullAway tracked das.",
+          "verdict": "depends",
+          "rationale": "Das Refinement existiert, orElseThrow gilt aber als sauberer."
+        }
+      ]
+    },
+    {
+      "id": "lombok-nonnull-exception",
+      "difficulty": 1,
+      "section": "Build & Lombok",
+      "stem": "Was passiert, wenn ein @NonNull-Parameter (Lombok) mit null aufgerufen wird (seit 1.16.20)?",
+      "explanation": "Seit Lombok 1.16.20 ist die Default-Exception NullPointerException. Über lombok.config (z.B. lombok.nonNull.exceptionType=JDK) lässt sich auf java.util.Objects.requireNonNull umschalten.",
+      "answers": [
+        {
+          "text": "Es wird eine NullPointerException geworfen — kein IllegalArgumentException mehr.",
+          "verdict": "correct",
+          "rationale": "Default-Verhalten seit 1.16.20."
+        },
+        {
+          "text": "Das Verhalten lässt sich über lombok.config konfigurieren.",
+          "verdict": "correct",
+          "rationale": "lombok.nonNull.exceptionType, lombok.nonNull.flagUsage etc."
+        },
+        {
+          "text": "Mit lombok.nonNull.exceptionType=JDK nutzt Lombok java.util.Objects.requireNonNull.",
+          "verdict": "correct",
+          "rationale": "Empfohlene Einstellung — keine Lombok-eigene Klasse im Stack-Trace."
+        },
+        {
+          "text": "Lombok wirft per Default eine IllegalArgumentException.",
+          "verdict": "wrong",
+          "rationale": "Das Verhalten wurde mit 1.16.20 von IAE auf NPE geändert."
+        },
+        {
+          "text": "Lombok ignoriert null und nutzt einen Default-Wert.",
+          "verdict": "wrong",
+          "rationale": "Lombok generiert einen expliziten Null-Check — keine stillschweigende Default-Logik."
+        },
+        {
+          "text": "Lombok loggt nur eine Warnung; der Aufruf läuft normal weiter.",
+          "verdict": "wrong",
+          "rationale": "Lombok wirft eine Exception, kein Logging."
+        },
+        {
+          "text": "Lombok-NPE und manuelle Objects.requireNonNull sind funktional austauschbar.",
+          "verdict": "depends",
+          "rationale": "Semantisch ja, Stack-Trace und Message unterscheiden sich aber."
+        },
+        {
+          "text": "Für eigene Validation kann man Lombok komplett übergehen.",
+          "verdict": "depends",
+          "rationale": "Geht, ist aber selten lohnend — Lombok-Hooks sind ausreichend."
+        }
+      ]
+    },
+    {
+      "id": "jspecify-cascading",
+      "difficulty": 1,
+      "section": "JSpecify",
+      "stem": "Was gilt für die Kaskadierung von @NullMarked auf Sub-Packages?",
+      "explanation": "@NullMarked endet an der Package-Grenze — JSpecify-Spec ist explizit dazu. Jedes Sub-Package braucht seine eigene package-info.java.",
+      "answers": [
+        {
+          "text": "@NullMarked auf com.example kaskadiert NICHT automatisch auf com.example.sub.",
+          "verdict": "correct",
+          "rationale": "Sub-Packages sind eigenständige Geltungsbereiche."
+        },
+        {
+          "text": "Jedes Sub-Package braucht eigene package-info.java mit @NullMarked.",
+          "verdict": "correct",
+          "rationale": "Folgt direkt aus der Nicht-Kaskadierung."
+        },
+        {
+          "text": "Die Wirkung von @NullMarked endet an der Package-Grenze.",
+          "verdict": "correct",
+          "rationale": "Genau so steht es in der JSpecify-1.0-Spec."
+        },
+        {
+          "text": "@NullMarked auf einem Parent-Package gilt rekursiv für alle Sub-Packages.",
+          "verdict": "wrong",
+          "rationale": "Das ist gerade der Punkt: keine Vererbung in Sub-Packages."
+        },
+        {
+          "text": "@NullMarked auf module-info überschreibt automatisch alle Package-Annotationen.",
+          "verdict": "wrong",
+          "rationale": "Modul- und Package-Scopes sind unabhängig — kein Override."
+        },
+        {
+          "text": "Ohne package-info.java gilt @NullMarked transitiv vom nächsthöheren Element.",
+          "verdict": "wrong",
+          "rationale": "Es gibt keine transitive Vererbung in JSpecify."
+        },
+        {
+          "text": "Es reicht, @NullMarked auf module-info.java zu setzen.",
+          "verdict": "depends",
+          "rationale": "Bei aktivem JPMS ja, ohne JPMS muss jedes Package selbst markiert werden."
+        },
+        {
+          "text": "Generierter Code in einem Sub-Package erbt die Annotationen vom Hauptpaket.",
+          "verdict": "depends",
+          "rationale": "Erbt nichts; Workaround: Generator-Config oder @NullUnmarked je nach Quelle."
+        }
+      ]
+    },
+    {
+      "id": "nullaway-errorprone",
+      "difficulty": 1,
+      "section": "abschnittsübergreifend",
+      "stem": "Was beschreibt das Verhältnis von NullAway zu ErrorProne?",
+      "explanation": "NullAway ist ein Plugin im ErrorProne-Framework. ErrorProne stellt die Compiler-Plugin-Infrastruktur, NullAway den eigentlichen Null-Checker. Beides läuft im Compile-Phase.",
+      "answers": [
+        {
+          "text": "NullAway ist ein Plugin im ErrorProne-Framework und läuft im Compile.",
+          "verdict": "correct",
+          "rationale": "Standard-Architektur."
+        },
+        {
+          "text": "ErrorProne stellt die Plugin-Infrastruktur, NullAway den Null-Checker.",
+          "verdict": "correct",
+          "rationale": "Saubere Aufgabentrennung."
+        },
+        {
+          "text": "NullAway läuft nicht standalone — ohne ErrorProne keine Aktivierung.",
+          "verdict": "correct",
+          "rationale": "ErrorProne ist Voraussetzung für die Compiler-Hooks."
+        },
+        {
+          "text": "NullAway ersetzt javac als Compiler.",
+          "verdict": "wrong",
+          "rationale": "javac bleibt der Compiler; ErrorProne hängt sich nur als Plugin ein."
+        },
+        {
+          "text": "NullAway ist ein Maven-Plugin, das nach dem Build separat startet.",
+          "verdict": "wrong",
+          "rationale": "Es ist ein Compiler-Plugin, kein Build-Phase-Plugin."
+        },
+        {
+          "text": "NullAway ist Bestandteil des JDK seit Java 21.",
+          "verdict": "wrong",
+          "rationale": "Drittanbieter-Tool von Uber, nicht im JDK."
+        },
+        {
+          "text": "NullAway ist gegenüber dem Checker Framework die ‚unsichere' Wahl.",
+          "verdict": "depends",
+          "rationale": "Formal-Soundness-mäßig ja, pragmatisch (Build-Geschwindigkeit) nein."
+        },
+        {
+          "text": "Für 100% null-sichere Codebase ist NullAway unzureichend.",
+          "verdict": "depends",
+          "rationale": "Unsound by design; Checker Framework ist sound, aber 5–20× langsamer."
+        }
+      ]
+    },
+    {
+      "id": "jspecify-typeuse-generics",
+      "difficulty": 2,
+      "section": "JSpecify",
+      "stem": "Welche Aussagen zu Map<@NonNull K, @Nullable V> treffen zu?",
+      "explanation": "Type-Use-Position ist die JSpecify-Innovation gegenüber JSR-305. Die Annotationen positionieren sich am Typ-Argument, nicht am Container.",
+      "answers": [
+        {
+          "text": "Schlüssel sind @NonNull, Werte können null sein.",
+          "verdict": "correct",
+          "rationale": "Genau die Bedeutung der Type-Use-Annotationen."
+        },
+        {
+          "text": "Type-Use-Position ist die Kerninnovation von JSpecify gegenüber JSR-305.",
+          "verdict": "correct",
+          "rationale": "JSR-305 unterstützte das nicht sauber."
+        },
+        {
+          "text": "get(key) auf einen vorhandenen Schlüssel kann @Nullable zurückgeben.",
+          "verdict": "correct",
+          "rationale": "Wert ist nullable — Rückgabe also nullable."
+        },
+        {
+          "text": "@NonNull bezieht sich auf die ganze Map, @Nullable auf einzelne Einträge.",
+          "verdict": "wrong",
+          "rationale": "Beide annotieren Type-Argumente, nicht den Container."
+        },
+        {
+          "text": "Die Reihenfolge der Annotationen ist nicht relevant.",
+          "verdict": "wrong",
+          "rationale": "Position ist semantisch — sie bezeichnet ein bestimmtes Type-Argument."
+        },
+        {
+          "text": "JSR-305 unterstützte type-use exakt genauso.",
+          "verdict": "wrong",
+          "rationale": "JSR-305 ist primär Declaration-Use; type-use kam mit Java 8 und JSpecify."
+        },
+        {
+          "text": "@Nullable V ist semantisch dasselbe wie Optional<V>.",
+          "verdict": "depends",
+          "rationale": "Logisch ähnlich; technisch: keine Heap-Wrapper, kein get()-Risiko."
+        },
+        {
+          "text": "Eine HashMap behandelt @NonNull-Schlüssel zur Laufzeit anders.",
+          "verdict": "depends",
+          "rationale": "java.util.HashMap erlaubt null-Keys; NullAway verbietet sie statisch."
+        }
+      ]
+    },
+    {
+      "id": "nullaway-unsound",
+      "difficulty": 2,
+      "section": "Refinement",
+      "stem": "Was beschreibt NullAway's bekannte ‚unsound assumption' beim Field-Refinement?",
+      "explanation": "Nach einem Null-Check vertraut NullAway, dass aufgerufene Methoden das Feld nicht mutieren. Idiom: lokale Kopie nehmen, dann auf der Kopie weiterarbeiten.",
+      "answers": [
+        {
+          "text": "Nach Null-Check vertraut NullAway, dass aufgerufene Methoden das Feld nicht mutieren.",
+          "verdict": "correct",
+          "rationale": "Genau die dokumentierte unsound assumption."
+        },
+        {
+          "text": "Folge: Build kann passieren, Laufzeit-NPE bleibt möglich.",
+          "verdict": "correct",
+          "rationale": "Gerade darum ‚unsound'."
+        },
+        {
+          "text": "Idiom: lokale Kopie des Feldes, dann auf der Kopie prüfen — sound.",
+          "verdict": "correct",
+          "rationale": "Lokale Variablen können nicht durch Methoden mutiert werden."
+        },
+        {
+          "text": "NullAway invalidiert nach jedem Methodenaufruf alle Refinements.",
+          "verdict": "wrong",
+          "rationale": "Genau das tut es nicht — sonst keine unsound assumption."
+        },
+        {
+          "text": "Die Annahme gilt nur für package-private Methoden.",
+          "verdict": "wrong",
+          "rationale": "Sie gilt unabhängig von der Sichtbarkeit."
+        },
+        {
+          "text": "Es gibt keine ‚unsound assumption' in NullAway — das ist ein Mythos.",
+          "verdict": "wrong",
+          "rationale": "Die unsound assumption ist im NullAway-Wiki dokumentiert."
+        },
+        {
+          "text": "Die Unsoundness ist ein Bug, der irgendwann gefixt wird.",
+          "verdict": "depends",
+          "rationale": "Bewusste Designentscheidung, kein Bug — könnte aber strikter werden."
+        },
+        {
+          "text": "Bei finalen Feldern ist die Annahme unkritisch.",
+          "verdict": "depends",
+          "rationale": "final macht Mutation nach Konstruktor unmöglich; Edge Cases bleiben (lazy init)."
+        }
+      ]
+    },
+    {
+      "id": "spring-field-injection",
+      "difficulty": 2,
+      "section": "Spring Boot 4",
+      "stem": "Field-Injection mit @Autowired in @NullMarked-Code — was gilt?",
+      "explanation": "Zwischen Konstruktor und Spring-Init ist das Feld faktisch null. Konstruktor-Injection vermeidet die Lücke; pragmatisch ist @SuppressWarnings(\"NullAway.Init\").",
+      "answers": [
+        {
+          "text": "Zwischen Konstruktor und Spring-Init ist das Feld faktisch null.",
+          "verdict": "correct",
+          "rationale": "Reflexion-basierte Setter-Injection läuft erst nach dem Konstruktor."
+        },
+        {
+          "text": "@SuppressWarnings(\"NullAway.Init\") ist der pragmatische Workaround.",
+          "verdict": "correct",
+          "rationale": "Spezifisch für Init-Felder, blendet andere Checks nicht aus."
+        },
+        {
+          "text": "Konstruktor-Injection vermeidet das Problem strukturell.",
+          "verdict": "correct",
+          "rationale": "Felder sind direkt nach Konstruktor non-null."
+        },
+        {
+          "text": "Spring initialisiert Felder direkt im Konstruktor — kein Problem.",
+          "verdict": "wrong",
+          "rationale": "Field-Injection ist Reflexion-basiert, NACH dem Konstruktor."
+        },
+        {
+          "text": "@Autowired auf Feld funktioniert mit @NullMarked ohne weitere Annahmen.",
+          "verdict": "wrong",
+          "rationale": "NullAway sieht das Init-Loch und meckert."
+        },
+        {
+          "text": "@Nullable auf dem Feld macht NullAway zufrieden — passende Lösung.",
+          "verdict": "wrong",
+          "rationale": "Semantisch falsch: das Feld ist nach Init non-null; @Nullable maskiert nur."
+        },
+        {
+          "text": "Konstruktor-Injection ist immer die bessere Wahl.",
+          "verdict": "depends",
+          "rationale": "Meistens ja; manche Setter-/Lifecycle-Konstrukte erfordern Field-Injection."
+        },
+        {
+          "text": "Lazy-init-Felder dürfen ohne weiteres null sein.",
+          "verdict": "depends",
+          "rationale": "Bis zur ersten Nutzung ja, dokumentieren mit @LateInit-Pattern."
+        }
+      ]
+    },
+    {
+      "id": "optional-get-vs-orelsethrow",
+      "difficulty": 2,
+      "section": "Optional",
+      "stem": "Was unterscheidet Optional.get() von Optional.orElseThrow()?",
+      "explanation": "get() und orElseThrow() ohne Argument werfen NoSuchElementException. orElseThrow(Supplier) erlaubt eine eigene Exception mit Kontext-Message — empfohlenes Idiom.",
+      "answers": [
+        {
+          "text": "get() wirft NoSuchElementException; orElseThrow() ohne Argument identisch.",
+          "verdict": "correct",
+          "rationale": "Seit JDK 10 — orElseThrow() ist ein Alias mit klarerem Namen."
+        },
+        {
+          "text": "orElseThrow(Supplier) erlaubt eigene Exception mit kontextueller Message.",
+          "verdict": "correct",
+          "rationale": "Hauptgrund, das Idiom zu bevorzugen."
+        },
+        {
+          "text": "Idiomatisch ist orElseThrow(Supplier) — get() gilt als Anti-Pattern.",
+          "verdict": "correct",
+          "rationale": "get() suggeriert ‚sicher', verbirgt aber das Fail-Verhalten."
+        },
+        {
+          "text": "get() wirft NullPointerException, orElseThrow IllegalStateException.",
+          "verdict": "wrong",
+          "rationale": "Beide werfen NoSuchElementException als Default."
+        },
+        {
+          "text": "orElseThrow ist langsamer als get().",
+          "verdict": "wrong",
+          "rationale": "Negierbarer Overhead; Lambda inlining macht es äquivalent."
+        },
+        {
+          "text": "get() loggt eine Warnung, orElseThrow nicht.",
+          "verdict": "wrong",
+          "rationale": "Beide werfen direkt — kein Logging."
+        },
+        {
+          "text": "Im Test ist get() ok, weil das Fail-Verhalten klar ist.",
+          "verdict": "depends",
+          "rationale": "Pragmatisch ok; AssertJ assertThat(opt).isPresent() ist sauberer."
+        },
+        {
+          "text": "isPresent() + get() ist schlechter als map(...).orElse(default).",
+          "verdict": "depends",
+          "rationale": "Funktional eleganter; je nach Lesbarkeit auch umgekehrt vertretbar."
+        }
+      ]
+    },
+    {
+      "id": "jpa-entity-id",
+      "difficulty": 2,
+      "section": "Spring Boot 4",
+      "stem": "JPA-Entity mit @GeneratedValue Long id — wie wird id korrekt annotiert?",
+      "explanation": "Reflexion-basierte Init lässt id vor dem persist() null. @Nullable Long id ist die ehrliche Annotation. @Column(nullable=false) sagt etwas über das DB-Schema, nicht über den Java-Typ.",
+      "answers": [
+        {
+          "text": "@Nullable Long id — id ist null vor dem persist().",
+          "verdict": "correct",
+          "rationale": "Korrekt für @GeneratedValue: vor save ist id wirklich null."
+        },
+        {
+          "text": "Reflexion-basierte Initialisierung lässt Felder ohne Wert anfangen.",
+          "verdict": "correct",
+          "rationale": "Hibernate ruft den No-Args-Konstruktor; Felder bleiben null/0."
+        },
+        {
+          "text": "@Column(nullable=false) sagt etwas über das Schema, nicht über den Java-Typ.",
+          "verdict": "correct",
+          "rationale": "DB-Constraint vs. Compile-Time-Garantie sind orthogonal."
+        },
+        {
+          "text": "Long id ohne Annotation passt — Spring/Hibernate setzt automatisch einen Wert.",
+          "verdict": "wrong",
+          "rationale": "Nein — bis save() ist id null."
+        },
+        {
+          "text": "@NonNull Long id ist korrekt, weil die DB nullable=false ist.",
+          "verdict": "wrong",
+          "rationale": "Compile-Zeit lügt: bis save bleibt id null."
+        },
+        {
+          "text": "Hibernate weist Default-Long(-1) zu, damit id nicht null ist.",
+          "verdict": "wrong",
+          "rationale": "Hibernate vergibt keinen Sentinel-Wert vor persist."
+        },
+        {
+          "text": "UUID als Identifier vermeidet das null-Problem.",
+          "verdict": "depends",
+          "rationale": "Im Konstruktor erzeugbar = nie null; aber Index-/Performance-Trade-offs."
+        },
+        {
+          "text": "@Column(nullable=false) UND @Nullable Long id ist ein Widerspruch.",
+          "verdict": "depends",
+          "rationale": "Code-Smell-Verdacht; semantisch konsistent (vor/nach persist)."
+        }
+      ]
+    },
+    {
+      "id": "nullaway-refinement-patterns",
+      "difficulty": 2,
+      "section": "Refinement",
+      "stem": "Welche Refinement-Idioms erkennt NullAway zuverlässig?",
+      "explanation": "Direkter Null-Check, Objects.requireNonNull, Optional.isPresent → get, instanceof + pattern. Boolean-Indirektion (Issue #98 seit 2017) wird NICHT verfolgt.",
+      "answers": [
+        {
+          "text": "if (s != null) — direkter Null-Check.",
+          "verdict": "correct",
+          "rationale": "Standard-Idiom, immer erkannt."
+        },
+        {
+          "text": "Objects.requireNonNull(s) — als Statement und als Ausdruck.",
+          "verdict": "correct",
+          "rationale": "Library model in NullAway."
+        },
+        {
+          "text": "Optional.isPresent() + nachfolgendes get() im selben Block.",
+          "verdict": "correct",
+          "rationale": "Ebenfalls als library model erkannt."
+        },
+        {
+          "text": "boolean nn = s != null; if (nn) { … } — Refinement folgt durch nn.",
+          "verdict": "wrong",
+          "rationale": "Issue #98: Boolean-Indirektion wird nicht verfolgt."
+        },
+        {
+          "text": "checkNotNull() einer beliebigen util-Klasse ohne library model.",
+          "verdict": "wrong",
+          "rationale": "Ohne registriertes library model versteht NullAway das nicht."
+        },
+        {
+          "text": "Inversion: if (s == null) return; refined nichts im Folgecode.",
+          "verdict": "wrong",
+          "rationale": "Doch — early return refiniert s im Rest der Methode."
+        },
+        {
+          "text": "Pattern matching mit instanceof refined zuverlässig.",
+          "verdict": "depends",
+          "rationale": "Meistens ja; sealed types und nested patterns haben Edge Cases."
+        },
+        {
+          "text": "Guava Preconditions.checkNotNull wird ohne Konfiguration erkannt.",
+          "verdict": "depends",
+          "rationale": "Guava ist als library model bekannt; eigene Util-Klassen nicht automatisch."
+        }
+      ]
+    },
+    {
+      "id": "lombok-config-jspecify",
+      "difficulty": 2,
+      "section": "Build & Lombok",
+      "stem": "Welche lombok.config-Einstellungen passen zu einer JSpecify-Adoption?",
+      "explanation": "lombok.addNullAnnotations=jspecify schaltet auf org.jspecify.annotations.* um. lombok.nonNull.exceptionType=JDK nutzt Objects.requireNonNull. Default-lombok.config bringt nichts davon mit.",
+      "answers": [
+        {
+          "text": "lombok.addNullAnnotations=jspecify — generiert org.jspecify.annotations.* statt JSR-305.",
+          "verdict": "correct",
+          "rationale": "Korrekter Schalter seit Lombok 1.18.32."
+        },
+        {
+          "text": "lombok.nonNull.exceptionType=JDK — nutzt Objects.requireNonNull.",
+          "verdict": "correct",
+          "rationale": "Empfohlen — kein Lombok-eigener Wrapper im Stack-Trace."
+        },
+        {
+          "text": "lombok.config sollte ins Projektroot, damit alle Module es nutzen.",
+          "verdict": "correct",
+          "rationale": "Lombok respektiert Hierarchie aufwärts bis zum Repo-Root."
+        },
+        {
+          "text": "Standard-lombok.config bringt JSpecify automatisch mit.",
+          "verdict": "wrong",
+          "rationale": "Default ist leer/JSR-305 — JSpecify muss aktiviert werden."
+        },
+        {
+          "text": "Ohne lombok.config schreibt Lombok automatisch JSpecify-Annotationen.",
+          "verdict": "wrong",
+          "rationale": "Nein — ohne Konfiguration JSR-305 oder javax.annotation.*."
+        },
+        {
+          "text": "lombok.addNullAnnotations=jakarta nutzt jakarta.annotation.* (existiert).",
+          "verdict": "wrong",
+          "rationale": "jakarta.annotation hat keine @Nullable/@NonNull, ist falscher Wert."
+        },
+        {
+          "text": "Eine zentrale lombok.config reicht für Multi-Module-Projekte.",
+          "verdict": "depends",
+          "rationale": "Meist ja; bei Sub-Modul-Overrides können Konflikte auftreten."
+        },
+        {
+          "text": "Statt lombok.config könnte man die Annotationen pro Klasse setzen.",
+          "verdict": "depends",
+          "rationale": "Funktioniert, ist aber stark fehleranfällig und nicht skalierbar."
+        }
+      ]
+    },
+    {
+      "id": "records-vs-lombok",
+      "difficulty": 3,
+      "section": "Build & Lombok",
+      "stem": "Sind Records ein vollständiger Ersatz für Lombok @Data / @Value?",
+      "explanation": "Records ersetzen @Value und @Data für unveränderliche DTOs/Value-Objects gut. @Builder, @Slf4j und mutable Klassen bleiben Lombok-Domäne. Bei JPA-Entities sind Records problematisch (no-args, mutable Felder).",
+      "answers": [
+        {
+          "text": "Für unveränderliche DTOs sind Records (JDK 16+) der Standardweg.",
+          "verdict": "correct",
+          "rationale": "Records lösen 60–70% der typischen @Value-Use-Cases."
+        },
+        {
+          "text": "Records haben automatisch finale Felder, equals/hashCode und toString.",
+          "verdict": "correct",
+          "rationale": "Sprach-Feature, kein Annotation-Processor nötig."
+        },
+        {
+          "text": "Migration von @Value zu Record ist überwiegend mechanisch.",
+          "verdict": "correct",
+          "rationale": "OpenRewrite hat Recipes dafür."
+        },
+        {
+          "text": "Records ersetzen @Builder eins zu eins durch Generierung.",
+          "verdict": "wrong",
+          "rationale": "Records haben keinen Builder; @Builder bleibt Lombok-Domäne."
+        },
+        {
+          "text": "Records erlauben mutable setter-Methoden.",
+          "verdict": "wrong",
+          "rationale": "Records sind by-design unveränderlich."
+        },
+        {
+          "text": "@Data und Records sind funktional identisch.",
+          "verdict": "wrong",
+          "rationale": "@Data erzeugt mutable Klasse mit Settern; Record ist immutable."
+        },
+        {
+          "text": "Für klassische JPA-Entities sind Records der saubere Weg.",
+          "verdict": "depends",
+          "rationale": "JPA verlangt no-arg-Konstruktor + mutable Felder; passt für DTOs/Projektionen, nicht für @Entity."
+        },
+        {
+          "text": "Records mit ≥10 Feldern brauchen einen separaten Builder.",
+          "verdict": "depends",
+          "rationale": "Static factories + with-Methoden reichen oft; Builder hilft bei Lesbarkeit."
+        }
+      ]
+    },
+    {
+      "id": "package-info-vs-flag",
+      "difficulty": 3,
+      "section": "JSpecify",
+      "stem": "Greenfield: package-info pro Package vs. NullAway-Flag AnnotatedPackages — was ist besser?",
+      "explanation": "package-info.java macht den Scope explizit im Code und ist tool-agnostisch. Der NullAway-Flag ist proprietär und nur als Brownfield-Bridge gedacht.",
+      "answers": [
+        {
+          "text": "Per-Package package-info.java macht den Scope explizit im Code.",
+          "verdict": "correct",
+          "rationale": "Direkt im Source — versionierbar, reviewbar, tool-unabhängig."
+        },
+        {
+          "text": "Der Flag ist nicht JSpecify-Standard und nur für NullAway.",
+          "verdict": "correct",
+          "rationale": "-XepOpt:NullAway:AnnotatedPackages ist ein NullAway-CLI-Schalter."
+        },
+        {
+          "text": "package-info überlebt Tool-Wechsel (z.B. zu Checker Framework).",
+          "verdict": "correct",
+          "rationale": "Spec-konform — andere JSpecify-Tools verstehen es ebenfalls."
+        },
+        {
+          "text": "Der Flag ersetzt JSpecify komplett — keine Annotationen mehr nötig.",
+          "verdict": "wrong",
+          "rationale": "Nein — der Flag definiert nur, welche Packages NullAway prüft."
+        },
+        {
+          "text": "package-info macht den Build automatisch langsamer.",
+          "verdict": "wrong",
+          "rationale": "Annotation-Processing-Overhead ist vernachlässigbar."
+        },
+        {
+          "text": "Der Flag funktioniert ohne JSpecify auf dem Classpath.",
+          "verdict": "wrong",
+          "rationale": "JSpecify-Annotationen müssen vorhanden sein, sonst kein Marker."
+        },
+        {
+          "text": "AnnotatedPackages-Flag ist für Brownfield-Migration sinnvoll.",
+          "verdict": "depends",
+          "rationale": "Als Bridge ja; Endzustand sollte aber package-info pro Package sein."
+        },
+        {
+          "text": "Ein Maven-Modul mit 50+ Sub-Packages braucht 50+ package-info.java.",
+          "verdict": "depends",
+          "rationale": "Mechanisch ja; einige IDEs generieren das, OpenRewrite kann es scripten."
+        }
+      ]
+    },
+    {
+      "id": "jep-8303099-wait",
+      "difficulty": 3,
+      "section": "Was kommt nativ?",
+      "stem": "Auf JEP 8303099 (native String! / String?) warten oder JSpecify jetzt adoptieren?",
+      "explanation": "JEP 8303099 ist Draft, frühestens JDK 31 (≈2029). Migration JSpecify→native Syntax ist mechanisch, OpenRewrite-fähig. Wer wartet, verliert 2–3 LTS-Zyklen Build-Sicherheit.",
+      "answers": [
+        {
+          "text": "JEP 8303099 ist im Draft-Status, frühestens JDK 31 (≈2029).",
+          "verdict": "correct",
+          "rationale": "Realistische Timeline laut OpenJDK-Roadmap."
+        },
+        {
+          "text": "Migration von JSpecify zur nativen Syntax ist mechanisch (OpenRewrite-fähig).",
+          "verdict": "correct",
+          "rationale": "Annotation→Suffix-Syntax ist 1:1 abbildbar."
+        },
+        {
+          "text": "Wer wartet, verliert 2–3 LTS-Zyklen Build-Sicherheit.",
+          "verdict": "correct",
+          "rationale": "Bei aktuellem JDK-21-LTS sind das 6–9 Jahre."
+        },
+        {
+          "text": "JEP 8303099 ist in JDK 25 bereits Production-ready.",
+          "verdict": "wrong",
+          "rationale": "Nicht targeted; Draft ohne JDK-Zuweisung."
+        },
+        {
+          "text": "Wartet man, spart man die JSpecify-Adoption komplett.",
+          "verdict": "wrong",
+          "rationale": "Heutige Build-Sicherheit fehlt während des Wartens."
+        },
+        {
+          "text": "Native Syntax wird inkompatibel zu JSpecify-Annotationen sein.",
+          "verdict": "wrong",
+          "rationale": "Beide Welten werden parallel funktionieren; Migration mechanisch."
+        },
+        {
+          "text": "Für Greenfield 2026 könnte man auf native Syntax warten.",
+          "verdict": "depends",
+          "rationale": "Strategisch verständlich, pragmatisch problematisch — Build-Sicherheit fehlt."
+        },
+        {
+          "text": "JSpecify-Adoption jetzt ist verschwendete Arbeit.",
+          "verdict": "depends",
+          "rationale": "Bei kleinem Codebase + langer Toleranz für Bugs evtl., sonst klar nein."
+        }
+      ]
+    },
+    {
+      "id": "history-other-langs",
+      "difficulty": 3,
+      "section": "transfer",
+      "stem": "Übergreifende Frage zur Geschichte und Praxis von Null jenseits von Java:",
+      "explanation": "Tony Hoare nannte null seinen ‚billion dollar mistake' (2009). Rust und Haskell haben Option/Maybe als Standard, kein null. Kotlin's null-safety ist Compile-Zeit, nicht Laufzeit-Wrapper.",
+      "answers": [
+        {
+          "text": "Tony Hoare bezeichnete null als seinen ‚billion dollar mistake' (2009).",
+          "verdict": "correct",
+          "rationale": "QCon-Talk 2009 — sehr bekanntes Zitat."
+        },
+        {
+          "text": "Rust hat kein null im Sprachkern — Option<T> ist Standard.",
+          "verdict": "correct",
+          "rationale": "Sprach-Design-Entscheidung; Sicherheit zur Compile-Zeit."
+        },
+        {
+          "text": "Haskell und Scala bieten Option/Maybe-Typen mit pattern matching.",
+          "verdict": "correct",
+          "rationale": "Klassisches FP-Idiom — Java's Optional ist davon inspiriert."
+        },
+        {
+          "text": "Java hat null erst in Version 8 (2014) eingeführt.",
+          "verdict": "wrong",
+          "rationale": "null gibt es seit Java 1.0 (1996)."
+        },
+        {
+          "text": "Kotlin's null-safety läuft über JVM-Bytecode-Hooks zur Laufzeit.",
+          "verdict": "wrong",
+          "rationale": "Kotlin's ?-Markierung ist Compile-Zeit, kein Runtime-Check."
+        },
+        {
+          "text": "Rust's Option<T> ist garantiert langsamer als Java-null.",
+          "verdict": "wrong",
+          "rationale": "Niche-Optimierung: Option<&T> hat dieselbe Größe wie ein Pointer."
+        },
+        {
+          "text": "Java könnte null per Sprach-Update aus dem Kern entfernen.",
+          "verdict": "depends",
+          "rationale": "Backward-incompatible; Project Valhalla geht in Richtung null-restricted types."
+        },
+        {
+          "text": "JSpecify + NullAway bringt Java auf Kotlin-Sicherheits-Niveau.",
+          "verdict": "depends",
+          "rationale": "Tooling-mäßig nahe dran; Sprache selbst hinkt hinterher."
+        }
+      ]
+    }
+  ]
+}
