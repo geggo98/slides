@@ -9,6 +9,7 @@ export default [
       "**/components/**/*.vue",
       "**/layouts/**/*.vue",
       "**/pages/**/*.vue",
+      "shared/**/*.vue",
     ],
     languageOptions: {
       parser: vueParser,
@@ -36,7 +37,11 @@ export default [
     },
   },
   {
-    files: ["**/components/**/*.ts"],
+    files: [
+      "**/components/**/*.ts",
+      "shared/**/*.ts",
+      "playwright-tests/**/*.ts",
+    ],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {

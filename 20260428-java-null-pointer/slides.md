@@ -1374,3 +1374,18 @@ Quellen: jspecify.dev · github.com/uber/NullAway · spring.io/blog · openjdk.o
 <!--
 - Backup-Folien (Bonus-Sektion) für Q&A bereithalten — wer nach JEP-Detail fragt, will die Roadmap sehen.
 -->
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<NullSafetyQuiz />
+
+<!--
+- Hinter der End-Slide: für Selbststudium nach dem Vortrag.
+- Adaptive: startet mittel, wird je nach Antwort härter oder leichter.
+-->
