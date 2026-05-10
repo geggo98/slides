@@ -1381,13 +1381,7 @@ title: Selbsttest
 hideInToc: true
 ---
 
-# Selbsttest
-
-<div class="text-sm opacity-70 mb-3">
-
-Optional — vier Fragen zur Selbstkontrolle. Die Fragen unterscheiden sich bei jedem Durchlauf.
-
-</div>
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
 
 <NullSafetyQuiz />
 
