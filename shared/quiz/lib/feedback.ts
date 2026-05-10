@@ -27,7 +27,7 @@ export const PILL_WORDING: Record<FeedbackState, PillSpec> = {
     cssClass: "fb-success",
   },
   correctOmit: {
-    result: "Korrekt nicht ausgewählt",
+    result: "Treffer",
     truth: "Aussage trifft nicht zu",
     icon: "✓",
     cssClass: "fb-success",
