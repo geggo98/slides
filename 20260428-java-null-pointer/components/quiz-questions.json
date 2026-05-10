@@ -855,8 +855,7 @@
           "verdict": "depends",
           "explanation": "Bei kleinem Codebase + langer Toleranz für Bugs evtl., sonst klar nein."
         }
-      ],
-      "framingHint": "Trade-off-Frage: mehrere Antworten können je nach Kontext zutreffen."
+      ]
     },
     {
       "id": "history-other-langs",
@@ -913,8 +912,7 @@
           "verdict": "depends",
           "explanation": "Tooling-mäßig nahe dran; Sprache selbst hinkt hinterher."
         }
-      ],
-      "framingHint": "Trade-off-Frage: hier gibt es keine eindeutige Lösung — wäge ab."
+      ]
     }
   ]
 }

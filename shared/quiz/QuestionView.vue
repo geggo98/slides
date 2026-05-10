@@ -3,18 +3,34 @@
  * Renders one question with its sampled options. Owns the local picks and
  * emits submit/next so the parent can drive the run state machine.
  *
+ * Layout after submit:
+ *  - Per-option explanation is inline inside each <OptionItem> (no separate
+ *    "Auflösung" panel).
+ *  - A dimmed solution checkbox sits in a reserved right-hand column under
+ *    the "Lösung" header. `solutionPolicy` decides which rows show the box;
+ *    default = "mismatches" → only `wrongPick` + `missed`.
+ *  - Whenever any sampled option has verdict=depends, an auto
+ *    "Abwägungsfrage" note appears between legend and options, both pre- and
+ *    post-submit.
+ *
  * Accessibility:
  *  - `<fieldset>` + `<legend>` for the question grouping (1.3.1, 4.1.2)
- *  - `role="status"` + `aria-live="polite"` on the feedback summary line
- *  - Focus moves to the feedback heading on submit (2.4.3)
- *  - Reduced-motion-friendly: only 200 ms opacity transitions
+ *  - `role="status"` + `aria-live="polite"` on the options region so the
+ *    inline post-submit content announces (4.1.3)
+ *  - Visually-hidden `<h3>` inside the options region absorbs focus on
+ *    submit so the existing focus-management still works (2.4.3)
  *  - Slidev's slide-nav keys (Space, arrows, Enter) are stopped at handlers
  */
 
 import { computed, nextTick, ref, watch } from "vue";
 import OptionItem from "./OptionItem.vue";
-import { classify, PILL_WORDING } from "./lib/feedback";
-import type { Difficulty, QuizOption, QuizQuestion } from "./lib/types";
+import { classify } from "./lib/feedback";
+import type {
+  Difficulty,
+  FeedbackState,
+  QuizOption,
+  QuizQuestion,
+} from "./lib/types";
 
 const props = defineProps<{
   question: QuizQuestion;
@@ -31,6 +47,13 @@ const emit = defineEmits<{
   (e: "submit"): void;
   (e: "next"): void;
 }>();
+
+// Single config knob. Flip to "always" to show the solution checkbox on every
+// row post-submit (the user mentioned this may change later).
+const solutionPolicy: "mismatches" | "always" = "mismatches";
+
+const HINT_BODY =
+  "Hier gibt es nicht die eine richtige Antwort. Markiere, was du allgemein als zutreffend ansehen würdest — die Auflösung erklärt die Bedingungen.";
 
 const feedbackHeadingRef = ref<HTMLElement | null>(null);
 
@@ -51,6 +74,10 @@ const sectionLabel = computed(() => {
   return s;
 });
 
+const hasDepends = computed(() =>
+  props.shownOptions.some((o) => o.verdict === "depends"),
+);
+
 function togglePick(idx: number) {
   if (props.submitted) return;
   const next = props.picks.slice();
@@ -58,11 +85,21 @@ function togglePick(idx: number) {
   emit("update:picks", next);
 }
 
-function rationaleClass(i: number): string {
+function feedbackStateFor(i: number): FeedbackState | null {
+  if (!props.submitted) return null;
   const opt = props.shownOptions[i];
-  const checked = props.picks[i] ?? false;
-  if (!opt) return "";
-  return PILL_WORDING[classify(opt.verdict, checked)].cssClass;
+  if (!opt) return null;
+  return classify(opt.verdict, props.picks[i] ?? false);
+}
+
+function solutionShownFor(i: number): boolean {
+  if (!props.submitted) return false;
+  const state = feedbackStateFor(i);
+  if (!state) return false;
+  if (solutionPolicy === "always") return state !== "depends";
+  // "mismatches" — only show the canonical correct answer where the user got
+  // it wrong; correct hits and correct omissions get no box.
+  return state === "wrongPick" || state === "missed";
 }
 
 watch(
@@ -92,51 +129,44 @@ watch(
       <span v-if="sectionLabel" class="section-badge">{{ sectionLabel }}</span>
     </header>
 
-    <div v-if="question.framingHint" class="framing-hint" role="note">
-      <span class="framing-icon" aria-hidden="true">⚖</span>
-      <span>{{ question.framingHint }}</span>
-    </div>
-
     <fieldset class="question-fieldset" :disabled="submitted">
       <legend class="question-legend">{{ question.question }}</legend>
-      <div class="hint">Mehrfachauswahl möglich.</div>
-      <div class="options">
-        <OptionItem
-          v-for="(opt, i) in shownOptions"
-          :key="opt.id"
-          :option="opt"
-          :input-id="`q${totalIndex}-o${i}`"
-          :checked="picks[i] ?? false"
-          :submitted="submitted"
-          @toggle="togglePick(i)"
-        />
+
+      <div v-if="hasDepends" class="framing-hint" role="note">
+        <span class="framing-icon" aria-hidden="true">⚖</span>
+        <span>
+          <strong>Abwägungsfrage.</strong>
+          {{ HINT_BODY }}
+        </span>
+      </div>
+
+      <p v-if="!submitted" class="hint">Mehrfachauswahl möglich.</p>
+
+      <div
+        class="options-region"
+        :role="submitted ? 'status' : undefined"
+        :aria-live="submitted ? 'polite' : undefined"
+      >
+        <h3 ref="feedbackHeadingRef" tabindex="-1" class="sr-only-heading">
+          {{ feedbackHeading ?? "Auflösung" }}
+        </h3>
+        <div class="options-header" aria-hidden="true">
+          <span class="correction-header">Korrektur</span>
+        </div>
+        <div class="options">
+          <OptionItem
+            v-for="(opt, i) in shownOptions"
+            :key="opt.id"
+            :option="opt"
+            :input-id="`q${totalIndex}-o${i}`"
+            :checked="picks[i] ?? false"
+            :submitted="submitted"
+            :show-solution-box="solutionShownFor(i)"
+            @toggle="togglePick(i)"
+          />
+        </div>
       </div>
     </fieldset>
-
-    <div
-      v-if="submitted"
-      class="feedback-status"
-      role="status"
-      aria-live="polite"
-    >
-      <h3 ref="feedbackHeadingRef" tabindex="-1" class="feedback-heading">
-        {{ feedbackHeading ?? "Auflösung" }}
-      </h3>
-      <ul class="rationale-list">
-        <li
-          v-for="(opt, i) in shownOptions"
-          :key="opt.id"
-          class="rationale-item"
-          :class="rationaleClass(i)"
-        >
-          <span class="rationale-marker" aria-hidden="true"></span>
-          <span class="rationale-text">{{ opt.explanation }}</span>
-        </li>
-      </ul>
-      <p v-if="question.explanation" class="general-explanation">
-        {{ question.explanation }}
-      </p>
-    </div>
 
     <div class="controls">
       <button
@@ -196,9 +226,9 @@ watch(
 }
 
 .framing-hint {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 8px;
   padding: 5px 9px;
   border-radius: 5px;
   background: var(--qz-tradeoff-bg);
@@ -206,9 +236,14 @@ watch(
   color: var(--qz-tradeoff);
   font-size: 10.5px;
   line-height: 1.4;
+  margin: 0;
 }
 .framing-icon {
   font-size: 13px;
+  line-height: 1.2;
+}
+.framing-hint strong {
+  font-weight: 600;
 }
 
 .question-fieldset {
@@ -230,92 +265,51 @@ watch(
 .hint {
   font-size: 10px;
   color: var(--qz-text-muted);
-  margin-bottom: 2px;
+  margin: 0;
 }
+
+.options-region {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.options-header {
+  display: grid;
+  grid-template-columns: 18px 22px 1fr auto;
+  column-gap: 8px;
+  align-items: end;
+  padding: 0 9px 1px;
+}
+.correction-header {
+  grid-column: 2;
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--qz-text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  width: max-content;
+  justify-self: center;
+}
+
 .options {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.feedback-status {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 5px 9px;
-  border: 0.5px solid var(--qz-border);
-  border-radius: 5px;
-  background: var(--qz-panel-bg);
-}
-.feedback-heading {
-  margin: 0;
-  font-size: 9.5px;
-  font-weight: 600;
-  color: var(--qz-accent);
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  outline: none;
-}
-.feedback-heading:focus-visible {
-  outline: 2px solid var(--qz-focus);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-
-.rationale-list {
-  list-style: none;
-  margin: 0;
+/* Visually-hidden but focusable heading for screen-reader announcement. */
+.sr-only-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-.rationale-item {
-  display: grid;
-  grid-template-columns: 8px 1fr;
-  gap: 6px;
-  align-items: start;
-  font-size: 10.5px;
-  line-height: 1.35;
-  color: var(--qz-text);
-}
-.rationale-marker {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-top: 5px;
-  background: var(--qz-text-muted);
-}
-.rationale-item.fb-success .rationale-marker {
-  background: var(--qz-success);
-}
-.rationale-item.fb-info .rationale-marker {
-  background: var(--qz-info);
-}
-.rationale-item.fb-error .rationale-marker {
-  background: var(--qz-error);
-}
-.rationale-item.fb-warning .rationale-marker {
-  background: var(--qz-warning);
-}
-.rationale-item.fb-tradeoff .rationale-marker {
-  background: var(--qz-tradeoff);
-}
-.rationale-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
+  margin: -1px;
   overflow: hidden;
-}
-
-.general-explanation {
-  margin: 4px 0 0;
-  padding-top: 4px;
-  border-top: 0.5px dashed var(--qz-border);
-  font-size: 10.5px;
-  color: var(--qz-text);
-  line-height: 1.4;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .controls {
