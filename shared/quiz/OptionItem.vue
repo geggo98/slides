@@ -59,26 +59,28 @@ function onChange(ev: Event) {
     :class="pill?.cssClass"
     :data-state="feedbackState ?? 'pending'"
   >
-    <input
-      :id="inputId"
-      type="checkbox"
-      class="user-pick"
-      :checked="checked"
-      :disabled="submitted"
-      :aria-describedby="submitted ? `${inputId}-pill` : undefined"
-      @change="onChange"
-      @click.stop
-      @keydown.space.stop
-    />
-    <div class="correction-cell">
+    <div class="left-controls">
       <input
-        v-if="submitted && showSolutionBox"
+        :id="inputId"
         type="checkbox"
-        class="solution-pick"
-        disabled
-        :checked="solutionChecked"
-        :aria-label="solutionAriaLabel"
+        class="user-pick"
+        :checked="checked"
+        :disabled="submitted"
+        :aria-describedby="submitted ? `${inputId}-pill` : undefined"
+        @change="onChange"
+        @click.stop
+        @keydown.space.stop
       />
+      <template v-if="submitted && showSolutionBox">
+        <span class="correction-arrow" aria-hidden="true">→</span>
+        <input
+          type="checkbox"
+          class="solution-pick"
+          disabled
+          :checked="solutionChecked"
+          :aria-label="solutionAriaLabel"
+        />
+      </template>
     </div>
     <label :for="inputId" class="option-text">{{ option.text }}</label>
     <span
@@ -101,7 +103,7 @@ function onChange(ev: Event) {
 <style scoped>
 .option-row {
   display: grid;
-  grid-template-columns: 18px 22px 1fr auto;
+  grid-template-columns: 46px 1fr auto;
   column-gap: 8px;
   row-gap: 2px;
   align-items: center;
@@ -115,20 +117,24 @@ function onChange(ev: Event) {
     border-color 0.15s,
     background 0.15s;
 }
-.option-row:hover:not(.fb-success):not(.fb-info):not(.fb-error):not(
-    .fb-warning
-  ):not(.fb-tradeoff) {
+.option-row:hover:not(.fb-success):not(.fb-error):not(.fb-warning):not(
+    .fb-tradeoff
+  ) {
   border-color: var(--qz-accent);
 }
 
-.user-pick {
+.left-controls {
   grid-column: 1;
   grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.user-pick {
   width: 14px;
   height: 14px;
   margin: 0;
   accent-color: var(--qz-accent);
-  justify-self: center;
 }
 .user-pick:disabled {
   cursor: default;
@@ -139,12 +145,12 @@ function onChange(ev: Event) {
   outline-offset: 2px;
 }
 
-.correction-cell {
-  grid-column: 2;
-  grid-row: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.correction-arrow {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--qz-text-muted);
+  user-select: none;
 }
 .solution-pick {
   width: 14px;
@@ -156,7 +162,7 @@ function onChange(ev: Event) {
 }
 
 .option-text {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 1;
   min-width: 0;
   cursor: pointer;
@@ -170,7 +176,7 @@ function onChange(ev: Event) {
 
 /* status pill ------------------------------------------------------------- */
 .status-pill {
-  grid-column: 4;
+  grid-column: 3;
   grid-row: 1;
   justify-self: end;
   display: inline-flex;
@@ -194,7 +200,7 @@ function onChange(ev: Event) {
 
 /* explanation row --------------------------------------------------------- */
 .option-explanation {
-  grid-column: 3 / span 2;
+  grid-column: 2 / span 2;
   grid-row: 2;
   margin: 0;
   font-size: 10px;
@@ -214,14 +220,6 @@ function onChange(ev: Event) {
 }
 .fb-success .status-pill {
   background: var(--qz-success);
-  color: var(--qz-bg);
-}
-.fb-info {
-  border-color: var(--qz-info);
-  background: var(--qz-info-bg);
-}
-.fb-info .status-pill {
-  background: var(--qz-info);
   color: var(--qz-bg);
 }
 .fb-error {

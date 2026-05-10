@@ -150,9 +150,6 @@ watch(
         <h3 ref="feedbackHeadingRef" tabindex="-1" class="sr-only-heading">
           {{ feedbackHeading ?? "Auflösung" }}
         </h3>
-        <div class="options-header" aria-hidden="true">
-          <span class="correction-header">Korrektur</span>
-        </div>
         <div class="options">
           <OptionItem
             v-for="(opt, i) in shownOptions"
@@ -272,25 +269,6 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.options-header {
-  display: grid;
-  grid-template-columns: 18px 22px 1fr auto;
-  column-gap: 8px;
-  align-items: end;
-  padding: 0 9px 1px;
-}
-.correction-header {
-  grid-column: 2;
-  font-size: 8.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--qz-text-muted);
-  font-weight: 500;
-  white-space: nowrap;
-  width: max-content;
-  justify-self: center;
 }
 
 .options {

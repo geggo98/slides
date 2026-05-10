@@ -30,7 +30,7 @@ export const PILL_WORDING: Record<FeedbackState, PillSpec> = {
     result: "Korrekt nicht ausgewählt",
     truth: "Aussage trifft nicht zu",
     icon: "✓",
-    cssClass: "fb-info",
+    cssClass: "fb-success",
   },
   wrongPick: {
     result: "Fälschlich ausgewählt",
