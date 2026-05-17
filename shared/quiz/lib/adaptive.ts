@@ -98,17 +98,22 @@ export interface PickNextOpts {
  * Within a bucket, items are scored by exposure (lower = preferred); when
  * spaced-repetition is on, past-failure count subtracts from the score so
  * previously-failed items leap ahead.
+ *
+ * `excludeIds` is what to skip. In exhaust-correct mode the caller passes
+ * only the perfectly-answered question IDs, so wrong/partial answers stay
+ * in rotation. When this returns `null` the caller may retry with an empty
+ * Set (cycle reset) before giving up with `pool_exhausted`.
  */
 export function pickNextQuestion(
   pool: readonly QuizQuestion[],
-  asked: ReadonlySet<string>,
+  excludeIds: ReadonlySet<string>,
   desired: Difficulty,
   memory: Pick<QuizMemory, "questionExposure" | "questionFailureCount">,
   opts: PickNextOpts = {},
 ): QuizQuestion | null {
   const { enableSpacedRepetition = false, spacedRepetitionWeight = 1.0 } = opts;
   const rng = opts.rng ?? Math.random;
-  const remaining = pool.filter((q) => !asked.has(q.id));
+  const remaining = pool.filter((q) => !excludeIds.has(q.id));
   if (remaining.length === 0) return null;
 
   const ladder: Difficulty[] = [desired, ...towardCenter(desired)];

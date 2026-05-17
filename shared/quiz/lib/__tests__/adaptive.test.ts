@@ -171,7 +171,7 @@ describe("pickNextQuestion", () => {
     });
     expect(picked?.id).toBe("m2");
   });
-  it("returns null when pool is exhausted", () => {
+  it("returns null when every question is excluded", () => {
     expect(
       pickNextQuestion(
         pool,
@@ -180,6 +180,37 @@ describe("pickNextQuestion", () => {
         memory,
       ),
     ).toBeNull();
+  });
+  it("excluding only correctly-answered keeps wrong/unseen in rotation", () => {
+    // Caller in spaced-rep mode passes correctlyAnsweredIds, not all asked.
+    // Wrong-answered m1 (not in exclude set) is still pickable even though it
+    // has been asked once.
+    const correctlyAnswered = new Set(["m2"]);
+    const exp = {
+      questionExposure: { m1: 1, m2: 1 },
+      questionFailureCount: { m1: 1 },
+    };
+    const picked = pickNextQuestion(pool, correctlyAnswered, "medium", exp, {
+      enableSpacedRepetition: true,
+      spacedRepetitionWeight: 1.0,
+      rng: () => 0,
+    });
+    expect(picked?.id).toBe("m1");
+  });
+  it("with spaced-rep, failureCount lifts wrong items above unseen", () => {
+    // m1 was wrong once (failureCount: 1, exposure: 1) → priority 1 - 1 = 0
+    // m2 is unseen (exposure: 0, failureCount: 0) → priority 0
+    // Tied at 0, both could be picked. Increasing failureCount tips m1 ahead:
+    const exp = {
+      questionExposure: { m1: 1 },
+      questionFailureCount: { m1: 2 },
+    };
+    const picked = pickNextQuestion(pool, new Set(), "medium", exp, {
+      enableSpacedRepetition: true,
+      spacedRepetitionWeight: 1.0,
+      rng: () => 0,
+    });
+    expect(picked?.id).toBe("m1"); // priority 1 - 2 = -1 beats m2's 0
   });
 });
 

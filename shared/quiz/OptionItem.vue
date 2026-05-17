@@ -236,7 +236,9 @@ function onChange(ev: Event) {
 }
 .fb-warning .status-pill {
   background: var(--qz-warning);
-  color: var(--qz-bg);
+  /* Yellow/amber needs near-black ink (white-on-yellow ≈ 1.7:1, fails WCAG).
+     Both themes' --qz-warning are bright; #000 gives 6:1+ in either case. */
+  color: #000;
 }
 .fb-tradeoff {
   /* dashed border = 4th differentiator beyond color, icon, label */

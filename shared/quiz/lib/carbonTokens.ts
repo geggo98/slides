@@ -30,6 +30,11 @@ export interface SurfacePalette {
 
 export interface QuizPalette extends StatusPalette, SurfacePalette {}
 
+// Success uses IBM blue (not green) so deuteranopia/protanopia don't collapse
+// success/error onto the same red-green axis. Blue + red are distinguishable
+// in all three CVD types (blue-yellow axis preserved under deutero/protan,
+// red-green axis preserved under tritan) and have clear L* separation.
+// Pairwise CVD ΔE and WCAG contrast are gated by carbonTokens.test.ts.
 export function makePalette(isDark: boolean): QuizPalette {
   if (isDark) {
     return {
@@ -41,16 +46,16 @@ export function makePalette(isDark: boolean): QuizPalette {
       accent: "#fb923c",
       accentBg: "rgba(251,146,60,0.14)",
       focus: "#fb923c",
-      success: "#42be65",
-      successBg: "rgba(66,190,101,0.18)",
+      success: "#4589ff",
+      successBg: "rgba(69,137,255,0.18)",
       info: "#4589ff",
       infoBg: "rgba(69,137,255,0.16)",
-      error: "#fa4d56",
-      errorBg: "rgba(250,77,86,0.16)",
+      error: "#ff8389",
+      errorBg: "rgba(255,131,137,0.16)",
       warning: "#f1c21b",
       warningBg: "rgba(241,194,27,0.18)",
-      tradeoff: "#a56eff",
-      tradeoffBg: "rgba(165,110,255,0.18)",
+      tradeoff: "#8a3ffc",
+      tradeoffBg: "rgba(138,63,252,0.18)",
     };
   }
   return {
@@ -62,12 +67,12 @@ export function makePalette(isDark: boolean): QuizPalette {
     accent: "#ea580c",
     accentBg: "rgba(234,88,12,0.10)",
     focus: "#ea580c",
-    success: "#198038",
-    successBg: "rgba(25,128,56,0.12)",
+    success: "#0f62fe",
+    successBg: "rgba(15,98,254,0.10)",
     info: "#0f62fe",
     infoBg: "rgba(15,98,254,0.10)",
-    error: "#da1e28",
-    errorBg: "rgba(218,30,40,0.10)",
+    error: "#a2191f",
+    errorBg: "rgba(162,25,31,0.10)",
     warning: "#b28600",
     warningBg: "rgba(241,194,27,0.18)",
     tradeoff: "#6929c4",
