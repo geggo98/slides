@@ -40,16 +40,16 @@ Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode 
 **Subagents** lösen Kontextfenster-Probleme.
 
 ---
-
-## clicks: false
+clicks: false
+---
 
 # Primitive im Überblick
 
 <PrimitivesOverview />
 
 ---
-
-## clicks: false
+clicks: false
+---
 
 # Vergleichsmatrix
 
@@ -176,6 +176,43 @@ clicks: false
 # Git Worktrees für Agenten
 
 <WorktreeOverview />
+
+---
+
+# Pipes & Headless-Mode
+
+| Tool            | Headless           | Stdin-Pipe           | Besonderheit                           |
+| --------------- | ------------------ | -------------------- | -------------------------------------- |
+| **Claude Code** | `-p` / `--print`   | ✓ (10 MB cap)        | 3 s-Timeout · ab 2026-06-15 SDK-Credit |
+| **Gemini CLI**  | `-p` / `--prompt`  | ✓                    | `--output-format json` / `stream-json` |
+| **Codex**       | `codex exec` (`e`) | ✓ (Prompt-Arg `-`)   | `exec resume`, `--json`                |
+| **OpenCode**    | `opencode run "…"` | ✗ (nur `-f <datei>`) | `opencode serve` für warme Sessions    |
+| **Windsurf**    | ✗                  | ✗                    | Nur IDE-integriert                     |
+| **Junie**       | ✗                  | ✗                    | Nur IDE-integriert                     |
+
+---
+
+# Claude im Pipe-Einsatz — Stolperfallen
+
+**1. 3-Sekunden-Timeout** — wenn binnen 3 s keine Daten ankommen, läuft Claude **ohne** Stdin weiter (Warnung auf stderr). Sobald Daten fließen, wartet er auf **EOF** — `tail -f | claude -p …` hängt deshalb ewig.
+
+**2. Abrechnung** — ab **2026-06-15** zählt `claude -p` auf Pro/Max-Plänen gegen ein separates **Agent-SDK-Credit**, nicht gegen das interaktive Kontingent.
+
+**3. Workaround: vollständig puffern, dann übergeben** — Subshell läuft fertig, Claude bekommt sofort einen geschlossenen Stream.
+
+```bash
+# Bash / Zsh — Herestring puffert über $(...)
+claude -p "Fasse das Transkript zusammen:" \
+  <<< "$(yt-dlp --skip-download --write-auto-subs --sub-lang de "$URL")"
+```
+
+```fish
+# Fish — psub schreibt in Tempfile (NICHT `psub -F` / `--fifo`,
+# das reproduziert den EOF-Hang)
+claude -p "Fasse zusammen:" < (yt-dlp --skip-download --write-auto-subs --sub-lang de $URL | psub)
+```
+
+Bonus: `claude -p` lässt sich mit `--resume <session-id>` zu einer bestehenden Session fortsetzen — ideal für mehrstufige Skript-Pipelines.
 
 ---
 
