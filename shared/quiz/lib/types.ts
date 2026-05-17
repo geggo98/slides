@@ -53,11 +53,11 @@ export interface QuizConfig {
 }
 
 export const DEFAULT_CONFIG: QuizConfig = {
-  maxQuestions: 4,
+  maxQuestions: 8,
   optionsPerQuestion: 4,
   seedDifficulty: "medium",
   floorStopEnabled: false,
-  enableSpacedRepetition: false,
+  enableSpacedRepetition: true,
   spacedRepetitionWeight: 1.0,
   tierWordingVariant: "B",
   historyTrimAt: 100,

@@ -276,6 +276,11 @@ const reviewItems = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 3px;
+  /* Cap height so the summary fits the slide canvas even at maxQuestions: 8+
+     (≈14px per item, this keeps ~9 items in view). Slidev's canvas is scaled
+     so px values here are logical, not viewport. */
+  max-height: 130px;
+  overflow-y: auto;
 }
 .review-item {
   display: grid;

@@ -243,10 +243,22 @@ function onNext() {
     finalizeRun(stop);
     return;
   }
-  const askedIds = new Set(run.value.asked.map((a) => a.questionId));
+  // Spaced-rep mode excludes only perfectly-answered questions; partial and
+  // wrong attempts stay in rotation. Plain mode excludes everything asked.
+  const excludeIds = cfg.value.enableSpacedRepetition
+    ? new Set(
+        run.value.asked
+          .filter((a) => a.submitted && performanceOf(a.score ?? 0) === "full")
+          .map((a) => a.questionId),
+      )
+    : new Set(run.value.asked.map((a) => a.questionId));
+  if (excludeIds.size === props.quiz.questions.length) {
+    finalizeRun("pool_exhausted");
+    return;
+  }
   const nq = pickNextQuestion(
     props.quiz.questions,
-    askedIds,
+    excludeIds,
     run.value.currentDifficulty,
     memory.value,
     {
@@ -295,6 +307,14 @@ function computeCompletedRun(
   submitted: AskedQuestion[],
   stop: StopReason,
 ): CompletedRun {
+  // Collapse repeats (spaced-rep mode appends a new AskedQuestion per attempt)
+  // to one entry per question, keeping the LAST attempt's data. Map keeps
+  // first-insertion order, so the review list reflects when the user first
+  // encountered each question.
+  const distinctByQuestion = new Map<string, AskedQuestion>();
+  for (const a of submitted) distinctByQuestion.set(a.questionId, a);
+  const distinctSubmitted = [...distinctByQuestion.values()];
+
   let scoringTotal = 0;
   let scoringCorrect = 0;
   const perDifficulty: CompletedRun["perDifficulty"] = {
@@ -304,7 +324,7 @@ function computeCompletedRun(
   };
   const questionScores: Record<string, number> = {};
 
-  for (const a of submitted) {
+  for (const a of distinctSubmitted) {
     const map = optionsByQuestion.value[a.questionId] ?? {};
     const shown = a.sampledOptionIds
       .map((id) => map[id])
@@ -337,12 +357,12 @@ function computeCompletedRun(
     runId: state.runId,
     completedAt: new Date().toISOString(),
     stopReason: stop,
-    questionsAsked: submitted.length,
+    questionsAsked: distinctSubmitted.length,
     scoringStatementsTotal: scoringTotal,
     scoringStatementsCorrect: scoringCorrect,
     scorePercent,
     perDifficulty,
-    askedQuestionIds: submitted.map((a) => a.questionId),
+    askedQuestionIds: distinctSubmitted.map((a) => a.questionId),
     questionScores,
   };
 }
