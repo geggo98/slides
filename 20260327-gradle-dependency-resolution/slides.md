@@ -859,6 +859,7 @@ ul { font-size: 0.9em; }
 - [Renovate: minimumReleaseAge](https://docs.renovatebot.com/configuration-options/#minimumreleaseage)
 - [Package Managers Need to Cool Down](https://nesbitt.io/2026/03/04/package-managers-need-to-cool-down.html) — Andrew Nesbitt
 - [npm: min-release-age](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age)
+- [npm: Bulk trusted publishing & script security (GitHub Blog, Feb 2026)](https://github.blog/changelog/2026-02-18-npm-bulk-trusted-publishing-config-and-script-security-now-generally-available/)
 - [pnpm: minimumReleaseAge](https://pnpm.io/settings#minimumreleaseage)
 - [Bun: minimumReleaseAge](https://bun.com/docs/pm/cli/install#minimum-release-age)
 - [Supply-Chain Guardrails (Coinspect)](https://www.coinspect.com/blog/supply-chain-guardrails/)

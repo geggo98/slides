@@ -29,6 +29,9 @@ const dependabotYml = `updates:
 const npmRc = `# .npmrc (projekt-lokal oder ~/.npmrc)
 min-release-age=7`;
 
+const npmInstall = `# default: erlaubt — explizit deaktivieren
+npm install --allow-git=none`;
+
 const pnpmWorkspace = `# pnpm-workspace.yaml (ab pnpm 10) oder package.json
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
@@ -79,23 +82,39 @@ const tabs = [
         height: "260px",
       },
     ],
-    info: {
-      tone: "info",
-      title: "Dependabot — semver-granular",
-      body: "Dependabot unterstützt <code>semver-major-days</code>, <code>semver-minor-days</code>, <code>semver-patch-days</code> — Patches dürfen z.&nbsp;B. sofort durch, Majors warten 30 Tage. Renovate hat diese Granularität via <code>matchUpdateTypes</code>.",
-    },
+    infos: [
+      {
+        tone: "info",
+        title: "Dependabot — semver-granular",
+        body: "Dependabot unterstützt <code>semver-major-days</code>, <code>semver-minor-days</code>, <code>semver-patch-days</code> — Patches dürfen z.&nbsp;B. sofort durch, Majors warten 30 Tage. Renovate hat diese Granularität via <code>matchUpdateTypes</code>.",
+      },
+    ],
   },
   {
     id: "npm",
     label: "npm",
+    layout: "row",
     snippets: [
-      { code: npmRc, language: "ini", caption: ".npmrc", height: "120px" },
+      { code: npmRc, language: "ini", caption: ".npmrc", height: "100px" },
+      {
+        code: npmInstall,
+        language: "shell",
+        caption: "safe install (npm ≥ 11.x)",
+        height: "100px",
+      },
     ],
-    info: {
-      tone: "warning",
-      title: "Erst ab npm 11.5.0 (Sept 2025)",
-      body: "Ältere npm-Versionen ignorieren den Key <strong>stillschweigend</strong> — Supply-Chain-Risiko, wenn Teile des Teams/CI auf älteren Versionen laufen. Erzwinge <code>engines.npm</code> oder nimm Volta/fnm. Einheit: Tage (Integer). Keine Exclude-Liste.",
-    },
+    infos: [
+      {
+        tone: "warning",
+        title: "Cooldown erst ab npm 11.5.0",
+        body: "Ältere npm-Versionen ignorieren <code>min-release-age</code> <strong>stillschweigend</strong>. Per <code>engines.npm</code> oder Volta/fnm erzwingen.",
+      },
+      {
+        tone: "warning",
+        title: "ACE via Git-Dependencies",
+        body: "Transitive Git-Deps können eine eigene <code>.npmrc</code> mitliefern, die den <strong>Git-Executable-Pfad</strong> überschreibt — RCE auch mit <code>--ignore-scripts</code>. <code>--allow-git=none</code> (npm ≥ 11.x, Feb 2026) per <code>.npmrc</code> oder CI durchsetzen.",
+      },
+    ],
   },
   {
     id: "pnpm",
@@ -114,11 +133,13 @@ const tabs = [
         height: "95px",
       },
     ],
-    info: {
-      tone: "warning",
-      title: "camelCase vs. kebab-case",
-      body: "<code>pnpm-workspace.yaml</code> / <code>package.json</code> nutzt <strong>camelCase</strong>, <code>.npmrc</code> nutzt <strong>kebab-case</strong>. Falsche Schreibweise wird <strong>still ignoriert</strong> — keine Warnung, keine Fehlermeldung.",
-    },
+    infos: [
+      {
+        tone: "warning",
+        title: "camelCase vs. kebab-case",
+        body: "<code>pnpm-workspace.yaml</code> / <code>package.json</code> nutzt <strong>camelCase</strong>, <code>.npmrc</code> nutzt <strong>kebab-case</strong>. Falsche Schreibweise wird <strong>still ignoriert</strong> — keine Warnung, keine Fehlermeldung.",
+      },
+    ],
   },
   {
     id: "bun",
@@ -131,11 +152,13 @@ const tabs = [
         height: "150px",
       },
     ],
-    info: {
-      tone: "info",
-      title: "Einheit: Sekunden",
-      body: "Bun ist das <strong>einzige</strong> Tool, das die Cooldown-Zeit in Sekunden ausdrückt — <code>604800</code> = 7 Tage. <code>bunfig.toml</code> nutzt camelCase.",
-    },
+    infos: [
+      {
+        tone: "info",
+        title: "Einheit: Sekunden",
+        body: "Bun ist das <strong>einzige</strong> Tool, das die Cooldown-Zeit in Sekunden ausdrückt — <code>604800</code> = 7 Tage. <code>bunfig.toml</code> nutzt camelCase.",
+      },
+    ],
   },
   {
     id: "yarn",
@@ -148,11 +171,13 @@ const tabs = [
         height: "170px",
       },
     ],
-    info: {
-      tone: "info",
-      title: "Map von Glob → Semver-Range",
-      body: '<code>npmPreapprovedPackages</code> ist <strong>keine Liste</strong>, sondern eine <strong>Map</strong> — Werte sind Semver-Ranges. <code>"*"</code> erlaubt alle Versionen, <code>"^5.0.0"</code> nur Patches/Minors ab 5.0.0. Damit lässt sich gezielt „nur Patches ohne Wartezeit" erlauben.',
-    },
+    infos: [
+      {
+        tone: "info",
+        title: "Map von Glob → Semver-Range",
+        body: '<code>npmPreapprovedPackages</code> ist <strong>keine Liste</strong>, sondern eine <strong>Map</strong> — Werte sind Semver-Ranges. <code>"*"</code> erlaubt alle Versionen, <code>"^5.0.0"</code> nur Patches/Minors ab 5.0.0. Damit lässt sich gezielt „nur Patches ohne Wartezeit" erlauben.',
+      },
+    ],
   },
   {
     id: "uv",
@@ -165,11 +190,13 @@ const tabs = [
         height: "140px",
       },
     ],
-    info: {
-      tone: "info",
-      title: "Override, kein Allowlist-Exclude",
-      body: "<code>exclude-newer-package</code> ist <strong>semantisch anders</strong> als bei npm/pnpm/Bun/Yarn: Es setzt pro Paket ein <strong>anderes Cutoff-Datum</strong> (Override) statt die Altersgrenze zu umgehen. Ein Datum statt eines Age-Werts — granularer, aber nicht vergleichbar.",
-    },
+    infos: [
+      {
+        tone: "info",
+        title: "Override, kein Allowlist-Exclude",
+        body: "<code>exclude-newer-package</code> ist <strong>semantisch anders</strong> als bei npm/pnpm/Bun/Yarn: Es setzt pro Paket ein <strong>anderes Cutoff-Datum</strong> (Override) statt die Altersgrenze zu umgehen. Ein Datum statt eines Age-Werts — granularer, aber nicht vergleichbar.",
+      },
+    ],
   },
   {
     id: "deno",
@@ -182,11 +209,13 @@ const tabs = [
         height: "120px",
       },
     ],
-    info: {
-      tone: "info",
-      title: "Exclude via gepinnte Imports",
-      body: "Kein Config-File, keine Per-Package-Excludes im Flag selbst. Idiomatisch: <code>deno.json</code> <code>imports</code> mit <strong>expliziter Version</strong> — gepinnte Pakete werden nicht durch Age-Checks geblockt (nur Auto-Resolutions). Format: Duration-String (<code>7d</code>, <code>24h</code>, <code>168h</code>).",
-    },
+    infos: [
+      {
+        tone: "info",
+        title: "Exclude via gepinnte Imports",
+        body: "Kein Config-File, keine Per-Package-Excludes im Flag selbst. Idiomatisch: <code>deno.json</code> <code>imports</code> mit <strong>expliziter Version</strong> — gepinnte Pakete werden nicht durch Age-Checks geblockt (nur Auto-Resolutions). Format: Duration-String (<code>7d</code>, <code>24h</code>, <code>168h</code>).",
+      },
+    ],
   },
 ];
 
@@ -229,9 +258,14 @@ const activeEntry = computed(() => tabs.find((t) => t.id === activeTab.value));
           </div>
         </div>
 
-        <div class="ct-info" :class="activeEntry.info.tone">
-          <p class="ct-info-title">{{ activeEntry.info.title }}</p>
-          <p class="ct-info-body" v-html="activeEntry.info.body" />
+        <div
+          v-for="(box, i) in activeEntry.infos"
+          :key="i"
+          class="ct-info"
+          :class="box.tone"
+        >
+          <p class="ct-info-title">{{ box.title }}</p>
+          <p class="ct-info-body" v-html="box.body" />
         </div>
       </div>
     </div>
