@@ -130,9 +130,7 @@ Ein Agent profitiert von **beiden gleichzeitig**.
 
 **Zed + JetBrains, 2025** — "LSP für AI-Agenten"
 
-Vor ACP: Jede IDE brauchte für jeden Agenten eine Custom-Integration.
-
-Mit ACP: Ein Agent implementiert ACP einmal → funktioniert in JetBrains, Zed, und jedem ACP-kompatiblen Editor.
+**Vor ACP:** N·M Custom-Integrationen (IDE × Agent). **Mit ACP:** einmal implementieren → läuft überall.
 
 | Tool        | ACP | Details              |
 | ----------- | --- | -------------------- |
@@ -143,6 +141,25 @@ Mit ACP: Ein Agent implementiert ACP einmal → funktioniert in JetBrains, Zed, 
 | Windsurf    | ✗   | Eigene IDE           |
 
 **MCP-Durchreichung:** JetBrains reicht konfigurierte MCP-Server an ACP-Agenten durch — einmal konfigurieren, alle Agenten nutzen es.
+
+---
+
+# ACP — Abrechnung auf Pro/Max
+
+Wie bei `claude -p` zählt **Claude Code via ACP** ab **2026-06-15** auf Pro/Max-Plänen gegen ein separates **Agent-SDK-Credit**, nicht gegen das (subventionierte) interaktive Subscription-Kontingent. Über das Credit hinaus zu Standard-API-Raten.
+
+**Betroffen:** Claude Code aus Zed/JetBrains via ACP, `claude -p`, GitHub Actions, alle Drittanbieter-Tools mit Agent-SDK. **Unverändert:** Interactive Claude Code im Terminal/IDE bleibt im Subscription-Kontingent.
+
+<!--
+Quellen zur Abrechnung Agent-SDK-Credit (Stand 2026-05):
+
+- Anthropic Help Center (kanonisch zum Billing-Split, Credit-Beträge, Start 2026-06-15):
+  https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan
+- Zed Blog (kanonisch zur ACP-→-Agent-SDK-Verknüpfung: "Claude Code through ACP … no longer draws from your Pro/Max subscription limits"):
+  https://zed.dev/blog/anthropic-subscription-changes
+- Ursprünglicher Hinweis aus der Community:
+  https://x.com/ClaudeDevs/status/2054610152817619388
+-->
 
 ---
 
