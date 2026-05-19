@@ -1,9 +1,14 @@
 #!/usr/bin/env bun
 // Overflow-check a Slidev slide: verify nothing renders below the 720px
 // viewport boundary (the scaled slide-canvas height). Cycles through every
-// tab button in .tab-bar/.tabs/.eco-tabs and through light+dark themes,
+// tab button on the visible slide (.tab-bar / .tabs / .ct-tabs / .eco-tabs
+// / .info-tabs / .sc-tabs / [role=tablist]) and through light+dark themes,
 // scrolls any scrollable container to the bottom, then reports elements
 // whose bottom > 720.
+//
+// Tab discovery, clicking, and overflow measurement are all scoped to the
+// visible .slidev-page so Slidev's prerendered adjacent slides don't
+// pollute the results.
 //
 // Usage:
 //   bun run playwright-tests/check-slide-overflow.ts <slide> [port]
@@ -76,10 +81,35 @@ try {
   process.exit(2);
 }
 
-const tabLabels = await page.$$eval(
-  ".tab-bar button, .tabs button, .eco-tabs button, [role='tablist'] [role='tab']",
-  (els) => els.map((el) => (el.textContent || "").trim()).filter(Boolean),
-);
+const TAB_SELECTOR = [
+  ".tab-bar button",
+  ".tabs button",
+  ".ct-tabs button",
+  ".eco-tabs button",
+  ".info-tabs button",
+  ".sc-tabs button",
+  "[role='tablist'] [role='tab']",
+].join(", ");
+
+// Identify the visible .slidev-page so all further queries can be scoped
+// to it. Slidev keeps adjacent slides in the DOM, and unscoped queries
+// would click hidden buttons (each click times out after 30s) and count
+// off-screen overflows.
+const slideClass = await page.evaluate(() => {
+  const pages = [...document.querySelectorAll<HTMLElement>(".slidev-page")];
+  const visible = pages.find((p) => p.offsetParent !== null);
+  return visible
+    ? ([...visible.classList].find((c) => /^slidev-page-\d+$/.test(c)) ?? null)
+    : null;
+});
+if (!slideClass) {
+  console.error(`No visible .slidev-page found at ${BASE}/${slide}`);
+  await browser.close();
+  process.exit(2);
+}
+const slideLoc = page.locator(`.${slideClass}`);
+const tabsLoc = slideLoc.locator(TAB_SELECTOR);
+const tabCount = await tabsLoc.count();
 
 type Finding = {
   tab: string;
@@ -100,8 +130,10 @@ async function setMode(mode: "light" | "dark") {
 }
 
 async function scrollScrollablesToBottom() {
-  await page.evaluate(() => {
-    document.querySelectorAll<HTMLElement>("*").forEach((el) => {
+  await page.evaluate((slideCls) => {
+    const slide = document.querySelector(`.${slideCls}`);
+    if (!slide) return;
+    slide.querySelectorAll<HTMLElement>("*").forEach((el) => {
       const cs = getComputedStyle(el);
       const oy = cs.overflowY;
       if (
@@ -111,18 +143,18 @@ async function scrollScrollablesToBottom() {
         el.scrollTop = el.scrollHeight;
       }
     });
-  });
+  }, slideClass);
   await page.waitForTimeout(150);
 }
 
 async function collectOverflow(tab: string, mode: string) {
   const rows = await page.evaluate(
-    ({ viewportH, tolerance }) => {
+    ({ viewportH, tolerance, slideCls }) => {
+      const slide = document.querySelector(`.${slideCls}`);
+      if (!slide) return [];
       const violations: Array<{ bottom: number; sel: string; text: string }> =
         [];
-      const seen = new Set<Element>();
-      document.querySelectorAll<HTMLElement>("body *").forEach((el) => {
-        if (seen.has(el)) return;
+      slide.querySelectorAll<HTMLElement>("*").forEach((el) => {
         // Only count leaf-ish elements with visible text, so we don't double-count wrappers
         const text = (el.textContent || "").trim();
         if (!text) return;
@@ -156,11 +188,10 @@ async function collectOverflow(tab: string, mode: string) {
           sel: el.tagName.toLowerCase() + (cls === "." ? "" : cls),
           text: text.slice(0, 60),
         });
-        seen.add(el);
       });
       return violations;
     },
-    { viewportH: VIEWPORT_H, tolerance: TOLERANCE },
+    { viewportH: VIEWPORT_H, tolerance: TOLERANCE, slideCls: slideClass },
   );
 
   for (const v of rows) {
@@ -178,16 +209,14 @@ async function collectOverflow(tab: string, mode: string) {
 for (const mode of ["light", "dark"] as const) {
   await setMode(mode);
 
-  if (tabLabels.length === 0) {
+  if (tabCount === 0) {
     await scrollScrollablesToBottom();
     await collectOverflow("(no tabs)", mode);
   } else {
-    for (const label of tabLabels) {
-      await page
-        .getByRole("button", { name: label })
-        .first()
-        .click()
-        .catch(() => {});
+    for (let i = 0; i < tabCount; i++) {
+      const btn = tabsLoc.nth(i);
+      const label = (await btn.textContent())?.trim() || `tab${i}`;
+      await btn.click({ timeout: 2000 }).catch(() => {});
       await page.waitForTimeout(250);
       await scrollScrollablesToBottom();
       await collectOverflow(label, mode);
@@ -198,7 +227,7 @@ for (const mode of ["light", "dark"] as const) {
 await browser.close();
 
 if (findings.length === 0) {
-  const combos = (tabLabels.length || 1) * 2;
+  const combos = (tabCount || 1) * 2;
   console.log(
     `✓ Slide ${slide} fits within ${VIEWPORT_H}px viewport across ${combos} tab × theme combos.`,
   );
