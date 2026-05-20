@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(devenv)",
+      "Skill(web-research)",
+      "Bash(devenv shell:*)",
+      "Bash(devenv inputs:*)"
+    ]
+  }
+}
