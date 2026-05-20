@@ -11,6 +11,26 @@ monaco: true
 
 Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode · Gemini CLI
 
+<div class="text-sm opacity-75 mt-4">
+
+**Hinweis:** Gemini CLI wird ab **2026-06-18** durch **Antigravity CLI** ersetzt — laut Google "no 1:1 feature parity right out of the gate". Einzelne hier gezeigte Gemini-CLI-Features können in Antigravity CLI vorübergehend fehlen.
+
+</div>
+
+<!--
+Quelle Antigravity-CLI-Transition (Stand 2026-05):
+
+- Google Developers Blog, 2026-05-19 (kanonisch):
+  https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/
+
+Kernfakten:
+- Antigravity CLI = Nachfolger (Teil von Googles "agent-first development platform")
+- 2026-06-18: Gemini CLI / Gemini Code Assist IDE-Extensions stoppen Requests für Pro/Ultra/Free
+- Erhalten bleiben: Agent Skills, Hooks, Subagents, Extensions als Plugins
+- Wörtlich: "no 1:1 feature parity right out of the gate"
+- Keine neuen GitHub-Org-Installationen nach 2026-06-18
+-->
+
 ---
 
 # Kernbegriffe
