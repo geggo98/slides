@@ -1,6 +1,6 @@
 <script setup>
 import CollapsibleSection from "./CollapsibleSection.vue";
-import MonacoBlock from "./MonacoBlock.vue";
+import MonacoBlock from "../../../shared/components/MonacoBlock.vue";
 
 const codeSkillDir = `# Im SKILL.md referenzieren:
 Nutze das Skript unter
