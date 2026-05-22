@@ -255,31 +255,7 @@ hideInToc: true
 
 # Pattern 1: Recipes-first, AI im Build-Loop
 
-<AiPatternCard
-class="mt-2"
-tag="Duolingo-Goldstandard. Deterministische Recipes laufen zuerst, AI fixt nur die Lücken im Build-Loop."
-:badges="[
-{ label: 'Determinismus: hoch', tone: 'good' },
-{ label: 'Reviewbar: gut', tone: 'good' },
-{ label: 'Token-Kosten: mittel' },
-{ label: 'Maturity: produktiv', tone: 'good' }
-]"
-:apply="[
-'Mass-Migration über viele Repos',
-'Spring-Boot-Major-Upgrades mit JPA/Jackson/Security',
-'Existierendes deterministisches Gate (Build, Tests)'
-]"
-:avoid="[
-'Kein verlässlicher Build als Gate',
-'Migration zu klein für CI-Setup',
-'Codebases ohne sinnvolle Test-Coverage'
-]"
-verdict="Der einzige produktionserprobte Workflow für Migration-at-Scale. AI nur für die Lücken nutzen — Halluzinationen erkennt der Build."
-
-> <template #pipeline>
-> <AiPattern1Pipeline />
-> </template>
-> </AiPatternCard>
+<AiPattern1Card class="mt-2" />
 
 <!--
 - Duolingo Golden Path Case Study (FINOS): Spring-Boot- und JDK-Upgrades über die gesamte Codebase.
@@ -293,32 +269,7 @@ hideInToc: true
 
 # Pattern 2: AI als Recipe-Autor
 
-<AiPatternCard
-class="mt-2"
-tag="Der LLM schreibt eine Recipe — nutzt sie aber nicht selbst zum Refactoren. Determinismus-Boundary verlagert sich nach links."
-:badges="[
-{ label: 'Determinismus: sehr hoch', tone: 'good' },
-{ label: 'Reviewbar: exzellent', tone: 'good' },
-{ label: 'Token-Kosten: einmalig', tone: 'good' },
-{ label: 'Maturity: produktiv', tone: 'good' }
-]"
-:apply="[
-'Migration wiederholt sich (Spring Boot 4 → 5 kommt)',
-'Eigene interne API-Migrationen in vielen Services',
-'Sinnvolle Recipe-Wiederverwendung über die Org'
-]"
-:avoid="[
-'Einmalige Migration in einem einzelnen Repo',
-'Team hat keine LST/Visitor-Lernkurve geplant',
-'Wenn Refaster reicht'
-]"
-verdict="Langfristig die nachhaltigste Investition. Token-Kosten fallen einmal an, nicht 200×."
-verdict-tone="success"
-
-> <template #pipeline>
-> <AiPattern2Pipeline />
-> </template>
-> </AiPatternCard>
+<AiPattern2Card class="mt-2" />
 
 <!--
 - Moderne Skills sind LLM-Instruktionen, die einem Coding-Agent Recipe-Authoring beibringen.
@@ -332,31 +283,7 @@ hideInToc: true
 
 # Pattern 3: LLM in Recipe — das Anti-Pattern
 
-<AiPatternCard
-class="mt-2"
-tag="`rewrite-generative-ai`: Recipe ruft an Decision-Points die OpenAI-API. Non-deterministische Diffs."
-:badges="[
-{ label: 'Determinismus: niedrig', tone: 'bad' },
-{ label: 'Reviewbar: schlecht', tone: 'bad' },
-{ label: 'Token-Kosten: hoch', tone: 'bad' },
-{ label: 'Maturity: experimentell', tone: 'warn' }
-]"
-:apply="[
-'Einmalige Spielereien, Prototypen, Forschung',
-'Wenn dem Team egal ist, was der Diff macht'
-]"
-:avoid="[
-'Produktive Pipelines',
-'Mass-Migration',
-'Wenn ein deterministischer Visitor das Gleiche täte (fast immer der Fall)'
-]"
-verdict="Hebt den fundamentalen Vorteil von OpenRewrite auf. Hände weg — die OpenRewrite-Maintainer selbst warnen vor Produktiveinsatz."
-verdict-tone="danger"
-
-> <template #pipeline>
-> <AiPattern3Pipeline />
-> </template>
-> </AiPatternCard>
+<AiPattern3Card class="mt-2" />
 
 <!--
 - rewrite-generative-ai existiert in der OpenRewrite-Org als experimentelles Repo.
@@ -370,31 +297,7 @@ hideInToc: true
 
 # Pattern 4: Prethink — Pipeline umgedreht
 
-<AiPatternCard
-class="mt-2"
-tag="OpenRewrite extrahiert strukturierten Kontext, AI-Agent konsumiert ihn. AI operiert auf Architektur-Beschreibung statt rohem Code-Grep."
-:badges="[
-{ label: 'Determinismus: hoch', tone: 'good' },
-{ label: 'Reviewbar: gut', tone: 'good' },
-{ label: 'Token-Kosten: mittel' },
-{ label: 'Maturity: neu', tone: 'warn' }
-]"
-:apply="[
-'Komplexe Architekturen, viele Services, B2B-Integrationen',
-'Token-Budget für rohen Code-Grep zu knapp',
-'Cross-Repo-Impact-Analyse'
-]"
-:avoid="[
-'Kleine, übersichtliche Codebases',
-'Architektur-Modelle nicht stabil',
-'Niemand maintained die Kontext-Files'
-]"
-verdict="Konzeptuell unterschätzt — das wird sich durchsetzen, auch ohne Moderne-Branding. Caveat: vollständige Implementierung hinter MPL-Paywall."
-
-> <template #pipeline>
-> <AiPattern4Pipeline />
-> </template>
-> </AiPatternCard>
+<AiPattern4Card class="mt-2" />
 
 <!--
 - FINOS CALM (architecture-as-code) ist die offene Spec dahinter.
@@ -408,32 +311,7 @@ hideInToc: true
 
 # Pattern 5: MCP-basierter Recipe-Call
 
-<AiPatternCard
-class="mt-2"
-tag="Recipes werden als MCP-Tools exponiert. AI-Agent ist Dirigent, OpenRewrite ist Orchester."
-:badges="[
-{ label: 'Determinismus: mittel', tone: 'warn' },
-{ label: 'Reviewbar: mittel', tone: 'warn' },
-{ label: 'Token-Kosten: hoch', tone: 'bad' },
-{ label: 'Maturity: neu, interaktiv', tone: 'warn' }
-]"
-:apply="[
-'Exploratives Refactoring am eigenen Repo',
-'Unklar, welche Recipes wann passen',
-'Interaktive Recipe-Auswahl im Chat-Workflow'
-]"
-:avoid="[
-'CI-getriebene Mass-Migration über das Inventory',
-'Reproduzierbarkeit zwischen Läufen kritisch',
-'Token-Budget knapp'
-]"
-verdict="Für Exploration brauchbar, für CI gefährlich. Mehr Flexibilität bedeutet hier weniger Determinismus zwischen Läufen."
-verdict-tone="warning"
-
-> <template #pipeline>
-> <AiPattern5Pipeline />
-> </template>
-> </AiPatternCard>
+<AiPattern5Card class="mt-2" />
 
 <!--
 - Moderne MCP Server exponiert run_recipe, find_recipes, analyze_impact.
