@@ -1,0 +1,918 @@
+{
+  "id": "open-rewrite-2026",
+  "title": "OpenRewrite Selbsttest",
+  "questions": [
+    {
+      "id": "lst-anatomy",
+      "question": "Welche Aussagen zur LST-Anatomie (Lossless Semantic Tree) stimmen?",
+      "difficulty": "easy",
+      "section": "LST",
+      "explanation": "Der LST ist OpenRewrites Kern-Datenstruktur und entsteht aus CST + Type Attribution. Der CST behält Whitespace und Kommentare, die Type Attribution liefert Symbole und Resolved Types. Genau diese Kombination macht den format-erhaltenden, typsicheren Round-Trip möglich — das ist OpenRewrites Killer-Feature.",
+      "options": [
+        {
+          "id": "lst-anatomy-o0",
+          "text": "LST = CST + Type Attribution: der CST behält Whitespace und Kommentare, die Type Attribution liefert Symbole und Resolved Types.",
+          "verdict": "true",
+          "explanation": "Exakt die Definition aus dem LST-Anatomie-Diagramm."
+        },
+        {
+          "id": "lst-anatomy-o1",
+          "text": "Der LST ermöglicht einen format-erhaltenden, typsicheren Round-Trip.",
+          "verdict": "true",
+          "explanation": "Das ist die zentrale Eigenschaft, die OpenRewrite vom AST-Lager abgrenzt."
+        },
+        {
+          "id": "lst-anatomy-o2",
+          "text": "Klassische ASTs (JavaParser, Spoon) verlieren beim Re-Print die Trivia (Whitespace, Kommentare).",
+          "verdict": "true",
+          "explanation": "AST-Tools haben Type-Awareness, aber kein Whitespace — daher kein reviewbarer Diff."
+        },
+        {
+          "id": "lst-anatomy-o3",
+          "text": "Der LST ist ein reiner AST ohne Whitespace-Information.",
+          "verdict": "false",
+          "explanation": "Genau umgekehrt: der LST behält Whitespace via CST-Teil."
+        },
+        {
+          "id": "lst-anatomy-o4",
+          "text": "Comby und ast-grep arbeiten auf einem CST und haben deshalb auch Type Attribution.",
+          "verdict": "false",
+          "explanation": "Comby/ast-grep haben CST, aber keine Type-Awareness — daher kein typsicheres Refactoring."
+        },
+        {
+          "id": "lst-anatomy-o5",
+          "text": "Der LST wird nur für Java unterstützt, nicht für Konfigurationsdateien.",
+          "verdict": "false",
+          "explanation": "Derselbe LST-Ansatz greift für YAML, XML, JSON, Properties, Maven/Gradle, Dockerfiles, Terraform, Kubernetes."
+        },
+        {
+          "id": "lst-anatomy-o6",
+          "text": "Spoon liefert eine volle Type-API, ist aber nicht format-erhaltend.",
+          "verdict": "true",
+          "explanation": "Spoon ist akademisch reif mit Type-API, verliert aber die Formatierung beim Round-Trip."
+        },
+        {
+          "id": "lst-anatomy-o7",
+          "text": "OpenRewrite arbeitet regex-basiert wie sed und braucht deshalb keinen Parser.",
+          "verdict": "false",
+          "explanation": "Anti-Pattern. OpenRewrite ist explizit type-aware, mit Cursor-API für Parent-Kontext."
+        }
+      ]
+    },
+    {
+      "id": "msal-pivot",
+      "question": "Welche Aussagen zum MSAL-Pivot vom 13. Dezember 2024 stimmen?",
+      "difficulty": "easy",
+      "section": "Lizenzen",
+      "explanation": "Am 13.12.2024 sind die `rewrite-spring`-Recipes (und `rewrite-hibernate`) von Apache 2.0 nach MSAL (Moderne Source Available License) gewechselt — juristisch unter Apache 2.0 erlaubt, aber überraschend für Contributoren und ein Vertrauensschaden.",
+      "options": [
+        {
+          "id": "msal-pivot-o0",
+          "text": "Am 13.12.2024 wechselte `rewrite-spring` von Apache 2.0 auf MSAL.",
+          "verdict": "true",
+          "explanation": "Exaktes Datum des Umlicensings."
+        },
+        {
+          "id": "msal-pivot-o1",
+          "text": "Apache 2.0 erlaubt einem Maintainer, künftige Versionen unter einer anderen Lizenz zu veröffentlichen.",
+          "verdict": "true",
+          "explanation": "Juristisch korrekt — das ist genau, wie der Pivot ohne Lizenz-Verletzung möglich war."
+        },
+        {
+          "id": "msal-pivot-o2",
+          "text": "`rewrite-hibernate` ist ebenfalls auf MSAL umgestellt worden.",
+          "verdict": "true",
+          "explanation": "Auch `rewrite-hibernate` und weitere „CE\"-Recipes sind MSAL."
+        },
+        {
+          "id": "msal-pivot-o3",
+          "text": "MSAL ist eine vom OSI anerkannte Open-Source-Lizenz.",
+          "verdict": "false",
+          "explanation": "MSAL ist source-available, aber keine OSI-zertifizierte OSS-Lizenz."
+        },
+        {
+          "id": "msal-pivot-o4",
+          "text": "Der Pivot wurde Contributoren ein halbes Jahr im Voraus angekündigt.",
+          "verdict": "false",
+          "explanation": "Er kam ohne Vorwarnung — genau das ist der Vertrauensschaden."
+        },
+        {
+          "id": "msal-pivot-o5",
+          "text": "MSAL erlaubt die Anwendung auf den eigenen Code, verbietet aber den Weiterverkauf als Tool.",
+          "verdict": "true",
+          "explanation": "Kerncharakteristik von MSAL — eigene Nutzung OK, Resale verboten."
+        },
+        {
+          "id": "msal-pivot-o6",
+          "text": "Nach dem Pivot ist `rewrite-core` ebenfalls MSAL.",
+          "verdict": "false",
+          "explanation": "`rewrite-core` und alle Sprach-LSTs sind weiterhin Apache 2.0."
+        },
+        {
+          "id": "msal-pivot-o7",
+          "text": "„Community Edition\" im Moderne-Marketing bedeutet, dass das Modul echte OSS ist.",
+          "verdict": "false",
+          "explanation": "„Community Edition\" steht hier für MSAL, nicht für OSI-OSS. Marketing-Falle."
+        }
+      ]
+    },
+    {
+      "id": "method-matcher-syntax",
+      "question": "Welche Aussagen zur MethodMatcher-Syntax in OpenRewrite stimmen?",
+      "difficulty": "easy",
+      "section": "Recipe-Mechanik",
+      "explanation": "Pure Recall der AspectJ-ähnlichen Matcher-Syntax: FQN-Typ vor Methode, * = Typ-Wildcard, .. = Args-Wildcard. Simple-Name-Matches funktionieren nicht.",
+      "options": [
+        {
+          "id": "method-matcher-syntax-o0",
+          "text": "Der Pattern-Bestandteil .. ist ein Wildcard für beliebige Argumentlisten.",
+          "verdict": "true",
+          "explanation": "Klassische Args-Wildcard, z.B. java.util.List add(..) matcht alle add-Overloads."
+        },
+        {
+          "id": "method-matcher-syntax-o1",
+          "text": "Der Typ vor dem Methodennamen muss als Fully Qualified Name angegeben werden.",
+          "verdict": "true",
+          "explanation": "MethodMatcher arbeitet typ-aware — Simple-Name allein ist nicht eindeutig."
+        },
+        {
+          "id": "method-matcher-syntax-o2",
+          "text": "Der Stern * an Stelle des Typs matcht jeden Receiver-Typ — z.B. * equals(Object).",
+          "verdict": "true",
+          "explanation": "Genau das Beispiel aus dem Talk: equals auf beliebigem Typ."
+        },
+        {
+          "id": "method-matcher-syntax-o3",
+          "text": "Ein Pattern wie List add(..) ohne FQN matcht java.util.List.add zuverlässig.",
+          "verdict": "false",
+          "explanation": "Simple-Name reicht nicht — der FQN java.util.List muss explizit dastehen."
+        },
+        {
+          "id": "method-matcher-syntax-o4",
+          "text": "Der MethodMatcher verwendet regex-basierte String-Suche auf den Sourcen.",
+          "verdict": "false",
+          "explanation": "Kein Regex — Matching läuft typ-aware gegen das LST mit AspectJ-ähnlicher Syntax."
+        },
+        {
+          "id": "method-matcher-syntax-o5",
+          "text": "Der Punkt-Punkt-Operator .. matcht genau zwei beliebige Argumente.",
+          "verdict": "false",
+          "explanation": ".. steht für eine beliebige (auch leere) Argumentliste, nicht für genau zwei."
+        },
+        {
+          "id": "method-matcher-syntax-o6",
+          "text": "Pattern wie org.springframework.boot.SpringApplication run(..) eignen sich, um Spring-Boot-Entry-Points zu finden.",
+          "verdict": "true",
+          "explanation": "Standard-Idiom aus dem Talk — fängt jeden run-Overload des SpringApplication-Typs."
+        },
+        {
+          "id": "method-matcher-syntax-o7",
+          "text": "Für statische Methoden gilt eine eigene Syntax mit static:-Präfix.",
+          "verdict": "false",
+          "explanation": "Es gibt kein static:-Präfix — der MethodMatcher matcht statische und instanzgebundene Methoden mit derselben Syntax."
+        }
+      ]
+    },
+    {
+      "id": "pattern-3-anti-pattern",
+      "question": "Welche Aussagen zu Pattern 3 (LLM in Recipe, rewrite-generative-ai) treffen zu?",
+      "difficulty": "easy",
+      "section": "KI-Pattern",
+      "explanation": "Pattern 3 ruft mitten in einem Recipe das LLM bei Decision-Points auf. Die Diffs werden non-deterministisch — der Kern-Vorteil von OpenRewrite (gleicher Input → gleicher Output) geht verloren. Die Maintainer warnen selbst im README vor Produktiveinsatz.",
+      "options": [
+        {
+          "id": "pattern-3-anti-pattern-o0",
+          "text": "Verletzt das Determinismus-Versprechen von OpenRewrite: gleicher Input liefert je nach Run unterschiedliche Diffs.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Anti-Pattern-Kern — der USP von OpenRewrite (Reproduzierbarkeit) wird aufgegeben."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o1",
+          "text": "Die OpenRewrite-Maintainer selbst warnen im README vor Produktiveinsatz.",
+          "verdict": "true",
+          "explanation": "rewrite-generative-ai existiert als experimentelles Repo, das README ist ungewöhnlich explizit."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o2",
+          "text": "Reviewbarkeit der Diffs ist schlecht, Token-Kosten sind hoch.",
+          "verdict": "true",
+          "explanation": "Beide Badges der Card sind rot — die ökonomische und qualitative Bilanz ist negativ."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o3",
+          "text": "Ist der produktionserprobte Standard bei Duolingo.",
+          "verdict": "false",
+          "explanation": "Duolingos Golden Path ist Pattern 1 (Recipes-first + AI im Build-Loop), nicht Pattern 3."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o4",
+          "text": "Liefert deterministische Diffs, weil das LLM nur Edge-Cases entscheidet.",
+          "verdict": "false",
+          "explanation": "Auch bei Edge-Cases ist LLM-Output non-deterministisch, was die gesamte Recipe nicht reproduzierbar macht."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o5",
+          "text": "Ein Pattern-3-Recipe ist immer auch idempotent, weil ChangeType drinsteckt.",
+          "verdict": "false",
+          "explanation": "Idempotenz setzt Determinismus voraus. Sobald das LLM mitentscheidet, ist beides nicht garantiert."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o6",
+          "text": "Für einen reinen Forschungs-Prototyp ist Pattern 3 vertretbar.",
+          "verdict": "depends",
+          "explanation": "Die Apply-Liste der Card nennt Prototypen und Spielereien als legitimen Use-Case — produktiv aber nie."
+        },
+        {
+          "id": "pattern-3-anti-pattern-o7",
+          "text": "Wenn ein deterministischer Visitor das Gleiche tun könnte, ist Pattern 3 trotzdem vertretbar.",
+          "verdict": "false",
+          "explanation": "Genau dann ist Pattern 3 doppelt schlecht — die Avoid-Liste der Card nennt das explizit."
+        }
+      ]
+    },
+    {
+      "id": "java-template-vs-string-concat",
+      "question": "Warum ist JavaTemplate dem String-Concat (\"this.x = \" + value + \";\") vorzuziehen?",
+      "difficulty": "medium",
+      "section": "Recipe-Mechanik",
+      "explanation": "JavaTemplate parst das Snippet im Kontext der CompilationUnit — mit Typen, Imports und Formatierung. String-Concat kennt davon nichts und produziert in Tests Mist.",
+      "options": [
+        {
+          "id": "java-template-vs-string-concat-o0",
+          "text": "JavaTemplate parst das Template mit Typinformation aus dem umgebenden LST.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Punkt: Placeholder wie #{any(int)} werden typ-aware aufgelöst."
+        },
+        {
+          "id": "java-template-vs-string-concat-o1",
+          "text": "JavaTemplate.builder(...).build() benötigt zur Anwendung einen Cursor sowie Coordinates wie firstStatement() oder replace().",
+          "verdict": "true",
+          "explanation": "apply(cursor, coordinates) ist die kanonische Signatur — Position via Coordinates, kein Index-Hack."
+        },
+        {
+          "id": "java-template-vs-string-concat-o2",
+          "text": "Notwendige Imports werden über maybeAddImport() gepflegt, nicht manuell auf der CompilationUnit.",
+          "verdict": "true",
+          "explanation": "Standard-Idiom; OpenRewrite konsolidiert und sortiert Imports korrekt."
+        },
+        {
+          "id": "java-template-vs-string-concat-o3",
+          "text": "String-Concat ist nur problematisch, wenn der Snippet längere als 80 Zeichen ist.",
+          "verdict": "false",
+          "explanation": "Länge ist irrelevant — das Problem ist fehlende Typ- und Format-Information, unabhängig von der Größe."
+        },
+        {
+          "id": "java-template-vs-string-concat-o4",
+          "text": "JavaTemplate übernimmt automatisch die Formatierung (Whitespace, Einrückung) aus dem umgebenden Code.",
+          "verdict": "true",
+          "explanation": "In Kombination mit maybeAutoFormat() bleibt der Stil der Datei erhalten."
+        },
+        {
+          "id": "java-template-vs-string-concat-o5",
+          "text": "Bei trivialen Konstanten ohne Typbezug ist String-Concat eine akzeptable Abkürzung.",
+          "verdict": "depends",
+          "explanation": "Für ein reines Literal mag es funktionieren — das LST kennt das Resultat aber trotzdem nicht typisiert, weshalb selbst dafür JavaTemplate die kompatible Wahl bleibt."
+        },
+        {
+          "id": "java-template-vs-string-concat-o6",
+          "text": "Mit String-Concat erstellte Knoten haben keine Typinformation und brechen nachfolgende type-aware Recipes.",
+          "verdict": "true",
+          "explanation": "Die so eingefügten Bestandteile sind im LST untypisiert — Folge-Recipes mit UsesType o.ä. greifen nicht."
+        },
+        {
+          "id": "java-template-vs-string-concat-o7",
+          "text": "JavaTemplate ist langsamer als String-Concat und sollte daher nur in Tests verwendet werden.",
+          "verdict": "false",
+          "explanation": "Performance ist nicht das Argument — und String-Concat in Produktion ist explizit Anti-Pattern."
+        }
+      ]
+    },
+    {
+      "id": "preconditions-spar-effekt",
+      "question": "Was leisten Preconditions wie UsesType<>, UsesMethod<> oder HasSourcePath<> wirklich?",
+      "difficulty": "medium",
+      "section": "Recipe-Mechanik",
+      "explanation": "Wichtige Subtilität: Preconditions sparen Edit-Aufwand (Visitor läuft nur über matchende Files), nicht Parse-Aufwand — das LST wird trotzdem für jede Datei gebaut.",
+      "options": [
+        {
+          "id": "preconditions-spar-effekt-o0",
+          "text": "Preconditions verhindern, dass der Mutations-Visitor auf nicht-matchenden Files läuft.",
+          "verdict": "true",
+          "explanation": "Genau ihr Zweck — Edit-Aufwand sparen, Visitor-Logik nur dort, wo die Bedingung erfüllt ist."
+        },
+        {
+          "id": "preconditions-spar-effekt-o1",
+          "text": "Preconditions verhindern, dass OpenRewrite die LSTs der nicht-matchenden Files überhaupt parst.",
+          "verdict": "false",
+          "explanation": "Subtilität aus dem Talk: das LST wird trotzdem komplett gebaut — Preconditions sparen Edit-, nicht Parse-Zeit."
+        },
+        {
+          "id": "preconditions-spar-effekt-o2",
+          "text": "UsesType<>, UsesMethod<> und UsesJavaVersion<> sind eingebaute Precondition-Typen.",
+          "verdict": "true",
+          "explanation": "Drei der fünf Standard-Preconditions aus dem Talk."
+        },
+        {
+          "id": "preconditions-spar-effekt-o3",
+          "text": "HasSourcePath<> eignet sich, um Recipes nur auf bestimmte Datei-Pfade wie application*.yml zu beschränken.",
+          "verdict": "true",
+          "explanation": "Pfad-basiertes Filtern; nützlich für Properties/YAML-Recipes."
+        },
+        {
+          "id": "preconditions-spar-effekt-o4",
+          "text": "Preconditions.and(...) erlaubt es, mehrere Bedingungen logisch zu verknüpfen.",
+          "verdict": "true",
+          "explanation": "Standard-API, kombiniert mit Preconditions.or(...) und Preconditions.not(...)."
+        },
+        {
+          "id": "preconditions-spar-effekt-o5",
+          "text": "FindDependency bzw. ModuleHasDependency prüfen auf Repo- bzw. Modul-Level, ob eine Dependency vorhanden ist.",
+          "verdict": "true",
+          "explanation": "Diese beiden decken die Build-Datei-Ebene ab — etwa um Spring-spezifische Recipes nur auf Spring-Modulen laufen zu lassen."
+        },
+        {
+          "id": "preconditions-spar-effekt-o6",
+          "text": "Bei einer riesigen Codebase mit wenigen Spring-Files spart eine UsesType-Precondition die meiste Wall-Clock-Zeit.",
+          "verdict": "depends",
+          "explanation": "Wenn der Edit-Visitor teuer ist, ja — wenn die Parse-Zeit dominiert (großer Heap, langsame Disk), eher gefühlt. Der Talk betont gerade diesen Trade-off."
+        },
+        {
+          "id": "preconditions-spar-effekt-o7",
+          "text": "Mit einer korrekt gesetzten Precondition kann OpenRewrite ein Repo komplett ohne LST-Build verarbeiten.",
+          "verdict": "false",
+          "explanation": "Falsche Erwartung — das LST entsteht immer; Preconditions selektieren erst danach."
+        }
+      ]
+    },
+    {
+      "id": "pattern-1-vs-2-roi",
+      "question": "Welche Aussagen zum Vergleich Pattern 1 (Recipes-first + AI im Build-Loop) vs. Pattern 2 (AI als Recipe-Autor) stimmen?",
+      "difficulty": "medium",
+      "section": "KI-Pattern",
+      "explanation": "Pattern 1 ist der Duolingo-Golden-Path mit AI als Patch-Maker im Build-Loop — Token-Kosten fallen pro Repo an. Pattern 2 verlagert das LLM ein Stück nach links: es schreibt einmalig eine deterministische Recipe, die danach beliebig oft ohne LLM läuft. Token-Kosten daher einmalig.",
+      "options": [
+        {
+          "id": "pattern-1-vs-2-roi-o0",
+          "text": "Pattern 2 hat einmalige Token-Kosten, weil das LLM nur die Recipe schreibt und sie nicht selbst ausführt.",
+          "verdict": "true",
+          "explanation": "Genau das ist der ökonomische Hebel von Pattern 2 — Token-Kosten fallen einmal an, nicht 200×."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o1",
+          "text": "Für Spring-Boot-Major-Upgrades über viele Repos ist Pattern 1 die produktionserprobte Wahl.",
+          "verdict": "true",
+          "explanation": "Mass-Migration mit Build-Loop ist der explizite Apply-Fall von Pattern 1 (Duolingo Golden Path)."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o2",
+          "text": "Pattern 2 zahlt sich besonders aus, wenn dieselbe Migration sich wiederholt (z.B. Spring Boot 4 → 5 kommt).",
+          "verdict": "true",
+          "explanation": "Recipe-Wiederverwendung über mehrere Migrationen ist der explizite Apply-Fall."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o3",
+          "text": "Pattern 1 hat höheren Determinismus als Pattern 2.",
+          "verdict": "false",
+          "explanation": "Umgekehrt: Pattern 2 ist 'Determinismus: sehr hoch' (Recipe ist deterministisch), Pattern 1 'Determinismus: hoch' (AI im Loop)."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o4",
+          "text": "Pattern 1 funktioniert auch ohne verlässliches Build-Gate (Tests, Compile).",
+          "verdict": "false",
+          "explanation": "Die Avoid-Liste der Pattern-1-Card nennt fehlende Build-Gates und schlechte Test-Coverage als Ausschlusskriterien."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o5",
+          "text": "Pattern 2 ist ungeeignet, wenn die Migration nur einmal in einem einzelnen Repo läuft.",
+          "verdict": "true",
+          "explanation": "Genau das steht in der Avoid-Liste — eine Einmal-Migration in einem Repo amortisiert die Recipe-Investition nicht."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o6",
+          "text": "Wenn Refaster ausreicht, ist Pattern 2 trotzdem die bessere Wahl.",
+          "verdict": "false",
+          "explanation": "Die Avoid-Liste von Pattern 2 listet 'Wenn Refaster reicht' explizit — kein OpenRewrite-Visitor nötig."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o7",
+          "text": "Pattern 1 und Pattern 2 lassen sich kombinieren: LLM schreibt Recipe, danach läuft sie mit AI-Gap-Fill im Build-Loop.",
+          "verdict": "true",
+          "explanation": "Das ist genau die Kombination, die die JSpecify-Migration im Talk demonstriert — Schritt 1 = Pattern 2, Schritt 2 = Pattern 1."
+        }
+      ]
+    },
+    {
+      "id": "jspecify-3-stufen",
+      "question": "Welche Aussagen zur dreistufigen JSpecify-Migrations-Story aus §5 sind korrekt?",
+      "difficulty": "medium",
+      "section": "JSpecify-Migration",
+      "explanation": "Stufe 1: mechanische ChangeType-Recipe ersetzt Spring/javax/JetBrains durch JSpecify (100% deterministisch, idempotent, ~80% Coverage). Stufe 2: @NullMarked auf Package-Ebene macht Default @NonNull — Build bricht. Stufe 3: LLM-Gap-Fill (Pattern 1) liest Kontrollfluss, schlägt @Nullable T oder Optional<T> vor, bis der Build grün ist.",
+      "options": [
+        {
+          "id": "jspecify-3-stufen-o0",
+          "text": "Die Standard-Recipe org.openrewrite.java.jspecify.MigrateToJspecify ersetzt Annotationen 100% deterministisch und idempotent.",
+          "verdict": "true",
+          "explanation": "Vier ChangeType-Aufrufe (Spring/javax → JSpecify); Standard-Building-Block, idempotent."
+        },
+        {
+          "id": "jspecify-3-stufen-o1",
+          "text": "@NullMarked macht den Default auf Package-Ebene @NonNull — danach bricht der Build, weil Rückgabewerte unmarkiert sind.",
+          "verdict": "true",
+          "explanation": "Genau das ist Schritt 2: Der mechanische Tausch reicht nicht, weil unannotierte Rückgaben jetzt als @NonNull gelesen werden."
+        },
+        {
+          "id": "jspecify-3-stufen-o2",
+          "text": "In Schritt 3 liest der Coding-Agent (Pattern 1) den Kontrollfluss und schlägt @Nullable User oder Optional<User> vor, bis der Build grün wird.",
+          "verdict": "true",
+          "explanation": "Genau dort endet die Mechanik — LLM-Gap-Fill im Build-Loop ist das Idiom (FINOS/Duolingo-Pattern)."
+        },
+        {
+          "id": "jspecify-3-stufen-o3",
+          "text": "Die mechanische Recipe deckt 100% der Migration ab — kein LLM nötig.",
+          "verdict": "false",
+          "explanation": "Coverage liegt laut Null-Sicherheits-Talk bei ~80%; @NullMarked-Folgefehler bleiben offen."
+        },
+        {
+          "id": "jspecify-3-stufen-o4",
+          "text": "Ob ein Rückgabetyp @Nullable User oder Optional<User> sein soll, hängt von Aufrufer-Erwartungen ab — keine reine Annotation-Frage.",
+          "verdict": "true",
+          "explanation": "Wörtlich aus den slide-data-Notizen: 'Vertrag der Aufrufer entscheidet — Annotation allein reicht nicht'."
+        },
+        {
+          "id": "jspecify-3-stufen-o5",
+          "text": "Die Recipe-Schritt-1 ist selbst LLM-autoriert — das ist Pattern 2 aus dem KI-Kapitel.",
+          "verdict": "true",
+          "explanation": "Schritt-1-Block: 'Auch das Recipe selbst kann LLM-autoriert sein — Pattern 2 aus dem vorigen Kapitel'."
+        },
+        {
+          "id": "jspecify-3-stufen-o6",
+          "text": "Die JSpecify-Migration ist ein Lehrbuch-Beispiel für Pattern 3 (LLM in Recipe).",
+          "verdict": "false",
+          "explanation": "Das genaue Gegenteil: Sie kombiniert Pattern 2 (Schritt 1) und Pattern 1 (Schritt 3) — beide außerhalb von Pattern 3."
+        },
+        {
+          "id": "jspecify-3-stufen-o7",
+          "text": "@NullMarked auf Klassenebene reicht in jedem Spring-Boot-Service voll aus.",
+          "verdict": "depends",
+          "explanation": "Funktioniert, aber package-info.java ist idiomatischer und vermeidet Wiederholung pro Klasse (siehe Presenter-Notes)."
+        }
+      ]
+    },
+    {
+      "id": "jspecify-recipe-mechanik",
+      "question": "Welche Aussagen zur YAML-Recipe MigrateNullAnnotationsToJspecify stimmen?",
+      "difficulty": "medium",
+      "section": "JSpecify-Migration",
+      "explanation": "Die Recipe nutzt vier ChangeType-Aufrufe (Spring Nullable/NonNull + javax Nullable/Nonnull → JSpecify), eine UsesType-Precondition als Filter und AddDependency mit Conditional, sodass jspecify:1.0.0 nur dann ergänzt wird, wenn der Typ tatsächlich verwendet wird. Komplett deklarativ, idempotent.",
+      "options": [
+        {
+          "id": "jspecify-recipe-mechanik-o0",
+          "text": "ChangeType ersetzt einen voll qualifizierten Typnamen, passt Imports automatisch an und ist idempotent.",
+          "verdict": "true",
+          "explanation": "Standard-Recipe-Building-Block laut slide-data — Imports werden automatisch korrigiert."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o1",
+          "text": "Die UsesType-Precondition sorgt dafür, dass nur Files angefasst werden, die die Spring-Nullable-Annotation tatsächlich verwenden.",
+          "verdict": "true",
+          "explanation": "Preconditions sind globaler Filter für alle Sub-Recipes — verhindert No-op-Touches."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o2",
+          "text": "AddDependency mit Conditional fügt jspecify:1.0.0 nur dann hinzu, wenn die Annotation auch wirklich verwendet wird — kein Pollution in null-annotation-freien Modulen.",
+          "verdict": "true",
+          "explanation": "Wörtlich aus den slide-data-Notizen — vermeidet überflüssige Dependencies."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o3",
+          "text": "Die Recipe ruft an Decision-Points die OpenAI-API auf.",
+          "verdict": "false",
+          "explanation": "Die Recipe ist rein deklarativ (YAML mit ChangeType + AddDependency) — kein LLM-Call. Das wäre Pattern 3."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o4",
+          "text": "Sie deckt auch JetBrains-Annotationen aus der IntelliJ-Welt ab.",
+          "verdict": "depends",
+          "explanation": "Die Talk-Variante deckt sie ab ('weil sie auch JetBrains-Annotationen aufnimmt' laut Presenter-Notes). Standard-Recipe MigrateToJspecify hat einen anderen Coverage-Bereich."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o5",
+          "text": "Mehrfaches Ausführen verändert das Ergebnis nach dem ersten Lauf weiter.",
+          "verdict": "false",
+          "explanation": "Idempotent: zweiter Run findet keine Spring/javax-Annotationen mehr und macht nichts."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o6",
+          "text": "Sub-Recipes in der recipeList laufen sequenziell — spätere sehen die Änderungen früherer.",
+          "verdict": "true",
+          "explanation": "Genau das ist die recipeList-Semantik laut slide-data: sequenzielle Sub-Recipe-Ausführung."
+        },
+        {
+          "id": "jspecify-recipe-mechanik-o7",
+          "text": "Nach diesem Recipe sind alle Null-Verträge im Code wieder semantisch korrekt — manueller oder LLM-Eingriff entfällt.",
+          "verdict": "false",
+          "explanation": "Coverage ~80%; nach @NullMarked bricht der Build typischerweise, und Schritt 3 (LLM-Gap-Fill) wird nötig."
+        }
+      ]
+    },
+    {
+      "id": "three-editions",
+      "question": "Welche Aussagen zur OpenRewrite-Lizenz-Matrix (Apache 2.0 / MSAL / MPL) stimmen?",
+      "difficulty": "medium",
+      "section": "Lizenzen",
+      "explanation": "Drei Editionen mit unterschiedlichen kommerziellen Implikationen: Apache 2.0 (Core, Sprach-LSTs, Plugins, migrate-java, testing) ist echtes OSS. MSAL (Spring, Hibernate, CE-Recipes) erlaubt eigene Nutzung, verbietet Resale. MPL (Multi-Repo-Impact, Prethink, AI-Recipes, Spring-Recipe-Depth-Coverage) ist Subscription-only und Vendor-Lock-in.",
+      "options": [
+        {
+          "id": "three-editions-o0",
+          "text": "`rewrite-core`, alle Sprach-LSTs und das Gradle-/Maven-Plugin stehen unter Apache 2.0.",
+          "verdict": "true",
+          "explanation": "Engine und Plugins sind Apache 2.0 — kommerziell unbedenklich."
+        },
+        {
+          "id": "three-editions-o1",
+          "text": "`rewrite-migrate-java` und `rewrite-testing-frameworks` sind Apache 2.0.",
+          "verdict": "true",
+          "explanation": "Beide bleiben im OSS-Lager."
+        },
+        {
+          "id": "three-editions-o2",
+          "text": "Multi-Repo-Impact, Prethink und AI-Recipes sind MPL und nur über Moderne-Subscription verfügbar.",
+          "verdict": "true",
+          "explanation": "Das ist der proprietäre Plattform-Hebel von Moderne."
+        },
+        {
+          "id": "three-editions-o3",
+          "text": "Eigene Recipes außerhalb von Moderne-Repos darf man ohne Restriktion bauen und veröffentlichen.",
+          "verdict": "true",
+          "explanation": "Unter Apache 2.0 sind eigene Recipes unbeschränkt erlaubt."
+        },
+        {
+          "id": "three-editions-o4",
+          "text": "MSAL erlaubt es, ein SaaS-Refactoring-Tool auf Basis von `rewrite-spring` an Dritte zu verkaufen.",
+          "verdict": "false",
+          "explanation": "MSAL verbietet genau diesen Resale-Pfad."
+        },
+        {
+          "id": "three-editions-o5",
+          "text": "„Community Edition\" und „Apache 2.0\" sind im OpenRewrite-Kontext austauschbare Begriffe.",
+          "verdict": "false",
+          "explanation": "„Community Edition\" ist das MSAL-Marketing-Label — kein OSS."
+        },
+        {
+          "id": "three-editions-o6",
+          "text": "MPL-Recipes sind über Maven Central frei downloadbar.",
+          "verdict": "false",
+          "explanation": "MPL-Module sind Subscription-gebunden, nicht über Maven Central öffentlich."
+        },
+        {
+          "id": "three-editions-o7",
+          "text": "Die DX Edition für regulierte Industrien fällt unter MPL.",
+          "verdict": "true",
+          "explanation": "DX Edition ist Teil des proprietären Moderne-Stacks (MPL)."
+        }
+      ]
+    },
+    {
+      "id": "audit-checklist",
+      "question": "Welche Items gehören in das Lizenz-/Versions-Audit für OpenRewrite in CI?",
+      "difficulty": "medium",
+      "section": "Lizenzen",
+      "explanation": "Sechs Pflicht-Items aus der Audit-Checklist: Plugin- und Recipe-JAR-Versionen pinnen (nie `latest.release`), `META-INF/LICENSE` pro JAR prüfen, `rewriteDryRun` vor `rewriteRun`, Legal/Compliance bei Beratungs- und SaaS-Pfaden konsultieren, eigene Recipes außerhalb der Moderne-Repos halten.",
+      "options": [
+        {
+          "id": "audit-checklist-o0",
+          "text": "Plugin-Version niemals als `latest.release` deklarieren.",
+          "verdict": "true",
+          "explanation": "Major-Bumps brechen Recipe-Signaturen; Drift wird sonst unsichtbar."
+        },
+        {
+          "id": "audit-checklist-o1",
+          "text": "Recipe-JAR-Versionen via Lock-File oder Renovate-PR pinnen.",
+          "verdict": "true",
+          "explanation": "Apache→MSAL-Sprünge sollen in einer PR sichtbar werden."
+        },
+        {
+          "id": "audit-checklist-o2",
+          "text": "`META-INF/LICENSE` jedes Recipe-JARs prüfen — Apache und MSAL können nebeneinander auftreten.",
+          "verdict": "true",
+          "explanation": "Pro JAR kann die Lizenz unterschiedlich sein."
+        },
+        {
+          "id": "audit-checklist-o3",
+          "text": "`rewriteDryRun` ist Pflicht vor `rewriteRun`.",
+          "verdict": "true",
+          "explanation": "Patch-Datei, Diff-Review, dann erst Apply — niemals direkt auf `main`."
+        },
+        {
+          "id": "audit-checklist-o4",
+          "text": "Bei Consulting-/SaaS-Mandaten reicht eine Eigeneinschätzung der Lizenz-Verträglichkeit.",
+          "verdict": "false",
+          "explanation": "MSAL-Grauzonen brauchen die Rechtsabteilung; Eigeneinschätzung ist riskant."
+        },
+        {
+          "id": "audit-checklist-o5",
+          "text": "Eigene Recipes sollten direkt in einen Fork des `openrewrite/rewrite-spring`-Repos eingebaut werden.",
+          "verdict": "false",
+          "explanation": "Eigene Recipes gehören in ein eigenes `company-rewrite`-Modul, eigene Lizenz, eigenes Maven-Coord."
+        },
+        {
+          "id": "audit-checklist-o6",
+          "text": "Wenn der Build grün ist, ist ein Lizenz-Audit überflüssig.",
+          "verdict": "false",
+          "explanation": "Lizenz-Drift bricht den Build nicht — sie taucht erst im Vendor-Audit auf."
+        },
+        {
+          "id": "audit-checklist-o7",
+          "text": "Ein jährliches Lizenz-Audit pro Recipe-JAR ist Teil der Definition-of-Done für CI-Integration.",
+          "verdict": "true",
+          "explanation": "Wer ernsthaft baut, plant das jährliche Audit von Anfang an ein."
+        }
+      ]
+    },
+    {
+      "id": "tool-mix-decisions",
+      "question": "Welche Tool-Wahl-Entscheidungen aus dem Tool-Mix-Cheatsheet stimmen?",
+      "difficulty": "medium",
+      "section": "Tool-Mix",
+      "explanation": "Tool-Mix statt Tool-Monokultur: OpenRewrite glänzt bei Mass-Migration auf der JVM, Refaster bei 1:1-Idiomen in Java, Spoon ist akademisch-typstark aber nicht format-erhaltend, Semgrep ist polyglott und security-orientiert, ast-grep ist polyglott aber nicht typ-aware, IntelliJ SSR ist lokal-schnell aber nicht CI-tauglich.",
+      "options": [
+        {
+          "id": "tool-mix-decisions-o0",
+          "text": "OpenRewrite ist die richtige Wahl für `javax → jakarta`-Migrationen über viele Repos.",
+          "verdict": "true",
+          "explanation": "Klassischer Mass-Migration-Use-Case mit `rewrite-migrate-java`."
+        },
+        {
+          "id": "tool-mix-decisions-o1",
+          "text": "Refaster / Error Prone eignen sich besonders für 1:1-Idiom-Migrationen und interne Code-Konventionen.",
+          "verdict": "true",
+          "explanation": "Refaster-Templates beschreiben 1:1-Idiom-Mappings."
+        },
+        {
+          "id": "tool-mix-decisions-o2",
+          "text": "Semgrep ist die richtige Wahl, wenn man format-erhaltende Refactorings in CI braucht.",
+          "verdict": "false",
+          "explanation": "Semgrep ist nicht format-preserving — es ist Security-/Lint-Tool, polyglott."
+        },
+        {
+          "id": "tool-mix-decisions-o3",
+          "text": "ast-grep liefert Pattern-Matching + Auto-Fix polyglott, ist aber nicht type-aware.",
+          "verdict": "true",
+          "explanation": "Polyglottes CST-Matching, aber ohne Symbol-Resolution."
+        },
+        {
+          "id": "tool-mix-decisions-o4",
+          "text": "Spoon ist das beste Werkzeug für format-erhaltende Mass-Migration über viele Repos.",
+          "verdict": "false",
+          "explanation": "Spoon hat Type-API, ist aber nicht format-erhaltend — Mass-Migration ist OpenRewrites Domäne."
+        },
+        {
+          "id": "tool-mix-decisions-o5",
+          "text": "IntelliJ SSR ist eine gute Wahl für reproduzierbare CI-Diffs.",
+          "verdict": "false",
+          "explanation": "SSR ist lokal in der IDE — CI-Integration und Reproduzierbarkeit fehlen."
+        },
+        {
+          "id": "tool-mix-decisions-o6",
+          "text": "OpenRewrite ist im Praxisalltag nicht die richtige Wahl für ein einmaliges Refactoring in einem Repo.",
+          "verdict": "true",
+          "explanation": "Setup-Kosten lohnen sich erst bei Mass-Migration; für einmalige Refactorings sind IntelliJ SSR oder ast-grep schneller."
+        },
+        {
+          "id": "tool-mix-decisions-o7",
+          "text": "Semgrep deckt mehr als 30 Sprachen ab und ist daher als Replacement für OpenRewrite in JVM-Codebases einsetzbar.",
+          "verdict": "false",
+          "explanation": "Sprachabdeckung ja, aber Semgrep ersetzt OpenRewrite nicht — fehlende Format-Preservation und kein LST."
+        }
+      ]
+    },
+    {
+      "id": "scanning-recipe-cross-file",
+      "question": "Wann ist eine ScanningRecipe nötig — und warum reichen Instance-Fields im Visitor nicht?",
+      "difficulty": "hard",
+      "section": "Recipe-Mechanik",
+      "explanation": "Subtile, aber wichtige Frage: Instance-State im Visitor bricht Determinismus (Reihenfolge der Files variiert, Caching gemeinsam genutzter Visitoren); ScanningRecipe ist die saubere Zwei-Phasen-Lösung.",
+      "options": [
+        {
+          "id": "scanning-recipe-cross-file-o0",
+          "text": "Eine ScanningRecipe trennt Lesen (getScanner) vom Mutieren (getVisitor) in zwei Phasen.",
+          "verdict": "true",
+          "explanation": "Genau das Pattern: erst alle Files in den Akkumulator scannen, dann mit dem Wissen mutieren."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o1",
+          "text": "Der Akkumulator wird über getInitialValue(ctx) angelegt und an Scanner und Visitor übergeben.",
+          "verdict": "true",
+          "explanation": "Drei-Methoden-Vertrag: getInitialValue / getScanner(acc) / getVisitor(acc)."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o2",
+          "text": "Instance-Fields im Visitor sind eine gute Alternative, weil OpenRewrite den Visitor pro Recipe-Run frisch instanziiert.",
+          "verdict": "false",
+          "explanation": "Genau deswegen bricht es: getVisitor() muss frische Instanzen liefern, Instance-State leakt zwischen Cycles oder verfälscht das Ergebnis bei wechselnder File-Reihenfolge."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o3",
+          "text": "Sobald eine Recipe Cross-File-Wissen braucht (z.B. existiert irgendwo ein @Bean mit Name X?), ist ScanningRecipe Pflicht.",
+          "verdict": "true",
+          "explanation": "Genau der Use-Case aus dem Talk — File A muss vor der Mutation in File B vollständig gelesen sein."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o4",
+          "text": "Auch eine Recipe, die neue Source-Files generiert, ist üblicherweise eine ScanningRecipe (mit generate(acc)).",
+          "verdict": "true",
+          "explanation": "Generative Recipes erweitern den Vertrag um die generate-Methode, basierend auf demselben Akkumulator."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o5",
+          "text": "Instance-State im Visitor bricht den Determinismus, weil die Reihenfolge der besuchten Files nicht garantiert ist.",
+          "verdict": "true",
+          "explanation": "Determinismus ist OpenRewrites Killer-Feature; Visitor-Reihenfolge ist Implementations-Detail, kein API-Vertrag."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o6",
+          "text": "Wenn das Cross-File-Wissen sich auf zwei explizit verlinkte Files beschränkt (application.yml und application.properties), könnte man auch mit einem statischen Holder arbeiten.",
+          "verdict": "depends",
+          "explanation": "Funktioniert in einem Single-Run-Setup, bricht aber bei parallelen Recipe-Cycles, Caching und Tests. ScanningRecipe ist die saubere Antwort — der statische Holder ist Hack-Territorium."
+        },
+        {
+          "id": "scanning-recipe-cross-file-o7",
+          "text": "ScanningRecipe ersetzt Preconditions vollständig — Scan und Filterung sind dasselbe Konzept.",
+          "verdict": "false",
+          "explanation": "Verschiedene Aufgaben: Preconditions filtern Files vor dem Edit-Visitor; ScanningRecipe baut wiederverwendbaren Cross-File-Zustand auf."
+        }
+      ]
+    },
+    {
+      "id": "moderne-netflix-origin",
+      "question": "Welche Aussagen zur Herkunft und Monetarisierung von OpenRewrite vs. Moderne, Inc. treffen zu?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "OpenRewrite entstand intern bei Netflix (Jonathan Schneider); Moderne, Inc. wurde 2020 von Schneider und Olga Kundzich aus Netflix ausgegruendet. Die Engine bleibt Apache 2.0; die kommerzielle Wertschoepfung lebt von Multi-Repo-SaaS, MPL-Recipes und seit 13.12.2024 MSAL-Recipes (z.B. rewrite-spring). Series B (TechCrunch 02/2025): 30 Mio. USD.",
+      "options": [
+        {
+          "id": "moderne-netflix-origin-o0",
+          "text": "OpenRewrite entstand urspruenglich bei Netflix als internes Tool fuer Jonathan Schneider.",
+          "verdict": "true",
+          "explanation": "Belegbar in Schneider-Interviews und Moderne-About-Seite: Netflix-Engineering-Tools, freedom-and-responsibility-Kultur."
+        },
+        {
+          "id": "moderne-netflix-origin-o1",
+          "text": "Moderne, Inc. wurde 2020 von Jonathan Schneider und Olga Kundzich gegruendet.",
+          "verdict": "true",
+          "explanation": "Beide kamen von Pivotal; Hauptsitz Miami. Quelle: Moderne-About, TechCrunch 02/2025 zur Series B."
+        },
+        {
+          "id": "moderne-netflix-origin-o2",
+          "text": "Die OpenRewrite-Engine (rewrite-core) blieb dauerhaft Apache 2.0, waehrend einzelne Recipe-Module nach MSAL/MPL gewechselt sind.",
+          "verdict": "true",
+          "explanation": "Engine ist Apache 2.0. Am 13.12.2024 wechselte rewrite-spring nach MSAL; weitere ~19 Module mit Moderne-Mehrheits-Contributions sind MSAL."
+        },
+        {
+          "id": "moderne-netflix-origin-o3",
+          "text": "OpenRewrite ist eine Eclipse-Foundation-Initiative aus dem Eclipse-JDT-Ecosystem.",
+          "verdict": "false",
+          "explanation": "OpenRewrite hat keinen Eclipse-Foundation-Bezug; LST ist Moderne/Netflix-Eigenentwicklung."
+        },
+        {
+          "id": "moderne-netflix-origin-o4",
+          "text": "Saemtliche org.openrewrite.recipe:*-Artefakte sind durchgehend Apache 2.0.",
+          "verdict": "false",
+          "explanation": "Die Maven-Coordinate org.openrewrite.recipe enthaelt sowohl Apache-2.0- als auch MSAL-Module (z.B. rewrite-spring) — die Coordinate sagt nichts ueber die Lizenz aus."
+        },
+        {
+          "id": "moderne-netflix-origin-o5",
+          "text": "Moderne hat OpenRewrite an Red Hat verkauft, das es heute als Konkurrenz zu Quarkus pflegt.",
+          "verdict": "false",
+          "explanation": "Frei erfunden — Moderne ist eigenstaendig (Series B 02/2025, 30 Mio. USD, Acrew Capital)."
+        },
+        {
+          "id": "moderne-netflix-origin-o6",
+          "text": "Die MSAL-Klausel verbietet jede unternehmensinterne Anwendung der betroffenen Recipes.",
+          "verdict": "depends",
+          "explanation": "MSAL erlaubt interne Anwendung auf eigenen Code; sie verbietet kommerzielle Weiterverwendung in eigenen Produkten oder Resale. 'Verboten' ist also nur der Repackage-Pfad."
+        },
+        {
+          "id": "moderne-netflix-origin-o7",
+          "text": "Moderne ist heute der dominante Code-Modernization-Anbieter — Sourcegraph hat das Feld geraeumt.",
+          "verdict": "depends",
+          "explanation": "Sourcegraph nennt Moderne/OpenRewrite explizit als Hauptkonkurrenz, Batch Changes ist aber language-agnostic und weiter aktiv — 'geraeumt' stimmt nicht, 'dominant in JVM' ist ein vertretbares Framing."
+        }
+      ]
+    },
+    {
+      "id": "codemod-landscape-polyglott",
+      "question": "Welche Aussagen zur polyglotten Codemod-Landschaft 2025/2026 treffen zu?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "jscodeshift (Meta) ist die JS-AST-Toolkit-Standardbasis, aber ohne Format-Preservation (Helfer: recast). Codemod.com hat einen iterativen AI-Loop (TS-Compiler + jscodeshift-Runner als Build-Loop fuer LLM-Codemods). Sourcegraph Batch Changes ist ein language-agnostischer Repo-Runner, kein Codemod-Engine. Stryker ist Mutation-Testing — kein Codemod-Tool.",
+      "options": [
+        {
+          "id": "codemod-landscape-polyglott-o0",
+          "text": "jscodeshift ist ein von Meta gepflegtes JavaScript-AST-Toolkit und nicht von Haus aus format-erhaltend.",
+          "verdict": "true",
+          "explanation": "Maintained by Facebook/Meta; AST-Manipulation; Format-Preservation kommt via recast on top."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o1",
+          "text": "Codemod.com nutzt einen iterativen AI-Loop, in dem TypeScript-Compiler und jscodeshift-Runner Feedback an das LLM geben.",
+          "verdict": "true",
+          "explanation": "Beschrieben im Codemod-Blog 'Iterative AI system': Tools pruefen LLM-Output, LLM korrigiert — entspricht dem Pattern-1-Build-Loop-Gedanken."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o2",
+          "text": "Sourcegraph Batch Changes ist ein Repo-Runner — es fuehrt beliebige Container-Skripte ueber viele Repos aus, statt selbst Code zu parsen.",
+          "verdict": "true",
+          "explanation": "Sourcegraph-Doku: 'any tool that can run in a container and change file contents on a disk' — explizit als Komplement zu OpenRewrite/Comby gedacht."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o3",
+          "text": "Stryker ist eine bekannte Codemod-Engine fuer JavaScript und TypeScript.",
+          "verdict": "false",
+          "explanation": "Stryker ist ein Mutation-Testing-Framework — es _erzeugt_ Bug-Mutanten, um Testqualitaet zu messen. Keine Migrations-Engine."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o4",
+          "text": "jscodeshift hat type-aware Visitor-Pattern aehnlich OpenRewrites LST-Type-Attribution out of the box.",
+          "verdict": "false",
+          "explanation": "jscodeshift ist syntax-orientiert — Type-Awareness erfordert zusaetzlich den TS-Compiler oder ts-morph; Format-Preservation kommt ueber recast."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o5",
+          "text": "Sourcegraph Batch Changes ist eine direkte JVM-Konkurrenz zu OpenRewrite und ersetzt LST-basierte Recipes.",
+          "verdict": "false",
+          "explanation": "Sourcegraph positioniert Batch Changes explizit als _ergaenzend_, nicht ersetzend — du kannst OpenRewrite-Recipes via Batch Changes deployen."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o6",
+          "text": "Codemod.com bietet eine YAML-deklarative Variante, die ohne Visitor-Code auskommt.",
+          "verdict": "depends",
+          "explanation": "Ja, declarative Codemods existieren — sie decken aber nur einfache 'find/replace at AST level' ab; komplexere Faelle brauchen weiter imperativen jscodeshift-Code."
+        },
+        {
+          "id": "codemod-landscape-polyglott-o7",
+          "text": "Wenn dein Team kein JVM-Stack hat, ist OpenRewrite die richtige Wahl.",
+          "verdict": "depends",
+          "explanation": "OpenRewrite hat zwar Multi-Sprachen-Parser (YAML, XML, JSON, Properties, Groovy/Kotlin DSL) — fuer eine TS/JS-only-Codebase ist jscodeshift/Codemod.com aber pragmatischer."
+        }
+      ]
+    },
+    {
+      "id": "knight-capital-deploy-disaster",
+      "question": "Der Knight-Capital-Crash 2012 wird oft als Mahnung fuer Mass-Code-Deployment zitiert. Was stimmt — und was ist popmythologisch verzerrt?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Knight Capital verlor am 1. August 2012 in ~45 Minuten ca. 440 Mio. USD. Ursache: ein Deployment-Fehler (7 von 8 SMARS-Servern wurden geupdated, einer behielt einen 2003 deprecated 'Power Peg'-Code-Pfad). Ein Flag-Bit wurde 2012 wiederverwendet und reaktivierte den dormanten Code. Klassische Lektion fuer Refactoring/Deployment: unvollstaendige Mass-Changes + reused Flags + fehlende Build-Reproduzierbarkeit = Desaster.",
+      "options": [
+        {
+          "id": "knight-capital-deploy-disaster-o0",
+          "text": "Knight Capital verlor am 1.8.2012 in ca. 45 Minuten rund 440 Millionen USD durch fehlerhafte automatische Trades.",
+          "verdict": "true",
+          "explanation": "Standard-Zahl in allen Quellen (Henrico Dolfing, CIO.com, Speculative Branches). Einige Quellen runden auf 460 Mio. USD."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o1",
+          "text": "Die Trigger-Ursache war ein _unvollstaendiges Deployment_ auf 7 von 8 SMARS-Servern, kombiniert mit einem reused Flag-Bit, das alten 'Power Peg'-Code reaktivierte.",
+          "verdict": "true",
+          "explanation": "Bekannte Post-Mortem-Analyse: Power Peg wurde 2003 deprecated, aber nie geloescht; 2012 wurde sein Flag wiederverwendet."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o2",
+          "text": "Eine Refactoring-Disziplin, die _toten Code zuverlaessig entfernt_ statt nur Flags zu setzen, haette das Risiko reduziert.",
+          "verdict": "true",
+          "explanation": "Der eigentliche Lapse: Dead-Code-Removal wurde nicht abgeschlossen; nur 'switched users away'. OpenRewrite-Style Dead-Code-Recipes adressieren genau das."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o3",
+          "text": "Tony Hoare nannte den Knight-Capital-Crash 2012 oeffentlich seinen 'billion dollar mistake'.",
+          "verdict": "false",
+          "explanation": "Hoares Zitat (QCon 2009) betrifft null-references, nicht Knight Capital — und stammt aus _2009_, also _vor_ dem Crash."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o4",
+          "text": "Hauptursache war ein Cyberangriff auf die Trading-Infrastruktur.",
+          "verdict": "false",
+          "explanation": "Kein Angriff — reiner Deployment- und Code-Hygiene-Fehler."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o5",
+          "text": "Die Refactoring-Lektion 'gleiche Eingabe -> identischer Diff' (OpenRewrites Determinismus) waere fuer Knights spezifisches Problem ein direkter Fix gewesen.",
+          "verdict": "depends",
+          "explanation": "Direkt fixen wuerde es nicht — der Fehler lag im Deployment, nicht im Refactoring-Diff. Aber: Reproduzierbare Diffs + sicheres Dead-Code-Removal + CI-verifizierte Mass-Migration adressieren die _gleiche Familie_ von Risiken."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o6",
+          "text": "Knight Capital existiert in seiner damaligen Form heute nicht mehr — die Firma wurde nach dem Crash uebernommen.",
+          "verdict": "true",
+          "explanation": "Knight Capital wurde 2013 von Getco zu KCG Holdings gemerged, spaeter 2017 von Virtu Financial uebernommen — der Crash bleibt das kanonische Software-Disaster-Beispiel."
+        },
+        {
+          "id": "knight-capital-deploy-disaster-o7",
+          "text": "Vergleichbare Mass-Refactoring-Faelle haetten heute ein OpenRewrite-Audit verhindert.",
+          "verdict": "depends",
+          "explanation": "OpenRewrite koennte Dead-Code-Removal und konsistente Diffs erzwingen — aber unvollstaendige Deployments und Flag-Wiederverwendung sind primaer Ops/Process-Probleme. Tool ist notwendig, nicht hinreichend."
+        }
+      ]
+    }
+  ]
+}

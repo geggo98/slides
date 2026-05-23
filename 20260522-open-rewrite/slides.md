@@ -569,3 +569,19 @@ hideInToc: true
 Fragen? · stefan@schwetschke.de
 
 </div>
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<OpenRewriteQuiz />
+
+<!--
+- Hinter der End-Slide: für Selbststudium nach dem Vortrag.
+- Adaptive: startet mittel, wird je nach Antwort härter oder leichter.
+- Optionen-Pool aus 4 parallelen Agent-Recherchen kuratiert: Recipe-Mechanik, KI-Pattern + JSpecify, Lizenzen + Tool-Mix, harte Transfer-Fragen (Moderne-Herkunft, Codemod-Landschaft, Knight-Capital-Crash).
+-->
