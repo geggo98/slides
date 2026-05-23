@@ -1,7 +1,7 @@
 <template>
   <div class="lst-wrap">
     <svg
-      viewBox="0 0 680 240"
+      viewBox="0 0 680 280"
       role="img"
       aria-label="LST = CST + Type Attribution"
     >
@@ -79,12 +79,16 @@
       />
 
       <g class="lst-card teal">
-        <rect x="220" y="160" width="240" height="56" rx="10" />
+        <rect x="170" y="160" width="340" height="100" rx="10" />
         <text x="340" y="184" text-anchor="middle" class="t-h">
           LST — Lossless Semantic Tree
         </text>
-        <text x="340" y="202" text-anchor="middle" class="t-s">
-          CST + Type Attribution = format-erhaltender, typsicherer Round-Trip
+        <text x="340" y="208" text-anchor="middle" class="t-s">
+          CST + Type Attribution
+        </text>
+        <text x="340" y="226" text-anchor="middle" class="t-s t-eq">=</text>
+        <text x="340" y="244" text-anchor="middle" class="t-s">
+          format-erhaltender, typsicherer Round-Trip
         </text>
       </g>
     </svg>
@@ -105,7 +109,11 @@
 .lst-wrap svg {
   width: 100%;
   height: auto;
-  max-height: 280px;
+  max-height: 320px;
+}
+.t-eq {
+  font-weight: 500;
+  fill: var(--color-text-tertiary);
 }
 .lst-card rect {
   fill: var(--color-background-secondary);
