@@ -556,3 +556,16 @@ Stefan Schwetschke · stefan@schwetschke.de · Mai 2026
 </div>
 
 </div>
+
+---
+layout: end
+hideInToc: true
+---
+
+# Danke!
+
+<div class="mt-6 text-sm opacity-60">
+
+Fragen? · stefan@schwetschke.de
+
+</div>
