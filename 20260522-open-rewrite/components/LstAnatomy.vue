@@ -26,68 +26,78 @@
         </marker>
       </defs>
 
-      <g class="lst-card gray">
-        <rect x="40" y="30" width="180" height="80" rx="10" />
-        <text x="130" y="58" text-anchor="middle" class="t-h">AST</text>
-        <text x="130" y="80" text-anchor="middle" class="t-s">
-          nur Syntax-Struktur
-        </text>
-        <text x="130" y="96" text-anchor="middle" class="t-s">
-          verliert Trivia
-        </text>
-      </g>
-
+      <!-- Top row: CST and Type Attribution as building blocks -->
       <g class="lst-card blue">
         <rect x="250" y="30" width="180" height="80" rx="10" />
-        <text x="340" y="58" text-anchor="middle" class="t-h">CST</text>
-        <text x="340" y="80" text-anchor="middle" class="t-s">
+        <text x="340" y="53" text-anchor="middle" class="t-h">CST</text>
+        <text x="340" y="68" text-anchor="middle" class="t-expand">
+          Concrete Syntax Tree
+        </text>
+        <text x="340" y="88" text-anchor="middle" class="t-s">
           behält Whitespace
         </text>
-        <text x="340" y="96" text-anchor="middle" class="t-s">
+        <text x="340" y="103" text-anchor="middle" class="t-s">
           und Kommentare
         </text>
       </g>
 
       <g class="lst-card purple">
         <rect x="460" y="30" width="180" height="80" rx="10" />
-        <text x="550" y="58" text-anchor="middle" class="t-h">
+        <text x="550" y="56" text-anchor="middle" class="t-h">
           Type Attribution
         </text>
         <text x="550" y="80" text-anchor="middle" class="t-s">
           Symbole, Resolved Types,
         </text>
-        <text x="550" y="96" text-anchor="middle" class="t-s">
+        <text x="550" y="95" text-anchor="middle" class="t-s">
           Klassenhierarchie
         </text>
       </g>
 
+      <!-- Composition arrows: CST + Type Attribution feed the LST -->
       <line
         x1="340"
         y1="110"
         x2="340"
-        y2="135"
+        y2="180"
         class="lst-line"
         marker-end="url(#lstArr)"
       />
       <line
         x1="550"
         y1="110"
-        x2="420"
-        y2="160"
+        x2="550"
+        y2="180"
         class="lst-line"
         marker-end="url(#lstArr)"
       />
 
+      <!-- AST: left, vertically centered — the implicit "vs" against LST -->
+      <g class="lst-card gray">
+        <rect x="40" y="100" width="180" height="80" rx="10" />
+        <text x="130" y="123" text-anchor="middle" class="t-h">AST</text>
+        <text x="130" y="138" text-anchor="middle" class="t-expand">
+          Abstract Syntax Tree
+        </text>
+        <text x="130" y="158" text-anchor="middle" class="t-s">
+          nur Syntax-Struktur
+        </text>
+        <text x="130" y="173" text-anchor="middle" class="t-s">
+          verliert Trivia
+        </text>
+      </g>
+
+      <!-- LST: bottom-right, spans CST and Type Attribution columns -->
       <g class="lst-card teal">
-        <rect x="170" y="160" width="340" height="100" rx="10" />
-        <text x="340" y="184" text-anchor="middle" class="t-h">
+        <rect x="250" y="180" width="390" height="90" rx="10" />
+        <text x="445" y="204" text-anchor="middle" class="t-h">
           LST — Lossless Semantic Tree
         </text>
-        <text x="340" y="208" text-anchor="middle" class="t-s">
+        <text x="445" y="226" text-anchor="middle" class="t-s">
           CST + Type Attribution
         </text>
-        <text x="340" y="226" text-anchor="middle" class="t-s t-eq">=</text>
-        <text x="340" y="244" text-anchor="middle" class="t-s">
+        <text x="445" y="244" text-anchor="middle" class="t-s t-eq">=</text>
+        <text x="445" y="261" text-anchor="middle" class="t-s">
           format-erhaltender, typsicherer Round-Trip
         </text>
       </g>
@@ -114,6 +124,11 @@
 .t-eq {
   font-weight: 500;
   fill: var(--color-text-tertiary);
+}
+.t-expand {
+  font-size: 10px;
+  fill: var(--color-text-tertiary);
+  font-style: italic;
 }
 .lst-card rect {
   fill: var(--color-background-secondary);
