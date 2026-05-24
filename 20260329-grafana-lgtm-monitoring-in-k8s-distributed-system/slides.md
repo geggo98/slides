@@ -656,9 +656,58 @@ metadata:
 Exemplars → Trace → Logs: Von „P99 ist hoch" zu Root Cause in **drei Klicks**.
 
 ---
+layout: section
+---
+
+# Bonus: Continuous Profiling mit Pyroscope
+
+Die fünfte Säule — Code-Level-Sicht zum LGTM-Stack
+
+---
+
+# Pyroscope: Continuous Profiling für LGTM
+
+Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tempo. **Mimir/Loki/Tempo zeigen WAS und WO — Pyroscope zeigt WELCHE Funktion.**
+
+<ProfilingMethods />
+
+<div class="text-slate-500" style="margin-top: 0.7em; font-size: 0.7em;">
+SDKs: Java · Go · .NET · Python · Ruby · Node.js · Rust · Auto-Instrumentation: Grafana Alloy mit eBPF
+</div>
+
+---
+
+# Pyroscope in der Praxis
+
+### Java-Agent für Spring Boot
+
+```bash
+java -javaagent:pyroscope.jar \
+  -Dpyroscope.application.name=quote-service \
+  -Dpyroscope.server.address=http://pyroscope:4040 \
+  -Dpyroscope.format=jfr \
+  -Dpyroscope.profiler.alloc=512k \
+  -Dpyroscope.profiler.lock=10ms \
+  -jar quote-service.jar
+```
+
+JFR aktiviert CPU + Allocation + Lock gleichzeitig (async-profiler unter der Haube). Alternative ohne Code-Änderung: eBPF-Auto-Instrumentation via Grafana Alloy.
+
+### Span Profiles: Drill-Down erweitert auf 4 Schritte
+
+```
+1. Dashboard    → P99-Spike                   (Mimir)
+2. Trace        → langsamer Span              (Tempo)
+3. Span Profile → Hot Function im Flamegraph  (Pyroscope)
+4. Root Cause   → konkrete Datei:Zeile
+```
+
+Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die Samples, die _während_ dieses Spans gesammelt wurden.
+
+---
 layout: end
 ---
 
 # Danke
 
-Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs
+Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs
