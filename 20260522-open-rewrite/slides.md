@@ -72,7 +72,7 @@ Format-erhaltend und typ-aware — die LST-Foundation
 hideInToc: true
 ---
 
-# OpenRewrite in einem Satz
+# OpenRewrite kurzgefasst
 
 <div class="grid grid-cols-2 gap-8 mt-4">
 <div>
