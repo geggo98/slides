@@ -677,6 +677,30 @@ SDKs: Java · Go · .NET · Python · Ruby · Node.js · Rust · Auto-Instrument
 
 ---
 
+# Flame Graph lesen — vom Sample zur Hot Function
+
+<div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; margin-top: 0.3em; font-size: 0.82em; line-height: 1.4;">
+
+<FlameGraphReader />
+
+<div>
+
+- **Y**: Stack-Tiefe (unten Einstieg, oben Leaf auf der CPU)
+- **X**: Samples alphabetisch — **keine Zeit-Achse**
+- **Breite**: Anteil der CPU-Samples → der Hot Path
+- **Farben**: bewusst zufällig, keine Semantik
+- „Breit = teuer" stimmt, „schmal = unwichtig" stimmt **nicht**
+- Nachbar-Frames stehen **nicht** in Aufrufreihenfolge
+
+</div>
+</div>
+
+<div class="text-slate-500" style="margin-top: 0.3em; font-size: 0.65em;">
+Brendan Gregg, 2011 · <a href="https://www.brendangregg.com/flamegraphs.html">brendangregg.com/flamegraphs.html</a> · auch als Off-CPU-, Memory-, Differential-Variante
+</div>
+
+---
+
 # Pyroscope in der Praxis
 
 ### Java-Agent für Spring Boot
