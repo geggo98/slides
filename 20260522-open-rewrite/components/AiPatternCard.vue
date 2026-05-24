@@ -23,7 +23,7 @@ defineProps({
     <slot name="pipeline" />
     <WhenGrid :apply="apply" :avoid="avoid" />
     <div :class="['verdict', `t-${verdictTone}`]">
-      <strong>Verdict:</strong> {{ verdict }}
+      <strong>Meine Einschätzung:</strong> {{ verdict }}
     </div>
   </div>
 </template>

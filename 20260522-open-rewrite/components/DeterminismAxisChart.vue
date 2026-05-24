@@ -1,10 +1,71 @@
 <script setup>
 const patterns = [
-  { id: 1, label: "Pattern 1", det: 80, cost: 50, tone: "good" },
-  { id: 2, label: "Pattern 2", det: 95, cost: 20, tone: "good" },
-  { id: 3, label: "Pattern 3", det: 10, cost: 90, tone: "bad" },
-  { id: 4, label: "Pattern 4", det: 80, cost: 50, tone: "warn" },
-  { id: 5, label: "Pattern 5", det: 50, cost: 80, tone: "warn" },
+  {
+    id: 1,
+    label: "Pattern 1",
+    keyword: "Recipes-first",
+    caption: [
+      "Deterministische Recipes zuerst,",
+      "AI schließt Lücken im Build-Loop.",
+    ],
+    det: 80,
+    cost: 50,
+    tone: "good",
+    tipDx: 24,
+    tipDy: 8,
+    tipAnchor: "start",
+  },
+  {
+    id: 2,
+    label: "Pattern 2",
+    keyword: "Recipe-Autor",
+    caption: ["LLM schreibt Recipe —", "Determinismus-Boundary nach links."],
+    det: 95,
+    cost: 20,
+    tone: "good",
+    tipDx: -100,
+    tipDy: 28,
+    tipAnchor: "start",
+  },
+  {
+    id: 3,
+    label: "Pattern 3",
+    keyword: "LLM in Recipe",
+    caption: ["LLM-Call in Recipe →", "non-deterministische Diffs."],
+    det: 10,
+    cost: 90,
+    tone: "bad",
+    tipDx: -24,
+    tipDy: -56,
+    tipAnchor: "end",
+  },
+  {
+    id: 4,
+    label: "Pattern 4",
+    keyword: "Prethink",
+    caption: [
+      "Recipe extrahiert Kontext,",
+      "AI reasoned strukturiert darüber.",
+    ],
+    det: 80,
+    cost: 60,
+    tone: "warn",
+    tipDx: 24,
+    tipDy: 8,
+    tipAnchor: "start",
+  },
+  {
+    id: 5,
+    label: "Pattern 5",
+    keyword: "MCP-Call",
+    caption: ["Recipes als MCP-Tools —", "Agent dirigiert, Tool orchestriert."],
+    det: 50,
+    cost: 80,
+    tone: "warn",
+    tipDx: -24,
+    tipDy: -22,
+    tipAnchor: "end",
+  },
 ];
 
 const W = 680;
@@ -13,12 +74,25 @@ const padL = 70;
 const padR = 30;
 const padT = 30;
 const padB = 60;
+const TIP_W = 230;
+const TIP_H = 42;
 
 function x(cost) {
   return padL + ((W - padL - padR) * cost) / 100;
 }
 function y(det) {
   return H - padB - ((H - padT - padB) * det) / 100;
+}
+
+function tipRectX(p) {
+  return p.tipAnchor === "end"
+    ? x(p.cost) + p.tipDx - TIP_W
+    : x(p.cost) + p.tipDx;
+}
+function tipTextX(p) {
+  return p.tipAnchor === "end"
+    ? x(p.cost) + p.tipDx - 10
+    : x(p.cost) + p.tipDx + 10;
 }
 </script>
 
@@ -53,7 +127,7 @@ function y(det) {
         class="label"
         transform="rotate(-90)"
       >
-        ↑ Determinismus
+        Determinismus →
       </text>
 
       <text :x="padL - 6" :y="y(0) + 4" text-anchor="end" class="tick">
@@ -76,11 +150,16 @@ function y(det) {
       </text>
 
       <line :x1="padL" :y1="y(60)" :x2="W - padR" :y2="y(60)" class="grid" />
-      <text :x="W - padR" :y="y(60) - 4" text-anchor="end" class="hint">
+      <text
+        :x="(padL + W - padR) / 2"
+        :y="y(60) - 4"
+        text-anchor="middle"
+        class="hint"
+      >
         Reviewbar-Schwelle
       </text>
 
-      <g v-for="p in patterns" :key="p.id">
+      <g v-for="(p, i) in patterns" :key="p.id" v-click="i + 1">
         <circle
           :cx="x(p.cost)"
           :cy="y(p.det)"
@@ -95,13 +174,35 @@ function y(det) {
         >
           {{ p.id }}
         </text>
+        <text text-anchor="middle" class="dot-name">
+          <tspan :x="x(p.cost)" :y="y(p.det) - 36">{{ p.label }}</tspan>
+          <tspan :x="x(p.cost)" :y="y(p.det) - 24" class="dot-keyword">
+            {{ p.keyword }}
+          </tspan>
+        </text>
+      </g>
+
+      <g
+        v-for="(p, i) in patterns"
+        :key="`tip-${p.id}`"
+        v-click="[i + 1, i + 2]"
+        class="tip"
+      >
+        <rect
+          :x="tipRectX(p)"
+          :y="y(p.det) + p.tipDy"
+          :width="TIP_W"
+          :height="TIP_H"
+          rx="6"
+          class="tip-bg"
+        />
         <text
-          :x="x(p.cost)"
-          :y="y(p.det) - 28"
-          text-anchor="middle"
-          class="dot-name"
+          :y="y(p.det) + p.tipDy + 16"
+          :text-anchor="p.tipAnchor"
+          class="tip-text"
         >
-          {{ p.label }}
+          <tspan :x="tipTextX(p)">{{ p.caption[0] }}</tspan>
+          <tspan :x="tipTextX(p)" dy="14">{{ p.caption[1] }}</tspan>
         </text>
       </g>
     </svg>
@@ -166,6 +267,21 @@ function y(det) {
 .dot-name {
   font-size: 11px;
   fill: var(--color-text-secondary);
+}
+.dot-keyword {
+  font-size: 10px;
+  fill: var(--color-text-tertiary);
+  font-style: italic;
+}
+.tip-bg {
+  fill: var(--color-background-secondary);
+  stroke: var(--color-border-default);
+  stroke-width: 0.5;
+  opacity: 0.96;
+}
+.tip-text {
+  font-size: 11px;
+  fill: var(--color-text-primary);
 }
 .caption {
   font-size: 12.5px;

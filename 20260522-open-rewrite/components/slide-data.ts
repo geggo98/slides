@@ -368,7 +368,7 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-  // Frage an den LLM: @Nullable User oder Optional<User>?
+  // Frage an den LLM-Agenten: @Nullable User oder Optional<User>?
   // Vertrag der Aufrufer entscheidet — Annotation allein reicht nicht.
   public @Nullable User findByEmail(String email) {
     if (email.isBlank()) return null;

@@ -239,20 +239,6 @@ Fünf Pattern, sortiert nach Reife und Risiko
 hideInToc: true
 ---
 
-# Die Determinismus-Grenze als Achsenkreuz
-
-<DeterminismAxisChart class="mt-4" />
-
-<!--
-- Je näher der LLM-Output zur PR-Boundary kommt, desto schmerzhafter die Verletzung.
-- Pattern 2 (AI als Recipe-Autor) ist die wirtschaftlichste Position: Determinismus hoch, Token-Kosten einmalig.
-- Pattern 3 ist die rote Zone — Maintainer raten selbst davon ab.
--->
-
----
-hideInToc: true
----
-
 # Pattern 1: Recipes-first, AI im Build-Loop
 
 <AiPattern1Card class="mt-2" />
@@ -317,6 +303,22 @@ hideInToc: true
 - Moderne MCP Server exponiert run_recipe, find_recipes, analyze_impact.
 - Agent entscheidet pro Turn neu — das ist Feature *und* Bug.
 - Für Exploration nützlich, für reproduzierbare CI-Pipelines nicht.
+-->
+
+---
+hideInToc: true
+clicks: 6
+---
+
+# Die Determinismus-Grenze als Achsenkreuz
+
+<DeterminismAxisChart class="mt-4" />
+
+<!--
+- Je näher der LLM-Output zur PR-Boundary kommt, desto schmerzhafter die Verletzung.
+- Pattern 2 (AI als Recipe-Autor) ist die wirtschaftlichste Position: Determinismus hoch, Token-Kosten einmalig.
+- Pattern 3 ist die rote Zone — Maintainer raten selbst davon ab.
+- Pro Klick erscheint ein Pattern mit Kurzbeschreibung — am Ende stehen alle fünf im Vergleich.
 -->
 
 ---
