@@ -136,49 +136,7 @@ hideInToc: true
 layout: section
 ---
 
-# 2. Lizenzen: Apache, MSAL, MPL
-
-Was sich Ende 2024 verschoben hat und warum es dich betrifft
-
----
-hideInToc: true
----
-
-# Die drei Editionen im Vergleich
-
-<LicenseMatrix class="mt-4" />
-
-<div class="mt-4 text-sm opacity-70 max-w-4xl">
-
-Am 13. Dezember 2024 sind die `rewrite-spring`-Recipes von Apache 2.0 nach MSAL gewechselt — ohne Vorwarnung an Contributors. Juristisch erlaubt (Apache 2.0 lässt das zu), strategisch ein Vertrauensschaden.
-
-</div>
-
-<!--
-- „Community Edition" im Recipe-Katalog heißt MSAL, nicht OSS. Marketing-Falle.
-- MPL-Recipes (Multi-Repo, AI-augmentiert) sind nur über Moderne-Subscription erreichbar.
-- Wer ernsthaft baut: jährliches Lizenz-Audit pro Recipe-JAR.
--->
-
----
-hideInToc: true
----
-
-# Praxis-Konsequenz: Audit vor Adoption
-
-<LicenseAuditChecklist class="mt-4" />
-
-<!--
-- Die Checklist gehört in den Definition-of-Done für CI-Integration.
-- Wer `latest.release` nutzt, sieht Lizenz-Drift erst, wenn der Build kaputt ist — oder schlimmer, in einem Vendor-Audit.
-- gradle-license-report oder die OpenRewrite-eigene DependencyLicenseCheck-Recipe automatisieren das.
--->
-
----
-layout: section
----
-
-# 3. Recipes bauen — drei Wege
+# 2. Recipes bauen — drei Wege
 
 YAML, Refaster, Imperative — in dieser Reihenfolge
 
@@ -231,7 +189,7 @@ hideInToc: true
 layout: section
 ---
 
-# 4. KI + OpenRewrite — die Determinismus-Grenze
+# 3. KI + OpenRewrite — die Determinismus-Grenze
 
 Fünf Pattern, sortiert nach Reife und Risiko
 
@@ -319,6 +277,48 @@ clicks: 6
 - Pattern 2 (AI als Recipe-Autor) ist die wirtschaftlichste Position: Determinismus hoch, Token-Kosten einmalig.
 - Pattern 3 ist die rote Zone — Maintainer raten selbst davon ab.
 - Pro Klick erscheint ein Pattern mit Kurzbeschreibung — am Ende stehen alle fünf im Vergleich.
+-->
+
+---
+layout: section
+---
+
+# 4. Lizenzen: Apache, MSAL, MPL
+
+Was sich Ende 2024 verschoben hat und warum es dich betrifft
+
+---
+hideInToc: true
+---
+
+# Die drei Editionen im Vergleich
+
+<LicenseMatrix class="mt-4" />
+
+<div class="mt-4 text-sm opacity-70 max-w-4xl">
+
+Am 13. Dezember 2024 sind die `rewrite-spring`-Recipes von Apache 2.0 nach MSAL gewechselt — ohne Vorwarnung an Contributors. Juristisch erlaubt (Apache 2.0 lässt das zu), strategisch ein Vertrauensschaden.
+
+</div>
+
+<!--
+- „Community Edition" im Recipe-Katalog heißt MSAL, nicht OSS. Marketing-Falle.
+- MPL-Recipes (Multi-Repo, AI-augmentiert) sind nur über Moderne-Subscription erreichbar.
+- Wer ernsthaft baut: jährliches Lizenz-Audit pro Recipe-JAR.
+-->
+
+---
+hideInToc: true
+---
+
+# Praxis-Konsequenz: Audit vor Adoption
+
+<LicenseAuditChecklist class="mt-4" />
+
+<!--
+- Die Checklist gehört in den Definition-of-Done für CI-Integration.
+- Wer `latest.release` nutzt, sieht Lizenz-Drift erst, wenn der Build kaputt ist — oder schlimmer, in einem Vendor-Audit.
+- gradle-license-report oder die OpenRewrite-eigene DependencyLicenseCheck-Recipe automatisieren das.
 -->
 
 ---
