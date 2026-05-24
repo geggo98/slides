@@ -18,3 +18,7 @@ dist/
 # Claude Code runtime state
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+# IDE
+/.lsp/
+

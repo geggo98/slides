@@ -667,7 +667,7 @@ Die fünfte Säule — Code-Level-Sicht zum LGTM-Stack
 
 # Pyroscope: Continuous Profiling für LGTM
 
-Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tempo. **Mimir/Loki/Tempo zeigen WAS und WO — Pyroscope zeigt WELCHE Funktion.**
+Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tempo. **Mimir/Loki/Tempo zeigen WAS und WO — Pyroscope zeigt WELCHE Funktion** mit Hilfe von Flame Graphs.
 
 <ProfilingMethods />
 
@@ -677,7 +677,9 @@ SDKs: Java · Go · .NET · Python · Ruby · Node.js · Rust · Auto-Instrument
 
 ---
 
-# Flame Graph lesen — vom Sample zur Hot Function
+# Flame Graphs lesen — vom Sample zur Hot Function
+
+Pyroscope visualisiert die gesammelten Daten als _Flame Graph_, wie im folgenden **interaktiven** Beispiel:
 
 <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; margin-top: 0.3em; font-size: 0.82em; line-height: 1.4;">
 
