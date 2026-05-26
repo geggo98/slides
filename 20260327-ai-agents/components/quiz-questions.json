@@ -1,0 +1,828 @@
+{
+  "id": "ai-agents-2026",
+  "title": "AI-Coding-Agents Selbsttest",
+  "questions": [
+    {
+      "id": "primitive-categories",
+      "question": "Welche Aussagen zur Klassifikation der sieben Kern-Primitive treffen zu?",
+      "difficulty": "easy",
+      "section": "Primitive",
+      "explanation": "Die Primitive zerfallen in drei Klassen: beratend (Instruktionsdateien, Rules), on-demand (Skills), deterministisch (Hooks). MCP und Subagents lösen orthogonale Probleme (Fähigkeitserweiterung bzw. Kontextfenster). Plugins sind kein eigenes Primitiv, sondern eine Bündelung.",
+      "options": [
+        {
+          "id": "primitive-categories-o0",
+          "text": "Instruktionsdateien und Rules sind beratend — das Modell kann sie ignorieren.",
+          "verdict": "true",
+          "explanation": "Beide werden in den System-Prompt geladen, aber das Modell entscheidet, ob es sie befolgt."
+        },
+        {
+          "id": "primitive-categories-o1",
+          "text": "Hooks laufen deterministisch und unabhängig von der Modellentscheidung.",
+          "verdict": "true",
+          "explanation": "Shell-/JS-Trigger an festen Lifecycle-Events — keine KI-Interpretation."
+        },
+        {
+          "id": "primitive-categories-o2",
+          "text": "Skills lädt das Modell on-demand basierend auf der Beschreibung im Frontmatter.",
+          "verdict": "true",
+          "explanation": "Skills sind die dritte Kategorie: das Modell entscheidet anhand der `description` des SKILL.md, ob es sie zieht."
+        },
+        {
+          "id": "primitive-categories-o3",
+          "text": "Plugins ersetzen Hooks und Skills mit einer einheitlichen API.",
+          "verdict": "false",
+          "explanation": "Plugins ersetzen nichts — sie bündeln Skills + Hooks + MCP-Server zu einem Paket."
+        },
+        {
+          "id": "primitive-categories-o4",
+          "text": "Subagents teilen ihr Kontextfenster mit dem Hauptagenten.",
+          "verdict": "false",
+          "explanation": "Genau das ist der Witz: Subagents haben ein eigenes Kontextfenster — nur die Zusammenfassung fließt zurück."
+        },
+        {
+          "id": "primitive-categories-o5",
+          "text": "MCP-Server stellen Fähigkeiten bereit, die das Modell sonst nicht hätte.",
+          "verdict": "true",
+          "explanation": "MCP gibt dem Agenten Hände für die Außenwelt — Datenbanken, APIs, Filesystem-Bridges."
+        },
+        {
+          "id": "primitive-categories-o6",
+          "text": "Eine harte Quality-Gate sollte als Rule statt als Hook implementiert werden.",
+          "verdict": "false",
+          "explanation": "Rules sind beratend — wer Quality erzwingen will, braucht Hooks."
+        },
+        {
+          "id": "primitive-categories-o7",
+          "text": "Ob ein Skill geladen wird, hängt von der Qualität seiner Beschreibung ab.",
+          "verdict": "depends",
+          "explanation": "Das Modell entscheidet anhand der `description`. Schlecht formulierte Skills werden übersehen — gut formulierte zielsicher gezogen."
+        }
+      ]
+    },
+    {
+      "id": "lsp-vs-mcp-vs-acp",
+      "question": "Welche Aussagen zur Abgrenzung von LSP, MCP und ACP treffen zu?",
+      "difficulty": "medium",
+      "section": "Protokolle",
+      "explanation": "Drei Protokolle mit klar getrennten Aufgaben: LSP (Microsoft, 2016) für semantisches Code-Verstehen, MCP (Anthropic, 2024) für externe Tool-Anbindung, ACP (Zed + JetBrains, 2025) als Editor-Agent-Brücke. Alle drei sind JSON-RPC-basiert — Verwechslung ist verbreitet.",
+      "options": [
+        {
+          "id": "lsp-vs-mcp-vs-acp-o0",
+          "text": "LSP gibt dem Agenten Augen für Code, MCP gibt ihm Hände für die Außenwelt.",
+          "verdict": "true",
+          "explanation": "Die Aufteilung ist orthogonal — ein Agent profitiert von beiden gleichzeitig."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o1",
+          "text": "ACP löst das N×M-Problem zwischen Editoren und Agenten.",
+          "verdict": "true",
+          "explanation": "Vor ACP brauchte jeder Editor jeden Agenten als Custom-Integration. Mit ACP: einmal implementieren, überall lauffähig."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o2",
+          "text": "ACP ersetzt MCP, weil JetBrains MCP-Server direkt an den Agenten durchreicht.",
+          "verdict": "false",
+          "explanation": "Durchreichung ist keine Ersetzung — MCP löst weiterhin Tool-Anbindung, ACP löst die Editor-Agent-Brücke."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o3",
+          "text": "ACP wurde 2016 von Microsoft als Schwester-Protokoll zu LSP eingeführt.",
+          "verdict": "false",
+          "explanation": "ACP stammt von Zed + JetBrains, 2025. LSP ist von Microsoft, 2016. MCP von Anthropic, 2024."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o4",
+          "text": "MCP-Tools laufen immer im Adress-Raum des Agenten.",
+          "verdict": "false",
+          "explanation": "MCP-Server sind externe Prozesse (lokal oder remote) — gerade das ist die Fähigkeitserweiterung."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o5",
+          "text": "Windsurf unterstützt ACP nicht, weil es eine eigene IDE betreibt.",
+          "verdict": "true",
+          "explanation": "Windsurf hat als einziges Tool im Vergleich keine ACP-Integration — die Anbindung läuft in der proprietären IDE."
+        },
+        {
+          "id": "lsp-vs-mcp-vs-acp-o6",
+          "text": "Ob für eine Aufgabe LSP oder MCP das richtige Protokoll ist, hängt vom Ziel ab.",
+          "verdict": "depends",
+          "explanation": "Symbol-Suche → LSP (~50 ms). Datenbank-Query → MCP. Beide gleichzeitig sinnvoll für einen Agenten."
+        }
+      ]
+    },
+    {
+      "id": "subagent-tradeoffs",
+      "question": "Welche Aussagen zu Subagents und Kontext-Isolation treffen zu?",
+      "difficulty": "medium",
+      "section": "Subagents",
+      "explanation": "Subagents sind isolierte Agent-Instanzen mit eigenem Kontextfenster — analog zu einem Praktikanten, der eine Teilaufgabe bearbeitet und nur ein zusammengefasstes Ergebnis zurückgibt. Lohnt sich erst bei größeren Teilaufgaben mit ≈ 5 + Tool-Calls.",
+      "options": [
+        {
+          "id": "subagent-tradeoffs-o0",
+          "text": "Subagents lösen Kontextfenster-Probleme, indem sie eine isolierte Instanz mit eigenem Fenster nutzen.",
+          "verdict": "true",
+          "explanation": "Eigenes Kontextfenster pro Subagent — nur das Ergebnis fließt zurück in den Haupt-Kontext."
+        },
+        {
+          "id": "subagent-tradeoffs-o1",
+          "text": "Ein Subagent lohnt sich erst ab ungefähr 5 + Tool-Calls.",
+          "verdict": "true",
+          "explanation": "Unterhalb dieser Schwelle überwiegt der Overhead des isolierten Setup-Kontextes den Nutzen der Isolation."
+        },
+        {
+          "id": "subagent-tradeoffs-o2",
+          "text": "Subagents teilen ihren Kontext mit dem Hauptagenten.",
+          "verdict": "false",
+          "explanation": "Genau das ist der Punkt: Subagents haben ein eigenes, isoliertes Kontextfenster — sonst hätten sie keinen Mehrwert."
+        },
+        {
+          "id": "subagent-tradeoffs-o3",
+          "text": "Subagents ersetzen Skills, weil sie ebenfalls on-demand laufen.",
+          "verdict": "false",
+          "explanation": "Skills sind on-demand-Wissen/Run-Books. Subagents sind ganze Agent-Instanzen. Komplementär, nicht ersetzend."
+        },
+        {
+          "id": "subagent-tradeoffs-o4",
+          "text": "OpenCode erlaubt Per-Agent-Permission-Overrides und pro Subagent ein anderes MCP-Set.",
+          "verdict": "true",
+          "explanation": "OpenCode hat diese feine Granularität — andere Tools sind in der Permissions-Sicht gröber."
+        },
+        {
+          "id": "subagent-tradeoffs-o5",
+          "text": "Subagents sind ein Synonym für Plugins.",
+          "verdict": "false",
+          "explanation": "Plugins bündeln Skills + Hooks + MCP. Subagents sind Agent-Instanzen. Konzeptionell verschieden."
+        },
+        {
+          "id": "subagent-tradeoffs-o6",
+          "text": "Ob ein Subagent für eine Aufgabe sinnvoll ist, hängt von Komplexität und Tool-Call-Anzahl ab.",
+          "verdict": "depends",
+          "explanation": "Kurze Tasks: Hauptagent direkt. Lange, klar abgegrenzte Tasks mit eigenem Tool-Set: Subagent."
+        }
+      ]
+    },
+    {
+      "id": "skill-model-decision",
+      "question": "Welche Aussagen zu Skills als modell-entschiedene Primitive treffen zu?",
+      "difficulty": "medium",
+      "section": "Skills",
+      "explanation": "Skills liegen zwischen beratend und deterministisch: das Modell entscheidet anhand des SKILL.md-Frontmatters (description), ob es sie lädt. Token-effizient, weil nur on-demand. Cross-Tool stärkster Standard — gleiche Struktur über alle 6 Tools.",
+      "options": [
+        {
+          "id": "skill-model-decision-o0",
+          "text": "Skills lädt das Modell on-demand, nicht beim Sessionstart.",
+          "verdict": "true",
+          "explanation": "Im Gegensatz zu Instruktionsdateien werden Skills erst geladen, wenn das Modell sie als relevant einstuft."
+        },
+        {
+          "id": "skill-model-decision-o1",
+          "text": "SKILL.md hat dieselbe Struktur über alle sechs verglichenen Tools.",
+          "verdict": "true",
+          "explanation": "SKILL.md ist als stärkster Cross-Tool-Standard genannt — gleiche YAML-Frontmatter, gleiche Konventionen."
+        },
+        {
+          "id": "skill-model-decision-o2",
+          "text": "Skills bestehen aus SKILL.md plus optionalen Skripten, Templates und Referenzdateien.",
+          "verdict": "true",
+          "explanation": "Wie ein Run-Book strukturiert — SKILL.md ist der Einstieg, die übrigen Dateien werden bei Bedarf nachgeladen."
+        },
+        {
+          "id": "skill-model-decision-o3",
+          "text": "Skills sind genauso deterministisch wie Hooks, weil sie ausführbaren Code enthalten können.",
+          "verdict": "false",
+          "explanation": "Skills sind nicht deterministisch — das Modell entscheidet, ob es sie überhaupt aktiviert. Hooks laufen unabhängig davon."
+        },
+        {
+          "id": "skill-model-decision-o4",
+          "text": "Skills sind weniger token-effizient als Instruktionsdateien.",
+          "verdict": "false",
+          "explanation": "Genau umgekehrt: Skills laden nur on-demand — Instruktionsdateien hängen immer im System-Prompt."
+        },
+        {
+          "id": "skill-model-decision-o5",
+          "text": "Windsurf entdeckt Skills aus `.agents/skills/` automatisch.",
+          "verdict": "true",
+          "explanation": "Praktische Cross-Tool-Interop: Windsurf scannt `.agents/skills/` als Standard-Skill-Pfad."
+        },
+        {
+          "id": "skill-model-decision-o6",
+          "text": "Ob ein Skill gezogen wird, hängt davon ab, wie präzise die `description` zum Task passt.",
+          "verdict": "depends",
+          "explanation": "Trefferquote ist eine Funktion der Beschreibungs-Qualität: schwammige Skills werden übersehen, scharfe zielsicher gezogen."
+        }
+      ]
+    },
+    {
+      "id": "hook-events-divergence",
+      "question": "Welche Aussagen zur Divergenz der Hook-Systeme treffen zu?",
+      "difficulty": "medium",
+      "section": "Hooks",
+      "explanation": "Hooks sind die unportabelste Konfigurations-Schicht. Die Anzahl der Events variiert von 2 (Codex) bis 30 + (OpenCode). Junie hat überhaupt keine klassischen Hooks — stattdessen Approval Gates und Live Prompting. Cross-Tool-Setup ist nahezu unmöglich.",
+      "options": [
+        {
+          "id": "hook-events-divergence-o0",
+          "text": "OpenCode hat mit über 30 Events die meisten Hook-Events und nutzt JS/TS-Plugins statt Shell.",
+          "verdict": "true",
+          "explanation": "OpenCode: 30 + Events, JS/TS-Plugin-System — die feinste Granularität und ausdrucksstärkste Sprache im Vergleich."
+        },
+        {
+          "id": "hook-events-divergence-o1",
+          "text": "Codex unterstützt mit nur 2 Events (notify + userpromptsubmit) das schmalste Hook-System.",
+          "verdict": "true",
+          "explanation": "Kein Pre-Tool-Block möglich — Codex eignet sich daher nicht für harte Quality-Gates auf Tool-Ebene."
+        },
+        {
+          "id": "hook-events-divergence-o2",
+          "text": "Junie hat ein klassisches Hook-System mit Pre-Tool-Block.",
+          "verdict": "false",
+          "explanation": "Junie hat keine klassischen Hooks — stattdessen Approval Gates + Live Prompting."
+        },
+        {
+          "id": "hook-events-divergence-o3",
+          "text": "Claude Code unterstützt drei Handler-Typen: Shell, LLM-Prompt und Agent.",
+          "verdict": "true",
+          "explanation": "Genau diese drei Handler-Typen listet die Vergleichsmatrix als Besonderheit von Claude Code."
+        },
+        {
+          "id": "hook-events-divergence-o4",
+          "text": "Gemini CLI kann via AfterAgent-Hook (Exit 2) einen Retry triggern.",
+          "verdict": "true",
+          "explanation": "Genau diese Besonderheit nennt die Vergleichsmatrix — AfterAgent mit Exit 2 = Retry-Trigger."
+        },
+        {
+          "id": "hook-events-divergence-o5",
+          "text": "Eine Cross-Tool-portable Hook-Definition lässt sich aus den Hook-Configs ableiten.",
+          "verdict": "false",
+          "explanation": "JSON vs. TOML vs. JS-Plugins, unterschiedliche Events — Hooks sind explizit nicht portabel."
+        },
+        {
+          "id": "hook-events-divergence-o6",
+          "text": "Ob ein Pre-Tool-Block für ein Compliance-Use-Case ausreicht, hängt vom Tool ab.",
+          "verdict": "depends",
+          "explanation": "Claude Code, Gemini, Windsurf, OpenCode haben Pre-Tool-Block — Codex und Junie nicht. Tool-Wahl bestimmt die Möglichkeit."
+        }
+      ]
+    },
+    {
+      "id": "agents-md-cross-tool",
+      "question": "Welche Aussagen zur Cross-Tool-Kompatibilität über AGENTS.md / CLAUDE.md / SKILL.md treffen zu?",
+      "difficulty": "medium",
+      "section": "Interop",
+      "explanation": "AGENTS.md ist der emergente Standard — von 5 von 6 Tools direkt unterstützt. Claude Code nutzt CLAUDE.md, kann aber via `@AGENTS.md`-Import eine Single-Source halten. Settings und Hooks sind dagegen nicht portabel.",
+      "options": [
+        {
+          "id": "agents-md-cross-tool-o0",
+          "text": "AGENTS.md wird von fünf der sechs verglichenen Tools direkt verstanden — Ausnahme Claude Code.",
+          "verdict": "true",
+          "explanation": "Claude Code liest nur CLAUDE.md; alle anderen verstehen AGENTS.md direkt."
+        },
+        {
+          "id": "agents-md-cross-tool-o1",
+          "text": "Claude Code lässt sich per `@AGENTS.md`-Import in CLAUDE.md mit einer Single-Source betreiben.",
+          "verdict": "true",
+          "explanation": "Empfohlene Lösung: `@AGENTS.md`-Import an beliebiger Stelle in CLAUDE.md, bis zu fünf Ebenen tief."
+        },
+        {
+          "id": "agents-md-cross-tool-o2",
+          "text": "Junie importiert `.claude/`, `.codex/` und `.cursor/` als Fallback automatisch.",
+          "verdict": "true",
+          "explanation": "Dokumentiertes Verhalten — Junie ist der freundlichste Cross-Tool-Importer."
+        },
+        {
+          "id": "agents-md-cross-tool-o3",
+          "text": "Settings und Hooks lassen sich problemlos zwischen Tools teilen, da alle JSON nutzen.",
+          "verdict": "false",
+          "explanation": "JSON vs. TOML vs. JS-Plugins — Hooks sind nicht portabel, nur Instruktionen und Skills."
+        },
+        {
+          "id": "agents-md-cross-tool-o4",
+          "text": "Claude Code liest AGENTS.md automatisch, sobald es im Git-Root liegt.",
+          "verdict": "false",
+          "explanation": "Claude Code liest nur CLAUDE.md — AGENTS.md muss explizit importiert oder verlinkt werden."
+        },
+        {
+          "id": "agents-md-cross-tool-o5",
+          "text": "OpenCode fällt explizit auf AGENTS.md zurück, nicht auf CLAUDE.md.",
+          "verdict": "false",
+          "explanation": "Die Folie nennt das Gegenteil: OpenCode fällt auf CLAUDE.md zurück."
+        },
+        {
+          "id": "agents-md-cross-tool-o6",
+          "text": "Ob `ln -s AGENTS.md CLAUDE.md` als Alternative zum Import-Pragma funktioniert, hängt vom OS ab.",
+          "verdict": "depends",
+          "explanation": "Unter Unix problemlos. Unter Windows braucht Symlink-Erstellung Admin-Rechte oder Developer-Mode — daher ist `@AGENTS.md`-Import portabler."
+        }
+      ]
+    },
+    {
+      "id": "auto-mode-classifier",
+      "question": "Welche Aussagen zum Claude-Code-Auto-Mode treffen zu?",
+      "difficulty": "hard",
+      "section": "Permissions",
+      "explanation": "Auto-Mode (Research Preview, v2.1.83+, nur Opus 4.6/4.7 + Sonnet 4.6 auf Anthropic API) ist der differenzierteste Permission Mode: er erlaubt alles, prüft aber im Hintergrund mit einem Classifier auf gefährliche Aktionen. Nicht zu verwechseln mit `bypassPermissions`, das überhaupt keine Checks macht.",
+      "options": [
+        {
+          "id": "auto-mode-classifier-o0",
+          "text": "Der Auto-Mode-Classifier blockt u. a. `curl | bash`, Force-Push, Prod-Deploys und IAM-Grants.",
+          "verdict": "true",
+          "explanation": "Explizite Block-Liste laut Folie — plus externe Endpoints und Chat-Aussagen wie „don't push\" als Deny."
+        },
+        {
+          "id": "auto-mode-classifier-o1",
+          "text": "Chat-Aussagen wie „don't push to main\" wirken im Auto-Mode wie ein zusätzlicher Deny.",
+          "verdict": "true",
+          "explanation": "Negative User-Instruktionen werden vom Classifier als Deny-Hinweis interpretiert — Konversation verschärft Policy."
+        },
+        {
+          "id": "auto-mode-classifier-o2",
+          "text": "Nach 3 Blocks in Folge oder 20 Blocks gesamt fällt der Auto-Mode automatisch zurück.",
+          "verdict": "true",
+          "explanation": "Sicherheits-Fallback gegen Endlos-Loops bei unklarer Intent."
+        },
+        {
+          "id": "auto-mode-classifier-o3",
+          "text": "`bypassPermissions` ist funktional identisch zu `auto`, nur mit anderem Namen.",
+          "verdict": "false",
+          "explanation": "Auto hat unsichtbare Checks, Bypass keine — nur Auto schützt vor Modellfehlern und Prompt-Injection."
+        },
+        {
+          "id": "auto-mode-classifier-o4",
+          "text": "Shift+Tab cycelt direkt zwischen `default`, `acceptEdits`, `plan` und `auto`.",
+          "verdict": "false",
+          "explanation": "Shift+Tab cycelt nur `default → acceptEdits → plan`. `auto` und `bypassPermissions` brauchen explizites Opt-in."
+        },
+        {
+          "id": "auto-mode-classifier-o5",
+          "text": "Auto-Mode läuft mit allen Anthropic-Modellen seit Claude 3.",
+          "verdict": "false",
+          "explanation": "Research Preview, v2.1.83+, ausschließlich Opus 4.6/4.7 + Sonnet 4.6 auf der Anthropic-API."
+        },
+        {
+          "id": "auto-mode-classifier-o6",
+          "text": "Ob Auto-Mode der richtige Default für eine CI-Pipeline ist, hängt vom Vertrauenslevel ab.",
+          "verdict": "depends",
+          "explanation": "Für CI ist `dontAsk` (nur vorab erlaubte Tools) meist sicherer — Auto eignet sich eher für interaktive Long-Running-Tasks."
+        }
+      ]
+    },
+    {
+      "id": "stdin-pipe-pitfalls",
+      "question": "Welche Aussagen zu Stdin-Pipes mit `claude -p` treffen zu?",
+      "difficulty": "hard",
+      "section": "Pipes & Headless",
+      "explanation": "Claude wartet 3 Sekunden auf das erste Stdin-Byte. Kommt nichts, läuft er ohne Stdin weiter. Kommen Daten, wartet er auf EOF — daher hängt `tail -f | claude -p` ewig. Workaround: vorher vollständig puffern.",
+      "options": [
+        {
+          "id": "stdin-pipe-pitfalls-o0",
+          "text": "Ohne Daten innerhalb von 3 Sekunden läuft `claude -p` ohne Stdin weiter (mit stderr-Warnung).",
+          "verdict": "true",
+          "explanation": "Genau dieses Verhalten ist als 3-Sekunden-Timeout dokumentiert."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o1",
+          "text": "`tail -f log | claude -p \"…\"` hängt, weil Stdin nie EOF erreicht.",
+          "verdict": "true",
+          "explanation": "Sobald Daten fließen, wartet Claude auf EOF. `tail -f` schließt den Stream nie."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o2",
+          "text": "Bash-Workaround: `claude -p \"…\" <<< \"$(cmd)\"` puffert vollständig und schließt dann.",
+          "verdict": "true",
+          "explanation": "Herestring führt die Subshell zu Ende und reicht einen geschlossenen Stream weiter."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o3",
+          "text": "Fish-Workaround: `claude -p \"…\" < (cmd | psub)` — psub schreibt in ein Tempfile.",
+          "verdict": "true",
+          "explanation": "psub ohne `-F`/`--fifo` puffert in eine Datei und vermeidet den EOF-Hang."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o4",
+          "text": "`psub -F` (FIFO-Variante) löst das Hang-Problem in Fish ebenso.",
+          "verdict": "false",
+          "explanation": "FIFO reproduziert den EOF-Hang genauso wie eine direkte Pipe — nur das Tempfile-psub funktioniert."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o5",
+          "text": "`stdbuf -oL tail -f` behebt den Hang durch Line-Buffering.",
+          "verdict": "false",
+          "explanation": "Pufferung ist nicht das Problem — Claude wartet auf EOF, das `tail -f` nie sendet."
+        },
+        {
+          "id": "stdin-pipe-pitfalls-o6",
+          "text": "Ob ein langsamer Stream durch `claude -p` zuverlässig funktioniert, hängt von initialer Verzögerung und EOF-Verhalten ab.",
+          "verdict": "depends",
+          "explanation": "Wenn binnen 3 s erste Daten kommen und ein EOF folgt, läuft es. Dauerstreaming ohne EOF hängt. Pufferung ist die zuverlässige Lösung."
+        }
+      ]
+    },
+    {
+      "id": "agent-sdk-billing-2026",
+      "question": "Welche Claude-Code-Nutzungen zählen ab 2026-06-15 gegen das separate Agent-SDK-Credit (statt Pro/Max-Subscription)?",
+      "difficulty": "hard",
+      "section": "ACP / Billing",
+      "explanation": "Anthropic trennt ab 2026-06-15 die Abrechnung: alles, was über das Agent-SDK läuft — `claude -p`, ACP-Verbindungen aus Zed/JetBrains, GitHub Actions, Drittanbieter-Tools mit SDK — zählt gegen ein neues Agent-SDK-Credit. Interaktives Terminal/IDE bleibt im Subscription-Kontingent. Über das Credit hinaus gelten Standard-API-Raten.",
+      "options": [
+        {
+          "id": "agent-sdk-billing-2026-o0",
+          "text": "Claude Code in Zed via ACP zählt gegen das Agent-SDK-Credit.",
+          "verdict": "true",
+          "explanation": "ACP-Verbindungen nutzen das Agent-SDK und sind explizit betroffen."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o1",
+          "text": "`claude -p` aus Shell-Skripten zählt gegen das Agent-SDK-Credit.",
+          "verdict": "true",
+          "explanation": "Pipe/Headless-Aufrufe sind Agent-SDK-basiert — separat abgerechnet."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o2",
+          "text": "Claude-Code-Aufrufe in GitHub Actions zählen gegen das Agent-SDK-Credit.",
+          "verdict": "true",
+          "explanation": "GitHub Actions Integration läuft über das Agent-SDK."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o3",
+          "text": "Interaktive Claude-Code-Sessions im Terminal zählen gegen das Agent-SDK-Credit.",
+          "verdict": "false",
+          "explanation": "Interaktives Terminal/IDE bleibt im Subscription-Kontingent — unverändert."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o4",
+          "text": "Über das Credit hinaus läuft die Abrechnung zu Standard-API-Raten weiter.",
+          "verdict": "true",
+          "explanation": "Genau so beschrieben — kein hartes Abschneiden, sondern Übergang in API-Preise."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o5",
+          "text": "Die Abrechnungsumstellung betrifft auch Codex, Gemini CLI und Windsurf.",
+          "verdict": "false",
+          "explanation": "Die 2026-06-15-Regel betrifft ausschließlich Anthropic-/Claude-Code-Abrechnung. Andere Tools haben eigene Modelle."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o6",
+          "text": "Ob die Umstellung für ein Team teurer wird, hängt vom Nutzungsmuster ab.",
+          "verdict": "depends",
+          "explanation": "Reine Pipe/SDK-Workflows mit hohem Volumen können das Credit ausschöpfen und auf API-Raten fallen; reine Interactive-Nutzer sind unbetroffen."
+        }
+      ]
+    },
+    {
+      "id": "gemini-antigravity-migration",
+      "question": "Was solltest du vor einer Gemini-CLI-Integration in CI (Mai 2026) wissen?",
+      "difficulty": "hard",
+      "section": "Migration",
+      "explanation": "Google migriert Gemini CLI ab 2026-06-18 zu Antigravity CLI. Pro/Ultra/Free-Requests werden gestoppt, neue GitHub-Org-Installationen sind gesperrt. Agent Skills, Hooks und Subagents werden als Plugins übernommen — aber explizit ohne 1:1-Feature-Parität ab Tag 1.",
+      "options": [
+        {
+          "id": "gemini-antigravity-migration-o0",
+          "text": "Ab 2026-06-18 stoppen Gemini-CLI-Requests für Pro/Ultra/Free.",
+          "verdict": "true",
+          "explanation": "Offizielles Cutoff-Datum aus dem Google Developers Blog."
+        },
+        {
+          "id": "gemini-antigravity-migration-o1",
+          "text": "Neue GitHub-Org-Installationen sind nach 2026-06-18 nicht mehr möglich.",
+          "verdict": "true",
+          "explanation": "Explizit aus den Quell-Notes — neue Org-Installs gesperrt."
+        },
+        {
+          "id": "gemini-antigravity-migration-o2",
+          "text": "Agent Skills, Hooks und Subagents werden als Plugins in Antigravity CLI übernommen.",
+          "verdict": "true",
+          "explanation": "Diese Primitive bleiben erhalten, allerdings unter neuem Bundling-Konzept."
+        },
+        {
+          "id": "gemini-antigravity-migration-o3",
+          "text": "Antigravity CLI bietet ab Tag 1 1:1-Feature-Parität — Drop-in-Replacement.",
+          "verdict": "false",
+          "explanation": "Google selbst sagt „no 1:1 feature parity right out of the gate\"."
+        },
+        {
+          "id": "gemini-antigravity-migration-o4",
+          "text": "Bestehende CI-Setups laufen ohne Anpassung weiter, weil das CLI-Binary stabil bleibt.",
+          "verdict": "false",
+          "explanation": "Requests werden gestoppt — laufende CI bricht ohne Migration auf Antigravity."
+        },
+        {
+          "id": "gemini-antigravity-migration-o5",
+          "text": "Wer heute Skills im SKILL.md-Format hält, ist Cross-Tool und Antigravity-kompatibel.",
+          "verdict": "true",
+          "explanation": "SKILL.md ist der stärkste Cross-Tool-Standard und bleibt in Antigravity nutzbar."
+        },
+        {
+          "id": "gemini-antigravity-migration-o6",
+          "text": "Ob es klüger ist, übergangsweise auf `codex exec` o.ä. auszuweichen, hängt vom Team-Standardisierungsdruck ab.",
+          "verdict": "depends",
+          "explanation": "Pragmatisch bis Antigravity stabil ist — wer aber Vendor-Lock-in fürchtet, bleibt besser gleich bei einem stabileren Tool."
+        }
+      ]
+    },
+    {
+      "id": "clinejection-attack-chain",
+      "question": "Welche Aussagen zur Angriffskette von Clinejection treffen zu?",
+      "difficulty": "hard",
+      "section": "Supply-Chain & Clinejection",
+      "explanation": "Clinejection (Adnan Khan, Disclosure 9. Feb 2026) verkettete Indirect Prompt Injection (Issue-Titel im claude-issue-triage-Workflow) → npm-preinstall im Angreifer-Fork → Cacheract-Cache-Poisoning des Nightly-Caches → Secret-Exfiltration → npm-Publish via postinstall. Die finale `cline@2.3.0` war byteidentisch zu v2.2.3 — nur ein neuer postinstall-Hook lud `openclaw@latest` nach.",
+      "options": [
+        {
+          "id": "clinejection-attack-chain-o0",
+          "text": "Der initiale Vektor war ein Issue-Titel, der unsanitisiert in den Claude-Prompt interpoliert wurde.",
+          "verdict": "true",
+          "explanation": "`claude-issue-triage.yml` interpolierte `${{ github.event.issue.title }}` direkt — klassische Indirect Prompt Injection."
+        },
+        {
+          "id": "clinejection-attack-chain-o1",
+          "text": "Die Payload-Auslieferung erfolgte über ein npm-`preinstall`-Skript im Angreifer-eigenen Fork.",
+          "verdict": "true",
+          "explanation": "Das `package.json` des Forks lud per `preinstall`-Hook eine Remote-Shell — Claude führte `npm install` bereitwillig aus."
+        },
+        {
+          "id": "clinejection-attack-chain-o2",
+          "text": "Die finale `cline@2.3.0`-CLI-Binary war byteidentisch zu v2.2.3 — nur ein neuer postinstall-Hook wurde hinzugefügt.",
+          "verdict": "true",
+          "explanation": "SHA-256 von `dist/cli.mjs` stimmte überein; einziger Diff war `postinstall: npm install -g openclaw@latest` → Malware-Scanner schlugen nicht an."
+        },
+        {
+          "id": "clinejection-attack-chain-o3",
+          "text": "Nach dem Löschen des Angreifer-Forks war der bösartige Commit nicht mehr erreichbar.",
+          "verdict": "false",
+          "explanation": "Gerade nicht: GitHubs Fork-Architektur lässt „Dangling Commits\" auch nach Fork-Löschung erreichbar — Teil des Angriffs."
+        },
+        {
+          "id": "clinejection-attack-chain-o4",
+          "text": "Cacheract vergiftete den Cache primär durch Brute-Force-Hashkollisionen.",
+          "verdict": "false",
+          "explanation": "Cacheract nutzt LRU-Eviction-Flooding (>10 GB Junk) — keine Hashkollisionen, sondern reines Verdrängen legitimer Einträge."
+        },
+        {
+          "id": "clinejection-attack-chain-o5",
+          "text": "Eine reine Code-Signatur-Verifikation der CLI-Binary hätte den Angriff erkannt.",
+          "verdict": "false",
+          "explanation": "Da `cli.mjs` byteidentisch blieb, wäre jede Signatur valide. Der Angriff verlagerte sich in den postinstall-Hook im `package.json`."
+        },
+        {
+          "id": "clinejection-attack-chain-o6",
+          "text": "Eine Allowlist „Bash mit `npm install`\" allein hätte den Angriff verhindert.",
+          "verdict": "depends",
+          "explanation": "Nur wenn die Allowlist konkrete Pakete bzw. Registries pinnt. Generisches `npm install` schützt nicht vor `github:user/repo#commit`."
+        }
+      ]
+    },
+    {
+      "id": "lethal-trifecta-willison",
+      "question": "Welche Aussagen zu Simon Willisons „Lethal Trifecta\" (Original-Definition vom 16. Juni 2025) treffen zu?",
+      "difficulty": "hard",
+      "section": "Lethal Trifecta",
+      "explanation": "Willisons Trifecta umfasst drei Fähigkeiten: (1) Access to private data, (2) Exposure to untrusted content, (3) Ability to communicate externally. Jede einzeln ist beherrschbar — nur die Kombination macht Agenten exfiltrierbar. Clinejection deutet eine vierte Dimension an: Modifikation vertrauenswürdiger Artefakte (Cache, npm publish im eigenen Namen).",
+      "options": [
+        {
+          "id": "lethal-trifecta-willison-o0",
+          "text": "Die drei Komponenten sind: privater Datenzugriff, Untrusted Content, externe Kommunikation.",
+          "verdict": "true",
+          "explanation": "Willisons Originalformulierung vom 16. Juni 2025 — wortwörtliche Definition."
+        },
+        {
+          "id": "lethal-trifecta-willison-o1",
+          "text": "Ohne externe Kommunikation kann ein Agent mit Secret-Zugang und Prompt-Injection keine Daten exfiltrieren.",
+          "verdict": "true",
+          "explanation": "Ohne ausgehenden Kanal (HTTP, npm publish, DNS) bleibt das Geheimnis im Prozess — daher ist Egress die kritische Komponente."
+        },
+        {
+          "id": "lethal-trifecta-willison-o2",
+          "text": "Clinejection berührt alle drei Trifecta-Elemente und legt eine vierte Dimension nahe.",
+          "verdict": "true",
+          "explanation": "Private Data (Tokens), Untrusted Content (Issue), External Comms (Bash/npm) — plus „Modify Trusted Artifacts\" (Cache + npm publish im eigenen Paket-Namen)."
+        },
+        {
+          "id": "lethal-trifecta-willison-o3",
+          "text": "Read-only-Agenten ohne privilegierten Datenzugriff sind durch Prompt Injection nicht angreifbar.",
+          "verdict": "false",
+          "explanation": "Untrusted Content kann das Modell weiter missbrauchen (Falschinformation, Phishing-Generierung) — nur sensitive Exfiltration ist limitiert."
+        },
+        {
+          "id": "lethal-trifecta-willison-o4",
+          "text": "Das Trifecta-Modell deckt „Modifikation vertrauenswürdiger Artefakte\" explizit ab.",
+          "verdict": "false",
+          "explanation": "Willisons Original-Modell adressiert es nicht; Clinejection zeigt die Lücke (Cache-Poisoning, npm-Publish im Projekt-Namen)."
+        },
+        {
+          "id": "lethal-trifecta-willison-o5",
+          "text": "Eine Egress-Allowlist auf „nur registry.npmjs.org\" bricht die Trifecta vollständig.",
+          "verdict": "false",
+          "explanation": "Greift nicht: Über genau die erlaubte Registry erfolgte ja die Publishing-Eskalation; auch DNS-Exfiltration bleibt möglich."
+        },
+        {
+          "id": "lethal-trifecta-willison-o6",
+          "text": "Ob ein nur lesender MCP-Server zur Trifecta beiträgt, hängt von der Datenquelle ab.",
+          "verdict": "depends",
+          "explanation": "Liefert er Inhalt aus Jira/Confluence/Web, ist er die Untrusted-Content-Komponente. Liefert er nur internes, sauberes Wissen, eher harmlos."
+        }
+      ]
+    },
+    {
+      "id": "permission-deny-hierarchy",
+      "question": "Welche Aussagen zur Permission-Auflösung und zum Prinzip „Deny gewinnt immer\" treffen zu?",
+      "difficulty": "hard",
+      "section": "Permissions",
+      "explanation": "Alle Tools resolven Permissions hierarchisch (System → User → Projekt → CLI). Universell gilt: ein Deny auf höherer Ebene kann von keiner niedrigeren Ebene aufgehoben werden — daher sind Projekt-Configs sicher versionierbar, Secrets dagegen gehören nicht ins Repo.",
+      "options": [
+        {
+          "id": "permission-deny-hierarchy-o0",
+          "text": "Ein Projekt-Level-Allow kann ein User-Level-Deny niemals überstimmen.",
+          "verdict": "true",
+          "explanation": "Deny gewinnt immer — universell über alle Tools, bewusst so designt für sichere Projekt-Versionierung."
+        },
+        {
+          "id": "permission-deny-hierarchy-o1",
+          "text": "Secrets gehören in User-Level-Configs oder Env-Vars, nicht in projektversionierte Configs.",
+          "verdict": "true",
+          "explanation": "Projekt-Configs werden eingecheckt — Secrets würden via Git-Historie leaken."
+        },
+        {
+          "id": "permission-deny-hierarchy-o2",
+          "text": "Per-Agent-Overrides in OpenCode können globale Deny-Listen für einzelne Subagenten lockern.",
+          "verdict": "false",
+          "explanation": "Per-Agent-Overrides können nur weiter einschränken oder MCPs pro Agent disablen — globale Verbote bleiben."
+        },
+        {
+          "id": "permission-deny-hierarchy-o3",
+          "text": "Ein CLI-Flag-Allow kann unter Codex einen Projekt-Deny überschreiben.",
+          "verdict": "false",
+          "explanation": "Auch CLI-Flags heben kein Deny auf — sonst wäre `--allow-all` ein trivialer Bypass."
+        },
+        {
+          "id": "permission-deny-hierarchy-o4",
+          "text": "Junies Safe/Sensitive-Klassifikation ist eine orthogonale Schicht zur Hierarchie, kein Ersatz.",
+          "verdict": "true",
+          "explanation": "Junie klassifiziert Kommandos regex-basiert zusätzlich zur Hierarchie — zweite Verteidigungslinie."
+        },
+        {
+          "id": "permission-deny-hierarchy-o5",
+          "text": "Sandboxes schützen vor Skill- oder MCP-Exfiltration sensibler Daten.",
+          "verdict": "false",
+          "explanation": "Sandboxes schützen den Host vor Tool-Operationen — Skill-/MCP-Exfiltration läuft über erlaubte Netzpfade und bleibt möglich."
+        },
+        {
+          "id": "permission-deny-hierarchy-o6",
+          "text": "Ob `bypassPermissions` vertretbar ist, hängt vom Ausführungskontext ab.",
+          "verdict": "depends",
+          "explanation": "In Container/VM ohne Internet legitim. Auf Host-System mit Credentials gefährlich — dann lieber `auto` mit Classifier."
+        }
+      ]
+    },
+    {
+      "id": "transfer-sandbox-internals",
+      "question": "Welche Aussagen zu den Sandbox-Backends der Coding-Agents treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · Sandbox-Internals",
+      "explanation": "Sandbox-Internals jenseits des Talks: macOS `sandbox-exec` ist seit macOS 11+ als deprecated markiert, bleibt aber funktional — sein Profile-Language SBPL ist ein Scheme-Subset. Linux-Landlock kam mit Kernel 5.13 (FS-Restrictions, ABI v1) und bekam in Kernel 6.7 Netzwerkkontrolle (TCP bind/connect, ABI v4). Container-Backends (Docker, Podman, LXC) isolieren mehr Schichten als reine Pfad-/Syscall-Filter.",
+      "options": [
+        {
+          "id": "transfer-sandbox-internals-o0",
+          "text": "macOS `sandbox-exec` ist offiziell deprecated, aber für CLI-Sandboxing weiterhin der einzige dokumentierte Mechanismus.",
+          "verdict": "true",
+          "explanation": "Apple empfiehlt App-Sandbox, aber die braucht Code-Signing und Xcode — für headless Server-Prozesse bleibt `sandbox-exec` Stand 2026 die einzige Option."
+        },
+        {
+          "id": "transfer-sandbox-internals-o1",
+          "text": "Die Seatbelt-Profile-Sprache SBPL ist ein Scheme-Subset.",
+          "verdict": "true",
+          "explanation": "SBPL nutzt einen Scheme-Dialekt (TinyScheme-Erbe) — daher die Klammer-Syntax (`(allow file-read*)`)."
+        },
+        {
+          "id": "transfer-sandbox-internals-o2",
+          "text": "Linux-Landlock unterstützt Netzwerkrestriktionen erst seit Kernel 6.7 (ABI v4).",
+          "verdict": "true",
+          "explanation": "5.13 brachte Filesystem-LSM (ABI v1), 6.7 fügte mit ABI v4 `LANDLOCK_ACCESS_NET_BIND_TCP` und `LANDLOCK_ACCESS_NET_CONNECT_TCP` hinzu."
+        },
+        {
+          "id": "transfer-sandbox-internals-o3",
+          "text": "Bubblewrap nutzt Linux-User-Namespaces und braucht Root-Rechte zum Start.",
+          "verdict": "false",
+          "explanation": "Bubblewrap ist genau dafür gebaut, ohne setuid-Helfer mit unprivilegierten User-Namespaces zu laufen."
+        },
+        {
+          "id": "transfer-sandbox-internals-o4",
+          "text": "seccomp-bpf operiert in einem Allowlist- oder Denylist-Modus auf Syscall-Ebene.",
+          "verdict": "true",
+          "explanation": "BPF-Filter werden per `prctl(PR_SET_SECCOMP)` installiert; Default-Action lässt sich auf Allow oder Kill setzen."
+        },
+        {
+          "id": "transfer-sandbox-internals-o5",
+          "text": "Eine Kernel-Sandbox (Seatbelt/Landlock/seccomp) schützt zuverlässig vor MCP-Datenexfiltration.",
+          "verdict": "false",
+          "explanation": "Kernel-Sandboxes isolieren den Prozess — Exfiltration via erlaubten MCP-Server-Aufruf läuft auf legitimen Pfaden."
+        },
+        {
+          "id": "transfer-sandbox-internals-o6",
+          "text": "Ob Container-Backends (Docker/Podman/LXC) gegenüber Landlock-Filtern stärkere Isolation bieten, hängt vom Threat-Model ab.",
+          "verdict": "depends",
+          "explanation": "Container isolieren zusätzlich Netzwerk, PID-Namespace und Filesystem-Root — bei reinen Filesystem-Risiken ist Landlock leichter und ausreichend."
+        }
+      ]
+    },
+    {
+      "id": "transfer-mcp-spec-2025-11",
+      "question": "Welche Aussagen zur MCP-Spec-Version 2025-11-25 (One-Year-Anniversary-Release) treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · MCP-Evolution",
+      "explanation": "Die letzte stabile MCP-Spec (Stand Mai 2026) ist 2025-11-25 — Anthropics Anniversary-Release. Sie brachte Sampling-mit-Tool-Calls (SEP-1577), URL-Mode-Elicitation für OAuth-Redirects (SEP-1036), OAuth Client-ID-Metadata Documents (SEP-991), OpenID-Connect-Discovery und Incremental-Scope-Consent via `WWW-Authenticate` (SEP-835). Async Tasks sind neu.",
+      "options": [
+        {
+          "id": "transfer-mcp-spec-2025-11-o0",
+          "text": "Sampling unterstützt seit 2025-11-25 explizite Tool-Calls über `tools` und `toolChoice` (SEP-1577).",
+          "verdict": "true",
+          "explanation": "Vorher konnte ein Server beim Sampling nur Text anfordern — jetzt auch strukturierte Tool-Use-Requests."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o1",
+          "text": "URL-Mode-Elicitation erlaubt dem Server, den Nutzer per URL in einen Browser-OAuth-Flow zu schicken, ohne dass der Client die Credentials sieht.",
+          "verdict": "true",
+          "explanation": "SEP-1036 — der Client öffnet die URL, der Nutzer authentifiziert sich, der Server bekommt das Token per Callback."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o2",
+          "text": "Für Client-Registrierung empfiehlt die Spec ab 2025-11-25 OAuth Client-ID-Metadata Documents (SEP-991).",
+          "verdict": "true",
+          "explanation": "Statt Pre-Registration veröffentlicht der Client ein JSON-Metadata-Dokument unter einer URL — der Server zieht sich die Client-Identität dort."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o3",
+          "text": "Das MCP-Spec-Update 2025-11-25 entfernte den Support für Sampling.",
+          "verdict": "false",
+          "explanation": "Im Gegenteil — Sampling wurde um Tool-Call-Unterstützung erweitert."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o4",
+          "text": "Async Tasks ermöglichen lang laufende MCP-Operationen ohne den synchronen Request-Reply-Zwang.",
+          "verdict": "true",
+          "explanation": "Eines der Hauptthemen des Anniversary-Releases — explizit für Agenten-Workloads, die mehrere Minuten brauchen können."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o5",
+          "text": "OpenID Connect Discovery 1.0 ist als Autorisierungs-Server-Discovery-Mechanismus dazugekommen.",
+          "verdict": "true",
+          "explanation": "Erlaubt Clients, MCP-Server-Authority-URLs als `.well-known/openid-configuration` aufzulösen."
+        },
+        {
+          "id": "transfer-mcp-spec-2025-11-o6",
+          "text": "Ob Tool-Description-Injection durch die neue Spec ausreichend gemildert wird, hängt von der Client-Implementierung ab.",
+          "verdict": "depends",
+          "explanation": "Die Spec gibt keine harte Garantie — ein Client kann weiter blind Tool-Descriptions in den System-Prompt nehmen. Mitigation bleibt Client-seitig."
+        }
+      ]
+    },
+    {
+      "id": "transfer-other-frameworks",
+      "question": "Welche Aussagen über smolagents (HuggingFace) und LangGraph (LangChain) als Alternativen zur „großen 6\" treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · Agent-Frameworks",
+      "explanation": "smolagents' CodeAgent generiert ausführbares Python statt JSON-Tool-Calls — laut HuggingFace-Benchmarks ca. 30 % weniger LLM-Steps, dafür kein persistenter State (Step-Log im Python-List, weg bei Prozess-Tod). LangGraph ist ein stateful Graph-Framework mit Checkpointer-System (InMemorySaver oder DB) — Persistence ist Core-Design, ideal für Production-Audit-Trails und Human-in-the-Loop.",
+      "options": [
+        {
+          "id": "transfer-other-frameworks-o0",
+          "text": "smolagents' CodeAgent emittiert Python statt JSON-Tool-Calls und braucht laut Bench ca. 30 % weniger Steps.",
+          "verdict": "true",
+          "explanation": "Code-Action statt Tool-Call: ein Step kann mehrere Operationen kombinieren, Loops/Branches direkt im Code."
+        },
+        {
+          "id": "transfer-other-frameworks-o1",
+          "text": "smolagents persistiert Agent-Memory standardmäßig nicht — Step-Log lebt im Python-List.",
+          "verdict": "true",
+          "explanation": "Stirbt der Prozess, ist der Kontext weg. Keine Checkpointer-Abstraktion eingebaut."
+        },
+        {
+          "id": "transfer-other-frameworks-o2",
+          "text": "LangGraph speichert State per Checkpointer (InMemorySaver oder DB-Backend) bei jedem Knoten-Schritt automatisch.",
+          "verdict": "true",
+          "explanation": "Persistence ist Core-Design — daher die Eignung für Long-Running und Human-in-the-Loop."
+        },
+        {
+          "id": "transfer-other-frameworks-o3",
+          "text": "smolagents nutzt LSP wie Claude Code für semantische Code-Navigation.",
+          "verdict": "false",
+          "explanation": "smolagents ist ein Agent-Framework, kein Coding-Agent — kein LSP-Hook, kein Editor-Integration."
+        },
+        {
+          "id": "transfer-other-frameworks-o4",
+          "text": "LangGraph erzwingt einen einzelnen Hauptagenten ohne Subgraphs.",
+          "verdict": "false",
+          "explanation": "Genau umgekehrt: LangGraph ist als Multi-Agent-Graph-Framework konzipiert — beliebige Subgraphs, hierarchische Orchestrierung."
+        },
+        {
+          "id": "transfer-other-frameworks-o5",
+          "text": "smolagents-Code-Execution ohne Sandbox ist ein bekanntes Sicherheitsrisiko.",
+          "verdict": "true",
+          "explanation": "Da der Agent ausführbares Python generiert, ist ein Code-Execution-Sandboxing (E2B, lokales Subprocess-Jail) Pflicht — sonst beliebige Host-Operationen."
+        },
+        {
+          "id": "transfer-other-frameworks-o6",
+          "text": "Ob LangGraph oder smolagents richtig ist, hängt von Persistenz-Bedarf und Step-Effizienz ab.",
+          "verdict": "depends",
+          "explanation": "Production mit Audit-Trail/Human-in-the-Loop → LangGraph. Prototyping mit minimaler LOC und maximaler Step-Effizienz → smolagents."
+        }
+      ]
+    }
+  ]
+}

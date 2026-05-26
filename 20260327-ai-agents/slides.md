@@ -335,3 +335,19 @@ layout: end
 ---
 
 # Danke
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<AiAgentsQuiz />
+
+<!--
+- Hinter der End-Slide: für Selbststudium nach dem Vortrag.
+- Adaptive: startet mittel, wird je nach Antwort härter oder leichter.
+- Optionen-Pool aus 3 parallelen Agenten + Transfer-Web-Research kuratiert: Tool-Mechanik, Sicherheit/Clinejection, Praktische Szenarien + 4 Transfer-Fragen (Sandbox-Internals, MCP-Spec-Evolution, andere Frameworks, Lethal Trifecta).
+-->
