@@ -110,14 +110,33 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
 # Sandboxing und Permissions
 
-| Tool            | Technologie                    | Besonderheit                                      |
-| --------------- | ------------------------------ | ------------------------------------------------- |
-| **Codex**       | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                 |
-| **Claude Code** | Seatbelt / bubblewrap          | Drei-Tier: Deny → Ask → Allow mit Prefix-Matching |
-| **Gemini CLI**  | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine    |
-| **Windsurf**    | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen           |
-| **Junie**       | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando             |
-| **OpenCode**    | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                      |
+| Tool            | Technologie                    | Besonderheit                                                     |
+| --------------- | ------------------------------ | ---------------------------------------------------------------- |
+| **Codex**       | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                |
+| **Claude Code** | Seatbelt / bubblewrap          | 6 Modi inkl. `auto` (Classifier-Safety-Net) · Deny → Ask → Allow |
+| **Gemini CLI**  | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine                   |
+| **Windsurf**    | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen                          |
+| **Junie**       | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando                            |
+| **OpenCode**    | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                                     |
+
+<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;">⚠️ <strong>Sensible Daten lokal?</strong> Agent im <strong>Devcontainer</strong> isolieren, nur unkritische Pfade mounten — Sandboxes schützen nicht vor Skill-/MCP-Exfiltration.</p>
+
+---
+
+# Claude Code Permission Modes
+
+Sechs Modi statt zwei. `Shift+Tab` cycelt `default → acceptEdits → plan`; `auto`/`bypassPermissions` brauchen Opt-in.
+
+| Modus               | Ohne Prompt erlaubt                     | Best für                         |
+| ------------------- | --------------------------------------- | -------------------------------- |
+| `default`           | Nur Reads                               | Sensitives, Onboarding           |
+| `acceptEdits`       | Reads + Edits + `mkdir`/`mv`/`cp`/`sed` | Iterieren, Review per `git diff` |
+| `plan`              | Nur Reads, kein Edit                    | Codebase erkunden                |
+| **`auto`**          | **Alles, mit Background-Classifier**    | **Lange Tasks, Prompt-Fatigue**  |
+| `dontAsk`           | Nur vorab erlaubte Tools (sonst Deny)   | CI/Pipelines                     |
+| `bypassPermissions` | Alles, ohne Checks                      | Container/VM ohne Internet       |
+
+<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Auto Mode</strong> (Research Preview, v2.1.83+, Opus 4.6/4.7 + Sonnet 4.6, Anthropic API) — Classifier blockt <code>curl | bash</code>, Force-Push, Prod-Deploys, IAM-Grants, externe Endpoints; Chat-Aussagen wie „don't push" wirken als Deny. Fallback nach 3 Blocks in Folge / 20 gesamt. <strong>vs. <code>bypassPermissions</code>:</strong> Auto = unsichtbare Checks, Bypass = keine — nur Auto schützt vor Modellfehlern und Prompt-Injection.</p>
 
 ---
 clicks: false
