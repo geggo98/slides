@@ -210,6 +210,8 @@ Quellen zur Abrechnung Agent-SDK-Credit (Stand 2026-05):
 
 **Settings und Hooks** — NICHT portabel. JSON vs. TOML vs. JS-Plugins.
 
+**Claude Code → Single-Source via `@AGENTS.md`-Import** in `CLAUDE.md` (an beliebiger Stelle, max. 5 Hops tief). Claude-spezifische Zusätze einfach darunter ergänzen. Alternative: `ln -s AGENTS.md CLAUDE.md` (Windows: Admin/Dev-Mode nötig).
+
 Praktische Interop heute:
 
 - **Junie** importiert automatisch `.claude/`, `.codex/`, `.cursor/`
@@ -274,7 +276,7 @@ Bonus: `claude -p` lässt sich mit `--resume <session-id>` zu einer bestehenden 
 
 # Empfehlungen für Multi-Tool-Teams
 
-1. **`AGENTS.md` als primäre Instruktionsdatei** — für Claude Code zusätzlich `CLAUDE.md`
+1. **`AGENTS.md` als primäre Instruktionsdatei** — Claude Code via `@AGENTS.md`-Import in `CLAUDE.md` (sonst doppelte Wartung)
 2. **Skills im `SKILL.md`-Format** in `.agents/skills/` — per Symlink in toolspezifische Pfade
 3. **Instruktionsdateien unter 200 Zeilen** — Rules für pfadspezifische Konventionen
 4. **Security schichten** — Permission-Deny + Sandbox + Ignore-Dateien
