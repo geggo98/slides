@@ -105,6 +105,14 @@ const orchestrators = [
     name: "agent-cli dev",
     desc: "CLI. Ein Befehl: Worktree + Deps + Env + Agent.",
   },
+  {
+    name: "JetBrains Air",
+    desc: "Eigenes Produkt (Preview 03/2026). Orchestriert Junie/Claude/Codex/Gemini gleichzeitig via Docker + Worktrees.",
+  },
+  {
+    name: "Cursor Cloud",
+    desc: "Bis 8 parallele Cloud-Agenten. Build-in-Parallel / best-of-n auf Worktrees.",
+  },
 ];
 </script>
 

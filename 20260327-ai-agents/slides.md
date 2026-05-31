@@ -1,34 +1,43 @@
 ---
 theme: default
-title: "AI Coding Agent Configuration"
+title: "AI Coding Agents: Konfiguration & Autonomie"
 info: |
   Systematischer Vergleich: Claude Code, Codex, Windsurf, Junie, OpenCode, Gemini CLI.
-  Primitive, Protokolle, Worktrees und Cross-Tool-Kompatibilität.
+  Konfiguration (Primitive, Protokolle, Worktrees, Cross-Tool) und
+  Autonomie & Orchestrierung (Subagents, /goal, /loop, Dynamic Workflows, Agent Teams).
 monaco: true
 ---
 
-# AI Coding Agent Configuration
+# AI Coding Agents: Konfiguration & Autonomie
 
 Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode · Gemini CLI
 
 <div class="text-sm opacity-75 mt-4">
 
-**Hinweis:** Gemini CLI wird ab **2026-06-18** durch **Antigravity CLI** ersetzt — laut Google "no 1:1 feature parity right out of the gate". Einzelne hier gezeigte Gemini-CLI-Features können in Antigravity CLI vorübergehend fehlen.
+**Hinweis:** Die quelloffene **Gemini CLI** wird ab **2026-06-18** (Consumer) durch die **Antigravity CLI** (`agy`) abgelöst — ein Go-Rewrite und **nicht** zu verwechseln mit der Antigravity-**IDE** (eigenes Produkt). Enterprise läuft vorerst weiter. Details: Kapitel _Autonomie & Orchestrierung_.
 
 </div>
 
 <!--
-Quelle Antigravity-CLI-Transition (Stand 2026-05):
+Quellen Antigravity (Stand 2026-05, faktengeprüft):
 
-- Google Developers Blog, 2026-05-19 (kanonisch):
+- Google Developers Blog, 2026-05-19 (kanonisch zur CLI-Transition):
   https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/
+- Plattform / 2.0 / SDK / Managed Agents:
+  https://antigravity.google
 
-Kernfakten:
-- Antigravity CLI = Nachfolger (Teil von Googles "agent-first development platform")
-- 2026-06-18: Gemini CLI / Gemini Code Assist IDE-Extensions stoppen Requests für Pro/Ultra/Free
-- Erhalten bleiben: Agent Skills, Hooks, Subagents, Extensions als Plugins
-- Wörtlich: "no 1:1 feature parity right out of the gate"
-- Keine neuen GitHub-Org-Installationen nach 2026-06-18
+WICHTIG — drei getrennte Produkte unter der Marke "Antigravity" (nur Marke + Runtime gemeinsam):
+- Antigravity IDE: agentischer VS-Code-Fork (Nov 2025), eigenständig; Agent-Manager wird zugunsten der 2.0-App abgelöst.
+- Antigravity 2.0: Standalone-Desktop-App (19.05.2026), KEIN Editor; Orchestrierungs-Command-Center.
+- Antigravity CLI (`agy`): Nachfolger der Gemini CLI (Go-Rewrite), teilt das Agent-Harness mit der 2.0-App — NICHT aus der IDE-Linie.
+
+Kernfakten CLI:
+- 2026-06-18: Gemini CLI / Code-Assist-Extensions stoppen Requests für Pro/Ultra/Free; Enterprise läuft weiter.
+- Erbt: Agent Skills, Hooks, Subagents, Extensions (→ "Antigravity plugins"), MCP.
+- Neu: async Background-Multi-Agent-Workflows + dynamische Subagents (Auto-Decompose); + Antigravity SDK + Managed Agents.
+- Open-Source-Status: proprietär (anders als die Apache-lizenzierte Gemini CLI) — Community-Kritik.
+  (Eine Flash-Suche widersprach mit angebl. GitHub-Repo; vor dem Vortrag final gegen antigravity.google prüfen.)
+- Wörtlich: "no 1:1 feature parity right out of the gate".
 -->
 
 ---
@@ -42,7 +51,7 @@ Kernfakten:
 | **Skills**            | `SKILL.md` + Skripte/Templates, laden on-demand                                   | Run-Book               |
 | **Hooks**             | Shell-Befehle bei Lifecycle-Events, deterministisch                               | Git-Hooks              |
 | **MCP Server**        | Externe Tool-Anbindung via Model Context Protocol                                 | Datenbank              |
-| **Subagents**         | Isolierte Agent-Instanzen mit eigenem Kontextfenster                              | Praktikant             |
+| **Subagents**         | Isolierte Agent-Instanzen, je eigenes Kontextfenster (= Kostenmultiplikator)      | Praktikant             |
 | **Plugins**           | Bündelung von Skills + Hooks + MCP in ein Paket                                   | npm-Paket              |
 
 ---
@@ -214,7 +223,7 @@ Quellen zur Abrechnung Agent-SDK-Credit (Stand 2026-05):
 
 Praktische Interop heute:
 
-- **Junie** importiert automatisch `.claude/`, `.codex/`, `.cursor/`
+- **Junie** scannt `.claude/`, `.codex/`, `.cursor/` und **schlägt** Guidelines **vor** (kein vollautomatischer Import)
 - **OpenCode** fällt auf `CLAUDE.md` zurück
 - **Windsurf** entdeckt Skills aus `.agents/skills/`
 - **Gemini CLI** erlaubt mehrere Dateinamen-Alternativen
@@ -283,6 +292,90 @@ Bonus: `claude -p` lässt sich mit `--resume <session-id>` zu einer bestehenden 
 5. **Hooks für harte Quality Gates** — nicht bitten, sondern erzwingen
 6. **MCP sparsam** — Token-Kosten monitoren, nicht aktive Server disconnecten
 7. **Projekt-Level-Configs versionieren** — Secrets nur in User-Level oder Env-Vars
+
+---
+layout: center
+---
+
+# Autonomie & Orchestrierung
+
+Bisher: _was_ der Agent weiß. Jetzt: _wie selbständig_ er arbeitet — und was das kostet.
+
+---
+
+# Drei Achsen der Autonomie
+
+Drei Fragen ordnen **jedes** Autonomie-Feature ein:
+
+1. **Wer hält den Plan?** — du · das Modell (Turn für Turn) · ein Skript
+2. **Reden die Worker miteinander?** — nein (Subagents) · ja (Agent Teams)
+3. **Wie viele Kontextfenster?** — jedes zusätzliche **vervielfacht die Tokens**
+
+| Achse         | Mechanismus              | Beispiel                      |
+| ------------- | ------------------------ | ----------------------------- |
+| **Zeit**      | wiederholtes Auslösen    | `/loop`                       |
+| **Bedingung** | Stopp bei Zielerreichung | `/goal` (Haiku prüft je Turn) |
+| **Breite**    | viele parallele Worker   | Dynamic Workflows             |
+
+---
+
+# Claude Code: Sechs Autonomie-Primitive
+
+| Primitiv              | Status        | Was es tut                                                    |
+| --------------------- | ------------- | ------------------------------------------------------------- |
+| **Subagents**         | GA            | Isolierter Worker, eigenes Kontextfenster, nur Summary zurück |
+| **Tasks**             | GA            | Aufgabenliste mit Abhängigkeiten (ersetzt TodoWrite)          |
+| **`/goal`**           | GA            | Completion-Bedingung; Haiku prüft je Turn                     |
+| **`/loop`**           | GA            | Cron-Intervall, session-gebunden                              |
+| **Dynamic Workflows** | Preview       | JS-Skript orchestriert ≤16 parallel, Cap 1000/Run             |
+| **Agent Teams**       | Experimentell | Peer-to-Peer-Mailbox, ~7× Tokens                              |
+
+---
+
+# Autonomie im Tool-Vergleich
+
+| Tool                  | Loop (Zeit) | Goal (Bedingung) | Breite (parallel)                |
+| --------------------- | ----------- | ---------------- | -------------------------------- |
+| **Claude Code**       | `/loop`     | `/goal`          | Dynamic Workflows                |
+| **Codex**             | ✗           | `/goal`          | Cloud-Sandboxes                  |
+| **Antigravity CLI**   | ◐           | ✗                | async Background-Workflows       |
+| **Copilot**           | ✗           | ◐ (bis PR)       | Cloud Agent                      |
+| **Windsurf / Cursor** | ✗           | ◐                | Cascade / Cloud (≤8)             |
+| **Junie / Air**       | ✗           | Plan/Brave-Mode  | Air orchestriert mehrere Agenten |
+
+Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, goal ∝ Turns, Breite multiplikativ ∝ Agenten.
+
+---
+
+# Dynamic Workflows & `ultracode`
+
+<div class="text-sm opacity-75">Research Preview · 28.05.2026 · Opus 4.8</div>
+
+**Mechanik:** Claude _schreibt_ ein JS-Skript, das in isolierter Background-Runtime Dutzende bis Hunderte Subagents orchestriert, die sich **adversarisch gegenseitig prüfen**.
+
+**Limits:** ≤16 gleichzeitig · Hard-Cap 1000/Run · Subagents im `acceptEdits`-Modus.
+
+**`ultracode`** = Effort `xhigh` + Auto-Orchestrierung, session-only (`/effort ultracode`). Eines der teuersten Features _mit zusätzlichem Aufschlag_ — Breite × Tiefe multiplikativ.
+
+<div class="mt-4 px-4 py-2 text-sm border-l-4 border-amber-500 bg-amber-500/10 rounded">
+
+**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag [_OpenRewrite — Refactoring at Scale_](../20260522-open-rewrite/)
+
+</div>
+
+---
+
+# Neue Orchestrierungs-Plattformen
+
+**Antigravity = Dachmarke über drei getrennte Produkte:**
+
+- **Antigravity IDE** — agentischer VS-Code-Fork (Nov 2025), eigenständig.
+- **Antigravity 2.0** — Standalone-Desktop-App, Orchestrierungs-Command-Center, **kein Editor**.
+- **Antigravity CLI (`agy`)** — Nachfolger der **Gemini CLI** (Go), teilt Harness mit der 2.0-App, **nicht** aus der IDE-Linie. Erbt Skills/Hooks/Subagents/Plugins/MCP; neu: async Multi-Agent-Workflows + dynamische Subagents. _Proprietär (Community-Kritik)._
+
+**Junie + JetBrains Air** — Junie: Plan-/Brave-Mode, Subagents in `.junie/agents/`, Junie CLI (Beta 03/2026, LLM-agnostisch, BYOK). **Air = eigenes Produkt** (Preview 03/2026): orchestriert Junie/Claude/Codex/Gemini **gleichzeitig** via Docker + Worktrees.
+
+**Cursor & Cloud-Agenten** — `cursor-agent`-CLI, Cloud Agents (≤8 parallel), best-of-n auf Worktrees. Dazu Codex Cloud & Copilot Cloud Agent.
 
 ---
 layout: center
