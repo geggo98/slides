@@ -823,6 +823,627 @@
           "explanation": "Production mit Audit-Trail/Human-in-the-Loop → LangGraph. Prototyping mit minimaler LOC und maximaler Step-Effizienz → smolagents."
         }
       ]
+    },
+    {
+      "id": "autonomy-axes-loop-goal-workflows",
+      "question": "Welche Aussagen zu den drei orthogonalen Autonomie-Achsen (loop, goal, workflows) und ihren Kostenprofilen treffen zu?",
+      "difficulty": "medium",
+      "section": "Autonomie",
+      "explanation": "loop, goal und workflows stehen für drei orthogonale Autonomie-Dimensionen mit unterschiedlichen Kostenprofilen: loop ist die ZEIT-Achse (wiederhole auf Intervall, Kosten proportional zur Laufzeit), goal die BEDINGUNGS-Achse (weiter bis ein Ziel wahr ist, Kosten proportional zur Turn-Zahl) und workflows die BREITEN-Achse (viele parallele Agenten, multiplikative Kosten in der Agentenzahl). Quer dazu liegen die Struktur-Achsen wer den Plan hält, ob Worker miteinander reden und wie viele Kontextfenster offen sind - und jedes zusätzliche Kontextfenster ist ein direkter Kostenmultiplikator. Die drei Achsen sind kombinierbar, nicht austauschbar, weil jede eine andere Frage beantwortet: wie oft, wie lange und wie breit autonom gearbeitet wird.",
+      "options": [
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o0",
+          "text": "loop adressiert die Zeit-Achse: es wiederholt einen Prompt auf einem Intervall, und die Kosten skalieren mit der Laufzeit.",
+          "verdict": "true",
+          "explanation": "/loop wiederholt einen Prompt cron-basiert auf Intervall und verbrennt Token pro Iteration, also wachsen die Kosten proportional zur Laufzeit."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o1",
+          "text": "goal adressiert die Bedingungs-Achse: es läuft weiter, bis eine Completion-Bedingung wahr ist, weshalb die Kosten mit der Zahl der Turns skalieren.",
+          "verdict": "true",
+          "explanation": "/goal setzt eine Completion-Bedingung, die nach jedem Turn geprüft wird, sodass die Kosten proportional zur benötigten Turn-Zahl steigen."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o2",
+          "text": "workflows adressiert die Breiten-Achse: viele Agenten arbeiten parallel, und die Kosten sind multiplikativ in der Zahl der Agenten, weil jeder Agent ein eigenes Kontextfenster mitbringt.",
+          "verdict": "true",
+          "explanation": "Workflows faechern in die Breite auf, und jedes zusätzliche Kontextfenster ist ein direkter Kostenmultiplikator - daher das multiplikative Profil."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o3",
+          "text": "Die drei Achsen schliessen sich gegenseitig aus, weil pro Session nur eine Autonomie-Dimension aktiv sein kann.",
+          "verdict": "false",
+          "explanation": "Die Achsen sind orthogonal und kombinierbar, da loop, goal und workflows jeweils eine andere Dimension (Zeit, Bedingung, Breite) abdecken."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o4",
+          "text": "goal beendet die Session sicher zu fixen Kosten, weil die Completion-Bedingung von selbst ein Turn-Budget erzwingt.",
+          "verdict": "false",
+          "explanation": "/goal hat ohne explizites Turn- oder Budget-Limit kein eingebautes Kostenlimit und kann entgleisen (ein dokumentierter Fall: ~200 $ in 14 h)."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o5",
+          "text": "loop eignet sich ohne Zusätze für dauerhafte Automation, weil ein einmal gestarteter Loop über das Sessionende hinaus weiterläuft.",
+          "verdict": "false",
+          "explanation": "/loop ist session-scoped und endet mit der Session; für dauerhafte Automation braucht es einen externen Scheduler wie GitHub Actions."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o6",
+          "text": "Der goal-Evaluator führt Tools wie die Testsuite aus, um die Bedingung selbst zu verifizieren.",
+          "verdict": "false",
+          "explanation": "Der Evaluator (Default Haiku) ruft keine Tools auf, sondern urteilt nur über das Transcript - deshalb muss die Bedingung aus Claudes eigenem Output beweisbar sein."
+        },
+        {
+          "id": "autonomy-axes-loop-goal-workflows-o7",
+          "text": "Ob ein konkreter autonomer Lauf günstig oder ruinös teuer wird, hängt von der gewählten Achse und ihren Limits ab.",
+          "verdict": "depends",
+          "explanation": "Ob die Kosten beherrschbar bleiben, hängt davon ab, welche Achse (Laufzeit, Turns oder Agentenzahl) skaliert und ob ein Zeit-, Turn- oder Budget-Limit gesetzt ist."
+        }
+      ]
+    },
+    {
+      "id": "goal-mechanik",
+      "question": "Welche Aussagen zur Funktionsweise von /goal in Claude Code treffen zu?",
+      "difficulty": "medium",
+      "section": "/goal",
+      "explanation": "/goal setzt genau eine Completion-Bedingung pro Session, die nach jedem Turn von einem kleinen, schnellen Modell (Default Haiku) allein anhand des Transcripts geprüft wird — der Evaluator ruft keine Tools auf, sondern urteilt nur über den Text. Deshalb muss die Bedingung aus Claudes eigenem Output beweisbar sein (\"npm test exits 0\", nicht \"tests pass\"), und sie löscht sich bei Erfüllung. Das Primitiv stammt ursprünglich von Codex; ohne Turn- oder Budget-Limit kann ein Lauf zur Kostenfalle werden.",
+      "options": [
+        {
+          "id": "goal-mechanik-o0",
+          "text": "Der Evaluator prüft nach jedem Turn das Transcript und ruft dabei selbst keine Tools auf.",
+          "verdict": "true",
+          "explanation": "Das kleine Evaluator-Modell urteilt ausschließlich über den Text des bisherigen Transcripts und führt keine eigenen Aktionen wie Befehle oder Datei-Reads aus."
+        },
+        {
+          "id": "goal-mechanik-o1",
+          "text": "Die Completion-Bedingung muss aus Claudes eigenem Output beweisbar sein, also etwa \"npm test exits 0\" statt \"tests pass\".",
+          "verdict": "true",
+          "explanation": "Da der Evaluator nur Text liest, taugen nur Bedingungen, deren Erfüllung im Transcript sichtbar belegt ist, nicht solche, die externes Wissen voraussetzen."
+        },
+        {
+          "id": "goal-mechanik-o2",
+          "text": "Das /goal-Primitiv wurde ursprünglich von Codex eingeführt und später von Claude Code übernommen.",
+          "verdict": "true",
+          "explanation": "loop und goal existieren als benannte Primitive nur bei Claude Code und Codex, wobei Codex /goal zuerst hatte."
+        },
+        {
+          "id": "goal-mechanik-o3",
+          "text": "Ohne Turn- oder Budget-Limit kann ein /goal-Lauf sehr teuer werden — dokumentiert ist ein Fall mit rund 200 $ in 14 Stunden.",
+          "verdict": "true",
+          "explanation": "Ohne Begrenzung arbeitet Claude bis zur Erfüllung weiter, sodass eine schwer erreichbare Bedingung die Token-Kosten ungebremst hochtreibt."
+        },
+        {
+          "id": "goal-mechanik-o4",
+          "text": "Pro Session lassen sich mehrere /goal-Bedingungen gleichzeitig setzen, die unabhängig voneinander überwacht werden.",
+          "verdict": "false",
+          "explanation": "Es gilt genau eine Bedingung pro Session, die sich zudem bei Erfüllung selbst löscht."
+        },
+        {
+          "id": "goal-mechanik-o5",
+          "text": "Standardmäßig übernimmt das große Hauptmodell (etwa Opus) die Bewertung der Bedingung nach jedem Turn.",
+          "verdict": "false",
+          "explanation": "Die Prüfung erledigt ein kleines, schnelles Modell (Default Haiku), nicht das leistungsstarke Hauptmodell."
+        },
+        {
+          "id": "goal-mechanik-o6",
+          "text": "Der Evaluator prüft nur einmal am Ende des Laufs, ob das Ziel erreicht wurde.",
+          "verdict": "false",
+          "explanation": "Die Bedingung wird nach jedem Turn erneut gegen das Transcript geprüft, nicht erst am Schluss."
+        },
+        {
+          "id": "goal-mechanik-o7",
+          "text": "Ob eine Bedingung wie \"alle Tests grün\" zuverlässig auslöst, hängt davon ab, ob das Ergebnis explizit im sichtbaren Transcript-Output erscheint.",
+          "verdict": "depends",
+          "explanation": "Da der Evaluator nur Text liest, wird die Erfüllung nur erkannt, wenn das Ergebnis als beweisbarer Output im Transcript steht — verbirgt Claude es oder führt es still aus, bleibt die Bedingung offen."
+        }
+      ]
+    },
+    {
+      "id": "loop-scheduling",
+      "question": "Welche Aussagen zum Scheduling- und Lebenszyklus-Verhalten von /loop treffen zu?",
+      "difficulty": "easy",
+      "section": "/loop",
+      "explanation": "/loop wiederholt denselben Prompt cron-basiert auf einem Intervall, ist aber session-scoped und endet mit der Session. Ohne explizite Intervallangabe wählt Claude dynamisch zwischen 1 min und 1 h, das Minimum liegt bei 1 min, und jede Iteration verbrennt erneut Token. Für dauerhafte, sitzungsunabhängige Automation braucht es daher einen externen Scheduler wie GitHub Actions.",
+      "options": [
+        {
+          "id": "loop-scheduling-o0",
+          "text": "/loop nutzt ein cron-basiertes Intervall, um denselben Prompt wiederholt auszuführen.",
+          "verdict": "true",
+          "explanation": "Der gebündelte Skill plant die Wiederholung cron-basiert auf dem angegebenen Intervall."
+        },
+        {
+          "id": "loop-scheduling-o1",
+          "text": "Ein /loop ist session-scoped und stoppt, sobald die Session beendet wird.",
+          "verdict": "true",
+          "explanation": "Der Loop lebt nur innerhalb der Session — schließt man sie, läuft keine weitere Iteration."
+        },
+        {
+          "id": "loop-scheduling-o2",
+          "text": "Ohne explizit angegebenes Intervall wählt Claude die Taktung selbst dynamisch zwischen 1 min und 1 h.",
+          "verdict": "true",
+          "explanation": "Fehlt das Intervall, pacet Claude eigenständig im Bereich 1 min bis 1 h."
+        },
+        {
+          "id": "loop-scheduling-o3",
+          "text": "Jede Iteration verbraucht erneut Token, weil der Prompt pro Durchlauf komplett ausgeführt wird.",
+          "verdict": "true",
+          "explanation": "/loop verbrennt Token pro Iteration — die Kosten skalieren mit der Anzahl der Durchläufe."
+        },
+        {
+          "id": "loop-scheduling-o4",
+          "text": "Einmal gestartet, läuft ein /loop als persistenter Hintergrund-Daemon auch nach Schließen der Session weiter.",
+          "verdict": "false",
+          "explanation": "Genau das nicht: /loop ist session-scoped und kein OS-Daemon — mit der Session endet auch der Loop."
+        },
+        {
+          "id": "loop-scheduling-o5",
+          "text": "Das kleinstmögliche Intervall liegt im Sekundenbereich, sodass nahezu Echtzeit-Polling möglich ist.",
+          "verdict": "false",
+          "explanation": "Das Minimum beträgt 1 min — sub-minütliches Polling ist nicht vorgesehen."
+        },
+        {
+          "id": "loop-scheduling-o6",
+          "text": "Nach jeder Iteration prüft ein kleines Evaluator-Modell das Transcript und beendet den Loop bei Zielerreichung automatisch.",
+          "verdict": "false",
+          "explanation": "Die Per-Turn-Evaluation gegen eine Completion-Bedingung gehört zu /goal, nicht zu /loop — /loop taktet rein zeitbasiert."
+        },
+        {
+          "id": "loop-scheduling-o7",
+          "text": "Ob /loop für eine wiederkehrende Aufgabe ausreicht, hängt davon ab, ob die Automation über das Sessionende hinaus persistieren muss.",
+          "verdict": "depends",
+          "explanation": "Innerhalb einer offenen Session genügt /loop; muss die Wiederholung die Session überdauern, braucht es einen externen Scheduler wie GitHub Actions."
+        }
+      ]
+    },
+    {
+      "id": "dynamic-workflows-execution-and-ultracode",
+      "question": "Welche Aussagen zum Ausführungsmodell von Dynamic Workflows (Research Preview, Opus 4.8) und zur Rolle von ultracode treffen zu?",
+      "difficulty": "hard",
+      "section": "Workflows",
+      "explanation": "Bei Dynamic Workflows schreibt Claude selbst ein JavaScript-Skript, das in einer isolierten Background-Runtime läuft und Dutzende bis Hunderte Subagents adversarisch gegeneinander arbeiten lässt; Schleife, Branching und Zwischenstand leben in Skript-Variablen, sodass Claudes Kontext nur die finale Antwort behält. Das Skript selbst hat keinen Filesystem- oder Shell-Zugriff – nur die Subagents arbeiten, und zwar im acceptEdits-Modus ohne Mid-run-User-Input. ultracode kombiniert Effort xhigh mit automatischer Orchestrierungs-Entscheidung, ist rein session-scoped und nicht mit dem Thinking-Keyword ultrathink zu verwechseln.",
+      "options": [
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o0",
+          "text": "Das orchestrierende JavaScript-Skript schreibt Claude selbst; es läuft in einer isolierten Background-Runtime, sodass Schleife, Branching und Zwischenstand in Skript-Variablen statt in Claudes Kontextfenster leben, das nur die finale Antwort behält.",
+          "verdict": "true",
+          "explanation": "Das ist der Kern: Claude generiert das Skript, die Kontrollstruktur lebt in der isolierten Runtime, und der Gesprächskontext hält nur das Endergebnis."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o1",
+          "text": "Die orchestrierten Subagents widerlegen sich adversarisch gegenseitig, bis ihre Antworten konvergieren.",
+          "verdict": "true",
+          "explanation": "Dynamic Workflows setzen auf adversariale Cross-Checks zwischen Dutzenden bis Hunderten Agenten, die so lange gegeneinander argumentieren, bis Konvergenz erreicht ist."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o2",
+          "text": "ultracode aktiviert Effort xhigh und überlässt Claude selbst die Entscheidung, wann eine Aufgabe einen Workflow rechtfertigt; es gilt nur session-scoped und wird weder über Settings noch über Environment-Variablen akzeptiert.",
+          "verdict": "true",
+          "explanation": "ultracode bündelt xhigh mit automatischer Workflow-Orchestrierung, urteilt selbst über den Einsatz und wird bei einer neuen Session zurückgesetzt, nicht persistent konfiguriert."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o3",
+          "text": "Das orchestrierende Skript selbst besitzt Filesystem- und Shell-Zugriff, um die Datei-Edits der Subagents zu bündeln und gemeinsam zu committen.",
+          "verdict": "false",
+          "explanation": "Das Skript hat gerade keinen Filesystem- oder Shell-Zugriff – nur die Subagents fassen Dateien und Tools an, und zwar im acceptEdits-Modus."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o4",
+          "text": "ultracode ist lediglich ein Synonym für ultrathink und erhöht ausschließlich das Thinking-Budget eines einzelnen Turns.",
+          "verdict": "false",
+          "explanation": "ultrathink ist das reine Thinking-Keyword für einen Turn; ultracode dagegen koppelt xhigh mit echter Workflow-Orchestrierung und ist nicht dasselbe."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o5",
+          "text": "Die Subagents fragen jeden Datei-Edit einzeln beim Nutzer ab, bevor sie ihn schreiben, sodass man mitten im Lauf Kurskorrekturen einspeisen kann.",
+          "verdict": "false",
+          "explanation": "Die Subagents laufen im acceptEdits-Modus mit automatisch genehmigten Edits, und mid-run gibt es keinen inhaltlichen User-Input – nur Permission-Prompts pausieren."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o6",
+          "text": "Pro Lauf laufen bis zu 16 Agenten gleichzeitig (auf CPU-armen Maschinen weniger), bei einer harten Obergrenze von 1000 Agenten insgesamt.",
+          "verdict": "true",
+          "explanation": "Die Nebenläufigkeit ist auf 16 gedeckelt (rechenschwache Maschinen weniger), die Gesamtzahl pro Lauf hart auf 1000 Agenten begrenzt."
+        },
+        {
+          "id": "dynamic-workflows-execution-and-ultracode-o7",
+          "text": "Ob ein unterbrochener Dynamic-Workflow-Lauf wieder aufgenommen werden kann, hängt davon ab, ob man sich noch in derselben Session befindet.",
+          "verdict": "depends",
+          "explanation": "Ein Resume ist nur innerhalb derselben Session möglich – über Session-Grenzen hinweg lässt sich der Lauf nicht fortsetzen."
+        }
+      ]
+    },
+    {
+      "id": "agent-teams",
+      "question": "Welche Aussagen zu Agent Teams (experimentell, hinter CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1) treffen zu?",
+      "difficulty": "medium",
+      "section": "Agent Teams",
+      "explanation": "Agent Teams ist der teuerste Orchestrierungsmodus (~7× Token): eine Session fungiert als Lead, der koordiniert und synthetisiert, mehrere Teammates sind eigene Claude-Code-Instanzen, die direkt per Peer-to-Peer-Mailbox miteinander kommunizieren – genau das ist der Unterschied zu Subagents, die ausschließlich an ihren Parent zurückmelden. Da Teammates NICHT in Worktrees isoliert werden, muss die Arbeit nach Dateien partitioniert und über eine geteilte Task-Liste plus File-Locking abgesichert werden. Der Modus ist experimentell (ab v2.1.32+) und nur über das Env-Flag aktivierbar.",
+      "options": [
+        {
+          "id": "agent-teams-o0",
+          "text": "Teammates kommunizieren direkt miteinander (Peer-to-Peer-Mailbox), während Subagents nur an ihren Parent zurückmelden.",
+          "verdict": "true",
+          "explanation": "Genau dieses Peer-Messaging ist der definierende Unterschied zu Subagents, die ausschließlich ihre finale Nachricht an den Parent zurückgeben."
+        },
+        {
+          "id": "agent-teams-o1",
+          "text": "Eine Session übernimmt die Rolle des Lead und koordiniert bzw. synthetisiert die Arbeit der Teammates.",
+          "verdict": "true",
+          "explanation": "Agent Teams besteht aus einer koordinierenden Lead-Session plus mehreren Teammates, die jeweils eigene Claude-Code-Instanzen sind."
+        },
+        {
+          "id": "agent-teams-o2",
+          "text": "Agent Teams ist mit ~7× Token der teuerste Orchestrierungsmodus und muss über das Env-Flag CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 aktiviert werden.",
+          "verdict": "true",
+          "explanation": "Der Modus ist experimentell (ab v2.1.32+), hinter genau diesem Flag versteckt und verbraucht durch mehrere parallele Instanzen rund das Siebenfache an Token."
+        },
+        {
+          "id": "agent-teams-o3",
+          "text": "Teammates teilen sich eine gemeinsame Task-Liste und nutzen File-Locking, um Schreibkonflikte zu vermeiden.",
+          "verdict": "true",
+          "explanation": "Da keine Worktree-Isolation existiert, koordinieren sich die Instanzen über eine geteilte Task-Liste und File-Locking auf demselben Arbeitsverzeichnis."
+        },
+        {
+          "id": "agent-teams-o4",
+          "text": "Jeder Teammate arbeitet automatisch in einem eigenen Git-Worktree, sodass sich gleichzeitige Edits nie in die Quere kommen.",
+          "verdict": "false",
+          "explanation": "Teammates werden gerade NICHT in Worktrees isoliert; die Arbeit muss stattdessen manuell nach Dateien partitioniert und per File-Locking abgesichert werden."
+        },
+        {
+          "id": "agent-teams-o5",
+          "text": "Wie Subagents besitzen die Teammates nur ein gemeinsames Kontextfenster mit dem Lead, weshalb kein Token-Multiplikator entsteht.",
+          "verdict": "false",
+          "explanation": "Jede Instanz hat ein eigenes Kontextfenster, und genau diese Vervielfachung erzeugt den ~7×-Kostenaufschlag des Modus."
+        },
+        {
+          "id": "agent-teams-o6",
+          "text": "Agent Teams ist ein bereits allgemein verfügbares (GA) Standardfeature, das ohne weitere Konfiguration sofort einsatzbereit ist.",
+          "verdict": "false",
+          "explanation": "Der Modus ist explizit experimentell und nur über das Env-Flag CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 zugänglich, nicht GA."
+        },
+        {
+          "id": "agent-teams-o7",
+          "text": "Ob sich ein Agent-Team gegenüber einfachen Subagents lohnt, hängt davon ab, ob die Aufgabe echtes Peer-zu-Peer-Abstimmen zwischen den Workern erfordert.",
+          "verdict": "depends",
+          "explanation": "Brauchen die Worker nur unabhängige Teilergebnisse, reichen die billigeren Subagents; erst echter direkter Austausch zwischen den Workern rechtfertigt den teuren Team-Modus."
+        }
+      ]
+    },
+    {
+      "id": "parallel-routen-koordination",
+      "question": "Welche Aussagen zu den vier Parallelisierungs-Routen (Subagents / Agent View / Agent Teams / Dynamic Workflows) und zu loop/goal als benannten Primitiven treffen zu?",
+      "difficulty": "hard",
+      "section": "Cross-Tool-Autonomie",
+      "explanation": "Die vier Routen unterscheiden sich darin, wer koordiniert und ob die Worker direkt miteinander reden: Subagents melden nur an den Parent (Claude koordiniert turn-by-turn in EINER Session), bei Agent View dispatchst du selbst, nur Agent Teams haben echtes Peer-to-Peer-Messaging (Lead synthetisiert) und sind mit ~7× Token der teuerste Modus, und Dynamic Workflows tauschen Zwischenstände über Skript-Variablen plus adversariale Cross-Checks aus — ebenfalls OHNE Peer-Messaging. loop und goal existieren als benannte Primitive nur bei Claude Code und Codex; Codex hatte /goal zuerst, andere Tools parallelisieren über eigene Routen ohne diese Namen.",
+      "options": [
+        {
+          "id": "parallel-routen-koordination-o0",
+          "text": "Bei der Subagents-Route koordiniert Claude die Worker turn-by-turn in EINER Session, und die Worker melden ausschließlich an den Parent zurück — sie reden nicht untereinander.",
+          "verdict": "true",
+          "explanation": "Subagents besitzen ein eigenes Kontextfenster, geben aber nur ihre finale Nachricht an den Parent zurück und haben keinen Peer-Kanal."
+        },
+        {
+          "id": "parallel-routen-koordination-o1",
+          "text": "Agent Teams sind die einzige Route mit echtem Peer-to-Peer-Messaging zwischen den Workern (geteilte Mailbox), während der Lead koordiniert und synthetisiert.",
+          "verdict": "true",
+          "explanation": "Genau das direkte Teammate-zu-Teammate-Messaging unterscheidet Agent Teams von Subagents, die nur an den Parent zurückmelden."
+        },
+        {
+          "id": "parallel-routen-koordination-o2",
+          "text": "Bei Dynamic Workflows tauschen sich die orchestrierten Subagents über Peer-to-Peer-Messaging aus, analog zu einem Agent Team.",
+          "verdict": "false",
+          "explanation": "Dynamic Workflows kennen KEIN Peer-Messaging; der Austausch läuft über Skript-Variablen plus adversariale Cross-Checks, bis Antworten konvergieren."
+        },
+        {
+          "id": "parallel-routen-koordination-o3",
+          "text": "Bei der Agent View dispatchst du die Worker selbst, und sie melden ihr Ergebnis an dich zurück — nicht an einen automatisch koordinierenden Lead.",
+          "verdict": "true",
+          "explanation": "Agent View (\"claude agents\") ist nutzergesteuert: du verteilst die Arbeit und erhältst die Rückmeldungen direkt, ohne Lead-Koordination dazwischen."
+        },
+        {
+          "id": "parallel-routen-koordination-o4",
+          "text": "Agent Teams sind der teuerste Orchestrierungsmodus, weil jede Instanz ein eigenes Kontextfenster mitbringt (~7× Token).",
+          "verdict": "true",
+          "explanation": "Mehrere vollwertige Claude-Code-Instanzen multiplizieren die Kontextfenster, was Agent Teams auf rund das Siebenfache der Token treibt — der teuerste Modus."
+        },
+        {
+          "id": "parallel-routen-koordination-o5",
+          "text": "loop und goal existieren als gleichnamige benannte Primitive auch bei Cursor und Antigravity.",
+          "verdict": "false",
+          "explanation": "Benannte /loop- und /goal-Primitive gibt es nur bei Claude Code und Codex (Codex hatte /goal zuerst); Cursor und Antigravity parallelisieren über andere Routen ohne diese Namen."
+        },
+        {
+          "id": "parallel-routen-koordination-o6",
+          "text": "Das JavaScript-Skript eines Dynamic Workflows, das Claude selbst schreibt, koordiniert die Agenten und greift dabei selbst direkt auf Dateisystem und Shell zu.",
+          "verdict": "false",
+          "explanation": "Das Skript hält nur Schleife, Branching und Zwischenstand in Variablen; Filesystem- und Shell-Zugriff haben ausschließlich die Subagents, nicht das Skript."
+        },
+        {
+          "id": "parallel-routen-koordination-o7",
+          "text": "Ob für eine Aufgabe die billigere Subagents-Route oder ein teures Agent Team das richtige Werkzeug ist, hängt davon ab, ob die Worker untereinander koordinieren müssen.",
+          "verdict": "depends",
+          "explanation": "Reicht reines Fan-out mit Rückmeldung an den Parent, genügen Subagents; brauchen die Worker echten Peer-Austausch, rechtfertigt das den ~7×-Token-Aufschlag eines Agent Teams."
+        }
+      ]
+    },
+    {
+      "id": "antigravity-produkte-cli-harness",
+      "question": "Welche Aussagen zur Antigravity-Produktfamilie und insbesondere zur Antigravity CLI (\"agy\") treffen zu?",
+      "difficulty": "medium",
+      "section": "Antigravity",
+      "explanation": "\"Antigravity\" ist eine Dachmarke über drei getrennte Produkte: die agentische IDE (VS-Code-Fork), die Standalone-Desktop-App Antigravity 2.0 (Orchestrierungs-Command-Center ohne Editor) und die CLI \"agy\". agy ist der Go-Rewrite-Nachfolger der quelloffenen Gemini CLI, stammt aber NICHT aus der IDE-Linie: Es teilt das Agent-Harness mit der 2.0-App und ist trotz des Open-Source-Erbes proprietär. Neu in agy sind asynchrone Background-Workflows und dynamische Subagents, bei denen das Harness die Aufgabe selbst zerlegt – ohne Config-Dateien.",
+      "options": [
+        {
+          "id": "antigravity-produkte-cli-harness-o0",
+          "text": "agy ist der Nachfolger der quelloffenen Gemini CLI und als Go-Rewrite implementiert.",
+          "verdict": "true",
+          "explanation": "agy ist der Go-Rewrite-Nachfolger der zuvor quelloffenen Gemini CLI."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o1",
+          "text": "agy teilt sein Agent-Harness mit der Antigravity-2.0-Desktop-App, nicht mit der IDE-Linie.",
+          "verdict": "true",
+          "explanation": "agy und die 2.0-App nutzen dasselbe Agent-Harness, das gerade NICHT aus dem VS-Code-Fork (IDE) stammt."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o2",
+          "text": "Antigravity 2.0 ist eine eigenständige Desktop-App und kein Code-Editor, sondern ein Orchestrierungs-Command-Center.",
+          "verdict": "true",
+          "explanation": "Antigravity 2.0 ist eine Standalone-Desktop-App ohne Editor, die als Orchestrierungs-Command-Center fungiert."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o3",
+          "text": "agy bringt asynchrone Background-Workflows und dynamische Subagents als neue Fähigkeiten gegenüber der früheren Gemini CLI mit.",
+          "verdict": "true",
+          "explanation": "Neu in agy sind async Background-Workflows und dynamische Subagents, bei denen das Harness die Aufgabe selbst zerlegt."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o4",
+          "text": "agy ist der Terminal-Modus, der aus der Antigravity-IDE herausgelöst wurde.",
+          "verdict": "false",
+          "explanation": "agy stammt NICHT aus der IDE-Linie, sondern aus der Gemini-CLI-Linie und teilt das Harness mit der 2.0-App."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o5",
+          "text": "Da agy aus der quelloffenen Gemini CLI hervorging, ist auch agy selbst Open Source.",
+          "verdict": "false",
+          "explanation": "Trotz des Open-Source-Erbes der Gemini CLI ist agy proprietär."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o6",
+          "text": "Für dynamische Subagents in agy musst du die Aufgabenzerlegung vorab in Config-Dateien definieren.",
+          "verdict": "false",
+          "explanation": "Das Harness zerlegt die Aufgabe selbst und nutzt dynamische Subagents ohne Config-Dateien."
+        },
+        {
+          "id": "antigravity-produkte-cli-harness-o7",
+          "text": "Ob du dieselbe Orchestrierungslogik per Terminal oder per GUI ansteuerst, hängt davon ab, ob du agy oder die Antigravity-2.0-App als Frontend wählst.",
+          "verdict": "depends",
+          "explanation": "Ob CLI oder GUI hängt vom gewählten Frontend ab – da beide dasselbe Harness teilen, ist die zugrunde liegende Orchestrierung jedoch identisch."
+        }
+      ]
+    },
+    {
+      "id": "junie-air-modes-orchestration",
+      "question": "Welche Aussagen zu JetBrains Junie und JetBrains Air treffen zu?",
+      "difficulty": "medium",
+      "section": "Junie / Air",
+      "explanation": "Junie ist der in der IDE integrierte Agent mit einem read-only Plan-Mode (Design-Doc in .junie/plans) und einem autonomeren Brave-Mode, von dem JetBrains ausdrücklich abrät; eigene Subagents liegen in .junie/agents/, und fremde Konfig-Ordner (.claude/.codex/.cursor) werden nur gescannt und als Guidelines vorgeschlagen statt voll importiert. JetBrains Air ist dagegen ein EIGENES Produkt (Public Preview 03/2026), das mehrere Agenten — Junie, Claude, Codex, Gemini — gleichzeitig via Docker und Git-Worktrees orchestriert. Junie und Air sind also nicht dasselbe Produkt in zwei Modi, sondern getrennte Werkzeuge.",
+      "options": [
+        {
+          "id": "junie-air-modes-orchestration-o0",
+          "text": "Junies Plan-Mode erzeugt ein read-only Design-Doc unter .junie/plans, ohne den Code selbst zu verändern.",
+          "verdict": "true",
+          "explanation": "Plan-Mode trennt Entwurf von Ausführung: das Doc liegt in .junie/plans und nimmt keine Edits vor."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o1",
+          "text": "Junie unterstützt eigene Subagents, die in .junie/agents/ definiert werden.",
+          "verdict": "true",
+          "explanation": "Subagent-Definitionen liegen analog zu den Plänen in einem eigenen Ordner .junie/agents/."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o2",
+          "text": "JetBrains Air ist ein eigenständiges Produkt, das mehrere Agenten (Junie, Claude, Codex, Gemini) gleichzeitig via Docker und Git-Worktrees orchestriert.",
+          "verdict": "true",
+          "explanation": "Air (Public Preview 03/2026) ist kein Junie-Modus, sondern ein separater Orchestrator über mehrere Agenten hinweg."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o3",
+          "text": "Junie scannt fremde Konfig-Ordner wie .claude, .codex oder .cursor und schlägt daraus Guidelines vor, ohne sie vollständig zu importieren.",
+          "verdict": "true",
+          "explanation": "Junie liest diese Ordner nur aus und macht Guideline-Vorschläge — ein automatischer Vollimport findet nicht statt."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o4",
+          "text": "Air ist lediglich der Multi-Agent-Modus innerhalb von Junie und kein separates Produkt.",
+          "verdict": "false",
+          "explanation": "Air ist ein eigenes JetBrains-Produkt — es orchestriert Junie als einen von mehreren Agenten, ist aber kein Junie-Feature."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o5",
+          "text": "JetBrains empfiehlt für den Regelbetrieb den Brave-Mode, weil er der sicherere der beiden Junie-Modi ist.",
+          "verdict": "false",
+          "explanation": "Brave-Mode ist der autonomere Modus und wird von JetBrains gerade NICHT empfohlen; der read-only Plan-Mode ist die konservative Wahl."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o6",
+          "text": "Die Junie CLI (Beta 03/2026) ist an JetBrains-eigene Modelle gebunden und erlaubt kein eigenes API-Schlüssel-Setup.",
+          "verdict": "false",
+          "explanation": "Die Junie CLI ist gerade LLM-agnostisch und BYOK (bring your own key) — nicht an ein festes Modell gebunden."
+        },
+        {
+          "id": "junie-air-modes-orchestration-o7",
+          "text": "Ob du für eine Aufgabe Junie allein oder Air einsetzt, hängt davon ab, ob mehrere Agenten parallel auf isolierten Git-Worktrees arbeiten sollen.",
+          "verdict": "depends",
+          "explanation": "Single-Agent-Arbeit in der IDE deckt Junie ab; sobald mehrere Agenten gleichzeitig auf getrennten Worktrees laufen sollen, ist Air das passende Werkzeug."
+        }
+      ]
+    },
+    {
+      "id": "transfer-kosten-budget-stellschrauben",
+      "question": "Welche Aussagen zu Budget-Stellschrauben und Kostenverhalten der Autonomie-Modi (loop, goal, workflows, Teams) treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · Autonomie-Kosten",
+      "explanation": "Jede der drei Autonomie-Achsen hat eine eigene, nicht in Token übersetzbare Stellschraube: loop deckelt Wall-Clock/Iterationen, goal deckelt Goal-Check-Zyklen pro Fortschritt, workflows deckelt die Fan-out-Breite (multiplikativ). Ein Zeit-Limit (loop) macht das Token-Budget gerade NICHT sicher, weil der Token-Burn pro Sekunde spiken kann, und ein reiner Token-Cap schützt nicht vor Schaden — eine kleine schädliche Änderung braucht wenige Token, weshalb Action-Scope/Isolation wichtiger ist. Agent Teams sind mit ~7× der teuerste Modus, getrieben von mehrfach aufgenommenem geteiltem Kontext und redundantem Reasoning.",
+      "options": [
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o0",
+          "text": "Die primäre Budget-Stellschraube von /loop ist Wall-Clock-Zeit bzw. Iterationszahl, nicht ein Token-Limit.",
+          "verdict": "true",
+          "explanation": "loop ist die Zeit-Achse und cappt Laufzeit/Iterationen; der Token-Verbrauch pro Schritt ist volatil und korreliert nur damit, wie festgefahren der Agent ist."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o1",
+          "text": "Ein Zeit-Limit bei /loop garantiert ein sicheres Token-Budget, weil mit der Zeit auch die Token linear gedeckelt sind.",
+          "verdict": "false",
+          "explanation": "loop cappt nur die Zeit, nicht die Token; der Token-Burn pro Sekunde kann durch lange Pläne, Logs oder Kontext-Reloads stark spiken."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o2",
+          "text": "Bei /goal ist die natürliche Stellschraube die maximale Zahl an Goal-Check-Zyklen pro Fortschritt, was Konvergenz-Tracking und rationale Stop-Loss-Regeln erlaubt.",
+          "verdict": "true",
+          "explanation": "goal skaliert mit Turns; das Mitverfolgen sinkender Fehlschlagzahlen ermöglicht frühes Abschneiden aussichtsloser Iterationen und kann so sogar die Gesamt-Token senken."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o3",
+          "text": "Die ~7×-Kosten von Agent Teams entstehen primär durch dupliziert aufgenommenen geteilten Kontext und redundantes Reasoning, nicht bloß durch mehr Prompts.",
+          "verdict": "true",
+          "explanation": "Der Faktor ergibt sich aus Agenten(3–4) × Runden(2–3) plus mehrfach bezahltem geteiltem Kontext, Rollen-Handoffs und redundanter Verifikation — Hauptkosten sind duplizierte Kontext-Aufnahme und Reasoning."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o4",
+          "text": "Breite Parallelität (workflows) senkt bei eng gekoppelten, cross-cutting Refactors zuverlässig die Gesamt-Token, weil die Arbeit aufgeteilt wird.",
+          "verdict": "false",
+          "explanation": "Bei eng gekoppelten Tasks sinkt zwar die Latenz, aber der Kontext-Sync- und Koordinations-Overhead ERHÖHT die Gesamt-Token; breite Parallelität lohnt nur bei schwach gekoppelten Tasks mit kleinem Budget pro Task."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o5",
+          "text": "Vor einem unbeaufsichtigten Lauf reicht ein harter Token-Cap als Guardrail aus, da Schaden proportional zu verbrauchten Token ist.",
+          "verdict": "false",
+          "explanation": "Eine kleine schädliche Änderung braucht nur wenige Token; entscheidend sind Action-Scope-Begrenzung und Isolation (kein Shell/keine Prod-Credentials, nur Branch/Sandbox) plus Kill-Switch, nicht der Token-Cap allein."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o6",
+          "text": "Die Stellschrauben der drei Achsen sind nicht in eine einzige Token-Größe übersetzbar: loop misst Zeit, goal misst Check-Zyklen, workflows misst Fan-out-Breite und -Tiefe.",
+          "verdict": "true",
+          "explanation": "Die drei Achsen sind orthogonal (Zeit, Bedingung, Breite) und ihre Budget-Größen fundamental verschieden, weshalb ein gemeinsames Token-Limit sie nicht ersetzt."
+        },
+        {
+          "id": "transfer-kosten-budget-stellschrauben-o7",
+          "text": "Ob breite Parallelität (workflows) die Gesamtkosten senkt oder erhöht, hängt von Kopplungsgrad und Token-Budget pro Task ab.",
+          "verdict": "depends",
+          "explanation": "Sie lohnt nur bei schwach gekoppelten Tasks mit kleinem Token-Budget pro Task; bei eng gekoppelten, cross-cutting Tasks dominiert der Koordinations-Overhead und treibt die Gesamtkosten hoch (Latenz sinkt trotzdem)."
+        }
+      ]
+    },
+    {
+      "id": "transfer-refactor-handoff-grenze",
+      "question": "Ein Team migriert eine große Java-Codebasis (deprecated API zum Nachfolger). Welche Aussagen zur Arbeitsteilung zwischen OpenRewrite-Recipes und einem LLM-Agent-Workflow an der Determinismus-Grenze treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · Refactoring-Ökonomie",
+      "explanation": "Recipes tragen eine feste, code-basierte AST-Semantik, fassen jede Datei einmal an und skalieren damit linear und token-frei mit der Codegröße — der mechanische Großteil ist quasi gratis. An der Determinismus-Grenze, wo Business-Intent oder cross-cutting Redesign nötig werden, bricht das statische Muster: dort übergibt ein Recipe gezielt (markiert z. B. deprecated Usages plus TODO), und der teure, superlinear skalierende Agent füllt nur diese Reste kontextabhängig. Wer den Agenten stattdessen breit über das ganze Repo laufen lässt, verschenkt genau die lineare, kostenlose Recipe-Skalierung und zahlt €€€€€ für etwas, das deterministisch lösbar war.",
+      "options": [
+        {
+          "id": "transfer-refactor-handoff-grenze-o0",
+          "text": "Der mechanische Großteil der Migration (einheitliche AST-Muster) läuft über Recipes token-frei und skaliert linear mit der Codegröße.",
+          "verdict": "true",
+          "explanation": "Recipes tragen eine feste, code-basierte Semantik pro AST-Muster, fassen jede Datei einmal an und führen keinen Multi-Turn-Dialog mit einem Modell — daher token-frei und linear."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o1",
+          "text": "An der Determinismus-Grenze kann ein Recipe deprecated Usages markieren und ein TODO setzen, das der Agent dann kontextabhängig auffüllt.",
+          "verdict": "true",
+          "explanation": "Genau dieser Handoff trennt das deterministisch Ausdrückbare vom semantisch Verstandenen: das Recipe markiert mechanisch, der Agent füllt nur die kontextabhängigen Grenzfälle."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o2",
+          "text": "Der Agent zahlt pro Datei wiederholt für 'Datei + Projekt verstehen' plus Planung und Backtracking, weshalb seine Kosten superlinear wachsen.",
+          "verdict": "true",
+          "explanation": "LLM-Agenten nehmen Kontext mehrfach auf und durchlaufen Multi-Turn-Reasoning, was im Gegensatz zur einmaligen, linearen Recipe-Anwendung superlinear skaliert."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o3",
+          "text": "Verdoppelt sich die Codegröße bei gleichem Muster, verdoppeln sich grob die token-freien Recipe-Operationen, nicht jedoch die bezahlten Agent-Token.",
+          "verdict": "true",
+          "explanation": "Recipes skalieren linear und token-frei mit dem Volumen; die teuren Agent-Token fallen nur an der unveränderten Determinismus-Grenze an und wachsen nicht mit dem mechanischen Großteil."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o4",
+          "text": "Weil der Agent semantisch flexibler ist, sollte man ihn von Anfang an über die gesamte Codebasis laufen lassen und Recipes ganz weglassen.",
+          "verdict": "false",
+          "explanation": "Das verschenkt die lineare, token-freie Recipe-Skalierung und treibt die superlinearen Agent-Kosten (€€€€€) über das ganze Repo statt nur über die Grenzfälle."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o5",
+          "text": "Recipes bewältigen auch cross-cutting Redesigns, die Business-Intent erfordern, solange man das Recipe nur ausführlich genug konfiguriert.",
+          "verdict": "false",
+          "explanation": "Recipes brechen genau dort, wo die Transformation Verständnis jenseits ausdrückbarer statischer AST-Muster braucht — das ist die Determinismus-Grenze, keine Konfigfrage."
+        },
+        {
+          "id": "transfer-refactor-handoff-grenze-o6",
+          "text": "Ob der Agent-Anteil und damit die Workflow-Kosten klein bleiben, hängt davon ab, wie viel der Migration sich als deterministische AST-Muster ausdrücken lässt, bevor die Determinismus-Grenze einen Handoff erzwingt.",
+          "verdict": "depends",
+          "explanation": "Je mehr das Recipe linear und token-frei abdeckt, desto schmaler der teure, superlineare Agent-Rest — der Kostenanteil hängt an der Lage dieser Grenze."
+        }
+      ]
+    },
+    {
+      "id": "transfer-route-wahl",
+      "question": "Welche Aussagen zur szenariobasierten Wahl der richtigen Orchestrierungs-Route treffen zu?",
+      "difficulty": "hard",
+      "section": "Transfer · Orchestrierungs-Wahl",
+      "explanation": "Die Route folgt aus der Kommunikationstopologie und der Kopplung der Tasks: Subagents melden nur an den Parent (genügen bei schwach gekoppelter, isolierter Fan-out-Arbeit), Agent Teams bieten Peer-to-Peer-Messaging (nötig bei gegenseitigem Veto/Verhandlung und verteilter Autorität), Dynamic Workflows bringen massive Parallelität plus adversariale Cross-Checks über Skript-Variablen (kein Peer-Messaging), und Agent View lässt dich selbst dispatchen. Breite Parallelität senkt die Latenz, erhöht aber bei eng gekoppelten Aufgaben durch Kontext-Sync-Overhead die Gesamt-Token. Adversariales Cross-Checking hebt die Konfidenz, weil das Ziel von \"plausibel klingen\" zu \"einem gezielten Widerlegungs-Angriff standhalten\" wechselt.",
+      "options": [
+        {
+          "id": "transfer-route-wahl-o0",
+          "text": "Für schwach gekoppelte Teilaufgaben, die ein Agent isoliert erledigt und nur sein Ergebnis zurückmeldet, genügen Subagents.",
+          "verdict": "true",
+          "explanation": "Subagents haben ein eigenes Kontextfenster und geben nur die finale Nachricht an den Parent zurück — genau das passende Muster für unabhängige Teiljobs."
+        },
+        {
+          "id": "transfer-route-wahl-o1",
+          "text": "Müssen Worker während der Arbeit direkt über geteilten Zustand verhandeln und sich gegenseitig vetoen, reichen Subagents nicht — echte Agent Teams mit Peer-to-Peer-Mailbox sind nötig.",
+          "verdict": "true",
+          "explanation": "Subagents reden nicht miteinander (nur an den Parent); verteilte Autorität mit Peer-Veto erfordert die direkte Mailbox-/Peer-to-Peer-Kommunikation der Agent Teams."
+        },
+        {
+          "id": "transfer-route-wahl-o2",
+          "text": "Ein Dynamic Workflow eignet sich, wenn Dutzende bis Hunderte Subagents dieselbe Frage adversarisch angreifen sollen, bis die Antworten konvergieren.",
+          "verdict": "true",
+          "explanation": "Genau dafür ist das von Claude geschriebene JS-Orchestrierungs-Skript gedacht: massive Parallelität (harte Obergrenze 1000 Agenten/Lauf) mit gegenseitiger Widerlegung über Skript-Variablen."
+        },
+        {
+          "id": "transfer-route-wahl-o3",
+          "text": "Adversariales Cross-Checking hebt die Konfidenz, weil eine Antwort nicht mehr nur plausibel klingen, sondern einem gezielten Widerlegungs-Angriff standhalten muss.",
+          "verdict": "true",
+          "explanation": "Unabhängige Kritiker mit unterschiedlichen Blind Spots senken die Posterior-Fehlerwahrscheinlichkeit, statt einen Fehler nur plausibel zu kaschieren."
+        },
+        {
+          "id": "transfer-route-wahl-o4",
+          "text": "Auch Dynamic Workflows nutzen Peer-to-Peer-Messaging zwischen den Agenten, identisch zu Agent Teams.",
+          "verdict": "false",
+          "explanation": "Dynamic Workflows haben gerade KEIN Peer-Messaging — der Austausch läuft über Skript-Variablen plus adversariale Cross-Checks; die Peer-Mailbox ist allein das Merkmal der Agent Teams."
+        },
+        {
+          "id": "transfer-route-wahl-o5",
+          "text": "Stimmen zwei parallele Agenten in ihrem Ergebnis überein, ist die Antwort damit garantiert korrekt.",
+          "verdict": "false",
+          "explanation": "Übereinstimmung beweist nichts — beide können dieselbe Fehlannahme teilen; erst unabhängige Kritiker mit verschiedenen Blind Spots erhöhen die Konfidenz."
+        },
+        {
+          "id": "transfer-route-wahl-o6",
+          "text": "Agent View bedeutet, dass die Worker untereinander koordinieren, während die Lead-Session nur synthetisiert.",
+          "verdict": "false",
+          "explanation": "Bei Agent View dispatchst du selbst und die Worker melden an dich zurück — Lead-Synthese mit Peer-Koordination ist das Muster der Agent Teams, nicht von Agent View."
+        },
+        {
+          "id": "transfer-route-wahl-o7",
+          "text": "Ob breite Parallelität (viele Agenten) die Gesamtkosten lohnt, hängt von der Kopplung der Tasks und dem Token-Budget pro Task ab.",
+          "verdict": "depends",
+          "explanation": "Sie lohnt nur bei schwach gekoppelten Tasks mit kleinem Token-Budget; bei eng gekoppelten cross-cutting Refactors dominiert der Kontext-Sync-/Koordinations-Overhead, sodass die Gesamt-Token steigen und nur die Latenz sinkt."
+        }
+      ]
     }
   ]
 }
