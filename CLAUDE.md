@@ -72,6 +72,28 @@ Bei komplexeren Szenarien (spezifische Tab-Navigation, eigene Scroll-Logik) stat
 
 `.claude/hooks/slide-overflow-reminder.sh` (konfiguriert in `.claude/settings.json` als `Stop`-Hook) erinnert am Turn-Ende daran, den Overflow-Check zu fahren, sobald unstaged Änderungen an `<talk>/slides.md`, `<talk>/components/*.vue` oder `<talk>/layouts/*.vue` existieren. Der Hook läuft Playwright **nicht** selbst (zu langsam, braucht laufenden Server) — er zeigt nur den konkreten `bun run`-Aufruf pro betroffenem Talk an.
 
+## Commit Conventions
+
+Commits follow **Conventional Commits** (roughly): `type(scope): subject`.
+
+- **Type**: one of `feat`, `fix`, `refactor`, `docs`, `style`, `ci`, `build`, `chore`.
+- **Scope** (almost always present): the talk directory short-name — `ai-agents`, `monitoring`, `open-rewrite`, `gradle`, `java-null`, `agents-details` — or a cross-cutting area — `shared`, `playwright`, `deploy`, `repo`, `claude`, `devenv`, `deps`. Combine multiple scopes comma-separated with no space (`shared,java-null`).
+- **Subject**: English, imperative mood, lowercase first word (the verb). Proper nouns and product/tech names keep their case (Claude Code, OpenRewrite, JSpecify, MCP). No trailing period. Aim for ≤ 72 chars.
+- **Body** (optional — add it for the what-and-why, omit it for trivial changes): one blank line after the subject, then **hard-wrap every line at ≤ 72 chars**. Body language may be English or German — match the talk's slide-content language (German talks such as `ai-agents` and `open-rewrite` routinely have German bodies). Use `-` bullets for multi-part changes and backtick inline identifiers.
+- **Trailer** on Claude-assisted commits, after a blank line: `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
+
+Example:
+
+```text
+feat(open-rewrite): add OpenRewrite presentation with JSpecify walkthrough
+
+34 Slides in sieben Sektionen, deutsch, mit Inhaltsverzeichnis, das nur
+die Section-Divider listet. Praxis-Sektion nutzt `MonacoBlockAnnotated`
+für die JSpecify-Migration.
+
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+```
+
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
