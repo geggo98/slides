@@ -1,0 +1,396 @@
+{
+  "title": "Autonomie & Orchestrierung — Tool-Pivot",
+  "note": "Wiederverwendbare Pivot-Daten: dimensions × tools. Jede Zelle {teaser, detail, mark}. mark ∈ yes|no|partial|none steuert das Symbol (✓/✗/◐).",
+  "dimensions": [
+    { "key": "primitive", "label": "Primitive", "short": "was bietet es" },
+    { "key": "umsetzung", "label": "Umsetzung", "short": "Besonderheiten" },
+    { "key": "kosten", "label": "Kosten", "short": "€-Profil" },
+    { "key": "plan", "label": "Plan-Halter", "short": "wer plant" },
+    { "key": "kommunikation", "label": "Worker-Komm.", "short": "reden sie?" },
+    {
+      "key": "kontextfenster",
+      "label": "Kontextfenster",
+      "short": "wie viele"
+    },
+    { "key": "reife", "label": "Reife", "short": "Status" },
+    { "key": "async", "label": "Async/Cloud", "short": "Delegation" }
+  ],
+  "tools": [
+    {
+      "key": "claude-code",
+      "name": "Claude Code",
+      "color": "#C96442",
+      "cells": {
+        "primitive": {
+          "teaser": "Subagents, Tasks, /goal, /loop",
+          "detail": "Reiches Set: Subagents mit eigenem Kontext, Tasks (ersetzt TodoWrite), /goal als Completion-Bedingung, /loop als Cron-Skill, Dynamic Workflows und ultracode. Plus experimentelle Agent Teams.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "JS-Skript steuert Subagents",
+          "detail": "Dynamic Workflows nutzen ein JS-Skript zur Orchestrierung von bis zu 16 parallelen Subagents (Hard-Cap 1000/Run, acceptEdits). Agent Teams via Env-Flag CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1. ultracode session-scoped.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€–€€€€€ (ultracode +)",
+          "detail": "Breite Spanne je nach Route: einfache Sessions günstig, Agent Teams ~7× Tokens, ultracode mit Aufschlag obendrauf. /goal warnt vor Eskalation ($200-in-14h-Fall).",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "gemischt",
+          "detail": "Plan-Halter variiert je Route: du beim Planning, das Modell turn-by-turn, oder das JS-Skript bei Dynamic Workflows. /goal lagert die Completion-Prüfung an einen Haiku-Evaluator je Turn aus.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nur an Parent",
+          "detail": "Subagents melden Ergebnisse ausschließlich an den Parent, kein Peer-Messaging. Ausnahme: experimentelle Agent Teams mit Lead + Teammates und echter Peer-to-Peer-Mailbox.",
+          "mark": "partial"
+        },
+        "kontextfenster": {
+          "teaser": "viele (≤16 parallel)",
+          "detail": "Jeder Subagent hat ein eigenes Kontextfenster. Dynamic Workflows fahren bis zu 16 parallele Subagents, Hard-Cap 1000 pro Run.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "gemischt",
+          "detail": "Subagents, Tasks (seit v2.1.16), /goal und /loop sind GA. Dynamic Workflows: Research Preview seit 28.05.2026 (v2.1.154+, Opus 4.8). Agent Teams experimentell hinter Env-Flag.",
+          "mark": "partial"
+        },
+        "async": {
+          "teaser": "lokal; Cloud via Agent-SDK",
+          "detail": "Agent View läuft lokal. Über das Agent-SDK auch auf Bedrock, Vertex und Foundry betreibbar. Keine native Cloud-Delegation in der CLI selbst.",
+          "mark": "partial"
+        }
+      }
+    },
+    {
+      "key": "codex",
+      "name": "OpenAI Codex",
+      "color": "#10A37F",
+      "cells": {
+        "primitive": {
+          "teaser": "/plan, /exec, /review, /goal",
+          "detail": "Slash-Primitive /plan, /exec, /review plus /goal (Original-Primitiv, ~30.04.2026) als Completion-Bedingung. Subagent-Workflows (default an) werden nur auf explizite Bitte gespawnt; Custom Agents via TOML.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "Rust-CLI + IDE + ChatGPT-Cloud",
+          "detail": "Open-source Rust-CLI, IDE-Extension und ChatGPT-Cloud, betrieben mit GPT-5.5. Custom Agents als TOML-Config; agents.max_depth default 1 begrenzt die Verschachtelung von Subagents.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€–€€€€ je Cloud-Nutzung",
+          "detail": "Lokale CLI ist open-source, Kosten entstehen über Modell-Calls (GPT-5.5) und parallele Cloud-Sandboxes. Spanne €€ bis €€€€ je nach Subagent- und Cloud-Parallelität.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "gemischt",
+          "detail": "Du dispatchst Tasks und steuerst /plan, das Modell hält den Plan turn-by-turn. /goal setzt eine Completion-Bedingung, gegen die jeder Turn geprüft wird.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nur an Parent",
+          "detail": "Worker laufen isoliert, kein Peer-Messaging zwischen Subagents. Ergebnisse fließen nur an den Parent zurück.",
+          "mark": "no"
+        },
+        "kontextfenster": {
+          "teaser": "mehrere",
+          "detail": "Parent plus gespawnte Subagents arbeiten in eigenen Kontextfenstern; agents.max_depth default 1 begrenzt die Tiefe. Codex Cloud nutzt zusätzlich je Task eine eigene Sandbox.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "GA",
+          "detail": "Codex ist GA und produktiv nutzbar. /goal als jüngstes Primitiv kam erst ~30.04.2026 hinzu.",
+          "mark": "yes"
+        },
+        "async": {
+          "teaser": "ja, Codex Cloud",
+          "detail": "Codex Cloud startet je Task parallele Cloud-Sandboxes mit deinem Repo. Internet ist während der Ausführung deaktiviert; Tasks laufen asynchron und delegiert.",
+          "mark": "yes"
+        }
+      }
+    },
+    {
+      "key": "antigravity-cli",
+      "name": "Antigravity CLI (agy)",
+      "color": "#4285F4",
+      "cells": {
+        "primitive": {
+          "teaser": "Skills, Subagents, MCP, async",
+          "detail": "Erbt von der Gemini CLI: Agent Skills, Hooks, dynamische Subagents, Extensions (jetzt „Antigravity plugins\") und MCP. Neu: async Background-Multi-Agent-Workflows. Dazu SDK + Managed Agents als API-gesteuerte Primitive.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "Go-Rewrite, geteiltes Harness",
+          "detail": "Nachfolger der Gemini CLI, in Go neu gebaut, teilt das Agent-Harness mit der Antigravity-2.0-Desktop-App (NICHT aus der IDE-Linie). Selbst-zerlegendes Harness, daher keine Config-Files oder Orchestrierungs-Skripte für Subagents nötig.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€–€€€€ + Managed Agents",
+          "detail": "Mittleres bis hohes Profil. Gemini-Modelle plus optionale Managed Agents (persistente isolierte Linux-Umgebungen) treiben die Kosten; genaue Tarife für agy noch nicht final dokumentiert.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "Harness",
+          "detail": "Das Agent-Harness zerlegt Aufgaben selbst und spinnt dynamisch Subagents auf. Keine externen Orchestrierungs-Skripte oder Config-Files nötig; der Plan liegt im selbst-zerlegenden Harness.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nur an Parent",
+          "detail": "Kein dokumentiertes Peer-Messaging zwischen Workern. Dynamische Subagents berichten an das orchestrierende Harness bzw. den Parent; direkter Austausch zwischen Agents ist nicht belegt.",
+          "mark": "no"
+        },
+        "kontextfenster": {
+          "teaser": "viele",
+          "detail": "Async Background-Multi-Agent-Workflows und dynamische Subagents bedeuten mehrere parallele Kontexte. Managed Agents laufen je in eigener persistenter Umgebung, also separate Fenster.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "experimentell",
+          "detail": "Sehr jung (Mai 2026) und proprietär (Community-Kritik, anders als die quelloffene Gemini CLI). Consumer-Gemini-CLI endet 18.06.2026, Enterprise läuft weiter.",
+          "mark": "no"
+        },
+        "async": {
+          "teaser": "ja, Background + Managed",
+          "detail": "Native async Background-Multi-Agent-Workflows. Antigravity SDK + Managed Agents spinnen Agents per API in persistenten, isolierten Linux-Umgebungen auf — echte Cloud-Delegation.",
+          "mark": "yes"
+        }
+      }
+    },
+    {
+      "key": "copilot",
+      "name": "GitHub Copilot",
+      "color": "#8957E5",
+      "cells": {
+        "primitive": {
+          "teaser": "Agent Mode, Cloud, Custom Agents",
+          "detail": "Drei Ebenen: IDE-Agent-Mode (autonomes Multi-File-Editing + Terminal), Cloud Agent (Issue-Zuweisung, Hintergrundarbeit) und Custom Agents (.github/agents/, Markdown+YAML). Das Mission-Control-Panel kann auch Drittagenten ansteuern.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "Custom Agents via .github/agents/",
+          "detail": "Custom Agents als Markdown+YAML in .github/agents/, max. 30.000 Zeichen, org-weit teilbar. Cloud Agent läuft in einer GitHub-Actions-Sandbox und pusht in einen Draft-PR. Mission Control orchestriert auch Drittagenten.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€–€€€",
+          "detail": "Abo-basiert; der Cloud Agent verbraucht zusätzlich Actions-Minuten und Premium-Requests. Custom Agents fallen ohne Zusatzkosten an.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "Modell (turn-by-turn)",
+          "detail": "Das Modell treibt sich selbst bis zum Endzustand bzw. fertigen PR; kein externes Plan-Skript. Der Cloud Agent arbeitet autonom bis zum Draft-PR und taggt dich dann zum Review.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nein",
+          "detail": "Worker reden nicht miteinander. Kein Peer-Messaging zwischen Agenten; Ergebnisse fließen über PRs und das Mission-Control-Panel zurück an dich.",
+          "mark": "no"
+        },
+        "kontextfenster": {
+          "teaser": "mehrere",
+          "detail": "Pro Ebene/Agent ein eigener Kontext: IDE-Session, Cloud-Agent-Lauf und ggf. mehrere parallele Cloud-Agenten haben je ihr eigenes Fenster.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "GA",
+          "detail": "Agent Mode GA in VS Code und JetBrains seit März 2026. Cloud Agent und Custom Agents produktiv verfügbar.",
+          "mark": "yes"
+        },
+        "async": {
+          "teaser": "Cloud Agent im Hintergrund",
+          "detail": "Der Cloud Agent arbeitet asynchron in einer GitHub-Actions-Sandbox: Issue zuweisen, der Agent committet im Hintergrund in einen Draft-PR und taggt dich zum Review.",
+          "mark": "yes"
+        }
+      }
+    },
+    {
+      "key": "windsurf",
+      "name": "Windsurf (Cascade)",
+      "color": "#09B6A2",
+      "cells": {
+        "primitive": {
+          "teaser": "Cascade, Planning-Agent, Workflows",
+          "detail": "Cascade ist der agentische Kern mit eigenem Planning-Agent, der den Langzeitplan im Hintergrund verfeinert. Parallel Agents bearbeiten mehrere Tasks gleichzeitig. Workflows (.windsurf/workflows/) sind benannte Markdown-Rezepte, via /name aufrufbar.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "VS-Code-Fork, .windsurf-Config",
+          "detail": "Agentische VS-Code-Fork-IDE, seit Dez 2025 unter Cognition AI (Devin). Workflows sind reine Prompt-Rezepte, keine Orchestrierungs-Engine. Parallel Agents sind credit-intensiv bei vagen Prompts, daher erst Plan-Only empfohlen.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€–€€€€ Quoten",
+          "detail": "Seit 19.03.2026 quotenbasiert: Pro $20, Max $200. Parallel Agents verbrauchen bei unklaren Prompts schnell viel Quote, deshalb der Plan-Only-Vorlauf.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "Modell (Planning-Agent)",
+          "detail": "Cascade hat einen dedizierten Planning-Agent, der den Langzeitplan eigenständig im Hintergrund verfeinert. Der Plan liegt damit beim Modell, nicht beim Nutzer oder einem externen Skript.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "indirekt",
+          "detail": "Parallel Agents laufen je Task, kein echtes Peer-Messaging dokumentiert. Devin als Cloud-Agent wird per One-Click-Handoff übergeben und im Kanban-Command-Center koordiniert — nur indirekte Abstimmung.",
+          "mark": "partial"
+        },
+        "kontextfenster": {
+          "teaser": "mehrere",
+          "detail": "Parallel Agents erlauben mehrere gleichzeitige Tasks mit jeweils eigenem Kontext. Zusätzlich verfeinert der Planning-Agent den Plan in einem separaten Hintergrundkontext.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "GA",
+          "detail": "Produktiv verfügbar, Übernahme durch Cognition AI im Dez 2025 abgeschlossen. Quotenpreismodell seit 19.03.2026 etabliert.",
+          "mark": "yes"
+        },
+        "async": {
+          "teaser": "Devin (Cloud)",
+          "detail": "Devin ist der autonome Cloud-Agent mit One-Click-Handoff aus der IDE und Kanban-Command-Center — echte asynchrone Cloud-Delegation. Kein Headless-/Stdin-Betrieb.",
+          "mark": "yes"
+        }
+      }
+    },
+    {
+      "key": "cursor",
+      "name": "Cursor",
+      "color": "#5B8DEF",
+      "cells": {
+        "primitive": {
+          "teaser": "YOLO, best-of-n, Cloud, CLI",
+          "detail": "Agent Mode mit YOLO-Mode (ohne Bestätigungen), parallele Subagenten und /best-of-n auf Git-Worktrees (N isolierte Varianten, beste gewinnt). cursor-agent CLI für CI/Bulk. Cloud Agents in isolierten VMs, bis 8 parallel, Multi-Repo.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "VS-Code-Fork, .cursor/rules",
+          "detail": "Anysphere-Editor mit Composer-Modell, Cursor Hooks und BugBot. CLI teilt .cursor/rules, MCP und Account-Credits. MCP gedeckelt auf 40 Tools/Session. Agents Window (3.0) als Dashboard für Background- und Cloud-Handoff.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€–€€€€ credit/usage",
+          "detail": "Credit- bzw. usage-basierte Abrechnung. Cloud-VMs und parallele Best-of-n-Läufe vervielfachen den Verbrauch, daher breite Spanne je nach Parallelität.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "gemischt",
+          "detail": "Du gibst die Anzahl N der Versuche vor; das Modell plant turn-by-turn innerhalb jedes isolierten Laufs. Bei best-of-n entscheidet die Auswahl über die beste Variante.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nein",
+          "detail": "Parallele Subagenten und Best-of-n-Worker laufen in isolierten Worktrees/VMs ohne Austausch untereinander. Es gibt kein Peer-Messaging zwischen den N Versuchen.",
+          "mark": "no"
+        },
+        "kontextfenster": {
+          "teaser": "viele (≤8)",
+          "detail": "Jeder parallele Subagent, Best-of-n-Versuch und Cloud-Agent hat ein eigenes Kontextfenster. Cloud Agents laufen bis 8 parallel in isolierten VMs.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "GA",
+          "detail": "Generell verfügbar mit sehr schneller Versionierung: Agents Window (3.0, 02.04.2026), parallele Subagenten (3.3, 07.05.2026), Cloud Agents (3.5, 20.05.2026). cursor-agent CLI seit Jan 2026.",
+          "mark": "yes"
+        },
+        "async": {
+          "teaser": "Cloud Agents in VMs",
+          "detail": "Cloud Agents (3.5) delegieren in isolierte Cloud-VMs, Multi-Repo und bis 8 parallel, mit Handoff aus dem Agents Window — echte asynchrone Cloud-Delegation.",
+          "mark": "yes"
+        }
+      }
+    },
+    {
+      "key": "junie-air",
+      "name": "JetBrains Junie / Air",
+      "color": "#F25C54",
+      "cells": {
+        "primitive": {
+          "teaser": "Plan-Mode, Subagents, Brave",
+          "detail": "Modi Ask/Code/Auto plus read-only Plan-Mode (Pläne in .junie/plans, editier- und committbar). Subagents via .junie/agents/ (Markdown+YAML) mit Auto-Delegation nach Name/Beschreibung. Brave-Mode autorisiert alle sensiblen Aktionen.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "IDE-nativ, JVM, LLM-agnostisch",
+          "detail": "Junie ist IntelliJ-nativ mit JVM-Wurzel und modellunabhängig. Es scannt .claude/.codex/.cursor und schlägt Guidelines nur VOR, statt sie voll zu importieren. Air ist ein eigenes Produkt, das Agenten via Docker + Git-Worktrees isoliert.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€€ (Pro ~$10/Ultimate $30)",
+          "detail": "Abgedeckt über AI Pro (~$10) bzw. Ultimate ($30). Junie CLI nutzt BYOK ohne Markup (/usage). Air wird separat lizenziert.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "gemischt",
+          "detail": "Bei Junie hält das Modell den Plan im read-only Plan-Mode (persistiert in .junie/plans, editier- und committbar). Bei Air übernimmt das Orchestrierungs-Harness die parallele Koordination der Agenten.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "indirekt (Air)",
+          "detail": "Junie-Subagents delegieren nur an den Parent; kein Peer-Messaging. Air koordiniert mehrere Agenten indirekt über Docker-Container und Git-Worktrees, nicht über direkten Worker-zu-Worker-Austausch.",
+          "mark": "partial"
+        },
+        "kontextfenster": {
+          "teaser": "mehrere",
+          "detail": "Junie nutzt pro Subagent eigenen Kontext. Air orchestriert Junie/Claude/Codex/Gemini gleichzeitig in getrennten Docker-/Worktree-Umgebungen, also mehrere parallele Kontextfenster.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "gemischt",
+          "detail": "Junie ist GA. Junie CLI ist Beta (seit 03/2026, LLM-agnostisch, BYOK). Air ist in Public Preview (03/2026).",
+          "mark": "partial"
+        },
+        "async": {
+          "teaser": "lokal parallel via Air",
+          "detail": "Air delegiert mehrere Agenten parallel lokal in Docker-Containern und Git-Worktrees, keine dedizierte Cloud-Delegation. Junie selbst arbeitet IDE-lokal.",
+          "mark": "partial"
+        }
+      }
+    },
+    {
+      "key": "opencode",
+      "name": "OpenCode",
+      "color": "#E5A50A",
+      "cells": {
+        "primitive": {
+          "teaser": "Subagents, JS/TS-Hooks, headless",
+          "detail": "Benannte Subagents mit Per-Agent-Permission-Overrides und Pro-Agent-MCP-Toggle. Hooks als JS/TS-Plugins über 30+ Events. Headless via 'opencode run'; 'opencode serve' für warme Sessions. Keine /goal- oder /loop-Primitive.",
+          "mark": "none"
+        },
+        "umsetzung": {
+          "teaser": "Quelloffen, BYOK, Plugin-Hooks",
+          "detail": "Open Source und Bring-your-own-key. Hooks sind JS/TS-Plugins statt Shell-Skripte. Worktrees nur manuell, keine eingebaute Orchestrierungs-Schicht. Permissions und MCP-Server pro Agent konfigurierbar.",
+          "mark": "none"
+        },
+        "kosten": {
+          "teaser": "€–€€ (BYOK)",
+          "detail": "Tool selbst kostenlos und quelloffen; Kosten entstehen nur über den eigenen Modell-API-Key (BYOK). Keine Plattform- oder Cloud-Gebühren.",
+          "mark": "none"
+        },
+        "plan": {
+          "teaser": "du / Modell",
+          "detail": "Kein Skript- oder Harness-getriebener Plan. Den Verlauf hältst du oder das Modell turn-by-turn; es gibt keine benannte Workflow-Orchestrierung.",
+          "mark": "none"
+        },
+        "kommunikation": {
+          "teaser": "nur an Parent",
+          "detail": "Subagents kommunizieren nicht peer-to-peer; Ergebnisse fließen nur an den aufrufenden Parent zurück. Kein Worker-zu-Worker-Messaging.",
+          "mark": "no"
+        },
+        "kontextfenster": {
+          "teaser": "mehrere",
+          "detail": "Haupt-Session plus separater Kontext je Subagent. Keine Cloud-Fächerung; warme Sessions über 'opencode serve' halten Kontext lokal.",
+          "mark": "none"
+        },
+        "reife": {
+          "teaser": "jung",
+          "detail": "Quelloffenes, breit genutztes Projekt (Stand Mai 2026), aber ohne stabilisiertes GA-Versprechen; API und Features bewegen sich schnell.",
+          "mark": "partial"
+        },
+        "async": {
+          "teaser": "kein Cloud",
+          "detail": "Keine Cloud- oder Async-Delegation. Subagents laufen lokal und synchron; Worktrees müssen manuell angelegt werden.",
+          "mark": "no"
+        }
+      }
+    }
+  ]
+}

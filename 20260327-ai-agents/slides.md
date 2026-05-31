@@ -378,6 +378,14 @@ Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, g
 **Cursor & Cloud-Agenten** — `cursor-agent`-CLI, Cloud Agents (≤8 parallel), best-of-n auf Worktrees. Dazu Codex Cloud & Copilot Cloud Agent.
 
 ---
+clicks: false
+---
+
+# Alle Details: Tools × Autonomie-Dimensionen
+
+<AutonomyPivot />
+
+---
 layout: center
 ---
 
