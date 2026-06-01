@@ -36,6 +36,12 @@
         (Quellen-Übersicht) bereits auf dieses Recipe verwiesen — der Kreis
         schließt sich.
       </p>
+      <a
+        class="xref-link"
+        href="https://geggo98.github.io/slides/20260428-java-null-pointer/"
+      >
+        → geggo98.github.io/slides/20260428-java-null-pointer/
+      </a>
     </div>
   </div>
 </template>
@@ -103,5 +109,19 @@ code {
   margin: 6px 0 0;
   font-style: italic;
   line-height: 1.55;
+}
+.xref-link {
+  align-self: flex-start;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-info);
+  text-decoration: none;
+  line-height: 1.4;
+  word-break: break-all;
+}
+.xref-link:hover {
+  text-decoration: underline;
 }
 </style>
