@@ -1,0 +1,379 @@
+{
+  "title": "Auto-Modi: Klassifikator-Gates im Vergleich",
+  "note": "Wiederverwendbare Pivot-Daten (Klon von autonomy-pivot.json): dimensions × tools. Jede Zelle {teaser, detail, mark}. mark ∈ yes|no|partial|none → ✓/✗/◐. Faktenstand ~Mai/Juni 2026; Klassifikator-Internals bei Cursor nicht öffentlich (Inferenz).",
+  "dimensions": [
+    {
+      "key": "gate",
+      "label": "Gate-Typ",
+      "short": "wie entschieden"
+    },
+    {
+      "key": "begriff",
+      "label": "„Auto\"-Begriff",
+      "short": "wie heißt es"
+    },
+    {
+      "key": "richter",
+      "label": "Richter-Modell",
+      "short": "separates LLM?"
+    },
+    {
+      "key": "sandbox",
+      "label": "Sandbox",
+      "short": "OS-Primitive"
+    },
+    {
+      "key": "architektur",
+      "label": "Architektur",
+      "short": "wo sitzt das Gate"
+    },
+    {
+      "key": "eskalation",
+      "label": "Eskalations-Trigger",
+      "short": "wann Stopp"
+    },
+    {
+      "key": "sicherheit",
+      "label": "Sicherheits-Aussage",
+      "short": "Boundary?"
+    }
+  ],
+  "tools": [
+    {
+      "key": "cursor",
+      "name": "Cursor",
+      "color": "#5B8DEF",
+      "cells": {
+        "gate": {
+          "teaser": "Klassifikator (block)",
+          "detail": "Dreistufig: Allowlist → Sandbox → Klassifikator. Nur was nicht allowlisted UND nicht sandboxbar ist, geht an den LLM-Klassifikator (allow/block). Gilt für Shell-, MCP- und Fetch-Calls. Auto-Review ist seit Cursor 3.6 der Standard-Run-Mode.",
+          "mark": "yes"
+        },
+        "begriff": {
+          "teaser": "Auto-Review (Run-Mode)",
+          "detail": "Vorsicht: „Auto-Review\" ist der Run-Mode mit Gate. Das separate „Auto\" bei Cursor ist dagegen MODELLAUSWAHL, kein Run-Mode — häufige Verwechslung. Codex nutzt denselben Namen „Auto-review\" für einen anderen Mechanismus.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "Classifier-Subagent",
+          "detail": "Separater, nicht-deterministischer Classifier-Subagent. Verwendetes Modell, Latenz und genaue Konfiguration gibt Cursor NICHT öffentlich preis (Inferenz). Steuerbar über autoRun-Custom-Instructions in permissions.json. Token derzeit kostenlos.",
+          "mark": "yes"
+        },
+        "sandbox": {
+          "teaser": "Seatbelt / Landlock+seccomp",
+          "detail": "macOS: Apple Seatbelt (sandbox-exec). Linux: Landlock LSM + seccomp. Windows: Linux-Sandbox via WSL2. Default: FS-Lesen global, Schreiben nur Workspace + /tmp, kein Netz ohne Freigabe. Netz-Allowlist in sandbox.json (default-deny).",
+          "mark": "yes"
+        },
+        "architektur": {
+          "teaser": "Sandbox-first",
+          "detail": "Erst isolieren, dann — nur für Nicht-Isolierbares — klassifizieren. Die OS-Sandbox trägt die Hauptlast, der Klassifikator ist der LETZTE Schritt. Laut Cursor stoppen sandboxed Agents ~40 % seltener (Vendor-Zahl).",
+          "mark": "yes"
+        },
+        "eskalation": {
+          "teaser": "nicht-allowlisted + nicht-sandboxbar",
+          "detail": "Eskaliert wird ein Call, der weder die Allowlist matcht noch in der Sandbox laufen kann. Auf Plattformen ohne Sandbox-Schritt geht der Call direkt zum Klassifikator. Outcomes: allow / try a different approach / ask for approval.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "Cursor wörtlich: „Treat Auto-review as best-effort convenience, not a security boundary.\" Allowlist „best-effort — bypasses are possible\". Bekannte Bypässe: Shell-Builtins (CVE-2026-22708), CurXecute, MCPoison. „Run Everything\" nie nutzen.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "claude-code",
+      "name": "Claude Code",
+      "color": "#C96442",
+      "cells": {
+        "gate": {
+          "teaser": "Klassifikator (primär)",
+          "detail": "Reihenfolge: Allow/Deny-Regeln → Read-only + In-Project-Edits auto-approved → alles andere zum Klassifikator → Block → Claude versucht Alternative. Der Klassifikator ist der PRIMÄRE Mechanismus, nicht der letzte Schritt. Research Preview, v2.1.83+.",
+          "mark": "yes"
+        },
+        "begriff": {
+          "teaser": "Auto Mode",
+          "detail": "„Auto Mode\" bzw. Permission-Modus auto. Nicht zu verwechseln mit acceptEdits (Edits ohne Klassifikator) oder bypassPermissions (gar keine Checks). Shift+Tab erreicht auto NICHT — Opt-in nötig.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "Sonnet 4.6, reasoning-blind",
+          "detail": "Transcript-Classifier auf Sonnet 4.6 (unabhängig vom Session-Modell). 2 Stufen: Single-Token-Yes/No, dann Chain-of-Thought nur bei Flag. Reasoning-blind: sieht NUR User-Msgs, Tool-Calls, CLAUDE.md — Claudes eigene Messages und Tool-Results werden gestrippt.",
+          "mark": "yes"
+        },
+        "sandbox": {
+          "teaser": "optional (Seatbelt / bubblewrap)",
+          "detail": "KEINE obligatorische Sandbox im Auto Mode. Sandboxing ist separat aktivierbar (Seatbelt / bubblewrap) und wird von Anthropic empfohlen — aber es ist nicht das Default-Rückgrat. Identische Isolations-Empfehlung wie für --dangerously-skip-permissions.",
+          "mark": "partial"
+        },
+        "architektur": {
+          "teaser": "Trust-Scope-first",
+          "detail": "Statt zu isolieren, wird eine Vertrauensgrenze VORDEKLARIERT: Working Directory + Git-Remotes + autoMode.environment (Prosa-Beschreibungen vertrauenswürdiger Repos/Buckets/Domains). Alles nicht Gelistete ist potenzielles Exfiltrations-Ziel.",
+          "mark": "yes"
+        },
+        "eskalation": {
+          "teaser": "außerhalb Trust-Scope + Block-Kategorien",
+          "detail": "Geblockt: curl|bash, Daten an externe Endpoints, Prod-Deploys/Migrationen, Massen-Löschung auf Cloud-Storage, IAM-/Repo-Permissions, Force-Push/Push auf main. Tier-2-Blindspot: In-Project-Edits erreichen den Klassifikator NICHT. Fallback nach 3 in Folge / 20 total.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "Anthropic: „reduces prompts but does not guarantee safety.\" FNR 17 % auf realen overeager-Aktionen (n=52); unabhängiger AmPermBench: 81 % auf adversarialen Prompts (36,8 % der Aktionen erreichen das Gate per Design nie). Primärer Failure-Mode: Consent-Scoping.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "codex",
+      "name": "OpenAI Codex",
+      "color": "#10A37F",
+      "cells": {
+        "gate": {
+          "teaser": "Klassifikator (optional)",
+          "detail": "Auto-review (approvals_reviewer = auto_review) routet eskalations-pflichtige Approvals an einen separaten Reviewer-Agenten statt an den Menschen. „A reviewer swap, not a permission grant\": erweitert KEINE writable_roots, aktiviert KEIN Netz. Nur bei interaktiven Approvals (on-request).",
+          "mark": "yes"
+        },
+        "begriff": {
+          "teaser": "Auto-review / Full Auto",
+          "detail": "„Auto-review\" = der Reviewer-Subagent (verwandt, aber technisch verschieden von Cursors gleichnamigem Feature). „Full Auto\" = --ask-for-approval on-request --sandbox workspace-write (Netz bleibt aus). Drei Sandbox-Modi, drei Approval-Policies.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "codex-auto-review (Guardian)",
+          "detail": "Dediziertes Modell-Slug codex-auto-review (GPT-5.4-Klasse, „Thinking, low reasoning\"), entkoppelt vom Hauptmodell. Default-Reviewer-Policy ist Open Source (core/src/guardian/policy.md); Enterprises überschreiben via guardian_policy_config.",
+          "mark": "yes"
+        },
+        "sandbox": {
+          "teaser": "Seatbelt / bubblewrap",
+          "detail": "macOS Seatbelt, Linux/WSL2 via bubblewrap, Windows native Sandbox. Drei Modi: read-only, workspace-write (Default, Netz aus), danger-full-access. .git/ und .codex/ immer gesperrt. Cloud-Codex: isolierte Container, Agent-Phase offline.",
+          "mark": "yes"
+        },
+        "architektur": {
+          "teaser": "Sandbox-first (+ Klassifikator)",
+          "detail": "Hybrid: sandbox-first wie Cursor, plus optionaler Klassifikator-Reviewer wie Claude Code darübergelegt. Zwei Kontrollebenen wirken zusammen: Sandbox-Mode (was erlaubt ist) + Approval-Policy (wann gefragt wird).",
+          "mark": "partial"
+        },
+        "eskalation": {
+          "teaser": "Sandbox-Boundary-Überschreitung",
+          "detail": "Geprüft werden Shell-Calls mit Sandbox-Eskalation, geblockte Netz-Requests, Edits außerhalb writable roots, MCP-Calls mit Approval-Annotation, Browser-Zugriff auf neue Domains. Bei never gibt es nichts zu reviewen. Headless: Abbruch bei wiederholtem Block.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "OpenAI: „Auto-review should not be treated as a guarantee of security. … we identified cases where Auto-review could be misled into approving commands without user approval.\" Injection-Recall 99,3 % (3 Kat., synthetisch) → 90,2 % über alle Kategorien.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "gemini-cli",
+      "name": "Gemini CLI",
+      "color": "#4285F4",
+      "cells": {
+        "gate": {
+          "teaser": "statisch (Policy-Engine)",
+          "detail": "KEIN Klassifikator. Approval-Modi default / auto_edit / plan / yolo. Plus Policy-Engine (~/.gemini/policies/ mit toolName/commandPrefix/decision/priority) und coreTools-Allowlist. Rein regelbasiert/deterministisch.",
+          "mark": "no"
+        },
+        "begriff": {
+          "teaser": "YOLO",
+          "detail": "yolo via --yolo / -y / --approval-mode=yolo / Ctrl+Y / GEMINI_YOLO_MODE=true. Reines Prompt-Skippen — alles wird auto-ausgeführt, kein semantisches Urteil. Admin-Lockdown via disableYoloMode.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "keiner",
+          "detail": "Kein urteilendes LLM im Loop. Entscheidungen fallen durch statisches Pattern-Matching der Policy-Engine und Folder-Trust — nicht durch Kontextbewertung.",
+          "mark": "no"
+        },
+        "sandbox": {
+          "teaser": "Docker (optional)",
+          "detail": "GEMINI_SANDBOX: Docker-Image, optional; bei YOLO per Default aktiv. Breiteste Backend-Auswahl im Vergleich (Seatbelt, Docker, Podman, LXC). Aber: keine kontextsensitive Freigabe.",
+          "mark": "partial"
+        },
+        "architektur": {
+          "teaser": "—",
+          "detail": "Weder Sandbox-first noch Trust-Scope-first im Sinne eines Gate-LLM. Statische Policies + optionale Sandbox + Folder-Trust. Kein semantischer Wächter.",
+          "mark": "none"
+        },
+        "eskalation": {
+          "teaser": "Pattern-Match auf Tool/Kommando",
+          "detail": "Eskalation/Block folgt aus Policy-Regeln (priority) und Allowlist-Treffern — deterministisch, kontextblind. Kein „try a different approach\" durch einen Richter.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "Google-Advisory (gefixt v0.39.1): früheres --yolo ignorierte die Allowlist KOMPLETT und führte alle Calls inkl. run_shell_command aus → RCE über Prompt Injection in CI; zusätzlich CVSS-10-Folder-Trust-RCE im Headless-Mode. Nie --yolo mit untrusted Input.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "windsurf",
+      "name": "Windsurf",
+      "color": "#09B6A2",
+      "cells": {
+        "gate": {
+          "teaser": "statisch (Listen)",
+          "detail": "KEIN Klassifikator. Vier Auto-Execution-Levels: Disabled / Allowlist Only / Auto / Turbo. Steuerung über cascadeCommandsAllowList / ...DenyList; Deny hat Vorrang. Rein listenbasiert.",
+          "mark": "no"
+        },
+        "begriff": {
+          "teaser": "Turbo",
+          "detail": "„Turbo\" = alle Terminal-Kommandos auto-ausführen außer Deny-Liste. „Auto\" führt Kommandos auto aus. Workflow-Annotationen // turbo / // turbo-all. Kein semantisches Urteil — nur Listen-Match.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "keiner",
+          "detail": "Kein Gating-LLM. Entscheidung allein durch Allow/Deny-Listen; Team-/Enterprise-Admins setzen ein Maximum-Level und team-weite Listen (gemerged mit User-Listen).",
+          "mark": "no"
+        },
+        "sandbox": {
+          "teaser": "keine (OS)",
+          "detail": "Keine OS-Sandbox-Primitive im Vergleichssinn; .codeiumignore beschränkt Dateizugriffe. Turbo-Mode ist Auto-Execution, keine Isolation.",
+          "mark": "no"
+        },
+        "architektur": {
+          "teaser": "—",
+          "detail": "Kein Gate-LLM, keine kernel-durchgesetzte Sandbox als Rückgrat — rein statisches Allow/Deny mit Admin-Deckelung.",
+          "mark": "none"
+        },
+        "eskalation": {
+          "teaser": "Deny-Listen-Match",
+          "detail": "Ausführung wird nur durch Treffer auf der Deny-Liste verhindert; alles andere läuft im Turbo-Mode automatisch. Kontextbewertung findet nicht statt.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "Statische Allow/Deny-Listen sind nachweislich umgehbar und nicht kontextsensitiv. Sie schützen nicht vor Prompt-Injection-getriebenen, listenkonformen Aktionen.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "junie",
+      "name": "JetBrains Junie",
+      "color": "#F25C54",
+      "cells": {
+        "gate": {
+          "teaser": "statisch (Allowlist)",
+          "detail": "KEIN Klassifikator. Default fragt vor Bash/Datei-Ops/MCP. Bevorzugt: Action Allowlist (regex-basiert, ~/.junie/allowlist.json mit fileEditing/executables/mcpTools/readOutsideProject). „Allow similar commands\" generiert eine Regex.",
+          "mark": "no"
+        },
+        "begriff": {
+          "teaser": "Brave Mode",
+          "detail": "„Brave Mode\" = Ausführung ohne Approval (/brave bzw. Ctrl+B). JetBrains rät ausdrücklich davon ab. Reines Abschalten der Rückfrage, kein Urteil. .aiignore schützt Dateiinhalte (außer in Brave Mode).",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "keiner",
+          "detail": "Kein urteilendes LLM. Safe/Sensitive-Klassifikation ist regex-/regelbasiert, kein LLM-Kontext-Urteil. Entscheidung über statische Allowlist + defaultBehavior: ask.",
+          "mark": "no"
+        },
+        "sandbox": {
+          "teaser": "keine (Allowlist)",
+          "detail": "Keine OS-Sandbox-Primitive; Isolation über Regex-Allowlist pro Kommando und .aiignore. Air (separates Produkt) isoliert via Docker + Worktrees — das ist aber nicht Junies Permission-Gate.",
+          "mark": "no"
+        },
+        "architektur": {
+          "teaser": "—",
+          "detail": "Statisches Allowlist-Gating ohne Gate-LLM und ohne kernel-durchgesetzte Sandbox als Default-Rückgrat.",
+          "mark": "none"
+        },
+        "eskalation": {
+          "teaser": "Allowlist-Miss → ask",
+          "detail": "Was die Regex-Allowlist nicht matcht, löst (außer in Brave Mode) eine Rückfrage aus. Deterministisch, kontextblind; kein Reviewer-Subagent.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "JetBrains rät vom Brave Mode ausdrücklich ab und empfiehlt die Allowlist. Regex-Allowlists sind statisch und durch listenkonforme oder injection-getriebene Aktionen umgehbar.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "opencode",
+      "name": "OpenCode",
+      "color": "#E5A50A",
+      "cells": {
+        "gate": {
+          "teaser": "statisch (granular)",
+          "detail": "KEIN Klassifikator. Rein statisches, sehr granulares System: allow/ask/deny pro Tool, Wildcard-/Glob-Matching gegen Tool-Namen (auch MCP: mymcp_*), „last matching rule wins\". Per-Agent-Override. .env per Default deny.",
+          "mark": "no"
+        },
+        "begriff": {
+          "teaser": "(kein Auto-Begriff)",
+          "detail": "OpenCode hat keinen beworbenen „Auto/YOLO\"-Run-Mode. Drei UI-Outcomes bei ask: once / always (Session) / reject. Autonomie entsteht durch allow-Regeln, nicht durch einen Modus-Schalter.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "keiner",
+          "detail": "Kein Gating-LLM. Entscheidung allein durch Glob-Pattern-Matching der Permission-Regeln. (Bekannter SDK-Bug, Issue #6396: Deny in custom Agents via SDK ignoriert.)",
+          "mark": "no"
+        },
+        "sandbox": {
+          "teaser": "keine (Permissions)",
+          "detail": "Keine eingebaute OS-Sandbox; Schutz rein über das granulare Permission-System und Per-Agent-MCP-Toggle. Isolation ist Sache des Nutzers (Container).",
+          "mark": "no"
+        },
+        "architektur": {
+          "teaser": "—",
+          "detail": "Granulares statisches Allow/Ask/Deny ohne Gate-LLM und ohne Sandbox-Rückgrat. Am granularsten regelbasiert von allen.",
+          "mark": "none"
+        },
+        "eskalation": {
+          "teaser": "Glob-Match → ask/deny",
+          "detail": "Eskalation/Block folgt aus dem zutreffenden Glob-Pattern (last matching rule wins). doom_loop / external_directory per Default ask. Deterministisch, kontextblind.",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary",
+          "detail": "Statische Regeln sind deterministisch und auditierbar, aber kontextblind und durch listenkonforme Aktionen umgehbar — kein semantischer Schutz vor Prompt-Injection-getriebenen, erlaubten Calls.",
+          "mark": "no"
+        }
+      }
+    },
+    {
+      "key": "pi",
+      "name": "Pi",
+      "color": "#9B59B6",
+      "cells": {
+        "gate": {
+          "teaser": "keins (Default)",
+          "detail": "Kern BEWUSST ohne Permission-Mechanik. Pi läuft per Default in vollem YOLO-Mode mit uneingeschränktem FS-Zugriff und ohne Vorabprüfung von Bash-Kommandos. Gating nur als optionale Community-Extension — ebenfalls statisch, kein LLM.",
+          "mark": "no"
+        },
+        "begriff": {
+          "teaser": "YOLO (Default)",
+          "detail": "Pi-Doku: „No permission popups. Run in a container, or build your own confirmation flow with extensions.\" YOLO ist nicht ein Modus, sondern der Grundzustand.",
+          "mark": "none"
+        },
+        "richter": {
+          "teaser": "keiner",
+          "detail": "Kein Gating-LLM. Optionale Extensions (pi-permission-system / pi-permissions) bauen OpenCode-Style allow/ask/deny + Bash-Wildcard + fail-closed nach — statisch/deterministisch, kein Klassifikator.",
+          "mark": "no"
+        },
+        "sandbox": {
+          "teaser": "keine (Container empfohlen)",
+          "detail": "Keine eingebaute Sandbox. Empfehlung des Autors: in einem Container laufen lassen. Isolation ist vollständig Sache des Nutzers.",
+          "mark": "no"
+        },
+        "architektur": {
+          "teaser": "—",
+          "detail": "Bewusst kein Gate und kein Sandbox-Rückgrat. Zechner: Sicherheitsmaßnahmen anderer Agenten seien „mostly security theater. As soon as your agent can write and run code, it's pretty much game over.\"",
+          "mark": "none"
+        },
+        "eskalation": {
+          "teaser": "keiner (Default)",
+          "detail": "Im Default-Zustand keine Eskalation — alles läuft. Erst die Community-Extension führt statische ask/deny-Eskalation ein (fail-closed).",
+          "mark": "none"
+        },
+        "sicherheit": {
+          "teaser": "kein Boundary (explizit)",
+          "detail": "Am ehrlichsten: Pi verspricht gar keinen Schutz und verweist auf Container. Die These „game over, sobald der Agent Code schreibt und ausführt\" ist die radikalste Variante der Vendor-Selbstaussage.",
+          "mark": "no"
+        }
+      }
+    }
+  ]
+}

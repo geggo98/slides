@@ -386,6 +386,60 @@ clicks: false
 <AutonomyPivot />
 
 ---
+
+# Auto-Modi: Wer entscheidet pro Tool-Call?
+
+»Auto« heißt bei jedem Tool etwas anderes — nur **drei** beinhalten ein echtes Urteil: ein _separates_ LLM entscheidet pro Call **allow / block / eskalieren** (reasoning-blind, damit der Hauptagent den Wächter nicht überredet).
+
+| Tool / Gruppe                                 | Echtes Gate-LLM               | Architektur                           |
+| --------------------------------------------- | ----------------------------- | ------------------------------------- |
+| **Cursor** (Auto-Review)                      | ✓ Classifier-Subagent         | Sandbox-first                         |
+| **Claude Code** (Auto Mode)                   | ✓ Sonnet 4.6, reasoning-blind | Trust-Scope-first                     |
+| **OpenAI Codex** (Auto-review)                | ✓ Guardian-Subagent           | Sandbox-first **+** Reviewer (Hybrid) |
+| **Gemini · Windsurf · Junie · OpenCode · Pi** | ✗ statische Allow/Deny        | — (YOLO/Turbo/Brave = Rückfrage aus)  |
+
+**Sandbox-first** (Cursor/Codex): erst isolieren, Klassifikator zuletzt. **Trust-Scope-first** (Claude): Vertrauensgrenze in Prosa (`autoMode.environment`), Klassifikator primär. → volle Matrix nächste Folie.
+
+---
+clicks: false
+---
+
+# Auto-Modi: Klassifikator-Gates im Detail
+
+<AutoModeGates />
+
+---
+
+# Wie sicher ist der Spaß? — Kein Sicherheits-Boundary
+
+**Alle Anbieter sagen es selbst.** Cursor wörtlich: _„best-effort convenience, not a security boundary."_ Der Klassifikator ist ein täuschbares LLM, nicht-deterministisch.
+
+| Quelle                      | Workload                   | False-Negative-Rate |
+| --------------------------- | -------------------------- | ------------------- |
+| **Anthropic** (n=52)        | reale „overeager"-Aktionen | **17 %**            |
+| **AmPermBench** (HKUST/ETH) | _adversariale_ Prompts     | **81 %**            |
+
+**Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → Details im _Bonus_.
+
+---
+
+# Konsequenz: Klassifikator + Sandbox + Least-Privilege — nie allein
+
+Primärer Failure-Mode (Anthropic): **Consent-Scoping** — der Klassifikator findet „approval-shaped evidence" und verkennt den echten Blast-Radius. **judge = defendant.**
+
+<div class="px-4 py-2 text-sm border-l-4 border-red-500 bg-red-500/10 rounded mb-3">
+
+**PocketOS, 25.04.2026:** Ein Cursor-Agent löschte Produktions-DB **und** Backups in _einem_ Call (~9 s) — trotz Plan-Mode und „Destructive Guardrails". (→ _Clinejection-Bonus_)
+
+</div>
+
+**Drei deterministische Hebel** — nicht probabilistisch:
+
+1. **Trifecta brechen:** Default-deny-Egress + Domain-Allowlist (Exfiltration kappen).
+2. **Hartes Deny statt Prosa** (`permissions.deny` / `hard_deny`) — überlebt Compaction.
+3. **Agent ohne echte Secrets** in Container/VM (Willison: OS-Sandbox > KI-Schutz).
+
+---
 layout: center
 ---
 
@@ -422,6 +476,65 @@ clicks: 1
 # Clinejection -- Willisons "Lethal Trifecta"
 
 <ClinejectionTrifecta />
+
+---
+
+# Claude Code Auto Mode — unter der Haube
+
+Zwei Verteidigungs-Layer, ein deklarierter Trust-Scope — und ein **blinder Fleck**.
+
+- **Input-Layer:** serverseitige **Prompt-Injection-Probe** scannt Tool-Outputs (Reads, Web-Fetches, Shell), _bevor_ sie in den Kontext gelangen → „treat as suspect".
+- **Output-Layer:** **2-stufiger Klassifikator auf Sonnet 4.6** — Stufe 1 Single-Token-Yes/No (auf Blocken getrimmt), Stufe 2 Chain-of-Thought nur bei Flag. **Reasoning-blind:** sieht nur User-Msgs, Tool-Calls, `CLAUDE.md` — Claudes eigene Messages & Tool-_Results_ werden gestrippt.
+
+**Reihenfolge (erster Match):** Allow/Deny-Regeln → Read-only + **In-Project-Edits auto-approved** → Rest zum Klassifikator → Block → Claude versucht Alternative. _(Die sechs Permission-Modi: siehe Kapitel „Claude Code Permission Modes".)_
+
+<div class="mt-2 px-4 py-2 text-sm border-l-4 border-red-500 bg-red-500/10 rounded">
+
+**Tier-2-Blindspot:** In-Project-Datei-Edits laufen **ohne Klassifikator-Aufruf** — by design. Genau hier setzen die unabhängigen Stress-Tests an.
+
+</div>
+
+---
+
+# `autoMode` — Vertrauen in Prosa, Verbote in Stein
+
+Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex.
+
+| Feld              | Bedeutung                                       | Härte                 |
+| ----------------- | ----------------------------------------------- | --------------------- |
+| **`environment`** | vertrauenswürdige Repos/Buckets/Domains (Prosa) | was gilt als „extern" |
+| **`hard_deny`**   | unbedingte Boundary — ignoriert Intent & Allows | hart (v2.1.136+)      |
+| **`soft_deny`**   | destruktiv, aber per User-Intent aufhebbar      | weich                 |
+| **`allow`**       | Carve-out gegen zu strenge Built-in-Block-Regel | Ausnahme              |
+
+```json
+"autoMode": { "environment": ["$defaults",
+  "Trusted buckets: s3://acme-artifacts", "Trusted domains: *.corp.example.com"] }
+```
+
+<p class="!my-0 !leading-tight" style="font-size: 12px; opacity: 0.85;"><strong>Zwei Fallen:</strong> <code>defaultMode: "auto"</code> aus dem Repo wird <em>ignoriert</em> (ein Repo darf sich nicht selbst Auto Mode geben) · „don't push" im Chat überlebt <strong>keine</strong> Context-Compaction → für Garantien <code>permissions.deny</code> / <code>hard_deny</code>.</p>
+
+---
+
+# Sicherheit im Detail — Zahlen, Vorfälle, Bypässe
+
+<div style="font-size: 0.85em">
+
+| Quelle                       | Workload                   | Kennzahl                             |
+| ---------------------------- | -------------------------- | ------------------------------------ |
+| **Anthropic** (n=10.000)     | realer Traffic             | 0,4 % False-_Positive_               |
+| **Anthropic** (n=52)         | reale „overeager"-Aktionen | **17 %** False-Negative              |
+| **Anthropic** (n=1.000)      | synthetische Exfiltration  | 5,7 % FNR                            |
+| **AmPermBench** (unabhängig) | adversariale Prompts       | **81 %** FNR (70,3 % auf Sichtbarem) |
+| **OpenAI** (synthetisch)     | Injection-Recall           | 99,3 % → **90,2 %** über alle Kat.   |
+
+</div>
+
+**Auch die deterministische Schicht hat Lücken:** Shell-Builtin-Bypass (`export`/`cd`/`eval` umgehen die Allowlist), CurXecute & MCPoison (MCP-Config-Tausch → RCE).
+
+<div class="mt-1 px-4 py-1 text-sm border-l-4 border-amber-500 bg-amber-500/10 rounded">
+<p class="!my-0 !leading-tight">Die Zahlen messen <strong>verschiedene Workloads</strong> — keine gemeinsame Skala; nur AmPermBench ist unabhängig, der Rest ist selbstberichtet.</p>
+</div>
 
 ---
 clicks: false
