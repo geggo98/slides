@@ -1444,6 +1444,414 @@
           "explanation": "Sie lohnt nur bei schwach gekoppelten Tasks mit kleinem Token-Budget; bei eng gekoppelten cross-cutting Refactors dominiert der Kontext-Sync-/Koordinations-Overhead, sodass die Gesamt-Token steigen und nur die Latenz sinkt."
         }
       ]
+    },
+    {
+      "id": "classifier-gate-which-tools",
+      "question": "Welche Aussagen dazu, welche Agenten ein echtes „zweites LLM als Richter\" (Klassifikator-Gate pro Tool-Call) haben, treffen zu?",
+      "difficulty": "medium",
+      "section": "Klassifikator-Gates",
+      "explanation": "Nur drei Agenten lassen ein SEPARATES LLM pro Tool-Call zwischen allow/block/eskalieren entscheiden: Cursor (Auto-Review), Claude Code (Auto Mode) und OpenAI Codex (Auto-review/Guardian). Alle drei trennen das urteilende vom handelnden Modell (reasoning-blind bzw. separater Subagent), damit der Hauptagent den Wächter nicht durch eigenes Reasoning überredet. Die übrigen (Gemini CLI, Windsurf, Junie, OpenCode, Pi) haben KEIN Gating-LLM — nur statische Allow/Deny-Regeln plus optionales OS-Sandboxing; ihr „Auto\"-Modus skippt nur die Rückfrage.",
+      "options": [
+        {
+          "id": "classifier-gate-which-tools-o0",
+          "text": "Cursor, Claude Code und OpenAI Codex haben je ein LLM, das pro Tool-Call ein Urteil (allow/block/eskalieren) fällt.",
+          "verdict": "true",
+          "explanation": "Genau diese drei trennen einen urteilenden Klassifikator vom handelnden Modell — alle anderen verglichenen Agenten nicht."
+        },
+        {
+          "id": "classifier-gate-which-tools-o1",
+          "text": "Gemini CLI im YOLO-Modus nutzt einen LLM-Klassifikator, um gefährliche Shell-Calls semantisch zu bewerten.",
+          "verdict": "false",
+          "explanation": "Gemini hat kein Gating-LLM — YOLO skippt nur die Rückfrage; Entscheidungen fallen über die statische Policy-Engine und Folder-Trust."
+        },
+        {
+          "id": "classifier-gate-which-tools-o2",
+          "text": "„Reasoning-blind\" bzw. ein separater Subagent soll verhindern, dass der Hauptagent den Wächter durch eigenes Reasoning überredet.",
+          "verdict": "true",
+          "explanation": "Die Trennung von Richter und Handelndem ist genau dafür da — der Wächter sieht nicht das Selbst-Rechtfertigungs-Reasoning des Hauptagenten."
+        },
+        {
+          "id": "classifier-gate-which-tools-o3",
+          "text": "OpenCode und Junie bewerten Tool-Calls über ein eingebautes Richter-LLM, nur ohne eigenen Modus-Namen.",
+          "verdict": "false",
+          "explanation": "Beide sind rein statisch: OpenCode per Glob-Pattern-Permissions, Junie per Regex-Allowlist — kein urteilendes LLM."
+        },
+        {
+          "id": "classifier-gate-which-tools-o4",
+          "text": "Pi liefert im Default-Zustand überhaupt kein Permission-Gate und verweist stattdessen auf Container-Isolation.",
+          "verdict": "true",
+          "explanation": "Pis Kern ist bewusst ohne Permission-Mechanik; ein statisches Gate gibt es nur als optionale Community-Extension."
+        },
+        {
+          "id": "classifier-gate-which-tools-o5",
+          "text": "Ein Klassifikator-Gate urteilt über Intent, eine OS-Sandbox erzwingt Boundaries — das sind zwei verschiedene Schichten.",
+          "verdict": "true",
+          "explanation": "Der Klassifikator fragt „passt die Aktion zum Auftrag?\", die Sandbox „ist dieser Syscall physisch möglich?\" — Defense-in-Depth kombiniert beides."
+        },
+        {
+          "id": "classifier-gate-which-tools-o6",
+          "text": "Ob ein „Auto\"-Modus tatsächlich ein semantisches Urteil enthält, hängt vom konkreten Agenten ab.",
+          "verdict": "depends",
+          "explanation": "Bei Cursor/Claude/Codex ja (Klassifikator), bei Gemini/Windsurf/Junie/OpenCode/Pi nein (bloßes Prompt-Skippen) — der Begriff allein sagt nichts."
+        }
+      ]
+    },
+    {
+      "id": "auto-terminology-collision",
+      "question": "Welche Aussagen zur Begriffs-Kollision rund um „Auto\"/„Auto-Review\" treffen zu?",
+      "difficulty": "medium",
+      "section": "Auto-Modi",
+      "explanation": "Die „Auto\"-Begriffe meinen Unterschiedliches: „Auto-Review\" existiert bei ZWEI Anbietern (Cursor und OpenAI Codex) für verwandte, aber technisch verschiedene Mechanismen. Cursors separates „Auto\" ist dagegen MODELLAUSWAHL, kein Run-Mode. „Auto Mode\" (Claude), „YOLO\" (Gemini/Pi), „Turbo\" (Windsurf), „Brave\" (Junie) und „Full Auto\" (Codex) bezeichnen jeweils Eigenes — nur drei davon enthalten ein Klassifikator-Urteil.",
+      "options": [
+        {
+          "id": "auto-terminology-collision-o0",
+          "text": "„Auto-Review\" gibt es bei Cursor und bei OpenAI Codex für technisch verschiedene Mechanismen.",
+          "verdict": "true",
+          "explanation": "Gleicher Name, verschiedene Sache: Cursor-Run-Mode-Gate vs. Codex-Reviewer-Subagent („Guardian\")."
+        },
+        {
+          "id": "auto-terminology-collision-o1",
+          "text": "Cursors „Auto\" bezeichnet einen autonomen Run-Mode ohne Rückfragen.",
+          "verdict": "false",
+          "explanation": "Cursors „Auto\" ist MODELLAUSWAHL, nicht der Run-Mode. Der Run-Mode mit Gate heißt „Auto-Review\"."
+        },
+        {
+          "id": "auto-terminology-collision-o2",
+          "text": "„YOLO\" (Gemini/Pi), „Turbo\" (Windsurf) und „Brave\" (Junie) sind bloßes Prompt-Skippen, kein semantisches Urteil.",
+          "verdict": "true",
+          "explanation": "Diese Modi schalten nur die Bestätigung ab; keiner ruft einen urteilenden Klassifikator auf."
+        },
+        {
+          "id": "auto-terminology-collision-o3",
+          "text": "„Full Auto\" bei Codex bedeutet vollen Zugriff inklusive aktiviertem Netzwerk.",
+          "verdict": "false",
+          "explanation": "„Full Auto\" = on-request + workspace-write, das Netzwerk bleibt AUS. Vollzugang ist erst danger-full-access + approval_policy=never."
+        },
+        {
+          "id": "auto-terminology-collision-o4",
+          "text": "„Auto Mode\" bei Claude Code und „Auto-Review\" bei Cursor bezeichnen denselben Mechanismus.",
+          "verdict": "false",
+          "explanation": "Trust-Scope-first (Claude, Klassifikator primär) vs. Sandbox-first (Cursor, Klassifikator als letzter Schritt) — verwandt im Ziel, verschieden im Aufbau."
+        },
+        {
+          "id": "auto-terminology-collision-o5",
+          "text": "Aus dem bloßen Namen eines „Auto\"-Modus lässt sich nicht ableiten, ob ein Klassifikator beteiligt ist.",
+          "verdict": "true",
+          "explanation": "Man muss den Mechanismus prüfen: nur Cursor-Auto-Review, Claude-Auto-Mode und Codex-Auto-review enthalten ein Gate-LLM."
+        },
+        {
+          "id": "auto-terminology-collision-o6",
+          "text": "Ob „Auto-Review\" das richtige Werkzeug ist, hängt davon ab, welches Tool gemeint ist.",
+          "verdict": "depends",
+          "explanation": "Cursor-Auto-Review (Sandbox + Gate als letzter Schritt) und Codex-Auto-review (Reviewer-Swap ohne Rechteerweiterung) leisten Unterschiedliches — der Name allein entscheidet nicht."
+        }
+      ]
+    },
+    {
+      "id": "sandbox-first-vs-trust-scope",
+      "question": "Welche Aussagen zur Architektur-Achse „Sandbox-Isolation-first\" (Cursor/Codex) vs. „Trust-Scope-first\" (Claude Code) treffen zu?",
+      "difficulty": "hard",
+      "section": "Klassifikator-Gates",
+      "explanation": "Cursor und Codex sind Sandbox-first: riskante Calls werden per OS-Sandbox (Seatbelt/Landlock+seccomp) isoliert, und der Klassifikator ist der LETZTE Schritt nur für Nicht-Isolierbares. Claude Code ist Trust-Scope-first: KEINE obligatorische Sandbox im Auto Mode, stattdessen eine vordeklarierte Vertrauensgrenze (Working Directory + Git-Remotes + autoMode.environment in Prosa), und der Klassifikator ist der PRIMÄRE Mechanismus. Codex ist ein Hybrid (sandbox-first plus optionaler Reviewer). Fürs Containment schlägt Sandbox-first den Klassifikator-first.",
+      "options": [
+        {
+          "id": "sandbox-first-vs-trust-scope-o0",
+          "text": "Bei Cursor trägt die OS-Sandbox die Hauptlast, und der Klassifikator läuft erst für das, was nicht isolierbar ist.",
+          "verdict": "true",
+          "explanation": "Reihenfolge Allowlist → Sandbox → Klassifikator; der Klassifikator ist der letzte Schritt, nicht das Rückgrat."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o1",
+          "text": "Claude Code erzwingt im Auto Mode eine obligatorische OS-Sandbox als Default-Rückgrat.",
+          "verdict": "false",
+          "explanation": "Im Auto Mode gibt es KEINE obligatorische Sandbox; sie ist optional/empfohlen. Das Rückgrat ist der Klassifikator plus deklarierter Trust-Scope."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o2",
+          "text": "autoMode.environment deklariert die Vertrauensgrenze in Prosa — was nicht gelistet ist, gilt als potenzielles Exfiltrations-Ziel.",
+          "verdict": "true",
+          "explanation": "environment beschreibt vertrauenswürdige Repos/Buckets/Domains in Prosa (kein Regex); alles Ungelistete ist „extern\"."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o3",
+          "text": "Codex ist ein Hybrid: sandbox-first wie Cursor, plus optional ein Klassifikator-Reviewer wie Claude Code.",
+          "verdict": "true",
+          "explanation": "Zwei Kontrollebenen wirken zusammen — Sandbox-Mode (was erlaubt ist) und Auto-review als Reviewer-Swap (wer eskalations-pflichtige Calls prüft)."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o4",
+          "text": "Cursor und Claude Code teilen sich dieselben Sandbox-Primitive (Seatbelt bzw. Landlock+seccomp).",
+          "verdict": "true",
+          "explanation": "Beide nutzen dieselben OS-Primitive — der Unterschied liegt nicht in der Technik, sondern darin, ob die Sandbox Default-Rückgrat ist."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o5",
+          "text": "Für deterministisches Containment ist Klassifikator-first dem Sandbox-first überlegen.",
+          "verdict": "false",
+          "explanation": "Umgekehrt: Eine kernel-durchgesetzte Sandbox ist deterministisch, der Klassifikator nicht — fürs Containment schlägt Sandbox-first."
+        },
+        {
+          "id": "sandbox-first-vs-trust-scope-o6",
+          "text": "Ob Trust-Scope-first oder Sandbox-first besser passt, hängt vom Einsatzkontext ab.",
+          "verdict": "depends",
+          "explanation": "Viel vertrauenswürdige interne Infra mit vielen Repos/Buckets → Claude mit gepflegtem environment (plus Sandbox); maximale deterministische Kontrolle → Cursor/Codex sandbox-first."
+        }
+      ]
+    },
+    {
+      "id": "tier2-blindspot",
+      "question": "Welche Aussagen zum „Tier-2-Blindspot\" von Claude Code Auto Mode und zur Differenz der FNR-Zahlen treffen zu?",
+      "difficulty": "hard",
+      "section": "Permission-Sicherheit",
+      "explanation": "Anthropic bestätigt wörtlich, dass Datei-Writes/-Edits INNERHALB des Projektverzeichnisses ohne Klassifikator-Aufruf erlaubt werden (by design) — der Tier-2-Blindspot. Der unabhängige AmPermBench (HKUST/ETH) misst 81 % End-to-End-FNR auf adversarialen Prompts, weil 36,8 % aller zustandsändernden Aktionen (In-Project-Edits) den Klassifikator per Design nie erreichen; selbst auf den Aktionen, die er sieht, bleibt 70,3 % FNR. Anthropics eigene 17 % stammen aus einer anderen (realen, kuratierten n=52) Workload — die Autoren betonen, das sei kein Widerspruch, sondern eine andere Last. Die Zahlen sind nicht 1:1 vergleichbar; nur AmPermBench ist unabhängig.",
+      "options": [
+        {
+          "id": "tier2-blindspot-o0",
+          "text": "Datei-Edits innerhalb des Projektverzeichnisses laufen im Auto Mode ohne Klassifikator-Aufruf.",
+          "verdict": "true",
+          "explanation": "Anthropic bestätigt das wörtlich — In-Project-File-Writes/-Edits sind ohne Klassifikator-Call erlaubt (Tier-2-Blindspot)."
+        },
+        {
+          "id": "tier2-blindspot-o1",
+          "text": "Die 81 % FNR von AmPermBench widerlegen Anthropics 17 % als geschönt.",
+          "verdict": "false",
+          "explanation": "Beide messen verschiedene Workloads (adversarial vs. real-kuratiert, n=52); die Autoren selbst nennen es ausdrücklich keinen Widerspruch."
+        },
+        {
+          "id": "tier2-blindspot-o2",
+          "text": "Ein wesentlicher Treiber der hohen End-to-End-FNR ist, dass ~37 % der zustandsändernden Aktionen das Gate per Design nie erreichen.",
+          "verdict": "true",
+          "explanation": "36,8 % der Aktionen (In-Project-Edits) umgehen den Klassifikator strukturell — sie können gar nicht geblockt werden."
+        },
+        {
+          "id": "tier2-blindspot-o3",
+          "text": "Auf den Aktionen, die der Klassifikator tatsächlich sieht, liegt die FNR nahe null.",
+          "verdict": "false",
+          "explanation": "Auch dort misst AmPermBench 70,3 % FNR (bei 31,9 % FPR) auf der adversarialen Workload — nicht nahe null."
+        },
+        {
+          "id": "tier2-blindspot-o4",
+          "text": "Von den drei FNR-Quellen ist nur AmPermBench unabhängig; Anthropic- und OpenAI-Zahlen sind selbstberichtet.",
+          "verdict": "true",
+          "explanation": "AmPermBench stammt von HKUST/ETH; die Vendor-Zahlen sind self-reported und messen jeweils andere Stichproben."
+        },
+        {
+          "id": "tier2-blindspot-o5",
+          "text": "Eine harte Deny-Regel (permissions.deny / hard_deny) greift auch im Tier-2-Blindspot, weil sie vor dem Klassifikator wirkt.",
+          "verdict": "true",
+          "explanation": "Deny-Regeln und hard_deny lösen vor der Klassifikator-Stufe auf — sie sind nicht auf den Klassifikator-Call angewiesen."
+        },
+        {
+          "id": "tier2-blindspot-o6",
+          "text": "Ob 17 % FNR akzeptabel sind, hängt vom Vergleichsmaßstab ab.",
+          "verdict": "depends",
+          "explanation": "Anthropic selbst: gegenüber --dangerously-skip-permissions eine deutliche Verbesserung; gegenüber sorgfältigem manuellem Approval eher eine Verschlechterung."
+        }
+      ]
+    },
+    {
+      "id": "classifier-not-a-boundary",
+      "question": "Welche Aussagen zur These „Klassifikator-Gates sind kein Sicherheits-Boundary\" treffen zu?",
+      "difficulty": "medium",
+      "section": "Permission-Sicherheit",
+      "explanation": "Alle Anbieter sagen es selbst: Cursor („best-effort convenience, not a security boundary\"), Anthropic („reduces prompts but does not guarantee safety\"), OpenAI („should not be treated as a guarantee of security\"). Der Klassifikator ist nicht-deterministisch, durch Prompt Injection und Consent-Scoping-Fehler umgehbar, und die Approval-Fatigue (Nutzer winken 93 % der Prompts durch) macht auch den Menschen als alleinige Instanz unzuverlässig. Empfehlung: Klassifikator + Sandbox + Least-Privilege, nie Klassifikator allein.",
+      "options": [
+        {
+          "id": "classifier-not-a-boundary-o0",
+          "text": "Cursor bezeichnet Auto-Review wörtlich als „best-effort convenience, not a security boundary\".",
+          "verdict": "true",
+          "explanation": "Direktes Zitat aus Cursors Agent-Security-Docs — der Klassifikator kann in beide Richtungen irren."
+        },
+        {
+          "id": "classifier-not-a-boundary-o1",
+          "text": "Nur die unabhängigen Forscher behaupten, das Gate sei keine Sicherheitsgrenze; die Anbieter werben mit Schutz.",
+          "verdict": "false",
+          "explanation": "Gerade die Anbieter sagen es selbst — Cursor, Anthropic und OpenAI räumen explizit ein, dass es kein Boundary ist."
+        },
+        {
+          "id": "classifier-not-a-boundary-o2",
+          "text": "Approval-Fatigue: Nutzer bestätigen rund 93 % aller Permission-Prompts, was den Menschen als alleinige Sicherheitsinstanz schwächt.",
+          "verdict": "true",
+          "explanation": "Anthropics motivierende Statistik — bei 93 % Durchwinken ist die manuelle Freigabe als alleiniger Schutz unzuverlässig."
+        },
+        {
+          "id": "classifier-not-a-boundary-o3",
+          "text": "Weil der Klassifikator serverseitig läuft, ist er deterministisch und damit eine harte Grenze.",
+          "verdict": "false",
+          "explanation": "Serverseitig heißt nicht deterministisch — der Klassifikator ist ein LLM und kann in beide Richtungen falsch entscheiden."
+        },
+        {
+          "id": "classifier-not-a-boundary-o4",
+          "text": "Die empfohlene Konsequenz ist: Klassifikator plus OS-Sandbox plus Least-Privilege, nie der Klassifikator allein.",
+          "verdict": "true",
+          "explanation": "Defense-in-Depth — der probabilistische Klassifikator wird durch deterministische Schichten (Sandbox, minimale Credentials) ergänzt."
+        },
+        {
+          "id": "classifier-not-a-boundary-o5",
+          "text": "Der ehrliche Vergleichsmaßstab für ein Klassifikator-Gate ist „perfekte Sicherheit\".",
+          "verdict": "false",
+          "explanation": "Der ehrliche Maßstab ist --dangerously-skip-permissions/YOLO — dagegen ist der Klassifikator eine messbare Verbesserung, perfekt ist er nicht."
+        },
+        {
+          "id": "classifier-not-a-boundary-o6",
+          "text": "Ob ein Klassifikator-Gate für ein konkretes Szenario „sicher genug\" ist, hängt von Blast-Radius und Isolation ab.",
+          "verdict": "depends",
+          "explanation": "Auf einer Wegwerf-VM ohne echte Credentials tolerierbar; auf der Dev-Maschine mit Live-Prod-Zugang nicht — dann braucht es deterministische Boundaries."
+        }
+      ]
+    },
+    {
+      "id": "consent-scoping-judge-defendant",
+      "question": "Welche Aussagen zum primären Failure-Mode „Consent-Scoping\" und zum „judge = defendant\"-Einwand treffen zu?",
+      "difficulty": "hard",
+      "section": "Permission-Sicherheit",
+      "explanation": "Anthropics primärer Failure-Mode ist Consent-Scoping: der Klassifikator findet „approval-shaped evidence\" und prüft NICHT korrekt, ob die vorherige Zustimmung den tatsächlichen Blast-Radius der Aktion abdeckt — er erkennt die gefährliche Aktion, verkennt aber die Reichweite des Konsenses. Dazu der fundamentale „judge = defendant\"-Einwand: der Richter ist selbst ein täuschbares LLM. Anthropics Gegenmaßnahmen (reasoning-blind, Tool-Results gestrippt, serverseitige Injection-Probe) erschweren DIREKTE Manipulation, lösen das Kernproblem aber nicht; einen lohnenden Prompt-Engineering-Fix hat Anthropic nicht gefunden. Konversations-Boundaries wie „don't push\" überleben Context-Compaction nicht — dafür braucht es Deny-Regeln.",
+      "options": [
+        {
+          "id": "consent-scoping-judge-defendant-o0",
+          "text": "Bei Consent-Scoping erkennt der Klassifikator die gefährliche Aktion, verkennt aber, ob die Zustimmung deren Blast-Radius abdeckt.",
+          "verdict": "true",
+          "explanation": "Genau das ist Anthropics Formulierung — „approval-shaped evidence\" wird gefunden, die Reichweite des Konsenses falsch eingeschätzt."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o1",
+          "text": "Reasoning-Blindheit und das Strippen der Tool-Results lösen das „judge = defendant\"-Problem vollständig.",
+          "verdict": "false",
+          "explanation": "Sie erschweren nur die DIREKTE Manipulation; der Richter bleibt ein täuschbares LLM, das Kernproblem bleibt ungelöst."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o2",
+          "text": "Die serverseitige Prompt-Injection-Probe scannt Tool-Outputs, bevor sie in den Agent-Kontext gelangen.",
+          "verdict": "true",
+          "explanation": "Der Input-Layer prüft Reads/Web-Fetches/Shell-Output vorab und stellt verdächtigem Inhalt eine Warnung voran („treat as suspect\")."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o3",
+          "text": "Eine im Chat geäußerte Grenze wie „don't push\" gilt im Auto Mode garantiert bis zum Sessionende.",
+          "verdict": "false",
+          "explanation": "Sie wirkt nur, solange die Message im Transcript ist — Context-Compaction kann sie entfernen, dann verschwindet die Grenze. Garantie nur via Deny-Regel."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o4",
+          "text": "Anthropic hat keinen Prompt-Engineering-Fix gefunden, der gegen Consent-Scoping mehr nützt als kostet.",
+          "verdict": "true",
+          "explanation": "Anthropic gibt das offen an — das Problem ist nicht durch reines Prompting des Klassifikators wirtschaftlich lösbar."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o5",
+          "text": "Der Klassifikator sieht im Auto Mode den vollen Verlauf inklusive Claudes eigener Antworten und aller Tool-Results.",
+          "verdict": "false",
+          "explanation": "Reasoning-blind: er sieht nur User-Messages, Tool-Calls und CLAUDE.md — Claudes eigene Messages und die Tool-Results werden gestrippt."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o6",
+          "text": "Ob eine nicht-verhandelbare Grenze zuverlässig hält, hängt davon ab, ob sie als Deny-Regel statt als Chat-Aussage formuliert ist.",
+          "verdict": "depends",
+          "explanation": "Konversations-Boundaries überleben Compaction nicht; nur permissions.deny / hard_deny geben eine harte, kontext-unabhängige Garantie."
+        }
+      ]
+    },
+    {
+      "id": "deterministic-egress-recommendation",
+      "question": "Welche Aussagen zu den Härtungs-Empfehlungen (lethal trifecta deterministisch brechen, Sandbox, Least-Privilege) treffen zu?",
+      "difficulty": "hard",
+      "section": "Permission-Sicherheit",
+      "explanation": "Die lethal trifecta (privater Datenzugriff + untrusted Content + Exfiltrations-Fähigkeit) ist bei Coding-Agenten per Default vollständig vorhanden und strukturell ungelöst. Praktikabelster deterministischer Hebel: Exfiltration kappen — Default-deny-Netzwerk-Egress plus Domain-Allowlist (Cursor sandbox.json, Codex network_proxy). Willison traut deterministischem OS-Sandboxing mehr als KI-basiertem Injection-Schutz, weil letzterer nicht-deterministisch ist. Hartes Deny schlägt Prosa für Nicht-Verhandelbares. Der Klassifikator schützt NICHT vor Supply-Chain — Dependencies müssen gepinnt werden (Auto-Mode-Allowlist enthält pip install -r requirements.txt).",
+      "options": [
+        {
+          "id": "deterministic-egress-recommendation-o0",
+          "text": "Der praktikabelste deterministische Hebel gegen die Trifecta ist, den Netzwerk-Egress per Default zu verbieten und nur eine Domain-Allowlist zuzulassen.",
+          "verdict": "true",
+          "explanation": "Exfiltration kappen bricht eine der drei Trifecta-Komponenten deterministisch — z. B. via Cursor sandbox.json oder Codex network_proxy."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o1",
+          "text": "Willison bevorzugt KI-basierten Prompt-Injection-Schutz gegenüber OS-Sandboxing, weil er kontextsensitiver ist.",
+          "verdict": "false",
+          "explanation": "Umgekehrt: Willison misstraut KI-Schutz, weil er nicht-deterministisch ist, und vertraut deterministischem OS-Sandboxing deutlich mehr."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o2",
+          "text": "Coding-Agenten erfüllen die lethal trifecta per Default vollständig (Quellcode + Pakete/Web + Netzwerk).",
+          "verdict": "true",
+          "explanation": "Privater Datenzugriff, Exposition gegenüber untrusted Content und Exfiltrations-Fähigkeit sind alle drei standardmäßig vorhanden."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o3",
+          "text": "Der Klassifikator schützt zuverlässig vor Supply-Chain-Angriffen über ungepinnte Dependencies.",
+          "verdict": "false",
+          "explanation": "Tut er nicht — die Default-Allowlist enthält pip install -r requirements.txt; gegen ungepinnte/kompromittierte Pakete hilft nur Pinning."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o4",
+          "text": "Für Nicht-Verhandelbares ist eine harte Deny-Regel der Prosa-Beschreibung im environment vorzuziehen.",
+          "verdict": "true",
+          "explanation": "hard_deny / permissions.deny sind unbedingt und überleben Compaction; Prosa im environment ist weicher und kontextabhängig."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o5",
+          "text": "Anthropics Isolations-Empfehlung für Auto Mode ist schwächer als die für --dangerously-skip-permissions.",
+          "verdict": "false",
+          "explanation": "Sie ist identisch: Container/VM ohne Live-Credentials — Anthropic empfiehlt für Auto Mode dieselbe Isolation wie für den Bypass-Modus."
+        },
+        {
+          "id": "deterministic-egress-recommendation-o6",
+          "text": "Ob ein YOLO-/Turbo-/Brave-Modus vertretbar ist, hängt von der Ausführungsumgebung ab.",
+          "verdict": "depends",
+          "explanation": "In einer Wegwerf-Container/VM ohne echte Daten okay; nie mit untrusted Input (PRs/Issues) in CI — siehe den Gemini-–yolo-Allowlist-Bypass."
+        }
+      ]
+    },
+    {
+      "id": "pocketos-incident-bypasses",
+      "question": "Welche Aussagen zu realen Vorfällen und Allowlist-/Sandbox-Bypässen rund um Klassifikator-Gates treffen zu?",
+      "difficulty": "hard",
+      "section": "Permission-Sicherheit",
+      "explanation": "Auch die deterministische Schicht ist nicht perfekt: Beim PocketOS-Vorfall (25.04.2026) löschte ein Cursor-Agent (Opus 4.6) Produktions-DB UND Volume-Backups in einem einzigen API-Call (~9 s) — trotz Plan-Mode und beworbener „Destructive Guardrails\". Bekannte Bypässe der statischen/Sandbox-Schicht: der Cursor-Shell-Builtin-Bypass (CVE-2026-22708 — Builtins wie export/cd/eval umgehen die Kommando-Allowlist), CurXecute (CVE-2025-54135) und MCPoison (CVE-2025-54136, Config-Tausch nach Erstfreigabe). Der technische Kern (Shell-Builtins umgehen die Allowlist) ist konsistent belegt; die Namens-/Attributionszuordnung („NomShub\") ist quellenabhängig uneinheitlich und vor Zitation zu prüfen.",
+      "options": [
+        {
+          "id": "pocketos-incident-bypasses-o0",
+          "text": "Beim PocketOS-Vorfall löschte ein Cursor-Agent Produktions-DB und Volume-Backups in einem einzigen API-Call.",
+          "verdict": "true",
+          "explanation": "25.04.2026, Opus 4.6, ~9 Sekunden — trotz Plan-Mode-Restriktionen und beworbener „Destructive Guardrails\"."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o1",
+          "text": "Shell-Builtins wie export, cd oder eval können eine reine Kommando-Allowlist umgehen, weil der Parser nur externe Executables trackt.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Kern des Cursor-Shell-Builtin-Bypasses (CVE-2026-22708) — beschrieben als deterministischer, zuverlässiger Sandbox-Escape."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o2",
+          "text": "Der Plan-Mode und die „Destructive Guardrails\" verhinderten den PocketOS-Schaden zuverlässig.",
+          "verdict": "false",
+          "explanation": "Gerade nicht — der Agent entschied bei einem Credential-Mismatch eigenmächtig zu löschen; die Guardrails griffen nicht."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o3",
+          "text": "MCPoison (CVE-2025-54136) tauscht nach einer Erstfreigabe Configs gegen Payloads aus und führt so zu RCE.",
+          "verdict": "true",
+          "explanation": "Prompt-Injection/Config-Manipulation via MCP — nach der initialen Freigabe wird die Config gegen eine bösartige Variante getauscht."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o4",
+          "text": "Die Namenszuordnung „NomShub\" zu CVE-2026-22708 ist über alle Quellen eindeutig belegt.",
+          "verdict": "false",
+          "explanation": "Die Attribution ist quellenabhängig uneinheitlich (Parser-Fehler vs. verketteter RCE-Report); nur der technische Kern ist konsistent."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o5",
+          "text": "Vorfälle wie PocketOS zeigen, dass auch ein Sandbox-/Allowlist-basierter Schutz allein keine Garantie ist.",
+          "verdict": "true",
+          "explanation": "Selbst die deterministische Schicht hat Bypässe und Fehlbedienungen — daher Defense-in-Depth statt Verlass auf eine einzige Schicht."
+        },
+        {
+          "id": "pocketos-incident-bypasses-o6",
+          "text": "Ob ein einzelner überprivilegierter API-Call katastrophalen Schaden anrichten kann, hängt vom Least-Privilege-Setup ab.",
+          "verdict": "depends",
+          "explanation": "Mit getrennten, minimal berechtigten Credentials (kein Backup-Löschrecht im selben Token) bleibt der Blast-Radius klein; ohne sie wird ein Call zur Katastrophe."
+        }
+      ]
     }
   ]
 }
