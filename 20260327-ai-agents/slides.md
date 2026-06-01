@@ -359,7 +359,7 @@ Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, g
 
 <div class="mt-4 px-4 py-2 text-sm border-l-4 border-amber-500 bg-amber-500/10 rounded">
 
-**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag [_OpenRewrite — Refactoring at Scale_](../20260522-open-rewrite/)
+**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag [_OpenRewrite — Refactoring at Scale_](https://geggo98.github.io/slides/20260522-open-rewrite/)
 
 </div>
 
