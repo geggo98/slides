@@ -6,6 +6,7 @@ info: |
   Konfiguration (Primitive, Protokolle, Worktrees, Cross-Tool) und
   Autonomie & Orchestrierung (Subagents, /goal, /loop, Dynamic Workflows, Agent Teams).
 monaco: true
+hideInToc: true
 ---
 
 # AI Coding Agents: Konfiguration & Autonomie
@@ -41,6 +42,22 @@ Kernfakten CLI:
 -->
 
 ---
+hideInToc: true
+---
+
+# Inhalt
+
+<Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
+
+---
+layout: section
+---
+
+# 1. Grundlagen & Primitive
+
+---
+hideInToc: true
+---
 
 # Kernbegriffe
 
@@ -54,6 +71,8 @@ Kernfakten CLI:
 | **Subagents**         | Isolierte Agent-Instanzen, je eigenes Kontextfenster (= Kostenmultiplikator)      | Praktikant             |
 | **Plugins**           | Bündelung von Skills + Hooks + MCP in ein Paket                                   | npm-Paket              |
 
+---
+hideInToc: true
 ---
 
 # Entscheidungsregel
@@ -70,6 +89,7 @@ Kernfakten CLI:
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Primitive im Überblick
@@ -78,12 +98,21 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Vergleichsmatrix
 
 <ComparisonMatrix />
 
+---
+layout: section
+---
+
+# 2. Instruktionen & Guardrails
+
+---
+hideInToc: true
 ---
 
 # Instruktionsdateien: Hierarchie
@@ -101,6 +130,8 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 **Universell: Deny gewinnt immer** — keine niedrigere Ebene kann ein Verbot aufheben.
 
 ---
+hideInToc: true
+---
 
 # Hook-Systeme: Die größte Divergenz
 
@@ -116,6 +147,8 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 **Architekturprinzip:** Hooks sind Quality Gates — sie fangen die letzten 10% auf, die das Modell trotz guter Instruktionen übersieht.
 
 ---
+hideInToc: true
+---
 
 # Sandboxing und Permissions
 
@@ -130,6 +163,8 @@ Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
 <p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;">⚠️ <strong>Sensible Daten lokal?</strong> Agent im <strong>Devcontainer</strong> isolieren, nur unkritische Pfade mounten — Sandboxes schützen nicht vor Skill-/MCP-Exfiltration.</p>
 
+---
+hideInToc: true
 ---
 
 # Claude Code Permission Modes
@@ -148,13 +183,22 @@ Sechs Modi statt zwei. `Shift+Tab` cycelt `default → acceptEdits → plan`; `a
 <p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Auto Mode</strong> (Research Preview, v2.1.83+, Opus 4.6/4.7 + Sonnet 4.6, Anthropic API) — Classifier blockt <code>curl | bash</code>, Force-Push, Prod-Deploys, IAM-Grants, externe Endpoints; Chat-Aussagen wie „don't push" wirken als Deny. Fallback nach 3 Blocks in Folge / 20 gesamt. <strong>vs. <code>bypassPermissions</code>:</strong> Auto = unsichtbare Checks, Bypass = keine — nur Auto schützt vor Modellfehlern und Prompt-Injection.</p>
 
 ---
+layout: section
+---
+
+# 3. Protokolle: LSP · MCP · ACP
+
+---
 clicks: false
+hideInToc: true
 ---
 
 # LSP · MCP · ACP
 
 <ProtocolCards />
 
+---
+hideInToc: true
 ---
 
 # LSP vs. MCP — Keine Verwechslung
@@ -172,6 +216,8 @@ clicks: false
 
 Ein Agent profitiert von **beiden gleichzeitig**.
 
+---
+hideInToc: true
 ---
 
 # ACP — Agent Client Protocol
@@ -191,6 +237,8 @@ Ein Agent profitiert von **beiden gleichzeitig**.
 **MCP-Durchreichung:** JetBrains reicht konfigurierte MCP-Server an ACP-Agenten durch — einmal konfigurieren, alle Agenten nutzen es.
 
 ---
+hideInToc: true
+---
 
 # ACP — Abrechnung auf Pro/Max
 
@@ -209,6 +257,14 @@ Quellen zur Abrechnung Agent-SDK-Credit (Stand 2026-05):
   https://x.com/ClaudeDevs/status/2054610152817619388
 -->
 
+---
+layout: section
+---
+
+# 4. Interoperabilität & Praxis
+
+---
+hideInToc: true
 ---
 
 # Cross-Tool-Kompatibilität
@@ -230,6 +286,7 @@ Praktische Interop heute:
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Zusammenspiel der Primitive
@@ -238,12 +295,15 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Git Worktrees für Agenten
 
 <WorktreeOverview />
 
+---
+hideInToc: true
 ---
 
 # Pipes & Headless-Mode
@@ -257,6 +317,8 @@ clicks: false
 | **Windsurf**    | ✗                  | ✗                    | Nur IDE-integriert                     |
 | **Junie**       | ✗                  | ✗                    | Nur IDE-integriert                     |
 
+---
+hideInToc: true
 ---
 
 # Claude im Pipe-Einsatz — Stolperfallen
@@ -282,6 +344,8 @@ claude -p "Fasse zusammen:" < (yt-dlp --skip-download --write-auto-subs --sub-la
 Bonus: `claude -p` lässt sich mit `--resume <session-id>` zu einer bestehenden Session fortsetzen — ideal für mehrstufige Skript-Pipelines.
 
 ---
+hideInToc: true
+---
 
 # Empfehlungen für Multi-Tool-Teams
 
@@ -294,13 +358,15 @@ Bonus: `claude -p` lässt sich mit `--resume <session-id>` zu einer bestehenden 
 7. **Projekt-Level-Configs versionieren** — Secrets nur in User-Level oder Env-Vars
 
 ---
-layout: center
+layout: section
 ---
 
-# Autonomie & Orchestrierung
+# 5. Autonomie & Orchestrierung
 
 Bisher: _was_ der Agent weiß. Jetzt: _wie selbständig_ er arbeitet — und was das kostet.
 
+---
+hideInToc: true
 ---
 
 # Drei Achsen der Autonomie
@@ -318,6 +384,8 @@ Drei Fragen ordnen **jedes** Autonomie-Feature ein:
 | **Breite**    | viele parallele Worker   | Dynamic Workflows             |
 
 ---
+hideInToc: true
+---
 
 # Claude Code: Sechs Autonomie-Primitive
 
@@ -330,6 +398,8 @@ Drei Fragen ordnen **jedes** Autonomie-Feature ein:
 | **Dynamic Workflows** | Preview       | JS-Skript orchestriert ≤16 parallel, Cap 1000/Run             |
 | **Agent Teams**       | Experimentell | Peer-to-Peer-Mailbox, ~7× Tokens                              |
 
+---
+hideInToc: true
 ---
 
 # Autonomie im Tool-Vergleich
@@ -345,6 +415,8 @@ Drei Fragen ordnen **jedes** Autonomie-Feature ein:
 
 Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, goal ∝ Turns, Breite multiplikativ ∝ Agenten.
 
+---
+hideInToc: true
 ---
 
 # Dynamic Workflows & `ultracode`
@@ -364,6 +436,8 @@ Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, g
 </div>
 
 ---
+hideInToc: true
+---
 
 # Neue Orchestrierungs-Plattformen
 
@@ -379,12 +453,21 @@ Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, g
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Alle Details: Tools × Autonomie-Dimensionen
 
 <AutonomyPivot />
 
+---
+layout: section
+---
+
+# 6. Sicherheit & Auto-Modi
+
+---
+hideInToc: true
 ---
 
 # Auto-Modi: Wer entscheidet pro Tool-Call?
@@ -402,12 +485,15 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Auto-Modi: Klassifikator-Gates im Detail
 
 <AutoModeGates />
 
+---
+hideInToc: true
 ---
 
 # Wie sicher ist der Spaß? — Kein Sicherheits-Boundary
@@ -421,6 +507,8 @@ clicks: false
 
 **Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → Details im _Bonus_.
 
+---
+hideInToc: true
 ---
 
 # Konsequenz: Klassifikator + Sandbox + Least-Privilege — nie allein
@@ -440,13 +528,14 @@ Primärer Failure-Mode (Anthropic): **Consent-Scoping** — der Klassifikator fi
 3. **Agent ohne echte Secrets** in Container/VM (Willison: OS-Sandbox > KI-Schutz).
 
 ---
-layout: center
+layout: section
 ---
 
-# Bonusmaterial
+# 7. Bonusmaterial
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Agent Skills — Deep Dive
@@ -455,6 +544,7 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Clinejection -- Anatomie eines Supply-Chain-Angriffs
@@ -463,6 +553,7 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Clinejection -- Zeitverlauf und vereitelte Eskalation
@@ -471,12 +562,15 @@ clicks: false
 
 ---
 clicks: 1
+hideInToc: true
 ---
 
 # Clinejection -- Willisons "Lethal Trifecta"
 
 <ClinejectionTrifecta />
 
+---
+hideInToc: true
 ---
 
 # Claude Code Auto Mode — unter der Haube
@@ -494,6 +588,8 @@ Zwei Verteidigungs-Layer, ein deklarierter Trust-Scope — und ein **blinder Fle
 
 </div>
 
+---
+hideInToc: true
 ---
 
 # `autoMode` — Vertrauen in Prosa, Verbote in Stein
@@ -514,6 +610,8 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
 
 <p class="!my-0 !leading-tight" style="font-size: 12px; opacity: 0.85;"><strong>Zwei Fallen:</strong> <code>defaultMode: "auto"</code> aus dem Repo wird <em>ignoriert</em> (ein Repo darf sich nicht selbst Auto Mode geben) · „don't push" im Chat überlebt <strong>keine</strong> Context-Compaction → für Garantien <code>permissions.deny</code> / <code>hard_deny</code>.</p>
 
+---
+hideInToc: true
 ---
 
 # Sicherheit im Detail — Zahlen, Vorfälle, Bypässe
@@ -538,6 +636,7 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Gesamtübersicht — Interaktiv
@@ -546,6 +645,7 @@ clicks: false
 
 ---
 layout: end
+hideInToc: true
 ---
 
 # Danke
