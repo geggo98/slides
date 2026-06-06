@@ -35,10 +35,10 @@ Drei Schichten · Builder als Typsystem-Lehrstück · Metaprogramming als Substr
 hideInToc: true
 ---
 
-# TL;DR
+# Kurzfassung
 
 - **Substitution ist real, aber selektiv.** 16 der 23 GoF-Muster sind laut Norvig in höheren Sprachen „either invisible or simpler" — ersetzt durch first-class functions, sum types/ADTs, null-safety, named/default args. Ein hartes Drittel bleibt sprachunabhängig relevant.
-- **Drei Schichten, nicht drei GoF-Familien.** Schicht 1 (Sprachdefizit-Workarounds) wird durch Features ersetzt; Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung; Schicht 3 (Architektur/DDD) ist unberührt. Wer das nicht trennt, irrt in beide Richtungen.
+- **Drei Schichten, nicht drei GoF-Familien.** Schicht 1 (Sprachdefizit-Notlösungen) wird durch Features ersetzt; Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung; Schicht 3 (Architektur/DDD) ist unberührt. Wer das nicht trennt, irrt in beide Richtungen.
 - **Builder ist der Lehrfall für Typsystem-Grenzen.** Geplante Java-null-Safety erzwingt Pflichtfelder **nicht** zur Compile-Zeit. Compile-zeit-sicher ist nur der Staged Builder — oder named/default args, die das Muster ganz auflösen.
 - **Metaprogramming ist das Substrat hinter „Proxy & Spring-Magie".** Dynamische Proxies _implementieren_ Proxy (statt es zu ersetzen) und subsumieren Decorator; Spring AOP industrialisiert das — mit dokumentierten Failure Modes.
 
@@ -111,7 +111,7 @@ Die GoF-Einteilung vermischt drei Abstraktionsebenen. Nützlicher ist die Schich
 <div class="grid grid-cols-3 gap-6 mt-6">
 <div>
 
-### Schicht 1 — Sprachdefizit-Workarounds
+### Schicht 1 — Sprachdefizit-Notlösungen
 
 Kompensieren fehlende Features: first-class functions, ADTs/sum types, null-safety, Sprach-Singletons.
 
@@ -152,11 +152,11 @@ hideInToc: true
 
 <div class="text-xs mt-4">
 
-| #   | These                                        | Verdict                                   | Kern                                                                 |
+| #   | These                                        | Fazit                                     | Kern                                                                 |
 | --- | -------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
 | 1   | Singleton ← Companion Object (Kotlin)        | **begrifflich falsch**, Intention korrekt | Kotlin-Singleton = `object`; `companion object` ≈ statische Member   |
 | 2   | Singleton ← `enum` (Java)                    | **korrekt**                               | Bloch, _Effective Java_ Item 3: bestes Singleton-Idiom               |
-| 3   | Singleton ↔ Spring DI-Scope                 | **korrekt mit Caveat**                    | per Container/Bean, nicht per ClassLoader wie GoF                    |
+| 3   | Singleton ↔ Spring DI-Scope                 | **korrekt mit Einschränkung**             | per Container/Bean, nicht per ClassLoader wie GoF                    |
 | 4   | Visitor ← Lambda                             | **größtenteils falsch**                   | Lambda nur im Single-Method-Fall; korrekt: sealed + pattern matching |
 | 5   | Builder-Pflichtfelder ← geplante null-Safety | **erzwingt NICHT**                        | kein Typestate; greift erst zur Laufzeit bei `build()`               |
 | 6   | Proxies / Spring ersetzen Muster             | **Begriff zu grob**                       | Proxies _implementieren_ Proxy, AOP _industrialisiert_               |
@@ -205,7 +205,7 @@ Code in den Tabs: anklickbare **Annotationen** mit JLS-/JEP-Bezügen.
 layout: section
 ---
 
-# 2. Schicht 1 — Sprachdefizit-Workarounds
+# 2. Schicht 1 — Sprachdefizit-Notlösungen
 
 „Verhalten als Wert übergeben" — und ADTs statt double dispatch
 
@@ -725,13 +725,13 @@ layout: section
 
 # 7. Meta-Analyse & Schluss
 
-„GoF zielt auf legacy Java/C++" — teilweise korrekt, aber zu pauschal
+„GoF zielt auf alte Java/C++-Codebasen" — teilweise korrekt, aber zu pauschal
 
 ---
 hideInToc: true
 ---
 
-# Verdict: „GoF zielt auf legacy Java/C++"?
+# Fazit: „GoF zielt auf alte Java/C++-Codebasen"?
 
 <div class="grid grid-cols-3 gap-6 mt-4">
 <div>
@@ -861,7 +861,7 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Caveats & Quellen
+# Einschränkungen & Quellen
 
 <div class="grid grid-cols-2 gap-8 mt-4 text-sm">
 <div>
@@ -877,7 +877,7 @@ hideInToc: true
 </div>
 <div>
 
-### Caveats
+### Einschränkungen
 
 - **JEP 8303099 ist Draft** — Syntaxdetails sind „strawman/TBD". null-Safety ist in **keinem** Release; §5/§7 sind Designanalyse.
 - Java-Beispiele setzen **Java 21** voraus (sealed ab 17, record ab 16, Pattern Matching final ab 21).

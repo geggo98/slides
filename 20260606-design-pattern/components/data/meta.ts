@@ -171,7 +171,7 @@ public class OrderService {
               "Fall A aus §9.3 — kein Spring-Bug, sondern Receiver-Bindung",
             tone: "danger",
             detail: {
-              title: "Workarounds",
+              title: "Notlösungen",
               body: "Self-Injection, <code>AopContext.currentProxy()</code> (braucht <code>exposeProxy=true</code>), oder Refactoring in eine zweite Bean.",
             },
           },

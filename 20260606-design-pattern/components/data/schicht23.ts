@@ -178,7 +178,7 @@ class Money:
     amount: Decimal
     currency: str`,
         callout:
-          "<strong>Caveat:</strong> Javas <code>record</code> bietet nur <em>flache</em> Immutability und eignet sich nicht als JPA-Entity (<code>final</code>, kein No-Arg-Konstruktor). <strong>Entity</strong> (Identität, Lebenszyklus) bleibt davon getrennt und [RELEVANT].",
+          "<strong>Achtung:</strong> Javas <code>record</code> bietet nur <em>flache</em> Immutability und eignet sich nicht als JPA-Entity (<code>final</code>, kein No-Arg-Konstruktor). <strong>Entity</strong> (Identität, Lebenszyklus) bleibt davon getrennt und [RELEVANT].",
       },
     ],
   },

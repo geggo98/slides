@@ -1,4 +1,4 @@
-// Schicht 1 — Sprachdefizit-Workarounds. Code + Annotationen je Muster.
+// Schicht 1 — Sprachdefizit-Notlösungen. Code + Annotationen je Muster.
 // Annotation-Schema (MonacoBlockAnnotated): { lines:n|[a,b], label, detail:{title,body}, tone }
 // tone ∈ info | success | warning | danger.
 
@@ -552,7 +552,7 @@ if let Some(l) = logger { l("hi"); }`,
         code: `Optional<Logger> logger = Optional.empty();
 logger.ifPresent(l -> l.log("hi"));`,
         callout:
-          "Null Object war ein Workaround für fehlende Nullability. Kotlin (<code>T?</code>), Rust (<code>Option&lt;T&gt;</code>) und Scala/Haskell machen es obsolet. Anmerkung: Null Object stand <em>nicht</em> im originalen GoF-Katalog.",
+          "Null Object war eine Notlösung für fehlende Nullability. Kotlin (<code>T?</code>), Rust (<code>Option&lt;T&gt;</code>) und Scala/Haskell machen es obsolet. Anmerkung: Null Object stand <em>nicht</em> im originalen GoF-Katalog.",
       },
     ],
   },
@@ -582,7 +582,7 @@ Registry.register("x")`,
 }
 HttpClient.create()                  // Zugriff nur über die Klasse`,
         callout:
-          "<strong>Falscher Freund #1:</strong> Die User-These „Singleton ← Companion Object“ ist <em>begrifflich falsch</em>, die Intention korrekt. Kotlin-Singleton = <code>object</code>; <code>companion object</code> ist ein an die Klasse gebundenes Pendant zu statischen Membern.",
+          "<strong>Falscher Freund #1:</strong> Die verbreitete These „Singleton ← Companion Object“ ist <em>begrifflich falsch</em>, die Intention korrekt. Kotlin-Singleton = <code>object</code>; <code>companion object</code> ist ein an die Klasse gebundenes Pendant zu statischen Membern.",
       },
     ],
   },
