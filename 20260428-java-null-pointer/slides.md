@@ -35,7 +35,7 @@ layout: center
 hideInToc: true
 ---
 
-# TL;DR
+# Kurzfassung
 
 <div class="text-left mt-8 max-w-3xl mx-auto space-y-4">
 
@@ -722,7 +722,7 @@ public class OrderService {
 hideInToc: true
 ---
 
-# Spring-Boot-4-Pitfalls
+# Spring-Boot-4-Tücken
 
 <div class="grid grid-cols-2 gap-8">
 <div>
@@ -960,7 +960,7 @@ hideInToc: true
 
 # Limitationen, die in der Praxis beißen
 
-| Limitation                                     | Symptom                                                 | Workaround                              |
+| Limitation                                     | Symptom                                                 | Umgehung                                |
 | ---------------------------------------------- | ------------------------------------------------------- | --------------------------------------- |
 | **Boolean-Indirection** (Issue #98, seit 2017) | `boolean nn = x != null; if (nn) x.foo();` → ERROR      | Direkt `if (x != null)`                 |
 | **Generics-Mode** in Entwicklung               | `Map<String, @Nullable V>` mit `JSpecifyMode=true` → FP | Default-Mode oder Suppress              |

@@ -104,7 +104,7 @@ const scenarios: Scenario[] = [
     ],
     verdict: "fail",
     verdictNote:
-      "Workaround: direkt if (s != null) — nicht über bool indirizieren",
+      "Umgehung: direkt if (s != null) — nicht über bool indirizieren",
   },
   {
     title: "3. Field + Methodenaufruf",
