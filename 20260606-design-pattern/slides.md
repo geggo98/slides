@@ -1,0 +1,894 @@
+---
+theme: default
+title: "Brauchen wir noch Entwurfsmuster? — GoF zwischen Sprachfeature und Architektur"
+info: |
+  Klassische GoF-Muster und ihre modernen Entsprechungen (JVM-Fokus).
+  Drei-Schichten-Taxonomie, Builder als Typsystem-Lehrstück, Metaprogramming
+  als Pattern-Substrat — mit einer Pattern × Sprache-Matrix.
+monaco: true
+mdc: true
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
+hideInToc: true
+---
+
+# Brauchen wir noch Entwurfsmuster?
+
+GoF zwischen Sprachfeature und Architektur — was bleibt, was die Sprache übernimmt
+
+<div class="mt-8 text-sm opacity-60">
+
+Drei Schichten · Builder als Typsystem-Lehrstück · Metaprogramming als Substrat · Pattern × Sprache-Matrix
+
+</div>
+
+<!--
+- Leitfrage: Sind die GoF-Muster (1994) heute noch relevant — oder haben Sprachfeatures sie überflüssig gemacht?
+- Antwort vorweg: weder „alles tot" noch „alles ewig". Die Wahrheit ist geschichtet.
+- JVM-Fokus, aber mit Kotlin/Rust/Go/TS/Python als Kontrast.
+-->
+
+---
+hideInToc: true
+---
+
+# TL;DR
+
+- **Substitution ist real, aber selektiv.** 16 der 23 GoF-Muster sind laut Norvig in höheren Sprachen „either invisible or simpler" — ersetzt durch first-class functions, sum types/ADTs, null-safety, named/default args. Ein hartes Drittel bleibt sprachunabhängig relevant.
+- **Drei Schichten, nicht drei GoF-Familien.** Schicht 1 (Sprachdefizit-Workarounds) wird durch Features ersetzt; Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung; Schicht 3 (Architektur/DDD) ist unberührt. Wer das nicht trennt, irrt in beide Richtungen.
+- **Builder ist der Lehrfall für Typsystem-Grenzen.** Geplante Java-null-Safety erzwingt Pflichtfelder **nicht** zur Compile-Zeit. Compile-zeit-sicher ist nur der Staged Builder — oder named/default args, die das Muster ganz auflösen.
+- **Metaprogramming ist das Substrat hinter „Proxy & Spring-Magie".** Dynamische Proxies _implementieren_ Proxy (statt es zu ersetzen) und subsumieren Decorator; Spring AOP industrialisiert das — mit dokumentierten Failure Modes.
+
+---
+hideInToc: true
+---
+
+# Inhalt
+
+<Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
+
+---
+layout: section
+---
+
+# 1. Die Frage & die Drei-Schichten-Taxonomie
+
+Warum „GoF ist tot" und „GoF ist ewig" beide falsch sind
+
+---
+hideInToc: true
+---
+
+# Drei Stimmen — dieselbe Diagnose
+
+<div class="grid grid-cols-3 gap-6 mt-6">
+<div>
+
+### Norvig (1996)
+
+> „16 of 23 patterns are **either invisible or simpler**" in höheren Sprachen.
+
+Aufgeschlüsselt: first-class functions (Strategy, Command, Template Method, Visitor), first-class types (Factory, Proxy, State …), Makros (Iterator, Interpreter).
+
+</div>
+<div>
+
+### Graham (2002)
+
+> Muster im Code seien „a **sign of trouble**".
+
+Ein Hinweis, dass man „by hand the expansions of some macro" erzeuge — _„the human compiler"_. Polemisch, aus Lisp-Sicht, aber dieselbe Diagnose.
+
+</div>
+<div>
+
+### Gamma (2009)
+
+> „I'm in favor of **dropping Singleton**. Its use is almost always a design smell."
+
+Würde Factory Method zu Factory verallgemeinern. Das GoF-Buch nutzt C++/Smalltalk — der OOP-Kontext der frühen 90er.
+
+</div>
+</div>
+
+<div class="mt-6 text-sm opacity-70">
+
+Aber: nicht alle Muster sind Sprachdefizite. Gamma betont zugleich die _„enduring nature of good design"_ an Adapter, Bridge, Proxy.
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Drei Schichten statt Creational / Structural / Behavioral
+
+Die GoF-Einteilung vermischt drei Abstraktionsebenen. Nützlicher ist die Schichtung nach **Substituierbarkeit**:
+
+<div class="grid grid-cols-3 gap-6 mt-6">
+<div>
+
+### Schicht 1 — Sprachdefizit-Workarounds
+
+Kompensieren fehlende Features: first-class functions, ADTs/sum types, null-safety, Sprach-Singletons.
+
+→ **durch Features ersetzt**
+
+<div class="text-xs opacity-60 mt-2">Strategy, Command, Template Method, Observer, Iterator, Visitor, State, Null Object, Singleton</div>
+
+</div>
+<div>
+
+### Schicht 2 — echte Strukturmuster
+
+Sprachunabhängige Strukturierung von Objektgeflechten.
+
+→ **bleiben relevant**, leichtere Implementierung
+
+<div class="text-xs opacity-60 mt-2">Adapter, Facade, Composite, Decorator, Proxy, Bridge</div>
+
+</div>
+<div>
+
+### Schicht 3 — Architektur / DDD
+
+DDD-Taktik & PoEAA: Entity, Value Object, Repository, Unit of Work …
+
+→ **von der Substitution unberührt** (Ausnahme: Value Object)
+
+<div class="text-xs opacity-60 mt-2">Value Object, Repository, Active Record vs Data Mapper</div>
+
+</div>
+</div>
+
+---
+hideInToc: true
+---
+
+# Faktencheck: sechs verbreitete Thesen
+
+<div class="text-xs mt-4">
+
+| #   | These                                        | Verdict                                   | Kern                                                                 |
+| --- | -------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| 1   | Singleton ← Companion Object (Kotlin)        | **begrifflich falsch**, Intention korrekt | Kotlin-Singleton = `object`; `companion object` ≈ statische Member   |
+| 2   | Singleton ← `enum` (Java)                    | **korrekt**                               | Bloch, _Effective Java_ Item 3: bestes Singleton-Idiom               |
+| 3   | Singleton ↔ Spring DI-Scope                 | **korrekt mit Caveat**                    | per Container/Bean, nicht per ClassLoader wie GoF                    |
+| 4   | Visitor ← Lambda                             | **größtenteils falsch**                   | Lambda nur im Single-Method-Fall; korrekt: sealed + pattern matching |
+| 5   | Builder-Pflichtfelder ← geplante null-Safety | **erzwingt NICHT**                        | kein Typestate; greift erst zur Laufzeit bei `build()`               |
+| 6   | Proxies / Spring ersetzen Muster             | **Begriff zu grob**                       | Proxies _implementieren_ Proxy, AOP _industrialisiert_               |
+
+</div>
+
+<!--
+- Diese sechs Thesen ziehen sich als roter Faden durch den Talk.
+- Vier davon sind „falsche Freunde" — gleiches Wort, anderes Konzept.
+-->
+
+---
+hideInToc: true
+---
+
+# Lese-Anleitung: vier Felder & vier Status-Labels
+
+<div class="grid grid-cols-2 gap-8 mt-4">
+<div>
+
+### Pro Muster zeigen wir
+
+1. **Originalintent** des Musters
+2. **GoF-Implementierung** (Java, klassisch)
+3. **Moderne Entsprechung** je Sprache (Tabs)
+4. **Status-Label**
+
+Code in den Tabs: anklickbare **Annotationen** mit JLS-/JEP-Bezügen.
+
+</div>
+<div>
+
+### Status-Labels
+
+- **[ERSETZT]** durch Sprachfeature obsolet
+- **[KONZEPT]** Idee bleibt, GoF-Implementierung veraltet
+- **[RELEVANT]** weiterhin idiomatisch
+- **[SPRACHABH.]** sprachabhängig
+
+<div class="text-xs opacity-60 mt-3">In der Schluss-Matrix verdichtet zu: weiterhin relevant · moderner Ersatz · trifft nicht zu.</div>
+
+</div>
+</div>
+
+---
+layout: section
+---
+
+# 2. Schicht 1 — Sprachdefizit-Workarounds
+
+„Verhalten als Wert übergeben" — und ADTs statt double dispatch
+
+---
+hideInToc: true
+---
+
+# Singleton · [ERSETZT] / [KONZEPT]
+
+<PatternTabs name="singleton" />
+
+<!--
+- enum-Singleton ist Blochs Empfehlung; alle drei Java-Idiome sind JLS-fundiert (kein UB).
+- Was NICHT verschwindet: globaler, schwer mockbarer Zustand. Nur DI löst das.
+-->
+
+---
+hideInToc: true
+---
+
+# Strategy & Command · [ERSETZT]
+
+<PatternTabs name="strategy" />
+
+---
+hideInToc: true
+---
+
+# Template Method · [ERSETZT] / [KONZEPT]
+
+<PatternTabs name="templateMethod" />
+
+---
+hideInToc: true
+---
+
+# Observer · [KONZEPT]
+
+<PatternTabs name="observer" />
+
+---
+hideInToc: true
+---
+
+# Iterator · [ERSETZT]
+
+<PatternTabs name="iterator" />
+
+---
+hideInToc: true
+---
+
+# Visitor · [ERSETZT durch ADTs] — der Lehrfall
+
+<PatternTabs name="visitor" />
+
+<!--
+- Warum „Lambda ersetzt Pattern X" zu kurz greift: Visitor löst das Expression Problem via double dispatch.
+- Ein Lambda ersetzt nur den degenerierten Ein-Methoden-Fall (dann ist es Strategy).
+-->
+
+---
+hideInToc: true
+---
+
+# State · [KONZEPT] / [ERSETZT]
+
+<PatternTabs name="state" />
+
+---
+hideInToc: true
+---
+
+# Null Object · [ERSETZT]
+
+<PatternTabs name="nullObject" />
+
+---
+hideInToc: true
+---
+
+# Falscher Freund #1: `object` vs `companion object`
+
+<PatternTabs name="falscherFreundKotlin" />
+
+---
+layout: section
+---
+
+# 3. Sonderfall Builder
+
+Der Lehrfall für Typsystem-Ebenen: Laufzeit-Check · Compile-Zeit-Kodierung · Problemauflösung
+
+---
+hideInToc: true
+---
+
+# Klassischer Builder — Prüfung zur Laufzeit
+
+<PatternTabs name="builderClassic" />
+
+---
+hideInToc: true
+---
+
+# Staged Builder — Pflichtfelder zur Compile-Zeit
+
+<PatternTabs name="builderStaged" />
+
+---
+hideInToc: true
+---
+
+# Grenze: kombinatorische Explosion (2ᴺ)
+
+<PatternTabs name="builderExplosion" />
+
+---
+hideInToc: true
+---
+
+# Grenze: Builder + Vererbung (`@SuperBuilder`)
+
+<PatternTabs name="builderInheritance" />
+
+---
+hideInToc: true
+---
+
+# Die eigentliche Auflösung: named / default args
+
+In Sprachen mit named + optionalen Parametern ist der Builder schlicht **überflüssig** — und Pflichtfelder sind „kostenlos" compile-zeit-erzwungen.
+
+<PatternTabs name="builderNamedArgs" />
+
+---
+hideInToc: true
+---
+
+# Pflichtfeld-Durchsetzung pro Idiom
+
+<div class="enf-table text-xs mt-3">
+
+| Sprache / Idiom                    | Mechanismus                      | Pflichtfeld-Durchsetzung                                |
+| ---------------------------------- | -------------------------------- | ------------------------------------------------------- |
+| Java — klassischer Builder         | Builder + `build()`              | **Laufzeit** (Exception)                                |
+| Java — Staged Builder              | Interface-Kette                  | **Compile-Zeit**                                        |
+| Java — Konstruktor / `record`      | Positionsparameter               | Compile-Zeit, keine named/default                       |
+| Java — null-Safety (JEP 8303099)   | `String!`                        | **Laufzeit** (narrowing); kein Typestate                |
+| Kotlin / Scala                     | named + default Params           | **Compile-Zeit**                                        |
+| Python                             | kwargs + `@dataclass`            | Laufzeit (`TypeError`, dynamisch)                       |
+| TypeScript                         | Options-Objekt + optionale Props | **Compile-Zeit**                                        |
+| Go                                 | functional options               | Compile-Zeit (Pflicht = Positionsparam), Rest ungeprüft |
+| Rust — pragmatisch                 | `build() -> Result`              | Laufzeit                                                |
+| Rust — typestate / `typed-builder` | `PhantomData`-Marker             | **Compile-Zeit**                                        |
+
+</div>
+
+<div class="mt-2 text-xs opacity-70">
+
+Der Builder ist kein „gelöstes" Muster, sondern eine **Landkarte**, _auf welcher Ebene_ eine Sprache das Konstruktionsproblem löst — null-Safety landet auf der schwächsten.
+
+</div>
+
+<style>
+.enf-table table { border-collapse: collapse; }
+.enf-table th, .enf-table td { padding: 2px 8px !important; line-height: 1.2; }
+</style>
+
+---
+layout: section
+---
+
+# 4. Schicht 2 — Strukturmuster
+
+Bleiben relevant — moderne Sprachen senken nur den Implementierungsaufwand
+
+---
+hideInToc: true
+---
+
+# Decorator · [RELEVANT]
+
+<PatternTabs name="decorator" />
+
+---
+hideInToc: true
+---
+
+# Adapter · [RELEVANT]
+
+<PatternTabs name="adapter" />
+
+---
+hideInToc: true
+---
+
+# Falscher Freund #2: Python `@decorator` ≠ GoF-Decorator
+
+<PatternTabs name="falscherFreundPython" />
+
+---
+hideInToc: true
+---
+
+# Kurz: Facade · Composite · Bridge · Proxy
+
+<div class="grid grid-cols-2 gap-8 mt-6">
+<div>
+
+- **Facade** — eine Modul-/Paketgrenze, die ein komplexes Subsystem hinter einer schmalen API verbirgt.
+- **Composite** — rekursive Teil-Ganzes-Struktur; als rekursive **sum types** elegant ausdrückbar.
+
+</div>
+<div>
+
+- **Bridge** — Komposition zweier unabhängiger Hierarchien (Abstraktion ⊥ Implementierung).
+- **Proxy** — bleibt [KONZEPT]; dynamische Proxies / AOP **implementieren** ihn → Teil III.
+
+</div>
+</div>
+
+<div class="mt-8 text-center text-sm opacity-70">
+
+Alle vier: <strong>[RELEVANT]</strong> — sprachunabhängige Strukturkonzepte, kein Sprachfeature nimmt sie weg.
+
+</div>
+
+---
+layout: section
+---
+
+# 5. Schicht 3 — Architektur- / DDD-Muster
+
+Von der Substitution unberührt — eine Ausnahme (Value Object), ein Brückenfall (Repository)
+
+---
+hideInToc: true
+---
+
+# Value Object · [ERSETZT (Implementierung)]
+
+<PatternTabs name="valueObject" />
+
+---
+hideInToc: true
+---
+
+# Repository · [RELEVANT], Implementierung generiert
+
+<PatternTabs name="repository" />
+
+---
+hideInToc: true
+---
+
+# Persistenz: drei Cluster, nicht „ORM vs. SQL"
+
+<div class="grid grid-cols-3 gap-6 mt-6">
+<div>
+
+### Active Record
+
+Persistenz lebt **im** Domänenobjekt: `user.save()`, `User.find(id)`.
+
+Schnelle CRUD-Entwicklung, aber Domänen-/Persistenzlogik vermischt; „Fat Models".
+
+<div class="text-xs opacity-60 mt-2">Rails, Django, Eloquent, GORM</div>
+
+</div>
+<div>
+
+### Data Mapper / ORM
+
+Mapper trennt Objekt von DB; **Unit of Work** + **Identity Map** + Change Tracking.
+
+Sauberes Modell, aber Leaky Abstraction: **N+1**, Lazy-Init, Cache-Staleness.
+
+<div class="text-xs opacity-60 mt-2">Hibernate/JPA, EF Core, SQLAlchemy ORM</div>
+
+</div>
+<div>
+
+### Repository
+
+Sammlungsähnliche **Domänen-Abstraktion** über Mapper/ORM.
+
+Gehört in die Domänenschicht; Implementierung in die Infrastruktur (Hexagonal).
+
+<div class="text-xs opacity-60 mt-2">Spring Data, IRepository&lt;T&gt;</div>
+
+</div>
+</div>
+
+<div class="mt-5 text-xs opacity-70">
+
+Große Debatten: **Impedance Mismatch** (Neward, „The Vietnam of Computer Science") · **Leaky Abstractions** (Spolsky) · **N+1**. Volle Cluster-Tabelle im Bonus.
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Repository über ORM = Anti-Pattern?
+
+<div class="grid grid-cols-2 gap-8 mt-4">
+<div>
+
+### Position „Anti-Pattern"
+
+- Microsoft Learn: „The Entity Framework **`DbContext`** class is based on the **Unit of Work and Repository** patterns" → Custom-Repo darüber = Abstraktion über Abstraktion.
+- **Generic Repository** (`IRepository<T>`) bringt keinen Mehrwert über `DbSet<T>`/`Session`, verletzt aber SRP.
+- „Wir tauschen später das ORM aus" — passiert fast nie.
+
+</div>
+<div>
+
+### Position „Sinnvoll"
+
+- DDD-Repository ≠ Generic Repository: **aggregat-spezifisch**, domänensprachliche Methoden (`findOrdersPendingPayment()`).
+- **Persistence Ignorance** der Domäne.
+- In-Memory-Repository ist trivialer zu schreiben als ein Mock-`DbContext`.
+
+</div>
+</div>
+
+<div class="mt-5 text-sm opacity-70">
+
+**Synthese:** aggregat-spezifische Domänen-Boundary (kein Generic Repository); niemals `IQueryable` herausleaken; für reine Reads lieber **Query Objects** / direkt `EntityManager`.
+
+</div>
+
+---
+layout: section
+---
+
+# 6. Metaprogramming als Pattern-Substrat
+
+Code, der Code beobachtet oder erzeugt — das Substrat, das Proxy & Decorator _implementiert und industrialisiert_
+
+---
+hideInToc: true
+---
+
+# Das Substrat — vier Techniken, ein Zeit-Spektrum
+
+Dynamische Proxies, AOP, Annotation Processing und Bytecode-Weaving teilen ein Merkmal: sie ziehen **Cross-Cutting-Belange** (Transaktionen, Caching, Security, Mapping, DI) aus handgeschriebenen Klassen heraus.
+
+<div class="grid grid-cols-4 gap-4 mt-8 text-sm">
+<div class="text-center">
+
+**Laufzeit**
+
+Dynamische Proxies (JDK / CGLIB)
+
+</div>
+<div class="text-center">
+
+**Laufzeit**
+
+Spring AOP (Proxy + Advice)
+
+</div>
+<div class="text-center">
+
+**Compile-Zeit**
+
+Annotation Processing (APT)
+
+</div>
+<div class="text-center">
+
+**Compile/Load/Laufzeit**
+
+Bytecode-Weaving (AspectJ)
+
+</div>
+</div>
+
+<div class="mt-8 text-center opacity-70">
+
+Je <strong>später und tiefer</strong> der Eingriff, desto größer die Reichweite — und desto höher die Kosten an Build-Komplexität, Debugging und „Magie".
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Dynamische Proxies — sie _implementieren_ Proxy
+
+<PatternTabs name="proxies" />
+
+---
+hideInToc: true
+---
+
+# Self-Invocation / Re-Entrancy — receiver-abhängig
+
+<PatternTabs name="selfInvocation" />
+
+---
+hideInToc: true
+---
+
+# Spring AOP — industrialisiert, mit Failure Modes
+
+<PatternTabs name="springAop" />
+
+---
+hideInToc: true
+---
+
+# Higher-Order Functions — der explizite Gegenentwurf
+
+<PatternTabs name="hof" />
+
+---
+hideInToc: true
+---
+
+# Das Reihenfolge-Problem: Retry × Transaktion
+
+<div class="grid grid-cols-2 gap-8 mt-4">
+<div>
+
+### Der Bug
+
+Liegt **eine** Transaktion um **alle** Versuche, markiert schon die erste Exception die Transaktion als **rollback-only** — Spring setzt das Flag, _bevor_ der Retry greift.
+
+→ Ein späterer, erfolgreicher Versuch ist vergeblich: Commit scheitert mit _„Transaction has been marked as rollback-only"_.
+
+</div>
+<div>
+
+### Korrekt
+
+**Retry außen, Transaktion innen** — jeder Versuch bekommt eine frische Transaktion.
+
+In Annotationsform zwingend als **Cross-Bean**-Aufruf (sonst greift wegen Self-Invocation der Retry-Proxy nicht).
+
+</div>
+</div>
+
+<div class="mt-5 text-sm opacity-70">
+
+Weitere Reihenfolge-Fälle: **Security vor Transaktion** · **Cache vor Transaktion** · Metrik _innerhalb vs. außerhalb_ von Retry. Transparente Annotationen machen die Reihenfolge **implizit** (still falsch konfigurierbar); funktionale Komposition macht sie **explizit** — die Schachtelung _ist_ der Code.
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Annotation Processing — Magie zur Compile-Zeit
+
+<PatternTabs name="annotationProcessing" />
+
+---
+hideInToc: true
+---
+
+# Bytecode-Weaving — der mächtigste, invasivste Punkt
+
+<div class="grid grid-cols-3 gap-6 mt-6">
+<div>
+
+### AspectJ
+
+Compile- oder Load-Time-Weaving (LTW via Java-Agent). **Voller Joinpoint-Umfang** — Field-Access, Konstruktoren, Self-Invocation. Löst die Spring-AOP-Grenzen, zum Preis von Build-/Agent-Komplexität.
+
+</div>
+<div>
+
+### ByteBuddy / CGLIB
+
+Generieren Klassen zur Laufzeit (Subclass-Proxies). ByteBuddy ist der moderne Standard; **Mockito** baut darauf.
+
+</div>
+<div>
+
+### Hibernate
+
+Bytecode-Enhancement (Build- oder Ladezeit) für **Lazy Loading** und **Dirty Checking**.
+
+</div>
+</div>
+
+<div class="mt-6 text-sm opacity-70">
+
+Weaving kann genau das, woran proxy-basiertes AOP scheitert — der ausgeführte Bytecode ≠ der geschriebene Quellcode (Debugging-Kosten). Die Industrie bewegt sich bei DI/AOP zu **Compile-Zeit** (Micronaut/Quarkus, Spring AOT/Native), getrieben von Startup-Zeit und GraalVM.
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Vergleichsmatrix der Metaprogramming-Techniken
+
+<div class="text-xs mt-4">
+
+| Technik                          | Zeitpunkt             | Reichweite                   | Hauptkosten                                   | Beispiele                 |
+| -------------------------------- | --------------------- | ---------------------------- | --------------------------------------------- | ------------------------- |
+| JDK Dynamic Proxy                | Laufzeit              | nur Interface-Methoden       | Reflection; Interface-Pflicht                 | Spring AOP, Spring Data   |
+| Subclass-Proxy (CGLIB/ByteBuddy) | Laufzeit              | public, non-`final` Methoden | Klassengenerierung; `final`/`private`-Grenzen | Spring AOP, Mockito       |
+| Annotation Processing (APT)      | Compile-Zeit          | generierter Quellcode        | an Build gebunden                             | Lombok, MapStruct, Dagger |
+| Bytecode-Weaving                 | Compile/Load/Laufzeit | Felder, Konstruktoren, alles | Agent/Build, Debugging                        | AspectJ, Hibernate        |
+| JS `Proxy` (Traps)               | Laufzeit              | jeder Property-Zugriff       | dynamisch, kein statischer Check              | Vue 3, MobX, Immer        |
+
+</div>
+
+---
+layout: section
+---
+
+# 7. Meta-Analyse & Schluss
+
+„GoF zielt auf legacy Java/C++" — teilweise korrekt, aber zu pauschal
+
+---
+hideInToc: true
+---
+
+# Verdict: „GoF zielt auf legacy Java/C++"?
+
+<div class="grid grid-cols-3 gap-6 mt-4">
+<div>
+
+### Pro These
+
+- **Norvig**: 16/23 „invisible or simpler".
+- **Graham**: Muster = „sign of trouble".
+- **Gamma 2009**: „drop Singleton"; GoF nutzt C++/Smalltalk, NeXTStep — Kontext der frühen 90er.
+
+</div>
+<div>
+
+### Contra These
+
+- **Adapter, Facade, Composite, Bridge, Proxy** + Architektur-Muster sind sprachunabhängig.
+- Selbst mit ADTs braucht man **Repository, Aggregate, Bounded Context**.
+- Goetz: OO und FP **konvergieren** — nicht „Muster sind falsch".
+
+</div>
+<div>
+
+### Synthese
+
+Nicht „GoF ist tot", sondern: ein Katalog aus **drei Schichten**. Schicht 1 ersetzt, Schicht 2 leichter, Schicht 3 unberührt.
+
+Wer die Schichten nicht trennt, irrt in **beide** Richtungen.
+
+</div>
+</div>
+
+---
+hideInToc: true
+---
+
+# Empfehlungen
+
+<div class="grid grid-cols-2 gap-8 mt-4">
+<div>
+
+1. **Entlang der drei Schichten lehren** — nicht Creational/Structural/Behavioral. Nur die Schichtung macht die Substitutionsachse sichtbar.
+2. **Pro Muster vier Felder:** Intent → GoF-Java → moderne Entsprechung je Sprache → Status-Label.
+3. **Vier Falsche-Freunde-Boxen** explizit machen.
+
+</div>
+<div>
+
+4. **Visitor = Lehrstück Expression Problem** — warum „Lambda ersetzt Pattern X" zu kurz greift; ADTs sind die Antwort.
+5. **Builder = Lehrstück Typsystem-Ebenen** — Laufzeit-Check vs. Compile-Zeit-Kodierung vs. Problemauflösung.
+6. **Metaprogramming als eigene Kategorie** — das Spektrum Laufzeit-Proxy → APT → Weaving ordnet die Industrie-Bewegung zu GraalVM/AOT.
+
+</div>
+</div>
+
+<div class="mt-5 text-xs opacity-60">
+
+Schwellen, die das Bild kippen: Java „carrier classes"/Record-`with`-Evolution → Builder von [RELEVANT] auf [ERSETZT]. JEP 8303099 von Draft auf GA → §5/§7 neu prüfen (vermutlich weiterhin „kein Typestate").
+
+</div>
+
+---
+layout: section
+---
+
+# Pattern × Sprache
+
+Die große Landkarte: weiterhin idiomatisch · moderner Ersatz · trifft nicht zu
+
+---
+hideInToc: true
+---
+
+# Pattern × Sprache — Schicht 1 (Verhalten)
+
+<PatternLanguageMatrix :keys="['singleton','strategy','template','observer','iterator','visitor','state','nullobj']" />
+
+<!--
+- Zellen sind anklickbar (Details als Popup).
+- Schicht 1 ist mehrheitlich ↻ (moderner Ersatz durch Sprachfeatures).
+- Sprachen ohne ADTs/Nullability (Go) zeigen mehr ✓ („relevant") bei Visitor/State/Null Object.
+-->
+
+---
+hideInToc: true
+---
+
+# Pattern × Sprache — Builder · Struktur · Architektur
+
+<PatternLanguageMatrix :keys="['builder','decorator','adapter','proxy','valueobj','repository','factory']" />
+
+<!--
+- Schicht 2/3 ist mehrheitlich ✓ (weiterhin relevant); Value Object & Factory sind die Ausnahmen (↻).
+- Builder ist sprachabhängig: Java/Go/Rust ✓ (Idiom nötig), Kotlin/TS/Python ↻ (named/default args).
+-->
+
+---
+layout: section
+---
+
+# Bonusmaterial
+
+Persistenz-Cluster · Querverweise · Quellen
+
+---
+hideInToc: true
+---
+
+# Persistenz-Pattern: sieben Cluster
+
+<PersistencePatternsMatrix />
+
+<!--
+- Kernanliegen: „jOOQ vs. Hibernate" ist nicht „Query Builder vs. ORM" als wertende Wahl,
+  sondern „SQL ist Wahrheit" vs. „Objekt-Graph ist Wahrheit".
+- Datomic ist KEINE ORM-Alternative, sondern ein anderes Datenmodell (Datalog/EAVT).
+-->
+
+---
+hideInToc: true
+---
+
+# Querverweise
+
+<DesignPatternCrossRef />
+
+---
+hideInToc: true
+---
+
+# Caveats & Quellen
+
+<div class="grid grid-cols-2 gap-8 mt-4 text-sm">
+<div>
+
+### Primärquellen
+
+- GoF 1994 · Bloch, _Effective Java_ Item 3
+- Norvig, _Design Patterns in Dynamic Programming_ (norvig.com)
+- Fowler, _PoEAA_ + bliki (ValueObject, EvansClassification) · Evans, _DDD_ 2003
+- OpenJDK: JEP 395 (record), 409 (sealed), 440/441 (pattern matching), **8303099** (null-safety, _Draft_)
+- Goetz, _Data Oriented Programming in Java_ · kotlinlang.org · docs.spring.io
+
+</div>
+<div>
+
+### Caveats
+
+- **JEP 8303099 ist Draft** — Syntaxdetails sind „strawman/TBD". null-Safety ist in **keinem** Release; §5/§7 sind Designanalyse.
+- Java-Beispiele setzen **Java 21** voraus (sealed ab 17, record ab 16, Pattern Matching final ab 21).
+- Norvigs 16/23 summiert die genannten Kategorien; 7 bleiben auch dynamisch „echte" Muster.
+- Beispiele sind didaktisch reduziert (Imports, Fehlerbehandlung teils ausgelassen).
+
+</div>
+</div>
+
+---
+layout: end
+---
+
+Entwurfsmuster 2026 — drei Schichten, ein Katalog. Danke!

@@ -1,0 +1,415 @@
+{
+  "title": "Pattern × Sprache",
+  "note": "Zelle anklicken für Details. Schicht in der Zeilen-Unterzeile.",
+  "dimensions": [
+    { "key": "singleton", "label": "Singleton", "short": "Schicht 1" },
+    { "key": "strategy", "label": "Strategy / Command", "short": "Schicht 1" },
+    { "key": "template", "label": "Template Method", "short": "Schicht 1" },
+    { "key": "observer", "label": "Observer", "short": "Schicht 1" },
+    { "key": "iterator", "label": "Iterator", "short": "Schicht 1" },
+    { "key": "visitor", "label": "Visitor", "short": "Schicht 1" },
+    { "key": "state", "label": "State", "short": "Schicht 1" },
+    { "key": "nullobj", "label": "Null Object", "short": "Schicht 1" },
+    { "key": "builder", "label": "Builder", "short": "Sonderfall" },
+    { "key": "decorator", "label": "Decorator", "short": "Schicht 2" },
+    { "key": "adapter", "label": "Adapter", "short": "Schicht 2" },
+    { "key": "proxy", "label": "Proxy", "short": "Schicht 2" },
+    { "key": "valueobj", "label": "Value Object", "short": "Schicht 3" },
+    { "key": "repository", "label": "Repository", "short": "Schicht 3" },
+    {
+      "key": "factory",
+      "label": "Factory (Method/Abstract)",
+      "short": "Schicht 3"
+    }
+  ],
+  "tools": [
+    {
+      "key": "java",
+      "name": "Java",
+      "color": "#E76F00",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "enum · DI",
+          "detail": "GoF-Boilerplate ersetzt durch enum (Bloch Item 3), Holder-Idiom oder Spring-DI-Scope. Die Globalstate-Kritik bleibt; nur DI löst die Testbarkeit."
+        },
+        "strategy": {
+          "mark": "ersatz",
+          "teaser": "Lambda",
+          "detail": "java.util.function (Function/UnaryOperator) ersetzt den Interface-Zoo."
+        },
+        "template": {
+          "mark": "ersatz",
+          "teaser": "Supplier-Hook",
+          "detail": "Hook als Funktionsparameter statt abstrakter Methode — Komposition statt Vererbung. Konzept bleibt."
+        },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "Reactor/Flow",
+          "detail": "Reactive Streams (RxJava, Reactor) verallgemeinern Observer um Operatoren, Error/Completion, Backpressure."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "Iterable/Stream",
+          "detail": "Iterable + for-each, Stream für lazy. Man schreibt nie einen Iterator von Hand."
+        },
+        "visitor": {
+          "mark": "ersatz",
+          "teaser": "sealed+switch",
+          "detail": "sealed + Pattern-Switch (JEP 441, JDK 21) mit Compiler-Vollständigkeit löst das Expression Problem."
+        },
+        "state": {
+          "mark": "ersatz",
+          "teaser": "sealed+when",
+          "detail": "sealed + switch; Übergänge als Funktionen. Kein Typestate wie in Rust."
+        },
+        "nullobj": {
+          "mark": "ersatz",
+          "teaser": "Optional",
+          "detail": "Optional (schwächer — nicht für Felder empfohlen). Mit JSpecify/Null-Safety stärker."
+        },
+        "builder": {
+          "mark": "relevant",
+          "teaser": "Builder/Staged",
+          "detail": "Mangels named/default args weiterhin nötig. Nur der Staged Builder ist compile-zeit-sicher."
+        },
+        "decorator": {
+          "mark": "relevant",
+          "teaser": "Komposition",
+          "detail": "Bleibt relevant, aber hohe Boilerplate (jede Methode delegieren)."
+        },
+        "adapter": {
+          "mark": "relevant",
+          "teaser": "Adapter-Klasse",
+          "detail": "Nominal typisiert → Adapter häufiger nötig als bei strukturellen Sprachen."
+        },
+        "proxy": {
+          "mark": "relevant",
+          "teaser": "dyn. Proxy/AOP",
+          "detail": "Dynamische Proxies & Spring AOP implementieren das Muster — sie ersetzen es nicht."
+        },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "record",
+          "detail": "record: equals/hashCode/toString gratis (JEP 395), flach unveränderlich."
+        },
+        "repository": {
+          "mark": "relevant",
+          "teaser": "Spring Data",
+          "detail": "Muster bleibt; Implementierung wird von Spring Data per Proxy generiert."
+        },
+        "factory": {
+          "mark": "ersatz",
+          "teaser": "DI / Factory-fn",
+          "detail": "DI-Container und Factory-Funktionen ersetzen Factory Method / Abstract Factory."
+        }
+      }
+    },
+    {
+      "key": "kotlin",
+      "name": "Kotlin",
+      "color": "#7F52FF",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "object",
+          "detail": "object-Declaration = echtes, lazy + thread-sicheres Singleton per Sprache. companion object ist NICHT dasselbe."
+        },
+        "strategy": {
+          "mark": "ersatz",
+          "teaser": "fun-Typ",
+          "detail": "Funktionstypen + Lambdas."
+        },
+        "template": {
+          "mark": "ersatz",
+          "teaser": "Trailing-Lambda",
+          "detail": "Trailing-Lambda als idiomatischer Hook."
+        },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "Flow",
+          "detail": "Flow/StateFlow mit Operatoren und lebenszyklusgebundener Cancellation."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "Sequence",
+          "detail": "Iterable + Sequence (lazy)."
+        },
+        "visitor": {
+          "mark": "ersatz",
+          "teaser": "sealed+when",
+          "detail": "sealed class + when (erschöpfend)."
+        },
+        "state": { "mark": "ersatz", "teaser": "sealed+when" },
+        "nullobj": {
+          "mark": "ersatz",
+          "teaser": "T? · ?.",
+          "detail": "Nullability im Typsystem (T?), Safe-Call ?."
+        },
+        "builder": {
+          "mark": "ersatz",
+          "teaser": "named/default",
+          "detail": "Named + default Konstruktor-Params machen den Builder überflüssig — Pflichtfeld gratis compile-zeit-erzwungen."
+        },
+        "decorator": {
+          "mark": "relevant",
+          "teaser": "by-Delegation",
+          "detail": "Class Delegation (by) generiert alle übrigen Methoden — Boilerplate weg, Muster bleibt."
+        },
+        "adapter": { "mark": "relevant", "teaser": "extension fns" },
+        "proxy": { "mark": "relevant", "teaser": "Delegation" },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "data/value class",
+          "detail": "data class; value class für Ein-Feld-VOs ohne Heap-Allokation."
+        },
+        "repository": { "mark": "relevant", "teaser": "Spring/Exposed" },
+        "factory": { "mark": "ersatz", "teaser": "Factory-fn / DI" }
+      }
+    },
+    {
+      "key": "ts",
+      "name": "TypeScript",
+      "color": "#3178C6",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "Modul-Const",
+          "detail": "ES-Module sind effektiv Singletons; ein exportierter const-Wert reicht."
+        },
+        "strategy": { "mark": "ersatz", "teaser": "Funktion" },
+        "template": { "mark": "ersatz", "teaser": "Callback" },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "Signals/RxJS",
+          "detail": "Signals (Solid/Angular) bzw. RxJS."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "Generator",
+          "detail": "Iteratorprotokoll + function*-Generatoren."
+        },
+        "visitor": {
+          "mark": "ersatz",
+          "teaser": "Union",
+          "detail": "Discriminated Union; Vollständigkeit über den never-Trick erzwingbar."
+        },
+        "state": { "mark": "ersatz", "teaser": "Union" },
+        "nullobj": {
+          "mark": "ersatz",
+          "teaser": "T | null · ?.",
+          "detail": "strictNullChecks + Optional Chaining."
+        },
+        "builder": {
+          "mark": "ersatz",
+          "teaser": "Options-Objekt",
+          "detail": "Options-Objekt mit optionalen Properties; Pflichtfeld vom Type-Checker erzwungen. Type-level set tracking löst sogar die kombinatorische Explosion."
+        },
+        "decorator": {
+          "mark": "relevant",
+          "teaser": "Komposition",
+          "detail": "GoF-Decorator = Wrapper. @decorator ist ein anderer Mechanismus (Definitionszeit-Transformation)."
+        },
+        "adapter": {
+          "mark": "relevant",
+          "teaser": "strukturell→selten",
+          "detail": "Strukturelle Typisierung senkt den Bedarf: passt die Form, ist kein Adapter nötig."
+        },
+        "proxy": {
+          "mark": "relevant",
+          "teaser": "Proxy-Traps",
+          "detail": "Eingebauter Proxy fängt jeden Property-Zugriff ab (Vue 3, MobX, Immer)."
+        },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "readonly type",
+          "detail": "Typ + readonly; Wertgleichheit aber nicht eingebaut (Referenzvergleich)."
+        },
+        "repository": {
+          "mark": "relevant",
+          "teaser": "über ORM",
+          "detail": "Repository über Prisma/TypeORM/MikroORM."
+        },
+        "factory": { "mark": "ersatz", "teaser": "Factory-fn" }
+      }
+    },
+    {
+      "key": "rust",
+      "name": "Rust",
+      "color": "#CE422B",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "OnceLock",
+          "detail": "OnceLock für lazy globale, unveränderliche Werte. Bewusst unbequem — drängt zu DI."
+        },
+        "strategy": {
+          "mark": "ersatz",
+          "teaser": "Fn-Closure",
+          "detail": "Closure als Fn-beschränkter generischer Parameter (zero-cost, monomorphisiert)."
+        },
+        "template": { "mark": "ersatz", "teaser": "Fn-Param" },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "Stream/channel",
+          "detail": "Streams (futures) bzw. channels."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "Iterator-Trait",
+          "detail": "Iterator-Trait mit lazy, zero-cost Adaptern."
+        },
+        "visitor": {
+          "mark": "ersatz",
+          "teaser": "enum+match",
+          "detail": "enum + match (erschöpfend) — Rust stand hier von Anfang an."
+        },
+        "state": {
+          "mark": "ersatz",
+          "teaser": "Typestate",
+          "detail": "enum + match; oder Typestate: ungültige Übergänge sind nicht kompilierbar."
+        },
+        "nullobj": {
+          "mark": "ersatz",
+          "teaser": "Option<T>",
+          "detail": "Option<T> statt Null Object."
+        },
+        "builder": {
+          "mark": "relevant",
+          "teaser": "typed-builder",
+          "detail": "Keine named/default args. Pragmatisch build()->Result (Laufzeit) oder Typestate via PhantomData (Compile-Zeit)."
+        },
+        "decorator": { "mark": "relevant", "teaser": "newtype/Deref" },
+        "adapter": { "mark": "relevant", "teaser": "From/Into" },
+        "proxy": {
+          "mark": "relevant",
+          "teaser": "Deref/wrapper",
+          "detail": "Kein dynamischer Proxy; Deref-Coercion und Wrapper-Typen."
+        },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "struct+derive",
+          "detail": "struct mit #[derive(PartialEq, Eq, Clone)] — Wertgleichheit."
+        },
+        "repository": { "mark": "relevant", "teaser": "über Diesel/sqlx" },
+        "factory": { "mark": "ersatz", "teaser": "assoc. fn (new)" }
+      }
+    },
+    {
+      "key": "go",
+      "name": "Go",
+      "color": "#00ADD8",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "sync.Once",
+          "detail": "Paket-Singleton via sync.Once (lazy, thread-sicher)."
+        },
+        "strategy": {
+          "mark": "ersatz",
+          "teaser": "func-Typ",
+          "detail": "Benannter Funktionstyp, first-class."
+        },
+        "template": { "mark": "ersatz", "teaser": "func-Param" },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "channel",
+          "detail": "Channels statt Listener-Listen."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "range / iter",
+          "detail": "range; range-over-func-Iteratoren seit Go 1.23."
+        },
+        "visitor": {
+          "mark": "relevant",
+          "teaser": "kein ADT",
+          "detail": "Keine Summen-Typen/sealed. Type Switch ohne Vollständigkeitsprüfung; Visitor (oder Codegen) bleibt eine Option."
+        },
+        "state": {
+          "mark": "relevant",
+          "teaser": "iota/structs",
+          "detail": "Kein ADT; Zustände via iota-Konstanten/Structs, ohne erschöpfende Prüfung."
+        },
+        "nullobj": {
+          "mark": "relevant",
+          "teaser": "nil; Null Obj",
+          "detail": "Keine Nullability im Typsystem und kein Option-Typ — Null Object bleibt sinnvoll (nil-Interface)."
+        },
+        "builder": {
+          "mark": "relevant",
+          "teaser": "func. options",
+          "detail": "Weder named noch default args → Functional Options Pattern (Pike/Cheney)."
+        },
+        "decorator": { "mark": "relevant", "teaser": "embedding" },
+        "adapter": {
+          "mark": "relevant",
+          "teaser": "strukturell→selten",
+          "detail": "Strukturelle Interfaces: erfüllt ein Typ die Methodenform, konformiert er implizit — kein Adapter nötig."
+        },
+        "proxy": { "mark": "relevant", "teaser": "Wrapper" },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "struct (==)",
+          "detail": "Structs sind vergleichbar (Wertsemantik), aber nicht sprachseitig immutable."
+        },
+        "repository": { "mark": "relevant", "teaser": "über sqlc/ent" },
+        "factory": { "mark": "ersatz", "teaser": "NewX-Funktion" }
+      }
+    },
+    {
+      "key": "python",
+      "name": "Python",
+      "color": "#3776AB",
+      "cells": {
+        "singleton": {
+          "mark": "ersatz",
+          "teaser": "Modul / Borg",
+          "detail": "Modul-Objekte sind Singletons; ansonsten Borg-Idiom oder DI."
+        },
+        "strategy": { "mark": "ersatz", "teaser": "callable" },
+        "template": { "mark": "ersatz", "teaser": "callable" },
+        "observer": {
+          "mark": "ersatz",
+          "teaser": "asyncio / Rx",
+          "detail": "asyncio-Streams bzw. RxPy."
+        },
+        "iterator": {
+          "mark": "ersatz",
+          "teaser": "Generator",
+          "detail": "yield-Generatoren; Iterator-Protokoll sprachverwaltet."
+        },
+        "visitor": {
+          "mark": "ersatz",
+          "teaser": "match-case",
+          "detail": "Structural Pattern Matching (3.10) — ohne erzwungene Vollständigkeit."
+        },
+        "state": { "mark": "ersatz", "teaser": "enum / match" },
+        "nullobj": {
+          "mark": "ersatz",
+          "teaser": "None / Optional",
+          "detail": "None + Optional[...] (Type-Hints, dynamisch geprüft)."
+        },
+        "builder": {
+          "mark": "ersatz",
+          "teaser": "kwargs/dataclass",
+          "detail": "Keyword-args + @dataclass; Pflichtfeld-Verstoß ist ein TypeError zur Laufzeit."
+        },
+        "decorator": {
+          "mark": "relevant",
+          "teaser": "Wrapper (≠ @)",
+          "detail": "GoF-Decorator = Wrapper-Objekt. @decorator ist HOF zur Definitionszeit (Falscher Freund)."
+        },
+        "adapter": { "mark": "relevant", "teaser": "Duck Typing" },
+        "proxy": { "mark": "relevant", "teaser": "__getattr__" },
+        "valueobj": {
+          "mark": "ersatz",
+          "teaser": "frozen dataclass",
+          "detail": "@dataclass(frozen=True): __eq__/__hash__ generiert, immutable."
+        },
+        "repository": { "mark": "relevant", "teaser": "über SQLAlchemy" },
+        "factory": { "mark": "ersatz", "teaser": "Factory-fn" }
+      }
+    }
+  ]
+}
