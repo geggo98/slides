@@ -140,7 +140,7 @@ E-commerce platform: Next.js 14, Postgres, Stripe.
             <td>CC Status</td>
             <td>
               <span class="dng">Nicht nativ.</span> Issue #6235 mit 3.200+
-              Upvotes. Workaround: <code>@AGENTS.md</code>
+              Upvotes. Notlösung: <code>@AGENTS.md</code>
             </td>
           </tr>
         </tbody>

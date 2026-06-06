@@ -39,7 +39,7 @@ export const STEPS: AttackStep[] = [
     date: "28. Jan 2026",
     icon: "\u{1F489}",
     detail:
-      "Ein Angreifer (GitHub-User \u201egtlhub-actions\u201c) erstellt Issue #8904 im cline/cline-Repository. Der Titel enth\u00e4lt eine als Fehlermeldung getarnte Anweisung, die Claude dazu bringt, `npm install github:cline/cline#<commit>` auszuf\u00fchren. Der Commit stammt aus einem Angreifer-Fork und ist \u00fcber GitHubs Fork-Architektur erreichbar \u2014 selbst nach L\u00f6schung des Forks (\u201eDangling Commit\u201c).",
+      "Ein Angreifer (GitHub-Nutzer \u201egtlhub-actions\u201c) erstellt Issue #8904 im cline/cline-Repository. Der Titel enth\u00e4lt eine als Fehlermeldung getarnte Anweisung, die Claude dazu bringt, `npm install github:cline/cline#<commit>` auszuf\u00fchren. Der Commit stammt aus einem Angreifer-Fork und ist \u00fcber GitHubs Fork-Architektur erreichbar \u2014 selbst nach L\u00f6schung des Forks (\u201eDangling Commit\u201c).",
     tech: 'Angriffsvektor: Indirect Prompt Injection\nWorkflow: claude-issue-triage.yml\nSchwachstelle: ${{ github.event.issue.title }} direkt im Prompt interpoliert\nZugang: allowed_non_write_users: "*"',
     prereq:
       "Cline hatte am 21. Dez. 2025 den claude-issue-triage.yml Workflow hinzugef\u00fcgt \u2014 mit Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch als zugelassene Tools.",

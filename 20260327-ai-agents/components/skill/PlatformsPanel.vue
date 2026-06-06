@@ -85,7 +85,7 @@ import CollapsibleSection from "./CollapsibleSection.vue";
         </div>
       </div>
       <div class="callout">
-        <b>AGENTS.md-Workaround für Claude Code:</b> Da Claude Code AGENTS.md
+        <b>AGENTS.md-Notlösung für Claude Code:</b> Da Claude Code AGENTS.md
         nicht nativ liest, kann man es per <code>@Import</code> in die CLAUDE.md
         einbinden: <code>See @AGENTS.md for cross-tool conventions.</code>
       </div>

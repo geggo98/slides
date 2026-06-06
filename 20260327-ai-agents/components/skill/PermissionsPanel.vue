@@ -14,19 +14,15 @@ import CollapsibleSection from "./CollapsibleSection.vue";
       gewinnt immer).
       <div class="flow">
         <div class="flow-box fb-purple">
-          User Settings<br /><span class="flow-sub"
-            >~/.claude/settings.json</span
-          >
+          Nutzer<br /><span class="flow-sub">~/.claude/settings.json</span>
         </div>
         <span class="flow-arrow">&rarr;</span>
         <div class="flow-box fb-teal">
-          Project Settings<br /><span class="flow-sub"
-            >.claude/settings.json</span
-          >
+          Projekt<br /><span class="flow-sub">.claude/settings.json</span>
         </div>
         <span class="flow-arrow">&rarr;</span>
         <div class="flow-box fb-amber">
-          Local Settings<br /><span class="flow-sub">settings.local.json</span>
+          Lokal<br /><span class="flow-sub">settings.local.json</span>
         </div>
         <span class="flow-arrow">&rarr;</span>
         <div class="flow-box fb-red">

@@ -327,7 +327,7 @@ hideInToc: true
 
 **2. Abrechnung** — ab **2026-06-15** zählt `claude -p` auf Pro/Max-Plänen gegen ein separates **Agent-SDK-Credit**, nicht gegen das interaktive Kontingent.
 
-**3. Workaround: vollständig puffern, dann übergeben** — Subshell läuft fertig, Claude bekommt sofort einen geschlossenen Stream.
+**3. Umgehung: vollständig puffern, dann übergeben** — Subshell läuft fertig, Claude bekommt sofort einen geschlossenen Stream.
 
 ```bash
 # Bash / Zsh — Herestring puffert über $(...)
@@ -538,7 +538,7 @@ clicks: false
 hideInToc: true
 ---
 
-# Agent Skills — Deep Dive
+# Agent Skills — im Detail
 
 <SkillInfographic />
 
@@ -600,7 +600,7 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
 | ----------------- | ----------------------------------------------- | --------------------- |
 | **`environment`** | vertrauenswürdige Repos/Buckets/Domains (Prosa) | was gilt als „extern" |
 | **`hard_deny`**   | unbedingte Boundary — ignoriert Intent & Allows | hart (v2.1.136+)      |
-| **`soft_deny`**   | destruktiv, aber per User-Intent aufhebbar      | weich                 |
+| **`soft_deny`**   | destruktiv, aber vom Nutzer aufhebbar           | weich                 |
 | **`allow`**       | Carve-out gegen zu strenge Built-in-Block-Regel | Ausnahme              |
 
 ```json

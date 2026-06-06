@@ -370,7 +370,7 @@
       "question": "Welche Aussagen zu Stdin-Pipes mit `claude -p` treffen zu?",
       "difficulty": "hard",
       "section": "Pipes & Headless",
-      "explanation": "Claude wartet 3 Sekunden auf das erste Stdin-Byte. Kommt nichts, läuft er ohne Stdin weiter. Kommen Daten, wartet er auf EOF — daher hängt `tail -f | claude -p` ewig. Workaround: vorher vollständig puffern.",
+      "explanation": "Claude wartet 3 Sekunden auf das erste Stdin-Byte. Kommt nichts, läuft er ohne Stdin weiter. Kommen Daten, wartet er auf EOF — daher hängt `tail -f | claude -p` ewig. Notlösung: vorher vollständig puffern.",
       "options": [
         {
           "id": "stdin-pipe-pitfalls-o0",
@@ -386,13 +386,13 @@
         },
         {
           "id": "stdin-pipe-pitfalls-o2",
-          "text": "Bash-Workaround: `claude -p \"…\" <<< \"$(cmd)\"` puffert vollständig und schließt dann.",
+          "text": "Bash-Notlösung: `claude -p \"…\" <<< \"$(cmd)\"` puffert vollständig und schließt dann.",
           "verdict": "true",
           "explanation": "Herestring führt die Subshell zu Ende und reicht einen geschlossenen Stream weiter."
         },
         {
           "id": "stdin-pipe-pitfalls-o3",
-          "text": "Fish-Workaround: `claude -p \"…\" < (cmd | psub)` — psub schreibt in ein Tempfile.",
+          "text": "Fish-Notlösung: `claude -p \"…\" < (cmd | psub)` — psub schreibt in ein Tempfile.",
           "verdict": "true",
           "explanation": "psub ohne `-F`/`--fifo` puffert in eine Datei und vermeidet den EOF-Hang."
         },
