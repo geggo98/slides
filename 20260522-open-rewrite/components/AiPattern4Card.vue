@@ -22,7 +22,7 @@ import AiPattern4Pipeline from "./AiPattern4Pipeline.vue";
       'Architektur-Modelle nicht stabil',
       'Niemand maintained die Kontext-Files',
     ]"
-    verdict="Konzeptuell unterschätzt — das wird sich durchsetzen, auch ohne Moderne-Branding. Caveat: vollständige Implementierung hinter MPL-Paywall."
+    verdict="Konzeptuell unterschätzt — das wird sich durchsetzen, auch ohne Moderne-Branding. Achtung: vollständige Implementierung hinter MPL-Paywall."
   >
     <template #pipeline>
       <AiPattern4Pipeline />

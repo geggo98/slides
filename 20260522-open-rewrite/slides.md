@@ -27,7 +27,7 @@ Zielgruppe: Java- und Spring-Boot-Entwicklerinnen und -Entwickler, die ihre Code
 <!--
 - Stand: Mai 2026.
 - Wir reden Klartext: Lizenz-Schmerzen, AI-Halluzinationen, Kotlin-Realität werden benannt.
-- Der Vortrag hat 7 Sektionen — Inhaltsverzeichnis auf der nächsten Slide nach dem TL;DR.
+- Der Vortrag hat 7 Sektionen — Inhaltsverzeichnis auf der nächsten Slide nach der Kurzfassung.
 - Praxisbeispiel JSpecify-Migration verbindet Recipe-Mechanik mit KI-Pattern 1+2.
 -->
 
@@ -36,7 +36,7 @@ layout: center
 hideInToc: true
 ---
 
-# TL;DR
+# Kurzfassung
 
 <div class="text-left mt-8 max-w-3xl mx-auto space-y-4">
 
