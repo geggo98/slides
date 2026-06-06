@@ -354,7 +354,7 @@ Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manu
 hideInToc: true
 ---
 
-# Claude Code ToolSearch: State of the Art
+# Claude Code ToolSearch: Stand der Technik
 
 <div class="text-sm opacity-70 mb-2">
 
@@ -426,7 +426,7 @@ hideInToc: true
 ### Community-Reports
 
 - Einzelne Resumes für **$342**
-- 80% des Usage-Limits mit **0 User-Inputs**
+- 80% der Nutzungsgrenze mit **0 Eingaben**
 - 480-Message-Session: **39K Tokens** reine Signaturen = 25% des Payloads
 
 </div>
@@ -464,7 +464,7 @@ Derselbe Harness, drei Cache-Charakteristiken — wer das ignoriert, zahlt schne
 
 **TTL: 1 h** auf Max · **5 min** auf Pro/API.
 
-Server-controlled — März-2026-Regression drückte 1h → 5m für viele User (#46829, ~17–25% Mehrkosten).
+Server-controlled — März-2026-Regression drückte 1h → 5m für viele Nutzer (#46829, ~17–25% Mehrkosten).
 
 Seit **v2.1.108** explizit via `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHING_5M`.
 
@@ -749,13 +749,13 @@ hideInToc: true
 layout: section
 ---
 
-# 10. Takeaways
+# 10. Kernaussagen
 
 ---
 hideInToc: true
 ---
 
-# Takeaways
+# Kernaussagen
 
 <div class="mt-4 space-y-6">
 
