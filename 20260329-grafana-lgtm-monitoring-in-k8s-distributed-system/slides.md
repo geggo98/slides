@@ -441,7 +441,7 @@ data:
 
 Statt zwei Metriken gegen die Zeit zu plotten, plottet man sie **gegeneinander** (X-Y). Die Trajektorie zeigt die Hysterese-Schleife.
 
-| Kombination        | X-Achse      | Y-Achse          | Insight                                         |
+| Kombination        | X-Achse      | Y-Achse          | Erkenntnis                                      |
 | ------------------ | ------------ | ---------------- | ----------------------------------------------- |
 | CPU vs. Latenz     | CPU-Usage    | P99 Latenz       | Knickpunkt CPU → Latenz, Hysterese bei Recovery |
 | Rate vs. Errors    | Request-Rate | Error-Rate       | Ab welcher Rate beginnen Errors?                |
