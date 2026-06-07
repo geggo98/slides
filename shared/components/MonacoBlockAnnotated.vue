@@ -32,6 +32,13 @@ const normalized = computed(() =>
   }),
 );
 
+// Hinweis nur zeigen, wenn es echt klickbare Annotationen MIT Details gibt.
+// klickbar = hat ein `label` (nur dann wird eine View-Zone erzeugt, s. u.);
+// nützlich  = hat ein `detail` (nur dann erscheint beim Klick ein Panel).
+const hasClickableDetails = computed(() =>
+  normalized.value.some((a) => a.label && a.detail),
+);
+
 const activeId = ref(props.defaultDetail);
 
 const currentDetail = computed(() => {
@@ -119,6 +126,11 @@ function toggleDetail(id) {
   emit("activate", activeId.value);
 }
 
+function closeDetail() {
+  activeId.value = null;
+  emit("activate", null);
+}
+
 function onReady(payload) {
   editor = payload.editor;
   monaco = payload.monaco;
@@ -139,26 +151,36 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="mba">
-    <div class="mba-hint">
+    <div v-if="hasClickableDetails" class="mba-hint">
       <span class="dot" />
       &#x1F4A1; Annotationen sind klickbar und zeigen Details
     </div>
-    <MonacoBlock
-      :code="code"
-      :language="language"
-      :height="height"
-      :editor-options="editorOptions"
-      :show-language-badge="showLanguageBadge"
-      :badge-position="badgePosition"
-      @ready="onReady"
-    />
-    <div
-      v-if="currentDetail"
-      :class="['mba-detail', `ann-tone-${currentDetail.tone}`]"
-    >
-      <div class="mba-detail-title">{{ currentDetail.title }}</div>
-      <div class="mba-detail-body" v-html="currentDetail.body" />
-      <slot name="detail" :detail="currentDetail" />
+    <div class="mba-stage" :style="{ height }">
+      <MonacoBlock
+        :code="code"
+        :language="language"
+        :height="height"
+        :editor-options="editorOptions"
+        :show-language-badge="showLanguageBadge"
+        :badge-position="badgePosition"
+        @ready="onReady"
+      />
+      <div
+        v-if="currentDetail"
+        :class="['mba-detail', `ann-tone-${currentDetail.tone}`]"
+      >
+        <button
+          class="mba-detail-close"
+          type="button"
+          aria-label="Schließen"
+          @click="closeDetail"
+        >
+          &#x2715;
+        </button>
+        <div class="mba-detail-title">{{ currentDetail.title }}</div>
+        <div class="mba-detail-body" v-html="currentDetail.body" />
+        <slot name="detail" :detail="currentDetail" />
+      </div>
     </div>
   </div>
 </template>
@@ -184,12 +206,38 @@ onBeforeUnmount(() => {
   border: 0.5px solid var(--color-border-info);
   flex-shrink: 0;
 }
+.mba-stage {
+  position: relative;
+}
 .mba-detail {
-  padding: 10px 14px;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: 70%;
+  overflow-y: auto;
+  z-index: 30;
+  padding: 10px 34px 10px 14px;
   border-radius: var(--sk-rad);
   border: 0.5px solid var(--color-border-tertiary);
   font-size: 13px;
   line-height: 1.55;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
+}
+.mba-detail-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px;
+  color: var(--color-text-tertiary);
+}
+.mba-detail-close:hover {
+  color: var(--color-text-primary);
 }
 .mba-detail-title {
   font-weight: 500;
