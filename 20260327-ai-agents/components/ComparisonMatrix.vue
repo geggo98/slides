@@ -1,14 +1,15 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import Tabs from "@shared/components/Tabs.vue";
 
 const { isDark } = useDarkMode();
 
 const tab = ref("files");
 const tabs = [
-  { id: "files", label: "Dateien" },
-  { id: "features", label: "Features" },
-  { id: "compat", label: "Kompatibilität" },
+  { key: "files", label: "Dateien" },
+  { key: "features", label: "Features" },
+  { key: "compat", label: "Kompatibilität" },
 ];
 
 const tools = [
@@ -241,100 +242,101 @@ const compatData = computed(() => ({
     gemini: "—",
   },
 }));
+
+const tabVars = computed(() => ({
+  "--sk-tab-gap": "4px",
+  "--sk-tab-bar-mb": "10px",
+  "--sk-tab-font-size": "10px",
+  "--sk-tab-font-weight": "500",
+  "--sk-tab-pad": "3px 10px",
+  "--sk-tab-radius": "4px",
+  "--sk-tab-border": `1px solid ${C.value.tabBtnBorder}`,
+  "--sk-tab-bg": "transparent",
+  "--sk-tab-color": C.value.tabBtnColor,
+  "--sk-tab-hover-bg": "transparent",
+  "--sk-tab-transition": "none",
+  "--sk-tab-active-bg": C.value.tabActiveBg,
+  "--sk-tab-active-color": C.value.tabActiveColor,
+  "--sk-tab-active-border": C.value.tabBtnBorder,
+}));
 </script>
 
 <template>
-  <div class="tabs">
-    <button
-      v-for="t in tabs"
-      :key="t.id"
-      :class="{ active: tab === t.id }"
-      @click.stop="tab = t.id"
-    >
-      {{ t.label }}
-    </button>
-  </div>
+  <div class="cmx-tabs" :style="tabVars">
+    <Tabs v-model="tab" :tabs="tabs" aria-label="Vergleichsmatrix">
+      <template #files>
+        <div class="table-wrap">
+          <table class="mtx">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Instruktionsdatei</th>
+                <th>Skills</th>
+                <th>Hooks</th>
+                <th>MCP</th>
+                <th>Subagents</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="t in tools" :key="t.key">
+                <td class="tool-name">{{ t.name }}</td>
+                <td class="mono">{{ t.instrFile }}</td>
+                <td class="mono">{{ t.skills }}</td>
+                <td class="mono">{{ t.hooks }}</td>
+                <td class="mono">{{ t.mcp }}</td>
+                <td class="mono">{{ t.subagents }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
 
-  <div class="table-wrap">
-    <table v-if="tab === 'files'" class="mtx">
-      <thead>
-        <tr>
-          <th>Tool</th>
-          <th>Instruktionsdatei</th>
-          <th>Skills</th>
-          <th>Hooks</th>
-          <th>MCP</th>
-          <th>Subagents</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="t in tools" :key="t.key">
-          <td class="tool-name">{{ t.name }}</td>
-          <td class="mono">{{ t.instrFile }}</td>
-          <td class="mono">{{ t.skills }}</td>
-          <td class="mono">{{ t.hooks }}</td>
-          <td class="mono">{{ t.mcp }}</td>
-          <td class="mono">{{ t.subagents }}</td>
-        </tr>
-      </tbody>
-    </table>
+      <template #features>
+        <div class="table-wrap">
+          <table class="mtx">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th v-for="t in tools" :key="t.key">{{ t.short }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="f in features" :key="f.name">
+                <td style="font-weight: 500">{{ f.name }}</td>
+                <td v-for="t in tools" :key="t.key" v-html="f[t.key]" />
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
 
-    <table v-if="tab === 'features'" class="mtx">
-      <thead>
-        <tr>
-          <th>Feature</th>
-          <th v-for="t in tools" :key="t.key">{{ t.short }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="f in features" :key="f.name">
-          <td style="font-weight: 500">{{ f.name }}</td>
-          <td v-for="t in tools" :key="t.key" v-html="f[t.key]" />
-        </tr>
-      </tbody>
-    </table>
-
-    <table v-if="tab === 'compat'" class="mtx">
-      <thead>
-        <tr>
-          <th>Von \ Nach</th>
-          <th v-for="t in tools" :key="t.key">{{ t.short }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="t in tools" :key="t.key">
-          <td class="tool-name">{{ t.short }}</td>
-          <td
-            v-for="t2 in tools"
-            :key="t2.key"
-            v-html="compatData[t.key]?.[t2.key] ?? '—'"
-          />
-        </tr>
-      </tbody>
-    </table>
+      <template #compat>
+        <div class="table-wrap">
+          <table class="mtx">
+            <thead>
+              <tr>
+                <th>Von \ Nach</th>
+                <th v-for="t in tools" :key="t.key">{{ t.short }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="t in tools" :key="t.key">
+                <td class="tool-name">{{ t.short }}</td>
+                <td
+                  v-for="t2 in tools"
+                  :key="t2.key"
+                  v-html="compatData[t.key]?.[t2.key] ?? '—'"
+                />
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+    </Tabs>
   </div>
 </template>
 
 <style scoped>
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 10px;
-}
-.tabs button {
-  font-size: 10px;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 4px;
-  border: 1px solid v-bind("C.tabBtnBorder");
-  background: transparent;
-  color: v-bind("C.tabBtnColor");
-  cursor: pointer;
-}
-.tabs button.active {
-  background: v-bind("C.tabActiveBg");
-  color: v-bind("C.tabActiveColor");
-}
 .table-wrap {
   overflow-x: auto;
 }

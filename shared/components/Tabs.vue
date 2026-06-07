@@ -89,7 +89,11 @@ function onKey(e: KeyboardEvent, i: number) {
       </button>
     </div>
     <div class="sk-tab-panel">
+      <!-- Per-tab content: one named slot per key (<template #keyA>). -->
       <slot :name="active" :active="active" />
+      <!-- Data-driven decks render a single panel from the active key via the
+           default scoped slot: <Tabs v-model=… v-slot="{ active }">…</Tabs>. -->
+      <slot :active="active" />
     </div>
   </div>
 </template>
@@ -116,10 +120,14 @@ function onKey(e: KeyboardEvent, i: number) {
   background: var(--sk-tab-bg, transparent);
   color: var(--sk-tab-color, var(--color-text-secondary));
   cursor: pointer;
-  transition:
+  /* Default matches the JavaVersionsMatrix original; decks whose tabs had no
+     transition set --sk-tab-transition: none for an exact no-op. */
+  transition: var(
+    --sk-tab-transition,
     background 0.15s,
     color 0.15s,
-    border-color 0.15s;
+    border-color 0.15s
+  );
 }
 .sk-tab:hover {
   background: var(--sk-tab-hover-bg, var(--color-background-secondary));
@@ -128,6 +136,9 @@ function onKey(e: KeyboardEvent, i: number) {
   background: var(--sk-tab-active-bg, var(--color-background-secondary));
   color: var(--sk-tab-active-color, var(--color-text-primary));
   border-color: var(--sk-tab-active-border, var(--color-text-secondary));
+  /* Defaults to the base weight; set this when active tabs were heavier than
+     inactive (e.g. inactive 400 / active 500). */
+  font-weight: var(--sk-tab-active-font-weight, var(--sk-tab-font-weight, 500));
 }
 .sk-tab-panel {
   width: 100%;

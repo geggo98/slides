@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 import MonacoBlock from "@shared/components/MonacoBlock.vue";
 import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 import PreconditionsTable from "./PreconditionsTable.vue";
@@ -11,59 +11,56 @@ import {
 } from "./slide-data.ts";
 
 const tabs = [
-  { id: "precond", label: "Preconditions" },
-  { id: "yaml", label: "Declarative YAML" },
-  { id: "boot", label: "Spring Boot Komposition" },
+  { key: "precond", label: "Preconditions" },
+  { key: "yaml", label: "Declarative YAML" },
+  { key: "boot", label: "Spring Boot Komposition" },
 ];
-const active = ref("precond");
 </script>
 
 <template>
   <div class="rk-wrap">
-    <div class="tab-bar">
-      <button
-        v-for="t in tabs"
-        :key="t.id"
-        :class="{ active: active === t.id }"
-        type="button"
-        @click.stop="active = t.id"
-      >
-        {{ t.label }}
-      </button>
-    </div>
-
-    <div :key="active" class="panel">
-      <template v-if="active === 'precond'">
-        <p class="lead">
-          Unterschied zwischen 30 Sekunden und zwei Stunden Recipe-Lauf.
-          Preconditions filtern bereits geparste Files — sparen <em>Edit</em>-,
-          nicht <em>Parse</em>-Aufwand.
-        </p>
-        <MonacoBlock :code="preconditionsCode" language="java" height="160px" />
-        <PreconditionsTable />
+    <Tabs :tabs="tabs" aria-label="Recipe-Komposition">
+      <template #precond>
+        <div class="panel">
+          <p class="lead">
+            Unterschied zwischen 30 Sekunden und zwei Stunden Recipe-Lauf.
+            Preconditions filtern bereits geparste Files — sparen
+            <em>Edit</em>-, nicht <em>Parse</em>-Aufwand.
+          </p>
+          <MonacoBlock
+            :code="preconditionsCode"
+            language="java"
+            height="160px"
+          />
+          <PreconditionsTable />
+        </div>
       </template>
 
-      <template v-else-if="active === 'yaml'">
-        <p class="lead">
-          Die <code>UpgradeSpringBoot_X_Y</code>-Recipes sind fast komplett YAML
-          — keine Java-Klasse, nur Komposition vorhandener Recipes.
-        </p>
-        <MonacoBlockAnnotated
-          :code="yamlRecipeCode"
-          language="yaml"
-          height="320px"
-          :annotations="yamlRecipeAnnotations"
-        />
+      <template #yaml>
+        <div class="panel">
+          <p class="lead">
+            Die <code>UpgradeSpringBoot_X_Y</code>-Recipes sind fast komplett
+            YAML — keine Java-Klasse, nur Komposition vorhandener Recipes.
+          </p>
+          <MonacoBlockAnnotated
+            :code="yamlRecipeCode"
+            language="yaml"
+            height="320px"
+            :annotations="yamlRecipeAnnotations"
+          />
+        </div>
       </template>
 
-      <template v-else-if="active === 'boot'">
-        <p class="lead">
-          <code>UpgradeSpringBoot_4_0</code> als Composite — zieht alle
-          Begleit-Upgrades rekursiv mit.
-        </p>
-        <SpringBootCompositionTree />
+      <template #boot>
+        <div class="panel">
+          <p class="lead">
+            <code>UpgradeSpringBoot_4_0</code> als Composite — zieht alle
+            Begleit-Upgrades rekursiv mit.
+          </p>
+          <SpringBootCompositionTree />
+        </div>
       </template>
-    </div>
+    </Tabs>
   </div>
 </template>
 
@@ -72,28 +69,19 @@ const active = ref("precond");
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.tab-bar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  padding-bottom: 8px;
-}
-.tab-bar button {
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 12px;
-  background: transparent;
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: var(--sk-rad);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-.tab-bar button.active {
-  background: var(--color-background-info);
-  color: var(--color-text-info);
-  border-color: var(--color-border-info);
+  --sk-tab-gap: 6px;
+  --sk-tab-bar-mb: 10px;
+  --sk-tab-bar-pb: 8px;
+  --sk-tab-bar-border-bottom: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-font-weight: inherit;
+  --sk-tab-pad: 6px 12px;
+  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-radius: var(--sk-rad);
+  --sk-tab-hover-bg: transparent;
+  --sk-tab-transition: none;
+  --sk-tab-active-bg: var(--color-background-info);
+  --sk-tab-active-color: var(--color-text-info);
+  --sk-tab-active-border: var(--color-border-info);
 }
 .panel {
   display: flex;

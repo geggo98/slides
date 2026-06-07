@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 import MonacoBlock from "@shared/components/MonacoBlock.vue";
 import MethodMatcherTable from "./MethodMatcherTable.vue";
@@ -13,83 +13,83 @@ import {
 } from "./slide-data.ts";
 
 const tabs = [
-  { id: "anatomy", label: "Anatomie" },
-  { id: "visitor", label: "Visitor" },
-  { id: "matcher", label: "MethodMatcher" },
-  { id: "template", label: "JavaTemplate" },
+  { key: "anatomy", label: "Anatomie" },
+  { key: "visitor", label: "Visitor" },
+  { key: "matcher", label: "MethodMatcher" },
+  { key: "template", label: "JavaTemplate" },
 ];
-const active = ref("anatomy");
 </script>
 
 <template>
   <div class="rm-wrap">
-    <div class="tab-bar">
-      <button
-        v-for="t in tabs"
-        :key="t.id"
-        :class="{ active: active === t.id }"
-        type="button"
-        @click.stop="active = t.id"
-      >
-        {{ t.label }}
-      </button>
-    </div>
-
-    <div :key="active" class="panel">
-      <template v-if="active === 'anatomy'">
-        <p class="lead">
-          Drei Teile: Metadaten/Optionen, Constructor, Visitor.
-        </p>
-        <MonacoBlockAnnotated
-          :code="sayHelloRecipeCode"
-          language="java"
-          height="300px"
-          :annotations="sayHelloAnnotations"
-        />
-      </template>
-
-      <template v-else-if="active === 'visitor'">
-        <p class="lead">
-          Depth-first, <code>super.visitX()</code> ist Pflicht. Cursor liefert
-          Parent-Kontext.
-        </p>
-        <MonacoBlockAnnotated
-          :code="visitorMechanicsCode"
-          language="java"
-          height="200px"
-          :annotations="visitorAnnotations"
-        />
-        <div class="callout">
-          <strong>JavaIsoVisitor vs. JavaVisitor:</strong>
-          Iso ist typerhaltend (Methode bleibt Methode). Faustregel: Iso, außer
-          du musst.
+    <Tabs :tabs="tabs" aria-label="Recipe-Mechanik">
+      <template #anatomy>
+        <div class="panel">
+          <p class="lead">
+            Drei Teile: Metadaten/Optionen, Constructor, Visitor.
+          </p>
+          <MonacoBlockAnnotated
+            :code="sayHelloRecipeCode"
+            language="java"
+            height="300px"
+            :annotations="sayHelloAnnotations"
+          />
         </div>
       </template>
 
-      <template v-else-if="active === 'matcher'">
-        <p class="lead">
-          Syntax:
-          <code>&lt;fqn.Type&gt; &lt;methodName&gt;(&lt;argTypes&gt;)</code>.
-          Wildcards: <code>..</code> = beliebige Args, <code>*</code> =
-          beliebiger Typ.
-        </p>
-        <MonacoBlock :code="methodMatcherCode" language="java" height="160px" />
-        <MethodMatcherTable />
-      </template>
-
-      <template v-else-if="active === 'template'">
-        <p class="lead">
-          Niemals String-Concat — JavaTemplate parst mit Imports und Typen.
-        </p>
-        <JavaTemplateComparison />
-        <div class="callout">
-          <strong>Coordinates statt Positionen:</strong>
-          <code>.replace()</code>, <code>.firstStatement()</code>,
-          <code>.before()</code>, <code>.after()</code>. Imports via
-          <code>maybeAddImport()</code>, niemals manuell an der CompilationUnit.
+      <template #visitor>
+        <div class="panel">
+          <p class="lead">
+            Depth-first, <code>super.visitX()</code> ist Pflicht. Cursor liefert
+            Parent-Kontext.
+          </p>
+          <MonacoBlockAnnotated
+            :code="visitorMechanicsCode"
+            language="java"
+            height="200px"
+            :annotations="visitorAnnotations"
+          />
+          <div class="callout">
+            <strong>JavaIsoVisitor vs. JavaVisitor:</strong>
+            Iso ist typerhaltend (Methode bleibt Methode). Faustregel: Iso,
+            außer du musst.
+          </div>
         </div>
       </template>
-    </div>
+
+      <template #matcher>
+        <div class="panel">
+          <p class="lead">
+            Syntax:
+            <code>&lt;fqn.Type&gt; &lt;methodName&gt;(&lt;argTypes&gt;)</code>.
+            Wildcards: <code>..</code> = beliebige Args, <code>*</code> =
+            beliebiger Typ.
+          </p>
+          <MonacoBlock
+            :code="methodMatcherCode"
+            language="java"
+            height="160px"
+          />
+          <MethodMatcherTable />
+        </div>
+      </template>
+
+      <template #template>
+        <div class="panel">
+          <p class="lead">
+            Niemals String-Concat — JavaTemplate parst mit Imports und Typen.
+          </p>
+          <JavaTemplateComparison />
+          <div class="callout">
+            <strong>Coordinates statt Positionen:</strong>
+            <code>.replace()</code>, <code>.firstStatement()</code>,
+            <code>.before()</code>, <code>.after()</code>. Imports via
+            <code>maybeAddImport()</code>, niemals manuell an der
+            CompilationUnit.
+          </div>
+        </div>
+      </template>
+    </Tabs>
   </div>
 </template>
 
@@ -98,28 +98,19 @@ const active = ref("anatomy");
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.tab-bar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  padding-bottom: 8px;
-}
-.tab-bar button {
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 12px;
-  background: transparent;
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: var(--sk-rad);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-.tab-bar button.active {
-  background: var(--color-background-info);
-  color: var(--color-text-info);
-  border-color: var(--color-border-info);
+  --sk-tab-gap: 6px;
+  --sk-tab-bar-mb: 10px;
+  --sk-tab-bar-pb: 8px;
+  --sk-tab-bar-border-bottom: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-font-weight: inherit;
+  --sk-tab-pad: 6px 12px;
+  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-radius: var(--sk-rad);
+  --sk-tab-hover-bg: transparent;
+  --sk-tab-transition: none;
+  --sk-tab-active-bg: var(--color-background-info);
+  --sk-tab-active-color: var(--color-text-info);
+  --sk-tab-active-border: var(--color-border-info);
 }
 .panel {
   display: flex;

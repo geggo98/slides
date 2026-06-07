@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 
 const activeTab = ref("gradle");
 
@@ -65,7 +66,7 @@ deno add --minimum-dependency-age=7d npm:lodash`;
 
 const tabs = [
   {
-    id: "gradle",
+    key: "gradle",
     label: "Gradle",
     layout: "row",
     snippets: [
@@ -91,7 +92,7 @@ const tabs = [
     ],
   },
   {
-    id: "npm",
+    key: "npm",
     label: "npm",
     layout: "row",
     snippets: [
@@ -117,7 +118,7 @@ const tabs = [
     ],
   },
   {
-    id: "pnpm",
+    key: "pnpm",
     label: "pnpm",
     snippets: [
       {
@@ -142,7 +143,7 @@ const tabs = [
     ],
   },
   {
-    id: "bun",
+    key: "bun",
     label: "Bun",
     snippets: [
       {
@@ -161,7 +162,7 @@ const tabs = [
     ],
   },
   {
-    id: "yarn",
+    key: "yarn",
     label: "Yarn ≥ 4.10",
     snippets: [
       {
@@ -180,7 +181,7 @@ const tabs = [
     ],
   },
   {
-    id: "uv",
+    key: "uv",
     label: "uv",
     snippets: [
       {
@@ -199,7 +200,7 @@ const tabs = [
     ],
   },
   {
-    id: "deno",
+    key: "deno",
     label: "Deno",
     snippets: [
       {
@@ -219,7 +220,7 @@ const tabs = [
   },
 ];
 
-const activeEntry = computed(() => tabs.find((t) => t.id === activeTab.value));
+const activeEntry = computed(() => tabs.find((t) => t.key === activeTab.value));
 </script>
 
 <template>
@@ -230,44 +231,37 @@ const activeEntry = computed(() => tabs.find((t) => t.id === activeTab.value));
         Sekunden · Duration-String · Datum — alle für denselben Cooldown.
       </p>
 
-      <div class="ct-tabs">
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          class="ct-tab"
-          :class="{ active: activeTab === t.id }"
-          @click.stop="activeTab = t.id"
-        >
-          {{ t.label }}
-        </button>
-      </div>
-
-      <div :key="activeTab" class="ct-panel">
-        <div class="ct-snippets" :class="{ row: activeEntry.layout === 'row' }">
+      <Tabs v-model="activeTab" :tabs="tabs" aria-label="Release-Cooldown">
+        <div :key="activeTab" class="ct-panel">
           <div
-            v-for="(s, i) in activeEntry.snippets"
-            :key="i"
-            class="ct-snippet"
+            class="ct-snippets"
+            :class="{ row: activeEntry.layout === 'row' }"
           >
-            <p class="ct-caption">{{ s.caption }}</p>
-            <MonacoBlock
-              :code="s.code"
-              :language="s.language"
-              :height="s.height"
-            />
+            <div
+              v-for="(s, i) in activeEntry.snippets"
+              :key="i"
+              class="ct-snippet"
+            >
+              <p class="ct-caption">{{ s.caption }}</p>
+              <MonacoBlock
+                :code="s.code"
+                :language="s.language"
+                :height="s.height"
+              />
+            </div>
+          </div>
+
+          <div
+            v-for="(box, i) in activeEntry.infos"
+            :key="i"
+            class="ct-info"
+            :class="box.tone"
+          >
+            <p class="ct-info-title">{{ box.title }}</p>
+            <p class="ct-info-body" v-html="box.body" />
           </div>
         </div>
-
-        <div
-          v-for="(box, i) in activeEntry.infos"
-          :key="i"
-          class="ct-info"
-          :class="box.tone"
-        >
-          <p class="ct-info-title">{{ box.title }}</p>
-          <p class="ct-info-body" v-html="box.body" />
-        </div>
-      </div>
+      </Tabs>
     </div>
   </GradleVars>
 </template>
@@ -275,39 +269,21 @@ const activeEntry = computed(() => tabs.find((t) => t.id === activeTab.value));
 <style scoped>
 .ct-wrap {
   width: 100%;
+  /* Reproduce the previous .ct-tab styling via the shared Tabs vars. Active
+     colours already match the Tabs defaults; only these differ. */
+  --sk-tab-bar-mb: 10px;
+  --sk-tab-font-size: 12.5px;
+  --sk-tab-radius: var(--border-radius-md);
+  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-transition: all 0.15s;
+  --sk-tab-font-weight: 400;
+  --sk-tab-active-font-weight: 500;
 }
 .ct-intro {
   font-size: 12.5px;
   color: var(--color-text-secondary);
   line-height: 1.5;
   margin: 0 0 10px;
-}
-
-.ct-tabs {
-  display: flex;
-  gap: 4px;
-  margin: 0 0 10px;
-  flex-wrap: wrap;
-}
-.ct-tab {
-  font-size: 12.5px;
-  padding: 5px 14px;
-  border-radius: var(--border-radius-md);
-  border: 0.5px solid var(--color-border-tertiary);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-}
-.ct-tab:hover {
-  background: var(--color-background-secondary);
-}
-.ct-tab.active {
-  background: var(--color-background-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-text-secondary);
-  font-weight: 500;
 }
 
 .ct-panel {
