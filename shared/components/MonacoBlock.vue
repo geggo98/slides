@@ -161,8 +161,12 @@ onMounted(async () => {
     monaco.editor.setTheme(isDark.value ? "mb-dark" : "mb-light");
   });
 
+  // `remeasureFonts` ist eine statische Funktion im `monaco.editor`-Namespace,
+  // KEINE Editor-Instanz-Methode (`editor.remeasureFonts` ist undefined). Nach
+  // dem Laden der Custom-Font ('0xProto') müssen die Zeichenbreiten neu
+  // vermessen werden, damit das Layout nicht verrutscht.
   document.fonts.ready.then(() => {
-    editor?.remeasureFonts();
+    monaco?.editor.remeasureFonts();
   });
 
   emit("ready", { editor, monaco });
