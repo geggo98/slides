@@ -429,11 +429,11 @@ hideInToc: true
 
 **`ultracode`** = Effort `xhigh` + Auto-Orchestrierung, session-only (`/effort ultracode`). Eines der teuersten Features _mit zusätzlichem Aufschlag_ — Breite × Tiefe multiplikativ.
 
-<div class="mt-4 px-4 py-2 text-sm border-l-4 border-amber-500 bg-amber-500/10 rounded">
+<Callout tone="warning" class="mt-4">
 
 **Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag [_OpenRewrite — Refactoring at Scale_](https://geggo98.github.io/slides/20260522-open-rewrite/)
 
-</div>
+</Callout>
 
 ---
 hideInToc: true
@@ -515,11 +515,11 @@ hideInToc: true
 
 Primärer Failure-Mode (Anthropic): **Consent-Scoping** — der Klassifikator findet „approval-shaped evidence" und verkennt den echten Blast-Radius. **judge = defendant.**
 
-<div class="px-4 py-2 text-sm border-l-4 border-red-500 bg-red-500/10 rounded mb-3">
+<Callout tone="danger" class="mb-3">
 
 **PocketOS, 25.04.2026:** Ein Cursor-Agent löschte Produktions-DB **und** Backups in _einem_ Call (~9 s) — trotz Plan-Mode und „Destructive Guardrails". (→ _Clinejection-Bonus_)
 
-</div>
+</Callout>
 
 **Drei deterministische Hebel** — nicht probabilistisch:
 
@@ -582,11 +582,11 @@ Zwei Verteidigungs-Layer, ein deklarierter Trust-Scope — und ein **blinder Fle
 
 **Reihenfolge (erster Match):** Allow/Deny-Regeln → Read-only + **In-Project-Edits auto-approved** → Rest zum Klassifikator → Block → Claude versucht Alternative. _(Die sechs Permission-Modi: siehe Kapitel „Claude Code Permission Modes".)_
 
-<div class="mt-2 px-4 py-2 text-sm border-l-4 border-red-500 bg-red-500/10 rounded">
+<Callout tone="danger" class="mt-2">
 
 **Tier-2-Blindspot:** In-Project-Datei-Edits laufen **ohne Klassifikator-Aufruf** — by design. Genau hier setzen die unabhängigen Stress-Tests an.
 
-</div>
+</Callout>
 
 ---
 hideInToc: true
@@ -630,9 +630,9 @@ hideInToc: true
 
 **Auch die deterministische Schicht hat Lücken:** Shell-Builtin-Bypass (`export`/`cd`/`eval` umgehen die Allowlist), CurXecute & MCPoison (MCP-Config-Tausch → RCE).
 
-<div class="mt-1 px-4 py-1 text-sm border-l-4 border-amber-500 bg-amber-500/10 rounded">
+<Callout tone="warning" dense class="mt-1">
 <p class="!my-0 !leading-tight">Die Zahlen messen <strong>verschiedene Workloads</strong> — keine gemeinsame Skala; nur AmPermBench ist unabhängig, der Rest ist selbstberichtet.</p>
-</div>
+</Callout>
 
 ---
 clicks: false
