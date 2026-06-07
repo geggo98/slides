@@ -1,34 +1,36 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
-const activeTab = ref('layers')
+const activeTab = ref("layers");
 
 const tabs = [
-  { key: 'layers', label: 'Dependency Stack' },
-  { key: 'ecosystem', label: 'Ökosystem-Vergleich' },
-  { key: 'table', label: 'Feature-Vergleich' },
-  { key: 'simulator', label: 'Resolution Simulator' },
-]
+  { key: "layers", label: "Dependency Stack" },
+  { key: "ecosystem", label: "Ökosystem-Vergleich" },
+  { key: "table", label: "Feature-Vergleich" },
+  { key: "simulator", label: "Resolution Simulator" },
+];
 </script>
 
 <template>
-  <GradleVars>
-    <div class="infographic">
-      <div class="tab-bar">
-        <button
-          v-for="t in tabs" :key="t.key"
-          class="tab-btn" :class="{ active: activeTab === t.key }"
-          @click="activeTab = t.key"
-        >{{ t.label }}</button>
-      </div>
-      <div class="tab-content">
-        <LayerStack v-if="activeTab === 'layers'" />
-        <EcosystemTabs v-if="activeTab === 'ecosystem'" />
-        <CompareTable v-if="activeTab === 'table'" />
-        <ResolutionSimulator v-if="activeTab === 'simulator'" />
-      </div>
+  <div class="infographic">
+    <div class="tab-bar">
+      <button
+        v-for="t in tabs"
+        :key="t.key"
+        class="tab-btn"
+        :class="{ active: activeTab === t.key }"
+        @click="activeTab = t.key"
+      >
+        {{ t.label }}
+      </button>
     </div>
-  </GradleVars>
+    <div class="tab-content">
+      <LayerStack v-if="activeTab === 'layers'" />
+      <EcosystemTabs v-if="activeTab === 'ecosystem'" />
+      <CompareTable v-if="activeTab === 'table'" />
+      <ResolutionSimulator v-if="activeTab === 'simulator'" />
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -49,7 +51,10 @@ const tabs = [
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 .tab-btn:hover {
   background: var(--color-background-secondary);

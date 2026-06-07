@@ -12,18 +12,16 @@ const tabs = [
 </script>
 
 <template>
-  <GradleVars>
-    <div class="jv-infographic">
-      <Tabs :tabs="tabs" aria-label="Java-Versionen">
-        <template #terms><JvmTerms /></template>
-        <template #core><JvmCoreProblem /></template>
-        <template #evolution><JvmEvolution /></template>
-        <template #idiomatic><JvmIdiomatic /></template>
-        <template #pitfalls><JvmPitfalls /></template>
-        <template #matrix><JvmMatrix /></template>
-      </Tabs>
-    </div>
-  </GradleVars>
+  <div class="jv-infographic">
+    <Tabs :tabs="tabs" aria-label="Java-Versionen">
+      <template #terms><JvmTerms /></template>
+      <template #core><JvmCoreProblem /></template>
+      <template #evolution><JvmEvolution /></template>
+      <template #idiomatic><JvmIdiomatic /></template>
+      <template #pitfalls><JvmPitfalls /></template>
+      <template #matrix><JvmMatrix /></template>
+    </Tabs>
+  </div>
 </template>
 
 <style scoped>

@@ -103,6 +103,16 @@ export const RADII = {
 } as const;
 
 /**
+ * Fonts — theme-independent. Defined globally (lifted from the old
+ * GradleVars) so inline `var(--font-mono)` renders monospace in every deck;
+ * previously only the gradle deck defined it, so open-rewrite / design-pattern
+ * inline code silently fell back to the sans body font.
+ */
+export const FONTS = {
+  "--font-mono": 'ui-monospace, "Cascadia Code", "Fira Code", monospace',
+} as const;
+
+/**
  * Maps each SemanticTokens key to its CSS custom-property name. The drift
  * guard in tokens.test.ts uses this to compare against SlidevTokens.vue.
  */

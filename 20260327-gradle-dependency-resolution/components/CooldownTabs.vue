@@ -224,46 +224,41 @@ const activeEntry = computed(() => tabs.find((t) => t.key === activeTab.value));
 </script>
 
 <template>
-  <GradleVars>
-    <div class="ct-wrap">
-      <p class="ct-intro">
-        Einheiten-Inkonsistenz ist die eigentliche Story: Tage · Minuten ·
-        Sekunden · Duration-String · Datum — alle für denselben Cooldown.
-      </p>
+  <div class="ct-wrap">
+    <p class="ct-intro">
+      Einheiten-Inkonsistenz ist die eigentliche Story: Tage · Minuten ·
+      Sekunden · Duration-String · Datum — alle für denselben Cooldown.
+    </p>
 
-      <Tabs v-model="activeTab" :tabs="tabs" aria-label="Release-Cooldown">
-        <div :key="activeTab" class="ct-panel">
+    <Tabs v-model="activeTab" :tabs="tabs" aria-label="Release-Cooldown">
+      <div :key="activeTab" class="ct-panel">
+        <div class="ct-snippets" :class="{ row: activeEntry.layout === 'row' }">
           <div
-            class="ct-snippets"
-            :class="{ row: activeEntry.layout === 'row' }"
-          >
-            <div
-              v-for="(s, i) in activeEntry.snippets"
-              :key="i"
-              class="ct-snippet"
-            >
-              <p class="ct-caption">{{ s.caption }}</p>
-              <MonacoBlock
-                :code="s.code"
-                :language="s.language"
-                :height="s.height"
-              />
-            </div>
-          </div>
-
-          <div
-            v-for="(box, i) in activeEntry.infos"
+            v-for="(s, i) in activeEntry.snippets"
             :key="i"
-            class="ct-info"
-            :class="box.tone"
+            class="ct-snippet"
           >
-            <p class="ct-info-title">{{ box.title }}</p>
-            <p class="ct-info-body" v-html="box.body" />
+            <p class="ct-caption">{{ s.caption }}</p>
+            <MonacoBlock
+              :code="s.code"
+              :language="s.language"
+              :height="s.height"
+            />
           </div>
         </div>
-      </Tabs>
-    </div>
-  </GradleVars>
+
+        <div
+          v-for="(box, i) in activeEntry.infos"
+          :key="i"
+          class="ct-info"
+          :class="box.tone"
+        >
+          <p class="ct-info-title">{{ box.title }}</p>
+          <p class="ct-info-body" v-html="box.body" />
+        </div>
+      </div>
+    </Tabs>
+  </div>
 </template>
 
 <style scoped>

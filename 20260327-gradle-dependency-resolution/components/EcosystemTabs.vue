@@ -57,26 +57,24 @@ const ecosystems = {
 </script>
 
 <template>
-  <GradleVars>
-    <div class="eco-wrap">
-      <p class="section-label">Vergleich mit anderen Ökosystemen</p>
+  <div class="eco-wrap">
+    <p class="section-label">Vergleich mit anderen Ökosystemen</p>
 
-      <Tabs v-model="activeTab" :tabs="tabs" aria-label="Ökosysteme">
-        <div :key="activeTab" class="eco-card">
-          <div class="eco-grid">
-            <div v-for="s in activeEco.stats" :key="s.label" class="eco-stat">
-              <div class="eco-stat-label">{{ s.label }}</div>
-              <div class="eco-stat-value">
-                <span v-if="s.cls" :class="s.cls">{{ s.value }}</span>
-                <code v-else>{{ s.value }}</code>
-              </div>
+    <Tabs v-model="activeTab" :tabs="tabs" aria-label="Ökosysteme">
+      <div :key="activeTab" class="eco-card">
+        <div class="eco-grid">
+          <div v-for="s in activeEco.stats" :key="s.label" class="eco-stat">
+            <div class="eco-stat-label">{{ s.label }}</div>
+            <div class="eco-stat-value">
+              <span v-if="s.cls" :class="s.cls">{{ s.value }}</span>
+              <code v-else>{{ s.value }}</code>
             </div>
           </div>
-          <div class="eco-detail" v-html="activeEco.detail"></div>
         </div>
-      </Tabs>
-    </div>
-  </GradleVars>
+        <div class="eco-detail" v-html="activeEco.detail"></div>
+      </div>
+    </Tabs>
+  </div>
 </template>
 
 <style scoped>

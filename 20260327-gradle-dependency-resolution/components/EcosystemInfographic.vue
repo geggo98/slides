@@ -226,277 +226,275 @@ function ecoLabel(eco) {
 </script>
 
 <template>
-  <GradleVars>
-    <div class="infographic">
-      <div class="info-header">
-        <h2 class="info-title">Maven Central vs. npm vs. Go</h2>
-        <p class="info-subtitle">
-          Größe, Downloads und Security-Lage im Vergleich
+  <div class="infographic">
+    <div class="info-header">
+      <h2 class="info-title">Maven Central vs. npm vs. Go</h2>
+      <p class="info-subtitle">
+        Größe, Downloads und Security-Lage im Vergleich
+      </p>
+    </div>
+
+    <div class="info-tabs">
+      <button
+        v-for="t in tabs"
+        :key="t.id"
+        class="info-tab"
+        :class="{ active: activeTab === t.id }"
+        @click.stop="activeTab = t.id"
+      >
+        {{ t.label }}
+      </button>
+    </div>
+
+    <div class="info-content">
+      <!-- Tab 1: Größe -->
+      <div v-if="activeTab === 'size'" class="tab-panel">
+        <p class="desc">
+          Unique Components (groupId:artifactId bzw. Package-Name) und Releases
+          je Ökosystem. Go-Zahlen sind Schätzungen.
         </p>
-      </div>
-
-      <div class="info-tabs">
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          class="info-tab"
-          :class="{ active: activeTab === t.id }"
-          @click.stop="activeTab = t.id"
-        >
-          {{ t.label }}
-        </button>
-      </div>
-
-      <div class="info-content">
-        <!-- Tab 1: Größe -->
-        <div v-if="activeTab === 'size'" class="tab-panel">
-          <p class="desc">
-            Unique Components (groupId:artifactId bzw. Package-Name) und
-            Releases je Ökosystem. Go-Zahlen sind Schätzungen.
-          </p>
-          <div class="size-sections">
-            <div class="size-section">
-              <div class="size-heading">Components (unique)</div>
-              <div v-for="d in sizeData" :key="d.name + 'c'" class="bar-row">
-                <div class="bar-name">{{ d.name }}</div>
-                <div class="bar-track">
-                  <div
-                    class="bar"
-                    :class="d.cls"
-                    :style="{ width: pct(d.components, maxComp) + '%' }"
-                  ></div>
-                </div>
-                <div class="bar-val">{{ fmt(d.components) }}</div>
-              </div>
-            </div>
-            <div class="size-section">
-              <div class="size-heading">Releases (mit Version)</div>
-              <div v-for="d in sizeData" :key="d.name + 'r'" class="bar-row">
-                <div class="bar-name">{{ d.name }}</div>
-                <div class="bar-track">
-                  <div
-                    class="bar bar-light"
-                    :class="d.cls"
-                    :style="{ width: pct(d.releases, maxRel) + '%' }"
-                  ></div>
-                </div>
-                <div class="bar-val">{{ fmt(d.releases) }}</div>
-              </div>
-            </div>
-          </div>
-          <p class="note">
-            Go: keine offiziellen Aggregat-Statistiken. Letzte belastbare Zahl:
-            ~16,7 Mio. Module-Versionen (März 2023).
-          </p>
-        </div>
-
-        <!-- Tab 2: Downloads -->
-        <div v-if="activeTab === 'downloads'" class="tab-panel">
-          <p class="desc">
-            Jährliche Download-Volumina 2025. npm-Zahlen teils durch
-            Spam-Kampagnen aufgebläht.
-          </p>
-          <div class="dl-controls">
-            <button
-              class="scale-btn"
-              :class="{ active: downloadScale === 'linear' }"
-              @click.stop="downloadScale = 'linear'"
-            >
-              Linear
-            </button>
-            <button
-              class="scale-btn"
-              :class="{ active: downloadScale === 'log' }"
-              @click.stop="downloadScale = 'log'"
-            >
-              Logarithmisch
-            </button>
-          </div>
-          <div class="dl-bars">
-            <div
-              v-for="d in dlData"
-              :key="d.name"
-              class="bar-row"
-              :class="{ 'indent-row': d.indent }"
-            >
-              <div class="bar-name" :class="{ 'indent-name': d.indent }">
-                {{ d.name }}
-              </div>
-              <div class="bar-track">
-                <template v-if="d.value">
-                  <div
-                    class="bar"
-                    :class="d.cls"
-                    :style="{ width: dlWidth(d) + '%' }"
-                  ></div>
-                </template>
-              </div>
-              <div class="bar-val" :class="{ na: !d.value }">
-                <template v-if="d.value"
-                  >{{ fmt(d.value) }}
-                  <span class="growth">{{ d.growth }}</span></template
-                >
-                <template v-else>keine offiziellen Statistiken</template>
-              </div>
-            </div>
-          </div>
-          <p class="note">
-            Maven Central: Wachstum von ~36 % auf 19,42 % verlangsamt (bewusste
-            Sustainability-Maßnahmen). 86 % des Traffics von Cloud-Providern.
-          </p>
-        </div>
-
-        <!-- Tab 3: Malware -->
-        <div v-if="activeTab === 'malware'" class="tab-panel">
-          <div class="malware-header">
-            <div class="malware-big">
-              {{ malwareTotal.toLocaleString("de-DE") }}
-            </div>
-            <div class="malware-label">neue Malware-Pakete 2025</div>
-          </div>
-          <div class="dl-controls">
-            <button
-              class="scale-btn"
-              :class="{ active: malwareScale === 'linear' }"
-              @click.stop="malwareScale = 'linear'"
-            >
-              Linear
-            </button>
-            <button
-              class="scale-btn"
-              :class="{ active: malwareScale === 'log' }"
-              @click.stop="malwareScale = 'log'"
-            >
-              Logarithmisch
-            </button>
-          </div>
-          <div class="malware-bars">
-            <div v-for="d in malwareData" :key="d.name" class="malware-row">
+        <div class="size-sections">
+          <div class="size-section">
+            <div class="size-heading">Components (unique)</div>
+            <div v-for="d in sizeData" :key="d.name + 'c'" class="bar-row">
               <div class="bar-name">{{ d.name }}</div>
-              <div class="bar-track malware-track">
+              <div class="bar-track">
                 <div
                   class="bar"
                   :class="d.cls"
-                  :style="{ width: malWidth(d) + '%' }"
+                  :style="{ width: pct(d.components, maxComp) + '%' }"
                 ></div>
               </div>
-              <div class="malware-stats">
-                <span class="malware-count">{{
-                  d.value.toLocaleString("de-DE")
-                }}</span>
-                <span class="malware-pct">{{ malPct(d.value) }} %</span>
-              </div>
+              <div class="bar-val">{{ fmt(d.components) }}</div>
             </div>
           </div>
-          <p class="note">
-            Quelle: Sonatype SSC Report 2026. Kumulativ seit 2019: über 1,23
-            Mio. Malware-Pakete entdeckt. Die Ungleichverteilung ist strukturell
-            bedingt — siehe Security-Tab.
-          </p>
-        </div>
-
-        <!-- Tab 4: Security Matrix -->
-        <div v-if="activeTab === 'security'" class="tab-panel">
-          <p class="desc">
-            Strukturelle Designentscheidungen. Diese Matrix erklärt, warum 99 %
-            der Malware auf npm landet.
-          </p>
-          <table class="sec-table">
-            <thead>
-              <tr>
-                <th>Mechanismus</th>
-                <th class="th-maven">Maven Central</th>
-                <th class="th-npm">npm</th>
-                <th class="th-go">Go Modules</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="r in secRows" :key="r.m">
-                <td class="mech">{{ r.m }}</td>
-                <td>
-                  <span class="cell" :class="r.maven[1]">{{ r.maven[0] }}</span>
-                </td>
-                <td>
-                  <span class="cell" :class="r.npm[1]">{{ r.npm[0] }}</span>
-                </td>
-                <td>
-                  <span class="cell" :class="r.go[1]">{{ r.go[0] }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="note">
-            ✓ stark · ~ teilweise · ✗ fehlend — ¹ Immutabilität gilt nur für
-            Publisher; Sonatype entfernt bei Malware/Brandjacking. — ²
-            Ann.-Processors (Lombok, MapStruct) werden implizit beim Compile
-            geladen, auch transitiv ohne Konfiguration. Gradle-Skripte sind
-            ausführbarer Code. Go: <code>go build</code> führt keinen Dep-Code
-            aus; <code>go test</code>/<code>go generate</code> explizit.
-          </p>
-        </div>
-
-        <!-- Tab 5: Timeline -->
-        <div v-if="activeTab === 'timeline'" class="tab-panel">
-          <div class="tl-legend">
-            <span class="tl-legend-item"
-              ><span class="tl-dot dot-maven"></span>Maven Central</span
-            >
-            <span class="tl-legend-item"
-              ><span class="tl-dot dot-npm"></span>npm</span
-            >
-            <span class="tl-legend-item"
-              ><span class="tl-dot dot-go"></span>Go Modules</span
-            >
-          </div>
-          <div class="tl-grid">
-            <div class="tl-col">
-              <div
-                v-for="e in evLeft"
-                :key="e.title"
-                class="tl-event"
-                :class="e.eco"
-              >
-                <div class="tl-date">{{ e.date }}</div>
-                <div class="tl-title">
-                  {{ e.title }}
-                  <span class="tl-tag" :class="'tag-' + e.eco">{{
-                    ecoLabel(e.eco)
-                  }}</span>
-                </div>
-                <div class="tl-desc">{{ e.desc }}</div>
+          <div class="size-section">
+            <div class="size-heading">Releases (mit Version)</div>
+            <div v-for="d in sizeData" :key="d.name + 'r'" class="bar-row">
+              <div class="bar-name">{{ d.name }}</div>
+              <div class="bar-track">
+                <div
+                  class="bar bar-light"
+                  :class="d.cls"
+                  :style="{ width: pct(d.releases, maxRel) + '%' }"
+                ></div>
               </div>
-            </div>
-            <div class="tl-col">
-              <div
-                v-for="e in evRight"
-                :key="e.title"
-                class="tl-event"
-                :class="e.eco"
-              >
-                <div class="tl-date">{{ e.date }}</div>
-                <div class="tl-title">
-                  {{ e.title }}
-                  <span class="tl-tag" :class="'tag-' + e.eco">{{
-                    ecoLabel(e.eco)
-                  }}</span>
-                </div>
-                <div class="tl-desc">{{ e.desc }}</div>
-              </div>
+              <div class="bar-val">{{ fmt(d.releases) }}</div>
             </div>
           </div>
-          <p class="note">
-            Auswahl bewusst gekürzt. npm dominiert die Liste — Maven- und
-            Go-Vorfälle zeigen jeweils neue strukturelle Angriffsvektoren.
-          </p>
         </div>
+        <p class="note">
+          Go: keine offiziellen Aggregat-Statistiken. Letzte belastbare Zahl:
+          ~16,7 Mio. Module-Versionen (März 2023).
+        </p>
       </div>
 
-      <div class="info-footer">
-        Datenstand 2025 · Quellen: Sonatype SSC Report 2026, CISA,
-        central.sonatype.org, go.dev
+      <!-- Tab 2: Downloads -->
+      <div v-if="activeTab === 'downloads'" class="tab-panel">
+        <p class="desc">
+          Jährliche Download-Volumina 2025. npm-Zahlen teils durch
+          Spam-Kampagnen aufgebläht.
+        </p>
+        <div class="dl-controls">
+          <button
+            class="scale-btn"
+            :class="{ active: downloadScale === 'linear' }"
+            @click.stop="downloadScale = 'linear'"
+          >
+            Linear
+          </button>
+          <button
+            class="scale-btn"
+            :class="{ active: downloadScale === 'log' }"
+            @click.stop="downloadScale = 'log'"
+          >
+            Logarithmisch
+          </button>
+        </div>
+        <div class="dl-bars">
+          <div
+            v-for="d in dlData"
+            :key="d.name"
+            class="bar-row"
+            :class="{ 'indent-row': d.indent }"
+          >
+            <div class="bar-name" :class="{ 'indent-name': d.indent }">
+              {{ d.name }}
+            </div>
+            <div class="bar-track">
+              <template v-if="d.value">
+                <div
+                  class="bar"
+                  :class="d.cls"
+                  :style="{ width: dlWidth(d) + '%' }"
+                ></div>
+              </template>
+            </div>
+            <div class="bar-val" :class="{ na: !d.value }">
+              <template v-if="d.value"
+                >{{ fmt(d.value) }}
+                <span class="growth">{{ d.growth }}</span></template
+              >
+              <template v-else>keine offiziellen Statistiken</template>
+            </div>
+          </div>
+        </div>
+        <p class="note">
+          Maven Central: Wachstum von ~36 % auf 19,42 % verlangsamt (bewusste
+          Sustainability-Maßnahmen). 86 % des Traffics von Cloud-Providern.
+        </p>
+      </div>
+
+      <!-- Tab 3: Malware -->
+      <div v-if="activeTab === 'malware'" class="tab-panel">
+        <div class="malware-header">
+          <div class="malware-big">
+            {{ malwareTotal.toLocaleString("de-DE") }}
+          </div>
+          <div class="malware-label">neue Malware-Pakete 2025</div>
+        </div>
+        <div class="dl-controls">
+          <button
+            class="scale-btn"
+            :class="{ active: malwareScale === 'linear' }"
+            @click.stop="malwareScale = 'linear'"
+          >
+            Linear
+          </button>
+          <button
+            class="scale-btn"
+            :class="{ active: malwareScale === 'log' }"
+            @click.stop="malwareScale = 'log'"
+          >
+            Logarithmisch
+          </button>
+        </div>
+        <div class="malware-bars">
+          <div v-for="d in malwareData" :key="d.name" class="malware-row">
+            <div class="bar-name">{{ d.name }}</div>
+            <div class="bar-track malware-track">
+              <div
+                class="bar"
+                :class="d.cls"
+                :style="{ width: malWidth(d) + '%' }"
+              ></div>
+            </div>
+            <div class="malware-stats">
+              <span class="malware-count">{{
+                d.value.toLocaleString("de-DE")
+              }}</span>
+              <span class="malware-pct">{{ malPct(d.value) }} %</span>
+            </div>
+          </div>
+        </div>
+        <p class="note">
+          Quelle: Sonatype SSC Report 2026. Kumulativ seit 2019: über 1,23 Mio.
+          Malware-Pakete entdeckt. Die Ungleichverteilung ist strukturell
+          bedingt — siehe Security-Tab.
+        </p>
+      </div>
+
+      <!-- Tab 4: Security Matrix -->
+      <div v-if="activeTab === 'security'" class="tab-panel">
+        <p class="desc">
+          Strukturelle Designentscheidungen. Diese Matrix erklärt, warum 99 %
+          der Malware auf npm landet.
+        </p>
+        <table class="sec-table">
+          <thead>
+            <tr>
+              <th>Mechanismus</th>
+              <th class="th-maven">Maven Central</th>
+              <th class="th-npm">npm</th>
+              <th class="th-go">Go Modules</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in secRows" :key="r.m">
+              <td class="mech">{{ r.m }}</td>
+              <td>
+                <span class="cell" :class="r.maven[1]">{{ r.maven[0] }}</span>
+              </td>
+              <td>
+                <span class="cell" :class="r.npm[1]">{{ r.npm[0] }}</span>
+              </td>
+              <td>
+                <span class="cell" :class="r.go[1]">{{ r.go[0] }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">
+          ✓ stark · ~ teilweise · ✗ fehlend — ¹ Immutabilität gilt nur für
+          Publisher; Sonatype entfernt bei Malware/Brandjacking. — ²
+          Ann.-Processors (Lombok, MapStruct) werden implizit beim Compile
+          geladen, auch transitiv ohne Konfiguration. Gradle-Skripte sind
+          ausführbarer Code. Go: <code>go build</code> führt keinen Dep-Code
+          aus; <code>go test</code>/<code>go generate</code> explizit.
+        </p>
+      </div>
+
+      <!-- Tab 5: Timeline -->
+      <div v-if="activeTab === 'timeline'" class="tab-panel">
+        <div class="tl-legend">
+          <span class="tl-legend-item"
+            ><span class="tl-dot dot-maven"></span>Maven Central</span
+          >
+          <span class="tl-legend-item"
+            ><span class="tl-dot dot-npm"></span>npm</span
+          >
+          <span class="tl-legend-item"
+            ><span class="tl-dot dot-go"></span>Go Modules</span
+          >
+        </div>
+        <div class="tl-grid">
+          <div class="tl-col">
+            <div
+              v-for="e in evLeft"
+              :key="e.title"
+              class="tl-event"
+              :class="e.eco"
+            >
+              <div class="tl-date">{{ e.date }}</div>
+              <div class="tl-title">
+                {{ e.title }}
+                <span class="tl-tag" :class="'tag-' + e.eco">{{
+                  ecoLabel(e.eco)
+                }}</span>
+              </div>
+              <div class="tl-desc">{{ e.desc }}</div>
+            </div>
+          </div>
+          <div class="tl-col">
+            <div
+              v-for="e in evRight"
+              :key="e.title"
+              class="tl-event"
+              :class="e.eco"
+            >
+              <div class="tl-date">{{ e.date }}</div>
+              <div class="tl-title">
+                {{ e.title }}
+                <span class="tl-tag" :class="'tag-' + e.eco">{{
+                  ecoLabel(e.eco)
+                }}</span>
+              </div>
+              <div class="tl-desc">{{ e.desc }}</div>
+            </div>
+          </div>
+        </div>
+        <p class="note">
+          Auswahl bewusst gekürzt. npm dominiert die Liste — Maven- und
+          Go-Vorfälle zeigen jeweils neue strukturelle Angriffsvektoren.
+        </p>
       </div>
     </div>
-  </GradleVars>
+
+    <div class="info-footer">
+      Datenstand 2025 · Quellen: Sonatype SSC Report 2026, CISA,
+      central.sonatype.org, go.dev
+    </div>
+  </div>
 </template>
 
 <style scoped>

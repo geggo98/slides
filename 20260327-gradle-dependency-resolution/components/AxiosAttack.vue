@@ -1,37 +1,39 @@
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick } from "vue";
 
-const activeTab = ref('timeline')
-const contentRef = ref(null)
+const activeTab = ref("timeline");
+const contentRef = ref(null);
 
 const tabs = [
-  { key: 'timeline', label: 'Zeitleiste' },
-  { key: 'anatomy', label: 'Anatomie' },
-  { key: 'infection', label: 'Infektionskette' },
-]
+  { key: "timeline", label: "Zeitleiste" },
+  { key: "anatomy", label: "Anatomie" },
+  { key: "infection", label: "Infektionskette" },
+];
 
 watch(activeTab, () => {
-  nextTick(() => contentRef.value?.scrollTo(0, 0))
-})
+  nextTick(() => contentRef.value?.scrollTo(0, 0));
+});
 </script>
 
 <template>
-  <GradleVars>
-    <div class="axios-attack">
-      <div class="tab-bar">
-        <button
-          v-for="t in tabs" :key="t.key"
-          class="tab-btn" :class="{ active: activeTab === t.key }"
-          @click="activeTab = t.key"
-        >{{ t.label }}</button>
-      </div>
-      <div ref="contentRef" class="tab-content">
-        <AxiosTimeline v-if="activeTab === 'timeline'" />
-        <AxiosAnatomy v-if="activeTab === 'anatomy'" />
-        <AxiosInfectionChain v-if="activeTab === 'infection'" />
-      </div>
+  <div class="axios-attack">
+    <div class="tab-bar">
+      <button
+        v-for="t in tabs"
+        :key="t.key"
+        class="tab-btn"
+        :class="{ active: activeTab === t.key }"
+        @click="activeTab = t.key"
+      >
+        {{ t.label }}
+      </button>
     </div>
-  </GradleVars>
+    <div ref="contentRef" class="tab-content">
+      <AxiosTimeline v-if="activeTab === 'timeline'" />
+      <AxiosAnatomy v-if="activeTab === 'anatomy'" />
+      <AxiosInfectionChain v-if="activeTab === 'infection'" />
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -56,7 +58,10 @@ watch(activeTab, () => {
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 .tab-btn:hover {
   background: var(--color-background-secondary);

@@ -53,6 +53,7 @@
   --sk-radm: 8px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
+  --font-mono: ui-monospace, "Cascadia Code", "Fira Code", monospace;
 }
 
 html.dark,

@@ -7,6 +7,7 @@ import {
   LIGHT,
   DARK,
   RADII,
+  FONTS,
   semanticCssVars,
   type SemanticTokens,
 } from "../tokens";
@@ -65,6 +66,9 @@ describe("SlidevTokens.vue drift guard", () => {
       expect(lightVars[name], name).toBe(value);
     }
     for (const [name, value] of Object.entries(RADII)) {
+      expect(lightVars[name], name).toBe(value);
+    }
+    for (const [name, value] of Object.entries(FONTS)) {
       expect(lightVars[name], name).toBe(value);
     }
   });
