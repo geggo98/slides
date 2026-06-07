@@ -102,18 +102,37 @@ class CounterImpl implements Counter {
         ],
       },
       {
-        label: "Fall B — Re-Entrancy (JS)",
-        language: "javascript",
-        height: "200px",
-        note: "Bei <code>proxy.method()</code> ist der Receiver der <strong>Proxy</strong> — interne <code>this.x()</code>-Aufrufe re-entern die Traps.",
-        code: `// proxy.method(): Receiver ist der Proxy -> interne this.x() re-entern die Traps.
-// Genau darauf beruht Vue 3s Reaktivität.
-//
-// orig.apply(target, args) bindet this auf das Target -> reproduziert Fall A.
-//
-// Zielkonflikt:
-//   this = Proxy   -> Selbstaufrufe interzipiert, aber private #fields brechen
-//   this = Target  -> private #fields funktionieren, Selbstaufrufe umgehen den Proxy`,
+        label: "Fall B — Receiver-Bindung (Java vs. JS)",
+        note: "Identischer Selbstaufruf, zwei Ergebnisse — entscheidend ist, worauf <code>this</code> im Rumpf zeigt.",
+        diagrams: [
+          {
+            title: "JDK Dynamic Proxy — <code>this = Target</code>",
+            code: `sequenceDiagram
+  participant C as Aufrufer
+  participant P as Proxy
+  participant T as Target
+  C->>P: countdown(2)
+  P->>T: method.invoke(target)
+  Note over T: this = Target
+  T->>T: this.countdown(1)
+  Note over T: Selbstaufruf umgeht Proxy<br/>kein Logging`,
+          },
+          {
+            title: "JS Proxy — <code>this = Proxy</code>",
+            code: `sequenceDiagram
+  participant C as Aufrufer
+  participant P as Proxy
+  participant T as Target
+  C->>P: countdown(2)
+  P->>T: orig(), receiver = Proxy
+  Note over T: this = Proxy
+  T->>P: this.countdown(1)
+  P->>T: orig() erneut
+  Note over P: re-entert Trap<br/>Logging`,
+          },
+        ],
+        caveat:
+          "⚠️ <strong>Arrow Functions:</strong> Klassenfeld-Arrows (<code>m = () => …</code>) binden <code>this</code> lexikalisch bei der Konstruktion → <strong>Target</strong>, umgehen den Proxy wie Fall A. Nur reguläre Methoden — oder in ihnen geschachtelte Arrows — re-entern.",
         callout:
           "Maßgeblich ist nie „Proxy ja/nein“, sondern die <strong>Receiver-Bindung</strong>. Wer Cross-Cutting <em>zuverlässig</em> auf jeden Aufruf legen will, kann sich nicht auf transparente, dispatch-basierte Proxies verlassen — das Hauptargument für den funktionalen Gegenentwurf.",
       },
