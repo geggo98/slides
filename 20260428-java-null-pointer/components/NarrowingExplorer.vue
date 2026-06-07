@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useDarkMode } from "@slidev/client";
-import MonacoBlock from "../../shared/components/MonacoBlock.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 type Nullness = "nonnull" | "nullable" | "bottom" | "other";
 type StoreEntry = [path: string, nullness: Nullness];

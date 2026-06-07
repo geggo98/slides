@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import MatrixPivot from "../../shared/components/MatrixPivot.vue";
+import MatrixPivot from "@shared/components/MatrixPivot.vue";
 import raw from "./pattern-language-matrix.json";
 
 // Optional: nur eine Teilmenge der Muster zeigen (z.B. pro Schicht), damit die

@@ -1,5 +1,5 @@
 <script setup>
-import MatrixPivot from "../../shared/components/MatrixPivot.vue";
+import MatrixPivot from "@shared/components/MatrixPivot.vue";
 import data from "./auto-mode-gates.json";
 
 // Daten + Interaktion in der wiederverwendbaren shared/MatrixPivot-Komponente;

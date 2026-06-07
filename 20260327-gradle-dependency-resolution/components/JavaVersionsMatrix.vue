@@ -1,5 +1,5 @@
 <script setup>
-import Tabs from "../../shared/components/Tabs.vue";
+import Tabs from "@shared/components/Tabs.vue";
 
 const tabs = [
   { key: "terms", label: "Begriffe" },

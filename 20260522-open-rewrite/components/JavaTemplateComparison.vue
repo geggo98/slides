@@ -1,5 +1,5 @@
 <script setup>
-import MonacoBlock from "../../shared/components/MonacoBlock.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 import { javaTemplateAntiCode, javaTemplateIdiomCode } from "./slide-data.ts";
 </script>
 

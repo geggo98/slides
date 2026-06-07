@@ -1,5 +1,5 @@
 <script setup>
-import BadgeRow from "../../shared/components/BadgeRow.vue";
+import BadgeRow from "@shared/components/BadgeRow.vue";
 import WhenGrid from "./WhenGrid.vue";
 
 defineProps({

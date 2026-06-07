@@ -1,7 +1,7 @@
 <script setup>
 import { ref, inject, computed } from "vue";
 import CrossRefLink from "./CrossRefLink.vue";
-import MonacoBlock from "../../../shared/components/MonacoBlock.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 const skillNav = inject("skillNav", null);
 

@@ -1,6 +1,6 @@
 <script setup>
 import CollapsibleSection from "./CollapsibleSection.vue";
-import MonacoBlock from "../../../shared/components/MonacoBlock.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 const scriptTrickCode = `# Dynamic Context Injection (Claude Code only)
 ---

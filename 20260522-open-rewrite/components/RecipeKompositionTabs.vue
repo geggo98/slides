@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
-import MonacoBlock from "../../shared/components/MonacoBlock.vue";
-import MonacoBlockAnnotated from "../../shared/components/MonacoBlockAnnotated.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
+import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 import PreconditionsTable from "./PreconditionsTable.vue";
 import SpringBootCompositionTree from "./SpringBootCompositionTree.vue";
 import {

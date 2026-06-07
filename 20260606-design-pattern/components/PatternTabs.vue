@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
-import MonacoBlockAnnotated from "../../shared/components/MonacoBlockAnnotated.vue";
+import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 // Slidevs eigene Mermaid-Pipeline (Singleton-Init, Cache, ShadowRoot) statt eines
 // handgerollten Wrappers — Letzterer zog `mermaid` als bare-specifier (dayjs-UMD,
 // kein ESM-default) und ließ das ganze Deck nicht mehr laden. Erwartet

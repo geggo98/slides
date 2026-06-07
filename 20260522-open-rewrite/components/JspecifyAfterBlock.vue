@@ -1,5 +1,5 @@
 <script setup>
-import MonacoBlockAnnotated from "../../shared/components/MonacoBlockAnnotated.vue";
+import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 import { jspecifyAfterCode, jspecifyAfterAnnotations } from "./slide-data.ts";
 </script>
 

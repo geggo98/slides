@@ -42,6 +42,8 @@ The Slidev dev server requires a full TTY and **will not start as a sub-process 
 
 Create a new top-level directory with a `slides.md` file. It will be automatically discovered by the build pipeline. The frontmatter `title:` field is used for the landing page link text.
 
+To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock from "@shared/components/MonacoBlock.vue"`), **copy a `vite.config.ts` from an existing talk** into the new directory. Slidev only merges a `vite.config.ts` from each deck's own directory — never the repo root — so without it the alias won't resolve at build/dev time. The file is identical across talks (it points `@shared` one level up to `shared/`).
+
 ## Debugging with Playwright
 
 Follow the guidelines in the **/slidev** skill for Playwright testing. Key rule: use the **Write tool** to create scripts in `playwright-tests/` and run them with `bun run` — never use heredocs, shell redirects, or `/tmp`.

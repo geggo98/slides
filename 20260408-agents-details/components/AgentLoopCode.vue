@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MonacoBlock from "../../shared/components/MonacoBlock.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 const code = `while (true) {
   response = llm.call(systemPrompt + tools + conversationHistory)
