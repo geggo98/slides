@@ -15,6 +15,12 @@
 
   The component renders a zero-size placeholder so it can be invoked from
   Markdown without affecting layout.
+
+  SOURCE OF TRUTH: the values below mirror shared/theme/tokens.ts. Edit the
+  palette THERE (it also feeds the JS-side usePalette() composable); the
+  static CSS here is kept in lock-step by shared/theme/__tests__/tokens.test.ts
+  (drift guard). The CSS stays static on purpose — bundled as CSS it avoids a
+  flash-of-unstyled-content that runtime injection would risk.
 -->
 <template>
   <span aria-hidden="true" class="slidev-tokens-marker" />
