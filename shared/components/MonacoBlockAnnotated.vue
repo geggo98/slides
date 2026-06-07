@@ -9,6 +9,8 @@ const props = defineProps({
   annotations: { type: Array, default: () => [] },
   editorOptions: { type: Object, default: () => ({}) },
   defaultDetail: { type: [String, Number, null], default: null },
+  showLanguageBadge: { type: Boolean, default: false },
+  badgePosition: { type: String, default: "top-right" },
 });
 
 const emit = defineEmits(["activate"]);
@@ -146,6 +148,8 @@ onBeforeUnmount(() => {
       :language="language"
       :height="height"
       :editor-options="editorOptions"
+      :show-language-badge="showLanguageBadge"
+      :badge-position="badgePosition"
       @ready="onReady"
     />
     <div

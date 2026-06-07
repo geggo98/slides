@@ -37,6 +37,7 @@ const current = computed(() => tabs.value[active.value] ?? {});
         :language="current.language || 'java'"
         :height="current.height || '300px'"
         :annotations="current.annotations || []"
+        show-language-badge
       />
       <div v-if="current.callout" class="callout" v-html="current.callout" />
     </div>

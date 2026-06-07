@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watchEffect } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watchEffect } from "vue";
 import { useDarkMode } from "@slidev/client";
 
 const props = defineProps({
@@ -7,6 +7,56 @@ const props = defineProps({
   language: { type: String, default: "yaml" },
   height: { type: String, default: "180px" },
   editorOptions: { type: Object, default: () => ({}) },
+  // Optionales Sprach-Badge in einer Editor-Ecke. Default aus; wird derzeit
+  // nur in der Design-Pattern-Präsentation (über PatternTabs) eingeschaltet.
+  showLanguageBadge: { type: Boolean, default: false },
+  badgePosition: { type: String, default: "top-right" },
+});
+
+// Marken-Label + farbenblind-sichere Badge-Farbe je Sprache. Die Farben sind
+// KEINE reinen Marken-Farben: reine Marken-Farben kollabieren unter Rot-Grün-
+// Schwäche (z.B. Rust/Scala ΔE2000 ≈ 1.2 — für Betroffene identisch). Diese
+// Palette ist gegen Protan/Deutan/Tritan optimiert (Machado 2009 + CIEDE2000):
+// jedes Sprachpaar, das je in einem PatternTabs-Block zusammen auftritt, hat
+// ΔE2000 ≥ 17, global ≥ 15 — Marken-Anker bleiben dennoch erkennbar (TS blau,
+// JS gelb, Kotlin violett, Go cyan, Java orange, Rust terrakotta). `fg` ist
+// auf ≥ 4.5:1 Kontrast gewählt. NICHT von Hand anpassen, ohne
+// `bun run playwright-tests/cvd-check.ts '<json>'` erneut grün zu sehen.
+const LANGUAGE_META = {
+  java: { label: "Java", bg: "#A1520C", fg: "#fff" },
+  kotlin: { label: "Kotlin", bg: "#652AEF", fg: "#fff" },
+  typescript: { label: "TypeScript", bg: "#1E4267", fg: "#fff" },
+  javascript: { label: "JavaScript", bg: "#E8D54A", fg: "#1a1a1a" },
+  jsx: { label: "JSX", bg: "#1B747E", fg: "#fff" },
+  go: { label: "Go", bg: "#52E8FF", fg: "#1a1a1a" },
+  rust: { label: "Rust", bg: "#D57C6D", fg: "#1a1a1a" },
+  python: { label: "Python", bg: "#2599F8", fg: "#1a1a1a" },
+  scala: { label: "Scala", bg: "#602424", fg: "#fff" },
+  yaml: { label: "YAML", bg: "#6b7280", fg: "#fff" },
+};
+
+// Aliase auf die kanonischen Keys normalisieren. Stellt u.a. sicher, dass
+// TypeScript als "TypeScript" und nicht als "JavaScript" erscheint.
+const LANGUAGE_ALIASES = {
+  ts: "typescript",
+  js: "javascript",
+  kt: "kotlin",
+  kts: "kotlin",
+  rs: "rust",
+  py: "python",
+  golang: "go",
+};
+
+const badge = computed(() => {
+  const raw = (props.language || "").toLowerCase();
+  const key = LANGUAGE_ALIASES[raw] || raw;
+  return (
+    LANGUAGE_META[key] || {
+      label: (props.language || "").toUpperCase() || "?",
+      bg: "#6b7280",
+      fg: "#fff",
+    }
+  );
 });
 
 const emit = defineEmits(["ready"]);
@@ -131,6 +181,14 @@ defineExpose({
 <template>
   <div class="monaco-block" :style="{ height }">
     <div ref="container" class="monaco-container" />
+    <div
+      v-if="showLanguageBadge"
+      class="mb-lang-badge"
+      :class="`mb-pos-${badgePosition}`"
+      :style="{ background: badge.bg, color: badge.fg }"
+    >
+      {{ badge.label }}
+    </div>
   </div>
 </template>
 
@@ -143,6 +201,7 @@ defineExpose({
   font-display: swap;
 }
 .monaco-block {
+  position: relative;
   border-radius: var(--sk-radm);
   overflow: hidden;
   border: 0.5px solid var(--color-border-tertiary);
@@ -151,5 +210,36 @@ defineExpose({
 .monaco-container {
   width: 100%;
   height: 100%;
+}
+.mb-lang-badge {
+  position: absolute;
+  z-index: 20;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 2px 7px;
+  border-radius: var(--sk-rad);
+  pointer-events: none;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 0 0 0.5px rgba(255, 255, 255, 0.25);
+}
+.mb-pos-top-right {
+  top: 6px;
+  right: 8px;
+}
+.mb-pos-top-left {
+  top: 6px;
+  left: 8px;
+}
+.mb-pos-bottom-right {
+  bottom: 6px;
+  right: 8px;
+}
+.mb-pos-bottom-left {
+  bottom: 6px;
+  left: 8px;
 }
 </style>
