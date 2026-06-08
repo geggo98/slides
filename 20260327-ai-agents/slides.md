@@ -433,7 +433,7 @@ hideInToc: true
 
 <Callout tone="warning" class="mt-4">
 
-**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag [_OpenRewrite — Refactoring at Scale_](https://geggo98.github.io/slides/20260522-open-rewrite/)
+**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag <TalkXref slug="20260522-open-rewrite">OpenRewrite — Refactoring at Scale</TalkXref>
 
 </Callout>
 

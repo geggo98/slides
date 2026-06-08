@@ -549,7 +549,7 @@ hideInToc: true
 - **Jonathan Leitschuh: When Open Source isn't** — <code>infosecwriteups.com/...642053be287d</code>
 - **Moderne AI Recipe Authoring** — <code>moderne.ai/blog/ai-powered-openrewrite-recipe-authoring-with-claude-skill</code>
 - **FINOS CALM Spec** — <code>github.com/finos/architecture-as-code</code>
-- **Querverweis: Java Null-Sicherheit 2026** (Slides 8–18 zu JSpecify)
+- **Querverweis:** <TalkXref slug="20260428-java-null-pointer">Java Null-Sicherheit 2026</TalkXref> (Slides 8–18 zu JSpecify)
 
 <div class="mt-4 text-xs opacity-60">
 

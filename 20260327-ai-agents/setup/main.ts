@@ -3,7 +3,9 @@
 // markdown-facing shared components are registered globally here.
 import { defineAppSetup } from "@slidev/types";
 import Callout from "@shared/components/Callout.vue";
+import TalkXref from "@shared/components/TalkXref.vue";
 
 export default defineAppSetup(({ app }) => {
   app.component("Callout", Callout);
+  app.component("TalkXref", TalkXref);
 });

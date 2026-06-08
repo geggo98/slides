@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import TalkXref from "@shared/components/TalkXref.vue";
+</script>
+
 <template>
   <div class="xref-grid">
     <div class="col here">
@@ -20,7 +24,9 @@
     <div class="col there">
       <header>
         <span class="badge alt">Querverweis</span>
-        Java Null-Sicherheit 2026
+        <TalkXref slug="20260428-java-null-pointer"
+          >Java Null-Sicherheit 2026</TalkXref
+        >
       </header>
       <ul>
         <li>
@@ -31,16 +37,12 @@
           Null Object → <code>Optional</code>/Nullability; JSpecify, NullAway
         </li>
       </ul>
-      <a
-        class="xref-link"
-        href="https://geggo98.github.io/slides/20260428-java-null-pointer/"
-      >
-        → geggo98.github.io/slides/20260428-java-null-pointer/
-      </a>
 
       <header class="mt">
         <span class="badge alt">Querverweis</span>
-        OpenRewrite — Refactoring at Scale
+        <TalkXref slug="20260522-open-rewrite"
+          >OpenRewrite — Refactoring at Scale</TalkXref
+        >
       </header>
       <ul>
         <li>
@@ -52,12 +54,6 @@
           Recipe-Mechanik
         </li>
       </ul>
-      <a
-        class="xref-link"
-        href="https://geggo98.github.io/slides/20260522-open-rewrite/"
-      >
-        → geggo98.github.io/slides/20260522-open-rewrite/
-      </a>
     </div>
   </div>
 </template>
@@ -119,16 +115,5 @@
   background: var(--color-background-primary);
   padding: 1px 5px;
   border-radius: 3px;
-}
-.xref-link {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 12px;
-  font-family: var(--font-mono);
-  color: var(--color-text-info);
-  text-decoration: none;
-}
-.xref-link:hover {
-  text-decoration: underline;
 }
 </style>
