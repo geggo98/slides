@@ -77,7 +77,7 @@
         "lazyinit": {
           "mark": "relevant",
           "teaser": "DCL/Holder",
-          "detail": "Kein eingebautes Lazy<T>: Instanzfeld via volatile-DCL, statisch via Holder/enum (Singleton-Folie) oder Guava memoize. StableValue (JEP) noch Preview."
+          "detail": "Kein eingebautes Lazy<T>: Instanzfeld via volatile-DCL, statisch via Holder/enum (Singleton-Folie) oder Guava memoize. LazyConstant (JEP 526) noch Preview."
         },
         "decorator": {
           "mark": "relevant",

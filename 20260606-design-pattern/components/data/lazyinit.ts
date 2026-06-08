@@ -11,7 +11,7 @@ export const lazyInit = {
       {
         label: "Java (von Hand)",
         language: "java",
-        height: "230px",
+        height: "255px",
         note: "Java hat <strong>kein</strong> eingebautes <code>Lazy&lt;T&gt;</code> — die Lazy-Init eines <em>Instanzfelds</em> (nicht statisch!) schreibt man von Hand (DCL mit <code>volatile</code>).",
         code: `class ReportService {
     private volatile Parser parser;       // volatile: Pflicht für DCL
@@ -37,7 +37,76 @@ export const lazyInit = {
           },
         ],
         callout:
-          "<code>enum</code>/Holder (Singleton-Folie) lösen nur den statischen, arg-losen Fall — nicht lazy <em>Instanzfelder</em> oder Werte mit Konstruktor-Args. Diese Lücke füllen <code>by lazy</code> &amp; Co.; Javas <code>StableValue</code> (JEP) ist 2026 noch Preview.",
+          "DCL ist nur für lazy <em>Instanzfelder</em> nötig — den statischen Fall lösen <code>enum</code>/Holder; modernes Java: <code>LazyConstant</code> (Tab).",
+      },
+      {
+        label: "Java (util.concurrent)",
+        language: "java",
+        height: "290px",
+        note: "Lock-frei statt DCL — <code>AtomicReference</code>+CAS (Einzelwert), <code>computeIfAbsent</code> (keyed, exactly-once).",
+        code: `class ReportService {
+    // (a) Einzelwert, lock-frei (CAS, „first wins“):
+    private final AtomicReference<Parser> ref = new AtomicReference<>();
+    Parser parser() {
+        Parser p = ref.get();
+        if (p != null) return p;
+        p = new Parser();                       // kann mehrfach laufen
+        return ref.compareAndSet(null, p) ? p : ref.get();
+    }
+    // (b) Mehrere Werte pro Key (atomar, exactly-once):
+    private final ConcurrentHashMap<Class<?>, Parser> cache = new ConcurrentHashMap<>();
+    Parser parser(Class<?> k) { return cache.computeIfAbsent(k, this::build); }
+}`,
+        annotations: [
+          {
+            lines: [7, 8],
+            label:
+              "CAS: compute kann mehrfach laufen — nur „first wins“ publiziert",
+            tone: "warning",
+            detail: {
+              title: "AtomicReference ≠ exactly-once",
+              body: "<code>compareAndSet</code> publiziert genau einen Wert, aber <code>new Parser()</code> kann unter Contention <strong>mehrfach</strong> laufen — nur sinnvoll, wenn die Berechnung idempotent und günstig ist. <code>updateAndGet</code>/<code>accumulateAndGet</code> dürfen die Funktion laut Javadoc bei Contention sogar wiederholen.",
+            },
+          },
+          {
+            lines: 12,
+            label: "computeIfAbsent: atomar, höchstens einmal pro Key",
+            tone: "success",
+            detail: {
+              title: "ConcurrentHashMap — keyed exactly-once",
+              body: "<code>computeIfAbsent</code> läuft <strong>atomar, höchstens einmal pro Key</strong>; andere Threads blockieren, bis fertig — also echtes „exactly once“, anders als die CAS-Variante. Idiomatisch für keyed Memoization (Parser-Cache pro Typ). Für „genau einmal“ bei einem Einzelwert ist DCL (Tab 1) oder ein memoized <code>Supplier</code> sauberer als CAS. Vorsicht: <em>rekursives</em> <code>computeIfAbsent</code> auf derselben Map wirft ab Java 9 <code>IllegalStateException</code>.",
+            },
+          },
+        ],
+      },
+      {
+        label: "Java (LazyConstant, Preview)",
+        language: "java",
+        height: "160px",
+        note: "<code>LazyConstant</code> (JEP 526, JDK 26, <strong>Preview</strong>) — wie <code>lazy val</code>, aber <strong>constant-foldbar trotz Lazy-Init</strong> (das kann keine Vor-25-Lösung). Auch <code>List.ofLazy</code>/<code>Map.ofLazy</code>.",
+        code: `// Preview (JEP 526) — javac & java mit --enable-preview
+class OrderController {
+    // Lazy, aber im final-Feld → JIT darf nach Init constant-folden:
+    private final LazyConstant<Logger> logger =
+        LazyConstant.of(() -> Logger.create(OrderController.class));
+    void submit() { logger.get().info("started"); }   // 1. get(): Closure läuft einmal
+}`,
+        annotations: [
+          {
+            lines: [3, 5],
+            label:
+              "Lazy UND constant-foldbar — die Lücke zwischen final und mutable",
+            tone: "info",
+            detail: {
+              title: "JEP 526 — Lazy Constants (2nd Preview, JDK 26)",
+              body: "Genau einmal, thread-sicher, und — im <code>final</code>-Feld gehalten — <strong>constant-foldbar</strong> (anders als <code>volatile</code>/<code>AtomicReference</code>, die der JIT nie wegoptimieren darf). Ohne die <code>static</code>-only-Beschränkung des Holder-Idioms. <strong>null</strong> als berechneter Wert ist verboten; nicht <code>Serializable</code>.",
+            },
+          },
+        ],
+        caveat:
+          "<strong>Alte API nicht mehr verwenden:</strong> <code>StableValue</code> (JEP 502, JDK 25, mit <code>orElseSet</code>/<code>setOrThrow</code>/<code>trySet</code>) wurde in JDK 26 zu <code>LazyConstant</code> umbenannt, die Low-Level-Methoden <strong>entfernt</strong>.",
+        callout:
+          "Weiterhin <strong>Preview</strong> — produktionsreif erst nach Finalisierung (~<strong>JDK 29</strong>, LTS Sep 2027). Bis dahin: Holder-Idiom (statisch) bzw. memoized <code>Supplier</code> (Instanz).",
       },
       {
         label: "Kotlin",
@@ -129,19 +198,6 @@ static CONFIG: LazyLock<HashMap<&str, &str>> = LazyLock::new(|| {
             },
           },
         ],
-      },
-      {
-        label: "Swift",
-        language: "swift",
-        height: "140px",
-        note: "Gleicher Keyword-Look, <strong>gegensätzliche</strong> Garantie.",
-        code: `class ReportService {
-    lazy var cache = Cache()       // ⚠️ Instanz: KEINE Synchronisation — Race beim 1. Zugriff
-
-    static let shared = Parser()   // ✅ static/global: lazy UND thread-sicher (swift_once)
-}`,
-        callout:
-          "<code>lazy var</code> (Instanz) hat <strong>keine</strong> Synchronisation — gleichzeitiger Erstzugriff kann den Initializer mehrfach ausführen. Globals &amp; <code>static</code>-Stored-Properties sind lazy <strong>und</strong> thread-sicher (<code>swift_once</code>/<code>dispatch_once</code>). Aber nur die <em>Initialisierung</em> ist once — ein mutables <code>static var</code> racet danach weiter; voll sicher ist nur <code>static let</code>.",
       },
       {
         label: "Go",

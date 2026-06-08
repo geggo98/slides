@@ -41,11 +41,13 @@ export const schicht1 = {
       {
         label: "enum (Bloch)",
         language: "java",
-        height: "150px",
-        note: "Thread-sicher, serialisierungs- und reflexionssicher — ohne jede Boilerplate.",
+        height: "210px",
+        note: "Thread-sicher, serialisierungs- und reflexionssicher — ohne Boilerplate. Ein Feld wird beim Enum-Init <strong>einmal lazy</strong> befüllt.",
         code: `public enum Registry {
     INSTANCE;                        // das einzige Element IST das Singleton
+    private final Index index = buildIndex();   // einmal, bei Enum-Init gebaut
     public void register(String key) { /* ... */ }
+    public Index index() { return index; }
 }
 // Nutzung: Registry.INSTANCE.register("x");`,
         annotations: [
@@ -58,7 +60,18 @@ export const schicht1 = {
               body: "Enum-Konstanten sind implizit <code>public static final</code>, erzeugt im statischen Initialisierer (JLS §8.9). Dass das <strong>genau einmal und thread-sicher</strong> geschieht, garantiert das Klassen-Init-Lock (JLS §12.4.2); Reflexions- und Serialisierungssicherheit gibt es gratis. Bloch, <em>Effective Java</em>, Item 3: „the best way to implement a singleton“.",
             },
           },
+          {
+            lines: 3,
+            label: "Lazy — aber der Init-Zeitpunkt ist nicht kontrollierbar",
+            tone: "warning",
+            detail: {
+              title: "JLS §12.4.1 — „first active use“",
+              body: "Das Feld wird mit der Enum-Klasse initialisiert: laut JLS §12.4.1 <em>unmittelbar vor der ersten aktiven Nutzung</em>. „Nutzung“ ist weit gefasst — jeder statische Methodenaufruf (auch <code>values()</code>/<code>valueOf()</code>), jedes <code>switch</code> über das Enum (synthetischer <code>$SwitchMap</code> ruft <code>ordinal()</code>) triggert die volle Initialisierung. Granularität ist <strong>pro Klasse</strong>, nicht pro Konstante. Du kontrollierst also <em>nicht</em>, wann <code>buildIndex()</code> läuft.",
+            },
+          },
         ],
+        callout:
+          "Das deckt nur den <strong>statischen, arg-losen</strong> Singleton-Fall — und der Init-Zeitpunkt ist nicht steuerbar. Für lazy <em>Instanzfelder</em>, Werte mit Konstruktor-Args oder einen kontrollierten Zeitpunkt → <strong>Lazy Initialization</strong> (eigene Folie).",
       },
       {
         label: "Holder (IoDH)",

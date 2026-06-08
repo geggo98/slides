@@ -217,6 +217,12 @@ hideInToc: true
 
 <PatternTabs name="singleton" />
 
+<div class="mt-2 text-xs opacity-70">
+
+Das `enum`-Feld ist lazy, aber der Init-Zeitpunkt ist nicht kontrollierbar → <Link to="lazy-init">Lazy Initialization</Link>.
+
+</div>
+
 <!--
 - enum-Singleton ist Blochs Empfehlung; alle drei Java-Idiome sind JLS-fundiert (kein UB).
 - Was NICHT verschwindet: globaler, schwer mockbarer Zustand. Nur DI löst das.
@@ -377,11 +383,12 @@ Der Builder ist kein „gelöstes" Muster, sondern eine **Landkarte**, _auf welc
 
 ---
 hideInToc: true
+routeAlias: lazy-init
 ---
 
 # Lazy Initialization · [ERSETZT] / [KONZEPT]
 
-Kein GoF-23-Muster (wie Null Object) — benannt von Beck (1997), Fowlers „Lazy Load" (2002). _Lazy initialization_ (ein Feld) ≠ _lazy evaluation_ (Haskell: ganze Sprache).
+Kein GoF-23-Muster — Beck (1997), Fowlers „Lazy Load" (2002). _Lazy initialization_ (ein Feld) ≠ _lazy evaluation_ (Haskell).
 
 <PatternTabs name="lazyInit" />
 
@@ -389,6 +396,54 @@ Kein GoF-23-Muster (wie Null Object) — benannt von Beck (1997), Fowlers „Laz
 - Konstruktions-Sonderfall neben Builder: Builder = WIE konstruieren, Lazy Init = WANN.
 - Java braucht JSR-133 (2004), nur um den Workaround KORREKT zu machen; Bibliotheken (Guava) verstecken ihn; neuere Sprachen backen ihn als Keyword ein.
 - enum/Holder (Singleton-Folie) lösen nur den statischen, arg-losen Fall — nicht Instanzfelder/Konstruktor-Args.
+-->
+
+---
+hideInToc: true
+---
+
+# Lazy Init — Methoden im Vergleich
+
+<div class="cmp-table text-xs mt-3">
+
+| Mechanismus                                    | Geltung  | Compute-Garantie                 | Constant-Folding |
+| ---------------------------------------------- | -------- | -------------------------------- | ---------------- |
+| `synchronized` / DCL (Java)                    | Instanz  | genau einmal                     | **nein**         |
+| `AtomicReference` (CAS)                        | Instanz  | ggf. mehrfach, erster gewinnt    | **nein**         |
+| `ConcurrentHashMap.computeIfAbsent`            | keyed    | genau einmal pro Key             | **nein**         |
+| Holder-Idiom (Java, `static`)                  | statisch | genau einmal                     | **ja**           |
+| `enum`-Singleton (Java)                        | statisch | genau einmal                     | —                |
+| `LazyConstant` (Java, `final`-Feld, _Preview_) | beides   | genau einmal, thread-safe        | **ja**           |
+| Kotlin `by lazy` (SYNCHRONIZED)                | Instanz  | genau einmal (DCL)               | nein             |
+| Scala 3 `lazy val`                             | Instanz  | genau einmal (CAS-State-Machine) | nein             |
+
+</div>
+
+<div class="mt-3 text-sm opacity-70">
+
+Die Lücke, die `LazyConstant` schließt: lazy **und** thread-safe **und** constant-foldbar — ohne die `static`-only-Beschränkung des Holder-Idioms. Mutable Träger (`volatile`, `AtomicReference`) darf der JIT nie wegoptimieren; `final`-getragene Lazy-Konstanten schon.
+
+</div>
+
+<div class="cmp-foot text-xs opacity-65 mt-4">
+
+**DCL** — Double-Checked Locking<br>
+**CAS** — Compare-and-Swap (atomare „vergleiche-und-tausche"-CPU-Instruktion)<br>
+**Constant Folding** — [statische Formelauswertung zur Übersetzungszeit](https://en.wikipedia.org/wiki/Constant_folding); der Compiler/JIT ersetzt einen konstanten Ausdruck vorab durch sein Ergebnis
+
+</div>
+
+<style>
+.cmp-table table { border-collapse: collapse; }
+.cmp-table th, .cmp-table td { padding: 2px 8px !important; line-height: 1.25; }
+.cmp-foot { border-top: 0.5px solid var(--color-border-tertiary); padding-top: 6px; line-height: 1.7; }
+.cmp-foot a { color: var(--color-text-info); text-decoration: underline; }
+.cmp-foot strong { color: var(--color-text-primary); font-weight: 600; }
+</style>
+
+<!--
+- §8 des Referenzdokuments: Semantik-Mapping mit der Constant-Folding-Spalte als Pointe.
+- LazyConstant ist semantisch lazy val/by lazy, aber zusätzlich ohne Static-only-Limit UND mit Constant-Folding.
 -->
 
 ---
@@ -889,7 +944,7 @@ hideInToc: true
 - Fowler, _PoEAA_ + bliki (ValueObject, EvansClassification) · Evans, _DDD_ 2003
 - OpenJDK: JEP 395 (record), 409 (sealed), 440/441 (pattern matching), **8303099** (null-safety, _Draft_)
 - Goetz, _Data Oriented Programming in Java_ · kotlinlang.org · docs.spring.io
-- Lazy Init: Beck, _Smalltalk Best Practice Patterns_ (1997) · Fowler, _PoEAA_ „Lazy Load“ · Pugh u. a., „Double-Checked Locking is Broken“ + JSR-133 (Java 5) · Rust 1.70 / 1.80 Release-Notes
+- Lazy Init: Beck, _Smalltalk Best Practice Patterns_ (1997) · Fowler, _PoEAA_ „Lazy Load“ · Pugh u. a., „Double-Checked Locking is Broken“ + JSR-133 (Java 5) · JEP 502/526/531 (Stable Values → Lazy Constants) · Rust 1.70 / 1.80 Release-Notes
 
 </div>
 <div>
