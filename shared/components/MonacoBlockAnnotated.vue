@@ -1,5 +1,12 @@
 <script setup>
-import { ref, computed, onBeforeUnmount, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  onBeforeUnmount,
+  nextTick,
+  watch,
+} from "vue";
 import MonacoBlock from "./MonacoBlock.vue";
 
 const props = defineProps({
@@ -51,6 +58,19 @@ let editor = null;
 let monaco = null;
 let decoCollection = null;
 let viewZoneIds = [];
+let scrollSub = null;
+
+// Höhe der 💡-View-Zone (s. applyAnnotations: heightInPx). Die Zone sitzt
+// ÜBER der Startzeile, die visuelle Oberkante der Annotation liegt also um
+// diesen Betrag höher als der Top der Startzeile.
+const VIEWZONE_H = 20;
+
+// Template-Ref auf das Detail-Popup + reaktive Inline-Styles für die
+// Positionierung (oberhalb der Annotation, s. positionDetail).
+const detailEl = ref(null);
+const detailStyle = ref({});
+const arrowStyle = ref({});
+const arrowDir = ref("down"); // "down" = oberhalb mit Pfeil, "none" = Overlap
 
 function classFor(tone, kind) {
   return `ann-${kind} ann-tone-${tone}`;
@@ -131,10 +151,86 @@ function closeDetail() {
   emit("activate", null);
 }
 
+const clamp = (lo, v, hi) => Math.min(Math.max(lo, v), hi);
+
+// Positioniert das Detail-Popup als Sprechblase OBERHALB der aktiven
+// Annotation (Pfeil zeigt nach unten auf sie). Reicht der Platz oberhalb nicht,
+// wird oben angepinnt und überlappt Annotation/Code (dann ohne Pfeil).
+function positionDetail() {
+  if (!editor || activeId.value == null || !detailEl.value) return;
+  const ann = normalized.value.find((a) => a.id === activeId.value);
+  if (!ann) return;
+
+  const stage = detailEl.value.parentElement; // .mba-stage
+  const stageW = stage.clientWidth;
+  const stageH = stage.clientHeight;
+  const GAP = 8;
+  const MARGIN = 6;
+  const ARROW = 7;
+
+  // Stage-relative Position der Startzeile; null, wenn rausgescrollt.
+  const pos = editor.getScrolledVisiblePosition({
+    lineNumber: ann.startLine,
+    column: 1,
+  });
+  const annTop = pos ? Math.max(0, pos.top - VIEWZONE_H) : null;
+  const annLeft = pos ? pos.left : MARGIN;
+
+  const h = detailEl.value.offsetHeight;
+  const w = detailEl.value.offsetWidth;
+
+  // Vertikal: bevorzugt komplett oberhalb der Annotation.
+  let top = annTop == null ? MARGIN : annTop - GAP - ARROW - h;
+  let dir = "down";
+  if (top < MARGIN) {
+    // Zu wenig Platz oben → oben anpinnen, Annotation/Code überlappen.
+    top = MARGIN;
+    dir = "none";
+  }
+
+  // Horizontal: Box an der Annotation ausrichten, im Stage halten.
+  const left = clamp(
+    MARGIN,
+    annLeft - 16,
+    Math.max(MARGIN, stageW - w - MARGIN),
+  );
+
+  detailStyle.value = {
+    top: `${top}px`,
+    left: `${left}px`,
+    maxHeight: `${stageH - 2 * MARGIN}px`,
+  };
+  // Pfeilspitze (translateX(-50%)) auf den Annotations-Anker, in der Box halten.
+  arrowStyle.value = {
+    left: `${clamp(2 * ARROW, annLeft - left, w - 2 * ARROW)}px`,
+  };
+  arrowDir.value = dir;
+}
+
+// Jeder Klick schließt — Label-Klicks rufen e.stopPropagation() (s.
+// applyAnnotations) und erreichen diesen Listener nicht, Öffnen/Wechseln
+// bleibt also intakt.
+function onDocClick() {
+  if (activeId.value != null) closeDetail();
+}
+
+function onKey(e) {
+  if (e.key === "Escape" && activeId.value != null) closeDetail();
+}
+
+function onResize() {
+  if (activeId.value != null) nextTick(positionDetail);
+}
+
 function onReady(payload) {
   editor = payload.editor;
   monaco = payload.monaco;
   applyAnnotations();
+  scrollSub = editor.onDidScrollChange(() => {
+    if (activeId.value != null) positionDetail();
+  });
+  // defaultDetail kann das Popup schon vor Editor-Bereitschaft aktiv haben.
+  if (activeId.value != null) nextTick(positionDetail);
 }
 
 watch(
@@ -143,7 +239,21 @@ watch(
   { deep: true },
 );
 
+watch(activeId, (id) => {
+  if (id != null) nextTick(positionDetail);
+});
+
+onMounted(() => {
+  document.addEventListener("click", onDocClick);
+  window.addEventListener("keydown", onKey);
+  window.addEventListener("resize", onResize);
+});
+
 onBeforeUnmount(() => {
+  document.removeEventListener("click", onDocClick);
+  window.removeEventListener("keydown", onKey);
+  window.removeEventListener("resize", onResize);
+  scrollSub?.dispose();
   decoCollection?.clear();
   viewZoneIds = [];
 });
@@ -167,19 +277,22 @@ onBeforeUnmount(() => {
       />
       <div
         v-if="currentDetail"
-        :class="['mba-detail', `ann-tone-${currentDetail.tone}`]"
+        ref="detailEl"
+        :class="[
+          'mba-detail',
+          `ann-tone-${currentDetail.tone}`,
+          { 'mba-overlap': arrowDir === 'none' },
+        ]"
+        :style="detailStyle"
       >
-        <button
-          class="mba-detail-close"
-          type="button"
-          aria-label="Schließen"
-          @click="closeDetail"
-        >
-          &#x2715;
-        </button>
         <div class="mba-detail-title">{{ currentDetail.title }}</div>
         <div class="mba-detail-body" v-html="currentDetail.body" />
         <slot name="detail" :detail="currentDetail" />
+        <span
+          v-if="arrowDir === 'down'"
+          class="mba-detail-arrow"
+          :style="arrowStyle"
+        />
       </div>
     </div>
   </div>
@@ -211,33 +324,29 @@ onBeforeUnmount(() => {
 }
 .mba-detail {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  max-height: 70%;
+  /* top/left/max-height kommen inline aus positionDetail() */
+  width: max-content;
+  max-width: min(60%, 30rem);
   overflow-y: auto;
   z-index: 30;
-  padding: 10px 34px 10px 14px;
+  padding: 10px 14px;
   border-radius: var(--sk-rad);
   border: 0.5px solid var(--color-border-tertiary);
   font-size: 13px;
   line-height: 1.55;
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
 }
-.mba-detail-close {
+/* Nach unten zeigender Pfeil — gefülltes Dreieck in der Tone-Hintergrundfarbe.
+   Farbe pro Tone weiter unten gesetzt. */
+.mba-detail-arrow {
   position: absolute;
-  top: 6px;
-  right: 8px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-  padding: 2px;
-  color: var(--color-text-tertiary);
-}
-.mba-detail-close:hover {
-  color: var(--color-text-primary);
+  bottom: -7px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid transparent;
 }
 .mba-detail-title {
   font-weight: 500;
@@ -259,6 +368,18 @@ onBeforeUnmount(() => {
 .mba-detail.ann-tone-danger {
   background: var(--color-background-danger);
   border-color: var(--color-border-danger);
+}
+.mba-detail.ann-tone-info .mba-detail-arrow {
+  border-top-color: var(--color-background-info);
+}
+.mba-detail.ann-tone-success .mba-detail-arrow {
+  border-top-color: var(--color-background-success);
+}
+.mba-detail.ann-tone-warning .mba-detail-arrow {
+  border-top-color: var(--color-background-warning);
+}
+.mba-detail.ann-tone-danger .mba-detail-arrow {
+  border-top-color: var(--color-background-danger);
 }
 </style>
 
