@@ -98,9 +98,9 @@
         },
         {
           "id": "lsp-vs-mcp-vs-acp-o5",
-          "text": "Windsurf unterstützt ACP nicht, weil es eine eigene IDE betreibt.",
-          "verdict": "true",
-          "explanation": "Windsurf hat als einziges Tool im Vergleich keine ACP-Integration — die Anbindung läuft in der proprietären IDE."
+          "text": "Devin Desktop (ehem. Windsurf) unterstützt ACP nicht, weil es eine eigene IDE betreibt.",
+          "verdict": "false",
+          "explanation": "Seit dem Rebrand zu Devin Desktop (Juni 2026) unterstützt es ACP — jeder ACP-kompatible Agent läuft neben Devin in derselben IDE. Einziges Tool ohne dokumentierten ACP-Support im Vergleich ist nun OpenCode."
         },
         {
           "id": "lsp-vs-mcp-vs-acp-o6",
@@ -200,9 +200,9 @@
         },
         {
           "id": "skill-model-decision-o5",
-          "text": "Windsurf entdeckt Skills aus `.agents/skills/` automatisch.",
+          "text": "Devin Desktop entdeckt Skills aus `.agents/skills/` automatisch.",
           "verdict": "true",
-          "explanation": "Praktische Cross-Tool-Interop: Windsurf scannt `.agents/skills/` als Standard-Skill-Pfad."
+          "explanation": "Praktische Cross-Tool-Interop: Devin Desktop scannt `.agents/skills/` als Standard-Skill-Pfad."
         },
         {
           "id": "skill-model-decision-o6",
@@ -259,7 +259,7 @@
           "id": "hook-events-divergence-o6",
           "text": "Ob ein Pre-Tool-Block für ein Compliance-Use-Case ausreicht, hängt vom Tool ab.",
           "verdict": "depends",
-          "explanation": "Claude Code, Gemini, Windsurf, OpenCode haben Pre-Tool-Block — Codex und Junie nicht. Tool-Wahl bestimmt die Möglichkeit."
+          "explanation": "Claude Code, Gemini, Devin Desktop, OpenCode haben Pre-Tool-Block — Codex und Junie nicht. Tool-Wahl bestimmt die Möglichkeit."
         }
       ]
     },
@@ -285,8 +285,8 @@
         {
           "id": "agents-md-cross-tool-o2",
           "text": "Junie importiert `.claude/`, `.codex/` und `.cursor/` als Fallback automatisch.",
-          "verdict": "true",
-          "explanation": "Dokumentiertes Verhalten — Junie ist der freundlichste Cross-Tool-Importer."
+          "verdict": "false",
+          "explanation": "Junie importiert NICHT automatisch — es scannt `.claude/`, `.codex/` und `.cursor/` nur und schlägt daraus Guidelines vor (kein vollautomatischer Import)."
         },
         {
           "id": "agents-md-cross-tool-o3",
@@ -455,7 +455,7 @@
         },
         {
           "id": "agent-sdk-billing-2026-o5",
-          "text": "Die Abrechnungsumstellung betrifft auch Codex, Gemini CLI und Windsurf.",
+          "text": "Die Abrechnungsumstellung betrifft auch Codex, Gemini CLI und Devin Desktop.",
           "verdict": "false",
           "explanation": "Die 2026-06-15-Regel betrifft ausschließlich Anthropic-/Claude-Code-Abrechnung. Andere Tools haben eigene Modelle."
         },
@@ -1450,7 +1450,7 @@
       "question": "Welche Aussagen dazu, welche Agenten ein echtes „zweites LLM als Richter\" (Klassifikator-Gate pro Tool-Call) haben, treffen zu?",
       "difficulty": "medium",
       "section": "Klassifikator-Gates",
-      "explanation": "Nur drei Agenten lassen ein SEPARATES LLM pro Tool-Call zwischen allow/block/eskalieren entscheiden: Cursor (Auto-Review), Claude Code (Auto Mode) und OpenAI Codex (Auto-review/Guardian). Alle drei trennen das urteilende vom handelnden Modell (reasoning-blind bzw. separater Subagent), damit der Hauptagent den Wächter nicht durch eigenes Reasoning überredet. Die übrigen (Gemini CLI, Windsurf, Junie, OpenCode, Pi) haben KEIN Gating-LLM — nur statische Allow/Deny-Regeln plus optionales OS-Sandboxing; ihr „Auto\"-Modus skippt nur die Rückfrage.",
+      "explanation": "Nur drei Agenten lassen ein SEPARATES LLM pro Tool-Call zwischen allow/block/eskalieren entscheiden: Cursor (Auto-Review), Claude Code (Auto Mode) und OpenAI Codex (Auto-review/Guardian). Alle drei trennen das urteilende vom handelnden Modell (reasoning-blind bzw. separater Subagent), damit der Hauptagent den Wächter nicht durch eigenes Reasoning überredet. Die übrigen (Gemini CLI, Devin Desktop, Junie, OpenCode, Pi) haben KEIN Gating-LLM — nur statische Allow/Deny-Regeln plus optionales OS-Sandboxing; ihr „Auto\"-Modus skippt nur die Rückfrage.",
       "options": [
         {
           "id": "classifier-gate-which-tools-o0",
@@ -1492,7 +1492,7 @@
           "id": "classifier-gate-which-tools-o6",
           "text": "Ob ein „Auto\"-Modus tatsächlich ein semantisches Urteil enthält, hängt vom konkreten Agenten ab.",
           "verdict": "depends",
-          "explanation": "Bei Cursor/Claude/Codex ja (Klassifikator), bei Gemini/Windsurf/Junie/OpenCode/Pi nein (bloßes Prompt-Skippen) — der Begriff allein sagt nichts."
+          "explanation": "Bei Cursor/Claude/Codex ja (Klassifikator), bei Gemini/Devin Desktop/Junie/OpenCode/Pi nein (bloßes Prompt-Skippen) — der Begriff allein sagt nichts."
         }
       ]
     },
@@ -1501,7 +1501,7 @@
       "question": "Welche Aussagen zur Begriffs-Kollision rund um „Auto\"/„Auto-Review\" treffen zu?",
       "difficulty": "medium",
       "section": "Auto-Modi",
-      "explanation": "Die „Auto\"-Begriffe meinen Unterschiedliches: „Auto-Review\" existiert bei ZWEI Anbietern (Cursor und OpenAI Codex) für verwandte, aber technisch verschiedene Mechanismen. Cursors separates „Auto\" ist dagegen MODELLAUSWAHL, kein Run-Mode. „Auto Mode\" (Claude), „YOLO\" (Gemini/Pi), „Turbo\" (Windsurf), „Brave\" (Junie) und „Full Auto\" (Codex) bezeichnen jeweils Eigenes — nur drei davon enthalten ein Klassifikator-Urteil.",
+      "explanation": "Die „Auto\"-Begriffe meinen Unterschiedliches: „Auto-Review\" existiert bei ZWEI Anbietern (Cursor und OpenAI Codex) für verwandte, aber technisch verschiedene Mechanismen. Cursors separates „Auto\" ist dagegen MODELLAUSWAHL, kein Run-Mode. „Auto Mode\" (Claude), „YOLO\" (Gemini/Pi), „Turbo\" (Devin Desktop), „Brave\" (Junie) und „Full Auto\" (Codex) bezeichnen jeweils Eigenes — nur drei davon enthalten ein Klassifikator-Urteil.",
       "options": [
         {
           "id": "auto-terminology-collision-o0",
@@ -1517,7 +1517,7 @@
         },
         {
           "id": "auto-terminology-collision-o2",
-          "text": "„YOLO\" (Gemini/Pi), „Turbo\" (Windsurf) und „Brave\" (Junie) sind bloßes Prompt-Skippen, kein semantisches Urteil.",
+          "text": "„YOLO\" (Gemini/Pi), „Turbo\" (Devin Desktop) und „Brave\" (Junie) sind bloßes Prompt-Skippen, kein semantisches Urteil.",
           "verdict": "true",
           "explanation": "Diese Modi schalten nur die Bestätigung ab; keiner ruft einen urteilenden Klassifikator auf."
         },

@@ -2,7 +2,7 @@
 theme: default
 title: "AI Coding Agents: Konfiguration & Autonomie"
 info: |
-  Systematischer Vergleich: Claude Code, Codex, Windsurf, Junie, OpenCode, Gemini CLI.
+  Systematischer Vergleich: Claude Code, Codex, Devin Desktop, Junie, OpenCode, Gemini CLI.
   Konfiguration (Primitive, Protokolle, Worktrees, Cross-Tool) und
   Autonomie & Orchestrierung (Subagents, /goal, /loop, Dynamic Workflows, Agent Teams).
 monaco: true
@@ -11,11 +11,13 @@ hideInToc: true
 
 # AI Coding Agents: Konfiguration & Autonomie
 
-Systematischer Vergleich: Claude Code · Codex · Windsurf · Junie · OpenCode · Gemini CLI
+Systematischer Vergleich: Claude Code · Codex · Devin Desktop · Junie · OpenCode · Gemini CLI
 
 <div class="text-sm opacity-75 mt-4">
 
 **Hinweis:** Die quelloffene **Gemini CLI** wird ab **2026-06-18** (Consumer) durch die **Antigravity CLI** (`agy`) abgelöst — ein Go-Rewrite und **nicht** zu verwechseln mit der Antigravity-**IDE** (eigenes Produkt). Enterprise läuft vorerst weiter. Details: Kapitel _Autonomie & Orchestrierung_.
+
+**Hinweis:** **Windsurf** heißt seit **2026-06-02** **Devin Desktop** — der Rust-Rewrite **Devin Local** löst **Cascade** ab (EOL 2026-07-01), neu mit **ACP-Support**.
 
 </div>
 
@@ -119,13 +121,13 @@ hideInToc: true
 
 Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
-| Tool            | Hierarchie                                                                                    |
-| --------------- | --------------------------------------------------------------------------------------------- |
-| **Claude Code** | `~/.claude/` → Elternverzeichnisse → Projekt-Root → Unterverzeichnisse + `.claude/rules/*.md` |
-| **Codex**       | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert            |
-| **Windsurf**    | System → Global → Workspace → AGENTS.md (4 Stufen)                                            |
-| **Gemini CLI**  | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine            |
-| **OpenCode**    | Remote-Config via `.well-known/opencode`                                                      |
+| Tool              | Hierarchie                                                                                    |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| **Claude Code**   | `~/.claude/` → Elternverzeichnisse → Projekt-Root → Unterverzeichnisse + `.claude/rules/*.md` |
+| **Codex**         | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert            |
+| **Devin Desktop** | System → Global → Workspace → AGENTS.md (4 Stufen)                                            |
+| **Gemini CLI**    | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine            |
+| **OpenCode**      | Remote-Config via `.well-known/opencode`                                                      |
 
 **Universell: Deny gewinnt immer** — keine niedrigere Ebene kann ein Verbot aufheben.
 
@@ -135,14 +137,14 @@ hideInToc: true
 
 # Hook-Systeme: Die größte Divergenz
 
-| Tool            | Events | Pre-Tool-Block | Besonderheit                              |
-| --------------- | ------ | -------------- | ----------------------------------------- |
-| **Claude Code** | 12+    | ✓ (Exit 2)     | 3 Handler-Typen: Shell, LLM-Prompt, Agent |
-| **Gemini CLI**  | 10     | ✓              | Retry-Trigger via `AfterAgent` (Exit 2)   |
-| **Windsurf**    | 12     | ✓              | Cloud-managed Hook-Deployment             |
-| **OpenCode**    | 30+    | ✓              | JS/TS-Plugins statt Shell-Skripte         |
-| **Codex**       | 2      | ✗              | Nur `notify` + `userpromptsubmit`         |
-| **Junie**       | —      | ✗              | Approval Gates + Live Prompting           |
+| Tool              | Events | Pre-Tool-Block | Besonderheit                              |
+| ----------------- | ------ | -------------- | ----------------------------------------- |
+| **Claude Code**   | 12+    | ✓ (Exit 2)     | 3 Handler-Typen: Shell, LLM-Prompt, Agent |
+| **Gemini CLI**    | 10     | ✓              | Retry-Trigger via `AfterAgent` (Exit 2)   |
+| **Devin Desktop** | 12     | ✓              | Cloud-managed Hook-Deployment             |
+| **OpenCode**      | 30+    | ✓              | JS/TS-Plugins statt Shell-Skripte         |
+| **Codex**         | 2      | ✗              | Nur `notify` + `userpromptsubmit`         |
+| **Junie**         | —      | ✗              | Approval Gates + Live Prompting           |
 
 **Architekturprinzip:** Hooks sind Quality Gates — sie fangen die letzten 10% auf, die das Modell trotz guter Instruktionen übersieht.
 
@@ -152,14 +154,14 @@ hideInToc: true
 
 # Sandboxing und Permissions
 
-| Tool            | Technologie                    | Besonderheit                                                     |
-| --------------- | ------------------------------ | ---------------------------------------------------------------- |
-| **Codex**       | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                |
-| **Claude Code** | Seatbelt / bubblewrap          | 6 Modi inkl. `auto` (Classifier-Safety-Net) · Deny → Ask → Allow |
-| **Gemini CLI**  | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine                   |
-| **Windsurf**    | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen                          |
-| **Junie**       | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando                            |
-| **OpenCode**    | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                                     |
+| Tool                   | Technologie                    | Besonderheit                                                     |
+| ---------------------- | ------------------------------ | ---------------------------------------------------------------- |
+| **Codex**              | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                |
+| **Claude Code**        | Seatbelt / bubblewrap          | 6 Modi inkl. `auto` (Classifier-Safety-Net) · Deny → Ask → Allow |
+| **Gemini CLI**         | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine                   |
+| **Devin&nbsp;Desktop** | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen                          |
+| **Junie**              | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando                            |
+| **OpenCode**           | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                                     |
 
 <p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;">⚠️ <strong>Sensible Daten lokal?</strong> Agent im <strong>Devcontainer</strong> isolieren, nur unkritische Pfade mounten — Sandboxes schützen nicht vor Skill-/MCP-Exfiltration.</p>
 
@@ -226,13 +228,13 @@ hideInToc: true
 
 **Vor ACP:** N·M Custom-Integrationen (IDE × Agent). **Mit ACP:** einmal implementieren → läuft überall.
 
-| Tool        | ACP | Details              |
-| ----------- | --- | -------------------- |
-| Claude Code | ✓   | JetBrains-IDEs + Zed |
-| Codex       | ✓   | JetBrains ab 2026.1  |
-| Junie       | ✓   | JetBrains-nativ      |
-| Gemini CLI  | ✓   | JetBrains + Zed      |
-| Windsurf    | ✗   | Eigene IDE           |
+| Tool          | ACP | Details              |
+| ------------- | --- | -------------------- |
+| Claude Code   | ✓   | JetBrains-IDEs + Zed |
+| Codex         | ✓   | JetBrains ab 2026.1  |
+| Junie         | ✓   | JetBrains-nativ      |
+| Gemini CLI    | ✓   | JetBrains + Zed      |
+| Devin Desktop | ✓   | ACP-Launch Juni 2026 |
 
 **MCP-Durchreichung:** JetBrains reicht konfigurierte MCP-Server an ACP-Agenten durch — einmal konfigurieren, alle Agenten nutzen es.
 
@@ -281,7 +283,7 @@ Praktische Interop heute:
 
 - **Junie** scannt `.claude/`, `.codex/`, `.cursor/` und **schlägt** Guidelines **vor** (kein vollautomatischer Import)
 - **OpenCode** fällt auf `CLAUDE.md` zurück
-- **Windsurf** entdeckt Skills aus `.agents/skills/`
+- **Devin Desktop** entdeckt Skills aus `.agents/skills/`
 - **Gemini CLI** erlaubt mehrere Dateinamen-Alternativen
 
 ---
@@ -308,14 +310,14 @@ hideInToc: true
 
 # Pipes & Headless-Mode
 
-| Tool            | Headless           | Stdin-Pipe           | Besonderheit                           |
-| --------------- | ------------------ | -------------------- | -------------------------------------- |
-| **Claude Code** | `-p` / `--print`   | ✓ (10 MB cap)        | 3 s-Timeout · ab 2026-06-15 SDK-Credit |
-| **Gemini CLI**  | `-p` / `--prompt`  | ✓                    | `--output-format json` / `stream-json` |
-| **Codex**       | `codex exec` (`e`) | ✓ (Prompt-Arg `-`)   | `exec resume`, `--json`                |
-| **OpenCode**    | `opencode run "…"` | ✗ (nur `-f <datei>`) | `opencode serve` für warme Sessions    |
-| **Windsurf**    | ✗                  | ✗                    | Nur IDE-integriert                     |
-| **Junie**       | ✗                  | ✗                    | Nur IDE-integriert                     |
+| Tool              | Headless           | Stdin-Pipe           | Besonderheit                           |
+| ----------------- | ------------------ | -------------------- | -------------------------------------- |
+| **Claude Code**   | `-p` / `--print`   | ✓ (10 MB cap)        | 3 s-Timeout · ab 2026-06-15 SDK-Credit |
+| **Gemini CLI**    | `-p` / `--prompt`  | ✓                    | `--output-format json` / `stream-json` |
+| **Codex**         | `codex exec` (`e`) | ✓ (Prompt-Arg `-`)   | `exec resume`, `--json`                |
+| **OpenCode**      | `opencode run "…"` | ✗ (nur `-f <datei>`) | `opencode serve` für warme Sessions    |
+| **Devin Desktop** | ✗                  | ✗                    | Nur IDE-integriert                     |
+| **Junie**         | ✗                  | ✗                    | Nur IDE-integriert                     |
 
 ---
 hideInToc: true
@@ -404,14 +406,14 @@ hideInToc: true
 
 # Autonomie im Tool-Vergleich
 
-| Tool                  | Loop (Zeit) | Goal (Bedingung) | Breite (parallel)                |
-| --------------------- | ----------- | ---------------- | -------------------------------- |
-| **Claude Code**       | `/loop`     | `/goal`          | Dynamic Workflows                |
-| **Codex**             | ✗           | `/goal`          | Cloud-Sandboxes                  |
-| **Antigravity CLI**   | ◐           | ✗                | async Background-Workflows       |
-| **Copilot**           | ✗           | ◐ (bis PR)       | Cloud Agent                      |
-| **Windsurf / Cursor** | ✗           | ◐                | Cascade / Cloud (≤8)             |
-| **Junie / Air**       | ✗           | Plan/Brave-Mode  | Air orchestriert mehrere Agenten |
+| Tool                       | Loop (Zeit) | Goal (Bedingung) | Breite (parallel)                |
+| -------------------------- | ----------- | ---------------- | -------------------------------- |
+| **Claude Code**            | `/loop`     | `/goal`          | Dynamic Workflows                |
+| **Codex**                  | ✗           | `/goal`          | Cloud-Sandboxes                  |
+| **Antigravity CLI**        | ◐           | ✗                | async Background-Workflows       |
+| **Copilot**                | ✗           | ◐ (bis PR)       | Cloud Agent                      |
+| **Devin Desktop / Cursor** | ✗           | ◐                | Devin Local / Cloud (≤8)         |
+| **Junie / Air**            | ✗           | Plan/Brave-Mode  | Air orchestriert mehrere Agenten |
 
 Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, goal ∝ Turns, Breite multiplikativ ∝ Agenten.
 
@@ -474,12 +476,12 @@ hideInToc: true
 
 »Auto« heißt bei jedem Tool etwas anderes — nur **drei** beinhalten ein echtes Urteil: ein _separates_ LLM entscheidet pro Call **allow / block / eskalieren** (reasoning-blind, damit der Hauptagent den Wächter nicht überredet).
 
-| Tool / Gruppe                                 | Echtes Gate-LLM               | Architektur                           |
-| --------------------------------------------- | ----------------------------- | ------------------------------------- |
-| **Cursor** (Auto-Review)                      | ✓ Classifier-Subagent         | Sandbox-first                         |
-| **Claude Code** (Auto Mode)                   | ✓ Sonnet 4.6, reasoning-blind | Trust-Scope-first                     |
-| **OpenAI Codex** (Auto-review)                | ✓ Guardian-Subagent           | Sandbox-first **+** Reviewer (Hybrid) |
-| **Gemini · Windsurf · Junie · OpenCode · Pi** | ✗ statische Allow/Deny        | — (YOLO/Turbo/Brave = Rückfrage aus)  |
+| Tool / Gruppe                                      | Echtes Gate-LLM               | Architektur                           |
+| -------------------------------------------------- | ----------------------------- | ------------------------------------- |
+| **Cursor** (Auto-Review)                           | ✓ Classifier-Subagent         | Sandbox-first                         |
+| **Claude Code** (Auto Mode)                        | ✓ Sonnet 4.6, reasoning-blind | Trust-Scope-first                     |
+| **OpenAI Codex** (Auto-review)                     | ✓ Guardian-Subagent           | Sandbox-first **+** Reviewer (Hybrid) |
+| **Gemini · Devin Desktop · Junie · OpenCode · Pi** | ✗ statische Allow/Deny        | — (YOLO/Turbo/Brave = Rückfrage aus)  |
 
 **Sandbox-first** (Cursor/Codex): erst isolieren, Klassifikator zuletzt. **Trust-Scope-first** (Claude): Vertrauensgrenze in Prosa (`autoMode.environment`), Klassifikator primär. → volle Matrix nächste Folie.
 

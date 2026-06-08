@@ -28,9 +28,9 @@ const worktrees = computed(() => {
       ...erstklassig,
     },
     {
-      tool: "Windsurf",
+      tool: "Devin Desktop",
       level: "Erstklassig",
-      desc: "Seit Wave 13. Side-by-side Cascade-Panes. Git Worktrees als Backend.",
+      desc: "Seit Wave 13. Side-by-side Devin-Local-Panes. Git Worktrees als Backend.",
       ...erstklassig,
     },
     {

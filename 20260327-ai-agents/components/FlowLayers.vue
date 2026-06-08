@@ -40,7 +40,7 @@ const layers = computed(() => {
       border: d ? "#4a8fd0" : "#185FA5",
       color: d ? "#85b7eb" : "#0C447C",
       detail:
-        "Pfad-/dateibasiert geladene Regeln. Windsurf: <code>glob</code>, <code>model_decision</code>. Claude Code: <code>globs</code> in YAML-Frontmatter.",
+        "Pfad-/dateibasiert geladene Regeln. Devin Desktop: <code>glob</code>, <code>model_decision</code>. Claude Code: <code>globs</code> in YAML-Frontmatter.",
     },
     {
       id: "skills",

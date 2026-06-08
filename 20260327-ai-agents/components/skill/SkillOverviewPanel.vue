@@ -59,8 +59,8 @@ import CollapsibleSection from "./CollapsibleSection.vue";
           <h4 class="hl">AGENTS.md</h4>
           <p>
             <b>Offener Standard</b> für Projektanweisungen.
-            Plattformübergreifend: Codex, Cursor, Gemini CLI, Windsurf, Aider,
-            Zed, etc. Reines Markdown, kein Schema nötig. Das README für
+            Plattformübergreifend: Codex, Cursor, Gemini CLI, Devin Desktop,
+            Aider, Zed, etc. Reines Markdown, kein Schema nötig. Das README für
             AI-Agents.
           </p>
         </div>

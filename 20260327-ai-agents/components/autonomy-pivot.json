@@ -206,16 +206,16 @@
     },
     {
       "key": "windsurf",
-      "name": "Windsurf (Cascade)",
+      "name": "Devin Desktop (Devin Local)",
       "color": "#09B6A2",
       "cells": {
         "primitive": {
-          "teaser": "Cascade, Planning-Agent, Workflows",
-          "detail": "Cascade ist der agentische Kern mit eigenem Planning-Agent, der den Langzeitplan im Hintergrund verfeinert. Parallel Agents bearbeiten mehrere Tasks gleichzeitig. Workflows (.windsurf/workflows/) sind benannte Markdown-Rezepte, via /name aufrufbar.",
+          "teaser": "Devin Local, Planning-Agent, Workflows",
+          "detail": "Devin Local ist der agentische Kern mit eigenem Planning-Agent, der den Langzeitplan im Hintergrund verfeinert. Parallel Agents bearbeiten mehrere Tasks gleichzeitig. Workflows (.devin/workflows/) sind benannte Markdown-Rezepte, via /name aufrufbar.",
           "mark": "none"
         },
         "umsetzung": {
-          "teaser": "VS-Code-Fork, .windsurf-Config",
+          "teaser": "VS-Code-Fork, .devin-Config",
           "detail": "Agentische VS-Code-Fork-IDE, seit Dez 2025 unter Cognition AI (Devin). Workflows sind reine Prompt-Rezepte, keine Orchestrierungs-Engine. Parallel Agents sind credit-intensiv bei vagen Prompts, daher erst Plan-Only empfohlen.",
           "mark": "none"
         },
@@ -226,7 +226,7 @@
         },
         "plan": {
           "teaser": "Modell (Planning-Agent)",
-          "detail": "Cascade hat einen dedizierten Planning-Agent, der den Langzeitplan eigenständig im Hintergrund verfeinert. Der Plan liegt damit beim Modell, nicht beim Nutzer oder einem externen Skript.",
+          "detail": "Devin Local hat einen dedizierten Planning-Agent, der den Langzeitplan eigenständig im Hintergrund verfeinert. Der Plan liegt damit beim Modell, nicht beim Nutzer oder einem externen Skript.",
           "mark": "none"
         },
         "kommunikation": {

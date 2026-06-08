@@ -51,7 +51,11 @@ const protocols = computed(() => {
           level: Y,
           detail: "30+ Language Server, Auto-Install",
         },
-        { tool: "Windsurf", level: Y, detail: "IDE-integriert (VS Code Fork)" },
+        {
+          tool: "Devin Desktop",
+          level: Y,
+          detail: "IDE-integriert (VS Code Fork)",
+        },
         {
           tool: "Junie",
           level: Y,
@@ -81,7 +85,7 @@ const protocols = computed(() => {
         },
         { tool: "Codex", level: Y, detail: "config.toml, OAuth-Flows" },
         {
-          tool: "Windsurf",
+          tool: "Devin Desktop",
           level: Y,
           detail: "MCP Marketplace, 100-Tool-Limit",
         },
@@ -115,7 +119,11 @@ const protocols = computed(() => {
           level: Y,
           detail: "Via ACP in JetBrains und Zed",
         },
-        { tool: "Windsurf", level: N, detail: "Eigene IDE, kein ACP" },
+        {
+          tool: "Devin Desktop",
+          level: Y,
+          detail: "ACP ab Launch (Juni 2026)",
+        },
         { tool: "OpenCode", level: N, detail: "Kein ACP dokumentiert" },
       ],
     },
