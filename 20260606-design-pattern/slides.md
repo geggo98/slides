@@ -376,6 +376,22 @@ Der Builder ist kein „gelöstes" Muster, sondern eine **Landkarte**, _auf welc
 </style>
 
 ---
+hideInToc: true
+---
+
+# Lazy Initialization · [ERSETZT] / [KONZEPT]
+
+Kein GoF-23-Muster (wie Null Object) — benannt von Beck (1997), Fowlers „Lazy Load" (2002). _Lazy initialization_ (ein Feld) ≠ _lazy evaluation_ (Haskell: ganze Sprache).
+
+<PatternTabs name="lazyInit" />
+
+<!--
+- Konstruktions-Sonderfall neben Builder: Builder = WIE konstruieren, Lazy Init = WANN.
+- Java braucht JSR-133 (2004), nur um den Workaround KORREKT zu machen; Bibliotheken (Guava) verstecken ihn; neuere Sprachen backen ihn als Keyword ein.
+- enum/Holder (Singleton-Folie) lösen nur den statischen, arg-losen Fall — nicht Instanzfelder/Konstruktor-Args.
+-->
+
+---
 layout: section
 ---
 
@@ -820,7 +836,7 @@ hideInToc: true
 
 # Pattern × Sprache — Builder · Struktur · Architektur
 
-<PatternLanguageMatrix :keys="['builder','decorator','adapter','proxy','valueobj','repository','factory']" />
+<PatternLanguageMatrix :keys="['builder','lazyinit','decorator','adapter','proxy','valueobj','repository','factory']" />
 
 <!--
 - Schicht 2/3 ist mehrheitlich ✓ (weiterhin relevant); Value Object & Factory sind die Ausnahmen (↻).
@@ -873,6 +889,7 @@ hideInToc: true
 - Fowler, _PoEAA_ + bliki (ValueObject, EvansClassification) · Evans, _DDD_ 2003
 - OpenJDK: JEP 395 (record), 409 (sealed), 440/441 (pattern matching), **8303099** (null-safety, _Draft_)
 - Goetz, _Data Oriented Programming in Java_ · kotlinlang.org · docs.spring.io
+- Lazy Init: Beck, _Smalltalk Best Practice Patterns_ (1997) · Fowler, _PoEAA_ „Lazy Load“ · Pugh u. a., „Double-Checked Locking is Broken“ + JSR-133 (Java 5) · Rust 1.70 / 1.80 Release-Notes
 
 </div>
 <div>

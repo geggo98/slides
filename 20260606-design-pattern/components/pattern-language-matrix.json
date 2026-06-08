@@ -11,6 +11,7 @@
     { "key": "state", "label": "State", "short": "Schicht 1" },
     { "key": "nullobj", "label": "Null Object", "short": "Schicht 1" },
     { "key": "builder", "label": "Builder", "short": "Sonderfall" },
+    { "key": "lazyinit", "label": "Lazy Init", "short": "Schicht 1" },
     { "key": "decorator", "label": "Decorator", "short": "Schicht 2" },
     { "key": "adapter", "label": "Adapter", "short": "Schicht 2" },
     { "key": "proxy", "label": "Proxy", "short": "Schicht 2" },
@@ -72,6 +73,11 @@
           "mark": "relevant",
           "teaser": "Builder/Staged",
           "detail": "Mangels named/default args weiterhin nötig. Nur der Staged Builder ist compile-zeit-sicher."
+        },
+        "lazyinit": {
+          "mark": "relevant",
+          "teaser": "DCL/Holder",
+          "detail": "Kein eingebautes Lazy<T>: Instanzfeld via volatile-DCL, statisch via Holder/enum (Singleton-Folie) oder Guava memoize. StableValue (JEP) noch Preview."
         },
         "decorator": {
           "mark": "relevant",
@@ -151,6 +157,11 @@
           "teaser": "named/default",
           "detail": "Named + default Konstruktor-Params machen den Builder überflüssig — Pflichtfeld gratis compile-zeit-erzwungen."
         },
+        "lazyinit": {
+          "mark": "ersatz",
+          "teaser": "by lazy",
+          "detail": "by lazy { } als Lazy<T>-Delegate; Default SYNCHRONIZED (thread-sicher), Modi PUBLICATION/NONE. lateinit ist NICHT dieses Muster."
+        },
         "decorator": {
           "mark": "relevant",
           "teaser": "by-Delegation",
@@ -204,6 +215,11 @@
           "mark": "ersatz",
           "teaser": "Options-Objekt",
           "detail": "Options-Objekt mit optionalen Properties; Pflichtfeld vom Type-Checker erzwungen. Type-level set tracking löst sogar die kombinatorische Explosion."
+        },
+        "lazyinit": {
+          "mark": "relevant",
+          "teaser": "lazy getter",
+          "detail": "Kein Builtin: self-redefining Getter (Object.defineProperty ersetzt den Accessor durch den Wert). Single-threaded → kein Lock nötig."
         },
         "decorator": {
           "mark": "relevant",
@@ -279,6 +295,11 @@
           "teaser": "typed-builder",
           "detail": "Keine named/default args. Pragmatisch build()->Result (Laufzeit) oder Typestate via PhantomData (Compile-Zeit)."
         },
+        "lazyinit": {
+          "mark": "ersatz",
+          "teaser": "LazyLock",
+          "detail": "LazyCell/LazyLock (1.80) bzw. OnceCell/OnceLock (1.70). *Cell = single-thread (!Sync), *Lock = thread-safe (im static nutzbar). Ersetzt lazy_static/once_cell."
+        },
         "decorator": { "mark": "relevant", "teaser": "newtype/Deref" },
         "adapter": { "mark": "relevant", "teaser": "From/Into" },
         "proxy": {
@@ -341,6 +362,11 @@
           "teaser": "func. options",
           "detail": "Weder named noch default args → Functional Options Pattern (Pike/Cheney)."
         },
+        "lazyinit": {
+          "mark": "ersatz",
+          "teaser": "sync.OnceValue",
+          "detail": "sync.Once (klassisch) → sync.OnceValue/OnceFunc/OnceValues (Go 1.21, generics-basiert)."
+        },
         "decorator": { "mark": "relevant", "teaser": "embedding" },
         "adapter": {
           "mark": "relevant",
@@ -394,6 +420,11 @@
           "mark": "ersatz",
           "teaser": "kwargs/dataclass",
           "detail": "Keyword-args + @dataclass; Pflichtfeld-Verstoß ist ein TypeError zur Laufzeit."
+        },
+        "lazyinit": {
+          "mark": "ersatz",
+          "teaser": "cached_property",
+          "detail": "functools.cached_property (3.8); Lock in 3.12 entfernt → bei Race ggf. mehrfach berechnet. Modul-Ebene: __getattr__ (PEP 562)."
         },
         "decorator": {
           "mark": "relevant",
