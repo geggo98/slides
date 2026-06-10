@@ -240,6 +240,7 @@ hideInToc: true
 
 ---
 hideInToc: true
+routeAlias: acp-abrechnung
 ---
 
 # ACP — Abrechnung auf Pro/Max
@@ -634,6 +635,55 @@ hideInToc: true
 
 <Callout tone="warning" dense class="mt-1">
 <p class="!my-0 !leading-tight">Die Zahlen messen <strong>verschiedene Workloads</strong> — keine gemeinsame Skala; nur AmPermBench ist unabhängig, der Rest ist selbstberichtet.</p>
+</Callout>
+
+---
+hideInToc: true
+---
+
+# Claude Code in IntelliJ via ACP — Installation
+
+**Subscription statt API-Key:** `claude` per Homebrew installieren, dann in IntelliJ als ACP-Agent registrieren.
+
+**Schritt 1 — installieren & anmelden:**
+
+```bash
+brew install --cask claude-code   # Cask: kein Auto-Update → `brew upgrade claude-code`
+claude                            # interaktiv: /login → Subscription wählen
+unset ANTHROPIC_API_KEY           # sonst gewinnt der Key gegen die Subscription
+claude /status                    # aktiven Auth-Modus bestätigen
+```
+
+---
+hideInToc: true
+---
+
+# Claude Code in IntelliJ via ACP — Agent registrieren
+
+**Schritt 2:** AI-Chat → ⋮ → **Add Custom Agent** öffnet `~/.jetbrains/acp.json`. Sauberer als bloßes `npx` (Latenz/Netz pro Start) ist ein Wrapper mit fixem Pfad und kontrolliertem `env`:
+
+```json
+{
+  "agent_servers": {
+    "Claude Code (Subscription)": {
+      "command": "/Users/<Du>/bin/claude-acp.sh",
+      "args": [],
+      "env": {}
+    }
+  }
+}
+```
+
+```sh
+#!/bin/sh
+# Spechern als: ~/bin/claude-acp.sh
+unset ANTHROPIC_API_KEY
+export CLAUDE_ACP_MODEL=opus # Alternativ: haiku (am billigsten), sonnet (ausgewogen), faible (sehr teuer, 2x Opus)
+exec npx claude-code-acp
+```
+
+<Callout tone="warning" dense class="mt-1">
+<p class="!my-0 !leading-tight"><strong>Token-Abrechnung:</strong> Der ACP-Pfad nutzt den Agent-SDK-Modus → zählt ab <strong>2026-06-15</strong> auf Pro/Max gegen ein separates Agent-SDK-Credit, nicht gegen das interaktive Kontingent. (siehe <Link to="acp-abrechnung">ACP — Abrechnung auf Pro/Max</Link>)</p>
 </Callout>
 
 ---
