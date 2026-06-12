@@ -82,7 +82,7 @@ Commits follow **Conventional Commits** (roughly): `type(scope): subject`.
 - **Scope** (almost always present): the talk directory short-name — `ai-agents`, `monitoring`, `open-rewrite`, `gradle`, `java-null`, `agents-details` — or a cross-cutting area — `shared`, `playwright`, `deploy`, `repo`, `claude`, `devenv`, `deps`. Combine multiple scopes comma-separated with no space (`shared,java-null`).
 - **Subject**: English, imperative mood, lowercase first word (the verb). Proper nouns and product/tech names keep their case (Claude Code, OpenRewrite, JSpecify, MCP). No trailing period. Aim for ≤ 72 chars.
 - **Body** (optional — add it for the what-and-why, omit it for trivial changes): one blank line after the subject, then **hard-wrap every line at ≤ 72 chars**. Body language may be English or German — match the talk's slide-content language (German talks such as `ai-agents` and `open-rewrite` routinely have German bodies). Use `-` bullets for multi-part changes and backtick inline identifiers.
-- **Trailer** on Claude-assisted commits, after a blank line: `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
+- **Trailer** on Claude-assisted commits, after a blank line: `🤖 edited with the help of an LLM agent`
 
 Example:
 
@@ -92,8 +92,6 @@ feat(open-rewrite): add OpenRewrite presentation with JSpecify walkthrough
 34 Slides in sieben Sektionen, deutsch, mit Inhaltsverzeichnis, das nur
 die Section-Divider listet. Praxis-Sektion nutzt `MonacoBlockAnnotated`
 für die JSpecify-Migration.
-
-Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 ```
 
 ## Tooling Preferences
