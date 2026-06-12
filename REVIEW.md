@@ -8,6 +8,40 @@
 
 ---
 
+## Umsetzungsstand (2026-06-12)
+
+Vollständig umgesetzt, ein Commit pro Vortrag bzw. Shared-Bereich auf `main`
+(`git log --oneline` ist die maßgebliche Referenz; die Detail-Häkchen unten
+sind als Nachschlagewerk belassen):
+
+- **shared** — MonacoBlock-`var()`-Fallbacks, `TalkXref`-Typisierung,
+  Broken-Link-Vitest, `shared/quiz/CLAUDE.md`, C#-Badge.
+- **ai-agents · gradle · monitoring (grafana) · agents-details · java-null ·
+  open-rewrite · design-pattern** — Inhalt/Fakten, Querverweise (`<TalkXref>` +
+  `setup/main.ts`), Sprache/Typografie, Struktur, Overflow. Beim Gradle-Deck
+  zusätzlich der Resolution-Simulator (SceneBom/BomDown/Force/Catalog) auf die
+  korrigierte Jackson-Version 2.20.x nachgezogen.
+- **Overflow** — jedes Deck per `playwright-tests/sweep-deck-overflow.ts`
+  (chromium, Light + Dark) auf **0 Overflow** gebracht.
+- **Vier neue Quizze** (gradle, grafana, agents-details, design-pattern) via
+  Web-Recherche → Fable-Generierung → adversariale Auswahl; Schema t:3/f:3/d:2,
+  Difficulty-Pyramide, Transfer-Sektionen über die Cross-Deck-Brücken.
+
+**Bewusst zurückgestellt** (keine Regression, hier dokumentiert):
+
+- Shared `TalkXrefPanel`-Konsolidierung + `talkUrl(anchor)` — präventive
+  Refactors ohne aktuellen Konsumenten.
+- Volle Headmatter-Angleichung über `lang: de` hinaus (transition/colorSchema/
+  fonts) — globales Rendering-Risiko, pro Deck visuell zu prüfen.
+- Breite Komponenten-Refactors (usePalette-Migration, shared `Tabs.vue`,
+  Komponenten-Dedup) und 0/N-Notes-Vollabdeckung — L-Aufwand, kein
+  nutzersichtbarer Gewinn.
+- Vorbestehende, nicht durch die Edits ausgelöste Overflows: grafana
+  `DashboardLinking` (strukturell, jetzt bewusst scrollbar) und der gradle
+  `EcosystemInfographic`-Footer auf einer Bonusfolie.
+
+---
+
 ## Übergreifend (Shared / Infrastruktur)
 
 ### Bugs & Robustheit
