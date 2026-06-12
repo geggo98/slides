@@ -55,6 +55,19 @@ const color = computed(() => {
   return C.value.green;
 });
 
+// Non-color status cue (Protan/Deutan can't tell warn-orange from crit-red):
+// "" = ok, "!" = warning, "!!" = critical.
+const statusGlyph = computed(() => {
+  if (props.invert) {
+    if (props.value <= props.crit) return "!!";
+    if (props.value <= props.warn) return "!";
+  } else {
+    if (props.value >= props.crit) return "!!";
+    if (props.value >= props.warn) return "!";
+  }
+  return "";
+});
+
 const trackDasharray = computed(
   () => `${dashLen.value} ${circ.value - dashLen.value}`,
 );
@@ -120,6 +133,21 @@ const unitFontSize = 8;
         }"
       >
         {{ displayValue }}
+      </text>
+      <text
+        v-if="statusGlyph"
+        :x="size / 2"
+        :y="size / 2 - 16"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        :style="{
+          fill: color,
+          fontSize: '10px',
+          fontWeight: 800,
+          fontFamily: `'JetBrains Mono', monospace`,
+        }"
+      >
+        {{ statusGlyph }}
       </text>
       <text
         :x="size / 2"

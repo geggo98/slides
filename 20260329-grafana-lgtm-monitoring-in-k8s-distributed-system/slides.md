@@ -1,6 +1,8 @@
 ---
 theme: default
 title: "Grafana LGTM: Monitoring in Kubernetes Distributed Systems"
+lang: de
+hideInToc: true
 info: |
   LGTM Stack (Loki, Grafana, Tempo, Mimir) mit OpenTelemetry.
   Monitoring-Methodologien, Saturation, Systemdynamik und Dashboard-Architektur.
@@ -13,8 +15,16 @@ info: |
 Loki · Grafana · Tempo · Mimir · OpenTelemetry
 
 <div class="text-slate-500" style="margin-top: 2em; font-size: 0.85em;">
-B2C-Versicherungsintegrator · Spring Boot Microservices · Percona MySQL · Redis · Traefik Gateway API
+B2C-Versicherungsintegrator · Spring Boot Microservices · Percona PostgreSQL · Redis · Traefik Gateway API
 </div>
+
+---
+hideInToc: true
+---
+
+# Inhalt
+
+<Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
 
 ---
 layout: section
@@ -25,11 +35,13 @@ layout: section
 RED · USE · Golden Signals
 
 ---
+hideInToc: true
+---
 
 # Die zentrale Gleichung
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 1.5em 0; flex-wrap: wrap;">
-  <span style="font-size: 1.3em; font-weight: 800; color: #eab308; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
+  <span class="text-amber-700 dark:text-amber-400" style="font-size: 1.3em; font-weight: 800; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
   <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">=</span>
   <span style="font-size: 1.3em; font-weight: 800; color: #ef4444; padding: 8px 20px; border-radius: 8px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);">RED</span>
   <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">+</span>
@@ -38,7 +50,7 @@ RED · USE · Golden Signals
 
 <p class="text-slate-500" style="text-align: center; font-size: 0.8em; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
 
-| Golden Signal  | RED-Equivalent | Perspektive                        |
+| Golden Signal  | RED-Äquivalent | Perspektive                        |
 | -------------- | -------------- | ---------------------------------- |
 | **Traffic**    | Rate           | User-facing                        |
 | **Errors**     | Errors         | User-facing                        |
@@ -46,17 +58,23 @@ RED · USE · Golden Signals
 | **Saturation** | —              | Infrastruktur (nur Golden Signals) |
 
 ---
+hideInToc: true
+---
 
 # Drei komplementäre Methoden
 
 <MethodsOverview />
 
 ---
+hideInToc: true
+---
 
 # Errors ≠ Errors: Zwei Perspektiven
 
 <ErrorsPerspective />
 
+---
+hideInToc: true
 ---
 
 # Diagnostischer Trichter
@@ -65,6 +83,7 @@ RED · USE · Golden Signals
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Monitoring-Methodologien — Interaktiv
@@ -80,6 +99,8 @@ layout: section
 _"If you can only measure four metrics of your user-facing system, focus on these four."_
 
 ---
+hideInToc: true
+---
 
 # Latency
 
@@ -93,31 +114,35 @@ Drei Latenz-Ebenen im Versicherungsintegrator:
 | **Externe B2B-API-Latenz**   | 500ms–5s    | Allianz, AXA etc. — stark schwankend |
 | **Cache-Hit vs. Cache-Miss** | Hit < 10ms  | Miss triggert B2B-Call               |
 
-```sql
--- P99 Latenz für erfolgreiche interne Requests
+```text
+# P99 Latenz für erfolgreiche interne Requests
 histogram_quantile(0.99,
   sum(rate(http_server_requests_seconds_bucket{status=~"2.."}[5m])) by (le, uri))
 ```
 
+---
+hideInToc: true
 ---
 
 # Traffic
 
 Quantifiziert die Last. Im Versicherungskontext ist der **Fan-out-Multiplikator** zentral: ein Kundenrequest auf `/api/v1/quotes` löst 5–15 parallele Provider-Calls aus.
 
-```sql
--- Gesamte Request-Rate über alle Services
+```text
+# Gesamte Request-Rate über alle Services
 sum(rate(http_server_requests_seconds_count[5m]))
 
--- Fan-out-Ratio: ausgehende B2B-Calls vs. eingehende Kundenrequests
+# Fan-out-Ratio: ausgehende B2B-Calls vs. eingehende Kundenrequests
 sum(rate(http_client_requests_seconds_count[5m]))
   / sum(rate(http_server_requests_seconds_count{uri="/api/v1/quotes"}[5m]))
 
--- Cache-Hit-Ratio als Traffic-Qualitätssignal
+# Cache-Hit-Ratio als Traffic-Qualitätssignal
 sum(rate(cache_gets_total{result="hit"}[5m]))
   / sum(rate(cache_gets_total[5m]))
 ```
 
+---
+hideInToc: true
 ---
 
 # Errors
@@ -128,15 +153,17 @@ Drei Kategorien im Integrator-Kontext:
 - **Upstream-Provider-Fehler** — 500er, Timeouts, 429 Rate-Limiting
 - **Partielle Degradation** — 3 von 10 Anbietern fallen aus → Quote unvollständig, aber nicht komplett fehlerhaft
 
-```sql
--- Interne Error-Rate als Prozentsatz
+```text
+# Interne Error-Rate als Prozentsatz
 sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
   / sum(rate(http_server_requests_seconds_count[5m]))
 
--- Provider-Timeout-Rate (Status 0 = Verbindungsabbruch)
-sum(rate(http_client_requests_seconds_count{status="0"}[5m])) by (clientName)
+# Provider-Fehlerrate (status=IO_ERROR = Verbindungsabbruch/Timeout ohne Response)
+sum(rate(http_client_requests_seconds_count{status="IO_ERROR"}[5m])) by (clientName)
 ```
 
+---
+hideInToc: true
 ---
 
 # Saturation
@@ -147,14 +174,14 @@ _"Many systems degrade in performance before achieving 100% utilization."_ — S
 
 Beste Indikatoren: **Queuing** — Arbeit, die auf Verarbeitung wartet.
 
-```sql
--- Tomcat Thread-Pool-Auslastung
+```text
+# Tomcat Thread-Pool-Auslastung
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads
 
--- HikariCP DB-Connection-Pool-Auslastung
+# HikariCP DB-Connection-Pool-Auslastung
 hikaricp_connections_active / hikaricp_connections_max
 
--- Container CPU nahe am Limit
+# Container CPU nahe am Limit
 sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)
   / sum(kube_pod_container_resource_limits{resource="cpu"}) by (pod)
 ```
@@ -168,6 +195,8 @@ layout: section
 _"The RED Method is a good proxy to how happy your customers will be."_
 — Tom Wilkie, 2015
 
+---
+hideInToc: true
 ---
 
 # RED: Rate, Errors, Duration
@@ -195,33 +224,39 @@ _"Like an emergency checklist in a flight manual."_
 — Brendan Gregg, 2012
 
 ---
+hideInToc: true
+---
 
 # USE: Utilization, Saturation, Errors
 
 Für **jede Ressource** (CPU, Memory, Disk, Network, Pools).
-Beantwortet: „Ist die Infrastruktur der Engpass?"
+Beantwortet: „Ist die Infrastruktur der Engpass?“
 
 ### CPU in Kubernetes
 
-```sql
--- Utilization: CPU-Nutzung als Anteil des Limits
+```text
+# Utilization: CPU-Nutzung als Anteil des Limits
 sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)
   / sum(kube_pod_container_resource_limits{resource="cpu"}) by (pod)
 
--- Saturation: CPU-Throttling-Prozentsatz (DER kritische K8s-CPU-Indikator)
+# Saturation: CPU-Throttling-Prozentsatz (DER kritische K8s-CPU-Indikator)
 sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
   / sum(rate(container_cpu_cfs_periods_total[5m])) by (pod, container)
 ```
 
 ### Memory in Kubernetes
 
-```sql
--- Utilization: Working Set vs. Limit (was der OOM-Killer beobachtet)
+```text
+# Utilization: Working Set vs. Limit (was der OOM-Killer beobachtet)
 sum(container_memory_working_set_bytes{container!=""}) by (pod)
   / sum(kube_pod_container_resource_limits{resource="memory"}) by (pod)
 ```
 
 **Immer** `container_memory_working_set_bytes` statt `container_memory_usage_bytes`!
+
+### Errors
+
+`rate(node_network_receive_errs_total[5m])` — Fehler auf Interface-Ebene (Drops, CRC).
 
 ---
 layout: section
@@ -232,21 +267,25 @@ layout: section
 10 kritische Indikatoren
 
 ---
+hideInToc: true
+---
 
 # CPU-Throttling: Der versteckte JVM-Killer
 
 CFS (Completely Fair Scheduler) arbeitet in **100ms-Perioden**. Container, der sein Quota aufbraucht, wird pausiert.
 
-Für JVM: **Bereits 15% Throttling kann GC-Pausen verstärken** — Stop-the-World-Pausen werden durch CFS-Pausen kompoundiert.
+Für JVM: **Bereits 15% Throttling kann GC-Pausen verstärken** — Stop-the-World-Pausen werden durch CFS-Pausen zusätzlich verstärkt.
 
-```sql
--- CPU-Throttling-Prozentsatz
+```text
+# CPU-Throttling-Prozentsatz
 sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
   / sum(rate(container_cpu_cfs_periods_total[5m])) by (pod, container) * 100
 ```
 
 Schwellwerte: **>25% über 15min = Warning**, **>50% = Critical**
 
+---
+hideInToc: true
 ---
 
 # Pool-Saturation: HikariCP & Tomcat
@@ -255,9 +294,9 @@ Schwellwerte: **>25% über 15min = Warning**, **>50% = Critical**
 
 Pool-Erschöpfung → blockierte Threads → kaskadierende Timeouts
 
-```sql
+```text
 hikaricp_connections_active / hikaricp_connections_max * 100
-hikaricp_connections_pending  -- Wartende Threads (>0 = Saturation!)
+hikaricp_connections_pending  # Wartende Threads (>0 = Saturation!)
 ```
 
 Sizing: `(core_count × 2) + effective_spindle_count` → 4-Core SSD: **(4×2)+1 = 9**
@@ -266,13 +305,21 @@ Sizing: `(core_count × 2) + effective_spindle_count` → 4-Core SSD: **(4×2)+1
 
 Default: max 200 Threads, Accept-Queue: 100. Alle busy + Queue voll → HTTP 503.
 
-```sql
+```text
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
 ```
 
 ---
+hideInToc: true
+---
 
 # Prioritätsmatrix
+
+<style>
+table {
+  font-size: 0.9em;
+}
+</style>
 
 | Prio   | Signal                                     | Business-Impact                     |
 | ------ | ------------------------------------------ | ----------------------------------- |
@@ -287,6 +334,7 @@ tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Saturation-Szenarien — Interaktiv
@@ -302,6 +350,8 @@ layout: section
 Warteschlangentheorie und die 80%-Regel
 
 ---
+hideInToc: true
+---
 
 # M/M/1: Warum 80%
 
@@ -310,23 +360,30 @@ Warteschlangentheorie und die 80%-Regel
 Faustregel: **T = S / (1 − ρ)**. Bei 80% Utilization: Response-Time = **5×** Service-Time. Bei 90%: **10×**.
 
 ---
+hideInToc: true
+---
 
 # Schwellwerte für Kubernetes / Spring Boot
 
-| Ressource          | Warning | Critical | Hinweis                                        |
-| ------------------ | ------- | -------- | ---------------------------------------------- |
-| CPU (Container)    | 70–80%  | 90%+     | CFS-Throttling beachten, nicht nur Utilization |
-| Memory (Container) | 80%     | 90%+     | `container_memory_working_set_bytes`           |
-| HikariCP Pool      | 80%     | 95%+     | Pending > 0 ist bereits Saturation             |
-| Tomcat Threads     | 75%     | 90%+     | Gepaart mit Upstream-Timeout-Check             |
-| Redis Memory       | 80%     | 95%+     | Evictions = aktive Sättigung                   |
-| Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Sättigung beginnt            |
+<style>
+table {
+  font-size: 0.86em;
+}
+</style>
+
+| Ressource          | Warning | Critical | Hinweis                              |
+| ------------------ | ------- | -------- | ------------------------------------ |
+| CPU (Container)    | 70–80%  | 90%+     | CFS-Throttling beachten              |
+| Memory (Container) | 80%     | 90%+     | `container_memory_working_set_bytes` |
+| HikariCP Pool      | 80%     | 95%+     | Pending > 0 ist bereits Saturation   |
+| Tomcat Threads     | 75%     | 90%+     | Gepaart mit Upstream-Timeout-Check   |
+| Redis Memory       | 80%     | 95%+     | Evictions = aktive Sättigung         |
+| Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Sättigung beginnt  |
 
 ### Einschränkungen der 80%-Faustregel
 
-- **M/M/1 ist ein Idealmodell** — bursty Traffic verschiebt den Knick nach links
-- **Parallelisierung (M/M/c)** — 200 Tomcat-Threads verschieben den Knick nach rechts (~90–95%), aber Absturz steiler
-- **CFS-Throttling ist binär** — 80% CPU kann plötzlich 40% Throttling bedeuten bei Bursts
+- **M/M/1 vs. M/M/c** — bursty Traffic verschiebt den Knick nach links, viele Threads nach rechts (~90–95%)
+- **CFS-Throttling ist binär** — 80% CPU können bei Bursts in 40% Throttling kippen
 
 ---
 layout: section
@@ -337,17 +394,21 @@ layout: section
 Warteschlangen, Oszillation, Hysterese
 
 ---
+hideInToc: true
+---
 
 # Rolling Bottlenecks und Excess Capacity
 
 In einer Kette abhängiger Services wandert der Engpass (Goldratt, Theory of Constraints).
 
-Ohne Überschusskapazität kann der Puffer nicht wieder aufgefüllt werden bevor die nächste Schwankung kommt → **Starvation kaskadiert downstream**.
+Ohne Überschusskapazität kann der Puffer nicht wieder aufgefüllt werden, bevor die nächste Schwankung kommt → **Starvation kaskadiert downstream**.
 
 <PipelineViz />
 
 **Excess Capacity (~20% Headroom) ist keine Verschwendung, sondern Systemanforderung.**
 
+---
+hideInToc: true
 ---
 
 # Queues als Federn / Oszillation
@@ -366,8 +427,10 @@ Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstell
 | Retry-Storm nach Upstream-Recovery            | Exponential Backoff mit Jitter                |
 
 ---
+hideInToc: true
+---
 
-# Hysterese: Warum Systeme nach Überlast „kleben"
+# Hysterese: Warum Systeme nach Überlast „kleben“
 
 Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn die externe Last sinkt:
 
@@ -381,6 +444,7 @@ Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Hysterese-Katalog — Interaktiv
@@ -389,6 +453,7 @@ clicks: false
 
 ---
 clicks: false
+hideInToc: true
 ---
 
 # Systemdynamik — Interaktiv
@@ -403,6 +468,8 @@ layout: section
 
 Grafana Recovery Thresholds
 
+---
+hideInToc: true
 ---
 
 # Naive Alerts vs. Recovery Threshold
@@ -436,6 +503,8 @@ data:
 ```
 
 ---
+hideInToc: true
+---
 
 # Phasenraum-Diagnose: XY Chart
 
@@ -458,6 +527,8 @@ layout: section
 Vier Ebenen vom Platform-Overview zur Root-Cause-Analyse
 
 ---
+hideInToc: true
+---
 
 # Was gehört nach oben?
 
@@ -468,10 +539,10 @@ Vier Ebenen vom Platform-Overview zur Root-Cause-Analyse
       «Все счастливые семьи похожи друг на друга, каждая несчастливая семья несчастлива по-своему.»
     </p>
     <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
-      „Alle glücklichen Familien sind einander ähnlich, jede unglückliche Familie ist auf ihre eigene Weise unglücklich."
+      „Alle glücklichen Familien sind einander ähnlich, jede unglückliche Familie ist auf ihre eigene Weise unglücklich.“
     </p>
     <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
-      — Lew Tolstoi, <em>Anna Karenina</em> (1878), Teil I, Kap. 1 · Übers. R. Tietze (2009) · Begriff „Anna-Karenina-Prinzip": J. Diamond, <em>Guns, Germs, and Steel</em> (1997)
+      — Lew Tolstoi, <em>Anna Karenina</em> (1878), Teil I, Kap. 1 · Übers. R. Tietze (2009) · Begriff „Anna-Karenina-Prinzip“: J. Diamond, <em>Guns, Germs, and Steel</em> (1997)
     </p>
     <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
       <strong>Glück hat eine Form, Unglück viele.</strong> Auf dem Haupt-Dashboard nicht alle Fehlerklassen auflisten — zeige <em>einen</em> Indikator: Ist der Service glücklich aus Sicht von End-Nutzern und SLOs?
@@ -483,18 +554,20 @@ Vier Ebenen vom Platform-Overview zur Root-Cause-Analyse
       "A man with a watch knows what time it is. A man with two watches is never sure."
     </p>
     <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
-      „Wer eine Uhr hat, weiß, wie spät es ist. Wer zwei Uhren hat, ist sich nie sicher."
+      „Wer eine Uhr hat, weiß, wie spät es ist. Wer zwei Uhren hat, ist sich nie sicher.“
     </p>
     <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
       — Segal's Law (apokryph; häufig Lee Segall, KIXL Dallas, zugeschrieben)
     </p>
     <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
-      <strong>Ein Status, eine Ampel.</strong> Zwei „Top-Level"-Statusanzeigen stiften Zweifel. Alles Diagnostische gehört tiefer ins Dashboard oder auf verlinkte Detail-Dashboards.
+      <strong>Ein Status, eine Ampel.</strong> Zwei „Top-Level“-Statusanzeigen stiften Zweifel. Alles Diagnostische gehört tiefer ins Dashboard oder auf verlinkte Detail-Dashboards.
     </p>
   </div>
 
 </div>
 
+---
+hideInToc: true
 ---
 
 # Dashboard-Hierarchie
@@ -502,24 +575,26 @@ Vier Ebenen vom Platform-Overview zur Root-Cause-Analyse
 <DashboardHierarchy />
 
 ---
+hideInToc: true
+---
 
 # Visualisierungstypen
 
 <VizGuide />
 
 ---
+hideInToc: true
+---
 
 # Dashboard-Linking
 
 <DashboardLinking />
 
----
-clicks: false
----
-
-# Dashboard-Architektur — Interaktiv
-
-<GrafanaDashboard />
+<!--
+- Referenz-Slide: vier Linking-Sektionen (Mechanismen, Drill-Down-Karte,
+  Text-Panels, URL-Parameter). Bewusst scrollbar — beim Vortrag in die
+  relevante Sektion scrollen.
+-->
 
 ---
 layout: section
@@ -529,6 +604,8 @@ layout: section
 
 Mimir · Loki · Tempo · Grafana
 
+---
+hideInToc: true
 ---
 
 # Mimir für Metriken (PromQL)
@@ -541,12 +618,16 @@ Namenskonvention: `level:metric_name:operations`
 
 ```yaml
 rules:
-  - record: job:http_requests:rate5m
+  # Stufe 1: pro Job + Status aggregieren (Level "job_status")
+  - record: job_status:http_requests:rate5m
     expr: sum by (job, status) (rate(http_requests_total[5m]))
-  - record: service:http_requests:rate5m
-    expr: sum by (service) (job:http_requests:rate5m)
+  # Stufe 2: baut auf Stufe 1 auf, entfernt status (Level "job")
+  - record: job:http_requests:rate5m
+    expr: sum by (job) (job_status:http_requests:rate5m)
 ```
 
+---
+hideInToc: true
 ---
 
 # Loki für Logs (LogQL)
@@ -554,30 +635,32 @@ rules:
 Labels beschreiben die **Quelle**, nicht den Inhalt. `trace_id`, `user_id` → Structured Metadata (Loki 3.0+).
 
 ```text
--- Fehler-Logs eines Services
+# Fehler-Logs eines Services
 {namespace="production", app="quote-service"} | json | level="error"
 
--- Error-Log-Rate pro Service
+# Error-Log-Rate pro Service
 sum by (app) (rate({namespace="production"} |= "error" [5m]))
 
--- Exception-Pattern
+# Exception-Pattern
 {app="quote-service"} |~ "(?i)(NullPointerException|OutOfMemoryError|TimeoutException)"
 ```
 
 **Performance**: Von links nach rechts filtern. String-Filter (`|=`) > Regex (`|~`) > Parser (`| json`).
 
 ---
+hideInToc: true
+---
 
 # Tempo für Traces (TraceQL)
 
 ```text
--- Spans langsamer als 2 Sekunden
+// Spans langsamer als 2 Sekunden
 { duration > 2s }
 
--- Fehler in einem Service
+// Fehler in einem Service
 { resource.service.name = "quote-service" && status = error }
 
--- Langsame DB-Calls
+// Langsame DB-Calls
 { span.db.system = "postgresql" && duration > 500ms }
 ```
 
@@ -588,6 +671,8 @@ Erzeugt automatisch RED-Metriken aus Spans:
 - `traces_spanmetrics_calls_total`
 - `traces_spanmetrics_latency_bucket`
 
+---
+hideInToc: true
 ---
 
 # Korrelation: Der Drill-Down-Workflow
@@ -604,16 +689,18 @@ Erzeugt automatisch RED-Metriken aus Spans:
 
 ### Exemplars konfigurieren
 
-```yaml
-# Alloy → Mimir
+```hcl
+// Alloy verwendet die River-Konfigurationssyntax (kein YAML)
 prometheus.remote_write "default" {
-endpoint {
-url = "http://mimir:9009/api/v1/push"
-send_exemplars = true
-}
+  endpoint {
+    url            = "http://mimir:9009/api/v1/push"
+    send_exemplars = true
+  }
 }
 ```
 
+---
+hideInToc: true
 ---
 
 # OpenTelemetry Instrumentierung
@@ -636,6 +723,8 @@ metadata:
 ```
 
 ---
+hideInToc: true
+---
 
 # Zusammenfassung
 
@@ -653,7 +742,7 @@ metadata:
 
 ### LGTM-Korrelation
 
-Exemplars → Trace → Logs: Von „P99 ist hoch" zu Root Cause in **drei Klicks**.
+Exemplars → Trace → Logs: Von „P99 ist hoch“ zu Root Cause in **drei Klicks**.
 
 ---
 layout: section
@@ -663,6 +752,8 @@ layout: section
 
 Die fünfte Säule — Code-Level-Sicht zum LGTM-Stack
 
+---
+hideInToc: true
 ---
 
 # Pyroscope: Continuous Profiling für LGTM
@@ -675,6 +766,8 @@ Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tem
 SDKs: Java · Go · .NET · Python · Ruby · Node.js · Rust · Auto-Instrumentation: Grafana Alloy mit eBPF
 </div>
 
+---
+hideInToc: true
 ---
 
 # Flame Graphs lesen — vom Sample zur Hot Function
@@ -691,7 +784,7 @@ Pyroscope visualisiert die gesammelten Daten als _Flame Graph_, wie im folgenden
 - **X**: Samples alphabetisch — **keine Zeit-Achse**
 - **Breite**: Anteil der CPU-Samples → der Hot Path
 - **Farben**: bewusst zufällig, keine Semantik
-- „Breit = teuer" stimmt, „schmal = unwichtig" stimmt **nicht**
+- „Breit = teuer“ stimmt, „schmal = unwichtig“ stimmt **nicht**
 - Nachbar-Frames stehen **nicht** in Aufrufreihenfolge
 
 </div>
@@ -701,6 +794,8 @@ Pyroscope visualisiert die gesammelten Daten als _Flame Graph_, wie im folgenden
 Brendan Gregg, 2011 · <a href="https://www.brendangregg.com/flamegraphs.html">brendangregg.com/flamegraphs.html</a> · auch als Off-CPU-, Memory-, Differential-Variante
 </div>
 
+---
+hideInToc: true
 ---
 
 # Pyroscope in der Praxis
@@ -732,6 +827,7 @@ Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die 
 
 ---
 layout: end
+hideInToc: true
 ---
 
 # Danke

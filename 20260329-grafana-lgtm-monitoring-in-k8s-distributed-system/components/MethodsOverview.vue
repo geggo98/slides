@@ -123,7 +123,9 @@ const methods = computed(() => [
 </script>
 
 <template>
-  <div :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }">
+  <div
+    :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }"
+  >
     <div v-for="(m, i) in methods" :key="i">
       <MethodBox v-bind="m" :style="{ height: '100%' }" />
     </div>
