@@ -32,6 +32,7 @@ const LANGUAGE_META = {
   rust: { label: "Rust", bg: "#D57C6D", fg: "#1a1a1a" },
   python: { label: "Python", bg: "#2599F8", fg: "#1a1a1a" },
   scala: { label: "Scala", bg: "#602424", fg: "#fff" },
+  csharp: { label: "C#", bg: "#178600", fg: "#fff" },
   yaml: { label: "YAML", bg: "#6b7280", fg: "#fff" },
 };
 
@@ -45,6 +46,7 @@ const LANGUAGE_ALIASES = {
   rs: "rust",
   py: "python",
   golang: "go",
+  cs: "csharp",
 };
 
 const badge = computed(() => {
