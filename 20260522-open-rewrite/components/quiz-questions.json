@@ -56,6 +56,12 @@
           "text": "OpenRewrite arbeitet regex-basiert wie sed und braucht deshalb keinen Parser.",
           "verdict": "false",
           "explanation": "Anti-Pattern. OpenRewrite ist explizit type-aware, mit Cursor-API für Parent-Kontext."
+        },
+        {
+          "id": "lst-anatomy-o8",
+          "text": "Ob sich der format-erhaltende LST gegenüber einem schnellen AST-Tool lohnt, hängt vom Anwendungsfall ab.",
+          "verdict": "depends",
+          "explanation": "Für reviewbare PRs über große Codebases ist der LST Gold wert; für ein Wegwerf-Skript auf einer einzelnen Datei sind AST-Tools oder Regex pragmatischer."
         }
       ]
     },
@@ -113,6 +119,12 @@
           "text": "„Community Edition\" im Moderne-Marketing bedeutet, dass das Modul echte OSS ist.",
           "verdict": "false",
           "explanation": "„Community Edition\" steht hier für MSAL, nicht für OSI-OSS. Marketing-Falle."
+        },
+        {
+          "id": "msal-pivot-o8",
+          "text": "Ob der MSAL-Pivot ein Problem für dein Team ist, hängt von der Nutzungsart ab.",
+          "verdict": "depends",
+          "explanation": "Interne Anwendung auf eigenen Code bleibt erlaubt; wer ein Tool oder SaaS auf rewrite-spring aufbaut und weiterverkauft, ist betroffen."
         }
       ]
     },
@@ -170,6 +182,12 @@
           "text": "Für statische Methoden gilt eine eigene Syntax mit static:-Präfix.",
           "verdict": "false",
           "explanation": "Es gibt kein static:-Präfix — der MethodMatcher matcht statische und instanzgebundene Methoden mit derselben Syntax."
+        },
+        {
+          "id": "method-matcher-syntax-o8",
+          "text": "Ob das Pattern * equals(Object) zu breit greift, hängt vom Recipe-Ziel ab.",
+          "verdict": "depends",
+          "explanation": "Für eine generische equals-Analyse über alle Typen ist der Stern genau richtig; soll nur ein konkreter Typ getroffen werden, ist der voll qualifizierte Receiver präziser."
         }
       ]
     },
@@ -398,6 +416,12 @@
           "text": "Pattern 1 und Pattern 2 lassen sich kombinieren: LLM schreibt Recipe, danach läuft sie mit AI-Gap-Fill im Build-Loop.",
           "verdict": "true",
           "explanation": "Das ist genau die Kombination, die die JSpecify-Migration im Talk demonstriert — Schritt 1 = Pattern 2, Schritt 2 = Pattern 1."
+        },
+        {
+          "id": "pattern-1-vs-2-roi-o8",
+          "text": "Ob sich für ein Team eher Pattern 1 oder Pattern 2 lohnt, hängt von der Wiederholungsrate der Migration ab.",
+          "verdict": "depends",
+          "explanation": "Eine einmalige Mass-Migration fährt man mit Pattern 1; wiederkehrende oder org-weite Migrationen amortisieren die einmalige Recipe-Investition von Pattern 2."
         }
       ]
     },
@@ -410,7 +434,7 @@
       "options": [
         {
           "id": "jspecify-3-stufen-o0",
-          "text": "Die Standard-Recipe org.openrewrite.java.jspecify.MigrateToJspecify ersetzt Annotationen 100% deterministisch und idempotent.",
+          "text": "Die Standard-Recipe org.openrewrite.java.jspecify.MigrateToJSpecify ersetzt Annotationen 100% deterministisch und idempotent.",
           "verdict": "true",
           "explanation": "Vier ChangeType-Aufrufe (Spring/javax → JSpecify); Standard-Building-Block, idempotent."
         },
@@ -436,13 +460,13 @@
           "id": "jspecify-3-stufen-o4",
           "text": "Ob ein Rückgabetyp @Nullable User oder Optional<User> sein soll, hängt von Aufrufer-Erwartungen ab — keine reine Annotation-Frage.",
           "verdict": "true",
-          "explanation": "Wörtlich aus den slide-data-Notizen: 'Vertrag der Aufrufer entscheidet — Annotation allein reicht nicht'."
+          "explanation": "Aus dem Talk: Der Vertrag der Aufrufer entscheidet — die Annotation allein reicht nicht."
         },
         {
           "id": "jspecify-3-stufen-o5",
           "text": "Die Recipe-Schritt-1 ist selbst LLM-autoriert — das ist Pattern 2 aus dem KI-Kapitel.",
           "verdict": "true",
-          "explanation": "Schritt-1-Block: 'Auch das Recipe selbst kann LLM-autoriert sein — Pattern 2 aus dem vorigen Kapitel'."
+          "explanation": "Aus dem Talk: Auch das Recipe selbst kann LLM-autoriert sein — Pattern 2 aus Kapitel 3."
         },
         {
           "id": "jspecify-3-stufen-o6",
@@ -454,13 +478,13 @@
           "id": "jspecify-3-stufen-o7",
           "text": "@NullMarked auf Klassenebene reicht in jedem Spring-Boot-Service voll aus.",
           "verdict": "depends",
-          "explanation": "Funktioniert, aber package-info.java ist idiomatischer und vermeidet Wiederholung pro Klasse (siehe Presenter-Notes)."
+          "explanation": "Funktioniert, aber package-info.java ist idiomatischer und vermeidet Wiederholung pro Klasse (so im Talk)."
         }
       ]
     },
     {
       "id": "jspecify-recipe-mechanik",
-      "question": "Welche Aussagen zur YAML-Recipe MigrateNullAnnotationsToJspecify stimmen?",
+      "question": "Welche Aussagen zur YAML-Recipe MigrateNullAnnotationsToJSpecify stimmen?",
       "difficulty": "medium",
       "section": "JSpecify-Migration",
       "explanation": "Die Recipe nutzt vier ChangeType-Aufrufe (Spring Nullable/NonNull + javax Nullable/Nonnull → JSpecify), eine UsesType-Precondition als Filter und AddDependency mit Conditional, sodass jspecify:1.0.0 nur dann ergänzt wird, wenn der Typ tatsächlich verwendet wird. Komplett deklarativ, idempotent.",
@@ -481,7 +505,7 @@
           "id": "jspecify-recipe-mechanik-o2",
           "text": "AddDependency mit Conditional fügt jspecify:1.0.0 nur dann hinzu, wenn die Annotation auch wirklich verwendet wird — kein Pollution in null-annotation-freien Modulen.",
           "verdict": "true",
-          "explanation": "Wörtlich aus den slide-data-Notizen — vermeidet überflüssige Dependencies."
+          "explanation": "Aus dem Talk — vermeidet überflüssige Dependencies in Modulen ohne Null-Annotationen."
         },
         {
           "id": "jspecify-recipe-mechanik-o3",
@@ -493,7 +517,7 @@
           "id": "jspecify-recipe-mechanik-o4",
           "text": "Sie deckt auch JetBrains-Annotationen aus der IntelliJ-Welt ab.",
           "verdict": "depends",
-          "explanation": "Die Talk-Variante deckt sie ab ('weil sie auch JetBrains-Annotationen aufnimmt' laut Presenter-Notes). Standard-Recipe MigrateToJspecify hat einen anderen Coverage-Bereich."
+          "explanation": "Die gezeigte Variante deckt nur Spring und javax ab; JetBrains (org.jetbrains.annotations.*) erfordert zwei zusätzliche ChangeType-Einträge — eine reine Erweiterungsfrage."
         },
         {
           "id": "jspecify-recipe-mechanik-o5",
@@ -569,6 +593,12 @@
           "text": "Die DX Edition für regulierte Industrien fällt unter MPL.",
           "verdict": "true",
           "explanation": "DX Edition ist Teil des proprietären Moderne-Stacks (MPL)."
+        },
+        {
+          "id": "three-editions-o8",
+          "text": "Ob ein Recipe-JAR aus der Maven-Coordinate org.openrewrite.recipe bedenkenlos nutzbar ist, hängt vom konkreten Modul ab.",
+          "verdict": "depends",
+          "explanation": "Die Coordinate mischt Apache-2.0- und MSAL-Module (z.B. rewrite-spring) — die Lizenz steht pro JAR in META-INF/LICENSE, nicht an der Coordinate."
         }
       ]
     },
@@ -626,6 +656,12 @@
           "text": "Ein jährliches Lizenz-Audit pro Recipe-JAR ist Teil der Definition-of-Done für CI-Integration.",
           "verdict": "true",
           "explanation": "Wer ernsthaft baut, plant das jährliche Audit von Anfang an ein."
+        },
+        {
+          "id": "audit-checklist-o8",
+          "text": "Ob ein jährliches Lizenz-Audit ausreicht, hängt von der Update-Frequenz der Recipe-JARs ab.",
+          "verdict": "depends",
+          "explanation": "Bei gepinnten Versionen mit seltenen Bumps genügt der Jahresrhythmus; wer latest.release oder häufige Renovate-Bumps fährt, muss pro Bump prüfen."
         }
       ]
     },
@@ -683,6 +719,12 @@
           "text": "Semgrep deckt mehr als 30 Sprachen ab und ist daher als Replacement für OpenRewrite in JVM-Codebases einsetzbar.",
           "verdict": "false",
           "explanation": "Sprachabdeckung ja, aber Semgrep ersetzt OpenRewrite nicht — fehlende Format-Preservation und kein LST."
+        },
+        {
+          "id": "tool-mix-decisions-o8",
+          "text": "Ob OpenRewrite oder ein polyglottes Tool die richtige Wahl ist, hängt vom Sprach-Mix des Repos ab.",
+          "verdict": "depends",
+          "explanation": "Für JVM-Mass-Migration ist OpenRewrite gesetzt; bei TS/JS- oder Multi-Sprach-Codebases sind ast-grep, Semgrep oder jscodeshift pragmatischer."
         }
       ]
     },
@@ -748,23 +790,23 @@
       "question": "Welche Aussagen zur Herkunft und Monetarisierung von OpenRewrite vs. Moderne, Inc. treffen zu?",
       "difficulty": "hard",
       "section": "transfer",
-      "explanation": "OpenRewrite entstand intern bei Netflix (Jonathan Schneider); Moderne, Inc. wurde 2020 von Schneider und Olga Kundzich aus Netflix ausgegruendet. Die Engine bleibt Apache 2.0; die kommerzielle Wertschoepfung lebt von Multi-Repo-SaaS, MPL-Recipes und seit 13.12.2024 MSAL-Recipes (z.B. rewrite-spring). Series B (TechCrunch 02/2025): 30 Mio. USD.",
+      "explanation": "OpenRewrite entstand intern bei Netflix (Jonathan Schneider); Moderne, Inc. wurde 2020 von Schneider und Olga Kundzich aus Netflix ausgegründet. Die Engine bleibt Apache 2.0; die kommerzielle Wertschöpfung lebt von Multi-Repo-SaaS, MPL-Recipes und seit 13.12.2024 MSAL-Recipes (z.B. rewrite-spring). Series B (TechCrunch 02/2025): 30 Mio. USD.",
       "options": [
         {
           "id": "moderne-netflix-origin-o0",
-          "text": "OpenRewrite entstand urspruenglich bei Netflix als internes Tool fuer Jonathan Schneider.",
+          "text": "OpenRewrite entstand ursprünglich bei Netflix als internes Tool für Jonathan Schneider.",
           "verdict": "true",
           "explanation": "Belegbar in Schneider-Interviews und Moderne-About-Seite: Netflix-Engineering-Tools, freedom-and-responsibility-Kultur."
         },
         {
           "id": "moderne-netflix-origin-o1",
-          "text": "Moderne, Inc. wurde 2020 von Jonathan Schneider und Olga Kundzich gegruendet.",
+          "text": "Moderne, Inc. wurde 2020 von Jonathan Schneider und Olga Kundzich gegründet.",
           "verdict": "true",
           "explanation": "Beide kamen von Pivotal; Hauptsitz Miami. Quelle: Moderne-About, TechCrunch 02/2025 zur Series B."
         },
         {
           "id": "moderne-netflix-origin-o2",
-          "text": "Die OpenRewrite-Engine (rewrite-core) blieb dauerhaft Apache 2.0, waehrend einzelne Recipe-Module nach MSAL/MPL gewechselt sind.",
+          "text": "Die OpenRewrite-Engine (rewrite-core) blieb dauerhaft Apache 2.0, während einzelne Recipe-Module nach MSAL/MPL gewechselt sind.",
           "verdict": "true",
           "explanation": "Engine ist Apache 2.0. Am 13.12.2024 wechselte rewrite-spring nach MSAL; weitere ~19 Module mit Moderne-Mehrheits-Contributions sind MSAL."
         },
@@ -776,15 +818,15 @@
         },
         {
           "id": "moderne-netflix-origin-o4",
-          "text": "Saemtliche org.openrewrite.recipe:*-Artefakte sind durchgehend Apache 2.0.",
+          "text": "Sämtliche org.openrewrite.recipe:*-Artefakte sind durchgehend Apache 2.0.",
           "verdict": "false",
-          "explanation": "Die Maven-Coordinate org.openrewrite.recipe enthaelt sowohl Apache-2.0- als auch MSAL-Module (z.B. rewrite-spring) — die Coordinate sagt nichts ueber die Lizenz aus."
+          "explanation": "Die Maven-Coordinate org.openrewrite.recipe enthält sowohl Apache-2.0- als auch MSAL-Module (z.B. rewrite-spring) — die Coordinate sagt nichts über die Lizenz aus."
         },
         {
           "id": "moderne-netflix-origin-o5",
           "text": "Moderne hat OpenRewrite an Red Hat verkauft, das es heute als Konkurrenz zu Quarkus pflegt.",
           "verdict": "false",
-          "explanation": "Frei erfunden — Moderne ist eigenstaendig (Series B 02/2025, 30 Mio. USD, Acrew Capital)."
+          "explanation": "Frei erfunden — Moderne ist eigenständig (Series B 02/2025, 30 Mio. USD, Acrew Capital)."
         },
         {
           "id": "moderne-netflix-origin-o6",
@@ -794,9 +836,9 @@
         },
         {
           "id": "moderne-netflix-origin-o7",
-          "text": "Moderne ist heute der dominante Code-Modernization-Anbieter — Sourcegraph hat das Feld geraeumt.",
+          "text": "Moderne ist heute der dominante Code-Modernization-Anbieter — Sourcegraph hat das Feld geräumt.",
           "verdict": "depends",
-          "explanation": "Sourcegraph nennt Moderne/OpenRewrite explizit als Hauptkonkurrenz, Batch Changes ist aber language-agnostic und weiter aktiv — 'geraeumt' stimmt nicht, 'dominant in JVM' ist ein vertretbares Framing."
+          "explanation": "Sourcegraph nennt Moderne/OpenRewrite explizit als Hauptkonkurrenz, Batch Changes ist aber language-agnostic und weiter aktiv — 'geräumt' stimmt nicht, 'dominant in JVM' ist ein vertretbares Framing."
         }
       ]
     },
@@ -805,7 +847,7 @@
       "question": "Welche Aussagen zur polyglotten Codemod-Landschaft 2025/2026 treffen zu?",
       "difficulty": "hard",
       "section": "transfer",
-      "explanation": "jscodeshift (Meta) ist die JS-AST-Toolkit-Standardbasis, aber ohne Format-Preservation (Helfer: recast). Codemod.com hat einen iterativen AI-Loop (TS-Compiler + jscodeshift-Runner als Build-Loop fuer LLM-Codemods). Sourcegraph Batch Changes ist ein language-agnostischer Repo-Runner, kein Codemod-Engine. Stryker ist Mutation-Testing — kein Codemod-Tool.",
+      "explanation": "jscodeshift (Meta) ist die JS-AST-Toolkit-Standardbasis, aber ohne Format-Preservation (Helfer: recast). Codemod.com hat einen iterativen AI-Loop (TS-Compiler + jscodeshift-Runner als Build-Loop für LLM-Codemods). Sourcegraph Batch Changes ist ein language-agnostischer Repo-Runner, kein Codemod-Engine. Stryker ist Mutation-Testing — kein Codemod-Tool.",
       "options": [
         {
           "id": "codemod-landscape-polyglott-o0",
@@ -817,52 +859,52 @@
           "id": "codemod-landscape-polyglott-o1",
           "text": "Codemod.com nutzt einen iterativen AI-Loop, in dem TypeScript-Compiler und jscodeshift-Runner Feedback an das LLM geben.",
           "verdict": "true",
-          "explanation": "Beschrieben im Codemod-Blog 'Iterative AI system': Tools pruefen LLM-Output, LLM korrigiert — entspricht dem Pattern-1-Build-Loop-Gedanken."
+          "explanation": "Beschrieben im Codemod-Blog 'Iterative AI system': Tools prüfen LLM-Output, LLM korrigiert — entspricht dem Pattern-1-Build-Loop-Gedanken."
         },
         {
           "id": "codemod-landscape-polyglott-o2",
-          "text": "Sourcegraph Batch Changes ist ein Repo-Runner — es fuehrt beliebige Container-Skripte ueber viele Repos aus, statt selbst Code zu parsen.",
+          "text": "Sourcegraph Batch Changes ist ein Repo-Runner — es führt beliebige Container-Skripte über viele Repos aus, statt selbst Code zu parsen.",
           "verdict": "true",
           "explanation": "Sourcegraph-Doku: 'any tool that can run in a container and change file contents on a disk' — explizit als Komplement zu OpenRewrite/Comby gedacht."
         },
         {
           "id": "codemod-landscape-polyglott-o3",
-          "text": "Stryker ist eine bekannte Codemod-Engine fuer JavaScript und TypeScript.",
+          "text": "Stryker ist eine bekannte Codemod-Engine für JavaScript und TypeScript.",
           "verdict": "false",
-          "explanation": "Stryker ist ein Mutation-Testing-Framework — es _erzeugt_ Bug-Mutanten, um Testqualitaet zu messen. Keine Migrations-Engine."
+          "explanation": "Stryker ist ein Mutation-Testing-Framework — es _erzeugt_ Bug-Mutanten, um Testqualität zu messen. Keine Migrations-Engine."
         },
         {
           "id": "codemod-landscape-polyglott-o4",
-          "text": "jscodeshift hat type-aware Visitor-Pattern aehnlich OpenRewrites LST-Type-Attribution out of the box.",
+          "text": "jscodeshift hat type-aware Visitor-Pattern ähnlich OpenRewrites LST-Type-Attribution out of the box.",
           "verdict": "false",
-          "explanation": "jscodeshift ist syntax-orientiert — Type-Awareness erfordert zusaetzlich den TS-Compiler oder ts-morph; Format-Preservation kommt ueber recast."
+          "explanation": "jscodeshift ist syntax-orientiert — Type-Awareness erfordert zusätzlich den TS-Compiler oder ts-morph; Format-Preservation kommt über recast."
         },
         {
           "id": "codemod-landscape-polyglott-o5",
           "text": "Sourcegraph Batch Changes ist eine direkte JVM-Konkurrenz zu OpenRewrite und ersetzt LST-basierte Recipes.",
           "verdict": "false",
-          "explanation": "Sourcegraph positioniert Batch Changes explizit als _ergaenzend_, nicht ersetzend — du kannst OpenRewrite-Recipes via Batch Changes deployen."
+          "explanation": "Sourcegraph positioniert Batch Changes explizit als _ergänzend_, nicht ersetzend — du kannst OpenRewrite-Recipes via Batch Changes deployen."
         },
         {
           "id": "codemod-landscape-polyglott-o6",
           "text": "Codemod.com bietet eine YAML-deklarative Variante, die ohne Visitor-Code auskommt.",
           "verdict": "depends",
-          "explanation": "Ja, declarative Codemods existieren — sie decken aber nur einfache 'find/replace at AST level' ab; komplexere Faelle brauchen weiter imperativen jscodeshift-Code."
+          "explanation": "Ja, declarative Codemods existieren — sie decken aber nur einfache 'find/replace at AST level' ab; komplexere Fälle brauchen weiter imperativen jscodeshift-Code."
         },
         {
           "id": "codemod-landscape-polyglott-o7",
           "text": "Wenn dein Team kein JVM-Stack hat, ist OpenRewrite die richtige Wahl.",
           "verdict": "depends",
-          "explanation": "OpenRewrite hat zwar Multi-Sprachen-Parser (YAML, XML, JSON, Properties, Groovy/Kotlin DSL) — fuer eine TS/JS-only-Codebase ist jscodeshift/Codemod.com aber pragmatischer."
+          "explanation": "OpenRewrite hat zwar Multi-Sprachen-Parser (YAML, XML, JSON, Properties, Groovy/Kotlin DSL) — für eine TS/JS-only-Codebase ist jscodeshift/Codemod.com aber pragmatischer."
         }
       ]
     },
     {
       "id": "knight-capital-deploy-disaster",
-      "question": "Der Knight-Capital-Crash 2012 wird oft als Mahnung fuer Mass-Code-Deployment zitiert. Was stimmt — und was ist popmythologisch verzerrt?",
+      "question": "Der Knight-Capital-Crash 2012 wird oft als Mahnung für Mass-Code-Deployment zitiert. Was stimmt — und was ist popmythologisch verzerrt?",
       "difficulty": "hard",
       "section": "transfer",
-      "explanation": "Knight Capital verlor am 1. August 2012 in ~45 Minuten ca. 440 Mio. USD. Ursache: ein Deployment-Fehler (7 von 8 SMARS-Servern wurden geupdated, einer behielt einen 2003 deprecated 'Power Peg'-Code-Pfad). Ein Flag-Bit wurde 2012 wiederverwendet und reaktivierte den dormanten Code. Klassische Lektion fuer Refactoring/Deployment: unvollstaendige Mass-Changes + reused Flags + fehlende Build-Reproduzierbarkeit = Desaster.",
+      "explanation": "Knight Capital verlor am 1. August 2012 in ~45 Minuten ca. 440 Mio. USD. Ursache: ein Deployment-Fehler (7 von 8 SMARS-Servern wurden geupdated, einer behielt einen 2003 deprecated 'Power Peg'-Code-Pfad). Ein Flag-Bit wurde 2012 wiederverwendet und reaktivierte den dormanten Code. Klassische Lektion für Refactoring/Deployment: unvollständige Mass-Changes + reused Flags + fehlende Build-Reproduzierbarkeit = Desaster.",
       "options": [
         {
           "id": "knight-capital-deploy-disaster-o0",
@@ -872,19 +914,19 @@
         },
         {
           "id": "knight-capital-deploy-disaster-o1",
-          "text": "Die Trigger-Ursache war ein _unvollstaendiges Deployment_ auf 7 von 8 SMARS-Servern, kombiniert mit einem reused Flag-Bit, das alten 'Power Peg'-Code reaktivierte.",
+          "text": "Die Trigger-Ursache war ein _unvollständiges Deployment_ auf 7 von 8 SMARS-Servern, kombiniert mit einem reused Flag-Bit, das alten 'Power Peg'-Code reaktivierte.",
           "verdict": "true",
-          "explanation": "Bekannte Post-Mortem-Analyse: Power Peg wurde 2003 deprecated, aber nie geloescht; 2012 wurde sein Flag wiederverwendet."
+          "explanation": "Bekannte Post-Mortem-Analyse: Power Peg wurde 2003 deprecated, aber nie gelöscht; 2012 wurde sein Flag wiederverwendet."
         },
         {
           "id": "knight-capital-deploy-disaster-o2",
-          "text": "Eine Refactoring-Disziplin, die _toten Code zuverlaessig entfernt_ statt nur Flags zu setzen, haette das Risiko reduziert.",
+          "text": "Eine Refactoring-Disziplin, die _toten Code zuverlässig entfernt_ statt nur Flags zu setzen, hätte das Risiko reduziert.",
           "verdict": "true",
           "explanation": "Der eigentliche Lapse: Dead-Code-Removal wurde nicht abgeschlossen; nur 'switched users away'. OpenRewrite-Style Dead-Code-Recipes adressieren genau das."
         },
         {
           "id": "knight-capital-deploy-disaster-o3",
-          "text": "Tony Hoare nannte den Knight-Capital-Crash 2012 oeffentlich seinen 'billion dollar mistake'.",
+          "text": "Tony Hoare nannte den Knight-Capital-Crash 2012 öffentlich seinen 'billion dollar mistake'.",
           "verdict": "false",
           "explanation": "Hoares Zitat (QCon 2009) betrifft null-references, nicht Knight Capital — und stammt aus _2009_, also _vor_ dem Crash."
         },
@@ -896,21 +938,21 @@
         },
         {
           "id": "knight-capital-deploy-disaster-o5",
-          "text": "Die Refactoring-Lektion 'gleiche Eingabe -> identischer Diff' (OpenRewrites Determinismus) waere fuer Knights spezifisches Problem ein direkter Fix gewesen.",
+          "text": "Die Refactoring-Lektion 'gleiche Eingabe -> identischer Diff' (OpenRewrites Determinismus) wäre für Knights spezifisches Problem ein direkter Fix gewesen.",
           "verdict": "depends",
-          "explanation": "Direkt fixen wuerde es nicht — der Fehler lag im Deployment, nicht im Refactoring-Diff. Aber: Reproduzierbare Diffs + sicheres Dead-Code-Removal + CI-verifizierte Mass-Migration adressieren die _gleiche Familie_ von Risiken."
+          "explanation": "Direkt fixen würde es nicht — der Fehler lag im Deployment, nicht im Refactoring-Diff. Aber: Reproduzierbare Diffs + sicheres Dead-Code-Removal + CI-verifizierte Mass-Migration adressieren die _gleiche Familie_ von Risiken."
         },
         {
           "id": "knight-capital-deploy-disaster-o6",
-          "text": "Knight Capital existiert in seiner damaligen Form heute nicht mehr — die Firma wurde nach dem Crash uebernommen.",
+          "text": "Knight Capital existiert in seiner damaligen Form heute nicht mehr — die Firma wurde nach dem Crash übernommen.",
           "verdict": "true",
-          "explanation": "Knight Capital wurde 2013 von Getco zu KCG Holdings gemerged, spaeter 2017 von Virtu Financial uebernommen — der Crash bleibt das kanonische Software-Disaster-Beispiel."
+          "explanation": "Knight Capital wurde 2013 von Getco zu KCG Holdings gemerged, später 2017 von Virtu Financial übernommen — der Crash bleibt das kanonische Software-Disaster-Beispiel."
         },
         {
           "id": "knight-capital-deploy-disaster-o7",
-          "text": "Vergleichbare Mass-Refactoring-Faelle haetten heute ein OpenRewrite-Audit verhindert.",
+          "text": "Vergleichbare Mass-Refactoring-Fälle hätten heute ein OpenRewrite-Audit verhindert.",
           "verdict": "depends",
-          "explanation": "OpenRewrite koennte Dead-Code-Removal und konsistente Diffs erzwingen — aber unvollstaendige Deployments und Flag-Wiederverwendung sind primaer Ops/Process-Probleme. Tool ist notwendig, nicht hinreichend."
+          "explanation": "OpenRewrite könnte Dead-Code-Removal und konsistente Diffs erzwingen — aber unvollständige Deployments und Flag-Wiederverwendung sind primär Ops/Process-Probleme. Tool ist notwendig, nicht hinreichend."
         }
       ]
     }

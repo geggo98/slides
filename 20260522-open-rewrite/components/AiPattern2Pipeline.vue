@@ -2,7 +2,7 @@
   <svg
     viewBox="0 0 680 250"
     role="img"
-    aria-label="Pattern 2: AI authort Recipe einmal, Recipe läuft deterministisch beliebig oft"
+    aria-label="Pattern 2: AI autoriert Recipe einmal, Recipe läuft deterministisch beliebig oft"
   >
     <defs>
       <marker

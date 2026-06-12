@@ -7,7 +7,7 @@ import { jspecifyAfterCode, jspecifyAfterAnnotations } from "./slide-data.ts";
   <MonacoBlockAnnotated
     :code="jspecifyAfterCode"
     language="java"
-    height="280px"
+    height="230px"
     :annotations="jspecifyAfterAnnotations"
   />
 </template>

@@ -45,7 +45,7 @@ const tabs = [
           <MonacoBlockAnnotated
             :code="yamlRecipeCode"
             language="yaml"
-            height="320px"
+            height="270px"
             :annotations="yamlRecipeAnnotations"
           />
         </div>

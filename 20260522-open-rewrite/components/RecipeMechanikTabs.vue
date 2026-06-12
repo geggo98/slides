@@ -31,7 +31,7 @@ const tabs = [
           <MonacoBlockAnnotated
             :code="sayHelloRecipeCode"
             language="java"
-            height="300px"
+            height="250px"
             :annotations="sayHelloAnnotations"
           />
         </div>
@@ -46,7 +46,7 @@ const tabs = [
           <MonacoBlockAnnotated
             :code="visitorMechanicsCode"
             language="java"
-            height="200px"
+            height="180px"
             :annotations="visitorAnnotations"
           />
           <div class="callout">

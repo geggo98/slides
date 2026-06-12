@@ -43,6 +43,9 @@ const risks = [
     severity: "high",
   },
 ];
+
+const sevGlyph = { high: "▲", med: "●", low: "▼" };
+const sevText = { high: "hoch", med: "mittel", low: "niedrig" };
 </script>
 
 <template>
@@ -56,7 +59,11 @@ const risks = [
     <tbody>
       <tr v-for="(r, i) in risks" :key="i">
         <td>
-          <span :class="['sev', `sev-${r.severity}`]" />
+          <span
+            :class="['sev', `sev-${r.severity}`]"
+            :aria-label="`Severity ${sevText[r.severity]}`"
+            >{{ sevGlyph[r.severity] }}</span
+          >
           {{ r.risk }}
         </td>
         <td v-html="r.mitigation" />
@@ -93,19 +100,20 @@ const risks = [
 }
 .sev {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
+  width: 1em;
+  margin-right: 7px;
+  font-size: 0.8em;
+  text-align: center;
   vertical-align: middle;
+  line-height: 1;
 }
 .sev-low {
-  background: var(--color-text-success);
+  color: var(--color-text-success);
 }
 .sev-med {
-  background: var(--color-text-warning);
+  color: var(--color-text-warning);
 }
 .sev-high {
-  background: var(--color-text-danger);
+  color: var(--color-text-danger);
 }
 </style>

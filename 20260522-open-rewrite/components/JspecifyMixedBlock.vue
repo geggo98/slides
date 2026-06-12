@@ -7,7 +7,7 @@ import { jspecifyMixedCode, jspecifyMixedAnnotations } from "./slide-data.ts";
   <MonacoBlockAnnotated
     :code="jspecifyMixedCode"
     language="java"
-    height="290px"
+    height="240px"
     :annotations="jspecifyMixedAnnotations"
   />
 </template>

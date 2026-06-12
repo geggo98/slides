@@ -7,7 +7,7 @@ import { jspecifyRecipeYaml, jspecifyRecipeAnnotations } from "./slide-data.ts";
   <MonacoBlockAnnotated
     :code="jspecifyRecipeYaml"
     language="yaml"
-    height="320px"
+    height="260px"
     :annotations="jspecifyRecipeAnnotations"
   />
 </template>

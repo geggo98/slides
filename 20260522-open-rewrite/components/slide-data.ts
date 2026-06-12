@@ -218,7 +218,7 @@ export const yamlRecipeAnnotations = [
   },
   {
     id: "list",
-    lines: [10, 19],
+    lines: [10, 20],
     label: "recipeList — sequenziell, mixed declarative + imperative",
     detail: {
       title: "Sub-Recipes",
@@ -303,9 +303,9 @@ export const jspecifyMixedAnnotations = [
 
 export const jspecifyRecipeYaml = `---
 type: specs.openrewrite.org/v1beta/recipe
-name: com.example.MigrateNullAnnotationsToJspecify
+name: com.example.MigrateNullAnnotationsToJSpecify
 displayName: Migriere Null-Annotationen zu JSpecify
-description: Ersetzt Spring/javax/JetBrains Null-Annotationen durch JSpecify.
+description: Ersetzt Spring- und javax-Null-Annotationen durch JSpecify.
 tags: [null-safety, jspecify, mechanical]
 preconditions:
   - org.openrewrite.java.search.UsesType:
@@ -326,12 +326,13 @@ recipeList:
   - org.openrewrite.java.dependencies.AddDependency:
       groupId: org.jspecify
       artifactId: jspecify
-      version: 1.0.0`;
+      version: 1.0.0
+      onlyIfUsing: org.jspecify.annotations.Nullable`;
 
 export const jspecifyRecipeAnnotations = [
   {
     id: "rename",
-    lines: [10, 24],
+    lines: [10, 22],
     label: "Mechanische ChangeType — 100 % deterministisch",
     detail: {
       title: "ChangeType",
@@ -344,7 +345,7 @@ export const jspecifyRecipeAnnotations = [
   },
   {
     id: "dep",
-    lines: [25, 28],
+    lines: [23, 27],
     label: "Dependency hinzufügen (nur wenn Typ verwendet)",
     detail: {
       title: "AddDependency",

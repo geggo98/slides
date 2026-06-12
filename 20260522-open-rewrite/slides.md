@@ -1,6 +1,7 @@
 ---
 theme: default
 title: "OpenRewrite — Refactoring at Scale für Spring Boot"
+lang: de
 info: |
   LST, Recipes, KI-Pattern und ein JSpecify-Praxisbeispiel.
   Querverweis: Java Null-Sicherheit 2026.
@@ -42,13 +43,13 @@ hideInToc: true
 
 1. **LST > AST.** OpenRewrites Lossless Semantic Tree erhält Whitespace _und_ Typinformation — Voraussetzung für reviewbare Diffs.
 2. **Recipes sind deterministisch — und das ist das Killer-Feature.** Gleiche Eingabe → identische Ausgabe. KI nur dort, wo die Determinismus-Grenze sie überlebt.
-3. **Pattern 1 (Recipes-first + AI im Build-Loop) ist der einzige produktionserprobte KI-Workflow.** Pattern 3 (LLM in Recipe) ist ein Anti-Pattern.
+3. **Pattern 1 (Recipes-first + AI im Build-Loop) ist der produktionserprobte KI-Workflow (Duolingo Golden Path) — zusammen mit Pattern 2 die einzige produktionsreife Zone.** Pattern 3 (LLM in Recipe) ist ein Anti-Pattern.
 4. **Lizenz-Audit ist Pflicht.** Seit 13.12.2024 ist `rewrite-spring` MSAL — „Community Edition" heißt hier „source available, kommerziell restriktiv".
 
 </div>
 
 <!--
-- Wer Spring-Recipes ungeprüft in CI committed, kann morgen vor einem MPL-Update stehen.
+- Wer Spring-Recipes ungeprüft in CI committet, steht beim nächsten Recipe-Update womöglich vor einem stillen Lizenzwechsel (Apache → MSAL).
 - JSpecify-Migration zeigt alle drei AI-Ebenen in einer Story: Mechanik, LLM-Recipe-Authoring, LLM-Gap-Fill.
 -->
 
@@ -168,6 +169,7 @@ hideInToc: true
 - Visitor: super.visit() vergessen ist Anfänger-Fehler #1.
 - Matcher: AspectJ-Syntax; * für Typ-Wildcard, .. für Args-Wildcard.
 - Template: niemals String-Concat. Anfänger-Fehler #2.
+- Editoren scrollen — bei langen Snippets im Vortrag scrollen.
 -->
 
 ---
@@ -183,6 +185,7 @@ hideInToc: true
 - Preconditions sparen Edit-, nicht Parse-Aufwand — wichtige Subtilität für Performance-Erwartungen.
 - YAML-recipeList läuft sequenziell — Reihenfolge zählt.
 - UpgradeSpringBoot_4_0 ist rekursiv: 4.0 → 3.5 → 3.4 → … → 2.0.
+- YAML-Editor scrollt — unteren Recipe-Teil bei Bedarf hereinscrollen.
 -->
 
 ---
@@ -297,7 +300,7 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70 max-w-4xl">
 
-Am 13. Dezember 2024 sind die `rewrite-spring`-Recipes von Apache 2.0 nach MSAL gewechselt — ohne Vorwarnung an Contributors. Juristisch erlaubt (Apache 2.0 lässt das zu), strategisch ein Vertrauensschaden.
+Am 13. Dezember 2024 sind die `rewrite-spring`-Recipes von Apache 2.0 nach MSAL gewechselt — ohne Vorwarnung an Contributoren. Juristisch erlaubt (Apache 2.0 lässt das zu), strategisch ein Vertrauensschaden. „MPL" meint hier die **Moderne Proprietary License** — nicht die Mozilla Public License.
 
 </div>
 
@@ -347,6 +350,7 @@ Typischer Spring-Boot-Bestand: <code>org.springframework.lang.Nullable</code> au
 - 15 Jahre Annotation-Wildwuchs: Spring, JetBrains, Eclipse, Checker FW, JSR-305 — alle inkompatibel.
 - JSpecify 1.0 (August 2024) ist der Konsens-Punkt: Google, Oracle, JetBrains, Spring, Sonar, Uber.
 - Annotationen kann man mechanisch ersetzen — Methodensemantik nicht.
+- Code-Editor scrollt — `greet`-Methode bei Bedarf hereinscrollen.
 -->
 
 ---
@@ -359,14 +363,16 @@ hideInToc: true
 
 <div class="mt-3 text-sm opacity-70">
 
-100 % deterministisch, idempotent, läuft <em>ohne</em> LLM. Vier <code>ChangeType</code>-Aufrufe ersetzen Spring/javax durch JSpecify. Auch das Recipe selbst kann LLM-autoriert sein — <strong>Pattern 2</strong> aus dem vorigen Kapitel.
+100 % deterministisch, idempotent, läuft <em>ohne</em> LLM. Vier <code>ChangeType</code>-Aufrufe ersetzen Spring/javax durch JSpecify. Auch das Recipe selbst kann LLM-autoriert sein — <strong>Pattern 2</strong> aus Kapitel 3.
 
 </div>
 
 <!--
-- Standard-Recipe ist `org.openrewrite.java.jspecify.MigrateToJspecify` (~80 % Coverage laut Null-Sicherheit-Talk).
-- Hier zeige ich eine eigene YAML-Variante, weil sie auch JetBrains-Annotationen aufnimmt.
+- Standard-Recipe ist `org.openrewrite.java.jspecify.MigrateToJSpecify` (~80 % Coverage laut Null-Sicherheit-Talk).
+- Hier zeige ich eine eigene YAML-Variante, die Spring- und javax-Annotationen explizit abdeckt.
+- Die Precondition filtert auf Spring-`@Nullable`; rein javax-annotierte Files brauchen einen ungefilterten Lauf oder eine zweite Precondition.
 - Pattern 2: Recipe wird einmal LLM-autoriert, dann beliebig oft deterministisch angewendet.
+- Der Monaco-Editor scrollt — im Vortrag den unteren Recipe-Teil hereinscrollen.
 -->
 
 ---
@@ -379,7 +385,7 @@ hideInToc: true
 
 <div class="mt-3 text-sm opacity-70">
 
-Annotationen sind getauscht. Aber <code>@NullMarked</code> macht den Default <code>@NonNull</code> — und der Build zeigt: <code>findByEmail</code> kann <code>null</code> zurückgeben. <strong>Hier endet die Mechanik.</strong> Der Coding-Agent (Pattern 1) liest den Kontrollfluss, schlägt <code>@Nullable User</code> oder <code>Optional&lt;User&gt;</code> vor — bis der Build grün ist.
+Annotationen sind getauscht. Aber <code>@NullMarked</code> macht den Default <code>@NonNull</code> — und der Build zeigt: <code>findByEmail</code> kann <code>null</code> zurückgeben. <strong>Hier endet die Mechanik.</strong> Der Coding-Agent (Pattern 1) liest den Kontrollfluss, schlägt <code>@Nullable User</code> oder <code>Optional&lt;User&gt;</code> vor — bis der Build grün ist. Der Null-Sicherheit-Talk wählt für Rückgaben konsequent <code>Optional</code>; hier entscheidet zusätzlich der Aufrufer-Vertrag.
 
 </div>
 
@@ -387,6 +393,7 @@ Annotationen sind getauscht. Aber <code>@NullMarked</code> macht den Default <co
 - @NullMarked auf Package-Ebene (package-info.java) ist idiomatischer als pro Klasse.
 - NullAway prüft den Rest — der Build wird zum Gate für den AI-Loop.
 - Genau das Pattern, das im FINOS-Bericht und bei Duolingo dokumentiert ist.
+- Code-Editor scrollt — bei Bedarf zur LLM-Lücke hinunterscrollen.
 -->
 
 ---
@@ -399,7 +406,7 @@ hideInToc: true
 
 <!--
 - Die beiden Talks ergänzen sich: hier das Tooling, dort das Konzept.
-- Im Null-Sicherheit-Talk wird der OpenRewrite-Recipe `MigrateToJspecify` als Migrationshebel genannt.
+- Im Null-Sicherheit-Talk wird der OpenRewrite-Recipe `MigrateToJSpecify` als Migrationshebel genannt.
 - Hier ist die andere Seite: was tut die Recipe konkret, wo hört sie auf, wie ergänzt KI sie.
 -->
 
@@ -458,11 +465,10 @@ hideInToc: true
 
 ### Stand 2026
 
-- `rewrite-kotlin` existiert, **aber**:
-- **K1** (alter Compiler) ist halbwegs unterstützt
-- **K2** (Default seit Kotlin 2.0) hat offene Parse-Issues
-- Großes K2-Tracking-Issue: <code>openrewrite/rewrite#6621</code>
-- Recipes mit Java-LST-Annahmen brechen auf Kotlin-spezifischen Konstrukten
+- `rewrite-kotlin` existiert und holt auf:
+- **K1** (alter Compiler) ist solide unterstützt
+- **K2** (Default seit Kotlin 2.0): Support ist gelandet — Tracking-Issue `openrewrite/rewrite#6007` (Done, Fix `#6338`); `#6621` war ein Duplikat
+- Einzelne Recipes mit Java-LST-Annahmen brechen noch auf Kotlin-spezifischen Konstrukten
 
 </div>
 <div>
@@ -471,7 +477,7 @@ hideInToc: true
 
 - **Polyglot-Visitor**-Marketing nur teilweise tragfähig
 - Reine Java-/Groovy-Codebases sind sicher
-- Bei gemischten Stacks: <code>exclusion("\*_/_.kt")</code>
+- Bei gemischten Stacks: `exclusion("**/*.kt")`
 - Kotlin-Anteil mit Coding-Agent (Claude Code etc.) refactoren — der versteht Kotlin nativ
 - Wer auf Kotlin migriert, gibt OpenRewrite für den Kotlin-Anteil weitgehend auf
 
@@ -517,6 +523,7 @@ hideInToc: true
 - Beispiel: application.properties + application.yml als gemeinsames Property-Set behandeln.
 - ScanningRecipe ist die richtige Antwort auf „wir brauchen das Wissen aus File B in File A".
 - Instance-Fields des Visitors taugen dafür nicht — Determinismus-Verletzung.
+- Code-Editor scrollt — `getVisitor`/`generate` bei Bedarf hereinscrollen.
 -->
 
 ---
@@ -535,21 +542,22 @@ hideInToc: true
 -->
 
 ---
-layout: end
+layout: default
 hideInToc: true
 ---
 
+# Reading List
+
 <div class="text-left max-w-3xl mx-auto text-sm">
 
-## Reading List
-
-- **Duolingo Golden Path** — <code>blog.duolingo.com/automating-jvm-golden-path</code>
-- **OpenRewrite Recipe-Konzepte** — <code>docs.openrewrite.org/concepts-and-explanations/recipes</code>
-- **Lizenz-FAQ** — <code>docs.openrewrite.org/licensing/openrewrite-licensing</code>
-- **Jonathan Leitschuh: When Open Source isn't** — <code>infosecwriteups.com/...642053be287d</code>
-- **Moderne AI Recipe Authoring** — <code>moderne.ai/blog/ai-powered-openrewrite-recipe-authoring-with-claude-skill</code>
-- **FINOS CALM Spec** — <code>github.com/finos/architecture-as-code</code>
-- **Querverweis:** <TalkXref slug="20260428-java-null-pointer">Java Null-Sicherheit 2026</TalkXref> (Slides 8–18 zu JSpecify)
+- **Duolingo Golden Path** — <a href="https://blog.duolingo.com/automating-jvm-golden-path">blog.duolingo.com/automating-jvm-golden-path</a>
+- **OpenRewrite Recipe-Konzepte** — <a href="https://docs.openrewrite.org/concepts-and-explanations/recipes">docs.openrewrite.org/concepts-and-explanations/recipes</a>
+- **Lizenz-FAQ** — <a href="https://docs.openrewrite.org/licensing/openrewrite-licensing">docs.openrewrite.org/licensing/openrewrite-licensing</a>
+- **Jonathan Leitschuh: When Open Source isn't** — <a href="https://infosecwriteups.com/when-open-source-isnt-how-openrewrite-lost-its-way-642053be287d">infosecwriteups.com/when-open-source-isnt-…</a>
+- **Moderne AI Recipe Authoring** — <a href="https://moderne.ai/blog/ai-powered-openrewrite-recipe-authoring-with-claude-skill">moderne.ai/blog/ai-powered-openrewrite-recipe-authoring-with-claude-skill</a>
+- **FINOS CALM Spec** — <a href="https://github.com/finos/architecture-as-code">github.com/finos/architecture-as-code</a>
+- **Querverweis:** <TalkXref slug="20260428-java-null-pointer">Java Null-Sicherheit 2026</TalkXref> (JSpecify-Sektion)
+- **Companion-Talk:** <TalkXref slug="20260327-ai-agents">AI Coding Agents</TalkXref> (Determinismus-Grenze, AI im Build-Loop)
 
 <div class="mt-4 text-xs opacity-60">
 

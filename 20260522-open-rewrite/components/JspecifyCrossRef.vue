@@ -13,7 +13,7 @@ import TalkXref from "@shared/components/TalkXref.vue";
         <li><strong>Wie</strong> migriere ich Annotationen mechanisch?</li>
         <li>
           Recipe
-          <code>org.openrewrite.java.jspecify.MigrateToJspecify</code> als
+          <code>org.openrewrite.java.jspecify.MigrateToJSpecify</code> als
           Building Block
         </li>
         <li>Pattern 1 + 2 als Workflow, Build-Loop als Gate</li>
@@ -38,8 +38,8 @@ import TalkXref from "@shared/components/TalkXref.vue";
         <li>NullAway als pragmatischer Checker</li>
       </ul>
       <p class="hint">
-        Slides 8–18 im Null-Sicherheit-Talk. Dort wird in Slide 12
-        (Quellen-Übersicht) bereits auf dieses Recipe verwiesen — der Kreis
+        In der JSpecify-Sektion des Null-Sicherheit-Talks. Dort wird auf der
+        Quellen-Übersicht bereits auf dieses Recipe verwiesen — der Kreis
         schließt sich.
       </p>
     </div>
