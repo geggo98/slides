@@ -959,7 +959,35 @@ hideInToc: true
 
 # Querverweise
 
-<DesignPatternCrossRef />
+<TalkXrefPanel
+  variant="neutral"
+  :here="{
+    title: 'Entwurfsmuster 2026',
+    bullets: [
+      '<strong>Drei Schichten:</strong> was die Sprache übernimmt, was bleibt',
+      'Builder als Lehrstück für <strong>Typsystem-Ebenen</strong> (Laufzeit → Staged → named/default args)',
+      'Visitor → ADTs; Metaprogramming <em>implementiert</em> Proxy',
+    ],
+  }"
+  :refs="[
+    {
+      slug: '20260428-java-null-pointer',
+      anchor: 'native-null-types',
+      bullets: [
+        '<strong>Warum</strong> null-Safety dem Builder keine Compile-Zeit-Pflichtfelder gibt (JEP 8303099)',
+        'Null Object → <code>Optional</code>/Nullability; JSpecify, NullAway',
+      ],
+    },
+    {
+      slug: '20260522-open-rewrite',
+      anchor: 'recipe-mechanik',
+      bullets: [
+        'Muster-Migration <strong>mechanisch</strong>: <code>ChangeType</code>, sealed-/Visitor-Recipes',
+        '<code>JavaIsoVisitor</code> — dasselbe double dispatch, jetzt als Recipe-Mechanik',
+      ],
+    },
+  ]"
+/>
 
 ---
 hideInToc: true

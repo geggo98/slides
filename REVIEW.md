@@ -11,20 +11,6 @@
 
 ---
 
-## Übergreifend (Shared / Infrastruktur)
-
-### Querverweis-Muster
-
-- [ ] **Rest-Migration:** `JspecifyCrossRef.vue` (open-rewrite) und `DesignPatternCrossRef.vue` (design-pattern) auf das neue `shared/components/TalkXrefPanel.vue` + `talkUrl(slug, anchor?)`/`routeAlias` umstellen (Shared-Seite inkl. Tests ist fertig; folgt in den Deck-Commits).
-
----
-
-## 20260606-design-pattern
-
-- [ ] (M) `PatternTabs.vue` eigene Tab-Bar → shared `Tabs.vue` (meistgenutzte Komponente, 24 Folien — bekäme ARIA + Tastatur-Nav gratis); lokale `.callout`/`.caveat`-Boxen → shared `Callout` (caveat ≈ tone="warning").
-
----
-
 ## Abschluss-Task
 
 - [ ] **(M) Cross-Engine-Overflow-Check aller geänderten Slides mit dem /slidev-Skill.** Die Zwischenprüfung lief nur über **Chromium**; der gebündelte Skill-Checker deckt **chromium + firefox + webkit**, Light **und echtes Dark** (Monaco-Theme!) sowie Code unter der Monaco-Fold ab. Pro Deck einen Dev-Server starten und:

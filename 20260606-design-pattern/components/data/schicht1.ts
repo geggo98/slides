@@ -532,7 +532,7 @@ impl Post<Published> {
         label: "Original (Java)",
         language: "java",
         height: "170px",
-        note: "Ein „leeres“ Objekt mit neutralem Verhalten, um <code>null</code>-Checks zu vermeiden.",
+        note: "Ein „leeres“ Objekt mit neutralem Verhalten, um <code>null</code>-Checks zu vermeiden. Im JDK angewandt: <code>Collections.emptyList()/emptySet()/emptyMap()</code> — geteilte immutable Singletons, neutral beim Lesen (<code>add()</code> wirft).",
         code: `interface Logger { void log(String msg); }
 class ConsoleLogger implements Logger {
     public void log(String m) { System.out.println(m); }

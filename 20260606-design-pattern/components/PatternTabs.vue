@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import Tabs from "@shared/components/Tabs.vue";
+import Callout from "@shared/components/Callout.vue";
 import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 // Slidevs eigene Mermaid-Pipeline (Singleton-Init, Cache, ShadowRoot) statt eines
 // handgerollten Wrappers — Letzterer zog `mermaid` als bare-specifier (dayjs-UMD,
@@ -21,8 +23,13 @@ const props = defineProps({
 });
 
 const tabs = computed(() => props.tabs ?? PATTERNS[props.name]?.tabs ?? []);
-const active = ref(0);
-const current = computed(() => tabs.value[active.value] ?? {});
+// Shared Tabs adressiert Tabs über String-Keys, die Pattern-Daten sind
+// index-basiert — der Index dient als Key.
+const tabDefs = computed(() =>
+  tabs.value.map((t, i) => ({ key: String(i), label: t.label })),
+);
+const active = ref("0");
+const current = computed(() => tabs.value[Number(active.value)] ?? {});
 
 // Mermaid-Quelltext für Slidevs <Mermaid> base64-lz-komprimieren.
 const toLz = (code) => lz.compressToBase64(code);
@@ -71,42 +78,40 @@ const mermaidThemeVars = computed(() =>
 
 <template>
   <div class="pt-wrap">
-    <div class="tab-bar">
-      <button
-        v-for="(t, i) in tabs"
-        :key="i"
-        :class="{ active: active === i }"
-        type="button"
-        @click.stop="active = i"
-      >
-        {{ t.label }}
-      </button>
-    </div>
-
-    <div :key="active" class="panel">
-      <p v-if="current.note" class="lead" v-html="current.note" />
-      <div v-if="current.diagrams" class="diagram-grid">
-        <figure v-for="(d, i) in current.diagrams" :key="i" class="diagram-col">
-          <figcaption v-if="d.title" v-html="d.title" />
-          <Mermaid
-            :key="isDark ? 'dark' : 'light'"
-            :code-lz="toLz(d.code)"
-            theme="default"
-            v-bind="{ themeVariables: mermaidThemeVars }"
-          />
-        </figure>
+    <Tabs v-model="active" :tabs="tabDefs" aria-label="Pattern-Varianten">
+      <div :key="active" class="panel">
+        <p v-if="current.note" class="lead" v-html="current.note" />
+        <div v-if="current.diagrams" class="diagram-grid">
+          <figure
+            v-for="(d, i) in current.diagrams"
+            :key="i"
+            class="diagram-col"
+          >
+            <figcaption v-if="d.title" v-html="d.title" />
+            <Mermaid
+              :key="isDark ? 'dark' : 'light'"
+              :code-lz="toLz(d.code)"
+              theme="default"
+              v-bind="{ themeVariables: mermaidThemeVars }"
+            />
+          </figure>
+        </div>
+        <MonacoBlockAnnotated
+          v-else
+          :code="current.code"
+          :language="current.language || 'java'"
+          :height="current.height || '300px'"
+          :annotations="current.annotations || []"
+          show-language-badge
+        />
+        <Callout v-if="current.caveat" tone="warning" dense class="pt-caveat">
+          <span v-html="current.caveat" />
+        </Callout>
+        <Callout v-if="current.callout" tone="info" dense class="pt-callout">
+          <span v-html="current.callout" />
+        </Callout>
       </div>
-      <MonacoBlockAnnotated
-        v-else
-        :code="current.code"
-        :language="current.language || 'java'"
-        :height="current.height || '300px'"
-        :annotations="current.annotations || []"
-        show-language-badge
-      />
-      <div v-if="current.caveat" class="caveat" v-html="current.caveat" />
-      <div v-if="current.callout" class="callout" v-html="current.callout" />
-    </div>
+    </Tabs>
   </div>
 </template>
 
@@ -115,28 +120,24 @@ const mermaidThemeVars = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-.tab-bar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  padding-bottom: 8px;
-}
-.tab-bar button {
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 12px;
-  background: transparent;
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: var(--sk-rad);
-  cursor: pointer;
-  color: var(--color-text-secondary);
-}
-.tab-bar button.active {
-  background: var(--color-background-info);
-  color: var(--color-text-info);
-  border-color: var(--color-border-info);
+  /* Optik der ehemaligen lokalen Tab-Bar 1:1 über die --sk-tab-*-Hooks der
+     shared Tabs.vue nachgebildet (visueller No-Op, gleiche Werte wie die
+     Migration in 20260522-open-rewrite). */
+  --sk-tab-gap: 6px;
+  --sk-tab-bar-mb: 10px;
+  --sk-tab-bar-pb: 8px;
+  --sk-tab-bar-border-bottom: 0.5px solid var(--color-border-tertiary);
+  /* Kein CSS-wide-Keyword (inherit) — das fiele auf den 500er-Fallback
+     zurück; die alte Bar erbte das normale Gewicht via `font: inherit`. */
+  --sk-tab-font-weight: 400;
+  --sk-tab-pad: 6px 12px;
+  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-radius: var(--sk-rad);
+  --sk-tab-hover-bg: transparent;
+  --sk-tab-transition: none;
+  --sk-tab-active-bg: var(--color-background-info);
+  --sk-tab-active-color: var(--color-text-info);
+  --sk-tab-active-border: var(--color-border-info);
 }
 .panel {
   display: flex;
@@ -188,42 +189,27 @@ const mermaidThemeVars = computed(() =>
   max-width: 100%;
   height: auto;
 }
-.caveat {
+/* Shared Callout liefert Ton & Akzent (caveat → warning, callout → info);
+   die kompaktere Deck-Textmetrik (12/12.5px statt 14px) bleibt erhalten,
+   sonst wachsen die Boxen auf den dichten Code-Folien in den Overflow.
+   .sk-callout dazu, um die Schriftgröße der shared Komponente zu schlagen. */
+.sk-callout.pt-caveat {
   font-size: 12px;
   color: var(--color-text-secondary);
-  background: var(
-    --color-background-warning,
-    var(--color-background-secondary)
-  );
-  border: 0.5px solid var(--color-border-warning, var(--color-border-tertiary));
-  border-radius: var(--sk-rad);
-  padding: 5px 11px;
   line-height: 1.45;
 }
-.caveat :deep(strong) {
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-.caveat :deep(code) {
-  font-family: var(--font-mono);
-  font-size: 0.92em;
-  background: var(--color-background-primary);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-.callout {
+.sk-callout.pt-callout {
   font-size: 12.5px;
   color: var(--color-text-secondary);
-  background: var(--color-background-secondary);
-  border-radius: var(--sk-rad);
-  padding: 6px 13px;
   line-height: 1.45;
 }
-.callout :deep(strong) {
+.pt-caveat :deep(strong),
+.pt-callout :deep(strong) {
   color: var(--color-text-primary);
   font-weight: 500;
 }
-.callout :deep(code) {
+.pt-caveat :deep(code),
+.pt-callout :deep(code) {
   font-family: var(--font-mono);
   font-size: 0.92em;
   background: var(--color-background-primary);
