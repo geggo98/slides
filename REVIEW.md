@@ -19,17 +19,7 @@
 
 ### Frontmatter-Konvention
 
-- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlen v. a. **gradle**, **grafana**, **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
-
----
-
-## 20260327-gradle-dependency-resolution
-
-- [ ] (M) Drei eigene Tab-Bars → shared `Tabs.vue`: `AxiosAttack.vue`, `GradleInfographic.vue`, `ResolutionSimulator.vue` (`.sc-tabs`); `EcosystemInfographic` (`.info-tabs`) bei nächster Überarbeitung.
-- [ ] (S) `CooldownTabs.vue` `.ct-info`-Boxen → shared `Callout` (tone-Prop).
-- [ ] (L) Optional: `CompareTable`/`JvmMatrix` → shared `MatrixPivot` (Detail-Blasen als Gewinn).
-- [ ] (L) Notes-Abdeckung erweitern (Sektions-Opener; Story-Slides S39/S40 haben bereits Notes).
-- [ ] (S) Vorbestehender Overflow auf der Bonus-Infografik „Ökosystem-Vergleich": `EcosystemInfographic`-`.info-footer` ragt ~50 px unter den Canvas (nicht durch die Edits ausgelöst).
+- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlen v. a. **grafana**, **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
 
 ---
 

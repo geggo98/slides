@@ -28,7 +28,7 @@ tasks.withType<JavaCompile>().configureEach {
       <div class="ig-config">
         <span class="ig-tag legacy">Legacy — vor Gradle 6.7</span>
         <p class="ig-file-header">build.gradle (Groovy)</p>
-        <MonacoBlock :code="legacyCode" language="groovy" height="84px" />
+        <MonacoBlock :code="legacyCode" language="groovy" height="96px" />
         <p class="ig-config-note">
           Kompiliert mit der Daemon-JVM — jedes JDK des Entwicklers. API-Sicht
           nicht begrenzt:
@@ -42,7 +42,7 @@ tasks.withType<JavaCompile>().configureEach {
       <div class="ig-config">
         <span class="ig-tag modern">2026 — Gradle 9.x</span>
         <p class="ig-file-header">build.gradle.kts (Kotlin DSL)</p>
-        <MonacoBlock :code="modernCode" language="kotlin" height="158px" />
+        <MonacoBlock :code="modernCode" language="kotlin" height="176px" />
         <p class="ig-config-note">
           Toolchain provisioniert JDK 21 via Foojay-Resolver —
           <code>JAVA_HOME</code> egal. <code>options.release = 17</code> bindet
@@ -76,7 +76,7 @@ tasks.withType<JavaCompile>().configureEach {
   font-size: 12px;
   color: var(--color-text-secondary);
   line-height: 1.5;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.25rem;
 }
 
 .ig-sidebyside {
@@ -120,8 +120,8 @@ tasks.withType<JavaCompile>().configureEach {
 .ig-config-note {
   font-size: 11px;
   color: var(--color-text-secondary);
-  margin: 6px 0 0;
-  line-height: 1.45;
+  margin: 4px 0 0;
+  line-height: 1.4;
 }
 .ig-config-note :deep(code),
 .ig-config-note code {

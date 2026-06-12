@@ -2,11 +2,17 @@
 theme: default
 layout: cover
 lang: de
-transition: slide-left
 title: Gradle Dependency Resolution & Locking
 info: |
   Gradle Dependency Locking, Resolution-Strategien, Supply-Chain-Schutz
   und Ökosystem-Vergleich.
+monaco: true
+mdc: true
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
 ---
 
 # Gradle Dependency Resolution & Locking
@@ -37,9 +43,24 @@ layout: section
 
 Kernbegriffe & Dependency Stack
 
+<!--
+- Einstieg: erst gemeinsames Vokabular, dann Mechanik. Die Begriffe
+  Locking, Resolution Strategy, Catalog und Verification werden im Alltag
+  ständig vermischt — hier sauber trennen.
+- Kernbotschaft der Sektion: vier getrennte Mechanismen mit vier getrennten
+  Aufgaben. Wer das einmal hat, versteht den Rest des Talks.
+- Auf der Stack-Folie (LayerStack) von unten nach oben erzählen:
+  Repository → Resolution → Lock-File → Verification.
+-->
+
 ---
 
 # Kernbegriffe
+
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+</style>
 
 | Begriff                   | Bedeutung                                                                           |
 | ------------------------- | ----------------------------------------------------------------------------------- |
@@ -67,6 +88,15 @@ layout: section
 
 Aktivierung & Befehle
 
+<!--
+- Story: Ohne Lock-File ist jeder Build ein Glücksspiel — „highest wins"
+  kann sich jederzeit ändern, ohne dass build.gradle.kts sich ändert.
+- Zwei Folien: Aktivierung (lockAllConfigurations + LockMode.STRICT),
+  dann die Befehlsübersicht — --write-locks ist der zentrale Befehl.
+- STRICT empfehlen: Build scheitert, wenn das Lock-File fehlt oder
+  veraltet ist — genau das Verhalten will man in der CI.
+-->
+
 ---
 
 # Locking aktivieren
@@ -91,6 +121,12 @@ configurations.compileClasspath {
 
 # Wichtigste Befehle
 
+<style>
+table { font-size: 0.78em; }
+th, td { padding: 0.25em 0.5em !important; }
+blockquote { font-size: 0.85em; }
+</style>
+
 | Aktion                             | Befehl                                                                  |
 | ---------------------------------- | ----------------------------------------------------------------------- |
 | Lock-File erzeugen / aktualisieren | `./gradlew dependencies --write-locks`                                  |
@@ -109,6 +145,18 @@ layout: section
 # 3. BOM & Resolution-Strategien
 
 Spring BOM, Plugin vs. Native, Extra Properties
+
+<!--
+- Längste Sektion. Roter Faden: Wer bestimmt am Ende die Version? Die
+  Prioritäts-Ränge (platform() Rang 5, Spring-Plugin Rang 6,
+  enforcedPlatform() Rang 7) ziehen sich bis zum Resolution Simulator
+  am Sektionsende durch.
+- Kernbotschaften: Ansätze nicht mischen (Plugin übersteuert platform()
+  stillschweigend); Empfehlung 2026 ist Variante A — native BOM via
+  platform() + BOM_COORDINATES.
+- ext["…"] nur als Spring-spezifischen Override-Mechanismus einordnen,
+  nicht als allgemeines Versions-Management.
+-->
 
 ---
 
@@ -267,6 +315,15 @@ layout: section
 
 TOML, Zusammenspiel & Fallstricke
 
+<!--
+- Erwartungsmanagement: Catalogs sind reine Deklaration (Einkaufsliste),
+  kein Constraint-Mechanismus — der häufigste Irrtum in Teams.
+- Ablauf: TOML-Syntax, dann die Vier-Mechanismen-Tabelle (Catalog / BOM /
+  Lock-File / Verification mit Analogien), dann die Fallstricke.
+- Wichtigster Fallstrick: Die BOM gewinnt gegen die Catalog-Version —
+  für BOM-gemanagte Deps deshalb keine Version im Catalog pflegen.
+-->
+
 ---
 
 # Version Catalogs (`libs.versions.toml`)
@@ -349,6 +406,14 @@ layout: section
 
 Neue Library & Library-Update
 
+<!--
+- Kurze, praktische Sektion: die zwei Alltags-Workflows als Kochrezept.
+- Muster ist beide Male identisch: Änderung in build.gradle.kts →
+  --write-locks → git diff gradle.lockfile reviewen → committen.
+- Betonen: Das Lock-File-Diff ist der eigentliche Review-Gegenstand —
+  dort werden transitive Überraschungen sichtbar, nicht im Build-Skript.
+-->
+
 ---
 
 # Workflow: Neue Library (Spring-gemanagt)
@@ -412,6 +477,17 @@ layout: section
 # 6. Snapshot-Versionen
 
 Sonderfall, Caching & Produktions-Gate
+
+<!--
+- Sonderfall-Sektion: Snapshots sind mutable und unterlaufen damit alles,
+  was die vorherigen Sektionen aufgebaut haben — Lock-File, Verification
+  Metadata und Scanner-Verlässlichkeit.
+- Ablauf: Vergleichstabelle Release vs. Snapshot, dann Repo-Trennung +
+  Caching (snapshotsOnly als Dependency-Confusion-Schutz), dann das
+  noSnapshots-Task als CI-Gate.
+- Kernbotschaft: Snapshots nur in Feature-/Integrations-Builds — nie
+  Richtung Produktion.
+-->
 
 ---
 
@@ -489,6 +565,16 @@ layout: section
 # 7. Supply-Chain-Schutz
 
 Scanning, Verification, Cooldown & Angriffe
+
+<!--
+- Finale Kernsektion; spannt den Bogen zu den realen Vorfällen
+  (Trivy → LiteLLM, Axios) am Sektionsende.
+- Defense-in-Depth-Reihenfolge: Scanner (Lock-File als Quelle) →
+  CVE-Pinning mit because() → Verification Metadata (+ zwei Escape
+  Hatches) → Repository Filtering → Cooldown → Build-Sandbox.
+- Kernbotschaft: Kein Mechanismus reicht allein — Cooldown etwa filtert
+  nur opportunistische Angriffe, gezielte sitzen ihn aus.
+-->
 
 ---
 
@@ -607,6 +693,14 @@ rm -rf "$GRADLE_USER_HOME"      # ⚠️ Cleanup nicht vergessen!
 ---
 
 # Escape Hatch 2: `.pom` / `.module` trusten
+
+<style>
+pre { font-size: 0.82em; }
+.slidev-code,
+.slidev-code code { line-height: 1.35 !important; }
+blockquote { font-size: 0.85em; }
+p { font-size: 0.92em; }
+</style>
 
 Wenn detached configurations (Checkstyle, JaCoCo, ErrorProne) auf manchen Systemen Artefakte ziehen, die woanders nicht reproduzierbar sind — letzter Ausweg:
 
@@ -781,6 +875,14 @@ layout: center
 ---
 
 # Bonusmaterial
+
+<!--
+- Ab hier optionales Material für Q&A und Vertiefung: Java-Versionen mit
+  Gradle, Cooldown-Tools im Detail, Nexus/PEP-Fallstrick, Ökosystem-
+  Vergleich und die Schutzmatrix als Gesamtübersicht.
+- Die Folien sind unabhängig voneinander — je nach Restzeit und Fragen
+  gezielt anspringen.
+-->
 
 ---
 clicks: false

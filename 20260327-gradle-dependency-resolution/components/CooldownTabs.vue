@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
+import Callout from "@shared/components/Callout.vue";
 import Tabs from "@shared/components/Tabs.vue";
 import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
@@ -248,15 +249,16 @@ const activeEntry = computed(() => tabs.find((t) => t.key === activeTab.value));
           </div>
         </div>
 
-        <div
+        <Callout
           v-for="(box, i) in activeEntry.infos"
           :key="i"
+          :tone="box.tone"
           class="ct-info"
           :class="box.tone"
         >
           <p class="ct-info-title">{{ box.title }}</p>
           <p class="ct-info-body" v-html="box.body" />
-        </div>
+        </Callout>
       </div>
     </Tabs>
   </div>
@@ -312,19 +314,8 @@ const activeEntry = computed(() => tabs.find((t) => t.key === activeTab.value));
   text-transform: lowercase;
 }
 
-.ct-info {
-  border-radius: var(--border-radius-lg);
-  padding: 10px 14px;
-  border: 0.5px solid var(--color-border-tertiary);
-}
-.ct-info.info {
-  background: var(--color-background-info);
-  border-color: var(--color-border-info);
-}
-.ct-info.warning {
-  background: var(--color-background-warning);
-  border-color: var(--color-border-warning);
-}
+/* Box-Optik (Hintergrund, Akzent-Border, Padding) kommt vom shared Callout;
+   hier bleibt nur die Titel-/Body-Typografie des Decks. */
 .ct-info-title {
   font-size: 12.5px;
   font-weight: 600;

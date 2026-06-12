@@ -1,15 +1,16 @@
 <script setup>
 import { ref, computed } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 
 const activeTab = ref("size");
 const downloadScale = ref("linear");
 
 const tabs = [
-  { id: "size", label: "Größe" },
-  { id: "downloads", label: "Downloads" },
-  { id: "malware", label: "Malware" },
-  { id: "security", label: "Security" },
-  { id: "timeline", label: "Timeline" },
+  { key: "size", label: "Größe" },
+  { key: "downloads", label: "Downloads" },
+  { key: "malware", label: "Malware" },
+  { key: "security", label: "Security" },
+  { key: "timeline", label: "Timeline" },
 ];
 
 function fmt(n) {
@@ -234,17 +235,7 @@ function ecoLabel(eco) {
       </p>
     </div>
 
-    <div class="info-tabs">
-      <button
-        v-for="t in tabs"
-        :key="t.id"
-        class="info-tab"
-        :class="{ active: activeTab === t.id }"
-        @click.stop="activeTab = t.id"
-      >
-        {{ t.label }}
-      </button>
-    </div>
+    <Tabs v-model="activeTab" :tabs="tabs" aria-label="Ökosystem-Vergleich" />
 
     <div class="info-content">
       <!-- Tab 1: Größe -->
@@ -504,13 +495,22 @@ function ecoLabel(eco) {
   display: flex;
   flex-direction: column;
   gap: 0;
+  /* Reproduce the previous .info-tab styling via the shared Tabs vars. */
+  --sk-tab-bar-mb: 10px;
+  --sk-tab-radius: var(--border-radius-md);
+  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
+  --sk-tab-transition: all 0.15s;
+  --sk-tab-font-weight: 400;
+  --sk-tab-active-font-weight: 500;
+  --sk-tab-active-bg: var(--color-background-primary);
+  --sk-tab-active-border: var(--color-border-primary);
 }
 .info-header {
   text-align: center;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 .info-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   margin: 0;
   background: linear-gradient(90deg, #d4691a, #cb3837, #00add8);
@@ -522,34 +522,6 @@ function ecoLabel(eco) {
   font-size: 12px;
   color: var(--color-text-secondary);
   margin: 2px 0 0;
-}
-
-/* ── Tabs ── */
-.info-tabs {
-  display: flex;
-  gap: 4px;
-  margin: 0 0 10px;
-  flex-wrap: wrap;
-}
-.info-tab {
-  font-size: 12px;
-  padding: 5px 14px;
-  border-radius: var(--border-radius-md);
-  border: 0.5px solid var(--color-border-tertiary);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-}
-.info-tab:hover {
-  background: var(--color-background-secondary);
-}
-.info-tab.active {
-  background: var(--color-background-primary);
-  border-color: var(--color-border-primary);
-  color: var(--color-text-primary);
-  font-weight: 500;
 }
 
 /* ── Content ── */
@@ -570,17 +542,17 @@ function ecoLabel(eco) {
 .note {
   font-size: 10px;
   color: var(--color-text-tertiary);
-  margin-top: 10px;
-  padding-top: 6px;
+  margin-top: 6px;
+  padding-top: 4px;
   border-top: 1px dashed var(--color-border-tertiary);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 .info-footer {
   font-size: 9px;
   color: var(--color-text-tertiary);
   text-align: center;
-  margin-top: 8px;
-  padding-top: 6px;
+  margin-top: 5px;
+  padding-top: 4px;
   border-top: 1px solid var(--color-border-tertiary);
 }
 
@@ -757,12 +729,12 @@ function ecoLabel(eco) {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 5px 6px;
+  padding: 4px 6px;
   border-bottom: 1px solid var(--color-border-tertiary);
   color: var(--color-text-tertiary);
 }
 .sec-table td {
-  padding: 3px 6px;
+  padding: 2px 6px;
   border-bottom: 0.5px solid var(--color-border-tertiary);
   vertical-align: middle;
 }
@@ -789,7 +761,7 @@ function ecoLabel(eco) {
 }
 .cell {
   display: inline-block;
-  padding: 2px 6px;
+  padding: 1px 6px;
   border-radius: 3px;
   font-size: 10px;
   font-weight: 500;
@@ -848,7 +820,7 @@ function ecoLabel(eco) {
 }
 .tl-event {
   position: relative;
-  padding-bottom: 10px;
+  padding-bottom: 6px;
 }
 .tl-event::before {
   content: "";

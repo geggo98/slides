@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, nextTick } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 
 const activeTab = ref("timeline");
 const contentRef = ref(null);
@@ -17,26 +18,19 @@ watch(activeTab, () => {
 
 <template>
   <div class="axios-attack">
-    <div class="tab-bar">
-      <button
-        v-for="t in tabs"
-        :key="t.key"
-        class="tab-btn"
-        :class="{ active: activeTab === t.key }"
-        @click="activeTab = t.key"
-      >
-        {{ t.label }}
-      </button>
-    </div>
-    <div ref="contentRef" class="tab-content">
-      <AxiosTimeline v-if="activeTab === 'timeline'" />
-      <AxiosAnatomy v-if="activeTab === 'anatomy'" />
-      <AxiosInfectionChain v-if="activeTab === 'infection'" />
-    </div>
+    <Tabs v-model="activeTab" :tabs="tabs" aria-label="Axios-Angriff">
+      <div ref="contentRef" class="tab-content">
+        <AxiosTimeline v-if="activeTab === 'timeline'" />
+        <AxiosAnatomy v-if="activeTab === 'anatomy'" />
+        <AxiosInfectionChain v-if="activeTab === 'infection'" />
+      </div>
+    </Tabs>
   </div>
 </template>
 
 <style scoped>
+/* Tab-Optik = shared Tabs-Defaults (1:1 die alte .tab-btn-Palette); nur das
+   Flex-Gerüst bleibt hier, damit der Scroll-Container die Resthöhe füllt. */
 .axios-attack {
   width: 100%;
   height: 424px;
@@ -44,37 +38,18 @@ watch(activeTab, () => {
   flex-direction: column;
   overflow: hidden;
 }
-.tab-bar {
+.axios-attack :deep(.sk-tabs) {
+  height: 100%;
   display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
+  flex-direction: column;
 }
-.tab-btn {
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid var(--color-border-tertiary);
-  border-radius: var(--border-radius-lg);
-  background: transparent;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
-}
-.tab-btn:hover {
-  background: var(--color-background-secondary);
-}
-.tab-btn.active {
-  background: var(--color-background-secondary);
-  color: var(--color-text-primary);
-  border-color: var(--color-text-secondary);
+.axios-attack :deep(.sk-tab-panel) {
+  flex: 1;
+  min-height: 0;
 }
 .tab-content {
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-secondary) transparent;

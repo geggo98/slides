@@ -14,19 +14,13 @@ plugins {
     id("org.springframework.boot") version "4.0.6" apply false
     java
 }
-
 dependencies {
     // Variante A — nativer BOM-Import, kein dependency-management-Plugin
     implementation(platform(SpringBootPlugin.BOM_COORDINATES))
 }
-
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-        vendor = JvmVendorSpec.ADOPTIUM
-    }
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
 }
-
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(21)
 }`;
