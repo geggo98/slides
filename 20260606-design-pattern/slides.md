@@ -997,3 +997,21 @@ layout: end
 ---
 
 Entwurfsmuster 2026 — drei Schichten, ein Katalog. Danke!
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<DesignPatternQuiz />
+
+<!--
+- Hinter der End-Slide: Selbststudium nach dem Vortrag. Adaptiv — startet
+  mittel, passt sich der Antwortqualität an.
+- Fragenpool via Web-Recherche + Fable-Generierung + adversariale Auswahl;
+  depends-lastig („hängt von der Sprache ab"), Transfer-Sektion verlinkt den
+  java-null-Talk (JEP 8303099, Staged Builder vs. @NonNull).
+-->

@@ -1,0 +1,1032 @@
+{
+  "id": "design-pattern-2026",
+  "title": "Entwurfsmuster Selbsttest",
+  "questions": [
+    {
+      "id": "taxonomie-drei-schichten",
+      "question": "Der Talk schlägt eine Drei-Schichten-Taxonomie statt der GoF-Einteilung vor. Welche Aussagen dazu treffen zu?",
+      "difficulty": "easy",
+      "section": "Taxonomie & Status-Labels",
+      "explanation": "Die GoF-Einteilung in Creational/Structural/Behavioral vermischt Abstraktionsebenen; der Talk schichtet stattdessen nach Substituierbarkeit: Schicht 1 (Sprachdefizit-Notlösungen) wird durch Features ersetzt, Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung relevant, Schicht 3 (Architektur/DDD) ist weitgehend unberührt.",
+      "options": [
+        {
+          "id": "taxonomie-drei-schichten-o1",
+          "text": "Schicht 1 umfasst Sprachdefizit-Notlösungen, die durch Sprachfeatures wie first-class functions oder ADTs ersetzt werden.",
+          "verdict": "true",
+          "explanation": "Genau das ist die Definition von Schicht 1: Muster, die fehlende Features (first-class functions, sum types, null-safety, Sprach-Singletons) kompensieren — sie werden durch diese Features ersetzt."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o2",
+          "text": "Schicht 2 (Strukturmuster) bleibt relevant — moderne Sprachen senken nur den Implementierungsaufwand.",
+          "verdict": "true",
+          "explanation": "Strukturmuster wie Adapter, Facade oder Composite sind sprachunabhängige Strukturierung von Objektgeflechten; sie verschwinden nicht, werden aber leichter implementierbar."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o3",
+          "text": "Schicht 3 (Architektur/DDD) ist von der Substitution weitgehend unberührt — mit Value Object als Ausnahme.",
+          "verdict": "true",
+          "explanation": "Architektur- und DDD-Muster wie Repository oder Unit of Work nimmt kein Sprachfeature weg; nur beim Value Object ersetzen Records & Co. die Implementierungs-Boilerplate."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o4",
+          "text": "Die drei Schichten des Talks entsprechen genau den GoF-Familien Creational, Structural und Behavioral.",
+          "verdict": "false",
+          "explanation": "Der Talk ersetzt die GoF-Einteilung bewusst, weil sie drei Abstraktionsebenen vermischt — die Schichtung erfolgt stattdessen nach Substituierbarkeit."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o5",
+          "text": "Schicht 3 ist die Schicht, die am stärksten durch Sprachfeatures ersetzt wird.",
+          "verdict": "false",
+          "explanation": "Es ist genau umgekehrt: Schicht 1 wird ersetzt, Schicht 3 (Architektur/DDD) bleibt von der Substitution unberührt."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o6",
+          "text": "Schon das GoF-Buch von 1994 ordnet seine Muster nach Substituierbarkeit durch Sprachfeatures.",
+          "verdict": "false",
+          "explanation": "Das GoF-Buch teilt in Creational/Structural/Behavioral ein; die Schichtung nach Substituierbarkeit ist der Gegenentwurf aus dem Talk."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o7",
+          "text": "Ob ein Schicht-1-Muster in Deinem Projekt wirklich „ersetzt“ ist, hängt von der eingesetzten Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Die Substitution setzt das Feature voraus: Mit Lambdas, ADTs oder null-safety ist das Muster überflüssig — in Sprachen ohne diese Features (etwa Go ohne sum types) bleibt es idiomatisch."
+        },
+        {
+          "id": "taxonomie-drei-schichten-o8",
+          "text": "Ob der Builder zu den „ersetzten“ Mustern zählt, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "In Kotlin/TypeScript/Python lösen named/default args den Builder auf, in Java/Go/Rust bleibt das Idiom nötig — deshalb trägt der Builder das Label [SPRACHABH.]."
+        }
+      ]
+    },
+    {
+      "id": "taxonomie-status-labels",
+      "question": "Der Talk nutzt vier Status-Labels pro Muster. Welche Aussagen über diese Labels treffen zu?",
+      "difficulty": "easy",
+      "section": "Taxonomie & Status-Labels",
+      "explanation": "Die vier Labels sind [ERSETZT] (durch Sprachfeature obsolet), [KONZEPT] (Idee bleibt, GoF-Implementierung veraltet), [RELEVANT] (weiterhin idiomatisch) und [SPRACHABH.] (sprachabhängig); die Schluss-Matrix verdichtet sie zu „weiterhin relevant · moderner Ersatz · trifft nicht zu“.",
+      "options": [
+        {
+          "id": "taxonomie-status-labels-o1",
+          "text": "[ERSETZT] bedeutet: durch ein Sprachfeature obsolet geworden.",
+          "verdict": "true",
+          "explanation": "Genau so definiert der Talk das Label — das Muster ist durch ein Sprachfeature wie Lambdas oder sealed types überflüssig."
+        },
+        {
+          "id": "taxonomie-status-labels-o2",
+          "text": "[RELEVANT] bedeutet: das Muster ist weiterhin idiomatisch.",
+          "verdict": "true",
+          "explanation": "Das Label markiert Muster wie Adapter oder Decorator, die nach wie vor zur idiomatischen Lösung gehören."
+        },
+        {
+          "id": "taxonomie-status-labels-o3",
+          "text": "In der Schluss-Matrix werden die Labels zu drei Kategorien verdichtet: weiterhin relevant · moderner Ersatz · trifft nicht zu.",
+          "verdict": "true",
+          "explanation": "Die Pattern×Sprache-Matrix am Ende arbeitet mit genau diesen drei verdichteten Kategorien."
+        },
+        {
+          "id": "taxonomie-status-labels-o4",
+          "text": "[KONZEPT] bedeutet, dass das Muster vollständig verschwunden ist.",
+          "verdict": "false",
+          "explanation": "[KONZEPT] heißt das Gegenteil: Die Idee bleibt erhalten, nur die klassische GoF-Implementierung ist veraltet."
+        },
+        {
+          "id": "taxonomie-status-labels-o5",
+          "text": "[SPRACHABH.] bedeutet, dass ein Muster ausschließlich in Java gilt.",
+          "verdict": "false",
+          "explanation": "[SPRACHABH.] heißt, dass der Status je nach Sprache unterschiedlich ausfällt — nicht, dass das Muster auf Java beschränkt wäre."
+        },
+        {
+          "id": "taxonomie-status-labels-o6",
+          "text": "Der Talk verwendet fünf Status-Labels.",
+          "verdict": "false",
+          "explanation": "Es sind genau vier Labels: [ERSETZT], [KONZEPT], [RELEVANT] und [SPRACHABH.]."
+        },
+        {
+          "id": "taxonomie-status-labels-o7",
+          "text": "Welches Label der Builder bekommt, hängt von der betrachteten Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Der Builder trägt [SPRACHABH.], weil er in Java/Go/Rust ein nötiges Idiom bleibt, während named/default args ihn in Kotlin/TypeScript/Python auflösen."
+        },
+        {
+          "id": "taxonomie-status-labels-o8",
+          "text": "Ob Singleton als [ERSETZT] oder [KONZEPT] einzuordnen ist, hängt vom Blickwinkel ab.",
+          "verdict": "depends",
+          "explanation": "Der Talk vergibt beide Labels: Das Konstruktions-Idiom ist ersetzt (enum, Kotlin object), aber das eigentliche Problem — globaler, schwer mockbarer Zustand — verschwindet dadurch nicht; das löst erst DI."
+        }
+      ]
+    },
+    {
+      "id": "taxonomie-drei-stimmen",
+      "question": "Der Talk zitiert drei prominente Stimmen zur Pattern-Debatte. Welche Aussagen treffen zu?",
+      "difficulty": "easy",
+      "section": "Taxonomie & Status-Labels",
+      "explanation": "Norvig (1996), Graham (2002) und Gamma (2009) stellen aus unterschiedlichen Perspektiven dieselbe Diagnose: Ein erheblicher Teil der GoF-Muster kompensiert Sprachdefizite — aber keiner von ihnen erklärt alle Muster für tot.",
+      "options": [
+        {
+          "id": "taxonomie-drei-stimmen-o1",
+          "text": "Norvig stellte fest, dass 16 der 23 GoF-Muster in höheren Sprachen „either invisible or simpler“ sind.",
+          "verdict": "true",
+          "explanation": "Das ist Norvigs Kernbefund von 1996: 16 von 23 Mustern werden durch Features wie first-class functions oder first-class types unsichtbar oder einfacher."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o2",
+          "text": "Gamma sprach sich 2009 dafür aus, Singleton zu streichen — dessen Einsatz sei fast immer ein Design-Smell.",
+          "verdict": "true",
+          "explanation": "Das Zitat lautet „I'm in favor of dropping Singleton. Its use is almost always a design smell“ — von einem der vier GoF-Autoren selbst."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o3",
+          "text": "Graham nannte Muster im Code „a sign of trouble“ — ein Hinweis, dass man als „human compiler“ Makro-Expansionen von Hand erzeugt.",
+          "verdict": "true",
+          "explanation": "Grahams Lisp-Perspektive von 2002 sieht wiederkehrende Muster als Zeichen, dass die Sprache eine Abstraktion nicht ausdrücken kann — polemisch, aber dieselbe Diagnose."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o4",
+          "text": "Norvig erklärte alle 23 GoF-Muster für überflüssig.",
+          "verdict": "false",
+          "explanation": "Es sind 16 von 23 — ein hartes Drittel bleibt auch in dynamischen Sprachen als „echte“ Muster sprachunabhängig relevant."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o5",
+          "text": "Gamma hat 2009 das gesamte GoF-Buch widerrufen.",
+          "verdict": "false",
+          "explanation": "Im Gegenteil: Gamma betont zugleich die „enduring nature of good design“ an Mustern wie Adapter, Bridge und Proxy — er kritisiert einzelne Muster, nicht den Katalog."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o6",
+          "text": "Graham lobte Entwurfsmuster als Zeichen reifer Software-Architektur.",
+          "verdict": "false",
+          "explanation": "Graham sah Muster im Code als Warnsignal („sign of trouble“), nicht als Qualitätsmerkmal — die Sprache solle die Abstraktion übernehmen."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o7",
+          "text": "Ob Norvigs 16/23-Befund auf Deinen Stack zutrifft, hängt vom Featureset Deiner Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Die Substitution setzt first-class functions, first-class types bzw. Makros voraus — eine Sprache ohne diese Features behält mehr Muster als „echte“ Muster."
+        },
+        {
+          "id": "taxonomie-drei-stimmen-o8",
+          "text": "Ob ein konkreter Singleton in Deinem Code ein Design-Smell ist, hängt vom Einzelfall ab.",
+          "verdict": "depends",
+          "explanation": "Gamma sagt „almost always“, nicht „always“ — die Aussage ist eine starke Heuristik, kein Verbot ohne Ausnahme."
+        }
+      ]
+    },
+    {
+      "id": "taxonomie-schicht-zuordnung",
+      "question": "Welche Muster ordnet der Talk welcher Schicht zu?",
+      "difficulty": "easy",
+      "section": "Taxonomie & Status-Labels",
+      "explanation": "Schicht 1 enthält die Sprachdefizit-Notlösungen (u. a. Strategy, Observer, Singleton, Null Object), Schicht 2 die Strukturmuster (Adapter, Facade, Composite, Decorator, Proxy, Bridge) und Schicht 3 die Architektur-/DDD-Muster (Value Object, Repository, Active Record vs. Data Mapper).",
+      "options": [
+        {
+          "id": "taxonomie-schicht-zuordnung-o1",
+          "text": "Adapter, Facade und Composite gehören zu Schicht 2 (Strukturmuster).",
+          "verdict": "true",
+          "explanation": "Sie strukturieren Objektgeflechte sprachunabhängig und bleiben relevant — die Definition von Schicht 2."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o2",
+          "text": "Repository und Value Object gehören zu Schicht 3 (Architektur/DDD).",
+          "verdict": "true",
+          "explanation": "Beide stammen aus DDD-Taktik bzw. PoEAA und liegen damit auf der Architekturebene — Value Object ist dort die Ausnahme, deren Implementierung ersetzt wird."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o3",
+          "text": "Strategy, Observer und Singleton stehen in Schicht 1 (Sprachdefizit-Notlösungen).",
+          "verdict": "true",
+          "explanation": "Sie kompensieren fehlende Features wie first-class functions oder Sprach-Singletons und werden deshalb durch Sprachfeatures ersetzt."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o4",
+          "text": "Decorator zählt zu Schicht 1 und ist durch Sprachfeatures obsolet.",
+          "verdict": "false",
+          "explanation": "Decorator ist ein Schicht-2-Strukturmuster und trägt im Talk das Label [RELEVANT]."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o5",
+          "text": "Value Object steht in Schicht 1, weil Records es ersetzen.",
+          "verdict": "false",
+          "explanation": "Value Object gehört zu Schicht 3 — es ist dort die explizit benannte Ausnahme, bei der nur die Implementierung durch Records ersetzt wird."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o6",
+          "text": "Proxy gehört zu Schicht 3 (Architektur).",
+          "verdict": "false",
+          "explanation": "Proxy ist ein Schicht-2-Strukturmuster mit Label [KONZEPT]; dynamische Proxies und AOP implementieren es."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o7",
+          "text": "Ob Null Object für Dich „ersetzt“ ist, hängt von der Null-Safety Deiner Sprache ab.",
+          "verdict": "depends",
+          "explanation": "In Sprachen mit Nullability-Support ist Null Object moderner Ersatz; Sprachen ohne (etwa Go) zeigen in der Matrix weiterhin „relevant“."
+        },
+        {
+          "id": "taxonomie-schicht-zuordnung-o8",
+          "text": "Ob Visitor und State in der Pattern×Sprache-Matrix als „relevant“ oder „moderner Ersatz“ erscheinen, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Sprachen ohne ADTs (wie Go) zeigen bei Visitor/State mehr „weiterhin relevant“, Sprachen mit sealed types + Pattern Matching den modernen Ersatz."
+        }
+      ]
+    },
+    {
+      "id": "taxonomie-faktencheck-thesen",
+      "question": "Der Talk prüft sechs verbreitete Thesen im Faktencheck. Welche Aussagen geben das Ergebnis korrekt wieder?",
+      "difficulty": "medium",
+      "section": "Taxonomie & Status-Labels",
+      "explanation": "Vier der sechs Thesen entpuppen sich als „falsche Freunde“ — gleiches Wort, anderes Konzept; korrekt sind nur „Singleton ← Java enum“ und (mit Einschränkung) die Spring-DI-Scope-Analogie.",
+      "options": [
+        {
+          "id": "taxonomie-faktencheck-thesen-o1",
+          "text": "„Singleton ← Java enum“ ist korrekt — Bloch nennt es in Effective Java (Item 3) das beste Singleton-Idiom.",
+          "verdict": "true",
+          "explanation": "Diese These besteht den Faktencheck: Das enum-Idiom ist JLS-fundiert und Blochs Empfehlung für Singletons in Java."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o2",
+          "text": "„Visitor ← Lambda“ ist größtenteils falsch — ein Lambda deckt nur den Single-Method-Fall ab.",
+          "verdict": "true",
+          "explanation": "Der korrekte Ersatz für Visitor sind sealed types + Pattern Matching; das Lambda ersetzt nur den degenerierten Ein-Methoden-Fall."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o3",
+          "text": "„Singleton ↔ Spring DI-Scope“ ist korrekt mit Einschränkung: Der Scope gilt per Container/Bean, nicht per ClassLoader wie bei GoF.",
+          "verdict": "true",
+          "explanation": "Spring garantiert eine Instanz pro Container und Bean-Definition — das ist eine andere Eindeutigkeitsgrenze als das ClassLoader-weite GoF-Singleton."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o4",
+          "text": "„Singleton ← Companion Object (Kotlin)“ ist begrifflich korrekt.",
+          "verdict": "false",
+          "explanation": "Der Faktencheck stuft die These als begrifflich falsch ein: Kotlins Singleton ist die object-Deklaration; companion object entspricht eher statischen Membern."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o5",
+          "text": "Die geplante Java-null-Safety erzwingt Builder-Pflichtfelder zur Compile-Zeit.",
+          "verdict": "false",
+          "explanation": "Der Faktencheck verneint das ausdrücklich: kein Typestate — die Prüfung greift erst zur Laufzeit bei build()."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o6",
+          "text": "Spring-Proxies „ersetzen“ das Proxy-Muster — so formuliert es der Talk als präzise Aussage.",
+          "verdict": "false",
+          "explanation": "Der Talk nennt den Begriff „ersetzen“ zu grob: Dynamische Proxies implementieren das Proxy-Muster, und AOP industrialisiert es."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o7",
+          "text": "Ob „Lambda ersetzt Visitor“ stimmt, hängt vom konkreten Fall ab.",
+          "verdict": "depends",
+          "explanation": "Im degenerierten Ein-Methoden-Fall trifft es zu (dann ist es faktisch Strategy); für echtes double dispatch über mehrere Fälle braucht es ADTs mit Pattern Matching."
+        },
+        {
+          "id": "taxonomie-faktencheck-thesen-o8",
+          "text": "Ob ein Spring-Bean „ein Singleton“ ist, hängt vom betrachteten Geltungsbereich ab.",
+          "verdict": "depends",
+          "explanation": "Pro Container und Bean-Definition ja — über mehrere Container oder im GoF-Sinn (per ClassLoader) nein; genau diese Einschränkung macht der Faktencheck."
+        }
+      ]
+    },
+    {
+      "id": "schicht1-singleton-ersatz",
+      "question": "Was sagt der Talk über Singleton und seine modernen Ersetzungen?",
+      "difficulty": "easy",
+      "section": "Schicht 1 ersetzt",
+      "explanation": "Das enum-Idiom ist Blochs Empfehlung (Effective Java Item 3) und wie alle drei Java-Idiome JLS-fundiert; Kotlin bietet mit object einen Sprach-Singleton — aber das eigentliche Problem des globalen, schwer mockbaren Zustands löst erst Dependency Injection.",
+      "options": [
+        {
+          "id": "schicht1-singleton-ersatz-o1",
+          "text": "In Java gilt das enum-Singleton als bestes Idiom — Bloch, Effective Java Item 3.",
+          "verdict": "true",
+          "explanation": "Der Talk führt das enum-Idiom als Blochs Empfehlung und als korrekt eingestufte Faktencheck-These an."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o2",
+          "text": "Kotlin bietet mit der object-Deklaration einen Singleton auf Sprachebene.",
+          "verdict": "true",
+          "explanation": "object ist Kotlins eingebauter Sprach-Singleton — nicht zu verwechseln mit companion object."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o3",
+          "text": "Globaler, schwer mockbarer Zustand verschwindet durch das enum-Idiom nicht — das löst erst DI.",
+          "verdict": "true",
+          "explanation": "Die Idiome lösen nur das Konstruktionsproblem; das Design-Problem des globalen Zustands adressiert erst Dependency Injection."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o4",
+          "text": "companion object ist Kotlins Singleton-Deklaration.",
+          "verdict": "false",
+          "explanation": "Kotlins Singleton ist object; companion object entspricht ungefähr statischen Membern — das ist der „falsche Freund“ aus dem Talk."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o5",
+          "text": "Das enum-Singleton-Idiom beruht auf undefiniertem Verhalten der JVM.",
+          "verdict": "false",
+          "explanation": "Alle drei im Talk gezeigten Java-Idiome sind JLS-fundiert — gerade das macht sie tragfähig."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o6",
+          "text": "Der Init-Zeitpunkt des enum-Felds lässt sich exakt steuern.",
+          "verdict": "false",
+          "explanation": "Das enum-Feld ist zwar lazy, aber der Init-Zeitpunkt ist nicht kontrollierbar — der Talk verweist dafür auf Lazy Initialization."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o7",
+          "text": "Ob Singleton bei Dir [ERSETZT] oder [KONZEPT] ist, hängt von Sprache und Blickwinkel ab.",
+          "verdict": "depends",
+          "explanation": "Kotlin ersetzt das Idiom per Sprachfeature, Java per etabliertem Idiom — und konzeptionell bleibt das Problem des globalen Zustands in beiden Fällen bestehen."
+        },
+        {
+          "id": "schicht1-singleton-ersatz-o8",
+          "text": "Ob Du überhaupt ein Singleton-Idiom brauchst, hängt davon ab, ob ein DI-Container den Lebenszyklus verwaltet.",
+          "verdict": "depends",
+          "explanation": "Mit Container-verwalteten Singleton-Scopes entfällt das handgeschriebene Idiom; ohne Container bleibt enum/object das Mittel der Wahl."
+        }
+      ]
+    },
+    {
+      "id": "schicht1-visitor-expression-problem",
+      "question": "Visitor gilt im Talk als „der Lehrfall“. Welche Aussagen dazu treffen zu?",
+      "difficulty": "medium",
+      "section": "Schicht 1 ersetzt",
+      "explanation": "Visitor löst das Expression Problem über double dispatch; der moderne Ersatz sind sealed types + Pattern Matching (ADTs) — ein Lambda ersetzt nur den degenerierten Ein-Methoden-Fall, und dann ist es faktisch Strategy.",
+      "options": [
+        {
+          "id": "schicht1-visitor-expression-problem-o1",
+          "text": "Visitor löst das Expression Problem über double dispatch.",
+          "verdict": "true",
+          "explanation": "Genau deshalb greift „Lambda ersetzt Visitor“ zu kurz — das Muster adressiert mehr als eine austauschbare Methode."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o2",
+          "text": "Der moderne Ersatz für Visitor sind sealed types plus Pattern Matching (ADTs).",
+          "verdict": "true",
+          "explanation": "ADTs mit erschöpfendem Pattern Matching drücken die Fallunterscheidung direkt aus, die Visitor über accept/visit-Paare simuliert."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o3",
+          "text": "Ein Lambda ersetzt nur den degenerierten Ein-Methoden-Fall — dann ist es faktisch Strategy.",
+          "verdict": "true",
+          "explanation": "Sobald nur eine einzige Methode variiert, liegt gar kein echter Visitor mehr vor; der Mehr-Fall-Kern des Musters braucht Pattern Matching."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o4",
+          "text": "Der Faktencheck des Talks stuft „Visitor ← Lambda“ als vollständig korrekt ein.",
+          "verdict": "false",
+          "explanation": "Die These ist als „größtenteils falsch“ eingestuft — das Lambda deckt nur den Single-Method-Fall ab."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o5",
+          "text": "In Java 21 ist Visitor alternativlos, weil Pattern Matching fehlt.",
+          "verdict": "false",
+          "explanation": "Sealed types gibt es ab Java 17 und Pattern Matching für switch ist ab Java 21 final — genau damit ist Visitor in modernem Java ersetzt."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o6",
+          "text": "Pattern Matching für switch ist in Java seit Version 8 final.",
+          "verdict": "false",
+          "explanation": "Final ist Pattern Matching für switch erst ab Java 21; Java 8 brachte Lambdas, kein Pattern Matching."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o7",
+          "text": "Ob Visitor in einer Sprache noch idiomatisch ist, hängt davon ab, ob sie sum types bietet.",
+          "verdict": "depends",
+          "explanation": "Mit ADTs und Pattern Matching ist Visitor ersetzt; in Sprachen ohne sum types — der Talk nennt Go — bleibt das Muster relevant."
+        },
+        {
+          "id": "schicht1-visitor-expression-problem-o8",
+          "text": "Ob Du in Java sealed + switch statt Visitor einsetzen kannst, hängt von Deinem Java-Level ab.",
+          "verdict": "depends",
+          "explanation": "Sealed types verlangen mindestens Java 17, finales Pattern Matching für switch Java 21 — auf älteren Versionen bleibt nur das klassische Muster."
+        }
+      ]
+    },
+    {
+      "id": "schicht1-null-object",
+      "question": "Wie ordnet der Talk das Null-Object-Muster ein?",
+      "difficulty": "medium",
+      "section": "Schicht 1 ersetzt",
+      "explanation": "Null Object steht in Schicht 1 und trägt das Label [ERSETZT], weil Null-Safety-Features das kompensierte Defizit beheben — in Sprachen ohne Nullability-Support (wie Go) bleibt das Muster dagegen relevant.",
+      "options": [
+        {
+          "id": "schicht1-null-object-o1",
+          "text": "Null Object gehört zu Schicht 1, den Sprachdefizit-Notlösungen.",
+          "verdict": "true",
+          "explanation": "Der Talk listet Null Object explizit unter den Schicht-1-Mustern, die fehlende Features wie null-safety kompensieren."
+        },
+        {
+          "id": "schicht1-null-object-o2",
+          "text": "Null Object trägt im Talk das Label [ERSETZT].",
+          "verdict": "true",
+          "explanation": "Die Folie führt das Muster als „Null Object · [ERSETZT]“ — der Ersatz kommt durch Null-Safety auf Sprachebene."
+        },
+        {
+          "id": "schicht1-null-object-o3",
+          "text": "In der Pattern×Sprache-Matrix zeigt Go bei Null Object eher „weiterhin relevant“.",
+          "verdict": "true",
+          "explanation": "Sprachen ohne ADTs und Nullability-Support zeigen laut Talk mehr „relevant“-Einträge bei Visitor, State und Null Object."
+        },
+        {
+          "id": "schicht1-null-object-o4",
+          "text": "Null Object ist ein Schicht-2-Strukturmuster.",
+          "verdict": "false",
+          "explanation": "Es steht in Schicht 1 — es kompensiert ein Sprachdefizit, statt Objektgeflechte zu strukturieren."
+        },
+        {
+          "id": "schicht1-null-object-o5",
+          "text": "Null Object trägt das Label [RELEVANT] und bleibt überall idiomatisch.",
+          "verdict": "false",
+          "explanation": "Das Label ist [ERSETZT]; idiomatisch bleibt es nur dort, wo die Sprache keine Null-Safety mitbringt."
+        },
+        {
+          "id": "schicht1-null-object-o6",
+          "text": "Die Matrix zeigt für Null Object in allen Sprachen denselben Status.",
+          "verdict": "false",
+          "explanation": "Gerade der Sprachvergleich ist der Punkt der Matrix — Go fällt bei Null Object anders aus als Sprachen mit Nullability-Support."
+        },
+        {
+          "id": "schicht1-null-object-o7",
+          "text": "Ob Null Object noch idiomatisch ist, hängt von der Null-Safety der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Mit eingebauter Null-Safety oder Optional-artigen Typen ist das Muster ersetzt; ohne diese Features bleibt es ein legitimer Workaround."
+        },
+        {
+          "id": "schicht1-null-object-o8",
+          "text": "Ob Du in Java heute noch ein Null Object brauchst, hängt vom Umfeld ab.",
+          "verdict": "depends",
+          "explanation": "Mit Optional als Rückgabetyp und Null-Annotations-Tooling ist das Muster meist überflüssig; in unannotierten Altbeständen kann es weiterhin Dienste leisten."
+        }
+      ]
+    },
+    {
+      "id": "builder-klassisch-laufzeit",
+      "question": "Wann prüft der klassische Builder seine Pflichtfelder — und was folgt daraus?",
+      "difficulty": "easy",
+      "section": "Builder & Lazy Init",
+      "explanation": "Der klassische Builder verschiebt die Pflichtfeld-Prüfung in build(): Fehlt ein Pflichtfeld, fliegt erst zur Laufzeit eine Exception — das ist die schwächste Garantie-Ebene, denn der Compiler hilft nicht.",
+      "options": [
+        {
+          "id": "builder-klassisch-laufzeit-o1",
+          "text": "Der klassische Builder prüft Pflichtfelder erst in build() — zur Laufzeit.",
+          "verdict": "true",
+          "explanation": "Die Prüfung ist in die build()-Methode verschoben; vor dem Aufruf merkt niemand, dass ein Pflichtfeld fehlt."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o2",
+          "text": "Das ist die schwächste Garantie-Ebene — der Compiler hilft nicht.",
+          "verdict": "true",
+          "explanation": "Genau hier setzt der Staged Builder an, der die Garantie auf die Compile-Zeit hebt."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o3",
+          "text": "Fehlt ein Pflichtfeld, fliegt beim build()-Aufruf eine Exception.",
+          "verdict": "true",
+          "explanation": "Die Pflichtfeld-Tabelle des Talks führt den klassischen Java-Builder als „Laufzeit (Exception)“."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o4",
+          "text": "Der klassische Builder erzwingt Pflichtfelder zur Compile-Zeit.",
+          "verdict": "false",
+          "explanation": "Compile-Zeit-Erzwingung leistet erst der Staged Builder mit seiner Interface-Kette — der klassische prüft erst zur Laufzeit."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o5",
+          "text": "Der Compiler meldet ein vergessenes Pflichtfeld beim klassischen Builder als Fehler.",
+          "verdict": "false",
+          "explanation": "Für den Compiler ist jede Setter-Reihenfolge gültig — der Fehler zeigt sich erst, wenn build() zur Laufzeit wirft."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o6",
+          "text": "Der klassische Builder trägt im Talk das Label [ERSETZT].",
+          "verdict": "false",
+          "explanation": "Er trägt [SPRACHABH.] — in Java/Go/Rust bleibt das Idiom nötig, in Kotlin/TypeScript/Python lösen named/default args es auf."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o7",
+          "text": "Ob Du überhaupt einen Builder brauchst, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "In Sprachen mit named + optionalen Parametern ist der Builder schlicht überflüssig — Pflichtfelder sind dort „kostenlos“ compile-zeit-erzwungen."
+        },
+        {
+          "id": "builder-klassisch-laufzeit-o8",
+          "text": "Auf welcher Ebene Pflichtfelder durchgesetzt werden, hängt von Sprache und gewähltem Idiom ab.",
+          "verdict": "depends",
+          "explanation": "Der Talk liest den Builder als Landkarte: Dieselbe Intention landet je nach Sprache und Idiom auf Laufzeit- oder Compile-Zeit-Ebene."
+        }
+      ]
+    },
+    {
+      "id": "builder-staged-compile-zeit",
+      "question": "Wie hebt der Staged Builder die Pflichtfeld-Garantie auf die Compile-Zeit?",
+      "difficulty": "medium",
+      "section": "Builder & Lazy Init",
+      "explanation": "Der Staged Builder kodiert die Pflicht-Reihenfolge in eine Interface-Kette — jede Stufe gibt nur das Interface der nächsten zurück, sodass der Compiler die Pflichtfelder erzwingt; der Preis sind N Interfaces Boilerplate.",
+      "options": [
+        {
+          "id": "builder-staged-compile-zeit-o1",
+          "text": "Der Staged Builder kodiert die Pflicht-Reihenfolge in eine Interface-Kette: Jede Stufe gibt nur das Interface der nächsten zurück.",
+          "verdict": "true",
+          "explanation": "Genau diese Kette macht ein Überspringen unmöglich — der Typ jeder Stufe erlaubt nur den nächsten Pflicht-Schritt."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o2",
+          "text": "Dadurch erzwingt der Compiler die Pflichtfelder — die Garantie liegt auf Compile-Zeit-Ebene.",
+          "verdict": "true",
+          "explanation": "Ein Aufruf mit fehlendem Pflichtfeld kompiliert schlicht nicht — die Pflichtfeld-Tabelle führt den Staged Builder als „Compile-Zeit“."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o3",
+          "text": "Der Preis sind N Interfaces Boilerplate.",
+          "verdict": "true",
+          "explanation": "Pro Pflicht-Stufe entsteht ein Interface — die Compile-Zeit-Garantie wird mit Schreibaufwand bezahlt."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o4",
+          "text": "Der Staged Builder prüft Pflichtfelder wie der klassische erst in build() zur Laufzeit.",
+          "verdict": "false",
+          "explanation": "Das ist genau der Unterschied: Der Staged Builder verlagert die Prüfung in das Typsystem, der klassische in die Laufzeit."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o5",
+          "text": "Die Compile-Zeit-Garantie des Staged Builders ist gratis zu haben.",
+          "verdict": "false",
+          "explanation": "Sie kostet N Interfaces Boilerplate — „kostenlos“ ist die Compile-Zeit-Erzwingung nur über named/default args in Sprachen, die sie bieten."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o6",
+          "text": "Named/default args sind eine Laufzeit-Lösung für Pflichtfelder.",
+          "verdict": "false",
+          "explanation": "Named + default Parameter erzwingen Pflichtfelder zur Compile-Zeit — und lösen das Builder-Muster dabei ganz auf."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o7",
+          "text": "Ob sich der Staged-Builder-Aufwand lohnt, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "In Kotlin oder Scala machen named/default args das Muster überflüssig; in Java ist die Interface-Kette der Weg zur Compile-Zeit-Garantie."
+        },
+        {
+          "id": "builder-staged-compile-zeit-o8",
+          "text": "Ob Du klassisch oder staged baust, hängt vom Trade-off zwischen Garantie-Ebene und Boilerplate ab.",
+          "verdict": "depends",
+          "explanation": "Der klassische Builder ist billiger zu schreiben, prüft aber erst zur Laufzeit; der Staged Builder kauft die Compile-Zeit-Garantie mit N Interfaces."
+        }
+      ]
+    },
+    {
+      "id": "builder-pflichtfeld-tabelle",
+      "question": "Die Pflichtfeld-Tabelle des Talks vergleicht Idiome über Sprachen hinweg. Welche Aussagen geben sie korrekt wieder?",
+      "difficulty": "medium",
+      "section": "Builder & Lazy Init",
+      "explanation": "Die Tabelle ist die Landkarte des Talks: Kotlin/Scala und TypeScript erreichen Compile-Zeit-Durchsetzung, Python prüft dynamisch zur Laufzeit, Java-Records nur positional — und die geplante Java-null-Safety landet auf der schwächsten Ebene.",
+      "options": [
+        {
+          "id": "builder-pflichtfeld-tabelle-o1",
+          "text": "Kotlin und Scala erzwingen Pflichtfelder über named + default Params zur Compile-Zeit.",
+          "verdict": "true",
+          "explanation": "Fehlt ein Pflicht-Argument, kompiliert der Aufruf nicht — und das ganz ohne Builder-Boilerplate."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o2",
+          "text": "Python prüft Pflicht-kwargs erst zur Laufzeit — es fliegt ein TypeError.",
+          "verdict": "true",
+          "explanation": "Als dynamische Sprache meldet Python fehlende Pflicht-Argumente erst beim Aufruf, nicht beim Übersetzen."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o3",
+          "text": "TypeScript erreicht Compile-Zeit-Durchsetzung über ein Options-Objekt mit optionalen Props.",
+          "verdict": "true",
+          "explanation": "Der Typ des Options-Objekts unterscheidet Pflicht- von optionalen Properties — der Compiler prüft das beim Aufruf."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o4",
+          "text": "Java-Records bieten named und default Parameter.",
+          "verdict": "false",
+          "explanation": "Records und Konstruktoren erzwingen zwar zur Compile-Zeit, aber nur positional — named/default args fehlen Java."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o5",
+          "text": "Python prüft @dataclass-Pflichtfelder bereits zur Compile-Zeit.",
+          "verdict": "false",
+          "explanation": "Die Tabelle führt Python ausdrücklich unter „Laufzeit (TypeError, dynamisch)“ — eine Compile-Zeit-Prüfung gibt es dort nicht."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o6",
+          "text": "Go prüft functional options vollständig über das Typsystem.",
+          "verdict": "false",
+          "explanation": "Compile-geprüft sind in Go nur Pflichtfelder als Positionsparameter — die functional options selbst bleiben ungeprüft."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o7",
+          "text": "Auf welcher Ebene Rust durchsetzt, hängt vom gewählten Idiom ab.",
+          "verdict": "depends",
+          "explanation": "Der pragmatische Weg mit build() -> Result prüft zur Laufzeit; der typestate-Ansatz (typed-builder, PhantomData) erzwingt zur Compile-Zeit."
+        },
+        {
+          "id": "builder-pflichtfeld-tabelle-o8",
+          "text": "Ob Compile-Zeit-Pflichtfelder mit Komfort (beliebige Reihenfolge, Defaults) zu haben sind, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Java schafft Compile-Zeit nur positional oder per Staged-Boilerplate; Kotlin/Scala bekommen Komfort und Garantie gleichzeitig über named/default args."
+        }
+      ]
+    },
+    {
+      "id": "lazy-constant-luecke",
+      "question": "Welche Lücke schließt LazyConstant (Java, Preview) im Vergleich der Lazy-Init-Mechanismen?",
+      "difficulty": "hard",
+      "section": "Builder & Lazy Init",
+      "explanation": "LazyConstant kombiniert als final-Feld-getragene Lazy-Konstante drei Eigenschaften, die bisher kein Mechanismus gleichzeitig bot: lazy, thread-safe und constant-foldbar — ohne die static-only-Beschränkung des Holder-Idioms; mutable Träger wie volatile oder AtomicReference darf der JIT dagegen nie wegoptimieren.",
+      "options": [
+        {
+          "id": "lazy-constant-luecke-o1",
+          "text": "LazyConstant ist lazy, thread-safe und constant-foldbar zugleich.",
+          "verdict": "true",
+          "explanation": "Genau diese Dreier-Kombination ist die Lücke, die der Vergleich der Mechanismen sichtbar macht — kein klassisches Idiom bietet alle drei."
+        },
+        {
+          "id": "lazy-constant-luecke-o2",
+          "text": "LazyConstant hat nicht die static-only-Beschränkung des Holder-Idioms — es gilt für statische UND Instanz-Fälle.",
+          "verdict": "true",
+          "explanation": "Die Vergleichstabelle führt LazyConstant mit Geltung „beides“, während das Holder-Idiom nur statisch funktioniert."
+        },
+        {
+          "id": "lazy-constant-luecke-o3",
+          "text": "Mutable Träger wie volatile oder AtomicReference darf der JIT nie wegfalten — final-getragene Lazy-Konstanten schon.",
+          "verdict": "true",
+          "explanation": "Constant Folding setzt voraus, dass sich der Wert nie mehr ändern kann; genau das garantiert der final-Träger von LazyConstant."
+        },
+        {
+          "id": "lazy-constant-luecke-o4",
+          "text": "Das Holder-Idiom funktioniert auch für Instanzfelder.",
+          "verdict": "false",
+          "explanation": "Das Holder-Idiom ist auf den statischen Fall beschränkt — das ist gerade die Einschränkung, die LazyConstant aufhebt."
+        },
+        {
+          "id": "lazy-constant-luecke-o5",
+          "text": "Double-Checked Locking ist constant-foldbar.",
+          "verdict": "false",
+          "explanation": "DCL arbeitet mit einem mutablen (volatile) Träger, den der JIT nie wegoptimieren darf — die Folding-Spalte sagt klar „nein“."
+        },
+        {
+          "id": "lazy-constant-luecke-o6",
+          "text": "LazyConstant ist seit Java 8 final verfügbar.",
+          "verdict": "false",
+          "explanation": "LazyConstant ist ein Preview-Feature — der Talk verweist auf die JEP-Reihe 502/526/531 (Stable Values → Lazy Constants)."
+        },
+        {
+          "id": "lazy-constant-luecke-o7",
+          "text": "Ob Constant Folding überhaupt erreichbar ist, hängt vom Träger des Werts ab.",
+          "verdict": "depends",
+          "explanation": "Nur final- bzw. static-getragene Werte kommen infrage (Holder-Idiom, LazyConstant); jeder mutable Träger schließt das Folding aus."
+        },
+        {
+          "id": "lazy-constant-luecke-o8",
+          "text": "Ob Du LazyConstant einsetzen kannst, hängt von Deinem JDK und dessen Preview-Status ab.",
+          "verdict": "depends",
+          "explanation": "Als Preview-Feature steht es nur in aktuellen JDKs mit aktivierten Preview-Features zur Verfügung — auf älteren Versionen bleiben Holder-Idiom oder DCL."
+        }
+      ]
+    },
+    {
+      "id": "meta-substrat-spektrum",
+      "question": "Der Talk ordnet vier Metaprogramming-Techniken auf einem Zeit-Spektrum an. Welche Aussagen treffen zu?",
+      "difficulty": "medium",
+      "section": "Metaprogramming-Substrat",
+      "explanation": "Dynamische Proxies und Spring AOP greifen zur Laufzeit, Annotation Processing zur Compile-Zeit, Bytecode-Weaving zur Compile-, Load- oder Laufzeit — gemeinsam ziehen sie Cross-Cutting-Belange aus handgeschriebenen Klassen heraus, und je später und tiefer der Eingriff, desto größer Reichweite und Kosten.",
+      "options": [
+        {
+          "id": "meta-substrat-spektrum-o1",
+          "text": "Alle vier Techniken ziehen Cross-Cutting-Belange (Transaktionen, Caching, Security, Mapping, DI) aus handgeschriebenen Klassen heraus.",
+          "verdict": "true",
+          "explanation": "Das ist das gemeinsame Merkmal, das der Talk als „Substrat“ bezeichnet — der Unterschied liegt nur im Eingriffszeitpunkt."
+        },
+        {
+          "id": "meta-substrat-spektrum-o2",
+          "text": "Dynamische Proxies und Spring AOP greifen zur Laufzeit, Annotation Processing zur Compile-Zeit.",
+          "verdict": "true",
+          "explanation": "Genau so ordnet das Spektrum die Techniken an — APT erzeugt Quellcode beim Übersetzen, Proxies entstehen erst im laufenden Prozess."
+        },
+        {
+          "id": "meta-substrat-spektrum-o3",
+          "text": "Bytecode-Weaving kann zur Compile-, Load- oder Laufzeit eingreifen.",
+          "verdict": "true",
+          "explanation": "AspectJ unterstützt Compile-Time- und Load-Time-Weaving (per Java-Agent) — deshalb steht Weaving im Spektrum mit allen drei Zeitpunkten."
+        },
+        {
+          "id": "meta-substrat-spektrum-o4",
+          "text": "Annotation Processing greift zur Laufzeit in den laufenden Prozess ein.",
+          "verdict": "false",
+          "explanation": "APT läuft im Compiler und erzeugt generierten Quellcode — zur Laufzeit ist davon nichts „magisch“ mehr aktiv."
+        },
+        {
+          "id": "meta-substrat-spektrum-o5",
+          "text": "Je später der Eingriff, desto geringer die Reichweite.",
+          "verdict": "false",
+          "explanation": "Der Talk sagt das Gegenteil: Je später und tiefer der Eingriff, desto größer die Reichweite — und desto höher die Kosten an Build-Komplexität, Debugging und „Magie“."
+        },
+        {
+          "id": "meta-substrat-spektrum-o6",
+          "text": "Spring AOP basiert auf Annotation Processing.",
+          "verdict": "false",
+          "explanation": "Spring AOP arbeitet mit Laufzeit-Proxies plus Advice — Annotation Processing ist der andere, Compile-Zeit-Punkt im Spektrum (Lombok, MapStruct, Dagger)."
+        },
+        {
+          "id": "meta-substrat-spektrum-o7",
+          "text": "Welche Technik passt, hängt vom Trade-off zwischen Reichweite und Kosten ab.",
+          "verdict": "depends",
+          "explanation": "Weaving erreicht alles, kostet aber Build-/Agent-Komplexität und Debugging-Schmerz; Proxies sind billig, enden aber an Interface- und final-Grenzen."
+        },
+        {
+          "id": "meta-substrat-spektrum-o8",
+          "text": "Ob Dein Framework Cross-Cutting zur Laufzeit oder zur Compile-Zeit verdrahtet, hängt vom Stack ab.",
+          "verdict": "depends",
+          "explanation": "Klassisches Spring nutzt Laufzeit-Proxies; Micronaut, Quarkus und Spring AOT/Native verlagern DI/AOP zur Compile-Zeit — getrieben von Startup-Zeit und GraalVM."
+        }
+      ]
+    },
+    {
+      "id": "meta-self-invocation",
+      "question": "Self-Invocation: Was passiert bei einem Selbstaufruf durch eine geproxyte Methode?",
+      "difficulty": "hard",
+      "section": "Metaprogramming-Substrat",
+      "explanation": "Ob ein Selbstaufruf interzipiert wird, hängt allein an der Receiver-Bindung von this: Beim Java-Proxy zeigt this auf das Target, der Aspekt wird still umgangen — beim JS-Proxy zeigt this auf den Proxy, die Trap wird erneut betreten.",
+      "options": [
+        {
+          "id": "meta-self-invocation-o1",
+          "text": "Beim JDK-Dynamic-Proxy zeigt this auf das Target — ein Selbstaufruf umgeht den Aspekt als stiller Bug.",
+          "verdict": "true",
+          "explanation": "Da this nicht der Proxy ist, läuft der interne Aufruf am Interceptor vorbei — ohne Fehler, ohne Warnung."
+        },
+        {
+          "id": "meta-self-invocation-o2",
+          "text": "Beim JS-Proxy zeigt this auf den Proxy — ein Selbstaufruf re-entert die Trap.",
+          "verdict": "true",
+          "explanation": "Die andere Receiver-Bindung führt zum gegenteiligen Verhalten: Der interne Aufruf geht wieder durch den Proxy."
+        },
+        {
+          "id": "meta-self-invocation-o3",
+          "text": "Entscheidend ist die Receiver-Bindung von this — nicht das bloße Vorhandensein eines Proxys.",
+          "verdict": "true",
+          "explanation": "Das ist das Kernargument des Talks: Dieselbe Proxy-Idee verhält sich je nach this-Semantik der Plattform komplett unterschiedlich."
+        },
+        {
+          "id": "meta-self-invocation-o4",
+          "text": "In Java re-entert ein Selbstaufruf immer den Proxy.",
+          "verdict": "false",
+          "explanation": "Genau umgekehrt: In Java zeigt this auf das Target, der Selbstaufruf läuft am Proxy vorbei."
+        },
+        {
+          "id": "meta-self-invocation-o5",
+          "text": "Das Problem entsteht, weil beim Selbstaufruf gar kein Proxy existiert.",
+          "verdict": "false",
+          "explanation": "Der Proxy existiert — er wird nur nicht durchlaufen, weil this auf das ungeproxte Target gebunden ist."
+        },
+        {
+          "id": "meta-self-invocation-o6",
+          "text": "Spring AOP meldet Self-Invocation als Compile-Fehler.",
+          "verdict": "false",
+          "explanation": "Es gibt weder Compile-Fehler noch Laufzeit-Warnung — gerade deshalb nennt der Talk den umgangenen Aspekt einen stillen Bug."
+        },
+        {
+          "id": "meta-self-invocation-o7",
+          "text": "Die Aussage „ein Selbstaufruf re-entert den Aspekt“ ist sprachabhängig.",
+          "verdict": "depends",
+          "explanation": "In Java (this = Target) ist sie falsch, in JavaScript (this = Proxy) richtig — die Receiver-Semantik der Sprache entscheidet."
+        },
+        {
+          "id": "meta-self-invocation-o8",
+          "text": "Ob eine Annotation wie @Transactional bei Self-Invocation greift, hängt vom Mechanismus ab.",
+          "verdict": "depends",
+          "explanation": "Proxy-basiertes Spring AOP wird umgangen; AspectJ-Bytecode-Weaving erfasst mit vollem Joinpoint-Umfang auch Self-Invocation."
+        }
+      ]
+    },
+    {
+      "id": "meta-proxies-implementieren",
+      "question": "„Proxies ersetzen das Proxy-Muster“ — wie korrigiert der Talk diese Formulierung?",
+      "difficulty": "hard",
+      "section": "Metaprogramming-Substrat",
+      "explanation": "Dynamische Proxies ersetzen das Proxy-Muster nicht, sie implementieren es — und subsumieren dabei Decorator; Spring AOP industrialisiert dieses Substrat mit dokumentierten Failure Modes, während die Industrie DI/AOP zunehmend zur Compile-Zeit verlagert.",
+      "options": [
+        {
+          "id": "meta-proxies-implementieren-o1",
+          "text": "Dynamische Proxies implementieren das Proxy-Muster, statt es zu ersetzen.",
+          "verdict": "true",
+          "explanation": "Das ist die zentrale Begriffskorrektur des Talks: Das Muster lebt im generierten Code weiter — niemand schreibt es nur noch von Hand."
+        },
+        {
+          "id": "meta-proxies-implementieren-o2",
+          "text": "Dynamische Proxies subsumieren auch das Decorator-Muster.",
+          "verdict": "true",
+          "explanation": "Ein generischer Interceptor um ein Zielobjekt deckt genau den Anwendungsfall ab, den handgeschriebene Decorator-Ketten bedienen."
+        },
+        {
+          "id": "meta-proxies-implementieren-o3",
+          "text": "Spring AOP industrialisiert das Substrat — mit dokumentierten Failure Modes.",
+          "verdict": "true",
+          "explanation": "Self-Invocation und das Reihenfolge-Problem sind genau solche dokumentierten Failure Modes der industrialisierten Proxy-Maschinerie."
+        },
+        {
+          "id": "meta-proxies-implementieren-o4",
+          "text": "Im Faktencheck gilt „Spring ersetzt Muster“ als präzise Formulierung.",
+          "verdict": "false",
+          "explanation": "Der Faktencheck stuft den Begriff als zu grob ein — implementieren und industrialisieren sind die treffenden Verben."
+        },
+        {
+          "id": "meta-proxies-implementieren-o5",
+          "text": "Wegen der dynamischen Proxies trägt das Proxy-Muster im Talk das Label [ERSETZT].",
+          "verdict": "false",
+          "explanation": "Proxy bleibt [KONZEPT] — die Idee ist quicklebendig, nur die Implementierung übernimmt das Substrat."
+        },
+        {
+          "id": "meta-proxies-implementieren-o6",
+          "text": "Beim Bytecode-Weaving entspricht der ausgeführte Bytecode exakt dem geschriebenen Quellcode.",
+          "verdict": "false",
+          "explanation": "Gerade nicht: Ausgeführter Bytecode ≠ geschriebener Quellcode — das sind die Debugging-Kosten, die der Talk dem Weaving zuschreibt."
+        },
+        {
+          "id": "meta-proxies-implementieren-o7",
+          "text": "Ob Dein Cross-Cutting per Laufzeit-Proxy oder zur Compile-Zeit entsteht, hängt vom Framework ab.",
+          "verdict": "depends",
+          "explanation": "Klassisches Spring arbeitet mit Laufzeit-Proxies; Micronaut, Quarkus und Spring AOT/Native verlagern es zur Compile-Zeit — getrieben von Startup-Zeit und GraalVM."
+        },
+        {
+          "id": "meta-proxies-implementieren-o8",
+          "text": "Ob ein Proxy noch von Hand geschrieben werden muss, hängt vom Ökosystem ab.",
+          "verdict": "depends",
+          "explanation": "Auf der JVM generieren JDK-Proxies, CGLIB oder ByteBuddy die Implementierung; ohne solches Substrat bleibt das Muster Handarbeit."
+        }
+      ]
+    },
+    {
+      "id": "transfer-records-value-object",
+      "question": "Brücke zum Null-Safety-Talk: Was leisten Records — und was nicht?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Records ersetzen die Value-Object-Boilerplate (deshalb das Label [ERSETZT] für die Implementierung) und im Lombok-Vergleich @Data/@Value — aber nicht @Builder oder @Slf4j; für DTOs und Projections sind sie ideal, als JPA-@Entity dagegen ungeeignet (final, kein No-Arg-Konstruktor).",
+      "options": [
+        {
+          "id": "transfer-records-value-object-o1",
+          "text": "Records ersetzen die Value-Object-Implementierung — deshalb trägt Value Object das Label [ERSETZT] (Implementierung).",
+          "verdict": "true",
+          "explanation": "Value Object ist die explizit benannte Schicht-3-Ausnahme: Das Konzept bleibt, die Boilerplate übernimmt das Sprachfeature."
+        },
+        {
+          "id": "transfer-records-value-object-o2",
+          "text": "Records ersetzen Lombok @Data und @Value, nicht aber @Builder oder @Slf4j.",
+          "verdict": "true",
+          "explanation": "So formuliert es der Null-Safety-Talk: Die Lombok-Migration ist partiell, nicht binär."
+        },
+        {
+          "id": "transfer-records-value-object-o3",
+          "text": "Records eignen sich besser für DTOs und Projections als für JPA-@Entity.",
+          "verdict": "true",
+          "explanation": "Records sind final und haben keinen No-Arg-Konstruktor — genau das macht sie als @Entity ungeeignet, als DTO aber ideal."
+        },
+        {
+          "id": "transfer-records-value-object-o4",
+          "text": "Records ersetzen auch Lombok @Builder.",
+          "verdict": "false",
+          "explanation": "Den Builder-Fall decken Records nicht ab — sie haben nur Positionsparameter ohne named/default args, weshalb @Builder bestehen bleibt."
+        },
+        {
+          "id": "transfer-records-value-object-o5",
+          "text": "Records werden als JPA-@Entity empfohlen.",
+          "verdict": "false",
+          "explanation": "Der Null-Safety-Talk rät zum Gegenteil: final und der fehlende No-Arg-Konstruktor stehen JPA-Entities im Weg."
+        },
+        {
+          "id": "transfer-records-value-object-o6",
+          "text": "Value Object gehört im Talk zu Schicht 1, den Sprachdefizit-Notlösungen.",
+          "verdict": "false",
+          "explanation": "Value Object steht in Schicht 3 (Architektur/DDD) — es ist dort die Ausnahme, deren Implementierung ersetzt wird."
+        },
+        {
+          "id": "transfer-records-value-object-o7",
+          "text": "Ob ein Record allein für die Konstruktion reicht, hängt vom Konstruktionsproblem ab.",
+          "verdict": "depends",
+          "explanation": "Java-Records erzwingen zur Compile-Zeit, aber nur positional — bei vielen optionalen Feldern braucht es weiterhin Builder oder named/default args (in anderen Sprachen)."
+        },
+        {
+          "id": "transfer-records-value-object-o8",
+          "text": "Ob Deine Lombok-Migration vollständig oder partiell ausfällt, hängt von den genutzten Annotationen ab.",
+          "verdict": "depends",
+          "explanation": "@Data/@Value lassen sich auf Records umstellen; @Builder, @Slf4j und @SneakyThrows haben kein Record-Pendant und bleiben."
+        }
+      ]
+    },
+    {
+      "id": "transfer-jep-8303099-builder",
+      "question": "Brücke zum Null-Safety-Talk: Was leistet die geplante Java-null-Safety (JEP 8303099) für Builder-Pflichtfelder?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "JEP 8303099 ist ein Draft ohne Target-Release und erzwingt Builder-Pflichtfelder nicht zur Compile-Zeit: Die Prüfung greift als narrowing zur Laufzeit, es gibt kein Typestate — in der Pflichtfeld-Landkarte landet null-Safety damit auf der schwächsten Ebene.",
+      "options": [
+        {
+          "id": "transfer-jep-8303099-builder-o1",
+          "text": "JEP 8303099 erzwingt Builder-Pflichtfelder nicht zur Compile-Zeit — die Prüfung greift als narrowing zur Laufzeit.",
+          "verdict": "true",
+          "explanation": "Die Pflichtfeld-Tabelle führt „Java — null-Safety (JEP 8303099)“ explizit als „Laufzeit (narrowing); kein Typestate“."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o2",
+          "text": "In der Pflichtfeld-Landkarte landet null-Safety auf der schwächsten Garantie-Ebene.",
+          "verdict": "true",
+          "explanation": "Sie reiht sich bei der Laufzeit-Durchsetzung ein — gemeinsam mit dem klassischen Builder und unterhalb von Staged Builder und named args."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o3",
+          "text": "JEP 8303099 ist ein Draft ohne Target-Release.",
+          "verdict": "true",
+          "explanation": "Beide Talks halten das fest: Syntaxdetails sind „strawman/TBD“, und null-Safety ist in keinem JDK-Release enthalten."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o4",
+          "text": "String! liefert Typestate-Garantien, mit denen der Compiler vergessene Builder-Pflichtfelder meldet.",
+          "verdict": "false",
+          "explanation": "Genau das verneint der Faktencheck: kein Typestate — ein vergessenes Pflichtfeld fällt weiterhin erst zur Laufzeit auf."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o5",
+          "text": "Mit JEP 8303099 wird der Staged Builder überflüssig.",
+          "verdict": "false",
+          "explanation": "Der Staged Builder bleibt der Compile-Zeit-Weg in Java — null-Safety operiert auf einer schwächeren Ebene und ersetzt ihn nicht."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o6",
+          "text": "JEP 8303099 ist bereits in einem JDK-Release ausgeliefert.",
+          "verdict": "false",
+          "explanation": "Null-Safety ist in keinem Release — die Aussagen zu Builder und null-Safety sind ausdrücklich Designanalyse eines Drafts."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o7",
+          "text": "Ob Pflichtfelder compile-zeit-erzwungen sind, hängt von Sprache und Idiom ab.",
+          "verdict": "depends",
+          "explanation": "Kotlin erreicht es über named/default args, Java über den Staged Builder — die geplante Java-null-Safety dagegen nicht; genau das ist die Landkarten-These."
+        },
+        {
+          "id": "transfer-jep-8303099-builder-o8",
+          "text": "Wie Du heute in Java Null-Sicherheit bekommst, hängt vom gewählten Stack ab.",
+          "verdict": "depends",
+          "explanation": "Der Null-Safety-Talk empfiehlt JSpecify + NullAway als pragmatischen Standard zur Build-Zeit — wer stattdessen auf den JEP wartet, wartet falsch."
+        }
+      ]
+    },
+    {
+      "id": "transfer-staged-vs-lombok-nonnull",
+      "question": "Brücke zum Null-Safety-Talk: Staged Builder vs. Lombok @NonNull — wer erzwingt was auf welcher Ebene?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Der Staged Builder erzwingt Pflichtfelder zur Compile-Zeit über seine Interface-Kette; Lombok @NonNull generiert dagegen einen Laufzeit-Check (standardmäßig NPE, seit Einführung 2013), und @Builder braucht für Pflichtfelder ein Wrapper-Pattern mit Check im build() — ein Laufzeit-, kein Typ-Problem.",
+      "options": [
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o1",
+          "text": "Der Staged Builder erzwingt Pflichtfelder zur Compile-Zeit.",
+          "verdict": "true",
+          "explanation": "Die Interface-Kette macht den unvollständigen Aufruf unkompilierbar — das ist die starke Seite des Vergleichs."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o2",
+          "text": "Lombok @NonNull prüft zur Laufzeit und wirft standardmäßig eine NPE — Default seit Einführung 2013.",
+          "verdict": "true",
+          "explanation": "Der Null-Safety-Talk räumt mit dem Mythos auf: nicht IllegalArgumentException, sondern NPE ist seit @NonNull v0.11.10 der Default."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o3",
+          "text": "Lombok @Builder braucht für Pflichtfelder ein Wrapper-Pattern mit Check im build() — das ist ein Laufzeit-, kein Typ-Problem.",
+          "verdict": "true",
+          "explanation": "So stellt es der Null-Safety-Talk dar: @Builder ist mit Null-Sicherheit verträglich, die Pflichtfeld-Prüfung bleibt aber Laufzeitsache."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o4",
+          "text": "Lombok @NonNull erzwingt Pflichtfelder zur Compile-Zeit.",
+          "verdict": "false",
+          "explanation": "@NonNull generiert nur einen Laufzeit-Null-Check im Methodenrumpf — der Compiler verhindert den null-Aufruf nicht."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o5",
+          "text": "@NonNull wirft standardmäßig eine IllegalArgumentException.",
+          "verdict": "false",
+          "explanation": "Das ist einer der Lombok-Mythen aus dem Null-Safety-Talk — NPE ist seit 2013 der Default."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o6",
+          "text": "Lombok generiert auf Wunsch auch einen Staged-Builder-Modus.",
+          "verdict": "false",
+          "explanation": "Lombok verzichtet bewusst darauf — bei freier Pflichtfeld-Reihenfolge drohte die kombinatorische Explosion von 2ᴺ Interfaces."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o7",
+          "text": "Auf welcher Ebene Dein Builder Pflichtfelder erzwingt, hängt vom gewählten Idiom ab.",
+          "verdict": "depends",
+          "explanation": "Staged Builder: Compile-Zeit; klassischer Builder, Lombok-Wrapper und @NonNull: Laufzeit — dieselbe Intention landet je nach Idiom auf verschiedenen Ebenen."
+        },
+        {
+          "id": "transfer-staged-vs-lombok-nonnull-o8",
+          "text": "Welche Exception der @NonNull-Check wirft, hängt von der lombok.config ab.",
+          "verdict": "depends",
+          "explanation": "Mit lombok.nonNull.exceptionType = JDK generiert Lombok java.util.Objects.requireNonNull(...) statt des eigenen Checks — die Konfiguration entscheidet."
+        }
+      ]
+    }
+  ]
+}
