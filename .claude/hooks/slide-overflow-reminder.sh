@@ -27,8 +27,8 @@ cat >&2 <<EOF
 ⚠ Slide files modified — overflow check recommended:
 $(echo "$CHANGED" | sed 's/^/    /')
 
-Run the check against a dev server (one per affected talk):
-$(echo "$TALKS" | sed 's|^|    bun run playwright-tests/check-slide-overflow.ts <slide> <port>   # |')
+Run the /slidev-skill overflow checker against a dev server (one per affected talk):
+$(echo "$TALKS" | sed 's|^|    zsh "$HOME/.claude/skills/slidev/scripts/check-slide-overflow.sh" <range> <port>   # |')
 
 Find the port with:
     zsh \$HOME/.claude/skills/slidev/scripts/find-slidev-port.sh

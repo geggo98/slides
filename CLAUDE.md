@@ -60,15 +60,18 @@ Slidev rendert jede Slide auf einem **logischen Canvas** (Default `980×552` CSS
 
 **Pflicht-Check für neue oder geänderte Slides mit viel Inhalt:**
 
-Nutze das dedizierte Skript:
+Nutze den gebündelten Cross-Browser-Checker aus dem **/slidev**-Skill (die maßgebliche Quelle — bewusst **nicht** im Repo dupliziert). Er rendert jede Folie über **chromium + firefox + webkit** (Clipping ist layout-engine-spezifisch), prüft Light **und echtes Dark** (eigener `colorScheme:'dark'`-Browser-Context, den Monaco respektiert — ein bloßer `.dark`-Klassen-Toggle kippt Monaco **nicht**), cycelt alle Tabs, misst auch nackte Text-Nodes (Range-Geometrie) und meldet Code unter der Monaco-Fold:
 
 ```sh
-bun run playwright-tests/check-slide-overflow.ts <slide-nummer> [port]
+CHECK="$HOME/.claude/skills/slidev/scripts/check-slide-overflow.sh"
+zsh "$CHECK" 1-59 3037                                  # ganzes Deck, alle drei Engines, Light+Dark
+zsh "$CHECK" 23 3037 --shot ./playwright-tests/qa       # eine Folie + Screenshots (Vision-QA)
+zsh "$CHECK" 1-59 3037 --browsers chromium              # schnelle Iteration, nur eine Engine
 ```
 
-Es cycled durch alle Tabs (`.tab-bar button`, `.tabs button`, `.eco-tabs button`, `[role=tab]`), togglet Light + Dark, scrollt interne Container ans Ende und meldet jedes Element mit `bottom > 720`. Exit-Code ≠ 0 bei Overflow. Port wird via `find-slidev-port.sh` auto-detektiert, wenn nicht übergeben.
+`<range>` ist `23` oder `1-59`; Port default `3030`, via `find-slidev-port.sh` ermittelbar; Exit-Code ≠ 0 bei Overflow. Braucht `deno` (+ `nix` für die gepinnten Browser). Hintergrund & Technik: `references/testing-overflow.md` im Skill.
 
-Bei komplexeren Szenarien (spezifische Tab-Navigation, eigene Scroll-Logik) stattdessen ein Ad-hoc-Playwright-Script in `playwright-tests/` schreiben, das die Slide auf `http://localhost:<port>/<n>` öffnet, in beiden Themes screenshottet und Panel-Bottoms gegen `720px` prüft.
+Bei komplexeren Szenarien (eigene Tab-/Scroll-Logik) ein Ad-hoc-Playwright-Script in `playwright-tests/` schreiben (via **Write tool**, mit `bun run`), das die Slide auf `http://localhost:<port>/<n>` öffnet, in beiden Themes screenshottet und Panel-Bottoms gegen `720px` prüft.
 
 ### Hook: Stop-Reminder
 
