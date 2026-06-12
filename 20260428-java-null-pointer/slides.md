@@ -6,6 +6,7 @@ info: |
   Plus: Was kommt nativ? Wie machen es Kotlin & andere JVM-Sprachen?
 monaco: true
 mdc: true
+lang: de
 transition: slide-left
 colorSchema: auto
 fonts:
@@ -41,7 +42,7 @@ hideInToc: true
 
 1. **`Optional<T>` ist Rückgabetyp. Punkt.** Kein Feld, kein Parameter, kein Generic-Element.
 2. **JSpecify 1.0 + `@NullMarked` + NullAway** ist der pragmatische 2026-Standard. Spring Boot 4 (Nov 2025) liefert es ab Werk.
-3. **Native `String!`/`String?`** bleibt mehrere LTS-Zyklen entfernt — JEP 8303099 ist Draft, realistisch frühestens **JDK 31** stable.
+3. **Native `String!`/`String?`** bleibt mehrere LTS-Zyklen entfernt — JEP 8303099 ist Draft, realistisch frühestens **JDK 33** stable (das nächste LTS nach 29, 2029).
 4. **Records ersetzen `@Data`/`@Value`**, nicht `@Builder`/`@Slf4j`. Lombok-Migration ist partiell, nicht binär.
 
 </div>
@@ -71,7 +72,7 @@ Annotation-Konsens 2026 und seine vier Annotationen
 hideInToc: true
 ---
 
-# Annotation-Chaos: Wie wir hierhin gekommen sind
+# Annotation-Chaos: Wie wir hierher gekommen sind
 
 <div class="grid grid-cols-2 gap-8">
 <div>
@@ -90,11 +91,11 @@ hideInToc: true
 
 ### Der Konsolidierungspunkt
 
-**JSpecify 1.0** (August 2024) — getragen von **Google, Oracle, JetBrains, Broadcom/VMware (Spring), Sonar, Uber**:
+**JSpecify 1.0** (17. Juli 2024) — getragen von **Google, Oracle, JetBrains, Broadcom/VMware (Spring), Sonar, Uber**:
 
 - Vier Annotationen, klare Type-Use-Semantik
 - Kein Checker — nur die Spezifikation
-- Spring Framework 7 / Boot 4: vollständig adoptiert
+- Spring Framework 7 / Boot 4: Core vollständig, Portfolio rolling
 - Kotlin 2.x liest JSpecify nativ
 
 </div>
@@ -115,13 +116,13 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70">
 
-OpenRewrite-Recipes (`org.openrewrite.java.jspecify.MigrateToJspecify`) automatisieren ~80 % der Migration.
+OpenRewrite-Recipes (`org.openrewrite.java.jspecify.MigrateToJSpecify`) automatisieren ~80 % der Migration.
 
 </div>
 
 <!--
 - "Bridge" = nur sinnvoll für die Sprache, mit der das Tool kommt (z.B. JetBrains-Annotationen für Kotlin-Compiler-Hints).
-- JetBrains-Annotationen werden ab IntelliJ 2025.3 zugunsten JSpecify deprecated.
+- IntelliJ 2025.3 bevorzugt JSpecify (Quick-Fixes); eine formale Deprecation der JetBrains-Annotationen ist bisher nur ein offener Request.
 -->
 
 ---
@@ -246,7 +247,7 @@ class CustomerRepo { Customer findById(String id) { ... } }
 
 JLS-Sicht: `com.foo` und `com.foo.bar` sind **zwei unabhängige Packages** — keine Hierarchie. Gilt für Sichtbarkeit, `sealed`-Permits, **und Annotationen**.
 
-JSpecify-Javadoc: _„This annotation has no effect on 'subpackages'."_
+JSpecify-Javadoc: _„This annotation has no effect on 'subpackages'.“_
 
 **Konsequenz:** Jedes Java-Package braucht sein **eigenes** `package-info.java` mit `@NullMarked`.
 
@@ -278,7 +279,7 @@ hideInToc: true
 
 ```java
 @NullMarked
-module com.example.kfzif { /* requires … */ }
+module com.example.shop { /* requires … */ }
 ```
 
 </div>
@@ -405,7 +406,7 @@ layout: quote
 hideInToc: true
 ---
 
-# „Optional was added with a clear intent: it was meant as a return type for methods that need to communicate clearly that they may have no result."
+# „Optional was added with a clear intent: it was meant as a return type for methods that need to communicate clearly that they may have no result.“
 
 <div class="mt-4 text-sm opacity-70">— Brian Goetz, Java Language Architect, Stack Overflow 2014</div>
 
@@ -434,7 +435,7 @@ public void register(User u, Optional<String> referral) { ... }
 List<Optional<String>> tags;
 Optional<List<Order>> orders;
 
-// ❌ get() ohne Refinement: NoSuchElementException statt NPE — nichts gewonnen
+// ❌ get() ohne Prüfung: NoSuchElementException statt NPE — nichts gewonnen
 String e = findById(id).get();
 ```
 
@@ -482,7 +483,7 @@ hideInToc: true
 | JPA / Jackson als Feldtyp       | ❌ de facto nein                                         |
 | Funktionale Komposition         | ✅ exzellent (`map`, `flatMap`, `filter`)                |
 | Primitives (`OptionalInt` etc.) | ⚠️ umständlich                                           |
-| **JEP 401 (Value Classes)**     | 🔮 löst Heap-Overhead — preview ab JDK 27/28             |
+| **JEP 401 (Value Classes)**     | 🔮 löst Heap-Overhead — Preview frühestens JDK 28        |
 
 <div class="mt-4 text-sm opacity-70">
 
@@ -512,8 +513,9 @@ hideInToc: true
 <GradleBuildSetup />
 
 <!--
-- OnlyNullMarked=true ist der Schlüssel: schrittweise Einführung pro Package, ohne den ganzen Codebase auf einmal zu fixen.
+- OnlyNullMarked=true ist der Schlüssel: schrittweise Einführung pro Package, ohne die ganze Codebase auf einmal zu fixen.
 - JSpecifyMode=true aktiviert die Generics-Präzision.
+- Editor scrollt — der Rest des Build-Setups liegt unter der Fold.
 -->
 
 ---
@@ -525,8 +527,9 @@ hideInToc: true
 <MavenBuildSetup />
 
 <!--
-- Spring-Initializr generiert das nicht out of the box; muss manuell rein.
+- Das NullAway-Setup generiert Spring-Initializr nicht out of the box; muss manuell rein (≠ JSpecify-Dependency, die Initializr für Boot 4 setzt — siehe Bonus).
 - Spring Boot 4 Parent-POM definiert die Versionen — nur die NullAway-Version selbst pinnen.
+- Editor scrollt — der Rest des POM-Setups liegt unter der Fold.
 -->
 
 ---
@@ -540,10 +543,10 @@ hideInToc: true
 
 ### Mythen ❌
 
-- „Lombok ist für NullAway unsichtbar"
-- „Lombok wirft `IllegalArgument`, nicht NPE"
-- „`@Builder` ist mit Null-Sicherheit unverträglich"
-- „Lombok und Records schließen sich aus"
+- „Lombok ist für NullAway unsichtbar“
+- „Lombok wirft `IllegalArgument`, nicht NPE“
+- „`@Builder` ist mit Null-Sicherheit unverträglich“
+- „Lombok und Records schließen sich aus“
 
 </div>
 <div>
@@ -551,8 +554,8 @@ hideInToc: true
 ### Fakten ✅
 
 - NullAway sieht generierten Code via `LombokHandler`
-- **Default seit 1.16.20: `NullPointerException`**
-- `@Builder` braucht Wrapper-Pattern, das ist kein Typ-Problem
+- **NPE ist Default seit Einführung 2013** (`@NonNull` v0.11.10)
+- `@Builder` braucht ein Wrapper-Pattern (Pflichtfeld-Check im `build()`), das ist kein Typ-Problem
 - **Records** ersetzen `@Data`/`@Value` — `@Slf4j`/`@SneakyThrows` bleiben
 
 </div>
@@ -561,6 +564,7 @@ hideInToc: true
 <div class="mt-4 text-sm opacity-70">
 
 **Voraussetzung:** korrekte `lombok.config`. Ohne sie bricht die Tooling-Integration.
+**Records vs. `@Builder`/named args** im Detail: <TalkXref slug="20260606-design-pattern">Design-Pattern-Talk</TalkXref>.
 
 </div>
 
@@ -638,15 +642,17 @@ hideInToc: true
 - **Alle** Public-APIs `@NullMarked`
 - `org.springframework.lang.@Nullable` deprecated
 - Reactor / Spring Data / Spring Security: rolling adoption
-- Kotlin 2.x: Spring-APIs sind **nativ nullsafe** sichtbar
+- Kotlin 2.x: Spring-APIs sind **nativ nullsicher** sichtbar
 
 ### Migration-Recipe (OpenRewrite)
 
 ```bash
 mvn rewrite:run \
   -Drewrite.activeRecipes=\
-    org.openrewrite.java.jspecify.MigrateToJspecify
+    org.openrewrite.java.jspecify.MigrateToJSpecify
 ```
+
+<div class="mt-2 text-xs opacity-70">Recipe-Mechanik im Detail: <TalkXref slug="20260522-open-rewrite">OpenRewrite-Talk</TalkXref></div>
 
 </div>
 <div>
@@ -680,8 +686,10 @@ hideInToc: true
 
 # Service-Layer-Beispiel
 
-```java {monaco} {height: '320px'}
+```java {monaco} {height: '300px'}
 package com.example.shop.order;
+
+import java.util.Optional;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -716,6 +724,7 @@ public class OrderService {
 - @NullMarked auf der Klasse oder package-info.java.
 - Constructor-Injection: keine Optional-Felder, kein @Nullable für Pflicht-Beans.
 - promo darf null sein → explizit annotiert.
+- Editor scrollt — die place()-Methode liegt unter der Fold.
 -->
 
 ---
@@ -772,7 +781,7 @@ public class Customer {
 
 - Reflection-Init = `null` möglich
 - `@Column(nullable=false)` ≠ Java-Typ-Garantie
-- Records oft besser geeignet (immutable, kein Init-Problem)
+- Records besser für DTOs/Projections, nicht als `@Entity` (`final`, kein No-Arg-Ctor)
 
 </div>
 </div>
@@ -786,9 +795,9 @@ public class Customer {
 hideInToc: true
 ---
 
-# Testing — Mockito skipped Constructor
+# Testing — Mockito skips Constructor
 
-```java {monaco} {height: '300px'}
+```java {monaco} {height: '260px'}
 @NullMarked
 public class OrderService {
     private final PaymentGateway gateway;
@@ -821,15 +830,16 @@ class OrderServiceTest {
 </div>
 
 <!--
-- Mockito v5+ unterstützt RETURNS_SMART_NULLS als Default per Settings.
-- AssertJ 3.24+ versteht JSpecify nativ — assertThat(...).isNotNull() ist nicht mehr nötig.
+- RETURNS_SMART_NULLS gibt es als Settings-Option seit Mockito 2 — kein v5-Feature und kein globaler Default (Javadoc: „probably the default in 3.0.0“, nie eingelöst).
+- AssertJ hat (Stand 2026) keinen JSpecify-Support — offenes Issue #3727.
+- Editor scrollt — der Test-Block liegt unter der Fold.
 -->
 
 ---
 layout: section
 ---
 
-# 5. Refinement (alias „Narrowing")
+# 5. Refinement (alias „Narrowing“)
 
 Wie der Build entscheidet, ob `x` jetzt wirklich nicht null ist
 
@@ -837,16 +847,16 @@ Wie der Build entscheidet, ob `x` jetzt wirklich nicht null ist
 hideInToc: true
 ---
 
-# „Narrowing" — Begriff & Architektur
+# „Narrowing“ — Begriff & Architektur
 
 <div class="grid grid-cols-2 gap-8">
 <div>
 
 ### Der Begriff
 
-- „Narrowing" steht **nicht** in der JSpecify-Spec
+- „Narrowing“ steht **nicht** in der JSpecify-Spec
 - Korrekt: _flow-sensitive type refinement_ (NullAway-Paper, FSE 2019)
-- Synonyme: Kotlin/TS „smart-cast", Compiler-Theorie „dataflow narrowing"
+- Synonyme: Kotlin/TS „smart-cast“, Compiler-Theorie „dataflow narrowing“
 - JSpecify erwähnt Refinement nur indirekt — schreibt es Tools zu
 
 </div>
@@ -856,7 +866,7 @@ hideInToc: true
 
 - **JSpecify** — Spezifikation: was `@Nullable T` _bedeutet_. Kein Checker.
 - **ErrorProne** — javac-Plugin-Framework von Google. Stellt CFG- und Dataflow-Infrastruktur. Macht selbst kein Refinement.
-- **NullAway** — ErrorProne-Plugin von Uber. Hier wohnt die Refinement-Logik. ~10 % Build-Overhead, **bewusst unsound**.
+- **NullAway** — ErrorProne-Plugin von Uber. Hier wohnt die Refinement-Logik. 5–10 % Build-Overhead, **bewusst unsound**.
 
 </div>
 </div>
@@ -878,11 +888,11 @@ hideInToc: true
 if (f != null)                   f.use();   // ✅ Vergleich (auch ternär, negiert)
 Objects.requireNonNull(f);       f.use();   // ✅ JDK
 Preconditions.checkNotNull(f);   f.use();   // ✅ Guava
-assert f != null;                f.use();   // ✅ nur mit -ea
+assert f != null;                f.use();   // ✅ nur mit NullAway:AssertsEnabled=true
 if (f instanceof Bar b)          b.use();   // ✅ instanceof + Pattern
 
 Optional<Foo> o = find();
-if (o.isPresent())               o.get();   // ✅ Optional-Idiom
+if (o.isPresent())               o.get();   // ✅ erkannt (nicht empfohlen → ifPresent)
 ```
 
 <div class="mt-4 text-sm opacity-70">
@@ -923,7 +933,7 @@ class OrderService {
 
 <div class="mt-2 text-xs opacity-70 italic">
 
-„NullAway makes the simplifying (but unsound) assumption that callees perform no mutation …" — NullAway-Wiki
+„NullAway makes the simplifying (but unsound) assumption that callees perform no mutation …“ — NullAway-Wiki
 
 </div>
 
@@ -942,7 +952,7 @@ void m() {
 }
 ```
 
-- Lokale Kopie macht **Read-Atomizität explizit**
+- Lokale Kopie macht **die Atomarität explizit**
 - Pattern in **Spring, Chromium, Uber**
 - Wer Soundness will: **Checker Framework** (5–20× langsamer)
 
@@ -1073,7 +1083,7 @@ hideInToc: true
 <div>
 
 - `@Nullable` ist Annotation, Compile-Tool prüft
-- Optional als „leeres Ergebnis"-Vehikel
+- Optional als „leeres Ergebnis“-Vehikel
 - Boilerplate: explizite Null-Checks
 
 </div>
@@ -1129,7 +1139,7 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70">
 
-JEP 8303099 ist Draft **ohne Target-Release**. „Frühestens" ist Lese-Hinweis: das ist die optimistische Lesart der derzeitigen OpenJDK-Mailinglisten.
+JEP 8303099 ist Draft **ohne Target-Release**. „Frühestens“ ist Lese-Hinweis: das ist die optimistische Lesart der derzeitigen OpenJDK-Mailinglisten.
 
 </div>
 
@@ -1148,12 +1158,12 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70 italic">
 
-> „Since this feature is still in the proposal stage and will likely take several years to materialize, JSpecify and NullAway currently represent the most practical and powerful way to improve the stability of Java applications." — Sébastien Deleuze, Spring Team, März 2025
+> „Since this feature is still in the proposal stage and will likely take several years to materialize, JSpecify and NullAway currently represent the most practical and powerful way to improve the stability of Java applications.“ — Sébastien Deleuze, Spring Team, März 2025
 
 </div>
 
 <!--
-- LTS-Zyklen sind 2 Jahre — JDK 25 (2025), 29 (2027), 31 (2029).
+- LTS-Zyklen sind 2 Jahre — JDK 25 (2025), 29 (2027), 33 (2029). JDK 31 (2028) ist KEIN LTS.
 - Wer heute auf 8303099 wartet: 2-3 LTS-Zyklen Wartezeit.
 -->
 
@@ -1179,7 +1189,7 @@ String? x;                // 2029+
 
 <div class="mt-4 text-sm opacity-70">
 
-**Mechanische Migration:** OpenRewrite (oder Nachfolger) wird `@Nullable T` → `T?` automatisieren. Der Aufwand „heute" und „später" ist vergleichbar — und „heute" gibt es schon Build-Sicherheit.
+**Mechanische Migration:** OpenRewrite (oder Nachfolger) wird `@Nullable T` → `T?` automatisieren. Der Aufwand „heute“ und „später“ ist vergleichbar — und „heute“ gibt es schon Build-Sicherheit.
 
 </div>
 
@@ -1230,7 +1240,7 @@ hideInToc: true
 <div class="text-left max-w-3xl mx-auto mt-6 space-y-2 text-sm">
 
 1. **Upgrade auf Spring Boot 4** (eigener PR, ohne Null-Migration mischen)
-2. **OpenRewrite-Recipes** für 80 % der Annotation-Migration
+2. **OpenRewrite-Recipes** für 80 % der Annotation-Migration (`MigrateToJSpecify` — <TalkXref slug="20260522-open-rewrite">Details</TalkXref>)
 3. **Pro Package**: `@NullMarked` setzen → NullAway-Output ansehen → fixen → Warnung auf Error
 4. **Lombok schrittweise zurückbauen**: `@Data` → Records, `@Slf4j` bleibt
 5. **JPA-Entities**: `@Getter`/`@Setter` reichen, `@EqualsAndHashCode` raus
@@ -1240,7 +1250,7 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70 text-center">
 
-**Was NICHT tun:** kein neuer JSR-305-Code · kein `Optional` als Feld/Parameter · kein `@Data`/`@Value` mehr · kein Checker FW „weil es sauberer wirkt"
+**Was NICHT tun:** kein neuer JSR-305-Code · kein `Optional` als Feld/Parameter · kein `@Data`/`@Value` mehr · kein Checker FW „weil es sauberer wirkt“
 
 </div>
 
@@ -1286,7 +1296,7 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70">
 
-Boot 2.x ist seit Mai 2025 Out-of-Support. Boot 3.x bekommt JSpecify-Adoption nicht mehr in den Hauptzweig — nur Boot 4 ist „native".
+Boot 2.x: OSS-Support endete am 30.06.2023 (kommerzielle Verlängerung bis 2029). Boot 3.x bekommt JSpecify-Adoption nicht mehr in den Hauptzweig — nur Boot 4 ist „native“.
 
 </div>
 
@@ -1350,6 +1360,41 @@ hideInToc: true
 <!--
 - Wichtig: nicht alle Lombok-Annotations sind böse. Records lösen 70% des Use-Cases.
 - @EqualsAndHashCode für JPA-Entities ist eine Falle — Hibernate-Reflection setzt id auf null, dann ungleich gleich.
+-->
+
+---
+hideInToc: true
+---
+
+# Weiterführende Quellen
+
+<div class="grid grid-cols-2 gap-8 mt-4 text-sm">
+<div>
+
+### Spezifikation & Tools
+
+- **JSpecify** — `jspecify.dev`
+- **NullAway** — `github.com/uber/NullAway`
+- **Checker Framework** — `checkerframework.org`
+- **Spring & JSpecify** — `spring.io/blog`
+- **JEP 8303099** — `openjdk.org/jeps/8303099`
+- **JEP 401** — `openjdk.org/jeps/401`
+
+</div>
+<div>
+
+### Verwandte Talks
+
+- Mechanische Migration & Recipes:
+  <TalkXref slug="20260522-open-rewrite">OpenRewrite-Talk</TalkXref>
+- Records, `@Builder` & named args pro Sprache:
+  <TalkXref slug="20260606-design-pattern">Design-Pattern-Talk</TalkXref>
+
+</div>
+</div>
+
+<!--
+- Reading List vor dem Dank — Quellen und die Companion-Talks gebündelt.
 -->
 
 ---

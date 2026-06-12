@@ -40,7 +40,7 @@ const annotations = [
   },
   {
     src: "javax.annotation.* (JSR-305)",
-    year: "2012",
+    year: "2006",
     status: "dead",
     note: "Migrieren",
   },
@@ -146,7 +146,7 @@ const jeps = [
     jep: "JEP 8303099",
     title: "Null-Restricted / Nullable Types",
     status: "Draft, kein Target",
-    earliest: "JDK 28+ (Preview), stable ≥ 2028",
+    earliest: "JDK 28+ (Preview), stable ≥ 2029 (LTS 33)",
   },
   {
     jep: "JEP 8316779",
@@ -158,7 +158,7 @@ const jeps = [
     jep: "JEP 401",
     title: "Value Classes (Preview)",
     status: "Candidate, EA Okt 2025",
-    earliest: "JDK 27/28 Preview, stable ≥ 2028",
+    earliest: "JDK 28 Preview, stable ≥ 2028",
   },
   {
     jep: "JEP 402",

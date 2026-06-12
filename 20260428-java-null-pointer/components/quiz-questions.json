@@ -7,7 +7,7 @@
       "question": "Welche Aussagen zu @NullMarked treffen zu?",
       "difficulty": "easy",
       "section": "JSpecify",
-      "explanation": "@NullMarked ist der JSpecify-1.0-Block-Marker (Aug 2024). Er deklariert für eine Code-Einheit (Package, Modul, Klasse): nicht annotierte Typen sind @NonNull. Es ist kein Type-Marker pro Variable.",
+      "explanation": "@NullMarked ist der JSpecify-1.0-Block-Marker (17. Juli 2024). Er deklariert für eine Code-Einheit (Package, Modul, Klasse): nicht annotierte Typen sind @NonNull. Es ist kein Type-Marker pro Variable.",
       "options": [
         {
           "id": "jspecify-marker-o0",
@@ -23,9 +23,9 @@
         },
         {
           "id": "jspecify-marker-o2",
-          "text": "Ist Teil der JSpecify-Spezifikation 1.0 (August 2024).",
+          "text": "Ist Teil der JSpecify-Spezifikation 1.0 (17. Juli 2024).",
           "verdict": "true",
-          "explanation": "Stable seit JSpecify 1.0, August 2024."
+          "explanation": "Stable seit JSpecify 1.0 (17. Juli 2024)."
         },
         {
           "id": "jspecify-marker-o3",
@@ -127,7 +127,7 @@
           "id": "lombok-nonnull-exception-o0",
           "text": "Es wird eine NullPointerException geworfen — kein IllegalArgumentException mehr.",
           "verdict": "true",
-          "explanation": "Default-Verhalten seit 1.16.20."
+          "explanation": "NPE ist der Default seit Einführung von @NonNull (2013); die 1.16.20-Anekdote betrifft nur eine spätere Default-Bestätigung, nicht den Wechsel selbst."
         },
         {
           "id": "lombok-nonnull-exception-o1",
@@ -167,7 +167,7 @@
         },
         {
           "id": "lombok-nonnull-exception-o7",
-          "text": "Für eigene Validation kann man Lombok komplett übergehen.",
+          "text": "Für eigene Validation kannst du Lombok komplett übergehen.",
           "verdict": "depends",
           "explanation": "Geht, ist aber selten lohnend — Lombok-Hooks sind ausreichend."
         }
@@ -190,7 +190,7 @@
           "id": "jspecify-cascading-o1",
           "text": "Jedes Sub-Package braucht eigene package-info.java mit @NullMarked.",
           "verdict": "true",
-          "explanation": "Folgt direkt aus der Nicht-Kaskadierung."
+          "explanation": "Folgt direkt aus der Nicht-Kaskadierung: weil @NullMarked an der Package-Grenze endet, muss jedes Package selbst markiert werden."
         },
         {
           "id": "jspecify-cascading-o2",
@@ -241,13 +241,13 @@
           "id": "nullaway-errorprone-o0",
           "text": "NullAway ist ein Plugin im ErrorProne-Framework und läuft im Compile.",
           "verdict": "true",
-          "explanation": "Standard-Architektur."
+          "explanation": "So ist NullAway gebaut: ErrorProne liefert das javac-Plugin-Framework, NullAway hängt sich als Check ein und läuft damit in der Compile-Phase."
         },
         {
           "id": "nullaway-errorprone-o1",
           "text": "ErrorProne stellt die Plugin-Infrastruktur, NullAway den Null-Checker.",
           "verdict": "true",
-          "explanation": "Saubere Aufgabentrennung."
+          "explanation": "ErrorProne liefert nur CFG- und Dataflow-Infrastruktur; die eigentliche Nullness-Logik wohnt komplett in NullAway — eine saubere Aufgabentrennung."
         },
         {
           "id": "nullaway-errorprone-o2",
@@ -475,7 +475,7 @@
           "id": "optional-get-vs-orelsethrow-o1",
           "text": "orElseThrow(Supplier) erlaubt eigene Exception mit kontextueller Message.",
           "verdict": "true",
-          "explanation": "Hauptgrund, das Idiom zu bevorzugen."
+          "explanation": "Genau das ist der Hauptgrund, orElseThrow gegenüber get() zu bevorzugen: die Exception trägt fachlichen Kontext statt einer nichtssagenden NoSuchElementException."
         },
         {
           "id": "optional-get-vs-orelsethrow-o2",
@@ -583,19 +583,19 @@
           "id": "nullaway-refinement-patterns-o0",
           "text": "if (s != null) — direkter Null-Check.",
           "verdict": "true",
-          "explanation": "Standard-Idiom, immer erkannt."
+          "explanation": "Der direkte Vergleich ist das Standard-Idiom — NullAway refined s im then-Branch zuverlässig zu @NonNull."
         },
         {
           "id": "nullaway-refinement-patterns-o1",
           "text": "Objects.requireNonNull(s) — als Statement und als Ausdruck.",
           "verdict": "true",
-          "explanation": "Library model in NullAway."
+          "explanation": "requireNonNull ist als Library Model hinterlegt, deshalb refined NullAway s auch dann, wenn der Aufruf nur als Ausdruck verwendet wird."
         },
         {
           "id": "nullaway-refinement-patterns-o2",
           "text": "Optional.isPresent() + nachfolgendes get() im selben Block.",
           "verdict": "true",
-          "explanation": "Ebenfalls als library model erkannt."
+          "explanation": "Auch dieses Paar ist als Library Model erkannt — nach isPresent() gilt get() im selben Block als sicher (idiomatisch ist trotzdem orElseThrow)."
         },
         {
           "id": "nullaway-refinement-patterns-o3",
@@ -640,7 +640,7 @@
           "id": "lombok-config-jspecify-o0",
           "text": "lombok.addNullAnnotations=jspecify — generiert org.jspecify.annotations.* statt JSR-305.",
           "verdict": "true",
-          "explanation": "Korrekter Schalter seit Lombok 1.18.32."
+          "explanation": "Der korrekte Schalter (seit Lombok 1.18.32): er lässt den generierten Code direkt JSpecify-Annotationen tragen, sodass NullAway ihn versteht."
         },
         {
           "id": "lombok-config-jspecify-o1",
@@ -680,7 +680,7 @@
         },
         {
           "id": "lombok-config-jspecify-o7",
-          "text": "Statt lombok.config könnte man die Annotationen pro Klasse setzen.",
+          "text": "Statt lombok.config könntest du die Annotationen pro Klasse setzen.",
           "verdict": "depends",
           "explanation": "Funktioniert, ist aber stark fehleranfällig und nicht skalierbar."
         }
@@ -689,7 +689,7 @@
     {
       "id": "records-vs-lombok",
       "question": "Sind Records ein vollständiger Ersatz für Lombok @Data / @Value?",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "section": "Build & Lombok",
       "explanation": "Records ersetzen @Value und @Data für unveränderliche DTOs/Value-Objects gut. @Builder, @Slf4j und mutable Klassen bleiben Lombok-Domäne. Bei JPA-Entities sind Records problematisch (no-args, mutable Felder).",
       "options": [
@@ -709,7 +709,7 @@
           "id": "records-vs-lombok-o2",
           "text": "Migration von @Value zu Record ist überwiegend mechanisch.",
           "verdict": "true",
-          "explanation": "OpenRewrite hat Recipes dafür."
+          "explanation": "Da beide unveränderliche Wert-Objekte beschreiben, ist die Umstellung weitgehend strukturell — OpenRewrite stellt dafür fertige Recipes bereit."
         },
         {
           "id": "records-vs-lombok-o3",
@@ -805,11 +805,11 @@
       "question": "Auf JEP 8303099 (native String! / String?) warten oder JSpecify jetzt adoptieren?",
       "difficulty": "hard",
       "section": "Was kommt nativ?",
-      "explanation": "JEP 8303099 ist Draft, frühestens JDK 31 (≈2029). Migration JSpecify→native Syntax ist mechanisch, OpenRewrite-fähig. Wer wartet, verliert 2–3 LTS-Zyklen Build-Sicherheit.",
+      "explanation": "JEP 8303099 ist Draft, frühestens JDK 33 (LTS, ≈2029). Migration JSpecify→native Syntax ist mechanisch, OpenRewrite-fähig. Wer wartet, verliert 2–3 LTS-Zyklen Build-Sicherheit.",
       "options": [
         {
           "id": "jep-8303099-wait-o0",
-          "text": "JEP 8303099 ist im Draft-Status, frühestens JDK 31 (≈2029).",
+          "text": "JEP 8303099 ist im Draft-Status, frühestens JDK 33 (LTS, ≈2029).",
           "verdict": "true",
           "explanation": "Realistische Timeline laut OpenJDK-Roadmap."
         },
@@ -833,7 +833,7 @@
         },
         {
           "id": "jep-8303099-wait-o4",
-          "text": "Wartet man, spart man die JSpecify-Adoption komplett.",
+          "text": "Wartest du, sparst du die JSpecify-Adoption komplett.",
           "verdict": "false",
           "explanation": "Heutige Build-Sicherheit fehlt während des Wartens."
         },
@@ -845,7 +845,7 @@
         },
         {
           "id": "jep-8303099-wait-o6",
-          "text": "Für Greenfield 2026 könnte man auf native Syntax warten.",
+          "text": "Für Greenfield 2026 könntest du auf native Syntax warten.",
           "verdict": "depends",
           "explanation": "Strategisch verständlich, pragmatisch problematisch — Build-Sicherheit fehlt."
         },
@@ -860,9 +860,9 @@
     {
       "id": "history-other-langs",
       "question": "Übergreifende Frage zur Geschichte und Praxis von Null jenseits von Java:",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "section": "transfer",
-      "explanation": "Tony Hoare nannte null seinen ‚billion dollar mistake' (2009). Rust und Haskell haben Option/Maybe als Standard, kein null. Kotlin's null-safety ist Compile-Zeit, nicht Laufzeit-Wrapper.",
+      "explanation": "Tony Hoare nannte null seinen ‚billion dollar mistake' (2009). Rust und Haskell haben Option/Maybe als Standard, kein null. Kotlins null-safety ist Compile-Zeit, nicht Laufzeit-Wrapper.",
       "options": [
         {
           "id": "history-other-langs-o0",
@@ -880,7 +880,7 @@
           "id": "history-other-langs-o2",
           "text": "Haskell und Scala bieten Option/Maybe-Typen mit pattern matching.",
           "verdict": "true",
-          "explanation": "Klassisches FP-Idiom — Java's Optional ist davon inspiriert."
+          "explanation": "Klassisches FP-Idiom — Javas Optional ist davon inspiriert."
         },
         {
           "id": "history-other-langs-o3",
@@ -890,13 +890,13 @@
         },
         {
           "id": "history-other-langs-o4",
-          "text": "Kotlin's null-safety läuft über JVM-Bytecode-Hooks zur Laufzeit.",
+          "text": "Kotlins null-safety läuft über JVM-Bytecode-Hooks zur Laufzeit.",
           "verdict": "false",
-          "explanation": "Kotlin's ?-Markierung ist Compile-Zeit, kein Runtime-Check."
+          "explanation": "Kotlins ?-Markierung ist Compile-Zeit, kein Runtime-Check."
         },
         {
           "id": "history-other-langs-o5",
-          "text": "Rust's Option<T> ist garantiert langsamer als Java-null.",
+          "text": "Rusts Option<T> ist garantiert langsamer als Java-null.",
           "verdict": "false",
           "explanation": "Niche-Optimierung: Option<&T> hat dieselbe Größe wie ein Pointer."
         },

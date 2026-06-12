@@ -5,7 +5,7 @@ const code = `<dependencies>
   <dependency>
     <groupId>org.jspecify</groupId>
     <artifactId>jspecify</artifactId>
-    <version>1.0.0</version>
+    <!-- Version vom Spring-Boot-4-Parent-POM verwaltet -->
   </dependency>
 </dependencies>
 
@@ -22,6 +22,11 @@ const code = `<dependencies>
       </compilerArgs>
       <annotationProcessorPaths>
         <path>
+          <groupId>com.google.errorprone</groupId>
+          <artifactId>error_prone_core</artifactId>
+          <version>2.42.0</version>
+        </path>
+        <path>
           <groupId>com.uber.nullaway</groupId>
           <artifactId>nullaway</artifactId>
           <version>0.13.2</version>
@@ -33,5 +38,5 @@ const code = `<dependencies>
 </script>
 
 <template>
-  <MonacoBlock :code="code" language="xml" height="380px" />
+  <MonacoBlock :code="code" language="xml" height="300px" />
 </template>

@@ -53,7 +53,7 @@ const scenarios: Scenario[] = [
     kotlinSees: "fun fetchName(id: Long): String",
     outcome: "success",
     outcomeText:
-      "Kotlin 2.x liest JSpecify automatisch. Native non-null, ohne Klammeraffen am Call-Site.",
+      "Kotlin 2.x liest JSpecify automatisch. Native non-null, ohne Klammeraffen an der Call-Site.",
   },
 ];
 </script>

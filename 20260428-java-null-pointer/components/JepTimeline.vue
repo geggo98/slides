@@ -35,7 +35,7 @@ const milestones: Array<{
     release: "JDK 25",
     date: "Sep 2025",
     lts: true,
-    events: [{ label: "Nichts zu Null-Safety", color: "yellow" }],
+    events: [{ label: "Nichts zu Null-Sicherheit", color: "yellow" }],
   },
   {
     release: "JDK 26",
@@ -46,7 +46,7 @@ const milestones: Array<{
   {
     release: "JDK 27",
     date: "Sep 2026",
-    events: [{ label: "Erste Preview JEP 401?", color: "purple" }],
+    events: [{ label: "JEP 401 noch kein Target", color: "purple" }],
   },
   {
     release: "JDK 28",
@@ -71,10 +71,10 @@ const milestones: Array<{
     events: [{ label: "Stabilisierung möglich", color: "blue" }],
   },
   {
-    release: "JDK 31",
-    date: "Sep 2028",
+    release: "JDK 33",
+    date: "Sep 2029",
     lts: true,
-    events: [{ label: "Frühestens stable", color: "green" }],
+    events: [{ label: "Frühestens stable (nächstes LTS)", color: "green" }],
   },
 ];
 </script>
@@ -114,8 +114,10 @@ const milestones: Array<{
       </div>
     </div>
     <div class="footnote">
-      Quelle: openjdk.org/projects/jdk &middot; Sébastien Deleuze (Spring, März
-      2025): „JSpecify + NullAway sind heute der pragmatische Pfad."
+      LTS: 25 (2025), 29 (2027), 33 (2029) — JDK 31 (2028) ist kein LTS.
+      &middot; Quelle: openjdk.org/projects/jdk &middot; Sébastien Deleuze
+      (Spring, März 2025): „JSpecify + NullAway sind heute der pragmatische
+      Pfad.“
     </div>
   </div>
 </template>

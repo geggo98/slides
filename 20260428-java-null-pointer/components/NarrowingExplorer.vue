@@ -103,8 +103,7 @@ const scenarios: Scenario[] = [
       },
     ],
     verdict: "fail",
-    verdictNote:
-      "Umgehung: direkt if (s != null) — nicht über bool indirizieren",
+    verdictNote: "Umgehung: direkt if (s != null) — nicht über bool umleiten",
   },
   {
     title: "3. Field + Methodenaufruf",
@@ -397,12 +396,14 @@ const tagLabel: Record<Nullness, string> = {
 
 <template>
   <div class="narrowing-explorer" :style="paletteVars">
-    <div class="scenario-row">
+    <div class="scenario-row" role="tablist" aria-label="Refinement-Szenarien">
       <button
         v-for="(s, i) in scenarios"
         :key="i"
         class="scenario-btn"
         :class="{ active: i === currentIdx }"
+        role="tab"
+        :aria-selected="i === currentIdx"
         @click="selectScenario(i)"
       >
         {{ s.title }}
