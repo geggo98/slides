@@ -833,3 +833,21 @@ hideInToc: true
 # Danke
 
 Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<GrafanaQuiz />
+
+<!--
+- Hinter der End-Slide: Selbststudium nach dem Vortrag. Adaptiv — startet
+  mittel, passt sich der Antwortqualität an.
+- Fragenpool via Web-Recherche + Fable-Generierung + adversariale Auswahl;
+  steht thematisch allein (keine Transfer-Sektion, dafür „Dashboard-
+  Architektur"), Schwellwert-Fragen sind bewusst depends-lastig.
+-->
