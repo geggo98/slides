@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import Tabs from "@shared/components/Tabs.vue";
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 const activeTab = ref("gradle");
 
@@ -107,7 +108,7 @@ const tabs = [
     infos: [
       {
         tone: "warning",
-        title: "Cooldown erst ab npm 11.5.0",
+        title: "Cooldown erst ab npm 11.10.0 (Feb 2026)",
         body: "Ältere npm-Versionen ignorieren <code>min-release-age</code> <strong>stillschweigend</strong>. Per <code>engines.npm</code> oder Volta/fnm erzwingen.",
       },
       {

@@ -1,4 +1,6 @@
 <script setup>
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
+
 const legacyCode = `java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17

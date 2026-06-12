@@ -39,7 +39,7 @@ watch(activeTab, () => {
 <style scoped>
 .axios-attack {
   width: 100%;
-  height: 472px;
+  height: 424px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

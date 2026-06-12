@@ -21,17 +21,17 @@
       <div class="g-row">
         <GraphNode name="starter-web" version="keine Version" />
         <div class="g-gap" />
-        <GraphNode name="BOM" version="jackson = 2.17.2" variant="bom-node" />
+        <GraphNode name="BOM" version="jackson = 2.20.1" variant="bom-node" />
       </div>
       <TreeConnector type="left-single" :width="180" />
       <div class="g-row">
-        <GraphNode name="jackson" version="2.17.2" variant="winner" />
+        <GraphNode name="jackson" version="2.20.1" variant="winner" />
         <div class="g-gap" />
         <div class="g-placeholder" />
       </div>
     </div>
     <ResultBox
-      value="jackson:2.17.2"
+      value="jackson:2.20.1"
       explain="Starter-web wird ohne Version deklariert. Die BOM liefert die Version. So ist es für ~300 Dependencies. Version Catalog würde hier ignoriert werden."
     />
   </div>

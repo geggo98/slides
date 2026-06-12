@@ -1,4 +1,6 @@
 <script setup>
+import MonacoBlock from "@shared/components/MonacoBlock.vue";
+
 const daemonProps = `toolchainVersion=21
 toolchainVendor=adoptium`;
 
@@ -6,10 +8,16 @@ const settingsKts = `plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }`;
 
-const buildKts = `plugins {
-    id("org.springframework.boot") version "4.0.6"
-    id("io.spring.dependency-management") version "1.1.7"
+const buildKts = `import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
+plugins {
+    id("org.springframework.boot") version "4.0.6" apply false
     java
+}
+
+dependencies {
+    // Variante A — nativer BOM-Import, kein dependency-management-Plugin
+    implementation(platform(SpringBootPlugin.BOM_COORDINATES))
 }
 
 java {
@@ -27,7 +35,7 @@ tasks.withType<JavaCompile>().configureEach {
 <template>
   <div class="ig-section">
     <p class="ig-label">
-      04 · Idiomatische Konfiguration 2026 — Spring Boot 3 auf JDK 21
+      04 · Idiomatische Konfiguration 2026 — Spring Boot 4 auf JDK 21
     </p>
 
     <div class="ig-columns">
@@ -43,7 +51,7 @@ tasks.withType<JavaCompile>().configureEach {
       </div>
       <div class="ig-col ig-col-main">
         <p class="ig-file-header">build.gradle.kts</p>
-        <MonacoBlock :code="buildKts" language="kotlin" height="310px" />
+        <MonacoBlock :code="buildKts" language="kotlin" height="330px" />
       </div>
     </div>
   </div>

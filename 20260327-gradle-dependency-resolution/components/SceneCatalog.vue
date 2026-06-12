@@ -6,21 +6,21 @@ const overrideMode = ref("none");
 
 const overrideResults = {
   ext: {
-    value: "jackson:2.18.3",
+    value: "jackson:2.20.2",
     color: "success",
     explain:
-      'ext["jackson.version"] ändert die BOM-Property direkt. Funktioniert nur für BOM-Properties.',
+      'ext["jackson-bom.version"] ändert die BOM-Property direkt. Funktioniert nur für BOM-Properties.',
     rank: 6,
   },
   force: {
-    value: "jackson:2.18.3",
+    value: "jackson:2.20.2",
     color: "success",
     explain:
       "force() übersteuert alles — BOM, Plugin, Constraints. Still, ohne Fehler.",
     rank: 8,
   },
   strict: {
-    value: "jackson:2.18.3",
+    value: "jackson:2.20.2",
     color: "success",
     explain:
       "strictly() erzwingt die Version. Bei inkompatiblem Constraint schlägt der Build fehl.",
@@ -41,7 +41,7 @@ watch(overrideMode, (val) => {
   <div class="scene-wrap">
     <div class="scene-desc">
       Der Version Catalog sagt jackson <code>2.18.3</code>. Die Spring BOM sagt
-      <code>2.17.2</code>. Wer gewinnt?
+      <code>2.20.1</code>. Wer gewinnt?
     </div>
     <div class="graph">
       <div class="g-row">
@@ -55,11 +55,11 @@ watch(overrideMode, (val) => {
       <div class="g-row">
         <GraphNode name="Catalog" version="jackson = 2.18.3" variant="loser" />
         <div class="g-gap" />
-        <GraphNode name="BOM" version="jackson = 2.17.2" variant="bom-node" />
+        <GraphNode name="BOM" version="jackson = 2.20.1" variant="bom-node" />
       </div>
       <TreeConnector type="left-single" :width="180" />
       <div class="g-row">
-        <GraphNode name="jackson" version="2.17.2" variant="winner" />
+        <GraphNode name="jackson" version="2.20.1" variant="winner" />
         <div class="g-gap" />
         <div class="g-placeholder" />
       </div>
@@ -68,7 +68,7 @@ watch(overrideMode, (val) => {
       <label>Override-Variante:</label>
       <select v-model="overrideMode" @click.stop>
         <option value="none">Keine (BOM gewinnt)</option>
-        <option value="ext">ext["jackson.version"]</option>
+        <option value="ext">ext["jackson-bom.version"]</option>
         <option value="force">force()</option>
         <option value="strict">strictly()</option>
       </select>
@@ -76,7 +76,7 @@ watch(overrideMode, (val) => {
 
     <ResultBox
       v-if="overrideMode === 'none'"
-      value="jackson:2.17.2"
+      value="jackson:2.20.1"
       value-color="warning"
       explain="Der Catalog ist Textersatz (Prio 3). Das Spring-Plugin (Prio 6) übersteuert ihn. Nur das Lock-File zeigt die Wahrheit."
     >

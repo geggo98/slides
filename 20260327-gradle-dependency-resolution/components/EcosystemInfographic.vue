@@ -46,7 +46,7 @@ const dlData = [
   {
     name: "  ↳ davon Axios",
     value: 5.2e9,
-    growth: "~100 Mio./Woche",
+    growth: "83 Mio./Woche",
     cls: "npm",
     indent: true,
   },
@@ -214,7 +214,7 @@ const events = [
     date: "Mär 2026",
     title: "Axios",
     eco: "npm",
-    desc: "40M+ Weekly Downloads. Lazarus-Gruppe (Nordkorea).",
+    desc: "83 Mio. Weekly Downloads. Lazarus-Gruppe (Nordkorea).",
   },
 ];
 const evLeft = events.slice(0, 6);
@@ -902,8 +902,14 @@ function ecoLabel(eco) {
   background: rgba(212, 105, 26, 0.15);
   color: #d4691a;
 }
+:global(.dark) .tag-maven {
+  color: #e8843c;
+}
 .tag-go {
   background: rgba(0, 173, 216, 0.15);
+  color: #0090b5;
+}
+:global(.dark) .tag-go {
   color: #00add8;
 }
 .tag-both {

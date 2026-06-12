@@ -1,5 +1,7 @@
 ---
 theme: default
+layout: cover
+lang: de
 transition: slide-left
 title: Gradle Dependency Resolution & Locking
 info: |
@@ -23,6 +25,10 @@ Reproduzierbare Builds, Supply-Chain-Schutz und Ökosystem-Vergleich
 6. **Snapshot-Versionen** — Sonderfall, Caching & Produktions-Gate
 7. **Supply-Chain-Schutz** — Scanning, Verification, Cooldown & Angriffe
 
+<br>
+
+**Bonus** — Java-Versionen mit Gradle, Cooldown-Tools im Detail, Nexus & PEP, Ökosystem-Vergleich
+
 ---
 layout: section
 ---
@@ -37,8 +43,8 @@ Kernbegriffe & Dependency Stack
 
 | Begriff                   | Bedeutung                                                                           |
 | ------------------------- | ----------------------------------------------------------------------------------- |
-| **Dependency Locking**    | Fixiert aufgelöste Versionen in einer Lock-Datei                                    |
-| **Resolution Strategy**   | "highest version wins" — Spring Boot BOM überschreibt mit festen Versionen          |
+| **Dependency Locking**    | Fixiert aufgelöste Versionen in einer Lock-File                                     |
+| **Resolution Strategy**   | Default „highest version wins“; BOM-Constraints greifen separat ein                 |
 | **Lock State**            | `gradle.lockfile` pro (Sub-)Projekt — exakter Abhängigkeitsbaum                     |
 | **Verification Metadata** | SHA-256 + PGP pro Artefakt in `verification-metadata.xml`                           |
 | **BOM**                   | POM, die Versionen vorgibt — importiert via `platform()` (nativ) oder Spring-Plugin |
@@ -69,7 +75,7 @@ Aktivierung & Befehle
 // build.gradle.kts
 dependencyLocking {
     lockAllConfigurations()
-    lockMode.set(LockMode.STRICT) // Build schlägt fehl wenn Lock-Datei fehlt/veraltet
+    lockMode.set(LockMode.STRICT) // Build schlägt fehl wenn Lock-File fehlt/veraltet
 }
 ```
 
@@ -85,14 +91,16 @@ configurations.compileClasspath {
 
 # Wichtigste Befehle
 
-| Aktion                              | Befehl                                                                  |
-| ----------------------------------- | ----------------------------------------------------------------------- |
-| Lock-Datei erzeugen / aktualisieren | `./gradlew dependencies --write-locks`                                  |
-| Nur eine Konfiguration locken       | `./gradlew dependencies --configuration compileClasspath --write-locks` |
-| Verification Metadata erzeugen      | `./gradlew --write-verification-metadata sha256,pgp`                    |
-| Abhängigkeitsbaum anzeigen          | `./gradlew dependencies --configuration compileClasspath`               |
-| Veraltete Deps prüfen               | `./gradlew dependencyUpdates`                                           |
-| Lock-Datei-Diff prüfen              | `git diff gradle.lockfile`                                              |
+| Aktion                             | Befehl                                                                  |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| Lock-File erzeugen / aktualisieren | `./gradlew dependencies --write-locks`                                  |
+| Nur eine Konfiguration locken      | `./gradlew dependencies --configuration compileClasspath --write-locks` |
+| Verification Metadata erzeugen     | `./gradlew --write-verification-metadata sha256,pgp`                    |
+| Abhängigkeitsbaum anzeigen         | `./gradlew dependencies --configuration compileClasspath`               |
+| Veraltete Deps prüfen              | `./gradlew dependencyUpdates`                                           |
+| Lock-File-Diff prüfen              | `git diff gradle.lockfile`                                              |
+
+> `dependencyUpdates` stammt aus dem **ben-manes versions-Plugin** (`com.github.ben-manes.versions`) — nicht in Gradle eingebaut.
 
 ---
 layout: section
@@ -120,7 +128,7 @@ plugins {
 3. Transitive Deps (Jackson, Tomcat, SLF4J, ...) werden durch BOM gepinnt
 4. Lock-File fixiert das Gesamtergebnis
 
-Spring-Boot-Version ändern → BOM ändert sich → Dutzende transitive Versionen ändern sich → Lock-Datei neu generieren!
+Spring-Boot-Version ändern → BOM ändert sich → Dutzende transitive Versionen ändern sich → Lock-File neu generieren!
 
 ---
 
@@ -137,7 +145,7 @@ th, td { padding: 0.25em 0.5em !important; }
 | **Syntax**               | `dependencyManagement { imports { mavenBom(...) } }`             | `implementation(platform(...))`                |
 | **Mechanismus**          | Interne Map `group:artifact → version`, injiziert vor Resolution | Gradle Constraint-Engine (Teil der Resolution) |
 | **Einzelne Constraints** | `dependencyManagement { dependencies { dependency(...) } }`      | `constraints { implementation(...) }`          |
-| **Overrides**            | `ext["jackson.version"]` (Maven-Property-Mapping)                | `constraints { }` oder `enforcedPlatform()`    |
+| **Overrides**            | `ext["jackson-bom.version"]` (Maven-Property-Mapping)            | `constraints { }` oder `enforcedPlatform()`    |
 | **Priorität**            | Rang 6 (übersteuert `platform()`)                                | Rang 5 / Rang 7 (`enforcedPlatform()`)         |
 | **Idiomatisch**          | Legacy — aber in Spring-Boot-Projekten weit verbreitet           | Empfohlen seit Gradle 5.x                      |
 
@@ -203,7 +211,7 @@ plugins {
     id("org.springframework.boot") version "4.0.6" apply false
     id("io.spring.dependency-management") version "1.1.7"
 }
-ext["jackson.version"] = "2.18.3"   // Maven-Property-Mapping → BOM-Override
+ext["jackson-bom.version"] = "2.20.2"   // Maven-Property-Mapping → BOM-Override
 ```
 
 > **`apply false` + `BOM_COORDINATES`:** Plugin-Classpath ohne Apply (kein `bootJar`/`bootRun`) — Plugin-Version und BOM-Version bleiben typsicher gekoppelt, kein String-Drift bei Upgrades.
@@ -218,12 +226,12 @@ ext["jackson.version"] = "2.18.3"   // Maven-Property-Mapping → BOM-Override
 
 ```kotlin
 // Root build.gradle.kts
-ext["jackson.version"] = "2.18.3"   // Überschreibt die Version aus der Spring-BOM
+ext["jackson-bom.version"] = "2.20.2"   // Überschreibt die Version aus der Spring-BOM
 ```
 
-Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson.version"]` auf diese Property → BOM verwendet den Override.
+Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.version>`). Das Dependency-Management-Plugin mappt `ext["jackson-bom.version"]` auf diese Property → BOM verwendet den Override.
 
-> Bekannte Property-Namen: `jackson.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
+> Bekannte Property-Namen: `jackson-bom.version`, `hibernate.version`, `slf4j.version`, `kotlin.version`, …
 >
 > Vollständige Liste: [Spring Boot — Dependency Versions](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html)
 
@@ -233,13 +241,11 @@ Spring Boot BOM definiert Versionen über Maven-Properties (`<jackson-bom.versio
 
 | Ansatz                                 | Typsicher        | IDE-Support | BOM-Override        |
 | -------------------------------------- | ---------------- | ----------- | ------------------- |
-| `ext["jackson.version"]`               | ❌ `Any?` + Cast | ❌          | ✅ Spring-BOM       |
+| `ext["jackson-bom.version"]`           | ❌ `Any?` + Cast | ❌          | ✅ Spring-BOM       |
 | `platform()` + `constraints {}`        | ✅               | ✅          | ✅ jede BOM (nativ) |
 | Version Catalog (`libs.versions.toml`) | ✅               | ✅          | ❌ BOM gewinnt      |
 | `buildSrc` / Convention Plugin         | ✅               | ✅          | ❌ manuell          |
 | `resolutionStrategy.force(...)`        | —                | —           | ✅ jede BOM         |
-
-<br>
 
 - **Native Gradle BOM-Override:** `constraints { }` oder `enforcedPlatform()`
 - **Spring-BOM-Override:** `ext["..."]` oder `force()`
@@ -268,7 +274,7 @@ TOML, Zusammenspiel & Fallstricke
 ```toml
 [versions]
 spring-boot = "4.0.6"
-jackson = "2.17.2"
+jackson = "2.20.1"
 
 [libraries]
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
@@ -314,7 +320,7 @@ jackson = "2.18.3"   # Catalog sagt 2.18.3
 ```
 
 ```kotlin
-implementation(libs.jackson.databind)  // Aufgelöst: 2.17.2 (BOM gewinnt!)
+implementation(libs.jackson.databind)  // Aufgelöst: 2.20.1 (BOM gewinnt!)
 ```
 
 **Pragmatische Lösung:** Für BOM-gemanagte Deps keine Version im Catalog angeben.
@@ -333,7 +339,7 @@ configurations.all {
 
 ### Doppelte Wahrheitsquellen vermeiden
 
-Catalog + `ext["jackson.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
+Catalog + `ext["jackson-bom.version"]` = Wartungs-Albtraum. Entscheide dich für eine Quelle.
 
 ---
 layout: section
@@ -387,17 +393,17 @@ git diff gradle.lockfile   # Kritisch: Jede transitive Änderung prüfen
 
 ```kotlin
 // Variante 1: BOM-Property überschreiben
-ext["jackson.version"] = "2.18.3"
+ext["jackson-bom.version"] = "2.20.2"
 
 // Variante 2: Force
 configurations.all {
-    resolutionStrategy { force("com.fasterxml.jackson.core:jackson-databind:2.18.3") }
+    resolutionStrategy { force("com.fasterxml.jackson.core:jackson-databind:2.20.2") }
 }
 ```
 
 > ⚠️ Eingriff in die BOM-Kohärenz — ab hier bist du selbst für Kompatibilität verantwortlich.
 >
-> Denk daran, die Version beim näschten Spring update zu prüfen und ggf. den Override wieder zu entfernen.
+> Denk daran, die Version beim nächsten Spring-Update zu prüfen und ggf. den Override wieder zu entfernen.
 
 ---
 layout: section
@@ -423,7 +429,7 @@ Gradle behandelt Snapshots als _dynamische Versionen_ (wie `1.+`):
 | Dependency-Scanner    | Verlässlich              | Falsche Sicherheit                        |
 | "Highest Wins"        | Deterministisch          | Non-deterministisch                       |
 
-> ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata und Scanner-Verlässlichkeit.
+> ⚠️ Snapshots unterwandern systematisch Lock-Files, Verification Metadata (<Link to="31">Details in Abschnitt 7</Link>) und Scanner-Verlässlichkeit.
 
 ---
 
@@ -496,9 +502,11 @@ Lock-File als **Single Source of Truth** für Scanner (Snyk, Trivy, OWASP, Depen
 
 <br>
 
-**Voraussetzung:** Lock-Datei ist aktuell und committet.
+**Voraussetzung:** Lock-File ist aktuell und committet.
 
-Veraltete Lock-Dateien → Scanner meldet keine neuen transitiven Deps → **blinde Flecken**.
+Veraltete Lock-Files → Scanner meldet keine neuen transitiven Deps → **blinde Flecken**.
+
+> ⚠️ Ironie: Trivy gilt hier als vertrauenswürdiger Scanner — wurde 2026 aber selbst zum Angriffsvektor: <Link to="39">Trivy → LiteLLM</Link>.
 
 ---
 
@@ -543,8 +551,8 @@ buildscript {
 Erzeugt `gradle/verification-metadata.xml`:
 
 ```xml
-<component group="com.fasterxml.jackson.core" name="jackson-databind" version="2.17.2">
-    <artifact name="jackson-databind-2.17.2.jar">
+<component group="com.fasterxml.jackson.core" name="jackson-databind" version="2.20.1">
+    <artifact name="jackson-databind-2.20.1.jar">
         <sha256 value="a1b2c3d4..." origin="Generated by Gradle"/>
         <pgp value="ABC12345"/>
     </artifact>
@@ -562,8 +570,8 @@ Erzeugt `gradle/verification-metadata.xml`:
 `--write-verification-metadata` erfasst nur Konfigurationen, die beim jeweiligen Task aufgelöst werden.
 
 ```bash
-# ❌ Unvollständig — erfasst nicht alle Konfigurationen
-./gradlew --write-verification-metadata sha256 classpath
+# ❌ Unvollständig — assemble löst z.B. keine Test-Konfigurationen auf
+./gradlew --write-verification-metadata sha256 assemble
 
 # ✅ Alle CI-relevanten Tasks ausführen, Caching deaktivieren
 ./gradlew --write-verification-metadata sha256 --no-build-cache \
@@ -616,9 +624,9 @@ Wenn detached configurations (Checkstyle, JaCoCo, ErrorProne) auf manchen System
 </verification-metadata>
 ```
 
-**Warum vertretbar:** JAR-Inhalte (der ausführbare Code) werden weiterhin per SHA-256 verifiziert — nur die volatilen Metadaten-Files werden großzügiger getrustet.
+**Warum vertretbar:** JAR-Inhalte (der Code) werden weiterhin per SHA-256 verifiziert — nur volatile Metadaten-Files werden großzügiger getrustet.
 
-**Warum POMs/Module-Files variieren:** Mirror-Whitespace/-Encoding, dynamisch generierte POMs (JitPack, Snapshot-Repos), Plugin-Marker-Artefakte aus dem Gradle Plugin Portal.
+**Warum sie variieren:** Mirror-Whitespace/-Encoding, dynamisch generierte POMs (JitPack, Snapshot-Repos), Plugin-Marker-Artefakte.
 
 > ⚠️ **Nicht der Default!** Wenn möglich, einzelne Artefakte mit `<trust group="..." name="..."/>` granular trusten statt Glob-Pattern.
 
@@ -666,7 +674,7 @@ Kompromittierte Pakete werden typischerweise innerhalb von Stunden bis Tagen ent
 
 > Cooldown ist kein Allheilmittel — gezielte Angriffe können ihn aussitzen. Eine Schicht in Defense-in-Depth, nicht die einzige.
 >
-> ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe separate Slides.
+> ¹ `exclude-newer` benötigt PEP 691 (JSON Metadata API). Nexus unterstützt nur PEP 503 (HTML) — siehe Bonus <Link to="45">„Cooldown: Nexus & Python“</Link>.
 
 ---
 
@@ -725,6 +733,18 @@ Aqua Security's Trivy — 32.000+ GitHub Stars, 100M+ Docker-Downloads — kompr
 
 > Die Ironie: Ein Security-Scanner wurde zum Angriffsvektor — weil er mit denselben Privilegien lief wie der Build.
 
+<!--
+Trivy → LiteLLM, März 2026: Angreifer (TeamPCP) übernahmen 76 von 77
+Version-Tags der trivy-action GitHub Action; die manipulierte Binary lief vor
+der Scan-Logik und exfiltrierte CI/CD-Secrets. LiteLLM (~95 Mio.
+Downloads/Monat) nutzte Trivy in der Pipeline → PyPI-Publishing-Tokens
+gestohlen → zwei kompromittierte Releases (v1.82.7, v1.82.8) mit dreistufigem
+Payload. Folgekette bis Mercor (KI-Daten-Zulieferer für Meta/OpenAI/Anthropic),
+Meta pausierte alle Mercor-Projekte. Kernlehre: Build-Sandbox + Least-Privilege
+für CI-Runner. Stand: 03/2026 (web-verifiziert), vor dem Talk auf Aktualität
+prüfen.
+-->
+
 ---
 clicks: false
 ---
@@ -732,6 +752,18 @@ clicks: false
 # Axios Supply-Chain-Angriff
 
 <AxiosAttack />
+
+<div class="mt-1 text-xs opacity-70">Gleiche Angriffsklasse, gleiches Vortragsdatum im JS-Ökosystem: <TalkXref slug="20260327-ai-agents">AI Coding Agents — Clinejection-Bonus</TalkXref></div>
+
+<!--
+Axios: am 30./31.03.2026 wurden axios@1.14.1 (latest) und 0.30.4 (legacy)
+kompromittiert — Caret-Ranges (^1.7.2) zogen die vergiftete Version automatisch.
+Erste Infektion 89 Sekunden nach Veröffentlichung; ~600k Downloads im
+2h54m-Fenster bis zur Entfernung. Attribution: Google GTIG → UNC1069 /
+BlueNoroff, Microsoft → Sapphire Sleet. Pointe für Gradle: ein 7-Tage-Cooldown
+(Minimum Release Age) hätte die Mehrheit dieser opportunistischen Angriffe
+gefiltert. Stand: Vorfall-Daten 03/2026, ggf. vor dem Talk aktualisieren.
+-->
 
 ---
 
@@ -754,7 +786,7 @@ layout: center
 clicks: false
 ---
 
-# Java-Versionen mit Gradle Verwalten
+# Java-Versionen mit Gradle verwalten
 
 <JavaVersionsMatrix />
 
@@ -837,18 +869,11 @@ title: Ökosysteme
 <EcosystemInfographic />
 
 ---
-clicks: false
-title: Alle Gradle Info-Grafiken
----
 
-<GradleInfographic />
-
----
-
-# Weiterführende Links
+# Weiterführende Links (1/2) — Gradle & Cooldown
 
 <style>
-ul { font-size: 0.9em; }
+ul { font-size: 0.85em; }
 </style>
 
 - [Gradle: Dependency Locking](https://docs.gradle.org/current/userguide/dependency_locking.html)
@@ -856,18 +881,27 @@ ul { font-size: 0.9em; }
 - [Gradle: Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html)
 - [Gradle: Bootstrapping Dependency Verification](https://docs.gradle.org/current/userguide/dependency_verification.html#sec:bootstrapping-verification)
 - [Gradle: Trusting Some Particular Artifacts](https://docs.gradle.org/current/userguide/dependency_verification.html#sec:trusting-some-artifacts)
-- [Renovate: minimumReleaseAge](https://docs.renovatebot.com/configuration-options/#minimumreleaseage)
+- [Spring Boot: Dependency Management Plugin](https://docs.spring.io/dependency-management-plugin/docs/current/reference/html/)
 - [Package Managers Need to Cool Down](https://nesbitt.io/2026/03/04/package-managers-need-to-cool-down.html) — Andrew Nesbitt
+- [Renovate: minimumReleaseAge](https://docs.renovatebot.com/configuration-options/#minimumreleaseage)
 - [npm: min-release-age](https://docs.npmjs.com/cli/v11/using-npm/config#min-release-age)
-- [npm: Bulk trusted publishing & script security (GitHub Blog, Feb 2026)](https://github.blog/changelog/2026-02-18-npm-bulk-trusted-publishing-config-and-script-security-now-generally-available/)
 - [pnpm: minimumReleaseAge](https://pnpm.io/settings#minimumreleaseage)
 - [Bun: minimumReleaseAge](https://bun.com/docs/pm/cli/install#minimum-release-age)
+- [uv: Locking and Syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
+
+---
+
+# Weiterführende Links (2/2) — Supply-Chain & Ökosysteme
+
+<style>
+ul { font-size: 0.85em; }
+</style>
+
+- [npm: Bulk trusted publishing & script security (GitHub Blog, Feb 2026)](https://github.blog/changelog/2026-02-18-npm-bulk-trusted-publishing-config-and-script-security-now-generally-available/)
 - [Supply-Chain Guardrails (Coinspect)](https://www.coinspect.com/blog/supply-chain-guardrails/)
 - [SLSA Framework](https://slsa.dev/)
-- [Spring Boot: Dependency Management Plugin](https://docs.spring.io/dependency-management-plugin/docs/current/reference/html/)
 - [Go: How Go Mitigates Supply Chain Attacks](https://go.dev/blog/supply-chain)
 - [pnpm: Mitigating Supply Chain Attacks](https://pnpm.io/supply-chain-security)
-- [uv: Locking and Syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
 - [PEP 503 — Simple Repository API](https://peps.python.org/pep-0503/)
 - [PEP 691 — JSON-based Simple API for Python Package Indexes](https://peps.python.org/pep-0691/)
 - [PEP 740 — Index Support for Digital Attestations](https://peps.python.org/pep-0740/)

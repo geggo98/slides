@@ -31,7 +31,7 @@ const ecosystems = {
       { label: "Lifecycle-scripts", value: "Hauptangriffsvektor", cls: "n" },
     ],
     detail:
-      "<strong>Höchstes Angriffsrisiko.</strong> <code>npm install</code> ist effektiv Remote Code Execution via <code>postinstall</code>-Scripts. pnpm v10 deaktiviert Scripts per Default. Lock-Files enthalten SHA-512 Integrity-Hashes. pnpm hat als einziger <code>minimumReleaseAge</code> eingebaut.",
+      "<strong>Höchstes Angriffsrisiko.</strong> <code>npm install</code> ist effektiv Remote Code Execution via <code>postinstall</code>-Scripts. pnpm v10 deaktiviert Scripts per Default. Lock-Files enthalten SHA-512 Integrity-Hashes. pnpm führte <code>minimumReleaseAge</code> zuerst ein — npm, Bun und Yarn zogen nach; pnpm v11 aktiviert es per Default mit 1440 Minuten.",
   },
   py: {
     stats: [

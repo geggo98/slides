@@ -6,8 +6,8 @@
   <div class="scene-wrap">
     <div class="scene-desc">
       <strong>Gefährlicher Fall:</strong>
-      Eine nicht-Spring-Library zieht transitiv jackson <code>2.18.0</code> ein.
-      Die Spring BOM pinnt aber auf <code>2.17.2</code>. Die BOM gewinnt —
+      Eine nicht-Spring-Library zieht transitiv jackson <code>2.21.0</code> ein.
+      Die Spring BOM pinnt aber auf <code>2.20.1</code>. Die BOM gewinnt —
       stilles Downgrade.
     </div>
     <div class="graph">
@@ -22,19 +22,19 @@
       <div class="g-row">
         <GraphNode name="external-lib" version="3.0" />
         <div class="g-gap" />
-        <GraphNode name="BOM" version="jackson = 2.17.2" variant="bom-node" />
+        <GraphNode name="BOM" version="jackson = 2.20.1" variant="bom-node" />
       </div>
       <TreeConnector type="parallel" :width="180" />
       <div class="g-row">
-        <GraphNode name="jackson" version="2.18.0" variant="loser" />
+        <GraphNode name="jackson" version="2.21.0" variant="loser" />
         <div class="g-gap" />
-        <GraphNode name="jackson" version="2.17.2" variant="winner" />
+        <GraphNode name="jackson" version="2.20.1" variant="winner" />
       </div>
     </div>
     <ResultBox
-      value="jackson:2.17.2"
+      value="jackson:2.20.1"
       value-color="warning"
-      explain="Die BOM erzwingt 2.17.2, obwohl external-lib 2.18.0 braucht. Kein Compile-Fehler — aber NoSuchMethodError zur Laufzeit möglich."
+      explain="Die BOM erzwingt 2.20.1, obwohl external-lib 2.21.0 braucht. Kein Compile-Fehler — aber NoSuchMethodError zur Laufzeit möglich."
     >
       <template #suffix>
         <span style="margin-left: 8px; font-size: 12px">(Downgrade!)</span>

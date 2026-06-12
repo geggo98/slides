@@ -10,7 +10,7 @@ const pitfalls = [
   },
   {
     title: "sourceCompatibility ohne release",
-    body: "Cross-Kompilation auf Java 8/11 ohne <code>options.release</code> ist das Morling-Problem in Wartezeit. Betroffen: Apache Thrift, Elasticsearch Client, Classgraph — reale Produktionsfehler.",
+    body: "Cross-Kompilation auf Java 8/11 ohne <code>options.release</code> ist das Morling-Problem in Wartestellung. Betroffen: Apache Thrift, Elasticsearch Client, Classgraph — reale Produktionsfehler.",
   },
   {
     title: "org.gradle.java.home hart gepinnt",
