@@ -197,8 +197,8 @@ const mermaidThemeVars = computed(() =>
   );
   border: 0.5px solid var(--color-border-warning, var(--color-border-tertiary));
   border-radius: var(--sk-rad);
-  padding: 7px 11px;
-  line-height: 1.5;
+  padding: 5px 11px;
+  line-height: 1.45;
 }
 .caveat :deep(strong) {
   color: var(--color-text-primary);
@@ -216,8 +216,8 @@ const mermaidThemeVars = computed(() =>
   color: var(--color-text-secondary);
   background: var(--color-background-secondary);
   border-radius: var(--sk-rad);
-  padding: 9px 13px;
-  line-height: 1.5;
+  padding: 6px 13px;
+  line-height: 1.45;
 }
 .callout :deep(strong) {
   color: var(--color-text-primary);

@@ -66,7 +66,7 @@ export const schicht1 = {
             tone: "warning",
             detail: {
               title: "JLS §12.4.1 — „first active use“",
-              body: "Das Feld wird mit der Enum-Klasse initialisiert: laut JLS §12.4.1 <em>unmittelbar vor der ersten aktiven Nutzung</em>. „Nutzung“ ist weit gefasst — jeder statische Methodenaufruf (auch <code>values()</code>/<code>valueOf()</code>), jedes <code>switch</code> über das Enum (synthetischer <code>$SwitchMap</code> ruft <code>ordinal()</code>) triggert die volle Initialisierung. Granularität ist <strong>pro Klasse</strong>, nicht pro Konstante. Du kontrollierst also <em>nicht</em>, wann <code>buildIndex()</code> läuft.",
+              body: "Das Feld wird mit der Enum-Klasse initialisiert: laut JLS §12.4.1 <em>unmittelbar vor der ersten aktiven Nutzung</em>. „Nutzung“ ist weit gefasst — jeder statische Methodenaufruf (auch <code>values()</code>/<code>valueOf()</code>), jedes <code>switch</code> über das Enum (synthetischer <code>$SwitchMap</code> ruft <code>ordinal()</code>) triggert die volle Initialisierung. Granularität ist <strong>pro Klasse</strong>, nicht pro Konstante. Man kontrolliert also <em>nicht</em>, wann <code>buildIndex()</code> läuft.",
             },
           },
         ],

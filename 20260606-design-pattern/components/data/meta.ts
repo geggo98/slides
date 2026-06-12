@@ -132,9 +132,9 @@ class CounterImpl implements Counter {
           },
         ],
         caveat:
-          "⚠️ <strong>Arrow Functions:</strong> Klassenfeld-Arrows (<code>m = () => …</code>) binden <code>this</code> lexikalisch bei der Konstruktion → <strong>Target</strong>, umgehen den Proxy wie Fall A. Nur reguläre Methoden — oder in ihnen geschachtelte Arrows — re-entern.",
+          "⚠️ <strong>Arrow Functions:</strong> Klassenfeld-Arrows (<code>m = () => …</code>) binden <code>this</code> lexikalisch bei der Konstruktion → <strong>Target</strong>, umgehen den Proxy wie Fall A. Nur reguläre Methoden re-entern.",
         callout:
-          "Maßgeblich ist nie „Proxy ja/nein“, sondern die <strong>Receiver-Bindung</strong>. Wer Cross-Cutting <em>zuverlässig</em> auf jeden Aufruf legen will, kann sich nicht auf transparente, dispatch-basierte Proxies verlassen — das Hauptargument für den funktionalen Gegenentwurf.",
+          "Maßgeblich ist nie „Proxy ja/nein“, sondern die <strong>Receiver-Bindung</strong>. Transparente, dispatch-basierte Proxies legen Cross-Cutting nicht <em>zuverlässig</em> auf jeden Aufruf.",
       },
     ],
   },
@@ -187,7 +187,7 @@ public class OrderService {
           {
             lines: 5,
             label:
-              "Fall A aus §9.3 — kein Spring-Bug, sondern Receiver-Bindung",
+              "Fall A von der Self-Invocation-Folie — kein Spring-Bug, sondern Receiver-Bindung",
             tone: "danger",
             detail: {
               title: "Notlösungen",
@@ -242,7 +242,7 @@ String result = decorated.get();`,
       },
       {
         label: "React HOC",
-        language: "jsx",
+        language: "javascript",
         height: "150px",
         note: "Eine HOC ist „a function that takes a component and returns a new component“.",
         code: `const withLogging = (Wrapped) => (props) => {   // expliziter Wrapper

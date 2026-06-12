@@ -11,7 +11,7 @@
     { "key": "state", "label": "State", "short": "Schicht 1" },
     { "key": "nullobj", "label": "Null Object", "short": "Schicht 1" },
     { "key": "builder", "label": "Builder", "short": "Sonderfall" },
-    { "key": "lazyinit", "label": "Lazy Init", "short": "Schicht 1" },
+    { "key": "lazyinit", "label": "Lazy Init", "short": "Sonderfall" },
     { "key": "decorator", "label": "Decorator", "short": "Schicht 2" },
     { "key": "adapter", "label": "Adapter", "short": "Schicht 2" },
     { "key": "proxy", "label": "Proxy", "short": "Schicht 2" },
@@ -20,7 +20,7 @@
     {
       "key": "factory",
       "label": "Factory (Method/Abstract)",
-      "short": "Schicht 3"
+      "short": "Schicht 1"
     }
   ],
   "tools": [

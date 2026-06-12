@@ -1,5 +1,6 @@
 ---
 theme: default
+lang: de
 title: "Brauchen wir noch Entwurfsmuster? — GoF zwischen Sprachfeature und Architektur"
 info: |
   Klassische GoF-Muster und ihre modernen Entsprechungen (JVM-Fokus).
@@ -27,7 +28,7 @@ Drei Schichten · Builder als Typsystem-Lehrstück · Metaprogramming als Substr
 
 <!--
 - Leitfrage: Sind die GoF-Muster (1994) heute noch relevant — oder haben Sprachfeatures sie überflüssig gemacht?
-- Antwort vorweg: weder „alles tot" noch „alles ewig". Die Wahrheit ist geschichtet.
+- Antwort vorweg: weder „alles tot“ noch „alles ewig“. Die Wahrheit ist geschichtet.
 - JVM-Fokus, aber mit Kotlin/Rust/Go/TS/Python als Kontrast.
 -->
 
@@ -37,10 +38,10 @@ hideInToc: true
 
 # Kurzfassung
 
-- **Substitution ist real, aber selektiv.** 16 der 23 GoF-Muster sind laut Norvig in höheren Sprachen „either invisible or simpler" — ersetzt durch first-class functions, sum types/ADTs, null-safety, named/default args. Ein hartes Drittel bleibt sprachunabhängig relevant.
+- **Substitution ist real, aber selektiv.** 16 der 23 GoF-Muster sind laut Norvig in höheren Sprachen „either invisible or simpler“ — ersetzt durch first-class functions, sum types/ADTs, null-safety, named/default args. Ein hartes Drittel bleibt sprachunabhängig relevant.
 - **Drei Schichten, nicht drei GoF-Familien.** Schicht 1 (Sprachdefizit-Notlösungen) wird durch Features ersetzt; Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung; Schicht 3 (Architektur/DDD) ist unberührt. Wer das nicht trennt, irrt in beide Richtungen.
 - **Builder ist der Lehrfall für Typsystem-Grenzen.** Geplante Java-null-Safety erzwingt Pflichtfelder **nicht** zur Compile-Zeit. Compile-zeit-sicher ist nur der Staged Builder — oder named/default args, die das Muster ganz auflösen.
-- **Metaprogramming ist das Substrat hinter „Proxy & Spring-Magie".** Dynamische Proxies _implementieren_ Proxy (statt es zu ersetzen) und subsumieren Decorator; Spring AOP industrialisiert das — mit dokumentierten Failure Modes.
+- **Metaprogramming ist das Substrat hinter „Proxy & Spring-Magie“.** Dynamische Proxies _implementieren_ Proxy (statt es zu ersetzen) und subsumieren Decorator; Spring AOP industrialisiert das — mit dokumentierten Failure Modes.
 
 ---
 hideInToc: true
@@ -56,7 +57,7 @@ layout: section
 
 # 1. Die Frage & die Drei-Schichten-Taxonomie
 
-Warum „GoF ist tot" und „GoF ist ewig" beide falsch sind
+Warum „GoF ist tot“ und „GoF ist ewig“ beide falsch sind
 
 ---
 hideInToc: true
@@ -69,7 +70,7 @@ hideInToc: true
 
 ### Norvig (1996)
 
-> „16 of 23 patterns are **either invisible or simpler**" in höheren Sprachen.
+> „16 of 23 patterns are **either invisible or simpler**“ in höheren Sprachen.
 
 Aufgeschlüsselt: first-class functions (Strategy, Command, Template Method, Visitor), first-class types (Factory, Proxy, State …), Makros (Iterator, Interpreter).
 
@@ -78,16 +79,16 @@ Aufgeschlüsselt: first-class functions (Strategy, Command, Template Method, Vis
 
 ### Graham (2002)
 
-> Muster im Code seien „a **sign of trouble**".
+> Muster im Code seien „a **sign of trouble**“.
 
-Ein Hinweis, dass man „by hand the expansions of some macro" erzeuge — _„the human compiler"_. Polemisch, aus Lisp-Sicht, aber dieselbe Diagnose.
+Ein Hinweis, dass man „by hand the expansions of some macro“ erzeuge — _„the human compiler“_. Polemisch, aus Lisp-Sicht, aber dieselbe Diagnose.
 
 </div>
 <div>
 
 ### Gamma (2009)
 
-> „I'm in favor of **dropping Singleton**. Its use is almost always a design smell."
+> „I'm in favor of **dropping Singleton**. Its use is almost always a design smell.“
 
 Würde Factory Method zu Factory verallgemeinern. Das GoF-Buch nutzt C++/Smalltalk — der OOP-Kontext der frühen 90er.
 
@@ -96,7 +97,7 @@ Würde Factory Method zu Factory verallgemeinern. Das GoF-Buch nutzt C++/Smallta
 
 <div class="mt-6 text-sm opacity-70">
 
-Aber: nicht alle Muster sind Sprachdefizite. Gamma betont zugleich die _„enduring nature of good design"_ an Adapter, Bridge, Proxy.
+Aber: nicht alle Muster sind Sprachdefizite. Gamma betont zugleich die _„enduring nature of good design“_ an Adapter, Bridge, Proxy.
 
 </div>
 
@@ -165,7 +166,7 @@ hideInToc: true
 
 <!--
 - Diese sechs Thesen ziehen sich als roter Faden durch den Talk.
-- Vier davon sind „falsche Freunde" — gleiches Wort, anderes Konzept.
+- Vier davon sind „falsche Freunde“ — gleiches Wort, anderes Konzept.
 -->
 
 ---
@@ -207,7 +208,7 @@ layout: section
 
 # 2. Schicht 1 — Sprachdefizit-Notlösungen
 
-„Verhalten als Wert übergeben" — und ADTs statt double dispatch
+„Verhalten als Wert übergeben“ — und ADTs statt double dispatch
 
 ---
 hideInToc: true
@@ -264,12 +265,12 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Visitor · [ERSETZT durch ADTs] — der Lehrfall
+# Visitor · [ERSETZT] durch ADTs — der Lehrfall
 
 <PatternTabs name="visitor" />
 
 <!--
-- Warum „Lambda ersetzt Pattern X" zu kurz greift: Visitor löst das Expression Problem via double dispatch.
+- Warum „Lambda ersetzt Pattern X“ zu kurz greift: Visitor löst das Expression Problem via double dispatch.
 - Ein Lambda ersetzt nur den degenerierten Ein-Methoden-Fall (dann ist es Strategy).
 -->
 
@@ -309,23 +310,33 @@ Der Lehrfall für Typsystem-Ebenen: Laufzeit-Check · Compile-Zeit-Kodierung · 
 hideInToc: true
 ---
 
-# Klassischer Builder — Prüfung zur Laufzeit
+# Klassischer Builder · [SPRACHABH.] — Prüfung zur Laufzeit
 
 <PatternTabs name="builderClassic" />
 
+<!--
+- Der klassische Builder verschiebt die Pflichtfeld-Prüfung in `build()`: fehlt ein Pflichtfeld, fliegt erst zur LAUFZEIT eine Exception.
+- Das ist die schwächste Garantie-Ebene — der Compiler hilft nicht. Genau hier setzt der nächste Schritt (Staged Builder) an.
+-->
+
 ---
 hideInToc: true
 ---
 
-# Staged Builder — Pflichtfelder zur Compile-Zeit
+# Staged Builder · [SPRACHABH.] — Pflichtfelder zur Compile-Zeit
 
 <PatternTabs name="builderStaged" />
 
+<!--
+- Der Staged Builder kodiert die Pflichtreihenfolge in eine Interface-Kette: jede Stufe gibt nur das Interface der nächsten zurück.
+- Dadurch erzwingt der COMPILER die Pflichtfelder — Preis: N Interfaces Boilerplate. Das ist die Compile-Zeit-Kodierung, die named/default args (übernächste Folie) ganz auflösen.
+-->
+
 ---
 hideInToc: true
 ---
 
-# Grenze: kombinatorische Explosion (2ᴺ)
+# Grenze: kombinatorische Explosion (2ᴺ) · [SPRACHABH.]
 
 <PatternTabs name="builderExplosion" />
 
@@ -333,7 +344,7 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Grenze: Builder + Vererbung (`@SuperBuilder`)
+# Grenze: Builder + Vererbung (`@SuperBuilder`) · [SPRACHABH.]
 
 <PatternTabs name="builderInheritance" />
 
@@ -341,9 +352,9 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Die eigentliche Auflösung: named / default args
+# Die eigentliche Auflösung: named / default args · [SPRACHABH.]
 
-In Sprachen mit named + optionalen Parametern ist der Builder schlicht **überflüssig** — und Pflichtfelder sind „kostenlos" compile-zeit-erzwungen.
+In Sprachen mit named + optionalen Parametern ist der Builder schlicht **überflüssig** — und Pflichtfelder sind „kostenlos“ compile-zeit-erzwungen.
 
 <PatternTabs name="builderNamedArgs" />
 
@@ -372,7 +383,7 @@ hideInToc: true
 
 <div class="mt-2 text-xs opacity-70">
 
-Der Builder ist kein „gelöstes" Muster, sondern eine **Landkarte**, _auf welcher Ebene_ eine Sprache das Konstruktionsproblem löst — null-Safety landet auf der schwächsten.
+Der Builder ist kein „gelöstes“ Muster, sondern eine **Landkarte**, _auf welcher Ebene_ eine Sprache das Konstruktionsproblem löst — null-Safety landet auf der schwächsten. <TalkXref slug="20260428-java-null-pointer">JEP 8303099 im Detail</TalkXref>
 
 </div>
 
@@ -388,7 +399,7 @@ routeAlias: lazy-init
 
 # Lazy Initialization · [ERSETZT] / [KONZEPT]
 
-Kein GoF-23-Muster — Beck (1997), Fowlers „Lazy Load" (2002). _Lazy initialization_ (ein Feld) ≠ _lazy evaluation_ (Haskell).
+Kein GoF-23-Muster — Beck (1997), Fowlers „Lazy Load“ (2002). _Lazy initialization_ (ein Feld) ≠ _lazy evaluation_ (Haskell).
 
 <PatternTabs name="lazyInit" />
 
@@ -428,7 +439,7 @@ Die Lücke, die `LazyConstant` schließt: lazy **und** thread-safe **und** const
 <div class="cmp-foot text-xs opacity-65 mt-4">
 
 **DCL** — Double-Checked Locking<br>
-**CAS** — Compare-and-Swap (atomare „vergleiche-und-tausche"-CPU-Instruktion)<br>
+**CAS** — Compare-and-Swap (atomare „vergleiche-und-tausche“-CPU-Instruktion)<br>
 **Constant Folding** — [statische Formelauswertung zur Übersetzungszeit](https://en.wikipedia.org/wiki/Constant_folding); der Compiler/JIT ersetzt einen konstanten Ausdruck vorab durch sein Ergebnis
 
 </div>
@@ -494,14 +505,14 @@ hideInToc: true
 <div>
 
 - **Bridge** — Komposition zweier unabhängiger Hierarchien (Abstraktion ⊥ Implementierung).
-- **Proxy** — bleibt [KONZEPT]; dynamische Proxies / AOP **implementieren** ihn → Teil III.
+- **Proxy** — bleibt [KONZEPT]; dynamische Proxies / AOP **implementieren** ihn → <Link to="metaprogramming">Sektion 6</Link>.
 
 </div>
 </div>
 
 <div class="mt-8 text-center text-sm opacity-70">
 
-Alle vier: <strong>[RELEVANT]</strong> — sprachunabhängige Strukturkonzepte, kein Sprachfeature nimmt sie weg.
+Facade · Composite · Bridge: <strong>[RELEVANT]</strong>, Proxy: <strong>[KONZEPT]</strong> — sprachunabhängige Strukturkonzepte, kein Sprachfeature nimmt sie weg.
 
 </div>
 
@@ -517,7 +528,7 @@ Von der Substitution unberührt — eine Ausnahme (Value Object), ein Brückenfa
 hideInToc: true
 ---
 
-# Value Object · [ERSETZT (Implementierung)]
+# Value Object · [ERSETZT] (Implementierung)
 
 <PatternTabs name="valueObject" />
 
@@ -533,7 +544,7 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Persistenz: drei Cluster, nicht „ORM vs. SQL"
+# Persistenz: drei Cluster, nicht „ORM vs. SQL“
 
 <div class="grid grid-cols-3 gap-6 mt-6">
 <div>
@@ -542,7 +553,7 @@ hideInToc: true
 
 Persistenz lebt **im** Domänenobjekt: `user.save()`, `User.find(id)`.
 
-Schnelle CRUD-Entwicklung, aber Domänen-/Persistenzlogik vermischt; „Fat Models".
+Schnelle CRUD-Entwicklung, aber Domänen-/Persistenzlogik vermischt; „Fat Models“.
 
 <div class="text-xs opacity-60 mt-2">Rails, Django, Eloquent, GORM</div>
 
@@ -573,7 +584,7 @@ Gehört in die Domänenschicht; Implementierung in die Infrastruktur (Hexagonal)
 
 <div class="mt-5 text-xs opacity-70">
 
-Große Debatten: **Impedance Mismatch** (Neward, „The Vietnam of Computer Science") · **Leaky Abstractions** (Spolsky) · **N+1**. Volle Cluster-Tabelle im Bonus.
+Große Debatten: **Impedance Mismatch** (Neward, „The Vietnam of Computer Science“) · **Leaky Abstractions** (Spolsky) · **N+1**. <Link to="persistenz-cluster">Volle Cluster-Tabelle im Bonus</Link>.
 
 </div>
 
@@ -586,16 +597,16 @@ hideInToc: true
 <div class="grid grid-cols-2 gap-8 mt-4">
 <div>
 
-### Position „Anti-Pattern"
+### Position „Anti-Pattern“
 
-- Microsoft Learn: „The Entity Framework **`DbContext`** class is based on the **Unit of Work and Repository** patterns" → Custom-Repo darüber = Abstraktion über Abstraktion.
+- Microsoft Learn: „The Entity Framework **`DbContext`** class is based on the **Unit of Work and Repository** patterns“ → Custom-Repo darüber = Abstraktion über Abstraktion.
 - **Generic Repository** (`IRepository<T>`) bringt keinen Mehrwert über `DbSet<T>`/`Session`, verletzt aber SRP.
-- „Wir tauschen später das ORM aus" — passiert fast nie.
+- „Wir tauschen später das ORM aus“ — passiert fast nie.
 
 </div>
 <div>
 
-### Position „Sinnvoll"
+### Position „Sinnvoll“
 
 - DDD-Repository ≠ Generic Repository: **aggregat-spezifisch**, domänensprachliche Methoden (`findOrdersPendingPayment()`).
 - **Persistence Ignorance** der Domäne.
@@ -610,8 +621,14 @@ hideInToc: true
 
 </div>
 
+<!--
+- Die „Anti-Pattern“-Position trifft NUR das Generic Repository (`IRepository<T>`) über einem ORM, das selbst schon Unit of Work + Repository ist.
+- Das DDD-Repository ist etwas anderes: aggregat-spezifisch, domänensprachlich, Persistence Ignorance. Synthese: Boundary ja, Generic-Wrapper nein, `IQueryable` nie herausleaken.
+-->
+
 ---
 layout: section
+routeAlias: metaprogramming
 ---
 
 # 6. Metaprogramming als Pattern-Substrat
@@ -659,7 +676,7 @@ Bytecode-Weaving (AspectJ)
 
 <div class="mt-8 text-center opacity-70">
 
-Je <strong>später und tiefer</strong> der Eingriff, desto größer die Reichweite — und desto höher die Kosten an Build-Komplexität, Debugging und „Magie".
+Je <strong>später und tiefer</strong> der Eingriff, desto größer die Reichweite — und desto höher die Kosten an Build-Komplexität, Debugging und „Magie“.
 
 </div>
 
@@ -678,6 +695,11 @@ hideInToc: true
 # Self-Invocation / Re-Entrancy — receiver-abhängig
 
 <PatternTabs name="selfInvocation" />
+
+<!--
+- Kernargument: ob ein Selbstaufruf interzipiert wird, hängt allein an der Receiver-Bindung von `this`, nicht am Vorhandensein eines Proxys.
+- Java-Proxy: `this` = Target → Selbstaufruf umgeht den Aspekt (stiller Bug). JS-Proxy: `this` = Proxy → re-entert die Trap. Das motiviert den funktionalen Gegenentwurf.
+-->
 
 ---
 hideInToc: true
@@ -708,7 +730,7 @@ hideInToc: true
 
 Liegt **eine** Transaktion um **alle** Versuche, markiert schon die erste Exception die Transaktion als **rollback-only** — Spring setzt das Flag, _bevor_ der Retry greift.
 
-→ Ein späterer, erfolgreicher Versuch ist vergeblich: Commit scheitert mit _„Transaction has been marked as rollback-only"_.
+→ Ein späterer, erfolgreicher Versuch ist vergeblich: Commit scheitert mit _„Transaction has been marked as rollback-only“_.
 
 </div>
 <div>
@@ -727,6 +749,11 @@ In Annotationsform zwingend als **Cross-Bean**-Aufruf (sonst greift wegen Self-I
 Weitere Reihenfolge-Fälle: **Security vor Transaktion** · **Cache vor Transaktion** · Metrik _innerhalb vs. außerhalb_ von Retry. Transparente Annotationen machen die Reihenfolge **implizit** (still falsch konfigurierbar); funktionale Komposition macht sie **explizit** — die Schachtelung _ist_ der Code.
 
 </div>
+
+<!--
+- Der Bug: eine Transaktion um alle Retries → die erste Exception setzt rollback-only, jeder spätere Erfolg scheitert beim Commit.
+- Regel: Retry AUSSEN, Transaktion INNEN — jeder Versuch eine frische Transaktion. Annotationen machen die Reihenfolge implizit (still falsch), funktionale Komposition macht sie explizit.
+-->
 
 ---
 hideInToc: true
@@ -796,22 +823,22 @@ layout: section
 
 # 7. Meta-Analyse & Schluss
 
-„GoF zielt auf alte Java/C++-Codebasen" — teilweise korrekt, aber zu pauschal
+„GoF zielt auf alte Java/C++-Codebasen“ — teilweise korrekt, aber zu pauschal
 
 ---
 hideInToc: true
 ---
 
-# Fazit: „GoF zielt auf alte Java/C++-Codebasen"?
+# Fazit: „GoF zielt auf alte Java/C++-Codebasen“?
 
 <div class="grid grid-cols-3 gap-6 mt-4">
 <div>
 
 ### Pro These
 
-- **Norvig**: 16/23 „invisible or simpler".
-- **Graham**: Muster = „sign of trouble".
-- **Gamma 2009**: „drop Singleton"; GoF nutzt C++/Smalltalk, NeXTStep — Kontext der frühen 90er.
+- **Norvig**: 16/23 „invisible or simpler“.
+- **Graham**: Muster = „sign of trouble“.
+- **Gamma 2009**: „drop Singleton“; GoF nutzt C++/Smalltalk, NeXTStep — Kontext der frühen 90er.
 
 </div>
 <div>
@@ -820,19 +847,24 @@ hideInToc: true
 
 - **Adapter, Facade, Composite, Bridge, Proxy** + Architektur-Muster sind sprachunabhängig.
 - Selbst mit ADTs braucht man **Repository, Aggregate, Bounded Context**.
-- Goetz: OO und FP **konvergieren** — nicht „Muster sind falsch".
+- Goetz: OO und FP **konvergieren** — nicht „Muster sind falsch“.
 
 </div>
 <div>
 
 ### Synthese
 
-Nicht „GoF ist tot", sondern: ein Katalog aus **drei Schichten**. Schicht 1 ersetzt, Schicht 2 leichter, Schicht 3 unberührt.
+Nicht „GoF ist tot“, sondern: ein Katalog aus **drei Schichten**. Schicht 1 ersetzt, Schicht 2 leichter, Schicht 3 unberührt.
 
 Wer die Schichten nicht trennt, irrt in **beide** Richtungen.
 
 </div>
 </div>
+
+<!--
+- Die These „GoF zielt auf alte Java/C++-Codebasen“ ist halb wahr: Schicht 1 stützt sie (Norvig/Graham/Gamma), Schicht 2/3 widerlegen sie (sprachunabhängige Struktur- und Architekturmuster).
+- Pointe: nicht „tot vs. ewig“, sondern drei Schichten. Wer sie nicht trennt, irrt in beide Richtungen.
+-->
 
 ---
 hideInToc: true
@@ -850,7 +882,7 @@ hideInToc: true
 </div>
 <div>
 
-4. **Visitor = Lehrstück Expression Problem** — warum „Lambda ersetzt Pattern X" zu kurz greift; ADTs sind die Antwort.
+4. **Visitor = Lehrstück Expression Problem** — warum „Lambda ersetzt Pattern X“ zu kurz greift; ADTs sind die Antwort.
 5. **Builder = Lehrstück Typsystem-Ebenen** — Laufzeit-Check vs. Compile-Zeit-Kodierung vs. Problemauflösung.
 6. **Metaprogramming als eigene Kategorie** — das Spektrum Laufzeit-Proxy → APT → Weaving ordnet die Industrie-Bewegung zu GraalVM/AOT.
 
@@ -859,7 +891,7 @@ hideInToc: true
 
 <div class="mt-5 text-xs opacity-60">
 
-Schwellen, die das Bild kippen: Java „carrier classes"/Record-`with`-Evolution → Builder von [RELEVANT] auf [ERSETZT]. JEP 8303099 von Draft auf GA → §5/§7 neu prüfen (vermutlich weiterhin „kein Typestate").
+Schwellen, die das Bild kippen: Java „carrier classes“/Record-`with`-Evolution → Builder von [RELEVANT] auf [ERSETZT]. JEP 8303099 von Draft auf GA → die Builder- und null-Safety-Einordnung neu prüfen (vermutlich weiterhin „kein Typestate“).
 
 </div>
 
@@ -867,7 +899,7 @@ Schwellen, die das Bild kippen: Java „carrier classes"/Record-`with`-Evolution
 layout: section
 ---
 
-# Pattern × Sprache
+# 8. Pattern × Sprache
 
 Die große Landkarte: weiterhin idiomatisch · moderner Ersatz · trifft nicht zu
 
@@ -882,7 +914,7 @@ hideInToc: true
 <!--
 - Zellen sind anklickbar (Details als Popup).
 - Schicht 1 ist mehrheitlich ↻ (moderner Ersatz durch Sprachfeatures).
-- Sprachen ohne ADTs/Nullability (Go) zeigen mehr ✓ („relevant") bei Visitor/State/Null Object.
+- Sprachen ohne ADTs/Nullability (Go) zeigen mehr ✓ („relevant“) bei Visitor/State/Null Object.
 -->
 
 ---
@@ -908,6 +940,7 @@ Persistenz-Cluster · Querverweise · Quellen
 
 ---
 hideInToc: true
+routeAlias: persistenz-cluster
 ---
 
 # Persistenz-Pattern: sieben Cluster
@@ -915,8 +948,8 @@ hideInToc: true
 <PersistencePatternsMatrix />
 
 <!--
-- Kernanliegen: „jOOQ vs. Hibernate" ist nicht „Query Builder vs. ORM" als wertende Wahl,
-  sondern „SQL ist Wahrheit" vs. „Objekt-Graph ist Wahrheit".
+- Kernanliegen: „jOOQ vs. Hibernate“ ist nicht „Query Builder vs. ORM“ als wertende Wahl,
+  sondern „SQL ist Wahrheit“ vs. „Objekt-Graph ist Wahrheit“.
 - Datomic ist KEINE ORM-Alternative, sondern ein anderes Datenmodell (Datalog/EAVT).
 -->
 
@@ -951,9 +984,9 @@ hideInToc: true
 
 ### Einschränkungen
 
-- **JEP 8303099 ist Draft** — Syntaxdetails sind „strawman/TBD". null-Safety ist in **keinem** Release; §5/§7 sind Designanalyse.
+- **JEP 8303099 ist Draft** — Syntaxdetails sind „strawman/TBD“. null-Safety ist in **keinem** Release; die Aussagen zu Builder & null-Safety sind Designanalyse.
 - Java-Beispiele setzen **Java 21** voraus (sealed ab 17, record ab 16, Pattern Matching final ab 21).
-- Norvigs 16/23 summiert die genannten Kategorien; 7 bleiben auch dynamisch „echte" Muster.
+- Norvigs 16/23 summiert die genannten Kategorien; 7 bleiben auch dynamisch „echte“ Muster.
 - Beispiele sind didaktisch reduziert (Imports, Fehlerbehandlung teils ausgelassen).
 
 </div>
