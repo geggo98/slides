@@ -19,17 +19,7 @@
 
 ### Frontmatter-Konvention
 
-- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlen v. a. **gradle**, **grafana**, **ai-agents**, **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
-
----
-
-## 20260327-ai-agents
-
-- [ ] (M) `SkillInfographic.vue:119–139`: lokale 19er-`--color-*`-Palette → `SlidevTokens` auflösen (die `components/skill/*.vue` hängen heute fragil an diesem Scope).
-- [ ] (M) `SkillInfographic`/`FullInfographic` `.nav`-Pill-Navigation → shared `Tabs.vue` (`role="tab"` ist bereits gesetzt).
-- [ ] (S) `ComparisonMatrix.vue` + `ProtocolCards.vue`: duplizierte Y/N/Partial-Span-Generatoren in einen Helper ziehen (toter Ternary ist bereits aufgelöst).
-- [ ] (M) `ProtocolCards.vue:293–351`: tragender Inhalt bei 7–8 px logischer Schrift (kleinste im Repo) — vergrößern.
-- [ ] (L) ~8 Komponenten mit eigenem `isDark ? dark : light`-Palettenobjekt → `shared/composables/usePalette.ts` (223 hardcodierte Hex-Werte).
+- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlen v. a. **gradle**, **grafana**, **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
 
 ---
 
@@ -86,8 +76,6 @@
 
 ## Quiz & Transferfragen
 
-- [ ] (M) **ai-agents:** Ur-Batch von 7 auf 8 Optionen auffüllen (23 Fragen haben noch 7 Optionen; alle erfüllen bereits ≥ 2 true/false, Sections sind schon auf 6 Buckets konsolidiert).
-- [ ] (S) **AiAgentsQuiz** — Transferfragen ergänzen: „Skills vs. MCP aus Token-Sicht" (medium, → agents-details); „Warum überlebt ‚don't push' die Session nicht?" (hard, Compaction); „Clinejection auf Gradle übertragen — was hätten Verification Metadata/Cooldown gebrochen?" (hard, → gradle); „Pattern-1-Build-Loop als `/goal`-Lauf" (hard, → open-rewrite).
 - [ ] (S) **OpenRewriteQuiz** — Transferfragen: „Hooks : Rules = Recipe : LLM-Gap-Fill" (medium, → ai-agents); „Nicht-deterministische Wächter in CI" (hard, Auto-Mode-Klassifikator ≈ Pattern 3); „50+ `package-info.java` → `ScanningRecipe`/`generate(acc)`" (hard, → java-null).
 - [ ] (S) **NullSafetyQuiz** — Transferfragen: „Wer meldet die Fehler nach Stufe 2? (NullAway in ErrorProne)" (medium, → open-rewrite); „@Nullable User vs. Optional<User> am Gap-Fill-Decision-Point" (medium); „Pflichtfelder: Staged Builder (Compile-Zeit) vs. Lombok @NonNull (Laufzeit)" (hard, → design-pattern); „Null Object [ERSETZT] vs. Optional vs. @Nullable" (medium).
 

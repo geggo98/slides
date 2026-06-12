@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
+import { useSupportMarks } from "./supportMarks";
 
 const { isDark } = useDarkMode();
 
@@ -9,18 +11,7 @@ const toggle = (name) => {
   openProto.value = openProto.value === name ? null : name;
 };
 
-const Yhtml = computed(() => {
-  const c = isDark.value ? "#80c050" : "#639922";
-  return `<span style="color:${c};font-weight:600">✓</span>`;
-});
-const Nhtml = computed(() => {
-  const c = isDark.value ? "#f06060" : "#A32D2D";
-  return `<span style="color:${c}">✗</span>`;
-});
-const Phtml = computed(() => {
-  const c = isDark.value ? "#e0a030" : "#BA7517";
-  return `<span style="color:${c};font-weight:500">◐</span>`;
-});
+const { Y: Yhtml, N: Nhtml, Partial: Phtml } = useSupportMarks();
 
 const protocols = computed(() => {
   const Y = Yhtml.value,
@@ -157,31 +148,55 @@ const stack = computed(() => {
   ];
 });
 
-const C = computed(() => {
-  const d = isDark.value;
-  return {
-    hintColor: d ? "#aaa" : "#888",
-    cardBg: d ? "#1e1e1e" : "white",
-    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    cardColor: d ? "#e5e5e5" : "#1a1a18",
-    hoverBorder: d ? "#aaa" : "#888",
-    byColor: d ? "#aaa" : "#888",
-    purposeColor: d ? "#ccc" : "#333",
-    neutralBg: d ? "#2a2a2e" : "#f3f2ee",
-    neutralColor: d ? "#ccc" : "#333",
-    detailBg: d ? "#1e1e1e" : "white",
-    detailBorder: d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-    tableColor: d ? "#e5e5e5" : "#1a1a18",
-    thBorderBottom: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    thColor: d ? "#aaa" : "#555",
-    tdBorderBottom: d ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-    tdColor: d ? "#e5e5e5" : "#1a1a18",
-    toolNameColor: d ? "#e5e5e5" : "#1a1a18",
-    detailTextColor: d ? "#ccc" : "#333",
-    stackLabelColor: d ? "#aaa" : "#888",
-    stackQ: d ? "#ccc" : "#333",
-    stackPlusColor: d ? "#aaa" : "#888",
-  };
+// Deck-Optik weicht von den kanonischen Tokens ab (warme Light-Neutrals wie
+// #1a1a18/#f3f2ee) — exakt erhalten via usePalette-Overrides.
+const C = usePalette({
+  light: {
+    hintColor: "#888",
+    cardBg: "white",
+    cardBorder: "rgba(0,0,0,0.1)",
+    cardColor: "#1a1a18",
+    hoverBorder: "#888",
+    byColor: "#888",
+    purposeColor: "#333",
+    neutralBg: "#f3f2ee",
+    neutralColor: "#333",
+    detailBg: "white",
+    detailBorder: "rgba(0,0,0,0.08)",
+    tableColor: "#1a1a18",
+    thBorderBottom: "rgba(0,0,0,0.1)",
+    thColor: "#555",
+    tdBorderBottom: "rgba(0,0,0,0.04)",
+    tdColor: "#1a1a18",
+    toolNameColor: "#1a1a18",
+    detailTextColor: "#333",
+    stackLabelColor: "#888",
+    stackQ: "#333",
+    stackPlusColor: "#888",
+  },
+  dark: {
+    hintColor: "#aaa",
+    cardBg: "#1e1e1e",
+    cardBorder: "rgba(255,255,255,0.12)",
+    cardColor: "#e5e5e5",
+    hoverBorder: "#aaa",
+    byColor: "#aaa",
+    purposeColor: "#ccc",
+    neutralBg: "#2a2a2e",
+    neutralColor: "#ccc",
+    detailBg: "#1e1e1e",
+    detailBorder: "rgba(255,255,255,0.08)",
+    tableColor: "#e5e5e5",
+    thBorderBottom: "rgba(255,255,255,0.12)",
+    thColor: "#aaa",
+    tdBorderBottom: "rgba(255,255,255,0.04)",
+    tdColor: "#e5e5e5",
+    toolNameColor: "#e5e5e5",
+    detailTextColor: "#ccc",
+    stackLabelColor: "#aaa",
+    stackQ: "#ccc",
+    stackPlusColor: "#aaa",
+  },
 });
 </script>
 
@@ -291,11 +306,11 @@ const C = computed(() => {
   font-weight: 600;
 }
 .proto-by {
-  font-size: 8px;
+  font-size: 9px;
   color: v-bind("C.byColor");
 }
 .proto-purpose {
-  font-size: 9px;
+  font-size: 10px;
   color: v-bind("C.purposeColor");
   line-height: 1.3;
 }
@@ -304,7 +319,7 @@ const C = computed(() => {
 }
 .badge {
   display: inline-block;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   padding: 1px 5px;
   border-radius: 6px;
@@ -324,7 +339,7 @@ const C = computed(() => {
 .support-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 8px;
+  font-size: 9px;
   color: v-bind("C.tableColor");
 }
 .support-table th {
@@ -332,7 +347,7 @@ const C = computed(() => {
   padding: 2px 4px;
   font-weight: 600;
   border-bottom: 1px solid v-bind("C.thBorderBottom");
-  font-size: 7px;
+  font-size: 8px;
   color: v-bind("C.thColor");
 }
 .support-table td {
@@ -342,12 +357,12 @@ const C = computed(() => {
 }
 .tool-name {
   font-weight: 600;
-  font-size: 8px;
+  font-size: 9px;
   white-space: nowrap;
   color: v-bind("C.toolNameColor");
 }
 .detail-text {
-  font-size: 7px;
+  font-size: 8px;
   color: v-bind("C.detailTextColor");
 }
 .stack-label {
@@ -381,7 +396,7 @@ const C = computed(() => {
   font-size: 10px;
 }
 .stack-q {
-  font-size: 8px;
+  font-size: 9px;
   color: v-bind("C.stackQ");
 }
 .stack-plus {

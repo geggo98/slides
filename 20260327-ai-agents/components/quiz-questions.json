@@ -103,6 +103,12 @@
           "explanation": "Seit dem Rebrand zu Devin Desktop (Juni 2026) unterstützt es ACP — jeder ACP-kompatible Agent läuft neben Devin in derselben IDE. Einziges Tool ohne dokumentierten ACP-Support im Vergleich ist nun OpenCode."
         },
         {
+          "id": "lsp-vs-mcp-vs-acp-o7",
+          "text": "JetBrains reicht einmal konfigurierte MCP-Server an alle ACP-Agenten durch.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Interop-Gewinn der MCP-Durchreichung: einmal in der IDE konfigurieren, jeder ACP-Agent nutzt sie — ersetzt MCP aber nicht."
+        },
+        {
           "id": "lsp-vs-mcp-vs-acp-o6",
           "text": "Ob für eine Aufgabe LSP oder MCP das richtige Protokoll ist, hängt vom Ziel ab.",
           "verdict": "depends",
@@ -152,6 +158,12 @@
           "text": "Subagents sind ein Synonym für Plugins.",
           "verdict": "false",
           "explanation": "Plugins bündeln Skills + Hooks + MCP. Subagents sind Agent-Instanzen. Konzeptionell verschieden."
+        },
+        {
+          "id": "subagent-tradeoffs-o7",
+          "text": "Subagents können sich während der Arbeit direkt untereinander abstimmen.",
+          "verdict": "false",
+          "explanation": "Subagents melden ausschließlich an ihren Parent zurück — direkte Peer-Kommunikation zwischen Workern ist das Merkmal der Agent Teams."
         },
         {
           "id": "subagent-tradeoffs-o6",
@@ -205,6 +217,12 @@
           "explanation": "Praktische Cross-Tool-Interop: Devin Desktop scannt `.agents/skills/` als Standard-Skill-Pfad."
         },
         {
+          "id": "skill-model-decision-o7",
+          "text": "Beim Sessionstart wird der komplette Inhalt jedes installierten Skills in den System-Prompt geladen.",
+          "verdict": "false",
+          "explanation": "Anfangs sichtbar ist nur die kurze Frontmatter-Beschreibung; den vollen SKILL.md-Inhalt samt Skripten und Referenzen lädt das Modell erst on-demand — genau das macht Skills token-effizient."
+        },
+        {
           "id": "skill-model-decision-o6",
           "text": "Ob ein Skill gezogen wird, hängt davon ab, wie präzise die `description` zum Task passt.",
           "verdict": "depends",
@@ -254,6 +272,12 @@
           "text": "Eine Cross-Tool-portable Hook-Definition lässt sich aus den Hook-Configs ableiten.",
           "verdict": "false",
           "explanation": "JSON vs. TOML vs. JS-Plugins, unterschiedliche Events — Hooks sind explizit nicht portabel."
+        },
+        {
+          "id": "hook-events-divergence-o7",
+          "text": "Devin Desktop bietet mangels CLI keine Hooks an.",
+          "verdict": "false",
+          "explanation": "Devin Desktop hat 12 Hook-Events inklusive Pre-Tool-Block — Besonderheit ist das cloud-managed Hook-Deployment; ganz ohne klassische Hooks ist im Vergleich nur Junie."
         },
         {
           "id": "hook-events-divergence-o6",
@@ -307,6 +331,12 @@
           "explanation": "Die Folie nennt das Gegenteil: OpenCode fällt auf CLAUDE.md zurück."
         },
         {
+          "id": "agents-md-cross-tool-o7",
+          "text": "Gemini CLI akzeptiert mehrere Dateinamen-Alternativen für die Instruktionsdatei.",
+          "verdict": "true",
+          "explanation": "Gemini CLI ist beim Dateinamen flexibel — neben Junies Guideline-Vorschlägen und OpenCodes CLAUDE.md-Fallback einer der Bausteine praktischer Interop heute."
+        },
+        {
           "id": "agents-md-cross-tool-o6",
           "text": "Ob `ln -s AGENTS.md CLAUDE.md` als Alternative zum Import-Pragma funktioniert, hängt vom OS ab.",
           "verdict": "depends",
@@ -356,6 +386,12 @@
           "text": "Auto-Mode läuft mit allen Anthropic-Modellen seit Claude 3.",
           "verdict": "false",
           "explanation": "Research Preview, v2.1.83+, ausschließlich Opus 4.6/4.7 + Sonnet 4.6 auf der Anthropic-API."
+        },
+        {
+          "id": "auto-mode-classifier-o7",
+          "text": "Der Auto-Mode-Klassifikator läuft lokal auf deiner Maschine, damit keine Tool-Call-Daten das Gerät verlassen.",
+          "verdict": "false",
+          "explanation": "Der Klassifikator ist ein server-konfiguriertes Modell auf Anthropic-Seite — deshalb funktioniert Auto-Mode auch nur auf der Anthropic-API, nicht offline."
         },
         {
           "id": "auto-mode-classifier-o6",
@@ -409,6 +445,12 @@
           "explanation": "Pufferung ist nicht das Problem — Claude wartet auf EOF, das `tail -f` nie sendet."
         },
         {
+          "id": "stdin-pipe-pitfalls-o7",
+          "text": "Für Stdin-Daten an `claude -p` gibt es keine Größenbegrenzung.",
+          "verdict": "false",
+          "explanation": "Claude Code cappt Stdin-Pipes bei 10 MB — größere Eingaben musst du vorher kürzen oder als Datei übergeben."
+        },
+        {
           "id": "stdin-pipe-pitfalls-o6",
           "text": "Ob ein langsamer Stream durch `claude -p` zuverlässig funktioniert, hängt von initialer Verzögerung und EOF-Verhalten ab.",
           "verdict": "depends",
@@ -458,6 +500,12 @@
           "text": "Die Abrechnungsumstellung betrifft auch Codex, Gemini CLI und Devin Desktop.",
           "verdict": "false",
           "explanation": "Die 2026-06-15-Regel betrifft ausschließlich Anthropic-/Claude-Code-Abrechnung. Andere Tools haben eigene Modelle."
+        },
+        {
+          "id": "agent-sdk-billing-2026-o7",
+          "text": "Die Umstellung betrifft nur Free-Accounts — Pro- und Max-Pläne rechnen alles weiter über das Subscription-Kontingent ab.",
+          "verdict": "false",
+          "explanation": "Genau Pro/Max sind gemeint: Agent-SDK-Pfade (ACP, `claude -p`, GitHub Actions) ziehen dort ab 2026-06-15 vom separaten Agent-SDK-Credit statt vom interaktiven Kontingent."
         },
         {
           "id": "agent-sdk-billing-2026-o6",
@@ -511,6 +559,12 @@
           "explanation": "SKILL.md ist der stärkste Cross-Tool-Standard und bleibt in Antigravity nutzbar."
         },
         {
+          "id": "gemini-antigravity-migration-o7",
+          "text": "Auch Enterprise-Kunden verlieren am 2026-06-18 den Gemini-CLI-Zugang.",
+          "verdict": "false",
+          "explanation": "Der Cutoff betrifft Pro/Ultra/Free — Enterprise läuft vorerst weiter. Das verschafft Unternehmens-CI eine Gnadenfrist, ersetzt die Migration aber nicht."
+        },
+        {
           "id": "gemini-antigravity-migration-o6",
           "text": "Ob es klüger ist, übergangsweise auf `codex exec` o.ä. auszuweichen, hängt vom Team-Standardisierungsdruck ab.",
           "verdict": "depends",
@@ -560,6 +614,12 @@
           "text": "Eine reine Code-Signatur-Verifikation der CLI-Binary hätte den Angriff erkannt.",
           "verdict": "false",
           "explanation": "Da `cli.mjs` byteidentisch blieb, wäre jede Signatur valide. Der Angriff verlagerte sich in den postinstall-Hook im `package.json`."
+        },
+        {
+          "id": "clinejection-attack-chain-o7",
+          "text": "Zwischen Disclosure (9. Feb) und Angriff (17. Feb) scheiterte die Token-Rotation — das Cline-Team löschte versehentlich das falsche Token.",
+          "verdict": "true",
+          "explanation": "Dadurch blieb das NPM_RELEASE_TOKEN aktiv, und der Angreifer publizierte `cline@2.3.0` über den npm-Account „clinebotorg\"."
         },
         {
           "id": "clinejection-attack-chain-o6",
@@ -613,6 +673,12 @@
           "explanation": "Greift nicht: Über genau die erlaubte Registry erfolgte ja die Publishing-Eskalation; auch DNS-Exfiltration bleibt möglich."
         },
         {
+          "id": "lethal-trifecta-willison-o7",
+          "text": "Schon zwei der drei Trifecta-Komponenten reichen aus, damit ein Agent per Prompt Injection Daten exfiltrieren kann.",
+          "verdict": "false",
+          "explanation": "Die Pointe des Modells ist die Dreier-Kombination: Ohne Egress bleibt das Geheimnis im Prozess, ohne privaten Datenzugriff gibt es nichts zu stehlen, ohne Untrusted Content fehlt der Injektionsvektor."
+        },
+        {
           "id": "lethal-trifecta-willison-o6",
           "text": "Ob ein nur lesender MCP-Server zur Trifecta beiträgt, hängt von der Datenquelle ab.",
           "verdict": "depends",
@@ -664,6 +730,12 @@
           "explanation": "Sandboxes schützen den Host vor Tool-Operationen — Skill-/MCP-Exfiltration läuft über erlaubte Netzpfade und bleibt möglich."
         },
         {
+          "id": "permission-deny-hierarchy-o7",
+          "text": "Codex sperrt `.git/` und `.codex/` in der Sandbox grundsätzlich — kein Allow schaltet sie frei.",
+          "verdict": "true",
+          "explanation": "Diese Pfade sind bei Codex immer gesperrt, damit weder Versionshistorie noch die Agent-Konfiguration selbst manipuliert werden können — ein Verbot, das keine Ebene aufhebt."
+        },
+        {
           "id": "permission-deny-hierarchy-o6",
           "text": "Ob `bypassPermissions` vertretbar ist, hängt vom Ausführungskontext ab.",
           "verdict": "depends",
@@ -713,6 +785,12 @@
           "text": "Eine Kernel-Sandbox (Seatbelt/Landlock/seccomp) schützt zuverlässig vor MCP-Datenexfiltration.",
           "verdict": "false",
           "explanation": "Kernel-Sandboxes isolieren den Prozess — Exfiltration via erlaubten MCP-Server-Aufruf läuft auf legitimen Pfaden."
+        },
+        {
+          "id": "transfer-sandbox-internals-o7",
+          "text": "Einmal installiert, gelten Landlock-Regeln systemweit für alle laufenden Prozesse.",
+          "verdict": "false",
+          "explanation": "Landlock ist unprivilegiertes Self-Sandboxing: Ein Prozess beschränkt sich selbst und seine Kind-Prozesse — andere Prozesse auf dem System bleiben unberührt."
         },
         {
           "id": "transfer-sandbox-internals-o6",
@@ -821,6 +899,12 @@
           "text": "smolagents-Code-Execution ohne Sandbox ist ein bekanntes Sicherheitsrisiko.",
           "verdict": "true",
           "explanation": "Da der Agent ausführbares Python generiert, ist ein Code-Execution-Sandboxing (E2B, lokales Subprocess-Jail) Pflicht — sonst beliebige Host-Operationen."
+        },
+        {
+          "id": "transfer-other-frameworks-o7",
+          "text": "LangGraph ist wie Claude Code ein fertiger Coding-Agent mit Terminal-UI — nur eben von LangChain.",
+          "verdict": "false",
+          "explanation": "LangGraph ist ein Graph-Framework zum Selberbauen von Agenten (Nodes, Edges, Checkpointer) — weder Terminal-UI noch fertiger Coding-Agent; genau deshalb ist es Alternative zu den „großen 6\", nicht eine von ihnen."
         },
         {
           "id": "transfer-other-frameworks-o6",
@@ -1387,6 +1471,12 @@
           "explanation": "Recipes brechen genau dort, wo die Transformation Verständnis jenseits ausdrückbarer statischer AST-Muster braucht — das ist die Determinismus-Grenze, keine Konfigfrage."
         },
         {
+          "id": "transfer-refactor-handoff-grenze-o7",
+          "text": "Unter der Haube ruft auch ein Recipe pro Datei kurz ein LLM auf, um das AST-Muster zu erkennen.",
+          "verdict": "false",
+          "explanation": "Recipes sind reiner Code mit fester AST-Semantik und laufen komplett ohne LLM — ein Modell im Recipe-Inneren wäre gerade das Anti-Pattern, vor dem die OpenRewrite-Maintainer selbst warnen."
+        },
+        {
           "id": "transfer-refactor-handoff-grenze-o6",
           "text": "Ob der Agent-Anteil und damit die Workflow-Kosten klein bleiben, hängt davon ab, wie viel der Migration sich als deterministische AST-Muster ausdrücken lässt, bevor die Determinismus-Grenze einen Handoff erzwingt.",
           "verdict": "depends",
@@ -1495,6 +1585,12 @@
           "explanation": "Der Klassifikator fragt „passt die Aktion zum Auftrag?\", die Sandbox „ist dieser Syscall physisch möglich?\" — Defense-in-Depth kombiniert beides."
         },
         {
+          "id": "classifier-gate-which-tools-o7",
+          "text": "Devin Desktops Turbo-Mode aktiviert einen Guardian-Klassifikator, der jeden Tool-Call semantisch bewertet.",
+          "verdict": "false",
+          "explanation": "Turbo schaltet nur die Rückfrage ab — ein Gate-LLM hat Devin Desktop nicht; der „Guardian\"-Subagent ist die Auto-review-Mechanik von OpenAI Codex."
+        },
+        {
           "id": "classifier-gate-which-tools-o6",
           "text": "Ob ein „Auto\"-Modus tatsächlich ein semantisches Urteil enthält, hängt vom konkreten Agenten ab.",
           "verdict": "depends",
@@ -1544,6 +1640,12 @@
           "text": "Aus dem bloßen Namen eines „Auto\"-Modus lässt sich nicht ableiten, ob ein Klassifikator beteiligt ist.",
           "verdict": "true",
           "explanation": "Man muss den Mechanismus prüfen: nur Cursor-Auto-Review, Claude-Auto-Mode und Codex-Auto-review enthalten ein Gate-LLM."
+        },
+        {
+          "id": "auto-terminology-collision-o7",
+          "text": "Sowohl Gemini CLI als auch Pi nennen ihren „Rückfragen aus\"-Modus YOLO.",
+          "verdict": "true",
+          "explanation": "Beide nutzen denselben Namen für dieselbe Mechanik: Bestätigungen werden übersprungen, ein urteilender Klassifikator steckt in keinem der beiden."
         },
         {
           "id": "auto-terminology-collision-o6",
@@ -1597,6 +1699,12 @@
           "explanation": "Umgekehrt: Eine kernel-durchgesetzte Sandbox ist deterministisch, der Klassifikator nicht — fürs Containment schlägt Sandbox-first."
         },
         {
+          "id": "sandbox-first-vs-trust-scope-o7",
+          "text": "Ein Repo kann sich über eine eingecheckte defaultMode-Einstellung selbst den Auto Mode geben.",
+          "verdict": "false",
+          "explanation": "`defaultMode: \"auto\"` aus dem Repo wird ignoriert — ein geklontes Fremd-Repo darf die Vertrauensgrenze nicht selbst aushebeln; Auto Mode braucht das Opt-in des Nutzers."
+        },
+        {
           "id": "sandbox-first-vs-trust-scope-o6",
           "text": "Ob Trust-Scope-first oder Sandbox-first besser passt, hängt vom Einsatzkontext ab.",
           "verdict": "depends",
@@ -1646,6 +1754,12 @@
           "text": "Eine harte Deny-Regel (permissions.deny / hard_deny) greift auch im Tier-2-Blindspot, weil sie vor dem Klassifikator wirkt.",
           "verdict": "true",
           "explanation": "Deny-Regeln und hard_deny lösen vor der Klassifikator-Stufe auf — sie sind nicht auf den Klassifikator-Call angewiesen."
+        },
+        {
+          "id": "tier2-blindspot-o7",
+          "text": "Der Tier-2-Blindspot war ein Implementierungs-Bug und wurde inzwischen per Update geschlossen.",
+          "verdict": "false",
+          "explanation": "Anthropic bestätigt das Verhalten als bewusste Design-Entscheidung — In-Project-Edits gelten als vorab konsentiert; absichern lässt sich der Blindspot nur über harte Deny-Regeln."
         },
         {
           "id": "tier2-blindspot-o6",
@@ -1699,6 +1813,12 @@
           "explanation": "Der ehrliche Maßstab ist --dangerously-skip-permissions/YOLO — dagegen ist der Klassifikator eine messbare Verbesserung, perfekt ist er nicht."
         },
         {
+          "id": "classifier-not-a-boundary-o7",
+          "text": "Ein Klassifikator-Gate kann in beide Richtungen irren: legitime Aktionen blocken und gefährliche durchlassen.",
+          "verdict": "true",
+          "explanation": "Genau das zeigen die Messwerte — 0,4 % False-Positives auf realem Traffic und je nach Workload 17 % bis 81 % False-Negatives; ein deterministisches Verbot kennt diese Grauzone nicht."
+        },
+        {
           "id": "classifier-not-a-boundary-o6",
           "text": "Ob ein Klassifikator-Gate für ein konkretes Szenario „sicher genug\" ist, hängt von Blast-Radius und Isolation ab.",
           "verdict": "depends",
@@ -1748,6 +1868,12 @@
           "text": "Der Klassifikator sieht im Auto Mode den vollen Verlauf inklusive Claudes eigener Antworten und aller Tool-Results.",
           "verdict": "false",
           "explanation": "Reasoning-blind: er sieht nur User-Messages, Tool-Calls und CLAUDE.md — Claudes eigene Messages und die Tool-Results werden gestrippt."
+        },
+        {
+          "id": "consent-scoping-judge-defendant-o7",
+          "text": "Der Output-Klassifikator arbeitet zweistufig: Stufe 1 liefert ein Single-Token-Yes/No, Chain-of-Thought folgt nur bei Flag.",
+          "verdict": "true",
+          "explanation": "Stufe 1 ist auf Blocken getrimmt und billig; erst wenn sie anschlägt, begründet Stufe 2 per Chain-of-Thought — so bleibt das Gate für jeden Tool-Call schnell genug."
         },
         {
           "id": "consent-scoping-judge-defendant-o6",
@@ -1801,6 +1927,12 @@
           "explanation": "Sie ist identisch: Container/VM ohne Live-Credentials — Anthropic empfiehlt für Auto Mode dieselbe Isolation wie für den Bypass-Modus."
         },
         {
+          "id": "deterministic-egress-recommendation-o7",
+          "text": "Für Default-deny-Netzwerk-Egress fehlen den Tools die Stellschrauben — weder Cursor noch Codex bieten dafür Konfiguration an.",
+          "verdict": "false",
+          "explanation": "Beide bringen genau dafür Mechanismen mit: Cursor über die sandbox.json, Codex über den network_proxy — der Hebel ist praktisch konfigurierbar, nicht nur Theorie."
+        },
+        {
           "id": "deterministic-egress-recommendation-o6",
           "text": "Ob ein YOLO-/Turbo-/Brave-Modus vertretbar ist, hängt von der Ausführungsumgebung ab.",
           "verdict": "depends",
@@ -1852,10 +1984,244 @@
           "explanation": "Selbst die deterministische Schicht hat Bypässe und Fehlbedienungen — daher Defense-in-Depth statt Verlass auf eine einzige Schicht."
         },
         {
+          "id": "pocketos-incident-bypasses-o7",
+          "text": "Der PocketOS-Vorfall passierte in Claude Code im Auto Mode — der Klassifikator winkte das Löschkommando durch.",
+          "verdict": "false",
+          "explanation": "Es war ein Cursor-Agent mit Opus 4.6 als Modell: Das Modell stammt von Anthropic, aber Harness, Plan-Mode und „Destructive Guardrails\" waren Cursor — Claude Codes Auto Mode war nicht beteiligt."
+        },
+        {
           "id": "pocketos-incident-bypasses-o6",
           "text": "Ob ein einzelner überprivilegierter API-Call katastrophalen Schaden anrichten kann, hängt vom Least-Privilege-Setup ab.",
           "verdict": "depends",
           "explanation": "Mit getrennten, minimal berechtigten Credentials (kein Backup-Löschrecht im selben Token) bleibt der Blast-Radius klein; ohne sie wird ein Call zur Katastrophe."
+        }
+      ]
+    },
+    {
+      "id": "transfer-skills-vs-mcp-token",
+      "question": "Welche Aussagen zu Skills vs. MCP aus Token-Sicht treffen zu?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Brücke zum Deep-Dive „Wie funktioniert ein Coding-Agent?\": MCP-Tool-Definitionen wandern bei jedem Request als JSON-Schema in den Request-Prefix und kosten 17K–126K Input-Tokens pro Server, bevor der erste Tool-Call passiert. Skills laden per Progressive Disclosure (~50 Tokens Frontmatter, Rest on-demand) — Faktor 40–1100× weniger. Mitigation: Lazy-Loading wie Claude Codes Tool-Search (automatisch ab >10 % Context-Anteil) und Prompt-Caching (90 % Discount, nur bei exaktem Prefix-Match).",
+      "options": [
+        {
+          "id": "transfer-skills-vs-mcp-token-o0",
+          "text": "Ein verbundener MCP-Server kostet 17K–126K Input-Tokens, bevor der erste Tool-Call überhaupt passiert.",
+          "verdict": "true",
+          "explanation": "Die vollen Tool-Definitionen stehen als JSON-Schema im Request-Prefix — und zwar bei jedem API-Call, nicht nur einmal pro Session."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o1",
+          "text": "Skills erreichen per Progressive Disclosure einen Faktor 40–1100× weniger Tokens als MCP-Tool-Definitionen.",
+          "verdict": "true",
+          "explanation": "Anfangs sichtbar sind nur ~50 Tokens Frontmatter pro Skill; der volle Inhalt wird erst geladen, wenn das Modell den Skill tatsächlich zieht."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o2",
+          "text": "MCP-Tool-Definitionen zählen als Input-Tokens bei jedem Request — auch wenn kein einziges MCP-Tool aufgerufen wird.",
+          "verdict": "true",
+          "explanation": "Genau das ist der MCP-Token-Bloat: Die Definitionen hängen im tools-Array jedes Requests, unabhängig davon, ob sie genutzt werden."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o3",
+          "text": "Claude Codes Tool-Search lädt MCP-Tools on-demand und aktiviert sich automatisch, sobald MCP-Tools mehr als 10 % des Contexts belegen.",
+          "verdict": "true",
+          "explanation": "Seit v2.1.7 (Jan 2026) aktiviert sich Tool-Search ab >10 % Context-Anteil automatisch; seit v2.1.69 werden auch System-Tools deferred."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o4",
+          "text": "Prompt-Caching neutralisiert den MCP-Bloat vollständig — gecachte Tool-Definitionen kosten in Folge-Requests nichts mehr.",
+          "verdict": "false",
+          "explanation": "Der Cache gibt 90 % Discount, nicht 100 % — und nur bei exaktem Prefix-Match; ein Token Änderung davor invalidiert alles danach."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o5",
+          "text": "Die Empfehlung aus dem Talk lautet, ungenutzte MCP-Server verbunden zu lassen, weil ihre Definitionen ohnehin gecacht sind.",
+          "verdict": "false",
+          "explanation": "Die Empfehlung ist das Gegenteil: MCP sparsam einsetzen, Token-Kosten monitoren und nicht aktive Server disconnecten."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o6",
+          "text": "Die meisten der sechs verglichenen Agents lösen den MCP-Token-Bloat automatisch per Lazy-Loading.",
+          "verdict": "false",
+          "explanation": "Nur 2 von 6 haben automatisches Lazy-Loading — die übrigen setzen auf manuelles Filtern oder ignorieren das Problem schlicht."
+        },
+        {
+          "id": "transfer-skills-vs-mcp-token-o7",
+          "text": "Ob ein MCP-Server oder ein Skill die richtige Wahl ist, hängt davon ab, ob du externe Fähigkeiten oder abrufbares Wissen brauchst.",
+          "verdict": "depends",
+          "explanation": "MCP liefert Fähigkeiten, die das Modell sonst nicht hätte (Datenbanken, APIs) — das ersetzt kein Skill; für Wissen und Run-Books ist der Skill um Größenordnungen billiger. Die Entscheidung ist eine Funktionsfrage, nicht nur eine Tokenpreis-Frage."
+        }
+      ]
+    },
+    {
+      "id": "transfer-dont-push-compaction",
+      "question": "Warum überlebt ein im Chat geäußertes „don't push\" die Session nicht zuverlässig — und was hat Context-Compaction damit zu tun?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Brücke zum Deep-Dive „Wie funktioniert ein Coding-Agent?\": Der Auto-Mode-Klassifikator sieht User-Messages nur, solange sie im Transcript stehen. Claude Code kompaktiert aber automatisch — MicroCompact trimmt alte Tool-Outputs lokal (0 API-Calls), AutoCompact ersetzt bei ~92–98 % Füllstand die Historie durch eine 20K-Token-Summary. Fällt die „don't push\"-Message der Kompaktierung zum Opfer oder verliert sie in der Summary ihre Schärfe, verschwindet die Grenze unbemerkt. Kontext-unabhängige Garantien geben nur permissions.deny / hard_deny.",
+      "options": [
+        {
+          "id": "transfer-dont-push-compaction-o0",
+          "text": "Der Klassifikator wertet „don't push\" nur, solange die Message im Transcript steht — was die Compaction entfernt, kann er nicht mehr sehen.",
+          "verdict": "true",
+          "explanation": "Chat-Grenzen sind Transcript-Inhalt, keine Konfiguration; der Klassifikator urteilt ausschließlich über das, was ihm vorliegt."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o1",
+          "text": "AutoCompact ersetzt bei ~92–98 % Füllstand die bisherige Historie durch eine 20K-Token-Summary — dabei kann die Verbots-Aussage verloren gehen oder verwässern.",
+          "verdict": "true",
+          "explanation": "Die Summary ist eine verlustbehaftete Komprimierung; ob ein beiläufiges „don't push\" sie wörtlich übersteht, ist nicht garantiert."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o2",
+          "text": "Eine harte Garantie bekommst du nur über permissions.deny bzw. hard_deny — die wirken kontext-unabhängig und überleben jede Compaction.",
+          "verdict": "true",
+          "explanation": "Deny-Regeln sind Konfiguration statt Konversation; hard_deny ignoriert sogar Intent und Allows (v2.1.136+)."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o3",
+          "text": "Compaction läuft füllstandsgesteuert im Hintergrund — du bemerkst also nicht unbedingt, dass deine Chat-Grenze gerade entsorgt wurde.",
+          "verdict": "true",
+          "explanation": "AutoCompact triggert automatisch bei ~92–98 % Füllstand; genau diese Lautlosigkeit macht Konversations-Boundaries trügerisch."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o4",
+          "text": "„don't push\" wird beim Aussprechen einmalig in eine persistente Session-Policy übersetzt und gilt damit garantiert bis zum Sessionende.",
+          "verdict": "false",
+          "explanation": "Eine solche Übersetzung gibt es nicht — die Aussage wirkt nur als Deny-Hinweis im Transcript; persistent sind allein echte Deny-Regeln in der Konfiguration."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o5",
+          "text": "MicroCompact ist das Problem: Es fasst die User-Messages per LLM zusammen und kostet dafür einen API-Call.",
+          "verdict": "false",
+          "explanation": "MicroCompact trimmt lokal alte Tool-Outputs mit 0 API-Calls; die LLM-Summary (20K Tokens) ist Sache von AutoCompact bzw. Full Compact."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o6",
+          "text": "In CLAUDE.md eingetragen wäre „don't push\" genauso flüchtig, weil auch Instruktionsdateien wegkompaktiert werden.",
+          "verdict": "false",
+          "explanation": "Kompaktiert wird die Conversation-History — CLAUDE.md gehört zum System-Prompt-Teil und wird bei jedem Request neu geladen; beratend bleibt es trotzdem, die Garantie gibt erst die Deny-Regel."
+        },
+        {
+          "id": "transfer-dont-push-compaction-o7",
+          "text": "Ob eine Chat-Grenze einen langen Lauf übersteht, hängt davon ab, wie früh sie fiel und wie oft kompaktiert wird.",
+          "verdict": "depends",
+          "explanation": "Kurze Sessions ohne Compaction behalten die Message im Transcript; je länger der Lauf und je näher am Füllstands-Limit, desto wahrscheinlicher verschwindet die Grenze in einer Summary — für Nicht-Verhandelbares deshalb immer die Deny-Regel."
+        }
+      ]
+    },
+    {
+      "id": "transfer-clinejection-gradle-cooldown",
+      "question": "Clinejection auf Gradle übertragen: Was hätten Verification Metadata und ein 7-Tage-Cooldown an der Angriffskette gebrochen?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Brücke zum Talk „Supply-Chain-Schutz in Gradle\": Die vergiftete cline@2.3.0 wurde 14 Minuten nach Publish erkannt und noch am selben Tag deprecated — ein 7-Tage-Cooldown (Minimum Release Age) hätte sie bei Konsumenten nie ankommen lassen. Verification Metadata (SHA-256 + PGP) schützt vor nachträglicher Manipulation bekannter Artefakte (Re-Upload-Schutz) und lässt unbekannte neue Artefakte am fehlenden Eintrag scheitern — beweist aber keine Harmlosigkeit. Der npm-spezifische postinstall-Vektor fehlt der JVM-Welt; dafür führt Gradle Fremdcode über Plugins, Code-Generatoren und Annotation Processors aus.",
+      "options": [
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o0",
+          "text": "Ein 7-Tage-Cooldown hätte cline@2.3.0 abgefangen: Das Paket wurde binnen 14 Minuten erkannt und noch am selben Tag deprecated — lange vor Ablauf der Frist.",
+          "verdict": "true",
+          "explanation": "Kompromittierte Pakete fliegen typischerweise binnen Stunden bis Tagen auf; genau diese Mehrheit opportunistischer Angriffe filtert das Minimum Release Age."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o1",
+          "text": "Hätte ein dynamischer Versions-Range die frische 2.3.0 gezogen, wäre ein Gradle-Build mit Verification Metadata fehlgeschlagen — für die neue Version existiert noch kein Eintrag in der verification-metadata.xml.",
+          "verdict": "true",
+          "explanation": "Jedes aufgelöste Artefakt muss einen gespeicherten Hash haben; ohne Eintrag bricht der Build mit „Dependency verification failed\" — der Auto-Pull à la npm-Caret-Range läuft so ins Leere."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o2",
+          "text": "Der eigentliche Payload-Vektor — ein postinstall-Lifecycle-Hook — existiert in der JVM-Welt nicht; Fremdcode läuft dort stattdessen über Gradle-Plugins, Code-Generatoren und Annotation Processors.",
+          "verdict": "true",
+          "explanation": "Die JVM-Welt hat keine Lifecycle-Scripts, ist deshalb aber nicht per se sicherer: Plugins laufen schon bei der Build-Konfiguration, Generatoren mit vollem Dateisystem- und Netzwerkzugriff."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o3",
+          "text": "Der Re-Upload-Schutz der Verification Metadata greift gegen nachträglich manipulierte bekannte Versionen: gleiche Version, anderer Inhalt → Build schlägt fehl.",
+          "verdict": "true",
+          "explanation": "SHA-256 + PGP pro Artefakt sind genau dafür da — hätte der Angreifer eine bestehende Version ausgetauscht statt 2.3.0 neu zu publizieren, wäre das sofort aufgeflogen."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o4",
+          "text": "Ein SHA-256-/PGP-Check hätte die 2.3.0 als Malware entlarvt, weil Schadcode die Signaturprüfung bricht.",
+          "verdict": "false",
+          "explanation": "Hashes und Signaturen beweisen Unverändertheit und Herkunft, nicht Harmlosigkeit: Die 2.3.0 wurde regulär mit gültigem Token publiziert — ihr Schadteil (postinstall auf openclaw) wäre ganz normal mitverifiziert worden."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o5",
+          "text": "Gradle bringt ein natives Minimum Release Age mit — ein Config-Key in der Build-Konfiguration genügt.",
+          "verdict": "false",
+          "explanation": "Gradle hat gerade KEIN natives Cooldown-Feature; der Schutz wird über Renovate- bzw. Dependabot-Cooldown (z. B. minimumReleaseAge: „7 days\") nachgerüstet."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o6",
+          "text": "Ein Cooldown hätte auch die Prompt Injection im Issue-Titel und das Cacheract-Cache-Poisoning verhindert.",
+          "verdict": "false",
+          "explanation": "Der Cooldown wirkt nur an der Konsumenten-Kante (welche Paket-Version installiert wird); Injection, npm-install des Angreifer-Forks und Cache-Poisoning liefen davor und davon unberührt — Defense-in-Depth bleibt nötig."
+        },
+        {
+          "id": "transfer-clinejection-gradle-cooldown-o7",
+          "text": "Ob ein Cooldown den Angriff zuverlässig stoppt, hängt vom Angreifer-Kalkül ab: opportunistische Angriffe filtert er, ein gezielter Angreifer kann die Frist aussitzen.",
+          "verdict": "depends",
+          "explanation": "Der Gradle-Talk sagt es explizit: Cooldown ist eine Schicht in Defense-in-Depth, kein Allheilmittel — wer lange genug unentdeckt bleibt, kommt nach Ablauf der Frist trotzdem durch."
+        }
+      ]
+    },
+    {
+      "id": "transfer-pattern1-build-loop-goal",
+      "question": "Du automatisierst den Pattern-1-Build-Loop (Recipes-first, AI fixt Build-Fehler) aus dem OpenRewrite-Talk als /goal-Lauf in Claude Code. Welche Aussagen treffen zu?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Brücke zum OpenRewrite-Talk: Pattern 1 lässt deterministische Recipes vorarbeiten und die KI nur Build-Fehler fixen — der Build ist die Ground-Truth. Das passt zu /goal: Die Completion-Bedingung muss aus Claudes eigenem Transcript-Output beweisbar sein, also „./gradlew build exits 0\" statt „Migration fertig\". Der Haiku-Evaluator führt den Build aber nie selbst aus — und ohne Turn-/Budget-Limit wird ein nicht konvergierender Fix-Loop zur Kostenfalle (dokumentiert: ~200 $ in 14 h). Die Recipes selbst gehören NICHT in den Loop: Sie laufen deterministisch und token-frei vorweg.",
+      "options": [
+        {
+          "id": "transfer-pattern1-build-loop-goal-o0",
+          "text": "Eine taugliche /goal-Bedingung wäre „./gradlew build exits 0\" — der Build-Exit-Code ist im Transcript beweisbar und entspricht exakt der Pattern-1-Ground-Truth.",
+          "verdict": "true",
+          "explanation": "Pattern 1 macht den Build zum Gate; /goal braucht eine aus Claudes Output beweisbare Bedingung — der protokollierte Exit-Code erfüllt beides gleichzeitig."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o1",
+          "text": "Claude muss den Build selbst ausführen und das Ergebnis sichtbar ausgeben — der Haiku-Evaluator ruft keine Tools auf und kann den Build nicht selbst starten.",
+          "verdict": "true",
+          "explanation": "Der Evaluator urteilt allein über das Transcript; führt Claude den Build still aus oder verschweigt das Ergebnis, bleibt die Bedingung unerfüllt."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o2",
+          "text": "Die deterministischen Recipes gehören vor den /goal-Lauf, nicht hinein: Sie erledigen den mechanischen Großteil token-frei, der Agent fixt nur die Rest-Fehler.",
+          "verdict": "true",
+          "explanation": "Genau die Arbeitsteilung von Pattern 1 — wer die Recipes vom Agenten im Loop nachbauen lässt, bezahlt superlineare Token-Kosten für deterministisch Lösbares."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o3",
+          "text": "Ohne Turn- oder Budget-Limit ist der Lauf eine Kostenfalle: Konvergiert der Build-Fix-Loop nicht, arbeitet Claude unbegrenzt weiter (dokumentiert: ~200 $ in 14 h).",
+          "verdict": "true",
+          "explanation": "Der OpenRewrite-Talk mahnt fürs Build-Loop-Pattern ein Iteration-Limit an, und /goal hat von sich aus keins — beide Warnungen zeigen auf dasselbe Risiko."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o4",
+          "text": "„Migration abgeschlossen und Code sauber\" ist als /goal-Bedingung besser geeignet, weil sie dem Evaluator Interpretationsspielraum lässt.",
+          "verdict": "false",
+          "explanation": "Genau umgekehrt: Der Evaluator braucht beweisbare, im Output sichtbare Kriterien — vage Prosa-Ziele lösen unzuverlässig aus oder nie."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o5",
+          "text": "Der Haiku-Evaluator kompiliert das Projekt nach jedem Turn selbst, um den Build-Status unabhängig zu verifizieren.",
+          "verdict": "false",
+          "explanation": "Der Evaluator ruft keine Tools auf — er liest nur das Transcript; die Verifikation ist nur so gut wie der Output, den Claude selbst produziert."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o6",
+          "text": "Pattern 1 funktioniert auch ohne verlässlichen Build als Gate — dann ersetzt der /goal-Evaluator das fehlende deterministische Gate.",
+          "verdict": "false",
+          "explanation": "Ohne Build-Gate fehlt die Ground-Truth, die Halluzinationen erkennt — der OpenRewrite-Talk nennt genau das als Ausschlusskriterium; ein Transcript-lesender Evaluator kann kein deterministisches Gate ersetzen."
+        },
+        {
+          "id": "transfer-pattern1-build-loop-goal-o7",
+          "text": "Ob /goal oder ein externer CI-Workflow der bessere Träger für den Build-Loop ist, hängt davon ab, ob die Automation die Session überdauern soll.",
+          "verdict": "depends",
+          "explanation": "/goal ist wie /loop an die Session gebunden (eine Bedingung, löscht sich bei Erfüllung); für wiederkehrende Migration-Waves über viele Repos im Duolingo-Stil ist Pattern 1 als CI-Workflow die nachhaltigere Form."
         }
       ]
     }

@@ -1,9 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
-import { useDarkMode } from "@slidev/client";
 import Tabs from "@shared/components/Tabs.vue";
-
-const { isDark } = useDarkMode();
+import { usePalette } from "@shared/composables/usePalette";
+import { useSupportMarks } from "./supportMarks";
 
 const tab = ref("files");
 const tabs = [
@@ -75,37 +74,43 @@ const tools = [
   },
 ];
 
-const Y = computed(() => {
-  const c = isDark.value ? "#80c050" : "#639922";
-  return `<span style="color:${c};font-weight:600">✓</span>`;
-});
-const N = computed(() => {
-  const c = isDark.value ? "#f06060" : "#A32D2D";
-  return `<span style="color:${c}">✗</span>`;
-});
-const Partial = computed(() => {
-  const c = isDark.value ? "#e0a030" : "#BA7517";
-  return `<span style="color:${c};font-weight:500">◐</span>`;
-});
+const { Y, N, Partial } = useSupportMarks();
 
-const C = computed(() => {
-  const d = isDark.value;
-  return {
-    tabBtnBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    tabBtnColor: d ? "#aaa" : "#888",
-    tabActiveBg: d ? "#2a2a2e" : "#f3f2ee",
-    tabActiveColor: d ? "#e5e5e5" : "#1a1a18",
-    tableBg: d ? "#1e1e1e" : "white",
-    tableBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    tableColor: d ? "#e5e5e5" : "#1a1a18",
-    thBg: d ? "#2a2a2e" : "#f3f2ee",
-    thColor: d ? "#999" : "#5f5e5a",
-    thBorderBottom: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    tdBorderBottom: d ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-    tdColor: d ? "#e5e5e5" : "#1a1a18",
-    toolNameColor: d ? "#e5e5e5" : "#1a1a18",
-    monoColor: d ? "#999" : "#5f5e5a",
-  };
+// Deck-Optik weicht von den kanonischen Tokens ab (warme Light-Neutrals wie
+// #1a1a18/#f3f2ee) — exakt erhalten via usePalette-Overrides.
+const C = usePalette({
+  light: {
+    tabBtnBorder: "rgba(0,0,0,0.1)",
+    tabBtnColor: "#888",
+    tabActiveBg: "#f3f2ee",
+    tabActiveColor: "#1a1a18",
+    tableBg: "white",
+    tableBorder: "rgba(0,0,0,0.1)",
+    tableColor: "#1a1a18",
+    thBg: "#f3f2ee",
+    thColor: "#5f5e5a",
+    thBorderBottom: "rgba(0,0,0,0.1)",
+    tdBorderBottom: "rgba(0,0,0,0.06)",
+    tdColor: "#1a1a18",
+    toolNameColor: "#1a1a18",
+    monoColor: "#5f5e5a",
+  },
+  dark: {
+    tabBtnBorder: "rgba(255,255,255,0.12)",
+    tabBtnColor: "#aaa",
+    tabActiveBg: "#2a2a2e",
+    tabActiveColor: "#e5e5e5",
+    tableBg: "#1e1e1e",
+    tableBorder: "rgba(255,255,255,0.12)",
+    tableColor: "#e5e5e5",
+    thBg: "#2a2a2e",
+    thColor: "#999",
+    thBorderBottom: "rgba(255,255,255,0.12)",
+    tdBorderBottom: "rgba(255,255,255,0.06)",
+    tdColor: "#e5e5e5",
+    toolNameColor: "#e5e5e5",
+    monoColor: "#999",
+  },
 });
 
 const features = computed(() => [

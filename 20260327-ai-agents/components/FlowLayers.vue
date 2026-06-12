@@ -1,7 +1,10 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 
+// isDark bleibt für die farbigen Layer-Daten unten; das Palettenobjekt C
+// läuft über usePalette.
 const { isDark } = useDarkMode();
 
 const openLayer = ref(null);
@@ -85,29 +88,51 @@ const layers = computed(() => {
   ];
 });
 
-const C = computed(() => {
-  const d = isDark.value;
-  return {
-    hintColor: d ? "#aaa" : "#888",
-    layerQ: d ? "#999" : "#5f5e5a",
-    detailBg: d ? "#1e1e1e" : "white",
-    detailColor: d ? "#e5e5e5" : "#1a1a18",
-    detailBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    codeBg: d ? "#2a2a2e" : "#f3f2ee",
-    codeColor: d ? "#e5e5e5" : "#1a1a18",
-    arrowColor: d ? "#aaa" : "#888",
-    sectionLabelColor: d ? "#aaa" : "#888",
-    tableBg: d ? "#1e1e1e" : "white",
-    tableBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    tableColor: d ? "#e5e5e5" : "#1a1a18",
-    thBg: d ? "#2a2a2e" : "#f3f2ee",
-    thColor: d ? "#ccc" : "#333",
-    thBorderBottom: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    tdBorderBottom: d ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-    tdColor: d ? "#e5e5e5" : "#1a1a18",
-    toolNameColor: d ? "#e5e5e5" : "#1a1a18",
-    exUsageColor: d ? "#ccc" : "#333",
-  };
+// Deck-Optik weicht von den kanonischen Tokens ab (warme Light-Neutrals wie
+// #1a1a18/#f3f2ee) — exakt erhalten via usePalette-Overrides.
+const C = usePalette({
+  light: {
+    hintColor: "#888",
+    layerQ: "#5f5e5a",
+    detailBg: "white",
+    detailColor: "#1a1a18",
+    detailBorder: "rgba(0,0,0,0.1)",
+    codeBg: "#f3f2ee",
+    codeColor: "#1a1a18",
+    arrowColor: "#888",
+    sectionLabelColor: "#888",
+    tableBg: "white",
+    tableBorder: "rgba(0,0,0,0.1)",
+    tableColor: "#1a1a18",
+    thBg: "#f3f2ee",
+    thColor: "#333",
+    thBorderBottom: "rgba(0,0,0,0.1)",
+    tdBorderBottom: "rgba(0,0,0,0.06)",
+    tdColor: "#1a1a18",
+    toolNameColor: "#1a1a18",
+    exUsageColor: "#333",
+  },
+  dark: {
+    hintColor: "#aaa",
+    layerQ: "#999",
+    detailBg: "#1e1e1e",
+    detailColor: "#e5e5e5",
+    detailBorder: "rgba(255,255,255,0.12)",
+    codeBg: "#2a2a2e",
+    codeColor: "#e5e5e5",
+    arrowColor: "#aaa",
+    sectionLabelColor: "#aaa",
+    tableBg: "#1e1e1e",
+    tableBorder: "rgba(255,255,255,0.12)",
+    tableColor: "#e5e5e5",
+    thBg: "#2a2a2e",
+    thColor: "#ccc",
+    thBorderBottom: "rgba(255,255,255,0.12)",
+    tdBorderBottom: "rgba(255,255,255,0.06)",
+    tdColor: "#e5e5e5",
+    toolNameColor: "#e5e5e5",
+    exUsageColor: "#ccc",
+  },
 });
 
 const examples = [

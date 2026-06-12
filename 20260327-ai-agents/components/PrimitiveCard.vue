@@ -1,8 +1,6 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useDarkMode } from "@slidev/client";
-
-const { isDark } = useDarkMode();
+import { ref } from "vue";
+import { usePalette } from "@shared/composables/usePalette";
 
 const props = defineProps({
   icon: { type: String, default: "" },
@@ -19,22 +17,37 @@ const props = defineProps({
   whenNot: { type: String, default: "" },
 });
 
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    cardBg: d ? "#1e1e1e" : "white",
-    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    cardColor: d ? "#e5e5e5" : "#1a1a18",
-    hoverBorder: d ? "#aaa" : "#888",
-    titleColor: d ? "#e5e5e5" : "#1a1a18",
-    analogyColor: d ? "#aaa" : "#888",
-    purposeColor: d ? "#999" : "#5f5e5a",
-    neutralBg: d ? "#2a2a2e" : "#f3f2ee",
-    neutralColor: d ? "#999" : "#5f5e5a",
-    detailBg: d ? "#2a2a2e" : "#f3f2ee",
-    detailColor: d ? "#e5e5e5" : "#1a1a18",
-    strongColor: d ? "#e5e5e5" : "#1a1a18",
-  };
+// Deck-Optik weicht von den kanonischen Tokens ab (warme Light-Neutrals wie
+// #1a1a18/#f3f2ee) — exakt erhalten via usePalette-Overrides.
+const P = usePalette({
+  light: {
+    cardBg: "white",
+    cardBorder: "rgba(0,0,0,0.1)",
+    cardColor: "#1a1a18",
+    hoverBorder: "#888",
+    titleColor: "#1a1a18",
+    analogyColor: "#888",
+    purposeColor: "#5f5e5a",
+    neutralBg: "#f3f2ee",
+    neutralColor: "#5f5e5a",
+    detailBg: "#f3f2ee",
+    detailColor: "#1a1a18",
+    strongColor: "#1a1a18",
+  },
+  dark: {
+    cardBg: "#1e1e1e",
+    cardBorder: "rgba(255,255,255,0.12)",
+    cardColor: "#e5e5e5",
+    hoverBorder: "#aaa",
+    titleColor: "#e5e5e5",
+    analogyColor: "#aaa",
+    purposeColor: "#999",
+    neutralBg: "#2a2a2e",
+    neutralColor: "#999",
+    detailBg: "#2a2a2e",
+    detailColor: "#e5e5e5",
+    strongColor: "#e5e5e5",
+  },
 });
 
 const open = ref(false);

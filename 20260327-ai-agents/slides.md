@@ -6,6 +6,12 @@ info: |
   Konfiguration (Primitive, Protokolle, Worktrees, Cross-Tool) und
   Autonomie & Orchestrierung (Subagents, /goal, /loop, Dynamic Workflows, Agent Teams).
 monaco: true
+mdc: true
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
 hideInToc: true
 lang: de
 ---
@@ -178,6 +184,16 @@ hideInToc: true
 
 # Sandboxing und Permissions
 
+<style>
+table {
+  font-size: 0.85em;
+}
+th,
+td {
+  padding: 0.3em 0.5em !important;
+}
+</style>
+
 | Tool                   | Technologie                    | Besonderheit                                                        |
 | ---------------------- | ------------------------------ | ------------------------------------------------------------------- |
 | **Codex**              | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                   |
@@ -199,6 +215,16 @@ routeAlias: permission-modes
 # Claude Code Permission Modes
 
 Sechs Modi statt zwei. `Shift+Tab` cycelt `default → acceptEdits → plan`; `auto`/`bypassPermissions` brauchen Opt-in.
+
+<style>
+table {
+  font-size: 0.85em;
+}
+th,
+td {
+  padding: 0.3em 0.5em !important;
+}
+</style>
 
 | Modus               | Ohne Prompt erlaubt                     | Best für                         |
 | ------------------- | --------------------------------------- | -------------------------------- |
@@ -730,6 +756,16 @@ hideInToc: true
 
 # Claude Code in IntelliJ via ACP — Agent registrieren
 
+<style>
+/* Seit dem Inter-Headmatter wickelt der Fließtext eine Zeile mehr um —
+   kompaktere Code-Blöcke halten das Callout über der Folienkante.
+   (Die Zeilenboxen steuert das innere code-Element, nicht das pre.) */
+pre.slidev-code,
+pre.slidev-code code {
+  line-height: 1.35 !important;
+}
+</style>
+
 **Schritt 2:** AI-Chat → ⋮ → **Add Custom Agent** öffnet `~/.jetbrains/acp.json`. Robuster als der direkte `npx`-Aufruf ist ein Wrapper-Skript: GUI-Apps erben den Shell-`PATH` nicht, das Skript setzt `PATH` und `env` kontrolliert:
 
 ```json
@@ -754,7 +790,7 @@ exec npx @agentclientprotocol/claude-agent-acp
 ```
 
 <Callout tone="warning" dense class="mt-1">
-<p class="!my-0 !leading-tight"><strong>Token-Abrechnung:</strong> Der ACP-Pfad nutzt den Agent-SDK-Modus → zählt ab <strong>2026-06-15</strong> auf Pro/Max gegen ein separates Agent-SDK-Credit, nicht gegen das interaktive Kontingent. (siehe <Link to="acp-abrechnung">ACP — Abrechnung auf Pro/Max</Link>)</p>
+<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Token-Abrechnung:</strong> Der ACP-Pfad nutzt den Agent-SDK-Modus → zählt ab <strong>2026-06-15</strong> auf Pro/Max gegen ein separates Agent-SDK-Credit, nicht gegen das interaktive Kontingent. (siehe <Link to="acp-abrechnung">ACP — Abrechnung auf Pro/Max</Link>)</p>
 </Callout>
 
 ---

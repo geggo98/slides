@@ -1,13 +1,17 @@
 <script setup>
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 import PrimitiveCard from "./PrimitiveCard.vue";
 
+// isDark bleibt für die farbigen Karten-Daten unten; das Palettenobjekt P
+// läuft über usePalette (Hint-Grau weicht vom Token ab — exakt erhalten).
 const { isDark } = useDarkMode();
 
-const P = computed(() => ({
-  hintColor: isDark.value ? "#aaa" : "#888",
-}));
+const P = usePalette({
+  light: { hintColor: "#888" },
+  dark: { hintColor: "#aaa" },
+});
 
 const primitives = computed(() => {
   const d = isDark.value;

@@ -1,7 +1,10 @@
 <script setup>
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 
+// isDark bleibt für die Badge-Farben der Worktree-Daten unten; die
+// Palettenobjekte combo/C laufen über usePalette.
 const { isDark } = useDarkMode();
 
 const worktrees = computed(() => {
@@ -54,38 +57,66 @@ const worktrees = computed(() => {
   ];
 });
 
-const combo = computed(() => {
-  const d = isDark.value;
-  return {
-    subBg: d ? "#1a3028" : "#E1F5EE",
-    subBorder: d ? "#40a080" : "#0F6E56",
-    subName: d ? "#5cc0a0" : "#085041",
-    subText: d ? "#ccc" : "#333",
-    wtBg: d ? "#2a2640" : "#EEEDFE",
-    wtBorder: d ? "#7c72d0" : "#534AB7",
-    wtName: d ? "#a5a0e0" : "#3C3489",
-    bothBg: d ? "#331810" : "#FAECE7",
-    bothBorder: d ? "#e08050" : "#D85A30",
-    bothName: d ? "#e09060" : "#712B13",
-    bothText: d ? "#e09060" : "#712B13",
-    codeBg: d ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-    codeColor: d ? "#e09060" : "#4a1a0a",
-  };
+// Kombi-Boxen-Farben (deck-spezifische Grün/Violett/Orange-Familien) —
+// exakt erhalten via usePalette-Overrides.
+const combo = usePalette({
+  light: {
+    subBg: "#E1F5EE",
+    subBorder: "#0F6E56",
+    subName: "#085041",
+    subText: "#333",
+    wtBg: "#EEEDFE",
+    wtBorder: "#534AB7",
+    wtName: "#3C3489",
+    bothBg: "#FAECE7",
+    bothBorder: "#D85A30",
+    bothName: "#712B13",
+    bothText: "#712B13",
+    codeBg: "rgba(0,0,0,0.08)",
+    codeColor: "#4a1a0a",
+  },
+  dark: {
+    subBg: "#1a3028",
+    subBorder: "#40a080",
+    subName: "#5cc0a0",
+    subText: "#ccc",
+    wtBg: "#2a2640",
+    wtBorder: "#7c72d0",
+    wtName: "#a5a0e0",
+    bothBg: "#331810",
+    bothBorder: "#e08050",
+    bothName: "#e09060",
+    bothText: "#e09060",
+    codeBg: "rgba(255,255,255,0.08)",
+    codeColor: "#e09060",
+  },
 });
 
-const C = computed(() => {
-  const d = isDark.value;
-  return {
-    sectionLabelColor: d ? "#aaa" : "#888",
-    cardBg: d ? "#1e1e1e" : "white",
-    cardBorder: d ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-    cardColor: d ? "#e5e5e5" : "#1a1a18",
-    cardH4: d ? "#e5e5e5" : "#1a1a18",
-    cardP: d ? "#ccc" : "#333",
-    comboSub: d ? "#ccc" : "#333",
-    comboArrow: d ? "#aaa" : "#888",
+// Deck-Optik weicht von den kanonischen Tokens ab (warme Light-Neutrals wie
+// #1a1a18) — exakt erhalten via usePalette-Overrides.
+const C = usePalette({
+  light: {
+    sectionLabelColor: "#888",
+    cardBg: "white",
+    cardBorder: "rgba(0,0,0,0.1)",
+    cardColor: "#1a1a18",
+    cardH4: "#1a1a18",
+    cardP: "#333",
+    comboSub: "#333",
+    comboArrow: "#888",
     limitsColor: "#aaa",
-  };
+  },
+  dark: {
+    sectionLabelColor: "#aaa",
+    cardBg: "#1e1e1e",
+    cardBorder: "rgba(255,255,255,0.12)",
+    cardColor: "#e5e5e5",
+    cardH4: "#e5e5e5",
+    cardP: "#ccc",
+    comboSub: "#ccc",
+    comboArrow: "#aaa",
+    limitsColor: "#aaa",
+  },
 });
 
 const orchestrators = [
