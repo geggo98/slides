@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { TALKS, type TalkSlug } from "../talks";
+import { TALK_BASE_URL, TALKS, talkUrl, type TalkSlug } from "../talks";
 
 // Repo-Root: dieses File liegt in shared/__tests__/, also zwei Ebenen hoch.
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -52,4 +52,89 @@ describe("TalkXref slug-Attribute", () => {
   it.each(xrefSlugs)("$file: slug=$slug ist registriert", ({ slug }) => {
     expect(talkSlugs).toContain(slug);
   });
+});
+
+describe("talkUrl", () => {
+  it("ohne anchor: kanonische Deck-URL mit Trailing-Slash", () => {
+    expect(talkUrl("20260428-java-null-pointer")).toBe(
+      `${TALK_BASE_URL}20260428-java-null-pointer/`,
+    );
+  });
+
+  it("mit anchor: routeAlias als Pfad-Segment (kein Hash — history-Mode)", () => {
+    expect(talkUrl("20260428-java-null-pointer", "jspecify")).toBe(
+      `${TALK_BASE_URL}20260428-java-null-pointer/jspecify`,
+    );
+  });
+
+  it("mit numerischem anchor: Folien-Nummer als Pfad-Segment", () => {
+    expect(talkUrl("20260522-open-rewrite", 12)).toBe(
+      `${TALK_BASE_URL}20260522-open-rewrite/12`,
+    );
+  });
+
+  it("normalisiert führende Slashes im anchor (kein Doppel-Slash)", () => {
+    expect(talkUrl("20260522-open-rewrite", "/recipe-mechanik")).toBe(
+      `${TALK_BASE_URL}20260522-open-rewrite/recipe-mechanik`,
+    );
+  });
+
+  it("leerer anchor verhält sich wie kein anchor", () => {
+    expect(talkUrl("20260606-design-pattern", "")).toBe(
+      `${TALK_BASE_URL}20260606-design-pattern/`,
+    );
+  });
+});
+
+// Anker-Robustheit: Jeder Cross-Deck-Anker in einer slides.md muss im
+// Ziel-Deck existieren — als `routeAlias:`-Frontmatter (Konvention) oder als
+// nackte Folien-Nummer. Erfasst werden beide Verwendungsformen:
+//   <TalkXref slug="…" anchor="…">            (direkte Links)
+//   { slug: "…", …, anchor: "…" }             (TalkXrefPanel-:refs-Literale)
+// Aliasse in Deck-eigenen .vue-Komponenten sieht der Scan – wie schon der
+// Slug-Scan oben – nicht; die Konsolidierung auf TalkXrefPanel verlagert die
+// Daten aber gerade in slides.md, wo dieser Test greift.
+const routeAliasesByDeck = new Map<string, Set<string>>();
+for (const dir of talkDirs) {
+  const md = readFileSync(resolve(repoRoot, dir, "slides.md"), "utf8");
+  routeAliasesByDeck.set(
+    dir,
+    new Set(
+      [...md.matchAll(/^routeAlias:\s*["']?([\w-]+)["']?\s*$/gm)].map(
+        (m) => m[1],
+      ),
+    ),
+  );
+}
+
+const xrefAnchors: { file: string; slug: string; anchor: string }[] = [];
+for (const dir of talkDirs) {
+  const file = `${dir}/slides.md`;
+  const md = readFileSync(resolve(repoRoot, dir, "slides.md"), "utf8");
+  // Form 1: <TalkXref … slug="…" … anchor="…" …>
+  for (const m of md.matchAll(/<TalkXref\b[^>]*>/g)) {
+    const slug = /\bslug=["']([^"']+)["']/.exec(m[0])?.[1];
+    const anchor = /\banchor=["']([^"']+)["']/.exec(m[0])?.[1];
+    if (slug && anchor) xrefAnchors.push({ file, slug, anchor });
+  }
+  // Form 2: Objekt-Literale mit slug+anchor (z.B. in :refs von TalkXrefPanel).
+  for (const m of md.matchAll(/\{[^{}]*\bslug:\s*["']([^"']+)["'][^{}]*\}/g)) {
+    const anchor = /\banchor:\s*["']([^"']+)["']/.exec(m[0])?.[1];
+    if (anchor) xrefAnchors.push({ file, slug: m[1], anchor });
+  }
+}
+
+describe("TalkXref/TalkXrefPanel anchor-Attribute", () => {
+  if (xrefAnchors.length === 0) {
+    it("noch keine anchor-Verwendung gefunden (Smoke)", () => {
+      expect(xrefAnchors).toEqual([]);
+    });
+  }
+  it.each(xrefAnchors)(
+    "$file: anchor=$anchor existiert in $slug",
+    ({ slug, anchor }) => {
+      if (/^\d+$/.test(anchor)) return; // Folien-Nummer: kein Alias nötig
+      expect([...(routeAliasesByDeck.get(slug) ?? [])]).toContain(anchor);
+    },
+  );
 });

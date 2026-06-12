@@ -10,9 +10,12 @@ import { talkUrl, TALKS, type TalkSlug } from "@shared/talks";
 // gelöschtes Deck failt beim Type-Check, statt stumm den Slug als Linktext zu
 // rendern. Der Runtime-Guard bleibt, weil Markdown-Verwendungen in slides.md
 // nicht von vue-tsc geprüft werden.
-const props = defineProps<{ slug: TalkSlug }>();
+// anchor (optional) deep-linkt auf eine Folie im Ziel-Deck: bevorzugt ein
+// routeAlias aus dem Ziel-Frontmatter, notfalls eine Folien-Nummer — Details
+// und Deployment-Begründung bei talkUrl() in @shared/talks.
+const props = defineProps<{ slug: TalkSlug; anchor?: string | number }>();
 
-const href = computed(() => talkUrl(props.slug));
+const href = computed(() => talkUrl(props.slug, props.anchor));
 // Fallback-Label aus der Registry, falls kein Slot-Inhalt übergeben wurde.
 const fallback = computed(() =>
   props.slug in TALKS ? TALKS[props.slug] : props.slug,

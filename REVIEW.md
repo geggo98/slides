@@ -15,8 +15,7 @@
 
 ### Querverweis-Muster
 
-- [ ] **(M) Slide-Ebene konsolidieren:** `JspecifyCrossRef.vue` (open-rewrite) und `DesignPatternCrossRef.vue` (design-pattern) sind ~80 % identische Zwei-Spalten-Panels. Durch EINE datengetriebene `shared/components/TalkXrefPanel.vue` ersetzen (Props: `here: {title, bullets}`, `refs: [{slug, bullets, anchor?}]`) — bevor ein drittes Deck eine dritte Kopie anlegt.
-- [ ] **(M) Slide-Anker robust machen:** `talkUrl(slug, anchor?)` + TalkXref-Prop `anchor`; Konvention: Cross-Deck-Ziele bekommen im Ziel-Deck ein `routeAlias`. (Die veralteten Prosa-Slide-Nummern sind bereits entfernt.)
+- [ ] **Rest-Migration:** `JspecifyCrossRef.vue` (open-rewrite) und `DesignPatternCrossRef.vue` (design-pattern) auf das neue `shared/components/TalkXrefPanel.vue` + `talkUrl(slug, anchor?)`/`routeAlias` umstellen (Shared-Seite inkl. Tests ist fertig; folgt in den Deck-Commits).
 
 ### Frontmatter-Konvention
 

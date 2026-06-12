@@ -19,6 +19,26 @@ export const TALKS = {
 
 export type TalkSlug = keyof typeof TALKS;
 
-export function talkUrl(slug: string): string {
-  return `${TALK_BASE_URL}${slug}/`;
+// Kanonische URL eines Decks, optional mit Slide-Anker.
+//
+// `anchor` ist ein **Pfad-Segment** im Ziel-Deck — bevorzugt ein `routeAlias`
+// aus dem Frontmatter der Ziel-Folie (kebab-case), notfalls eine Folien-Nummer.
+// Warum Pfad statt Hash: alle Decks laufen im Slidev-Default `routerMode:
+// history` (kein Deck setzt routerMode im Headmatter); vue-router ignoriert
+// dort `#/…`-Fragmente fürs Routing, ein Hash-Anker würde also nicht
+// navigieren. Pfad-Deeplinks funktionieren in beiden Umgebungen:
+//   - Dev-Server (base "/"): http://localhost:<port>/<anchor> direkt.
+//   - GitHub Pages: die devenv-Task `slides:spa-redirect` deployt eine
+//     404.html, die /<base>/<deck>/<anchor> auf /<base>/<deck>/?__spa=/<anchor>
+//     umleitet; ein in jedes index.html injiziertes Head-Script macht daraus
+//     per history.replaceState **vor** App-Boot wieder /<anchor>, das
+//     vue-router als (Alias-)Route auflöst. Live verifiziert.
+//
+// Konvention: Cross-Deck-Ziele bekommen im Ziel-Deck ein `routeAlias` —
+// Folien-Nummern verschieben sich beim Editieren, Aliasse nicht.
+export function talkUrl(slug: string, anchor?: string | number): string {
+  const base = `${TALK_BASE_URL}${slug}/`;
+  if (anchor === undefined || anchor === "") return base;
+  // Führende Slashes tolerieren ("/jspecify" ≙ "jspecify"), Doppel-Slash vermeiden.
+  return base + String(anchor).replace(/^\/+/, "");
 }
