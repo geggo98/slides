@@ -28,5 +28,5 @@ tasks.withType<JavaCompile>().configureEach {
 </script>
 
 <template>
-  <MonacoBlock :code="code" language="kotlin" height="320px" />
+  <MonacoBlock :code="code" language="kotlin" height="370px" />
 </template>

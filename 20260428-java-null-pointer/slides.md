@@ -62,6 +62,7 @@ hideInToc: true
 
 ---
 layout: section
+routeAlias: jspecify
 ---
 
 # 1. JSpecify — Was und Warum
@@ -508,28 +509,17 @@ NullAway in den Build, Lombok-Konfig richtig setzen
 hideInToc: true
 ---
 
-# Build-Setup — Gradle (Kotlin DSL)
+# Build-Setup — Gradle & Maven
 
-<GradleBuildSetup />
+<BuildSetupTabs />
 
 <!--
+- Tabs: Gradle (Kotlin DSL) und Maven — gleiche NullAway-Optionen, zwei Build-Systeme.
 - OnlyNullMarked=true ist der Schlüssel: schrittweise Einführung pro Package, ohne die ganze Codebase auf einmal zu fixen.
 - JSpecifyMode=true aktiviert die Generics-Präzision.
-- Editor scrollt — der Rest des Build-Setups liegt unter der Fold.
--->
-
----
-hideInToc: true
----
-
-# Build-Setup — Maven
-
-<MavenBuildSetup />
-
-<!--
-- Das NullAway-Setup generiert Spring-Initializr nicht out of the box; muss manuell rein (≠ JSpecify-Dependency, die Initializr für Boot 4 setzt — siehe Bonus).
-- Spring Boot 4 Parent-POM definiert die Versionen — nur die NullAway-Version selbst pinnen.
-- Editor scrollt — der Rest des POM-Setups liegt unter der Fold.
+- Maven: Das NullAway-Setup generiert Spring-Initializr nicht out of the box; muss manuell rein (≠ JSpecify-Dependency, die Initializr für Boot 4 setzt — siehe Bonus).
+- Maven: Spring Boot 4 Parent-POM definiert die Versionen — nur die NullAway-Version selbst pinnen.
+- Editor scrollt — der Rest des Setups liegt unter der Fold.
 -->
 
 ---
@@ -1123,6 +1113,7 @@ hideInToc: true
 
 ---
 layout: section
+routeAlias: native-null-types
 ---
 
 # 7. Was kommt nativ?

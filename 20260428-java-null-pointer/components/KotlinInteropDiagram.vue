@@ -1,25 +1,37 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 
-const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    bg: d ? "#14141c" : "#ffffff",
-    cardBg: d ? "#1a1a24" : "#f9fafb",
-    border: d ? "#2a2a35" : "#e4e4e7",
-    text: d ? "#c8c8d0" : "#3f3f46",
-    muted: d ? "#7f7f8c" : "#71717a",
-    label: d ? "#a78bfa" : "#7c3aed",
-    arrow: d ? "#7f7f8c" : "#9ca3af",
-    java: d ? "#fb923c" : "#ea580c",
-    kotlin: d ? "#93c5fd" : "#1d4ed8",
-    danger: d ? "#fca5a5" : "#dc2626",
-    success: d ? "#86efac" : "#16a34a",
-    code: d ? "#1f2428" : "#f4f4f5",
-  };
+// Carbon-Familie des Decks (vgl. shared/quiz/lib/carbonTokens.ts) als exakte
+// Overrides — die Migration auf usePalette ist ein visueller No-Op.
+const P = usePalette({
+  light: {
+    bg: "#ffffff",
+    cardBg: "#f9fafb",
+    border: "#e4e4e7",
+    text: "#3f3f46",
+    muted: "#71717a",
+    label: "#7c3aed",
+    arrow: "#9ca3af",
+    java: "#ea580c",
+    kotlin: "#1d4ed8",
+    danger: "#dc2626",
+    success: "#16a34a",
+    code: "#f4f4f5",
+  },
+  dark: {
+    bg: "#14141c",
+    cardBg: "#1a1a24",
+    border: "#2a2a35",
+    text: "#c8c8d0",
+    muted: "#7f7f8c",
+    label: "#a78bfa",
+    arrow: "#7f7f8c",
+    java: "#fb923c",
+    kotlin: "#93c5fd",
+    danger: "#fca5a5",
+    success: "#86efac",
+    code: "#1f2428",
+  },
 });
 
 type Scenario = {

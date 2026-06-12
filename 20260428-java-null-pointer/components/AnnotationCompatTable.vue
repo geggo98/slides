@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 
 type Status = "active" | "deprecated" | "dead" | "bridge";
 
@@ -8,27 +8,43 @@ const props = defineProps<{
   variant?: "annotations" | "analyzers" | "languages" | "jeps" | "springboot";
 }>();
 
-const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    bg: d ? "#14141c" : "#ffffff",
-    headerBg: d ? "#1a1a24" : "#f4f4f5",
-    headerText: d ? "#a78bfa" : "#7c3aed",
-    border: d ? "#2a2a35" : "#e4e4e7",
-    text: d ? "#c8c8d0" : "#3f3f46",
-    hoverBg: d ? "#181820" : "#f9fafb",
-    accent: d ? "#fb923c" : "#ea580c",
-    green: d ? "#86efac" : "#16a34a",
-    greenBg: d ? "rgba(74,222,128,0.15)" : "rgba(22,163,74,0.1)",
-    yellow: d ? "#fde68a" : "#a16207",
-    yellowBg: d ? "rgba(250,204,21,0.18)" : "rgba(202,138,4,0.12)",
-    red: d ? "#fca5a5" : "#dc2626",
-    redBg: d ? "rgba(248,113,113,0.15)" : "rgba(220,38,38,0.1)",
-    blue: d ? "#93c5fd" : "#1d4ed8",
-    blueBg: d ? "rgba(96,165,250,0.15)" : "rgba(37,99,235,0.1)",
-  };
+// Carbon-Familie des Decks (vgl. shared/quiz/lib/carbonTokens.ts) als exakte
+// Overrides — die Migration auf usePalette ist ein visueller No-Op.
+const P = usePalette({
+  light: {
+    bg: "#ffffff",
+    headerBg: "#f4f4f5",
+    headerText: "#7c3aed",
+    border: "#e4e4e7",
+    text: "#3f3f46",
+    hoverBg: "#f9fafb",
+    accent: "#ea580c",
+    green: "#16a34a",
+    greenBg: "rgba(22,163,74,0.1)",
+    yellow: "#a16207",
+    yellowBg: "rgba(202,138,4,0.12)",
+    red: "#dc2626",
+    redBg: "rgba(220,38,38,0.1)",
+    blue: "#1d4ed8",
+    blueBg: "rgba(37,99,235,0.1)",
+  },
+  dark: {
+    bg: "#14141c",
+    headerBg: "#1a1a24",
+    headerText: "#a78bfa",
+    border: "#2a2a35",
+    text: "#c8c8d0",
+    hoverBg: "#181820",
+    accent: "#fb923c",
+    green: "#86efac",
+    greenBg: "rgba(74,222,128,0.15)",
+    yellow: "#fde68a",
+    yellowBg: "rgba(250,204,21,0.18)",
+    red: "#fca5a5",
+    redBg: "rgba(248,113,113,0.15)",
+    blue: "#93c5fd",
+    blueBg: "rgba(96,165,250,0.15)",
+  },
 });
 
 const annotations = [

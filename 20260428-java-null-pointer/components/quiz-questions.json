@@ -913,6 +913,234 @@
           "explanation": "Tooling-mäßig nahe dran; Sprache selbst hinkt hinterher."
         }
       ]
+    },
+    {
+      "id": "transfer-stufe2-fehlermelder",
+      "question": "Brücke zum OpenRewrite-Talk: Nach der mechanischen Recipe-Migration macht @NullMarked den Default @NonNull — der Build bricht. Wer meldet diese Fehler?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Die Fehler meldet NullAway — als Plugin im ErrorProne-Framework, das sich in javac einhängt, also zur Compile-Zeit. Die OpenRewrite-Recipe aus Stufe 1 tauscht nur Annotationen; der Coding-Agent (Pattern 1) fixt anschließend im Build-Loop, was NullAway meldet, bis der Build grün ist.",
+      "options": [
+        {
+          "id": "transfer-stufe2-fehlermelder-o0",
+          "text": "NullAway meldet die Verstöße — als Plugin im ErrorProne-Framework, zur Compile-Zeit.",
+          "verdict": "true",
+          "explanation": "ErrorProne stellt die javac-Plugin-Infrastruktur, NullAway enthält den eigentlichen Null-Checker — der Build bricht in :compileJava, nicht erst zur Laufzeit."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o1",
+          "text": "Die OpenRewrite-Recipe prüft selbst keine Nullness — sie tauscht nur mechanisch die Annotationen.",
+          "verdict": "true",
+          "explanation": "Stufe 1 besteht aus ChangeType-Aufrufen (Spring/javax → JSpecify); ob ein Rückgabewert wirklich null sein kann, sieht erst der Checker im Build."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o2",
+          "text": "Der Build wird zum Gate für den Agenten: Pattern 1 fixt so lange, bis NullAway nichts mehr meldet.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Build-Loop aus dem OpenRewrite-Talk — die NullAway-Meldungen sind die Ground-Truth, an der sich jeder LLM-Vorschlag messen lassen muss."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o3",
+          "text": "Die Recipe meldet die Null-Verstöße direkt beim rewrite:run-Lauf.",
+          "verdict": "false",
+          "explanation": "Nein — die Recipe ist deterministische Mechanik ohne Nullness-Analyse; die Verstöße tauchen erst beim anschließenden Compile mit NullAway auf."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o4",
+          "text": "Die Nullness-Logik steckt in ErrorProne; NullAway liefert nur die Konfiguration dazu.",
+          "verdict": "false",
+          "explanation": "Umgekehrt: ErrorProne ist nur das Plugin-Framework mit CFG- und Dataflow-Infrastruktur — die Nullness-Logik wohnt komplett in NullAway."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o5",
+          "text": "Der LLM-Agent findet die Fehler durch eigenes Code-Lesen — ein Build-Lauf ist dafür unnötig.",
+          "verdict": "false",
+          "explanation": "Das Pattern funktioniert genau andersherum: Der Build (NullAway) meldet die Fehler, der Agent liefert Fix-Vorschläge — ohne Build-Gate fehlt die Ground-Truth."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o6",
+          "text": "Dieselben Fehler siehst du schon vor dem Build in der IDE.",
+          "verdict": "depends",
+          "explanation": "IntelliJ IDEA prüft JSpecify best-effort und sofort — verbindlich ist aber erst das NullAway-Gate im Build, und die Befunde decken sich je nach Tool nicht in jedem Fall."
+        },
+        {
+          "id": "transfer-stufe2-fehlermelder-o7",
+          "text": "Ohne NullAway im Build bleibt das gesetzte @NullMarked wirkungslos.",
+          "verdict": "depends",
+          "explanation": "Fürs Build-Gate stimmt das — aber IntelliJ wertet die Annotationen trotzdem aus, und Kotlin 2.x liest @NullMarked nativ für seine eigene Null-Prüfung."
+        }
+      ]
+    },
+    {
+      "id": "transfer-gap-fill-nullable-vs-optional",
+      "question": "Brücke zum OpenRewrite-Talk: Am Gap-Fill-Decision-Point schlägt der Agent für findByEmail @Nullable User oder Optional<User> vor. Was gilt für diese Wahl?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Beide Varianten machen den NullAway-Build grün — die Mechanik endet hier, entschieden wird der Vertrag gegenüber den Aufrufern. Dieser Talk wählt für Rückgaben konsequent Optional (‚may have no result'); für Felder und Parameter bleibt @Nullable T die richtige Form.",
+      "options": [
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o0",
+          "text": "Beide Vorschläge machen den NullAway-Build grün — entschieden wird der Vertrag gegenüber den Aufrufern.",
+          "verdict": "true",
+          "explanation": "Genau hier endet die Recipe-Mechanik: Beide Annotationsformen stellen NullAway zufrieden, aber welche Form die Aufrufer bekommen sollen, ist eine Design-Entscheidung."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o1",
+          "text": "Dieser Talk wählt für Rückgaben konsequent Optional<User> — ‚may have no result' steht dann im Typ.",
+          "verdict": "true",
+          "explanation": "Das ist Brian Goetz' Design-Intent: Optional kommuniziert als Rückgabetyp explizit, dass ein Ergebnis fehlen kann, und das Typsystem zwingt zur Behandlung."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o2",
+          "text": "Für Felder und Parameter wäre Optional<User> das Anti-Pattern — dort gehört @Nullable User hin.",
+          "verdict": "true",
+          "explanation": "Optional ist nicht serialisierbar und als Parameter weiter null-anfällig; komplementär gilt: Optional als Rückgabetyp, @Nullable für Feld und Parameter."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o3",
+          "text": "Die mechanische ChangeType-Recipe aus Stufe 1 trifft diese Entscheidung bereits automatisch.",
+          "verdict": "false",
+          "explanation": "Nein — die Recipe tauscht nur Annotationstypen; der Gap-Fill-Decision-Point ist genau die Stelle, an der die Mechanik endet und Agent oder Mensch entscheiden müssen."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o4",
+          "text": "Laut Brian Goetz ist Optional<User> als Rückgabetyp ein Anti-Pattern.",
+          "verdict": "false",
+          "explanation": "Umgekehrt: Der Rückgabetyp ist der einzige Einsatz, für den Optional gedacht ist — Anti-Patterns sind Feld, Parameter und Collection-Element."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o5",
+          "text": "Der grüne Build beweist, dass die fachlich richtige Variante gewählt wurde.",
+          "verdict": "false",
+          "explanation": "Der Build prüft nur Nullness-Konsistenz — beide Varianten kompilieren; den Aufrufer-Vertrag validiert kein Checker."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o6",
+          "text": "In Hot Paths spricht der Overhead von Optional für @Nullable User.",
+          "verdict": "depends",
+          "explanation": "~16–32 Byte Heap pro Optional sind in Hot Paths messbar — JEP 401 (Value Classes) soll genau diesen Overhead später auflösen."
+        },
+        {
+          "id": "transfer-gap-fill-nullable-vs-optional-o7",
+          "text": "Für Kotlin-Konsumenten ist @Nullable User die glattere Wahl.",
+          "verdict": "depends",
+          "explanation": "Kotlin 2.x liest JSpecify nativ und macht daraus User? — Optional bleibt dagegen ein Wrapper; wird die API primär aus Java konsumiert, bleibt Optional idiomatisch."
+        }
+      ]
+    },
+    {
+      "id": "transfer-staged-builder-vs-nonnull",
+      "question": "Brücke zum Design-Pattern-Talk: Pflichtfelder im Builder — Staged Builder vs. Lombok @NonNull. Wer erzwingt was auf welcher Ebene?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Der Staged Builder erzwingt Pflichtfelder zur Compile-Zeit: Seine Interface-Kette macht build() erst nach den Pflicht-Settern sichtbar. Lombok @NonNull generiert dagegen nur einen Laufzeit-Check (Default NPE seit Einführung 2013). Auch Null-Safety-Annotationen ändern daran nichts — Builder-Felder bleiben intern nullable, geprüft wird erst in build().",
+      "options": [
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o0",
+          "text": "Der Staged Builder macht den unvollständigen Aufruf unkompilierbar — build() existiert erst auf der letzten Stufe der Interface-Kette.",
+          "verdict": "true",
+          "explanation": "Jede Stufe gibt nur das Interface der nächsten zurück; damit erzwingt der Compiler die Pflichtfelder — das einzige compile-zeit-sichere Builder-Idiom in Java."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o1",
+          "text": "Lombok @NonNull prüft zur Laufzeit — Default ist eine NullPointerException, seit Einführung 2013.",
+          "verdict": "true",
+          "explanation": "@NonNull generiert einen Null-Check im Methodenrumpf; der Compiler verhindert den null-Aufruf nicht, erst die Laufzeit meldet ihn."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o2",
+          "text": "Auch JSpecify + NullAway heben Builder-Pflichtfelder nicht auf Compile-Zeit: Die Builder-Felder bleiben intern @Nullable, geprüft wird erst in build().",
+          "verdict": "true",
+          "explanation": "Inkrementelles Setzen erzwingt nullable Felder im Builder — deshalb braucht @Builder das Wrapper-Pattern mit Pflichtfeld-Check im build(); das ist ein Laufzeit-, kein Typ-Problem."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o3",
+          "text": "Mit @NonNull auf dem Builder-Feld meldet der Compiler vergessene Pflichtfelder.",
+          "verdict": "false",
+          "explanation": "Nein — Lombok @NonNull ist reine Laufzeit-Mechanik; ein nie aufgerufener Setter löst keinen Compile-Fehler aus, sondern fällt erst beim build()-Check oder als NPE auf."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o4",
+          "text": "Lombok bietet den Staged-Modus als Option an, etwa @Builder(staged = true).",
+          "verdict": "false",
+          "explanation": "Lombok verzichtet bewusst darauf: Bei freier Setter-Reihenfolge drohen 2ᴺ Interfaces (‚combinatorial explosion') — Staged Builder kommen von Hand oder aus Generatoren wie Immutables/@RecordBuilder."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o5",
+          "text": "Java-Records lösen das Pflichtfeld-Problem wie Kotlin — über named und default args.",
+          "verdict": "false",
+          "explanation": "Records erzwingen zwar zur Compile-Zeit, aber rein positional — named/default args hat Java nicht, und genau deshalb bleibt @Builder Lombok-Domäne."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o6",
+          "text": "Den Staged Builder schreibst du besser nicht von Hand.",
+          "verdict": "depends",
+          "explanation": "Die N Interfaces sind der Boilerplate-Preis, weshalb er meist generiert wird (Immutables, @RecordBuilder) — für zwei, drei Pflichtfelder ist die Handschrift aber vertretbar."
+        },
+        {
+          "id": "transfer-staged-builder-vs-nonnull-o7",
+          "text": "Sobald NullAway im Build läuft, kannst du die Lombok-@NonNull-Checks entfernen.",
+          "verdict": "depends",
+          "explanation": "Innerhalb statisch geprüften Codes verlieren sie an Wert — das Migrations-Cheatsheet behält sie trotzdem als komplementäre Laufzeit-Verteidigung, denn NullAway ist bewusst unsound und externe Aufrufer bleiben ungeprüft."
+        }
+      ]
+    },
+    {
+      "id": "transfer-null-object-vs-optional",
+      "question": "Brücke zum Design-Pattern-Talk: Null Object trägt dort das Label [ERSETZT]. Wie verhält sich das Muster zu Optional und @Nullable?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Null Object — ein Objekt mit bewusst neutralem Verhalten wie ein No-op-Logger — war eine Notlösung für fehlende Nullability; Kotlin (T?) und Rust (Option<T>) machen es obsolet. In Java übernimmt @Nullable plus Checker die Feld- und Parameter-Seite, Optional die Rückgabe-Seite — Optional als Feldersatz ist ausdrücklich der schwächere Weg.",
+      "options": [
+        {
+          "id": "transfer-null-object-vs-optional-o0",
+          "text": "Null Object ist ein Objekt mit bewusst neutralem Verhalten — etwa ein Logger, dessen log() nichts tut.",
+          "verdict": "true",
+          "explanation": "Genau so definiert es der Design-Pattern-Talk: Ein ‚leeres' Objekt mit No-op-Verhalten erspart die null-Checks beim Aufrufer."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o1",
+          "text": "Das Muster kompensierte fehlende Nullability — Kotlin (T?) und Rust (Option<T>) machen es obsolet.",
+          "verdict": "true",
+          "explanation": "In Kotlin erledigt der Safe-Call logger?.log(\"hi\") denselben Job ohne Extra-Klasse — deshalb steht Null Object in Schicht 1 der Sprachdefizit-Notlösungen."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o2",
+          "text": "Null Object stand gar nicht im originalen GoF-Katalog.",
+          "verdict": "true",
+          "explanation": "Der Design-Pattern-Talk merkt das in der Anmerkung explizit an — die 23 GoF-Muster enthalten es nicht."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o3",
+          "text": "Der empfohlene Java-Ersatz ist Optional als Feldtyp.",
+          "verdict": "false",
+          "explanation": "Gerade nicht: Optional ist nicht serialisierbar und als Feld ein Anti-Pattern — für Felder ist @Nullable T die ehrliche Annotation, Optional gehört in die Rückgabe."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o4",
+          "text": "Kotlin braucht weiterhin Null-Object-Klassen, weil ?. nur Exceptions unterdrückt.",
+          "verdict": "false",
+          "explanation": "?. ist kein Exception-Catcher, sondern ein Sprach-Konstrukt im Typsystem: Bei null wird der Aufruf gar nicht erst ausgeführt — eine No-op-Klasse ist überflüssig."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o5",
+          "text": "Im Design-Pattern-Talk zählt Null Object zu Schicht 2, den dauerhaft relevanten Strukturmustern.",
+          "verdict": "false",
+          "explanation": "Es steht in Schicht 1 (Sprachdefizit-Notlösungen) mit Label [ERSETZT] — Schicht 2 sind Adapter, Facade, Composite, Decorator, Proxy und Bridge."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o6",
+          "text": "Ein No-op-Logger ist auch 2026 noch legitim.",
+          "verdict": "depends",
+          "explanation": "Als bewusste Default-Implementierung (Logging abgeschaltet) ja — als Ersatz für fehlende Nullability ist er durch T?, Option<T> und @Nullable überholt."
+        },
+        {
+          "id": "transfer-null-object-vs-optional-o7",
+          "text": "In Java ersetzt Optional das Null Object vollständig.",
+          "verdict": "depends",
+          "explanation": "Für Rückgaben ja (Optional.empty() plus ifPresent) — als Feldersatz ist Optional laut Design-Pattern-Talk ausdrücklich schwächer; dort übernimmt @Nullable."
+        }
+      ]
     }
   ]
 }

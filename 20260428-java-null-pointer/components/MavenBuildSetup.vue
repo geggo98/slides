@@ -38,5 +38,5 @@ const code = `<dependencies>
 </script>
 
 <template>
-  <MonacoBlock :code="code" language="xml" height="300px" />
+  <MonacoBlock :code="code" language="xml" height="370px" />
 </template>

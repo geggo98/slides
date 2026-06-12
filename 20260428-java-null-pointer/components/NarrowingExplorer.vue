@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 import MonacoBlock from "@shared/components/MonacoBlock.vue";
 
 type Nullness = "nonnull" | "nullable" | "bottom" | "other";
@@ -283,27 +283,43 @@ const scenarios: Scenario[] = [
   },
 ];
 
-const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    bg: d ? "#14141c" : "#ffffff",
-    panelBg: d ? "#1a1a24" : "#f4f4f5",
-    border: d ? "#2a2a35" : "#e4e4e7",
-    text: d ? "#c8c8d0" : "#3f3f46",
-    textMuted: d ? "rgba(200,200,208,0.6)" : "rgba(63,63,70,0.65)",
-    accent: d ? "#fb923c" : "#ea580c",
-    accentBg: d ? "rgba(251,146,60,0.12)" : "rgba(234,88,12,0.08)",
-    green: d ? "#86efac" : "#16a34a",
-    greenBg: d ? "rgba(74,222,128,0.18)" : "rgba(22,163,74,0.12)",
-    yellow: d ? "#fde68a" : "#a16207",
-    yellowBg: d ? "rgba(250,204,21,0.20)" : "rgba(202,138,4,0.14)",
-    red: d ? "#fca5a5" : "#dc2626",
-    redBg: d ? "rgba(248,113,113,0.18)" : "rgba(220,38,38,0.12)",
-    blue: d ? "#93c5fd" : "#1d4ed8",
-    blueBg: d ? "rgba(96,165,250,0.18)" : "rgba(37,99,235,0.12)",
-  };
+// Carbon-Familie des Decks (vgl. shared/quiz/lib/carbonTokens.ts) als exakte
+// Overrides — die Migration auf usePalette ist ein visueller No-Op.
+const P = usePalette({
+  light: {
+    bg: "#ffffff",
+    panelBg: "#f4f4f5",
+    border: "#e4e4e7",
+    text: "#3f3f46",
+    textMuted: "rgba(63,63,70,0.65)",
+    accent: "#ea580c",
+    accentBg: "rgba(234,88,12,0.08)",
+    green: "#16a34a",
+    greenBg: "rgba(22,163,74,0.12)",
+    yellow: "#a16207",
+    yellowBg: "rgba(202,138,4,0.14)",
+    red: "#dc2626",
+    redBg: "rgba(220,38,38,0.12)",
+    blue: "#1d4ed8",
+    blueBg: "rgba(37,99,235,0.12)",
+  },
+  dark: {
+    bg: "#14141c",
+    panelBg: "#1a1a24",
+    border: "#2a2a35",
+    text: "#c8c8d0",
+    textMuted: "rgba(200,200,208,0.6)",
+    accent: "#fb923c",
+    accentBg: "rgba(251,146,60,0.12)",
+    green: "#86efac",
+    greenBg: "rgba(74,222,128,0.18)",
+    yellow: "#fde68a",
+    yellowBg: "rgba(250,204,21,0.20)",
+    red: "#fca5a5",
+    redBg: "rgba(248,113,113,0.18)",
+    blue: "#93c5fd",
+    blueBg: "rgba(96,165,250,0.18)",
+  },
 });
 
 const paletteVars = computed(() => ({
@@ -419,7 +435,7 @@ const tagLabel: Record<Nullness, string> = {
     <MonacoBlock
       :code="codeText"
       language="java"
-      height="160px"
+      height="176px"
       @ready="onReady"
     />
 

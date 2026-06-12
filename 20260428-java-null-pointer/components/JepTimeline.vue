@@ -1,25 +1,37 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { usePalette } from "@shared/composables/usePalette";
 
-const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    bg: d ? "#14141c" : "#ffffff",
-    track: d ? "#2a2a35" : "#e4e4e7",
-    text: d ? "#c8c8d0" : "#3f3f46",
-    muted: d ? "#7f7f8c" : "#71717a",
-    accent: d ? "#fb923c" : "#ea580c",
-    nowBg: d ? "rgba(251,146,60,0.18)" : "rgba(234,88,12,0.10)",
-    boxBg: d ? "#1a1a24" : "#f9fafb",
-    border: d ? "#2a2a35" : "#e4e4e7",
-    blue: d ? "#93c5fd" : "#1d4ed8",
-    green: d ? "#86efac" : "#16a34a",
-    purple: d ? "#c4b5fd" : "#7c3aed",
-    yellow: d ? "#fde68a" : "#a16207",
-  };
+// Carbon-Familie des Decks (vgl. shared/quiz/lib/carbonTokens.ts) als exakte
+// Overrides — die Migration auf usePalette ist ein visueller No-Op.
+const P = usePalette({
+  light: {
+    bg: "#ffffff",
+    track: "#e4e4e7",
+    text: "#3f3f46",
+    muted: "#71717a",
+    accent: "#ea580c",
+    nowBg: "rgba(234,88,12,0.10)",
+    boxBg: "#f9fafb",
+    border: "#e4e4e7",
+    blue: "#1d4ed8",
+    green: "#16a34a",
+    purple: "#7c3aed",
+    yellow: "#a16207",
+  },
+  dark: {
+    bg: "#14141c",
+    track: "#2a2a35",
+    text: "#c8c8d0",
+    muted: "#7f7f8c",
+    accent: "#fb923c",
+    nowBg: "rgba(251,146,60,0.18)",
+    boxBg: "#1a1a24",
+    border: "#2a2a35",
+    blue: "#93c5fd",
+    green: "#86efac",
+    purple: "#c4b5fd",
+    yellow: "#fde68a",
+  },
 });
 
 type Color = "blue" | "green" | "purple" | "yellow";

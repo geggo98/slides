@@ -19,13 +19,6 @@
 
 ---
 
-## 20260428-java-null-pointer
-
-- [ ] (M) Vier Komponenten (`AnnotationCompatTable`, `JepTimeline`, `NarrowingExplorer`, `KotlinInteropDiagram`) hand-rollen dieselbe Carbon-Palette → auf `shared/quiz/lib/carbonTokens.ts` bzw. `usePalette` umstellen.
-- [ ] (S) Optional: S19/S20 (Gradle/Maven Build-Setup) mit shared `Tabs` auf eine Slide zusammenführen.
-
----
-
 ## 20260522-open-rewrite
 
 - [ ] (S) `RecipeMechanikTabs`/`RecipeKompositionTabs`: identischen 14-Zeilen-`--sk-tab-*`-Block dedupen; lokale `.callout` vs. shared `Callout` entscheiden.
@@ -43,7 +36,6 @@
 ## Quiz & Transferfragen
 
 - [ ] (S) **OpenRewriteQuiz** — Transferfragen: „Hooks : Rules = Recipe : LLM-Gap-Fill" (medium, → ai-agents); „Nicht-deterministische Wächter in CI" (hard, Auto-Mode-Klassifikator ≈ Pattern 3); „50+ `package-info.java` → `ScanningRecipe`/`generate(acc)`" (hard, → java-null).
-- [ ] (S) **NullSafetyQuiz** — Transferfragen: „Wer meldet die Fehler nach Stufe 2? (NullAway in ErrorProne)" (medium, → open-rewrite); „@Nullable User vs. Optional<User> am Gap-Fill-Decision-Point" (medium); „Pflichtfelder: Staged Builder (Compile-Zeit) vs. Lombok @NonNull (Laufzeit)" (hard, → design-pattern); „Null Object [ERSETZT] vs. Optional vs. @Nullable" (medium).
 
 ---
 
