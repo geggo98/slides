@@ -6,12 +6,16 @@ import { talkUrl, TALKS, type TalkSlug } from "@shared/talks";
 // kanonische GitHub-Pages-URL. Bewusst ohne festen Pfeil — Call-Sites setzen "→"
 // selbst, wo gewünscht. Erbt Schriftgröße/-gewicht vom Kontext, damit die
 // Komponente sowohl als Header-Link als auch inline im Fließtext passt.
-const props = defineProps<{ slug: string }>();
+// slug ist auf die bekannten Talk-Slugs typisiert: ein Tippfehler oder ein
+// gelöschtes Deck failt beim Type-Check, statt stumm den Slug als Linktext zu
+// rendern. Der Runtime-Guard bleibt, weil Markdown-Verwendungen in slides.md
+// nicht von vue-tsc geprüft werden.
+const props = defineProps<{ slug: TalkSlug }>();
 
 const href = computed(() => talkUrl(props.slug));
 // Fallback-Label aus der Registry, falls kein Slot-Inhalt übergeben wurde.
 const fallback = computed(() =>
-  props.slug in TALKS ? TALKS[props.slug as TalkSlug] : props.slug,
+  props.slug in TALKS ? TALKS[props.slug] : props.slug,
 );
 </script>
 

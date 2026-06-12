@@ -206,9 +206,12 @@ defineExpose({
 }
 .monaco-block {
   position: relative;
-  border-radius: var(--sk-radm);
+  /* var()-Fallbacks: in Decks ohne SlidevTokens (z.B. java-null-pointer,
+   * agents-details) bleiben die Tokens sonst unaufgelöst und die border-
+   * Shorthand wird komplett verworfen — randloser Editor auf weißer Slide. */
+  border-radius: var(--sk-radm, 8px);
   overflow: hidden;
-  border: 0.5px solid var(--color-border-tertiary);
+  border: 0.5px solid var(--color-border-tertiary, rgba(128, 128, 128, 0.3));
   margin: 8px 0;
 }
 .monaco-container {
@@ -218,13 +221,13 @@ defineExpose({
 .mb-lang-badge {
   position: absolute;
   z-index: 20;
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1;
   padding: 2px 7px;
-  border-radius: var(--sk-rad);
+  border-radius: var(--sk-rad, 6px);
   pointer-events: none;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.35),
