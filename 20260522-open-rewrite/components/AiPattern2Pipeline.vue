@@ -1,8 +1,13 @@
+<script setup>
+import "./svg-diagram.css";
+</script>
+
 <template>
   <svg
+    class="or-diagram"
     viewBox="0 0 680 250"
     role="img"
-    aria-label="Pattern 2: AI autoriert Recipe einmal, Recipe läuft deterministisch beliebig oft"
+    aria-label="Pattern 2: KI autoriert Recipe einmal, Recipe läuft deterministisch beliebig oft"
   >
     <defs>
       <marker
@@ -27,7 +32,7 @@
     <g class="c-coral">
       <rect x="60" y="32" width="200" height="58" rx="10" />
       <text x="160" y="55" text-anchor="middle" class="t-h">
-        AI + Moderne Skills
+        KI + Moderne Skills
       </text>
       <text x="160" y="74" text-anchor="middle" class="t-s">
         Recipe authoring
@@ -81,25 +86,25 @@
     <path
       d="M430 150 L120 150 L120 160"
       fill="none"
-      class="line-fan"
+      class="arr"
       marker-end="url(#p2Arr)"
     />
     <path
       d="M430 150 L260 150 L260 160"
       fill="none"
-      class="line-fan"
+      class="arr"
       marker-end="url(#p2Arr)"
     />
     <path
       d="M430 150 L400 150 L400 160"
       fill="none"
-      class="line-fan"
+      class="arr"
       marker-end="url(#p2Arr)"
     />
     <path
       d="M430 150 L550 150 L550 160"
       fill="none"
-      class="line-fan"
+      class="arr"
       marker-end="url(#p2Arr)"
     />
 
@@ -112,48 +117,11 @@
 
 <style scoped>
 svg {
-  width: 100%;
-  height: auto;
   max-height: 200px;
-}
-.c-coral rect {
-  fill: var(--color-background-warning);
-  stroke: var(--color-border-warning);
-  stroke-width: 0.5;
-}
-.c-blue rect {
-  fill: var(--color-background-info);
-  stroke: var(--color-border-info);
-  stroke-width: 0.5;
-}
-.c-teal rect {
-  fill: var(--color-background-success);
-  stroke: var(--color-border-success);
-  stroke-width: 0.5;
 }
 .t-section {
   font-size: 11.5px;
   font-weight: 500;
   fill: var(--color-text-secondary);
-}
-.t-h {
-  font-size: 12.5px;
-  font-weight: 500;
-  fill: var(--color-text-primary);
-}
-.t-s {
-  font-size: 11px;
-  fill: var(--color-text-secondary);
-}
-.t-foot {
-  font-size: 11.5px;
-  fill: var(--color-text-tertiary);
-  font-style: italic;
-}
-.arr,
-.line-fan {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  fill: none;
 }
 </style>

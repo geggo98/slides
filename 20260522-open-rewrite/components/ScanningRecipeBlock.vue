@@ -4,5 +4,5 @@ import { scanningRecipeSnippet } from "./slide-data.ts";
 </script>
 
 <template>
-  <MonacoBlock :code="scanningRecipeSnippet" language="java" height="190px" />
+  <MonacoBlock :code="scanningRecipeSnippet" language="java" height="220px" />
 </template>

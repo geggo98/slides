@@ -1,5 +1,10 @@
+<script setup>
+import "./svg-diagram.css";
+</script>
+
 <template>
   <svg
+    class="or-diagram"
     viewBox="0 0 680 200"
     role="img"
     aria-label="Pattern 3: LLM in Recipe — non-deterministische Diffs"
@@ -72,19 +77,7 @@
 
 <style scoped>
 svg {
-  width: 100%;
-  height: auto;
   max-height: 170px;
-}
-.c-gray rect {
-  fill: var(--color-background-secondary);
-  stroke: var(--color-border-tertiary);
-  stroke-width: 0.5;
-}
-.c-coral rect {
-  fill: var(--color-background-warning);
-  stroke: var(--color-border-warning);
-  stroke-width: 0.5;
 }
 .danger-box {
   fill: none;
@@ -92,22 +85,8 @@ svg {
   stroke-width: 1;
   stroke-dasharray: 4 3;
 }
-.t-h {
-  font-size: 12.5px;
-  font-weight: 500;
-  fill: var(--color-text-primary);
-}
-.t-s {
-  font-size: 11px;
-  fill: var(--color-text-secondary);
-}
 .t-danger {
   font-size: 11.5px;
   fill: var(--color-text-danger);
-}
-.arr {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  fill: none;
 }
 </style>

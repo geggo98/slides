@@ -22,7 +22,7 @@ const phases = [
     n: "2",
     title: "Pattern 1 als CI-Workflow",
     bullets: [
-      "Duolingo-Style: YAML-Konfig, OpenRewrite zuerst, AI-Agent fixt Lücken",
+      "Duolingo-Style: YAML-Konfig, OpenRewrite zuerst, KI-Agent fixt Lücken",
       "Coding-Agent integrieren (Claude Code, Codex …)",
       "Token-Budget und Eskalations-Pfade definieren",
     ],
@@ -33,7 +33,7 @@ const phases = [
     bullets: [
       "Internes <code>company-rewrite</code>-Modul aufsetzen",
       "Erst YAML-Wrapper, dann Refaster, dann Imperative",
-      "AI-Agent (Pattern 2) zum Authoring — mit Moderne-Skills als Anleitung",
+      "KI-Agent (Pattern 2) zum Authoring — mit Moderne-Skills als Anleitung",
       "Tests mit <code>@DocumentExample</code> als Doku-Quelle",
     ],
   },

@@ -1,4 +1,6 @@
 <script setup>
+import "./data-table.css";
+
 const risks = [
   {
     risk: "Recipe wird umlizenziert (Apache → MSAL → MPL)",
@@ -12,7 +14,7 @@ const risks = [
   },
   {
     risk: "Kotlin K2 nicht parsbar",
-    mitigation: '<code>exclusion("**/*.kt")</code>; AI-Agent für Kotlin-Files',
+    mitigation: '<code>exclusion("**/*.kt")</code>; KI-Agent für Kotlin-Files',
     severity: "med",
   },
   {
@@ -22,7 +24,7 @@ const risks = [
     severity: "med",
   },
   {
-    risk: "AI-Halluzinationen im Pattern-1-Loop",
+    risk: "KI-Halluzinationen im Pattern-1-Loop",
     mitigation: "Iteration-Limit; menschliches Review vor PR-Merge",
     severity: "high",
   },
@@ -49,7 +51,7 @@ const sevText = { high: "hoch", med: "mittel", low: "niedrig" };
 </script>
 
 <template>
-  <table class="risk">
+  <table class="or-table risk">
     <thead>
       <tr>
         <th>Risiko</th>
@@ -73,22 +75,7 @@ const sevText = { high: "hoch", med: "mittel", low: "niedrig" };
 </template>
 
 <style scoped>
-.risk {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-.risk th {
-  text-align: left;
-  font-weight: 500;
-  padding: 8px 10px;
-  border-bottom: 0.5px solid var(--color-border-secondary);
-  color: var(--color-text-secondary);
-}
 .risk td {
-  padding: 7px 10px;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  vertical-align: top;
   line-height: 1.5;
 }
 .risk td :deep(code) {

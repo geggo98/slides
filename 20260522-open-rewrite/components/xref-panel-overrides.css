@@ -1,0 +1,22 @@
+/* Korrektur für das shared TalkXrefPanel (genutzt in slides.md, Folie
+   "Querverweis: Java Null-Sicherheit 2026"): Die scoped li-Regel des
+   Panels (li[data-v-…], Spezifität 0,1,1) steht im Gleichstand mit den
+   Prose-Styles des Themes (.slidev-layout li) — shared CSS wird aber vor
+   dem Theme geladen und verliert den Gleichstand. Die alte deck-lokale
+   JspecifyCrossRef lud nach dem Theme und gewann ihn. Diese Regel
+   (Spezifität 0,2,1) stellt die alte Optik deterministisch wieder her:
+   kein zusätzlicher 1.1em-Prose-Einzug pro Bullet. */
+.slidev-layout .xref-grid li {
+  margin-left: 0;
+}
+
+/* Gleiches Spiel für die <code>-Chips, aber nur fürs background: Die alte
+   Komponente verlor genau diese eine Deklaration an die spezifischere
+   Theme-Regel für Inline-Code (:not(pre) > code, 0,1,2) — die Chips
+   rendern damit im Theme-Code-Grau (#f5f5f5 hell / #1b1b1b dunkel) statt
+   im Token-Weiß des shared Panels. Box und Schrift kamen dagegen aus der
+   eigenen Regel und stimmen mit dem Panel überein. Spezifität 0,3,1
+   schlägt die :deep(code)-Regel des Panels (0,2,1). */
+.slidev-layout .xref-grid .col code {
+  background: var(--slidev-code-background);
+}

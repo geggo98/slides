@@ -955,6 +955,177 @@
           "explanation": "OpenRewrite könnte Dead-Code-Removal und konsistente Diffs erzwingen — aber unvollständige Deployments und Flag-Wiederverwendung sind primär Ops/Process-Probleme. Tool ist notwendig, nicht hinreichend."
         }
       ]
+    },
+    {
+      "id": "hooks-rules-recipe-analogie",
+      "question": "Der AI-Coding-Agents-Talk trennt deterministische Hooks von beratenden Rules. Welche Aussagen zur Analogie „Hooks : Rules = Recipe : LLM-Gap-Fill\" stimmen?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Brücke zum AI-Coding-Agents-Talk: Rules und Instruktionsdateien sind beratend — das Modell kann sie ignorieren; Hooks sind deterministisch und laufen garantiert. Dieselbe Trennlinie zieht dieser Talk: Die Recipe liefert bei gleicher Eingabe garantiert denselben Diff, der LLM-Gap-Fill ist probabilistisch. Pattern 1 verdrahtet beide Seiten, indem der deterministische Build als Quality Gate die LLM-Vorschläge prüft.",
+      "options": [
+        {
+          "id": "hooks-rules-recipe-analogie-o0",
+          "text": "Hooks laufen garantiert bei Lifecycle-Events, Rules kann das Modell ignorieren — diese Trennung macht den Hook zum Pendant der deterministischen Recipe.",
+          "verdict": "true",
+          "explanation": "Aus dem Agents-Talk: Hooks sind deterministisch und laufen garantiert, Rules sind beratend. Die Recipe steht mit „gleiche Eingabe → identischer Diff\" auf derselben Seite wie der Hook."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o1",
+          "text": "Der LLM-Gap-Fill steht auf der probabilistischen Seite der Analogie: Sein Output ist nicht garantiert korrekt und braucht deshalb den Build als Ground-Truth.",
+          "verdict": "true",
+          "explanation": "Genau deshalb ist Pattern 1 ein Build-Loop-Pattern — Halluzinationen erkennt der Build, nicht das LLM selbst."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o2",
+          "text": "Hooks fungieren als Quality Gates, die auffangen, was das Modell trotz guter Instruktionen übersieht — strukturell dieselbe Rolle wie das Build-Gate im Pattern-1-Loop.",
+          "verdict": "true",
+          "explanation": "Architekturprinzip aus dem Agents-Talk: Hooks fangen die letzten 10 % auf; im OpenRewrite-Workflow übernimmt der Build diese Gate-Rolle für den LLM-Output."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o3",
+          "text": "Rules werden wie Recipes deterministisch durchgesetzt — beide Mechanismen laufen garantiert.",
+          "verdict": "false",
+          "explanation": "Rules sind beratend — das Modell kann sie ignorieren. Garantiert laufen nur Hooks; auf der OpenRewrite-Seite garantiert nur die Recipe ihr Ergebnis."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o4",
+          "text": "Der LLM-Gap-Fill liefert wie die Recipe bei gleicher Eingabe immer denselben Vorschlag — deshalb ist die Analogie schief.",
+          "verdict": "false",
+          "explanation": "LLM-Output ist non-deterministisch — genau das unterscheidet den Gap-Fill von der Recipe und macht die Analogie erst stimmig."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o5",
+          "text": "Hooks sind beratend: Das Modell entscheidet selbst, ob es einen Hook ausführt.",
+          "verdict": "false",
+          "explanation": "Verwechslung mit Skills — dort entscheidet das Modell über das Laden. Hooks laufen deterministisch bei ihrem Lifecycle-Event."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o6",
+          "text": "Ob eine Team-Konvention als beratende Rule oder als erzwingender Hook umgesetzt gehört, hängt davon ab, wie kritisch ein Verstoß ist.",
+          "verdict": "depends",
+          "explanation": "Der Agents-Talk empfiehlt Rules für pfadspezifische Konventionen und Hooks für harte Quality Gates — „nicht bitten, sondern erzwingen\" gilt nur für das, was wirklich nie schiefgehen darf."
+        },
+        {
+          "id": "hooks-rules-recipe-analogie-o7",
+          "text": "Ob ein LLM-Gap-Fill ohne deterministisches Gate vertretbar ist, hängt vom Einsatzkontext ab.",
+          "verdict": "depends",
+          "explanation": "Für einen Wegwerf-Prototyp mag es gehen; die Avoid-Liste von Pattern 1 nennt fehlende Build-Gates aber als Ausschlusskriterium für den produktiven Einsatz."
+        }
+      ]
+    },
+    {
+      "id": "auto-mode-waechter-pattern-3",
+      "question": "Der Auto-Mode-Klassifikator aus dem AI-Coding-Agents-Talk ist ein nicht-deterministischer Wächter in der Tool-Call-Pipeline. Welche Aussagen zum Strukturvergleich mit Pattern 3 (LLM in Recipe) treffen zu?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Brücke zum AI-Coding-Agents-Talk: Der Auto-Mode-Klassifikator ist ein täuschbares, nicht-deterministisches LLM, das pro Tool-Call urteilt — strukturell dasselbe Muster wie Pattern 3, das ein LLM an Decision-Points einer Recipe setzt. Beide Anbieter warnen selbst, und in beiden Welten lautet die Konsequenz: Die Garantien tragen deterministische Schichten (Recipes bzw. hartes Deny, Sandbox, Least-Privilege), das LLM ist bestenfalls Komfort-Schicht.",
+      "options": [
+        {
+          "id": "auto-mode-waechter-pattern-3-o0",
+          "text": "Strukturell dasselbe Muster: Ein LLM entscheidet an Decision-Points einer sonst deterministischen Pipeline — das Verhalten wird dadurch pro Lauf unterschiedlich.",
+          "verdict": "true",
+          "explanation": "Pattern 3 ruft an Decision-Points die LLM-API, der Auto-Mode-Klassifikator urteilt pro Tool-Call — beide Male ersetzt ein probabilistisches Urteil eine deterministische Regel."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o1",
+          "text": "Beide Anbieter warnen selbst: Das rewrite-generative-ai-README rät vom Produktiveinsatz ab, Cursor nennt seinen Klassifikator wörtlich „best-effort convenience, not a security boundary\".",
+          "verdict": "true",
+          "explanation": "Beides ist im jeweiligen Talk belegt — selten sind Hersteller so explizit über die Grenzen des eigenen Features."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o2",
+          "text": "Der Klassifikator ist bewusst reasoning-blind: Ein separates LLM urteilt pro Call, damit der Hauptagent den Wächter nicht überreden kann.",
+          "verdict": "true",
+          "explanation": "Aus dem Agents-Talk: Claudes eigene Messages und Tool-Results werden gestrippt — der Wächter sieht nur User-Messages, Tool-Calls und die Instruktionsdatei."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o3",
+          "text": "Der Claude-Code-Klassifikator ist ein deterministisches Regex-Gate — also strukturell das Gegenteil von Pattern 3.",
+          "verdict": "false",
+          "explanation": "Regex-Allowlists hat Junie; Claudes Auto Mode nutzt ein server-konfiguriertes Klassifikator-Modell — ein täuschbares, nicht-deterministisches LLM."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o4",
+          "text": "Da der Klassifikator jede zustandsändernde Aktion prüft, taugt er als alleinige Sicherung in CI.",
+          "verdict": "false",
+          "explanation": "Rund 37 % der zustandsändernden Aktionen (In-Project-Edits) erreichen ihn per Design nie — und die Konsequenz im Agents-Talk lautet: Klassifikator, Sandbox und Least-Privilege nie allein einsetzen."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o5",
+          "text": "Unabhängige Benchmarks bestätigen die Anbieterzahlen: Auch bei adversarialen Prompts bleibt die False-Negative-Rate unter 20 %.",
+          "verdict": "false",
+          "explanation": "Das Gegenteil: AmPermBench (HKUST/ETH) misst 81 % False-Negative-Rate bei adversarialen Prompts — die 17 % von Anthropic stammen aus realen, nicht-adversarialen „overeager\"-Aktionen."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o6",
+          "text": "Ob ein LLM-Wächter in der Pipeline vertretbar ist, hängt davon ab, ob dahinter deterministische Schichten stehen.",
+          "verdict": "depends",
+          "explanation": "Als Komfort-Schicht über hartem Deny, Sandbox und Least-Privilege ist er ein Gewinn; als einzige Verteidigungslinie ist er ein täuschbares LLM — der Agents-Talk fordert genau deshalb die drei deterministischen Hebel."
+        },
+        {
+          "id": "auto-mode-waechter-pattern-3-o7",
+          "text": "Ob der nicht-deterministische Wächter genauso schwer wiegt wie Pattern 3, hängt davon ab, wo der LLM-Output landet.",
+          "verdict": "depends",
+          "explanation": "Bei Pattern 3 landet das non-deterministische Urteil direkt im Diff und damit im PR; beim Klassifikator „nur\" in der Allow/Block-Entscheidung — gleiches Strukturproblem, aber je nach Schadensszenario ein anderer Blast-Radius."
+        }
+      ]
+    },
+    {
+      "id": "package-info-scanning-recipe",
+      "question": "Du willst in einem Spring-Boot-Repo mit 50+ Packages die fehlenden package-info.java-Dateien mit @NullMarked per OpenRewrite erzeugen. Welche Aussagen stimmen?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Brücke zum Null-Sicherheits-Talk: @NullMarked kaskadiert nicht in Sub-Packages — jedes Package braucht sein eigenes package-info.java. Das Erzeugen der fehlenden Dateien ist ein generativer Zwei-Phasen-Fall: getScanner inventarisiert im Akkumulator, welche Packages schon eine package-info.java haben, generate(acc) legt die fehlenden Source-Files an.",
+      "options": [
+        {
+          "id": "package-info-scanning-recipe-o0",
+          "text": "Das ist ein Fall für eine ScanningRecipe: getScanner sammelt im Akkumulator, welche Packages bereits ein package-info.java haben, generate(acc) erzeugt die fehlenden Dateien.",
+          "verdict": "true",
+          "explanation": "Recipes, die neue Source-Files generieren, sind der klassische ScanningRecipe-Fall — der generate-Schritt arbeitet mit dem Wissen aus dem Akkumulator."
+        },
+        {
+          "id": "package-info-scanning-recipe-o1",
+          "text": "Der Zwei-Phasen-Ansatz ist nötig, weil die Recipe erst nach dem Scan aller Files weiß, welchen Packages ein package-info.java fehlt.",
+          "verdict": "true",
+          "explanation": "Cross-File-Wissen: Eine einzelne Datei verrät nicht, ob ihr Package schon eine package-info.java besitzt — dafür muss der Scanner das ganze Repo gesehen haben."
+        },
+        {
+          "id": "package-info-scanning-recipe-o2",
+          "text": "Aus JLS-Sicht sind com.example und com.example.service zwei unabhängige Packages — deshalb reicht eine einzige generierte Datei im Wurzel-Package nicht.",
+          "verdict": "true",
+          "explanation": "Aus dem Null-Sicherheits-Talk: Die JLS kennt keine Package-Hierarchie, und die JSpecify-Javadoc sagt explizit „no effect on subpackages\"."
+        },
+        {
+          "id": "package-info-scanning-recipe-o3",
+          "text": "@NullMarked im obersten package-info.java wirkt auf alle Unterpackages — die Recipe muss also nur eine Datei anlegen.",
+          "verdict": "false",
+          "explanation": "Genau der häufigste Onboarding-Bug: @NullMarked kaskadiert nicht — jedes der 50+ Packages braucht seine eigene Datei."
+        },
+        {
+          "id": "package-info-scanning-recipe-o4",
+          "text": "Ein gewöhnlicher Visitor mit einem Instance-Field als Package-Inventar löst die Aufgabe genauso zuverlässig.",
+          "verdict": "false",
+          "explanation": "Instance-State im Visitor verletzt den Determinismus — die Reihenfolge der besuchten Files ist nicht garantiert, und getVisitor() muss frische Instanzen liefern."
+        },
+        {
+          "id": "package-info-scanning-recipe-o5",
+          "text": "Da nur neue Dateien entstehen, genügt eine HasSourcePath-Precondition — eine ScanningRecipe wäre überdimensioniert.",
+          "verdict": "false",
+          "explanation": "Preconditions filtern nur, welche Files der Edit-Visitor anfasst — sie sammeln kein Cross-File-Wissen und können keine neuen Source-Files erzeugen."
+        },
+        {
+          "id": "package-info-scanning-recipe-o6",
+          "text": "Alternativ deckt ein einziges @NullMarked in module-info.java transitiv alle Packages ab.",
+          "verdict": "depends",
+          "explanation": "Stimmt nur, wenn das Projekt JPMS aktiv nutzt — der typische Spring-Boot-Classpath tut das nicht, dann fällt diese Option laut Null-Sicherheits-Talk komplett weg."
+        },
+        {
+          "id": "package-info-scanning-recipe-o7",
+          "text": "Generated-Sources-Packages (MapStruct, QueryDSL) sollte die Recipe genauso mit @NullMarked versorgen.",
+          "verdict": "depends",
+          "explanation": "Kommt auf die Strategie an: Der Null-Sicherheits-Talk empfiehlt eher, generierte Packages per eigenem package-info.java mit @NullUnmarked explizit auszunehmen — oder den Generator selbst eine passende package-info erzeugen zu lassen."
+        }
+      ]
     }
   ]
 }

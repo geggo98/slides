@@ -29,7 +29,7 @@ const tiers = [
     sub: "Moderne Proprietary License",
     tone: "danger",
     items: [
-      "Multi-Repo-Impact, Prethink, AI-Recipes",
+      "Multi-Repo-Impact, Prethink, KI-Recipes",
       "Spring-Boot-Recipes mit Tiefen-Coverage",
       "Nur über Moderne-Subscription",
       "DX Edition für regulierte Industrien",

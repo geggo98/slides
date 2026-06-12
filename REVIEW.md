@@ -19,23 +19,9 @@
 
 ---
 
-## 20260522-open-rewrite
-
-- [ ] (S) `RecipeMechanikTabs`/`RecipeKompositionTabs`: identischen 14-Zeilen-`--sk-tab-*`-Block dedupen; lokale `.callout` vs. shared `Callout` entscheiden.
-- [ ] (M) 5× AiPattern-Pipeline-SVGs + `LstAnatomy`/`RecipeTypesDecisionTree` teilen ~40 Zeilen CSS; 5 Tabellen-Komponenten identisches Tabellen-CSS — je eine gemeinsame Basis extrahieren.
-- [ ] (M) Genus „Recipe" (das/die/eine) festlegen; „KI" vs. „AI" — KI im Fließtext, AI nur in Eigennamen (teils im selben Satz; etablierte Pattern-Labels wie „AI im Build-Loop" berücksichtigen).
-
----
-
 ## 20260606-design-pattern
 
 - [ ] (M) `PatternTabs.vue` eigene Tab-Bar → shared `Tabs.vue` (meistgenutzte Komponente, 24 Folien — bekäme ARIA + Tastatur-Nav gratis); lokale `.callout`/`.caveat`-Boxen → shared `Callout` (caveat ≈ tone="warning").
-
----
-
-## Quiz & Transferfragen
-
-- [ ] (S) **OpenRewriteQuiz** — Transferfragen: „Hooks : Rules = Recipe : LLM-Gap-Fill" (medium, → ai-agents); „Nicht-deterministische Wächter in CI" (hard, Auto-Mode-Klassifikator ≈ Pattern 3); „50+ `package-info.java` → `ScanningRecipe`/`generate(acc)`" (hard, → java-null).
 
 ---
 

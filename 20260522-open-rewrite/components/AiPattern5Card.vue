@@ -5,7 +5,7 @@ import AiPattern5Pipeline from "./AiPattern5Pipeline.vue";
 
 <template>
   <AiPatternCard
-    tag="Recipes werden als MCP-Tools exponiert. AI-Agent ist Dirigent, OpenRewrite ist Orchester."
+    tag="Recipes werden als MCP-Tools exponiert. KI-Agent ist Dirigent, OpenRewrite ist Orchester."
     :badges="[
       { label: 'Determinismus: mittel', tone: 'warn' },
       { label: 'Reviewbar: mittel', tone: 'warn' },

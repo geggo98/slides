@@ -1,5 +1,10 @@
+<script setup>
+import "./svg-diagram.css";
+</script>
+
 <template>
   <svg
+    class="or-diagram"
     viewBox="0 0 680 240"
     role="img"
     aria-label="Pattern 1: Recipes first, AI im Build-Loop"
@@ -42,7 +47,7 @@
     <g class="c-coral">
       <rect x="320" y="180" width="140" height="44" rx="8" />
       <text x="390" y="206" text-anchor="middle" class="t-h">
-        AI fixt Fehler
+        KI fixt Fehler
       </text>
     </g>
 
@@ -94,42 +99,6 @@
 
 <style scoped>
 svg {
-  width: 100%;
-  height: auto;
   max-height: 180px;
-}
-.c-gray rect {
-  fill: var(--color-background-secondary);
-  stroke: var(--color-border-tertiary);
-  stroke-width: 0.5;
-}
-.c-blue rect {
-  fill: var(--color-background-info);
-  stroke: var(--color-border-info);
-  stroke-width: 0.5;
-}
-.c-teal rect {
-  fill: var(--color-background-success);
-  stroke: var(--color-border-success);
-  stroke-width: 0.5;
-}
-.c-coral rect {
-  fill: var(--color-background-warning);
-  stroke: var(--color-border-warning);
-  stroke-width: 0.5;
-}
-.t-h {
-  font-size: 12.5px;
-  font-weight: 500;
-  fill: var(--color-text-primary);
-}
-.t-s {
-  font-size: 11px;
-  fill: var(--color-text-secondary);
-}
-.arr {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  fill: none;
 }
 </style>

@@ -1,0 +1,26 @@
+/* Gemeinsame Tabellen-Basis dieses Decks (MethodMatcherTable,
+   PreconditionsTable, RewriteCatalog, RiskMatrix, ToolMixCheatsheet).
+   Abweichungen pro Tabelle (Schriftgröße, Zellen-Padding) laufen über
+   die --or-table-*-Custom-Properties, Zusatzstile (code, Badges, …)
+   bleiben scoped in der jeweiligen Komponente.
+
+   Bewusst global mit .or-table-Namespace statt @import im scoped-Block:
+   Vite inlined @import erst nach dem Scope-Rewrite, die Regeln kämen
+   also ohnehin ungescoped an. */
+.or-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--or-table-fs, 12.5px);
+}
+.or-table th {
+  text-align: left;
+  font-weight: 500;
+  padding: var(--or-table-th-pad, 8px 10px);
+  border-bottom: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+}
+.or-table td {
+  padding: var(--or-table-td-pad, 7px 10px);
+  border-bottom: 0.5px solid var(--color-border-tertiary);
+  vertical-align: top;
+}

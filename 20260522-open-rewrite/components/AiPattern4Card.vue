@@ -5,7 +5,7 @@ import AiPattern4Pipeline from "./AiPattern4Pipeline.vue";
 
 <template>
   <AiPatternCard
-    tag="OpenRewrite extrahiert strukturierten Kontext, AI-Agent konsumiert ihn. AI operiert auf Architektur-Beschreibung statt rohem Code-Grep."
+    tag="OpenRewrite extrahiert strukturierten Kontext, KI-Agent konsumiert ihn. KI operiert auf Architektur-Beschreibung statt rohem Code-Grep."
     :badges="[
       { label: 'Determinismus: hoch', tone: 'good' },
       { label: 'Reviewbar: gut', tone: 'good' },

@@ -6,7 +6,7 @@ const patterns = [
     keyword: "Recipes-first",
     caption: [
       "Deterministische Recipes zuerst,",
-      "AI schließt Lücken im Build-Loop.",
+      "KI schließt Lücken im Build-Loop.",
     ],
     det: 80,
     cost: 50,
@@ -45,7 +45,7 @@ const patterns = [
     keyword: "Prethink",
     caption: [
       "Recipe extrahiert Kontext,",
-      "AI reasoned strukturiert darüber.",
+      "KI reasoned strukturiert darüber.",
     ],
     det: 80,
     cost: 60,

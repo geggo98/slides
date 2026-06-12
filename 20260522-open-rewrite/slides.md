@@ -17,7 +17,7 @@ hideInToc: true
 
 # OpenRewrite — Refactoring at Scale für Spring Boot
 
-LST, Recipes und KI im Build-Loop — am Beispiel JSpecify
+LST, Recipes und AI im Build-Loop — am Beispiel JSpecify
 
 <div class="mt-8 text-sm opacity-60">
 
@@ -27,7 +27,7 @@ Zielgruppe: Java- und Spring-Boot-Entwicklerinnen und -Entwickler, die ihre Code
 
 <!--
 - Stand: Mai 2026.
-- Wir reden Klartext: Lizenz-Schmerzen, AI-Halluzinationen, Kotlin-Realität werden benannt.
+- Wir reden Klartext: Lizenz-Schmerzen, KI-Halluzinationen, Kotlin-Realität werden benannt.
 - Der Vortrag hat 7 Sektionen — Inhaltsverzeichnis auf der nächsten Slide nach der Kurzfassung.
 - Praxisbeispiel JSpecify-Migration verbindet Recipe-Mechanik mit KI-Pattern 1+2.
 -->
@@ -50,7 +50,7 @@ hideInToc: true
 
 <!--
 - Wer Spring-Recipes ungeprüft in CI committet, steht beim nächsten Recipe-Update womöglich vor einem stillen Lizenzwechsel (Apache → MSAL).
-- JSpecify-Migration zeigt alle drei AI-Ebenen in einer Story: Mechanik, LLM-Recipe-Authoring, LLM-Gap-Fill.
+- JSpecify-Migration zeigt alle drei KI-Ebenen in einer Story: Mechanik, LLM-Recipe-Authoring, LLM-Gap-Fill.
 -->
 
 ---
@@ -95,7 +95,7 @@ hideInToc: true
 - **Kein IDE-Plugin** (CLI / Gradle / Maven)
 - **Kein regex-basiertes sed** — type-aware, Cursor-API für Parent-Kontext
 - **Kein AST-only-Tool** — behält Formatierung beim Round-Trip
-- **Kein magisches AI-Werkzeug** — KI ist ein additives Pattern, kein Ersatz
+- **Kein magisches KI-Werkzeug** — KI ist ein additives Pattern, kein Ersatz
 
 </div>
 </div>
@@ -157,6 +157,7 @@ hideInToc: true
 
 ---
 hideInToc: true
+routeAlias: recipe-mechanik
 ---
 
 # Recipe-Mechanik
@@ -206,7 +207,7 @@ hideInToc: true
 
 <!--
 - Duolingo Golden Path Case Study (FINOS): Spring-Boot- und JDK-Upgrades über die gesamte Codebase.
-- Pattern 1 ist im Kern: Build ist die Ground-Truth, AI ist Patch-Maker.
+- Pattern 1 ist im Kern: Build ist die Ground-Truth, KI ist Patch-Maker.
 - Iteration-Limit nicht vergessen — sonst läuft der Token-Zähler heiß.
 -->
 
@@ -220,7 +221,7 @@ hideInToc: true
 
 <!--
 - Moderne Skills sind LLM-Instruktionen, die einem Coding-Agent Recipe-Authoring beibringen.
-- Praktischer Bonus: das Recipe wird einmal reviewt, dann läuft es deterministisch.
+- Praktischer Bonus: die Recipe wird einmal reviewt, dann läuft sie deterministisch.
 - Genau dieses Pattern werden wir in der JSpecify-Sektion sehen.
 -->
 
@@ -306,7 +307,7 @@ Am 13. Dezember 2024 sind die `rewrite-spring`-Recipes von Apache 2.0 nach MSAL 
 
 <!--
 - „Community Edition" im Recipe-Katalog heißt MSAL, nicht OSS. Marketing-Falle.
-- MPL-Recipes (Multi-Repo, AI-augmentiert) sind nur über Moderne-Subscription erreichbar.
+- MPL-Recipes (Multi-Repo, KI-augmentiert) sind nur über Moderne-Subscription erreichbar.
 - Wer ernsthaft baut: jährliches Lizenz-Audit pro Recipe-JAR.
 -->
 
@@ -363,7 +364,7 @@ hideInToc: true
 
 <div class="mt-3 text-sm opacity-70">
 
-100 % deterministisch, idempotent, läuft <em>ohne</em> LLM. Vier <code>ChangeType</code>-Aufrufe ersetzen Spring/javax durch JSpecify. Auch das Recipe selbst kann LLM-autoriert sein — <strong>Pattern 2</strong> aus Kapitel 3.
+100 % deterministisch, idempotent, läuft <em>ohne</em> LLM. Vier <code>ChangeType</code>-Aufrufe ersetzen Spring/javax durch JSpecify. Auch die Recipe selbst kann LLM-autoriert sein — <strong>Pattern 2</strong> aus Kapitel 3.
 
 </div>
 
@@ -391,7 +392,7 @@ Annotationen sind getauscht. Aber <code>@NullMarked</code> macht den Default <co
 
 <!--
 - @NullMarked auf Package-Ebene (package-info.java) ist idiomatischer als pro Klasse.
-- NullAway prüft den Rest — der Build wird zum Gate für den AI-Loop.
+- NullAway prüft den Rest — der Build wird zum Gate für den KI-Loop.
 - Genau das Pattern, das im FINOS-Bericht und bei Duolingo dokumentiert ist.
 - Code-Editor scrollt — bei Bedarf zur LLM-Lücke hinunterscrollen.
 -->
@@ -402,11 +403,36 @@ hideInToc: true
 
 # Querverweis: Java Null-Sicherheit 2026
 
-<JspecifyCrossRef class="mt-4" />
+<TalkXrefPanel
+  class="mt-4"
+  :here="{
+    title: 'OpenRewrite — Refactoring at Scale',
+    bullets: [
+      '<strong>Wie</strong> migriere ich Annotationen mechanisch?',
+      'Recipe <code>org.openrewrite.java.jspecify.MigrateToJSpecify</code> als Building Block',
+      'Pattern 1 + 2 als Workflow, Build-Loop als Gate',
+      'LLM-Gap-Fill nur dort, wo der Build es verlangt',
+    ],
+  }"
+  :refs="[
+    {
+      slug: '20260428-java-null-pointer',
+      title: 'Java Null-Sicherheit 2026',
+      anchor: 'jspecify',
+      bullets: [
+        '<strong>Warum</strong> JSpecify und nicht Spring/JSR-305?',
+        'Die vier Annotationen: <code>@NullMarked</code>, <code>@Nullable</code>, <code>@NonNull</code>, <code>@NullUnmarked</code>',
+        'Scope-Regeln und <code>package-info.java</code>',
+        'NullAway als pragmatischer Checker',
+      ],
+      hint: 'In der JSpecify-Sektion des Null-Sicherheit-Talks. Dort wird auf der Quellen-Übersicht bereits auf diese Recipe verwiesen — der Kreis schließt sich.',
+    },
+  ]"
+/>
 
 <!--
 - Die beiden Talks ergänzen sich: hier das Tooling, dort das Konzept.
-- Im Null-Sicherheit-Talk wird der OpenRewrite-Recipe `MigrateToJSpecify` als Migrationshebel genannt.
+- Im Null-Sicherheit-Talk wird die OpenRewrite-Recipe `MigrateToJSpecify` als Migrationshebel genannt.
 - Hier ist die andere Seite: was tut die Recipe konkret, wo hört sie auf, wie ergänzt KI sie.
 -->
 
@@ -441,7 +467,7 @@ hideInToc: true
 <RiskMatrix class="mt-4" />
 
 <!--
-- Top-3 Risiken aus der Praxis: Lizenz-Drift, AI-Halluzinationen, Vendor-Lock-in.
+- Top-3 Risiken aus der Praxis: Lizenz-Drift, KI-Halluzinationen, Vendor-Lock-in.
 - Recipe-Versionen pinnen ist die billigste Mitigation und wird trotzdem oft ignoriert.
 - Kotlin K2 als bewusst akzeptierter Trade-off, nicht als Ärgernis.
 -->

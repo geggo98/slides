@@ -1,9 +1,10 @@
 <script setup>
+import "./data-table.css";
 import { methodMatcherPatterns } from "./slide-data.ts";
 </script>
 
 <template>
-  <table class="mm-table">
+  <table class="or-table mm-table">
     <thead>
       <tr>
         <th>Pattern</th>
@@ -23,21 +24,10 @@ import { methodMatcherPatterns } from "./slide-data.ts";
 
 <style scoped>
 .mm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12.5px;
-}
-.mm-table th {
-  text-align: left;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-bottom: 0.5px solid var(--color-border-secondary);
-  color: var(--color-text-secondary);
-}
-.mm-table td {
-  padding: 3px 10px;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  vertical-align: top;
+  /* Kompakter als die or-table-Defaults — Tabelle teilt sich die Folie
+     mit einem Monaco-Block. */
+  --or-table-th-pad: 4px 10px;
+  --or-table-td-pad: 3px 10px;
 }
 .mm-table code {
   font-family: var(--font-mono);

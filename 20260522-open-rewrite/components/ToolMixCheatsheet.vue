@@ -1,4 +1,6 @@
 <script setup>
+import "./data-table.css";
+
 const tools = [
   {
     tool: "OpenRewrite",
@@ -40,7 +42,7 @@ const tools = [
 </script>
 
 <template>
-  <table class="cheat">
+  <table class="or-table cheat">
     <thead>
       <tr>
         <th>Werkzeug</th>
@@ -69,21 +71,10 @@ const tools = [
 
 <style scoped>
 .cheat {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-.cheat th {
-  text-align: left;
-  font-weight: 500;
-  padding: 8px 10px;
-  border-bottom: 0.5px solid var(--color-border-secondary);
-  color: var(--color-text-secondary);
+  /* Vier Spalten — eine Stufe kleiner als der or-table-Default. */
+  --or-table-fs: 12px;
 }
 .cheat td {
-  padding: 7px 10px;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  vertical-align: top;
   line-height: 1.5;
 }
 .cheat td.not {

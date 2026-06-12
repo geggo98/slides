@@ -1,4 +1,5 @@
 <script setup>
+import "./recipe-tabs.css";
 import Tabs from "@shared/components/Tabs.vue";
 import MonacoBlockAnnotated from "@shared/components/MonacoBlockAnnotated.vue";
 import MonacoBlock from "@shared/components/MonacoBlock.vue";
@@ -21,7 +22,7 @@ const tabs = [
 </script>
 
 <template>
-  <div class="rm-wrap">
+  <div class="or-tabs">
     <Tabs :tabs="tabs" aria-label="Recipe-Mechanik">
       <template #anatomy>
         <div class="panel">
@@ -92,61 +93,3 @@ const tabs = [
     </Tabs>
   </div>
 </template>
-
-<style scoped>
-.rm-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  --sk-tab-gap: 6px;
-  --sk-tab-bar-mb: 10px;
-  --sk-tab-bar-pb: 8px;
-  --sk-tab-bar-border-bottom: 0.5px solid var(--color-border-tertiary);
-  --sk-tab-font-weight: inherit;
-  --sk-tab-pad: 6px 12px;
-  --sk-tab-border: 0.5px solid var(--color-border-tertiary);
-  --sk-tab-radius: var(--sk-rad);
-  --sk-tab-hover-bg: transparent;
-  --sk-tab-transition: none;
-  --sk-tab-active-bg: var(--color-background-info);
-  --sk-tab-active-color: var(--color-text-info);
-  --sk-tab-active-border: var(--color-border-info);
-}
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.lead {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  margin: 0;
-  line-height: 1.55;
-}
-.lead code {
-  font-family: var(--font-mono);
-  font-size: 0.92em;
-  background: var(--color-background-secondary);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-.callout {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  background: var(--color-background-secondary);
-  border-radius: var(--sk-rad);
-  padding: 10px 14px;
-  line-height: 1.55;
-}
-.callout strong {
-  color: var(--color-text-primary);
-  font-weight: 500;
-}
-.callout code {
-  font-family: var(--font-mono);
-  font-size: 0.92em;
-  background: var(--color-background-primary);
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-</style>

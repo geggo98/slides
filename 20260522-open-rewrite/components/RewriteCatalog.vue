@@ -1,4 +1,6 @@
 <script setup>
+import "./data-table.css";
+
 function licClass(l) {
   if (l.startsWith("Apache")) return "ok";
   if (l === "MSAL") return "warn";
@@ -45,7 +47,7 @@ const modules = [
 </script>
 
 <template>
-  <table class="catalog">
+  <table class="or-table catalog">
     <thead>
       <tr>
         <th>Modul</th>
@@ -73,21 +75,8 @@ const modules = [
 
 <style scoped>
 .catalog {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-.catalog th {
-  text-align: left;
-  font-weight: 500;
-  padding: 8px 10px;
-  border-bottom: 0.5px solid var(--color-border-secondary);
-  color: var(--color-text-secondary);
-}
-.catalog td {
-  padding: 7px 10px;
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-  vertical-align: top;
+  /* Nur drei Spalten — eine Stufe größer als der or-table-Default. */
+  --or-table-fs: 13px;
 }
 .catalog code {
   font-family: var(--font-mono);

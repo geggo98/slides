@@ -5,7 +5,7 @@ import AiPattern1Pipeline from "./AiPattern1Pipeline.vue";
 
 <template>
   <AiPatternCard
-    tag="Duolingo-Goldstandard. Deterministische Recipes laufen zuerst, AI fixt nur die Lücken im Build-Loop."
+    tag="Duolingo-Goldstandard. Deterministische Recipes laufen zuerst, KI fixt nur die Lücken im Build-Loop."
     :badges="[
       { label: 'Determinismus: hoch', tone: 'good' },
       { label: 'Reviewbar: gut', tone: 'good' },
@@ -22,7 +22,7 @@ import AiPattern1Pipeline from "./AiPattern1Pipeline.vue";
       'Migration zu klein für CI-Setup',
       'Codebases ohne sinnvolle Test-Coverage',
     ]"
-    verdict="Der einzige produktionserprobte Workflow für Migration-at-Scale. AI nur für die Lücken nutzen — Halluzinationen erkennt der Build."
+    verdict="Der einzige produktionserprobte Workflow für Migration-at-Scale. KI nur für die Lücken nutzen — Halluzinationen erkennt der Build."
   >
     <template #pipeline>
       <AiPattern1Pipeline />

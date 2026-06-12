@@ -1,5 +1,10 @@
+<script setup>
+import "./svg-diagram.css";
+</script>
+
 <template>
   <svg
+    class="or-diagram"
     viewBox="0 0 680 220"
     role="img"
     aria-label="Pattern 5: MCP-basierter Recipe-Call"
@@ -25,7 +30,7 @@
 
     <g class="c-coral">
       <rect x="20" y="60" width="160" height="100" rx="10" />
-      <text x="100" y="94" text-anchor="middle" class="t-h">AI Agent</text>
+      <text x="100" y="94" text-anchor="middle" class="t-h">KI-Agent</text>
       <text x="100" y="116" text-anchor="middle" class="t-s">
         entscheidet dynamisch,
       </text>
@@ -99,46 +104,8 @@
 
 <style scoped>
 svg {
-  width: 100%;
-  height: auto;
+  /* Einziges Pipeline-Diagramm mit größerer Headline-Schrift. */
+  --or-dia-h-size: 13px;
   max-height: 180px;
-}
-.c-coral rect {
-  fill: var(--color-background-warning);
-  stroke: var(--color-border-warning);
-  stroke-width: 0.5;
-}
-.c-purple rect {
-  fill: color-mix(
-    in srgb,
-    var(--color-background-info) 60%,
-    var(--color-background-secondary) 40%
-  );
-  stroke: var(--color-border-info);
-  stroke-width: 0.5;
-}
-.c-blue rect {
-  fill: var(--color-background-info);
-  stroke: var(--color-border-info);
-  stroke-width: 0.5;
-}
-.t-h {
-  font-size: 13px;
-  font-weight: 500;
-  fill: var(--color-text-primary);
-}
-.t-s {
-  font-size: 11px;
-  fill: var(--color-text-secondary);
-}
-.t-foot {
-  font-size: 11.5px;
-  fill: var(--color-text-tertiary);
-  font-style: italic;
-}
-.arr {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  fill: none;
 }
 </style>

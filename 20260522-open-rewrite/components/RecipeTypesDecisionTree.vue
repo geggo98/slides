@@ -1,6 +1,11 @@
+<script setup>
+import "./svg-diagram.css";
+</script>
+
 <template>
   <div class="rcp-tree">
     <svg
+      class="or-diagram"
       viewBox="0 0 680 240"
       role="img"
       aria-label="Drei Recipe-Typen Entscheidungsbaum"
@@ -26,7 +31,7 @@
         </marker>
       </defs>
 
-      <g class="card neutral">
+      <g class="c-gray">
         <rect x="180" y="20" width="320" height="48" rx="10" />
         <text x="340" y="48" text-anchor="middle" class="t-h">
           Was soll die Recipe leisten?
@@ -58,7 +63,7 @@
         marker-end="url(#rcpArr)"
       />
 
-      <g class="card blue">
+      <g class="c-blue">
         <rect x="40" y="120" width="180" height="72" rx="10" />
         <text x="130" y="142" text-anchor="middle" class="t-h">
           Declarative YAML
@@ -69,7 +74,7 @@
         <text x="130" y="178" text-anchor="middle" class="t-pct">~ 60 %</text>
       </g>
 
-      <g class="card purple">
+      <g class="c-purple">
         <rect x="250" y="120" width="180" height="72" rx="10" />
         <text x="340" y="142" text-anchor="middle" class="t-h">
           Refaster-style
@@ -80,7 +85,7 @@
         <text x="340" y="178" text-anchor="middle" class="t-pct">~ 25 %</text>
       </g>
 
-      <g class="card coral">
+      <g class="c-coral">
         <rect x="460" y="120" width="180" height="72" rx="10" />
         <text x="550" y="142" text-anchor="middle" class="t-h">
           Imperative Java
@@ -91,7 +96,7 @@
         <text x="550" y="178" text-anchor="middle" class="t-pct">~ 15 %</text>
       </g>
 
-      <text x="340" y="218" text-anchor="middle" class="t-foot">
+      <text x="340" y="218" text-anchor="middle" class="t-note">
         Schreib in dieser Reihenfolge. Imperative Java erst, wenn YAML und
         Refaster nicht reichen.
       </text>
@@ -104,54 +109,19 @@
   width: 100%;
 }
 .rcp-tree svg {
-  width: 100%;
-  height: auto;
+  /* Größere Diagramm-Typo als die Pipeline-Defaults der Basis. */
+  --or-dia-h-size: 14px;
+  --or-dia-s-size: 12px;
   max-height: 320px;
-}
-.card rect {
-  stroke-width: 0.5;
-  stroke: var(--color-border-tertiary);
-  fill: var(--color-background-secondary);
-}
-.card.neutral rect {
-  fill: var(--color-background-secondary);
-}
-.card.blue rect {
-  fill: var(--color-background-info);
-  stroke: var(--color-border-info);
-}
-.card.purple rect {
-  fill: color-mix(
-    in srgb,
-    var(--color-background-info) 60%,
-    var(--color-background-secondary) 40%
-  );
-  stroke: var(--color-border-info);
-}
-.card.coral rect {
-  fill: var(--color-background-warning);
-  stroke: var(--color-border-warning);
-}
-.t-h {
-  font-size: 14px;
-  font-weight: 500;
-  fill: var(--color-text-primary);
-}
-.t-s {
-  font-size: 12px;
-  fill: var(--color-text-secondary);
 }
 .t-pct {
   font-size: 11px;
   fill: var(--color-text-tertiary);
 }
-.t-foot {
+/* Bewusst nicht .t-foot der Basis (kursiv, tertiär) — die Fußzeile ist
+   hier eine Handlungsanweisung in normaler Sekundärfarbe. */
+.t-note {
   font-size: 12px;
   fill: var(--color-text-secondary);
-}
-.arr {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  fill: none;
 }
 </style>
