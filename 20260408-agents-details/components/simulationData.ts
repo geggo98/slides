@@ -210,12 +210,12 @@ export const STEPS: SimStep[] = [
   },
   {
     title: "Cache-Key Lookup im KV-Cache",
-    desc: "Der Server hashed das Prefix → Cache-Key. Cache-Hit: 90% Discount ($0.30 statt $3/MTok bei Sonnet). Cache-Miss: voller Write zu 1.25× Kosten. Default-TTL: 5 Minuten. Nur EXAKTER Prefix-Match.",
+    desc: "Der Server hasht das Prefix → Cache-Key. Cache-Hit: 90% Discount ($0.30 statt $3/MTok bei Sonnet). Cache-Miss: voller Write zu 1.25× Kosten. Default-TTL: 5 Minuten. Nur EXAKTER Prefix-Match.",
     nodes: ["api", "cache"],
     edges: ["api-cache"],
   },
   {
-    title: "Modell decodet die Antwort",
+    title: "Modell dekodiert die Antwort",
     desc: "Claude Opus 4.6 generiert autoregressiv Tokens. Bei Tool-Use stoppt das Modell nach dem tool_use-Block. Special Tokens sind hinter der API versteckt — strukturell wie <tool_call> in Open-Source-Modellen.",
     nodes: ["api", "model"],
     edges: ["api-model"],
@@ -320,7 +320,7 @@ Limit: 200 Zeilen / 25 KB. AUTO DREAM: Hintergrund-Subagent konsolidiert periodi
   },
   tools: {
     title: "Local Tools",
-    body: `Im Harness-Process: Read, Write, Edit, Bash, Glob, Grep, Task (Sub-Agent), etc. 19+ bei Claude Code.
+    body: `Im Harness-Process: Read, Write, Edit, Bash, Glob, Grep, Task (Subagent), etc. 19+ bei Claude Code.
 
 Tool-Definitionen als JSON-Schema im "tools"-API-Parameter → Input-Tokens.
 

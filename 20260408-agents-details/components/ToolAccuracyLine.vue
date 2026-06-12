@@ -56,8 +56,9 @@ const option = computed(() => ({
     {
       name: "Standard",
       type: "line",
+      // Im Light-Mode dunklere Töne für ausreichenden Kontrast auf Weiß.
       data: TOOL_ACCURACY.standard,
-      itemStyle: { color: "#f472b6" },
+      itemStyle: { color: isDark.value ? "#f472b6" : "#db2777" },
       lineStyle: { width: 3 },
       symbol: "circle",
       symbolSize: 8,
@@ -69,10 +70,13 @@ const option = computed(() => ({
             yAxis: 49,
             label: {
               formatter: "Opus 4 mit allen Tools: 49%",
-              color: "#fb923c",
+              color: isDark.value ? "#fb923c" : "#c2410c",
               fontSize: 10,
             },
-            lineStyle: { color: "#fb923c", type: "dashed" },
+            lineStyle: {
+              color: isDark.value ? "#fb923c" : "#c2410c",
+              type: "dashed",
+            },
           },
         ],
       },
@@ -81,7 +85,7 @@ const option = computed(() => ({
       name: "Mit Tool Search",
       type: "line",
       data: TOOL_ACCURACY.withToolSearch,
-      itemStyle: { color: "#4ade80" },
+      itemStyle: { color: isDark.value ? "#4ade80" : "#16a34a" },
       lineStyle: { width: 3 },
       symbol: "circle",
       symbolSize: 8,

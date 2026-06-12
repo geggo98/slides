@@ -58,7 +58,7 @@
           </p>
           <p>
             Kernpraktiken: Compaction, Structured Note-Taking,
-            Sub-Agent-Isolation · Write/Select/Compress/Isolate · Just-in-Time
+            Subagent-Isolation · Write/Select/Compress/Isolate · Just-in-Time
             Retrieval.
           </p>
         </div>

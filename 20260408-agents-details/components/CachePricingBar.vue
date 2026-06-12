@@ -38,7 +38,9 @@ const option = computed(() => ({
       name: "Cache-Write",
       type: "bar",
       data: CACHE_PRICING.cacheWrite,
-      itemStyle: { color: "#fb923c" },
+      // Orange vs. Blau (statt Orange/Grün) — Deutan-sicher; im Light-Mode
+      // dunklere Töne für ausreichenden Kontrast.
+      itemStyle: { color: isDark.value ? "#fb923c" : "#ea580c" },
       barMaxWidth: 32,
       label: {
         show: true,
@@ -52,7 +54,7 @@ const option = computed(() => ({
       name: "Cache-Read",
       type: "bar",
       data: CACHE_PRICING.cacheRead,
-      itemStyle: { color: "#4ade80" },
+      itemStyle: { color: isDark.value ? "#60a5fa" : "#2563eb" },
       barMaxWidth: 32,
       label: {
         show: true,

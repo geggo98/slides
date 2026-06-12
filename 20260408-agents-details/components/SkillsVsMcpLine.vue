@@ -55,7 +55,8 @@ const option = computed(() => ({
       name: "Skills (Progressive)",
       type: "line",
       data: SKILLS_VS_MCP.skills,
-      itemStyle: { color: "#4ade80" },
+      // Light-Mode: dunklere Töne für Kontrast auf Weiß.
+      itemStyle: { color: isDark.value ? "#4ade80" : "#16a34a" },
       lineStyle: { width: 3 },
       symbol: "circle",
       symbolSize: 8,
@@ -64,7 +65,7 @@ const option = computed(() => ({
       name: "MCP-Server (Static)",
       type: "line",
       data: SKILLS_VS_MCP.mcp,
-      itemStyle: { color: "#f472b6" },
+      itemStyle: { color: isDark.value ? "#f472b6" : "#db2777" },
       lineStyle: { width: 3 },
       symbol: "circle",
       symbolSize: 8,

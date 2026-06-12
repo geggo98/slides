@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { useDarkMode, useNav, useSlideContext } from "@slidev/client";
 import { NODES, EDGES, STEPS, DETAILS, getCatColors } from "./simulationData";
 import type { SimNode } from "./simulationData";
 
 const { isDark } = useDarkMode();
+const nav = useNav();
+// $page ist die Slide-Nummer DIESER Komponente; nav.currentPage die aktive.
+// Nachbar-Slides bleiben gemountet, daher muss der globale keydown-Handler
+// prüfen, ob diese Slide gerade sichtbar ist — sonst kapert Space/Pfeil die
+// Slidev-Navigation auf anderen Folien.
+const { $page } = useSlideContext();
 
 const currentStep = ref(0);
 const isPlaying = ref(false);
@@ -163,6 +169,9 @@ function reset() {
 }
 
 function onKeydown(e: KeyboardEvent) {
+  // Nur reagieren, wenn DIESE Slide aktiv ist — sonst hijackt der globale
+  // Listener Space/Pfeiltasten auf den Nachbar-Folien.
+  if (nav.currentPage.value !== $page.value) return;
   if (e.key === "ArrowRight") {
     stop();
     next();

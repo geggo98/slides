@@ -27,7 +27,7 @@ const rows = [
     codex: "Rust",
     gemini: "TypeScript",
     pi: "TypeScript",
-    opencode: "Go",
+    opencode: "TypeScript",
     cursor: "(IDE)",
   },
   {
@@ -58,7 +58,7 @@ const rows = [
     cursor: "Client",
   },
   {
-    feature: "Sub-Agents",
+    feature: "Subagents",
     cc: "Ja (Tiefe 1)",
     codex: "Parallel",
     gemini: "A2A (exp.)",
@@ -87,7 +87,7 @@ const rows = [
   {
     feature: "Multi-Provider",
     cc: "Nein",
-    codex: "OpenAI-fokus.",
+    codex: "OpenAI-Fokus",
     gemini: "Nein",
     pi: "15+ Provider",
     opencode: "Multi",
@@ -95,7 +95,7 @@ const rows = [
   },
   {
     feature: "Context",
-    cc: "200K",
+    cc: "200K (1M)",
     codex: "Modell-abh.",
     gemini: "1M",
     pi: "Provider-abh.",
@@ -122,14 +122,16 @@ const agentNames: Record<string, string> = {
   opencode: "OpenCode",
   cursor: "Cursor",
 };
-const agentColors: Record<string, string> = {
+// OpenCode-Gelb #facc15 erreicht auf weißem Grund nur ~1.5:1 — im Light-Mode
+// das dunklere Amber (#ca8a04) nutzen, im Dark-Mode das helle Gelb behalten.
+const agentColors = computed<Record<string, string>>(() => ({
   cc: "#fb923c",
   codex: "#10b981",
   gemini: "#60a5fa",
   pi: "#a78bfa",
-  opencode: "#facc15",
+  opencode: isDark.value ? "#facc15" : "#ca8a04",
   cursor: "#f472b6",
-};
+}));
 </script>
 
 <template>

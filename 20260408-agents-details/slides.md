@@ -1,6 +1,7 @@
 ---
 theme: default
 title: "Wie funktioniert ein Coding-Agent?"
+lang: de
 info: |
   Architektur, Gemeinsamkeiten und Token-Verbrauch.
   Deep-Dive in Agent-Loop, Tool-Use, Context Management und die Erkenntnisse aus dem Claude-Code-Source-Leak.
@@ -25,6 +26,12 @@ hideInToc: true
 # Inhalt
 
 <Toc mode="all" minDepth="1" maxDepth="1" columns="2" listClass="!list-none !pl-0" />
+
+<div class="mt-6 text-sm opacity-60">
+
+Companion-Talk: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref> — Tool-Auswahl, Permissions und Praxis. Dieser Deep-Dive zeigt, wie der Loop intern funktioniert.
+
+</div>
 
 ---
 layout: section
@@ -63,7 +70,7 @@ hideInToc: true
 <div class="mt-4 text-sm opacity-70">
 
 - Die Loop terminiert, wenn das Modell **keinen Tool-Call** mehr ausgibt
-- Bei Claude Code heißt dieser Loop intern `nO` (Master Loop)
+- Bei Claude Code heißt diese Loop intern `nO` (Master Loop)
 - Der Harness muss nur die Infrastruktur bereitstellen — das Modell orchestriert
 
 </div>
@@ -93,7 +100,7 @@ hideInToc: true
 
 ### Der Ablauf
 
-1. **Tool-Definitionen** als JSON-Schema im System-Prompt
+1. **Tool-Definitionen** als JSON-Schema im Request-Prefix (separates `tools`-Array)
 2. Modell generiert strukturiertes JSON (`tool_use`-Block)
 3. Harness **parst** Funktionsname + Parameter
 4. Harness **führt aus** (lokal oder via MCP)
@@ -111,7 +118,7 @@ hideInToc: true
 | Gemini CLI      | ~12     | Mittlerer Weg          |
 | **Claude Code** | **19+** | Fein-granular          |
 
-**Jedes Tool kostet Tokens im System-Prompt.**
+**Jedes Tool kostet Tokens — als `tools`-Array bei jedem Request.**
 
 </div>
 </div>
@@ -184,7 +191,7 @@ Eine produktive Session füllt das **schnell** — Datei-Inhalte, Tool-Ergebniss
 
 ```
 ┌─────────────────────────┐
-│ Tool-Definitionen       │ ← 19+ Tools = viele Tokens
+│ Tool-Definitionen       │ ← Request-Prefix, 19+ Tools
 │ System-Prompt (statisch)│ ← CLAUDE.md, Skills, Rules
 │ MCP-Tool-Definitionen   │ ← 17K–126K pro Server!
 │ Conversation-History    │ ← wächst mit jeder Iteration
@@ -275,7 +282,7 @@ Der statische Teil wird **global über alle Organisationen gecacht** — massive
 | Gemini CLI      | Mittel             |
 | **Claude Code** | **Multi-K Tokens** |
 
-Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antworten.** A/B-Tests zeigten ~1.2% Token-Reduktion mit expliziten Wortzahlen.
+Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antworten.** A/B-Tests zeigten ~1,2% Token-Reduktion mit expliziten Wortzahlen.
 
 </div>
 </div>
@@ -300,10 +307,16 @@ MCP-Server saugen **17K–126K Tokens** bevor der erste Tool-Call passiert.
 
 <div class="mt-4 text-sm opacity-70">
 
-- Tool-Definitionen werden **bei JEDEM Request** in den System-Prompt injiziert
+- Tool-Definitionen werden **bei JEDEM Request** in den Request-Prefix (`tools`-Array) injiziert
 - Sie zählen als **Input-Tokens** und kosten bei jedem API-Call
 - Skills lösen das via Progressive Disclosure: **Faktor 40–1100×** weniger Tokens
 - Prompt-Caching gibt **90% Discount** — aber nur bei exaktem Prefix-Match
+
+</div>
+
+<div class="mt-3 text-xs opacity-60">
+
+Praxis-Sicht auf MCP-Token-Bloat und Tool-Auswahl: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
 
@@ -330,7 +343,7 @@ hideInToc: true
 
 <div class="text-sm opacity-70 mb-2">
 
-Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem Request.
+Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem Request. Skills in der Praxis: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
 
@@ -370,6 +383,13 @@ Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) ·
 
 </div>
 
+<!--
+Stand 06/2026: Tool Search Tool seit Claude Code v2.1.7 (Jan 2026), aktiviert
+automatisch ab >10 % Context-Anteil der MCP-Tools; System-Tool-Deferral seit
+v2.1.69. Accuracy-Zahlen (49→74 %, 79,5→88,1 %) aus Anthropics Tool-Search-
+Ankündigung. Drittanbieter-Werte aus den jeweiligen Projekt-READMEs.
+-->
+
 ---
 layout: section
 ---
@@ -392,7 +412,7 @@ hideInToc: true
 
 ### Wie funktioniert der Cache?
 
-- Server hashed **Prefix** (Modell + Tools + System-Prompt + History)
+- Server hasht **Prefix** (Modell + Tools + System-Prompt + History)
 - **Nur exakter Prefix-Match** — ein Token Änderung invalidiert alles danach
 - Default-TTL: **5 Minuten**
 - Extended: 1 Stunde (2× Write-Kosten)
@@ -406,6 +426,12 @@ hideInToc: true
 | **Cache Read** | **$0.30 (0.10×)** |
 
 </div>
+</div>
+
+<div class="mt-2 text-xs opacity-60">
+
+OpenAI und Google geben den **Cache-Read ebenfalls mit 0,1×** an. **Google** berechnet bei explizitem Caching zusätzlich Storage-Kosten — Details auf der nächsten Slide.
+
 </div>
 
 ---
@@ -445,6 +471,13 @@ Google verlangt **Storage-Kosten**: $1–4.50/MTok/h. Min. 32.768 Tokens.
 </div>
 </div>
 
+<!--
+Belege: Cache-Invalidierungs-Bug Claude Code #42338; $342-Resume und
+„80 % Limit mit 0 Eingaben" aus Community-Reports (GitHub/Reddit); 480-Message-
+Session = 39K Signatur-Tokens aus einem öffentlichen Token-Breakdown.
+Default-TTL 5 min, Extended 1 h = 2× Cache-Write. Stand 29.04.2026.
+-->
+
 ---
 hideInToc: true
 ---
@@ -462,7 +495,7 @@ Derselbe Harness, drei Cache-Charakteristiken — wer das ignoriert, zahlt schne
 
 ### Interaktiv (`claude`)
 
-**TTL: 1 h** auf Max · **5 min** auf Pro/API.
+**TTL: 1 h** (2× Write-Kosten) auf Max · **5 min** auf Pro/API.
 
 Server-controlled — März-2026-Regression drückte 1h → 5m für viele Nutzer (#46829, ~17–25% Mehrkosten).
 
@@ -477,7 +510,7 @@ Seit **v2.1.108** explizit via `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHIN
 
 Lange Tool-Calls oder verspätete Permission-Prompts → Cache verfällt → voller Cache-Write.
 
-**Fork-Mode** (`CLAUDE_CODE_FORK_SUBAGENT=1`, v2.1.117): Kind erbt Parent-Prefix → ~**90% Discount** bei parallelen Subagenten. Seit **v2.1.121** auch in `-p` und SDK.
+**Fork-Mode** (`CLAUDE_CODE_FORK_SUBAGENT=1`, v2.1.117): Kind erbt Parent-Prefix → ~**90% Discount** bei parallelen Subagents. Seit **v2.1.121** auch in `-p` und SDK.
 
 </div>
 <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -499,11 +532,19 @@ Stand verifiziert: 29.04.2026 — Anthropic schaltet Cache-Defaults serverseitig
 
 </div>
 
+<!--
+Quellen: 1h→5m-Regression #46829; ENABLE_PROMPT_CACHING_1H /
+FORCE_PROMPT_CACHING_5M seit v2.1.108; Fork-Mode CLAUDE_CODE_FORK_SUBAGENT=1
+seit v2.1.117 (in -p/SDK ab v2.1.121); OpenClaw #19989 (claude -p ohne
+--resume = 10× Kosten). Cache-Defaults werden serverseitig ohne Changelog
+umgeschaltet — vor jedem Talk gegenchecken. Stand 29.04.2026.
+-->
+
 ---
 layout: section
 ---
 
-# 6. Sandbox & Sub-Agents
+# 6. Sandbox & Subagents
 
 ---
 hideInToc: true
@@ -522,20 +563,22 @@ hideInToc: true
 
 Bekannte Schwäche Claude Code: Bei >50 Sub-Commands in einer Pipeline fällt die Validierung auf ein einzelnes "Ask" zurück.
 
+Konfigurations- und Permission-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+
 </div>
 
 ---
 hideInToc: true
 ---
 
-# Sub-Agents
+# Subagents
 
 <div class="grid grid-cols-2 gap-8">
 <div>
 
 ### Claude Code: AgentTool
 
-- **Tiefe 1** — Sub-Agenten spawnen keine eigenen Sub-Agenten
+- **Tiefe 1** — Subagents spawnen keine eigenen Subagents
 - Jeder startet mit **frischer Conversation** (kein Parent-History)
 - Lädt eigenes System-Prompt und CLAUDE.md
 - Nur das **finale Summary** geht zurück an den Parent
@@ -546,7 +589,7 @@ hideInToc: true
 
 ### Die Gegenposition
 
-**Pi** hat bewusst **keine Sub-Agenten.**
+**Pi** hat bewusst **keine Subagents.**
 
 > _"Spawning multiple sub-agents is an anti-pattern; it doesn't work unless you don't care if your codebase devolves into garbage."_
 >
@@ -555,6 +598,12 @@ hideInToc: true
 Stattdessen: Spawn pi-Instanzen via tmux.
 
 </div>
+</div>
+
+<div class="mt-4 text-xs opacity-60">
+
+Orchestrierung im Alltag: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref> · Deterministische Alternative zu LLM-Subagents: <TalkXref slug="20260522-open-rewrite">OpenRewrite</TalkXref>.
+
 </div>
 
 ---
@@ -631,6 +680,12 @@ hideInToc: true
 # Harness-Vergleich
 
 <HarnessTable />
+
+<div class="mt-3 text-xs opacity-60">
+
+**OpenCode** (sst/opencode) ist TypeScript — in Go geschrieben ist Charm **Crush** (Fork-Linie des Prototyps). · **Gemini CLI** wird ab 2026-06-18 schrittweise von Antigravity abgelöst (<TalkXref slug="20260327-ai-agents">Details im Agents-Talk</TalkXref>). Stand: 29.04.2026.
+
+</div>
 
 ---
 hideInToc: true
@@ -709,11 +764,17 @@ hideInToc: true
 
 <div class="text-xs opacity-60 mb-2">
 
-31. März 2026: 59.8 MB Source-Map in npm — 512K Zeilen TypeScript.
+31. März 2026: 59,8 MB Source-Map in npm — 512K Zeilen TypeScript.
 
 </div>
 
 <LeakStatsGrid />
+
+<!--
+Quelle: Claude-Code-Source-Map-Leak vom 31.03.2026 (cli.js.map, 59,8 MB,
+512K Zeilen TypeScript, ~1.900 Dateien deobfusziert). Zahlen aus der
+Community-Analyse des Leaks. Pi-Vergleichswerte aus dem pi-mono-Repo.
+-->
 
 ---
 clicks: 1
@@ -757,11 +818,11 @@ hideInToc: true
 
 # Kernaussagen
 
-<div class="mt-4 space-y-6">
+<div class="mt-4 space-y-5">
 
 ### 1. Agent = While-Loop + Tool-Use
 
-Der Kern ist trivial — 10 Zeilen Pseudocode. Kein Classifier, kein Router, keine State-Machine.
+Der Kern ist trivial — ~10 Zeilen Pseudocode. Kein Classifier, kein Router, keine State-Machine.
 
 ### 2. Token-Budget ist die echte Constraint
 
@@ -773,7 +834,7 @@ MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40
 
 ### 4. Der Wert steckt im Modell
 
-RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert. Die Harness-Schicht wird austauschbar. Investiert in **Context-Engineering und Domain-Skills**, nicht in Framework-Abstraktionen.
+RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert; die Harness-Schicht wird austauschbar. Der Hebel liegt in **Context-Engineering und Domain-Skills**, nicht in Framework-Abstraktionen.
 
 </div>
 
@@ -804,10 +865,44 @@ hideInToc: true
 <EngineeringSchichten />
 
 ---
+hideInToc: true
+---
+
+# Quellen & Weiterführendes
+
+<div class="grid grid-cols-2 gap-x-8 gap-y-2 text-sm mt-4">
+<div>
+
+- Anthropic — _Building Effective Agents_
+- Geoff Huntley — _How to Build a Coding Agent_
+- Browser Use — _The Bitter Lesson of Agent Frameworks_
+- Armin Ronacher — `lucumr.pocoo.org`
+
+</div>
+<div>
+
+- Mario Zechner — **Pi** (`pi-mono`)
+- Boris Cherny — **Claude Code**
+- Claude Code Source-Leak — `cli.js.map`, 31.03.2026
+
+</div>
+</div>
+
+<div class="mt-6 text-sm opacity-60">
+
+Companion-Talk: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref> — Tool-Auswahl, Permissions und Praxis.
+
+</div>
+
+---
 layout: end
 hideInToc: true
 ---
 
 # Danke
 
-Quellen: Anthropic "Building Effective Agents" · Claude Code Source Leak (März 2026) · Mario Zechner (Pi) · Boris Cherny (Claude Code) · Geoff Huntley "How to Build a Coding Agent" · Browser Use "Bitter Lesson of Agent Frameworks" · Armin Ronacher (lucumr.pocoo.org)
+<div class="text-sm opacity-60 mt-2">
+
+Quellen & Companion-Talk: siehe vorige Slide.
+
+</div>

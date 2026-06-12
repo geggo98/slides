@@ -49,8 +49,9 @@ const option = computed(() => ({
           x2: 1,
           y2: 0,
           colorStops: [
-            { offset: 0, color: "#fb923c" },
-            { offset: 1, color: "#f472b6" },
+            // Light-Mode: dunklere Töne für Kontrast auf Weiß.
+            { offset: 0, color: isDark.value ? "#fb923c" : "#ea580c" },
+            { offset: 1, color: isDark.value ? "#f472b6" : "#db2777" },
           ],
         },
       },
@@ -71,12 +72,16 @@ const option = computed(() => ({
                 xAxis: 3000,
                 label: {
                   formatter: "Pi (gesamt) ~3K",
-                  color: "#a78bfa",
+                  color: isDark.value ? "#a78bfa" : "#7c3aed",
                   position: "insideStartTop",
                   fontSize: 12,
                   fontWeight: "bold",
                 },
-                lineStyle: { color: "#a78bfa", type: "dashed", width: 2 },
+                lineStyle: {
+                  color: isDark.value ? "#a78bfa" : "#7c3aed",
+                  type: "dashed",
+                  width: 2,
+                },
               },
             ]
           : [],

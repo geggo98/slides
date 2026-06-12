@@ -28,6 +28,10 @@ const option = computed(() => ({
         color: "#fff",
         fontSize: 11,
         lineHeight: 14,
+        // Dunkler Halo, damit weiße Labels auch auf helleren Zellen
+        // (Gelb/Grün/Blau-400) lesbar bleiben — sonst nur ~2:1 Kontrast.
+        textBorderColor: "rgba(0,0,0,0.55)",
+        textBorderWidth: 2,
       },
       upperLabel: {
         show: true,
@@ -35,6 +39,8 @@ const option = computed(() => ({
         color: "#fff",
         fontSize: 14,
         fontWeight: 700,
+        textBorderColor: "rgba(0,0,0,0.55)",
+        textBorderWidth: 2,
       },
       itemStyle: {
         borderColor: isDark.value ? "#0a0a0f" : "#ffffff",
