@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 import EChartWrapper from "./EChartWrapper.vue";
-import { getTooltip } from "./chartConfig";
+import { getTooltip, resolveColor } from "./chartConfig";
 import { HARNESSES, RADAR_INDICATORS } from "./chartData";
 
 const { isDark } = useDarkMode();
@@ -40,9 +40,9 @@ const option = computed(() => ({
       data: HARNESSES.map((h) => ({
         value: h.values,
         name: h.name,
-        lineStyle: { color: h.color, width: 2 },
-        itemStyle: { color: h.color },
-        areaStyle: { color: h.color, opacity: 0.08 },
+        lineStyle: { color: resolveColor(h.color, isDark), width: 2 },
+        itemStyle: { color: resolveColor(h.color, isDark) },
+        areaStyle: { color: resolveColor(h.color, isDark), opacity: 0.08 },
       })),
     },
   ],

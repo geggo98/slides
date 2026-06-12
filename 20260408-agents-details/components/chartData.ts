@@ -1,7 +1,27 @@
+// ── Themed colors ───────────────────────────────────────────────────────────
+// Serien-/Akzentfarben als Light/Dark-Paar: die hellen Tailwind-400er-Töne
+// der Dark-Palette erreichen auf weißem Grund nur ~1.6–2.1:1 Kontrast.
+// Light-Mode nutzt deshalb die 600er/700er-Stufe derselben Skala — gleiche
+// Farbsemantik, ausreichender Kontrast. Auflösung via resolveColor()
+// (chartConfig.ts) nach dem Muster `d ? dark : light`.
+export interface ThemedColor {
+  light: string;
+  dark: string;
+}
+
+export const AGENT_COLORS = {
+  claudeCode: { light: "#c2410c", dark: "#fb923c" }, // Orange
+  codex: { light: "#047857", dark: "#10b981" }, // Smaragd
+  gemini: { light: "#2563eb", dark: "#60a5fa" }, // Blau
+  pi: { light: "#7c3aed", dark: "#a78bfa" }, // Violett
+  opencode: { light: "#ca8a04", dark: "#facc15" }, // Gelb/Amber
+  cursor: { light: "#db2777", dark: "#f472b6" }, // Pink
+} as const satisfies Record<string, ThemedColor>;
+
 // ── Harness data (Radar + Bar) ──────────────────────────────────────────────
 export interface Harness {
   name: string;
-  color: string;
+  color: ThemedColor;
   oss: boolean;
   lang: string;
   tools: number;
@@ -12,7 +32,7 @@ export interface Harness {
 export const HARNESSES: Harness[] = [
   {
     name: "Claude Code",
-    color: "#fb923c",
+    color: AGENT_COLORS.claudeCode,
     oss: false,
     lang: "TypeScript",
     tools: 19,
@@ -21,7 +41,7 @@ export const HARNESSES: Harness[] = [
   },
   {
     name: "Codex CLI",
-    color: "#10b981",
+    color: AGENT_COLORS.codex,
     oss: true,
     lang: "Rust",
     tools: 6,
@@ -30,7 +50,7 @@ export const HARNESSES: Harness[] = [
   },
   {
     name: "Gemini CLI",
-    color: "#60a5fa",
+    color: AGENT_COLORS.gemini,
     oss: true,
     lang: "TypeScript",
     tools: 12,
@@ -39,7 +59,7 @@ export const HARNESSES: Harness[] = [
   },
   {
     name: "Pi",
-    color: "#a78bfa",
+    color: AGENT_COLORS.pi,
     oss: true,
     lang: "TypeScript",
     tools: 4,
@@ -48,7 +68,7 @@ export const HARNESSES: Harness[] = [
   },
   {
     name: "OpenCode",
-    color: "#facc15",
+    color: AGENT_COLORS.opencode,
     oss: true,
     lang: "TypeScript",
     tools: 9,
@@ -57,7 +77,7 @@ export const HARNESSES: Harness[] = [
   },
   {
     name: "Cursor",
-    color: "#f472b6",
+    color: AGENT_COLORS.cursor,
     oss: false,
     lang: "(IDE)",
     tools: 8,
@@ -89,7 +109,7 @@ export const MCP_DATA = [
 // ── MCP Optimization Strategies ────────────────────────────────────────────
 export interface McpOptStrategy {
   agent: string;
-  color: string;
+  color: ThemedColor;
   lazyLoading: "auto" | "file" | "none" | "n/a";
   allowDeny: boolean;
   hardLimit: string | null;
@@ -100,7 +120,7 @@ export interface McpOptStrategy {
 export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   {
     agent: "Claude Code",
-    color: "#fb923c",
+    color: AGENT_COLORS.claudeCode,
     lazyLoading: "auto",
     allowDeny: true,
     hardLimit: null,
@@ -109,7 +129,7 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   },
   {
     agent: "Cursor",
-    color: "#f472b6",
+    color: AGENT_COLORS.cursor,
     lazyLoading: "file",
     allowDeny: true,
     hardLimit: "40/80",
@@ -118,7 +138,7 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   },
   {
     agent: "Codex CLI",
-    color: "#10b981",
+    color: AGENT_COLORS.codex,
     lazyLoading: "none",
     allowDeny: true,
     hardLimit: null,
@@ -127,7 +147,7 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   },
   {
     agent: "Gemini CLI",
-    color: "#60a5fa",
+    color: AGENT_COLORS.gemini,
     lazyLoading: "none",
     allowDeny: true,
     hardLimit: null,
@@ -136,7 +156,7 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   },
   {
     agent: "OpenCode",
-    color: "#facc15",
+    color: AGENT_COLORS.opencode,
     lazyLoading: "none",
     allowDeny: true,
     hardLimit: null,
@@ -145,7 +165,7 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   },
   {
     agent: "Pi",
-    color: "#a78bfa",
+    color: AGENT_COLORS.pi,
     lazyLoading: "n/a",
     allowDeny: false,
     hardLimit: null,
@@ -226,18 +246,66 @@ export interface MemoryApproach {
   x: number; // complexity
   y: number; // effectiveness
   size: number; // token cost
-  color: string;
+  color: ThemedColor;
 }
 
 export const MEMORY_APPROACHES: MemoryApproach[] = [
-  { name: "CLAUDE.md / AGENTS.md", x: 1, y: 8, size: 5, color: "#facc15" },
-  { name: "MEMORY.md (Auto)", x: 2, y: 7, size: 4, color: "#fb923c" },
-  { name: "Skills (Progressive)", x: 3, y: 9, size: 1, color: "#4ade80" },
-  { name: "Aider Repo Map", x: 4, y: 8, size: 3, color: "#a78bfa" },
-  { name: "Session Persistence", x: 2, y: 6, size: 5, color: "#5eead4" },
-  { name: "Cursor RAG (Embeddings)", x: 7, y: 7, size: 4, color: "#60a5fa" },
-  { name: "Mem0 (Vector+Graph)", x: 7, y: 5, size: 6, color: "#f472b6" },
-  { name: "MemGPT / Letta", x: 9, y: 4, size: 8, color: "#ec4899" },
+  {
+    name: "CLAUDE.md / AGENTS.md",
+    x: 1,
+    y: 8,
+    size: 5,
+    color: { light: "#ca8a04", dark: "#facc15" },
+  },
+  {
+    name: "MEMORY.md (Auto)",
+    x: 2,
+    y: 7,
+    size: 4,
+    color: { light: "#c2410c", dark: "#fb923c" },
+  },
+  {
+    name: "Skills (Progressive)",
+    x: 3,
+    y: 9,
+    size: 1,
+    color: { light: "#16a34a", dark: "#4ade80" },
+  },
+  {
+    name: "Aider Repo Map",
+    x: 4,
+    y: 8,
+    size: 3,
+    color: { light: "#7c3aed", dark: "#a78bfa" },
+  },
+  {
+    name: "Session Persistence",
+    x: 2,
+    y: 6,
+    size: 5,
+    color: { light: "#0d9488", dark: "#5eead4" },
+  },
+  {
+    name: "Cursor RAG (Embeddings)",
+    x: 7,
+    y: 7,
+    size: 4,
+    color: { light: "#2563eb", dark: "#60a5fa" },
+  },
+  {
+    name: "Mem0 (Vector+Graph)",
+    x: 7,
+    y: 5,
+    size: 6,
+    color: { light: "#db2777", dark: "#f472b6" },
+  },
+  {
+    name: "MemGPT / Letta",
+    x: 9,
+    y: 4,
+    size: 8,
+    color: { light: "#be185d", dark: "#ec4899" },
+  },
 ];
 
 // ── Taxonomy Treemap ────────────────────────────────────────────────────────

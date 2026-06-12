@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import { AGENT_COLORS } from "./chartData";
+import { resolveColor } from "./chartConfig";
 
 const { isDark } = useDarkMode();
 
@@ -22,7 +24,7 @@ const P = computed(() => {
 const providers = [
   {
     name: "Anthropic Claude",
-    color: "#fb923c",
+    color: AGENT_COLORS.claudeCode,
     code: `{
   "name": "get_weather",
   "description": "...",
@@ -35,7 +37,7 @@ const providers = [
   },
   {
     name: "OpenAI",
-    color: "#10b981",
+    color: AGENT_COLORS.codex,
     code: `{
   "type": "function",
   "function": {
@@ -50,7 +52,7 @@ const providers = [
   },
   {
     name: "Google Gemini",
-    color: "#60a5fa",
+    color: AGENT_COLORS.gemini,
     code: `{
   "functionDeclarations": [{
     "name": "get_weather",
@@ -68,7 +70,7 @@ const providers = [
 <template>
   <div class="grid">
     <div v-for="p in providers" :key="p.name" class="card">
-      <h4 :style="{ color: p.color }">{{ p.name }}</h4>
+      <h4 :style="{ color: resolveColor(p.color, isDark) }">{{ p.name }}</h4>
       <pre><code>{{ p.code }}</code></pre>
       <p class="note">{{ p.note }}</p>
     </div>

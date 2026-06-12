@@ -6,6 +6,12 @@ info: |
   Architektur, Gemeinsamkeiten und Token-Verbrauch.
   Deep-Dive in Agent-Loop, Tool-Use, Context Management und die Erkenntnisse aus dem Claude-Code-Source-Leak.
 monaco: true
+mdc: true
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
 hideInToc: true
 ---
 
@@ -818,7 +824,7 @@ hideInToc: true
 
 # Kernaussagen
 
-<div class="mt-4 space-y-5">
+<div class="mt-2 space-y-4">
 
 ### 1. Agent = While-Loop + Tool-Use
 

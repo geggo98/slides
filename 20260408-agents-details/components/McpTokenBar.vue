@@ -73,8 +73,9 @@ const option = computed(() => ({
             x2: 1,
             y2: 0,
             colorStops: [
-              { offset: 0, color: "#a78bfa" },
-              { offset: 1, color: "#fb923c" },
+              // Light-Mode: dunklere Töne für Kontrast auf Weiß.
+              { offset: 0, color: isDark.value ? "#a78bfa" : "#7c3aed" },
+              { offset: 1, color: isDark.value ? "#fb923c" : "#c2410c" },
             ],
           },
         },

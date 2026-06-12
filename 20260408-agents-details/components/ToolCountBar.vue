@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 import EChartWrapper from "./EChartWrapper.vue";
-import { getAxis, getTooltip } from "./chartConfig";
+import { getAxis, getTooltip, resolveColor } from "./chartConfig";
 import { HARNESSES } from "./chartData";
 
 const { isDark } = useDarkMode();
@@ -35,7 +35,7 @@ const option = computed(() => ({
       type: "bar",
       data: HARNESSES.map((h) => ({
         value: h.tools,
-        itemStyle: { color: h.color },
+        itemStyle: { color: resolveColor(h.color, isDark) },
       })),
       barMaxWidth: 50,
       label: {

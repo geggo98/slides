@@ -17,19 +17,6 @@
 
 - [ ] **Rest-Migration:** `JspecifyCrossRef.vue` (open-rewrite) und `DesignPatternCrossRef.vue` (design-pattern) auf das neue `shared/components/TalkXrefPanel.vue` + `talkUrl(slug, anchor?)`/`routeAlias` umstellen (Shared-Seite inkl. Tests ist fertig; folgt in den Deck-Commits).
 
-### Frontmatter-Konvention
-
-- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlt v. a. **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
-
----
-
-## 20260408-agents-details
-
-- [ ] (M) Accessibility: breite Chart-Serienfarben-Migration in `chartData.ts` (über die bereits gefixten Einzelfälle hinaus) sowie `SchichtenVars`-Akzente (1.6–2.1:1) — Muster: `ToolSearchImpact.vue:15` (`d ? dark : light`).
-- [ ] (M) `EngineeringSchichten.vue` eigene Tab-Bar → shared `Tabs.vue` (trivialer 5-Tab-Switcher).
-- [ ] (M) Duplikate dedupen: `LeakStatsGrid` ↔ `ToolSearchImpact` (Stat-Card-Grid), `HarnessTable` ↔ `McpOptTable` (Badge-/Tabellen-CSS, Carbon-Palette) → gemeinsames StatGrid/Badge bzw. deck-lokales `palette.ts`.
-- [ ] (S) Ungenutzten `public/fonts/0xProto-Regular.woff2`-Symlink entfernen (oder `fonts:`-Frontmatter ergänzen und nutzen). Das HTML-Design-Artefakt im Deck-Root ist bereits gelöscht.
-
 ---
 
 ## 20260428-java-null-pointer

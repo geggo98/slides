@@ -11,12 +11,14 @@
 
 <style>
 .schichten-vars {
-  /* Accent colors — identical in light & dark for brand consistency */
-  --s-prompt: #e8a23b;
-  --s-context: #5fc7b8;
-  --s-harness: #e85a7c;
-  --s-evolution: #a8d55a;
-  --s-intent: #7a736a;
+  /* Accent colors — gleicher Farbton wie im Dark-Mode, aber abgedunkelt:
+     die hellen Töne erreichen auf dem warmen Off-White nur ~1.6–2.1:1
+     Kontrast. Diese Varianten liegen bei ≥4.5:1 (Text & Borders). */
+  --s-prompt: #9c620d;
+  --s-context: #22776b;
+  --s-harness: #b12547;
+  --s-evolution: #577a1a;
+  --s-intent: #6b6459;
 
   --s-prompt-soft: rgba(232, 162, 59, 0.12);
   --s-context-soft: rgba(95, 199, 184, 0.12);
@@ -42,6 +44,13 @@
 }
 
 .dark .schichten-vars {
+  /* Auf dunklem Grund haben die hellen Original-Akzente genug Kontrast. */
+  --s-prompt: #e8a23b;
+  --s-context: #5fc7b8;
+  --s-harness: #e85a7c;
+  --s-evolution: #a8d55a;
+  --s-intent: #7a736a;
+
   --s-prompt-soft: rgba(232, 162, 59, 0.08);
   --s-context-soft: rgba(95, 199, 184, 0.08);
   --s-harness-soft: rgba(232, 90, 124, 0.08);

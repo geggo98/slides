@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import Tabs from "@shared/components/Tabs.vue";
 
 const activeTab = ref("stack");
 
@@ -14,18 +15,12 @@ const tabs = [
 
 <template>
   <SchichtenVars>
-    <div class="schichten-infographic">
-      <div class="tab-bar">
-        <button
-          v-for="t in tabs"
-          :key="t.key"
-          class="tab-btn"
-          :class="{ active: activeTab === t.key }"
-          @click.stop="activeTab = t.key"
-        >
-          {{ t.label }}
-        </button>
-      </div>
+    <Tabs
+      v-model="activeTab"
+      :tabs="tabs"
+      aria-label="Engineering-Schichten-Ansichten"
+      class="schichten-infographic"
+    >
       <div class="tab-content">
         <SchichtenStack v-if="activeTab === 'stack'" />
         <SchichtenTimeline v-else-if="activeTab === 'timeline'" />
@@ -33,43 +28,28 @@ const tabs = [
         <SchichtenEvolution v-else-if="activeTab === 'evolution'" />
         <SchichtenVerdict v-else-if="activeTab === 'verdict'" />
       </div>
-    </div>
+    </Tabs>
   </SchichtenVars>
 </template>
 
 <style scoped>
 .schichten-infographic {
   width: 100%;
+  /* Optik der alten deck-eigenen Tab-Bar 1:1 über die --sk-tab-*-Hooks
+     des shared Tabs.vue (Gap, Font, Padding, Transition = Defaults). */
+  --sk-tab-bar-mb: 14px;
+  --sk-tab-border: 1px solid var(--s-line-strong);
+  --sk-tab-radius: 6px;
+  --sk-tab-color: var(--s-fg-muted);
+  --sk-tab-hover-bg: var(--s-bg-soft);
+  --sk-tab-active-bg: var(--s-bg-soft);
+  --sk-tab-active-color: var(--s-fg);
+  --sk-tab-active-border: var(--s-fg-muted);
 }
-.tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.tab-btn {
-  padding: 5px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  border: 1px solid var(--s-line-strong);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--s-fg-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
-  font-family: inherit;
-}
-.tab-btn:hover {
-  background: var(--s-bg-soft);
+/* Die alte Tab-Bar hellte beim Hover auch die Schrift auf — das shared
+   Tabs.vue ändert nur den Hintergrund, daher hier nachgezogen. */
+.schichten-infographic :deep(.sk-tab:hover) {
   color: var(--s-fg);
-}
-.tab-btn.active {
-  background: var(--s-bg-soft);
-  color: var(--s-fg);
-  border-color: var(--s-fg-muted);
 }
 .tab-content {
   width: 100%;

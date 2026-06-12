@@ -1,4 +1,14 @@
 import type { Ref } from "vue";
+import type { ThemedColor } from "./chartData";
+
+// Löst ein Light/Dark-Farbpaar aus chartData.ts gegen den aktuellen Modus auf.
+export function resolveColor(
+  color: ThemedColor,
+  isDark: Ref<boolean> | { value: boolean },
+) {
+  const d = typeof isDark === "object" ? isDark.value : isDark;
+  return d ? color.dark : color.light;
+}
 
 export function getAxis(isDark: Ref<boolean> | { value: boolean }) {
   const d = typeof isDark === "object" ? isDark.value : isDark;

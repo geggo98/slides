@@ -1,24 +1,13 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import Badge from "./Badge.vue";
+import { AGENT_COLORS } from "./chartData";
+import { resolveColor } from "./chartConfig";
+import { useDeckPalette } from "./palette";
 
 const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    bg: d ? "#14141c" : "#ffffff",
-    headerBg: d ? "#1a1a24" : "#f4f4f5",
-    headerText: d ? "#a78bfa" : "#7c3aed",
-    border: d ? "#2a2a35" : "#e4e4e7",
-    text: d ? "#c8c8d0" : "#3f3f46",
-    hoverBg: d ? "#181820" : "#f9fafb",
-    badgeGreenBg: d ? "rgba(74,222,128,0.15)" : "rgba(22,163,74,0.1)",
-    badgeGreenText: d ? "#86efac" : "#16a34a",
-    badgeRedBg: d ? "rgba(248,113,113,0.15)" : "rgba(220,38,38,0.1)",
-    badgeRedText: d ? "#fca5a5" : "#dc2626",
-  };
-});
+const P = useDeckPalette();
 
 const rows = [
   {
@@ -122,15 +111,15 @@ const agentNames: Record<string, string> = {
   opencode: "OpenCode",
   cursor: "Cursor",
 };
-// OpenCode-Gelb #facc15 erreicht auf weißem Grund nur ~1.5:1 — im Light-Mode
-// das dunklere Amber (#ca8a04) nutzen, im Dark-Mode das helle Gelb behalten.
+// Agentenfarben aus AGENT_COLORS: Dark-Mode helle 400er-Töne, Light-Mode
+// die dunkleren 600er/700er derselben Skala (Kontrast auf Weiß).
 const agentColors = computed<Record<string, string>>(() => ({
-  cc: "#fb923c",
-  codex: "#10b981",
-  gemini: "#60a5fa",
-  pi: "#a78bfa",
-  opencode: isDark.value ? "#facc15" : "#ca8a04",
-  cursor: "#f472b6",
+  cc: resolveColor(AGENT_COLORS.claudeCode, isDark),
+  codex: resolveColor(AGENT_COLORS.codex, isDark),
+  gemini: resolveColor(AGENT_COLORS.gemini, isDark),
+  pi: resolveColor(AGENT_COLORS.pi, isDark),
+  opencode: resolveColor(AGENT_COLORS.opencode, isDark),
+  cursor: resolveColor(AGENT_COLORS.cursor, isDark),
 }));
 </script>
 
@@ -149,10 +138,8 @@ const agentColors = computed<Record<string, string>>(() => ({
         <tr v-for="row in rows" :key="row.feature">
           <td class="feature">{{ row.feature }}</td>
           <td v-for="a in agents" :key="a">
-            <span v-if="(row as any)[a] === 'y'" class="badge green">Ja</span>
-            <span v-else-if="(row as any)[a] === 'n'" class="badge red"
-              >Nein</span
-            >
+            <Badge v-if="(row as any)[a] === 'y'" tone="green">Ja</Badge>
+            <Badge v-else-if="(row as any)[a] === 'n'" tone="red">Nein</Badge>
             <span v-else>{{ (row as any)[a] }}</span>
           </td>
         </tr>
@@ -198,20 +185,5 @@ tr:last-child td {
 }
 tr:hover td {
   background: v-bind("P.hoverBg");
-}
-.badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: 600;
-}
-.badge.green {
-  background: v-bind("P.badgeGreenBg");
-  color: v-bind("P.badgeGreenText");
-}
-.badge.red {
-  background: v-bind("P.badgeRedBg");
-  color: v-bind("P.badgeRedText");
 }
 </style>

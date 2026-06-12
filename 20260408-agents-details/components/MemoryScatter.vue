@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 import EChartWrapper from "./EChartWrapper.vue";
-import { getAxis, getTooltip } from "./chartConfig";
+import { getAxis, getTooltip, resolveColor } from "./chartConfig";
 import { MEMORY_APPROACHES } from "./chartData";
 
 const { isDark } = useDarkMode();
@@ -55,9 +55,9 @@ const option = computed(() => ({
         name: a.name,
         symbolSize: a.size * 5 + 18,
         itemStyle: {
-          color: a.color,
+          color: resolveColor(a.color, isDark),
           opacity: 0.7,
-          borderColor: a.color,
+          borderColor: resolveColor(a.color, isDark),
           borderWidth: 2,
         },
         label: {
@@ -80,7 +80,8 @@ const option = computed(() => ({
       top: 30,
       style: {
         text: "★ Sweet Spot",
-        fill: "#4ade80",
+        // Light-Mode: dunklerer Ton für Kontrast auf Weiß.
+        fill: isDark.value ? "#4ade80" : "#16a34a",
         fontSize: 12,
         fontWeight: "bold",
       },

@@ -1,80 +1,46 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
-import { LEAK_STATS } from "./chartData";
+import StatGrid from "./StatGrid.vue";
+import { AGENT_COLORS, LEAK_STATS } from "./chartData";
+import { useDeckPalette } from "./palette";
 
-const { isDark } = useDarkMode();
-
-const P = computed(() => {
-  const d = isDark.value;
-  return {
-    cardBg: d
-      ? "linear-gradient(135deg, #14141c, #1a1a24)"
-      : "linear-gradient(135deg, #ffffff, #f9fafb)",
-    cardBorder: d ? "#2a2a35" : "#e4e4e7",
-    valueColor: d ? "#a78bfa" : "#7c3aed",
-    labelColor: d ? "#8a8a9a" : "#71717a",
-    descColor: d ? "#b4b4c0" : "#52525b",
-    piColor: d ? "#a78bfa" : "#7c3aed",
-    piBorder: d ? "#2a2a35" : "#e4e4e7",
-  };
-});
+// Violett = Pi-Akzent (AGENT_COLORS.pi): Wertfarbe der Karten und Farbe
+// der Pi-Vergleichszeile im Karten-Footer.
+const P = useDeckPalette();
 </script>
 
 <template>
-  <div class="stats-grid">
-    <div v-for="s in LEAK_STATS" :key="s.label" class="stat-card">
-      <div class="stat-value">{{ s.value }}</div>
-      <div class="stat-label">{{ s.label }}</div>
-      <div class="stat-desc">{{ s.desc }}</div>
-      <div v-if="s.pi" class="stat-pi">
-        Pi: <strong>{{ s.pi }}</strong>
+  <StatGrid
+    :stats="LEAK_STATS"
+    :cols="3"
+    :accent="AGENT_COLORS.pi"
+    class="leak-grid"
+  >
+    <template #footer="{ stat }">
+      <div v-if="stat.pi" class="stat-pi">
+        Pi: <strong>{{ stat.pi }}</strong>
       </div>
-    </div>
-  </div>
+    </template>
+  </StatGrid>
 </template>
 
 <style scoped>
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+.leak-grid {
+  /* Kompakter als die StatGrid-Defaults — 9 Karten in 3 Spalten. */
+  --stat-gap: 8px;
+  --stat-pad: 10px;
+  --stat-value-size: 18px;
+  --stat-label-size: 9px;
+  --stat-label-mt: 0px;
+  --stat-desc-size: 10px;
+  --stat-desc-mt: 4px;
   margin-bottom: 12px;
-}
-.stat-card {
-  background: v-bind("P.cardBg");
-  border: 1px solid v-bind("P.cardBorder");
-  border-radius: 8px;
-  padding: 10px;
-}
-.stat-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: v-bind("P.valueColor");
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-}
-.stat-label {
-  font-size: 9px;
-  color: v-bind("P.labelColor");
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-.stat-desc {
-  font-size: 10px;
-  color: v-bind("P.descColor");
-  margin-top: 4px;
-  line-height: 1.4;
 }
 .stat-pi {
   font-size: 10px;
-  color: v-bind("P.piColor");
+  color: v-bind("P.accentViolet");
   margin-top: 6px;
   padding-top: 6px;
-  border-top: 1px solid v-bind("P.piBorder");
+  border-top: 1px solid v-bind("P.cardBorder");
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-}
-.stat-pi strong {
-  color: v-bind("P.piColor");
 }
 </style>
