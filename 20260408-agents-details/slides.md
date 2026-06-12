@@ -906,3 +906,20 @@ hideInToc: true
 Quellen & Companion-Talk: siehe vorige Slide.
 
 </div>
+
+---
+layout: default
+title: Selbsttest
+hideInToc: true
+---
+
+<div class="text-2xl font-semibold mb-2">Selbsttest</div>
+
+<AgentsDetailsQuiz />
+
+<!--
+- Hinter der End-Slide: Selbststudium nach dem Vortrag. Adaptiv — startet
+  mittel, passt sich der Antwortqualität an.
+- Fragenpool via Web-Recherche + Fable-Generierung + adversariale Auswahl;
+  Transfer-Sektion verlinkt den ai-agents-Talk (Token-Ökonomie, Skills vs. MCP).
+-->
