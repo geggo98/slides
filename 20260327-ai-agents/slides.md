@@ -676,10 +676,11 @@ hideInToc: true
 
 ```sh
 #!/bin/sh
-# Spechern als: ~/bin/claude-acp.sh
+# Speichern als: ~/bin/claude-acp.sh
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH" # Brew (ARM/Intel) fehlt im GUI-PATH
 unset ANTHROPIC_API_KEY
-export CLAUDE_ACP_MODEL=opus # Alternativ: haiku (am billigsten), sonnet (ausgewogen), faible (sehr teuer, 2x Opus)
-exec npx claude-code-acp
+export ANTHROPIC_MODEL=opus # Alternativ: haiku (am billigsten), sonnet (ausgewogen), fable (sehr teuer, 2x Opus)
+exec npx @agentclientprotocol/claude-agent-acp
 ```
 
 <Callout tone="warning" dense class="mt-1">
