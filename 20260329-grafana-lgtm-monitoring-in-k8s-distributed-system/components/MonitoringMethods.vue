@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import Tabs from "@shared/components/Tabs.vue";
 import MethodBox from "./MethodBox.vue";
 import DiagnosticFunnel from "./DiagnosticFunnel.vue";
 import ErrorsPerspective from "./ErrorsPerspective.vue";
@@ -17,7 +18,8 @@ const C = computed(() => {
     surfaceAlt: d ? "#161c2a" : "#f1f5f9",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     blueDim: d ? "rgba(59,130,246,0.12)" : "rgba(37,99,235,0.08)",
@@ -38,8 +40,8 @@ const C = computed(() => {
 });
 
 const tabs = [
-  { id: "overview", label: "\u00DCberblick & Zusammenhang" },
-  { id: "praxis", label: "Monitoring-Praxis" },
+  { key: "overview", label: "\u00DCberblick & Zusammenhang" },
+  { key: "praxis", label: "Monitoring-Praxis" },
 ];
 
 const redSignals = computed(() => [
@@ -236,7 +238,7 @@ data:
       background: C.bg,
       color: C.text,
       height: '100%',
-      fontFamily: `'DM Sans', 'Segoe UI', system-ui, sans-serif`,
+      fontFamily: 'inherit',
       overflow: 'auto',
     }"
   >
@@ -273,7 +275,7 @@ data:
               color: C.yellow,
               textTransform: 'uppercase',
               letterSpacing: '1.4px',
-              fontFamily: `'JetBrains Mono', monospace`,
+              fontFamily: 'var(--slidev-code-font-family)',
             }"
             >Monitoring-Methodologie</span
           >
@@ -304,36 +306,15 @@ data:
         </p>
       </div>
 
-      <!-- Tabs -->
-      <div
-        :style="{
-          display: 'flex',
-          gap: '1px',
-          marginBottom: '14px',
-          borderBottom: `1px solid ${C.border}`,
-        }"
-      >
-        <button
-          v-for="t in tabs"
-          :key="t.id"
-          :style="{
-            padding: '7px 13px',
-            background: 'transparent',
-            border: 'none',
-            borderBottom: `2px solid ${activeTab === t.id ? C.blue : 'transparent'}`,
-            color: activeTab === t.id ? C.text : C.muted,
-            fontSize: '9px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: '-1px',
-            transition: 'all 0.15s ease',
-            fontFamily: 'inherit',
-          }"
-          @click="activeTab = t.id"
-        >
-          {{ t.label }}
-        </button>
-      </div>
+      <!-- Tabs: shared Komponente (ARIA + Pfeiltasten), Panels bleiben als
+           v-if-Geschwister unten — Zustand läuft über v-model. Optik (Unter-
+           strich-Tabs) via --sk-tab-* und :deep() im scoped Style. -->
+      <Tabs
+        v-model="activeTab"
+        class="mm-tabs"
+        :tabs="tabs"
+        aria-label="Monitoring-Methodologien — Ansichten"
+      />
 
       <!-- Overview Tab -->
       <div v-if="activeTab === 'overview'" class="tab-content">
@@ -356,7 +337,7 @@ data:
               textTransform: 'uppercase',
               letterSpacing: '1px',
               marginBottom: '8px',
-              fontFamily: `'JetBrains Mono', monospace`,
+              fontFamily: 'var(--slidev-code-font-family)',
             }"
           >
             Die zentrale Gleichung
@@ -454,7 +435,7 @@ data:
                   fontSize: '7px',
                   color: C.yellow,
                   fontWeight: 600,
-                  fontFamily: `'JetBrains Mono', monospace`,
+                  fontFamily: 'var(--slidev-code-font-family)',
                 }"
                 >{{ m.gs }}</span
               >
@@ -466,7 +447,7 @@ data:
                   fontSize: '7px',
                   color: m.red === '\u2014' ? C.dim : C.red,
                   fontWeight: 600,
-                  fontFamily: `'JetBrains Mono', monospace`,
+                  fontFamily: 'var(--slidev-code-font-family)',
                 }"
                 >{{ m.red }}</span
               >
@@ -507,7 +488,7 @@ data:
                   fontWeight: 700,
                   color: C.red,
                   marginBottom: '3px',
-                  fontFamily: `'JetBrains Mono', monospace`,
+                  fontFamily: 'var(--slidev-code-font-family)',
                 }"
               >
                 SCOPE
@@ -547,7 +528,7 @@ data:
                   fontWeight: 700,
                   color: C.purple,
                   marginBottom: '3px',
-                  fontFamily: `'JetBrains Mono', monospace`,
+                  fontFamily: 'var(--slidev-code-font-family)',
                 }"
               >
                 SCOPE
@@ -587,7 +568,7 @@ data:
                   fontWeight: 700,
                   color: C.yellow,
                   marginBottom: '3px',
-                  fontFamily: `'JetBrains Mono', monospace`,
+                  fontFamily: 'var(--slidev-code-font-family)',
                 }"
               >
                 WANN STATT RED?
@@ -684,7 +665,7 @@ data:
                     fontSize: '7px',
                     fontWeight: 700,
                     color: C.orange,
-                    fontFamily: `'JetBrains Mono', monospace`,
+                    fontFamily: 'var(--slidev-code-font-family)',
                     padding: '1px 4px',
                     borderRadius: '2px',
                     background: C.orangeDim,
@@ -696,7 +677,7 @@ data:
                     fontSize: '7px',
                     fontWeight: 700,
                     color: C.red,
-                    fontFamily: `'JetBrains Mono', monospace`,
+                    fontFamily: 'var(--slidev-code-font-family)',
                     padding: '1px 4px',
                     borderRadius: '2px',
                     background: C.redDim,
@@ -846,7 +827,7 @@ data:
                 background: C.codeBg,
                 fontSize: '7px',
                 color: C.codeText,
-                fontFamily: `'JetBrains Mono', monospace`,
+                fontFamily: 'var(--slidev-code-font-family)',
                 lineHeight: 1.6,
                 overflowX: 'auto',
                 whiteSpace: 'pre-wrap',
@@ -942,7 +923,7 @@ data:
                     :style="{
                       fontSize: '6.3px',
                       color: C.blue,
-                      fontFamily: `'JetBrains Mono', monospace`,
+                      fontFamily: 'var(--slidev-code-font-family)',
                       marginBottom: '1px',
                     }"
                   >
@@ -953,7 +934,7 @@ data:
                       margin: 0,
                       fontSize: '6.3px',
                       color: C.codeText,
-                      fontFamily: `'JetBrains Mono', monospace`,
+                      fontFamily: 'var(--slidev-code-font-family)',
                       lineHeight: 1.4,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'break-all',
@@ -966,7 +947,7 @@ data:
                     :style="{
                       fontSize: '6.3px',
                       color: C.red,
-                      fontFamily: `'JetBrains Mono', monospace`,
+                      fontFamily: 'var(--slidev-code-font-family)',
                       marginBottom: '1px',
                     }"
                   >
@@ -977,7 +958,7 @@ data:
                       margin: 0,
                       fontSize: '6.3px',
                       color: C.codeText,
-                      fontFamily: `'JetBrains Mono', monospace`,
+                      fontFamily: 'var(--slidev-code-font-family)',
                       lineHeight: 1.4,
                       whiteSpace: 'pre-wrap',
                       wordBreak: 'break-all',
@@ -1003,7 +984,7 @@ data:
                 fontWeight: 700,
                 color: C.green,
                 marginBottom: '2px',
-                fontFamily: `'JetBrains Mono', monospace`,
+                fontFamily: 'var(--slidev-code-font-family)',
               }"
             >
               PRAXIS-TIPP
@@ -1023,8 +1004,6 @@ data:
 </template>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap");
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1064,5 +1043,33 @@ data:
 
 .tab-content {
   animation: fadeIn 0.3s ease;
+}
+
+/* Shared-Tabs-Optik: exakt der frühere Inline-Style (Unterstrich-Tabs auf
+ * Border-Linie). Farben kommen aus der isDark-Palette via v-bind. */
+.mm-tabs {
+  --sk-tab-gap: 1px;
+  --sk-tab-bar-mb: 14px;
+  --sk-tab-bar-border-bottom: 1px solid v-bind("C.border");
+  --sk-tab-font-size: 9px;
+  --sk-tab-font-weight: 600;
+  --sk-tab-pad: 7px 13px;
+  --sk-tab-radius: 0;
+  --sk-tab-bg: transparent;
+  --sk-tab-hover-bg: transparent;
+  --sk-tab-active-bg: transparent;
+  --sk-tab-color: v-bind("C.muted");
+  --sk-tab-active-color: v-bind("C.text");
+  --sk-tab-transition: all 0.15s ease;
+}
+
+.mm-tabs :deep(button.sk-tab) {
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.mm-tabs :deep(button.sk-tab.active) {
+  border-bottom-color: v-bind("C.blue");
 }
 </style>

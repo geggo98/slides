@@ -25,7 +25,8 @@ const C = computed(() => {
   const d = isDark.value;
   return {
     border: d ? "#1e2536" : "#e2e8f0",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     green: d ? "#22c55e" : "#16a34a",
     orange: d ? "#f97316" : "#ea580c",
     red: d ? "#ef4444" : "#dc2626",
@@ -129,7 +130,7 @@ const unitFontSize = 8;
           fill: color,
           fontSize: valueFontSize + 'px',
           fontWeight: 800,
-          fontFamily: `'JetBrains Mono', monospace`,
+          fontFamily: 'var(--slidev-code-font-family)',
         }"
       >
         {{ displayValue }}
@@ -144,7 +145,7 @@ const unitFontSize = 8;
           fill: color,
           fontSize: '10px',
           fontWeight: 800,
-          fontFamily: `'JetBrains Mono', monospace`,
+          fontFamily: 'var(--slidev-code-font-family)',
         }"
       >
         {{ statusGlyph }}
@@ -156,7 +157,7 @@ const unitFontSize = 8;
         :style="{
           fill: C.muted,
           fontSize: unitFontSize + 'px',
-          fontFamily: `'JetBrains Mono', monospace`,
+          fontFamily: 'var(--slidev-code-font-family)',
         }"
       >
         {{ unit }}

@@ -173,7 +173,7 @@ function onFrameClick(f) {
           display: 'flex',
           alignItems: 'center',
           padding: '0 5px',
-          fontFamily: `'JetBrains Mono', monospace`,
+          fontFamily: 'var(--slidev-code-font-family)',
           fontSize: '8.5px',
           color: theme.text,
           overflow: 'hidden',
@@ -200,7 +200,7 @@ function onFrameClick(f) {
       :style="{
         padding: '5px 9px',
         fontSize: '9px',
-        fontFamily: `'JetBrains Mono', monospace`,
+        fontFamily: 'var(--slidev-code-font-family)',
         background: theme.tooltipBg,
         color: theme.tooltipFg,
         border: `1px solid ${theme.tooltipBorder}`,

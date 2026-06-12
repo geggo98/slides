@@ -19,18 +19,7 @@
 
 ### Frontmatter-Konvention
 
-- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlen v. a. **grafana**, **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
-
----
-
-## 20260329-grafana-lgtm-monitoring-in-k8s-distributed-system
-
-- [ ] (M) `DashboardLinking` (S38) ist derzeit bewusst scrollbar — sauberer wäre ein struktureller Split der vier Referenz-Sektionen auf zwei Slides.
-- [ ] (M) Vier Komponenten laden DM Sans zur Laufzeit von `fonts.googleapis.com` (`MonitoringMethods`, `SaturationSimulator`, `SystemDynamicsSimulator`, `GrafanaDashboard`) — self-hosten oder Deck-Font nutzen (Netzabhängigkeit beim Präsentieren).
-- [ ] (M) S32/S35-Hinweisboxen → shared `Callout` (Token-Setup ist da; das `#eab308`-Kontrastproblem auf S3 ist bereits gefixt).
-- [ ] (S) `muted: #64748b` modus-fix in fast allen Komponenten (auf Dark-Surface nur 4.0:1 bei 8–10 px-Labels).
-- [ ] (L) Tab-Komponenten auf shared `Tabs.vue` migrieren (jetzt möglich, da `setup/main.ts` die Tokens lädt).
-- [ ] (L) Notes 0/51 — mindestens Bedienungs-Spickzettel für die 5 interaktiven Slides.
+- [ ] **(S–M) Headmatter-Standard über `lang: de` hinaus angleichen** (`monaco · mdc · transition: slide-left · colorSchema: auto · fonts: {sans: Inter, mono: 0xProto}`). Es fehlt v. a. **agents-details**. Pro Deck visuell prüfen — globales Rendering-Risiko (besonders `colorSchema: auto` bei grafana, das aktuell auf Dark optimierte Hex-Farben hat).
 
 ---
 

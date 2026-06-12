@@ -15,7 +15,8 @@ const C = computed(() => {
     border: d ? "#1e2536" : "#e2e8f0",
     borderHi: d ? "#2a3350" : "#cbd5e1",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     green: d ? "#22c55e" : "#16a34a",
@@ -1222,8 +1223,6 @@ function phaseFilled(phases, idx, prog) {
 </template>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap");
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1253,7 +1252,7 @@ function phaseFilled(phases, idx, prog) {
 .sim-root {
   background: var(--c-bg);
   color: var(--c-text);
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
   width: 100%;
   height: 100%;
   overflow: auto;
@@ -1303,7 +1302,7 @@ function phaseFilled(phases, idx, prog) {
   color: var(--c-red);
   text-transform: uppercase;
   letter-spacing: 1.3px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .sim-title {
   font-size: 13px;
@@ -1438,7 +1437,7 @@ function phaseFilled(phases, idx, prog) {
   padding: 1px 5px;
   border-radius: 3px;
   border: 1px solid;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .scenario-header-desc {
   font-size: 7.5px;
@@ -1449,7 +1448,7 @@ function phaseFilled(phases, idx, prog) {
 .dashboard-level {
   font-size: 6.5px;
   color: var(--c-dim);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   text-align: right;
   flex-shrink: 0;
 }
@@ -1466,7 +1465,7 @@ function phaseFilled(phases, idx, prog) {
   font-size: 6.5px;
   font-weight: 700;
   color: var(--c-orange);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .trigger-text {
   font-size: 7.5px;
@@ -1519,7 +1518,7 @@ function phaseFilled(phases, idx, prog) {
 .progress-pct {
   font-size: 7px;
   color: var(--c-muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   min-width: 22px;
   text-align: right;
 }
@@ -1569,7 +1568,7 @@ function phaseFilled(phases, idx, prog) {
 .phase-sev {
   font-size: 6px;
   font-weight: 700;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .phase-name {
   font-size: 7px;
@@ -1614,12 +1613,12 @@ function phaseFilled(phases, idx, prog) {
 .threshold-warn {
   font-size: 5.5px;
   color: var(--c-dim);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .threshold-crit {
   font-size: 5.5px;
   color: var(--c-dim);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 /* Fix + PromQL */
@@ -1641,7 +1640,7 @@ function phaseFilled(phases, idx, prog) {
   text-transform: uppercase;
   letter-spacing: 0.7px;
   margin-bottom: 3px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .fix-text {
   font-size: 7.5px;
@@ -1692,7 +1691,7 @@ function phaseFilled(phases, idx, prog) {
   font-weight: 700;
   color: var(--c-blue);
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .promql-code {
   background: var(--c-codeBg);
@@ -1701,7 +1700,7 @@ function phaseFilled(phases, idx, prog) {
   padding: 5px 6px;
   font-size: 7px;
   color: var(--c-codeText);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   line-height: 1.4;
   overflow-x: auto;
   margin: 0;

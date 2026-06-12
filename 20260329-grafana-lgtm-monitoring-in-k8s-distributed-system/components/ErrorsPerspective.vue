@@ -10,7 +10,8 @@ const C = computed(() => {
     surface: d ? "#111621" : "#ffffff",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     red: d ? "#ef4444" : "#dc2626",
     redDim: d ? "rgba(239,68,68,0.10)" : "rgba(220,38,38,0.08)",
     purple: d ? "#a855f7" : "#9333ea",
@@ -67,7 +68,7 @@ const useErrors = [
             fontWeight: 700,
             color: C.red,
             marginBottom: '4px',
-            fontFamily: `'JetBrains Mono', monospace`,
+            fontFamily: 'var(--slidev-code-font-family)',
           }"
         >
           RED / Golden Signals — Errors
@@ -114,7 +115,7 @@ const useErrors = [
             fontWeight: 700,
             color: C.purple,
             marginBottom: '4px',
-            fontFamily: `'JetBrains Mono', monospace`,
+            fontFamily: 'var(--slidev-code-font-family)',
           }"
         >
           USE — Errors

@@ -12,7 +12,8 @@ const C = computed(() => {
     surfaceAlt: d ? "#161c2a" : "#f1f5f9",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     green: d ? "#22c55e" : "#16a34a",
@@ -1059,7 +1060,7 @@ function startDot(h) {
 
 <style scoped>
 .hysterese-catalog {
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
   color: var(--c-text);
   line-height: 1.4;
 }
@@ -1221,7 +1222,7 @@ function startDot(h) {
   padding: 0px 5px;
   border-radius: 3px;
   border: 1px solid;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .card-mechanism {
@@ -1284,7 +1285,7 @@ function startDot(h) {
   font-size: 9px;
   font-weight: 700;
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .detail-text {
@@ -1298,14 +1299,14 @@ function startDot(h) {
   font-weight: 700;
   color: var(--c-muted);
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .axes-text {
   font-size: 10px;
   color: var(--c-text);
   line-height: 1.4;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .metrics-label {
@@ -1313,13 +1314,13 @@ function startDot(h) {
   font-weight: 700;
   color: var(--c-blue);
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .metrics-text {
   font-size: 10px;
   color: var(--c-muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .summary {
@@ -1352,7 +1353,7 @@ function startDot(h) {
 .summary-number {
   font-size: 16px;
   font-weight: 800;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .summary-label {

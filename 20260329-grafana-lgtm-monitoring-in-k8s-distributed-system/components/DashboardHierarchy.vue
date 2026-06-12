@@ -13,7 +13,8 @@ const DARK_PALETTE = {
   border: "#1e2536",
   borderActive: "#3b82f6",
   text: "#e2e8f0",
-  textMuted: "#64748b",
+  // #64748b erreichte auf dunkler Surface nur ~4:1 — heller abgestuft.
+  textMuted: "#94a3b8",
   textDim: "#475569",
   accent: "#3b82f6",
   accentGlow: "rgba(59,130,246,0.15)",
@@ -971,7 +972,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 .level-tag {
   font-size: 7px;
   font-weight: 700;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .level-name {
@@ -991,7 +992,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   font-weight: 700;
   padding: 1px 4px;
   border-radius: 3px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .flow-arrow {
@@ -1061,7 +1062,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 .range-info {
   font-size: 6px;
   color: v-bind("PALETTE.textDim");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .method-note {
@@ -1212,7 +1213,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   text-transform: uppercase;
   letter-spacing: 0.7px;
   margin-bottom: 3px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .links-wrap {
@@ -1239,7 +1240,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 .link-vars {
   font-size: 5px;
   color: v-bind("PALETTE.textDim");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   background: rgba(59, 130, 246, 0.06);
   padding: 1px 3px;
   border-radius: 2px;
@@ -1300,7 +1301,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 .sizing-item-size {
   font-size: 6px;
   color: v-bind("PALETTE.accent");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .sizing-note {
@@ -1316,7 +1317,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   font-weight: 700;
   letter-spacing: 0.3px;
   margin-top: 1px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 /* Hero-Panel: Anna-Karenina-/Segal-Ampel als dominantes Service-Health-Element */
@@ -1347,7 +1348,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   font-size: 28px;
   font-weight: 800;
   line-height: 1;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   flex-shrink: 0;
 }
 
@@ -1363,14 +1364,14 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
   font-weight: 800;
   letter-spacing: 0.6px;
   line-height: 1;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .hero-slo {
   font-size: 9px;
   font-weight: 700;
   color: v-bind("PALETTE.text");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   line-height: 1.1;
 }
 
@@ -1402,7 +1403,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
 .hero-budget-label {
   font-size: 6px;
   color: v-bind("PALETTE.textMuted");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   letter-spacing: 0.2px;
   flex-shrink: 0;
 }

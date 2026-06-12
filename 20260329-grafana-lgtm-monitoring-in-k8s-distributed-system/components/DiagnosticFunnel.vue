@@ -10,7 +10,8 @@ const C = computed(() => {
     surface: d ? "#111621" : "#ffffff",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     red: d ? "#ef4444" : "#dc2626",
     yellow: d ? "#eab308" : "#ca8a04",
@@ -80,7 +81,7 @@ const steps = computed(() => [
               fontSize: '7.7px',
               fontWeight: 700,
               color: step.color,
-              fontFamily: `'JetBrains Mono', monospace`,
+              fontFamily: 'var(--slidev-code-font-family)',
             }"
             >{{ step.from }}</span
           >
@@ -90,7 +91,7 @@ const steps = computed(() => [
               fontSize: '7.7px',
               fontWeight: 700,
               color: step.color,
-              fontFamily: `'JetBrains Mono', monospace`,
+              fontFamily: 'var(--slidev-code-font-family)',
             }"
             >{{ step.to }}</span
           >
@@ -108,7 +109,7 @@ const steps = computed(() => [
             :style="{
               fontSize: '7px',
               color: C.dim,
-              fontFamily: `'JetBrains Mono', monospace`,
+              fontFamily: 'var(--slidev-code-font-family)',
             }"
             >&blacktriangledown; Warum?</span
           >
@@ -120,7 +121,7 @@ const steps = computed(() => [
           :style="{
             fontSize: '7px',
             color: C.dim,
-            fontFamily: `'JetBrains Mono', monospace`,
+            fontFamily: 'var(--slidev-code-font-family)',
           }"
           >&blacktriangledown; Fix</span
         >

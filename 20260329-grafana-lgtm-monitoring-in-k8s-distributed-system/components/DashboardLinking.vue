@@ -2,6 +2,17 @@
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 
+// Vier Referenz-Sektionen passen nicht auf einen Canvas — der Split verteilt
+// sie auf zwei Folien: "mechanisms" = Drei Mechanismen + URL-Parameter,
+// "drilldown" = Drill-Down-Karte + Text-Panels. "all" (Default) stapelt
+// weiterhin alles, für den Tab-Container GrafanaDashboard.
+const props = defineProps({
+  part: { type: String, default: "all" },
+});
+
+const showMechanisms = computed(() => props.part !== "drilldown");
+const showDrilldown = computed(() => props.part !== "mechanisms");
+
 const { isDark } = useDarkMode();
 
 const DARK_PALETTE = {
@@ -10,7 +21,8 @@ const DARK_PALETTE = {
   surfaceHover: "#1a1f2e",
   border: "#1e2536",
   text: "#e2e8f0",
-  textMuted: "#64748b",
+  // #64748b erreichte auf dunkler Surface nur ~4:1 — heller abgestuft.
+  textMuted: "#94a3b8",
   textDim: "#475569",
   accent: "#3b82f6",
   accentGlow: "rgba(59,130,246,0.15)",
@@ -208,9 +220,9 @@ const URL_PARAMS = [
 </script>
 
 <template>
-  <div class="linking-root">
+  <div class="linking-root" :class="`part-${props.part}`">
     <!-- Linking patterns overview -->
-    <div class="mechanisms-section">
+    <div v-if="showMechanisms" class="mechanisms-section">
       <div class="mechanisms-title">Dashboard-Linking: Drei Mechanismen</div>
       <div class="mechanisms-desc">
         Grafana bietet drei Wege, Dashboards zu vernetzen. Zusammen erzeugen sie
@@ -239,70 +251,8 @@ const URL_PARAMS = [
       </div>
     </div>
 
-    <!-- Drill-Down Navigation Map -->
-    <div class="drilldown-section">
-      <div class="drilldown-title">
-        Drill-Down-Karte: RED / Golden Signals &rarr; USE
-      </div>
-      <div class="drilldown-desc">
-        Die Verlinkung folgt dem diagnostischen Trichter: Anomalie auf
-        Service-Level erkennen (RED/Golden), dann zur Ressourcen-Ebene
-        navigieren (USE), um die Root Cause zu finden.
-      </div>
-      <div class="drilldown-list">
-        <div
-          v-for="(link, i) in DRILL_DOWN_MAP"
-          :key="i"
-          class="dd-item"
-          :style="{
-            background: `${link.color}06`,
-            borderColor: `${link.color}12`,
-          }"
-        >
-          <div class="dd-flow">
-            <span class="dd-from">{{ link.from }}</span>
-            <span class="dd-arrow" :style="{ color: link.color }">&rarr;</span>
-            <span class="dd-to" :style="{ color: link.color }">{{
-              link.to
-            }}</span>
-          </div>
-          <div class="dd-trigger">{{ link.trigger }}</div>
-          <div class="dd-badges">
-            <span class="dd-vars">{{ link.vars }}</span>
-            <span
-              class="dd-method"
-              :style="{ background: `${link.color}15`, color: link.color }"
-              >{{ link.method }}</span
-            >
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Text Panel Best Practices -->
-    <div class="textpanel-section">
-      <div class="textpanel-title">Text Panels: Was und wo</div>
-      <div class="textpanel-grid">
-        <div
-          v-for="(item, i) in TEXT_PANEL_EXAMPLES"
-          :key="i"
-          class="tp-item"
-          :style="{ borderColor: `${item.color}20` }"
-        >
-          <div class="tp-header" :style="{ background: `${item.color}06` }">
-            <div class="tp-name" :style="{ color: item.color }">
-              {{ item.title }}
-            </div>
-            <div class="tp-level">{{ item.level }}</div>
-          </div>
-          <pre class="tp-code">{{ item.content }}</pre>
-          <div class="tp-tip">{{ item.tip }}</div>
-        </div>
-      </div>
-    </div>
-
     <!-- URL Parameter Reference -->
-    <div class="urlref-section">
+    <div v-if="showMechanisms" class="urlref-section">
       <div class="urlref-title">URL-Parameter-Referenz</div>
       <div class="urlref-grid">
         <div v-for="(p, i) in URL_PARAMS" :key="i" class="urlref-item">
@@ -321,16 +271,126 @@ const URL_PARAMS = [
         </div>
       </div>
     </div>
+
+    <!-- Drill-Down Navigation Map + Text Panels (zweite Folie des Splits) -->
+    <div v-if="showDrilldown" class="dd-wrap">
+      <div class="drilldown-section">
+        <div class="drilldown-title">
+          Drill-Down-Karte: RED / Golden Signals &rarr; USE
+        </div>
+        <div class="drilldown-desc">
+          Die Verlinkung folgt dem diagnostischen Trichter: Anomalie auf
+          Service-Level erkennen (RED/Golden), dann zur Ressourcen-Ebene
+          navigieren (USE), um die Root Cause zu finden.
+        </div>
+        <div class="drilldown-list">
+          <div
+            v-for="(link, i) in DRILL_DOWN_MAP"
+            :key="i"
+            class="dd-item"
+            :style="{
+              background: `${link.color}06`,
+              borderColor: `${link.color}12`,
+            }"
+          >
+            <div class="dd-flow">
+              <span class="dd-from">{{ link.from }}</span>
+              <span class="dd-arrow" :style="{ color: link.color }"
+                >&rarr;</span
+              >
+              <span class="dd-to" :style="{ color: link.color }">{{
+                link.to
+              }}</span>
+            </div>
+            <div class="dd-trigger">{{ link.trigger }}</div>
+            <div class="dd-badges">
+              <span class="dd-vars">{{ link.vars }}</span>
+              <span
+                class="dd-method"
+                :style="{ background: `${link.color}15`, color: link.color }"
+                >{{ link.method }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Panel Best Practices -->
+      <div class="textpanel-section">
+        <div class="textpanel-title">Text Panels: Was und wo</div>
+        <div class="textpanel-grid">
+          <div
+            v-for="(item, i) in TEXT_PANEL_EXAMPLES"
+            :key="i"
+            class="tp-item"
+            :style="{ borderColor: `${item.color}20` }"
+          >
+            <div class="tp-header" :style="{ background: `${item.color}06` }">
+              <div class="tp-name" :style="{ color: item.color }">
+                {{ item.title }}
+              </div>
+              <div class="tp-level">{{ item.level }}</div>
+            </div>
+            <pre class="tp-code">{{ item.content }}</pre>
+            <div class="tp-tip">{{ item.tip }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .linking-root {
-  /* Vier gestapelte Referenz-Sektionen passen nicht auf einen Canvas —
-   * bewusst scrollbar statt still abgeschnitten (Referenz-/Interaktiv-Slide). */
-  max-height: 440px;
-  overflow-y: auto;
   animation: fadeSlideIn 0.3s ease;
+}
+
+/* Folie 1 des Splits: drei Mechanismen nebeneinander statt gestapelt,
+ * darunter die URL-Parameter-Referenz — passt ohne Scrollen auf den Canvas. */
+.part-mechanisms .mechanisms-title {
+  /* doppelt mit dem Folientitel "Dashboard-Linking: Drei Mechanismen" */
+  display: none;
+}
+
+.part-mechanisms .urlref-tip {
+  /* Label und Text in einer Zeile statt gestapelt — spart Höhe */
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.part-mechanisms .urlref-tip-label {
+  white-space: nowrap;
+  margin-bottom: 0;
+}
+
+.part-mechanisms .mechanisms-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
+  gap: 8px;
+}
+
+.part-mechanisms .mechanism-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.part-mechanisms .mechanism-top {
+  flex: 1;
+}
+
+/* Folie 2 des Splits: Drill-Down-Karte links, Text-Panels rechts. */
+.part-drilldown .dd-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 10px;
+}
+
+.part-drilldown .drilldown-section,
+.part-drilldown .textpanel-section {
+  margin-bottom: 0;
 }
 
 @keyframes fadeSlideIn {
@@ -420,7 +480,7 @@ const URL_PARAMS = [
   background: #0d1117;
   font-size: 7px;
   color: #79c0ff;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   line-height: 1.5;
   overflow-x: auto;
   white-space: pre-wrap;
@@ -507,7 +567,7 @@ const URL_PARAMS = [
   border-radius: 2px;
   background: rgba(59, 130, 246, 0.06);
   color: v-bind("PALETTE.accent");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .dd-method {
@@ -566,7 +626,7 @@ const URL_PARAMS = [
   background: #0d1117;
   font-size: 7px;
   color: #adbac7;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   line-height: 1.4;
   overflow-x: auto;
   white-space: pre-wrap;
@@ -612,7 +672,7 @@ const URL_PARAMS = [
 .urlref-param {
   font-size: 7px;
   color: v-bind("PALETTE.accent");
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   word-break: break-all;
 }
 
@@ -635,7 +695,7 @@ const URL_PARAMS = [
   font-weight: 700;
   color: v-bind("PALETTE.green");
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 
 .urlref-tip-text {

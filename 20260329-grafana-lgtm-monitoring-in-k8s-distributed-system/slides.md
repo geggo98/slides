@@ -1,11 +1,18 @@
 ---
 theme: default
 title: "Grafana LGTM: Monitoring in Kubernetes Distributed Systems"
-lang: de
-hideInToc: true
 info: |
   LGTM Stack (Loki, Grafana, Tempo, Mimir) mit OpenTelemetry.
   Monitoring-Methodologien, Saturation, Systemdynamik und Dashboard-Architektur.
+monaco: true
+mdc: true
+lang: de
+transition: slide-left
+colorSchema: auto
+fonts:
+  sans: Inter
+  mono: 0xProto
+hideInToc: true
 ---
 
 # Grafana LGTM Stack
@@ -89,6 +96,17 @@ hideInToc: true
 # Monitoring-Methodologien — Interaktiv
 
 <MonitoringMethods />
+
+<!--
+- Bedienung: zwei Tabs oben — „Überblick & Zusammenhang“ (zentrale
+  Gleichung, RED/USE/Golden mit allen Signalen) und „Monitoring-Praxis“
+  (Schwellwerte, Hysterese-Alerting, XY-Charts). Inhalt ist scrollbar.
+- Zeigen: im Überblick die Gleichung Golden = RED + Saturation und die
+  zwei Errors-Perspektiven (User vs. Maschine); der diagnostische
+  Trichter RED → Golden → USE ist der rote Faden der nächsten Sektionen.
+- „Monitoring-Praxis“ nur anreißen — Schwellwerte und Hysterese kommen
+  später als eigene Sektionen ausführlich.
+-->
 
 ---
 layout: section
@@ -254,9 +272,7 @@ sum(container_memory_working_set_bytes{container!=""}) by (pod)
 
 **Immer** `container_memory_working_set_bytes` statt `container_memory_usage_bytes`!
 
-### Errors
-
-`rate(node_network_receive_errs_total[5m])` — Fehler auf Interface-Ebene (Drops, CRC).
+**Errors**: `rate(node_network_receive_errs_total[5m])` — Fehler auf Interface-Ebene (Drops, CRC).
 
 ---
 layout: section
@@ -341,6 +357,17 @@ hideInToc: true
 
 <SaturationSimulator />
 
+<!--
+- Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
+  Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider fährt das
+  Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
+  Gauges laufen mit. Slider auch manuell ziehbar.
+- Zeigen: „CPU-Throttling“ komplett durchspielen (GC-Verstärkung beim
+  JVM-Killer von eben!), danach „Kaskaden-Failure“ als Eskalation.
+- Unten „PromQL-Queries anzeigen“ aufklappen — die Queries entsprechen
+  den Schwellwerten der vorigen Folien; Gegenmaßnahmen-Box mitgeben.
+-->
+
 ---
 layout: section
 ---
@@ -367,7 +394,16 @@ hideInToc: true
 
 <style>
 table {
-  font-size: 0.86em;
+  font-size: 0.84em;
+}
+table td,
+table th {
+  padding-top: 0.35em;
+  padding-bottom: 0.35em;
+}
+h3 {
+  margin-top: 0.1em;
+  margin-bottom: 0.2em;
 }
 </style>
 
@@ -451,6 +487,16 @@ hideInToc: true
 
 <HystereseCatalog />
 
+<!--
+- Bedienung: Filter-Pills oben (Applikation, Infrastruktur, Netzwerk,
+  Kubernetes); Klick auf eine Karte klappt die Detail-Ansicht mit
+  Feedback-Loop auf. Die Kurven-Animation läuft von selbst.
+- Zeigen: „Cache-Stampede“ und „JVM GC Death Spiral“ aufklappen — die
+  zwei Mechanismen von der Tabelle der vorigen Folie, jetzt bewegt.
+- Hinweis: alle 15 Mechanismen teilen dasselbe Muster — interner
+  Zustand bleibt bestehen, obwohl die externe Last längst gesunken ist.
+-->
+
 ---
 clicks: false
 hideInToc: true
@@ -459,6 +505,16 @@ hideInToc: true
 # Systemdynamik — Interaktiv
 
 <SystemDynamicsSimulator />
+
+<!--
+- Bedienung: Tab „Simulation“: Szenario wählen (Queues als Federn,
+  Dirac-Impuls, Überlast + Recovery, Rolling Bottleneck), ▶ startet die
+  Pipeline-Animation Gateway → Quote-Service → Provider-Adapter.
+- Zeigen: „Dirac-Impuls“ (Batch = maximale Oszillation) und „Rolling
+  Bottleneck“ (der Engpass wandert) — die Kernaussagen der Sektion live.
+- Tab „M/M/1 & Regeln“: Kurve plus die drei Regeln (Excess Capacity,
+  Steady Flow, Hysterese) — als Abschluss der Sektion kurz zeigen.
+-->
 
 ---
 layout: section
@@ -475,14 +531,14 @@ hideInToc: true
 # Naive Alerts vs. Recovery Threshold
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
-<div style="padding: 16px; border-radius: 8px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+<Callout tone="danger">
 <h4 style="color: #ef4444; margin: 0 0 8px;">Naiver Alert</h4>
-<p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em;">"P99 > 500ms" feuert beim Hinaufgehen und resolved beim Heruntergehen. Bei 500ms auf dem Rückweg ist das System noch degradiert. Erzeugt Flapping.</p>
-</div>
-<div style="padding: 16px; border-radius: 8px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2);">
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">"P99 > 500ms" feuert beim Hinaufgehen und resolved beim Heruntergehen. Bei 500ms auf dem Rückweg ist das System noch degradiert. Erzeugt Flapping.</p>
+</Callout>
+<Callout tone="success">
 <h4 style="color: #22c55e; margin: 0 0 8px;">Mit Recovery Threshold</h4>
-<p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em;">Feuert bei P99 > 500ms, resolved erst bei P99 < 200ms. Asymmetrische Schwellen verhindern Flapping und stellen sicher, dass das System wirklich erholt ist.</p>
-</div>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Feuert bei P99 > 500ms, resolved erst bei P99 < 200ms. Asymmetrische Schwellen verhindern Flapping und stellen sicher, dass das System wirklich erholt ist.</p>
+</Callout>
 </div>
 
 ```yaml
@@ -534,35 +590,36 @@ hideInToc: true
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 0.6em;">
 
-  <div style="padding: 16px 18px; border-left: 3px solid #a855f7; background: rgba(168,85,247,0.08); border-radius: 6px;">
-    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 4px; line-height: 1.35;">
+  <!-- Lila ist kein Callout-Tone — Akzent per Inline-Style überschrieben. -->
+  <Callout style="border-left-color: #a855f7; background: rgba(168,85,247,0.08); padding: 16px 18px;">
+    <p style="font-style: italic; margin: 0 0 4px; line-height: 1.35;">
       «Все счастливые семьи похожи друг на друга, каждая несчастливая семья несчастлива по-своему.»
     </p>
-    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
+    <p style="font-style: italic; margin: 0 0 6px; line-height: 1.35;">
       „Alle glücklichen Familien sind einander ähnlich, jede unglückliche Familie ist auf ihre eigene Weise unglücklich.“
     </p>
-    <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
+    <p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em; margin: 0 0 10px;">
       — Lew Tolstoi, <em>Anna Karenina</em> (1878), Teil I, Kap. 1 · Übers. R. Tietze (2009) · Begriff „Anna-Karenina-Prinzip“: J. Diamond, <em>Guns, Germs, and Steel</em> (1997)
     </p>
-    <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
+    <p style="margin: 0; line-height: 1.4;">
       <strong>Glück hat eine Form, Unglück viele.</strong> Auf dem Haupt-Dashboard nicht alle Fehlerklassen auflisten — zeige <em>einen</em> Indikator: Ist der Service glücklich aus Sicht von End-Nutzern und SLOs?
     </p>
-  </div>
+  </Callout>
 
-  <div style="padding: 16px 18px; border-left: 3px solid #3b82f6; background: rgba(59,130,246,0.08); border-radius: 6px;">
-    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 4px; line-height: 1.35;">
+  <Callout tone="info" style="padding: 16px 18px;">
+    <p style="font-style: italic; margin: 0 0 4px; line-height: 1.35;">
       "A man with a watch knows what time it is. A man with two watches is never sure."
     </p>
-    <p style="font-style: italic; font-size: 0.85em; margin: 0 0 6px; line-height: 1.35;">
+    <p style="font-style: italic; margin: 0 0 6px; line-height: 1.35;">
       „Wer eine Uhr hat, weiß, wie spät es ist. Wer zwei Uhren hat, ist sich nie sicher.“
     </p>
-    <p style="font-size: 0.72em; color: #64748b; margin: 0 0 10px;">
+    <p class="text-slate-500 dark:text-slate-400" style="font-size: 0.85em; margin: 0 0 10px;">
       — Segal's Law (apokryph; häufig Lee Segall, KIXL Dallas, zugeschrieben)
     </p>
-    <p style="font-size: 0.85em; margin: 0; line-height: 1.4;">
+    <p style="margin: 0; line-height: 1.4;">
       <strong>Ein Status, eine Ampel.</strong> Zwei „Top-Level“-Statusanzeigen stiften Zweifel. Alles Diagnostische gehört tiefer ins Dashboard oder auf verlinkte Detail-Dashboards.
     </p>
-  </div>
+  </Callout>
 
 </div>
 
@@ -573,6 +630,17 @@ hideInToc: true
 # Dashboard-Hierarchie
 
 <DashboardHierarchy />
+
+<!--
+- Bedienung: links Ebene L1–L4 anklicken — rechts erscheint das
+  Beispiel-Layout der Ebene (Panels, Dashboard-Links, Methoden-Badge).
+  Alternativ unten der „Drill-Down“-Button für die nächste Ebene.
+- Zeigen: L1 Platform Overview — genau eine Ampel (Anna-Karenina /
+  Segal's Law von eben), dann L2 → L3 als Drill-Down-Pfad durchklicken.
+- Hinweis: pro Ebene wechselt die Methode — L1/L2 RED bzw. Golden
+  Signals (User-Sicht), L3/L4 USE (Ressourcen-Sicht). Links unten der
+  Sizing-Spickzettel fürs 24-Spalten-Grid.
+-->
 
 ---
 hideInToc: true
@@ -586,14 +654,31 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Dashboard-Linking
+# Dashboard-Linking: Drei Mechanismen
 
-<DashboardLinking />
+<DashboardLinking part="mechanisms" />
 
 <!--
-- Referenz-Slide: vier Linking-Sektionen (Mechanismen, Drill-Down-Karte,
-  Text-Panels, URL-Parameter). Bewusst scrollbar — beim Vortrag in die
-  relevante Sektion scrollen.
+- Referenz-Slide 1/2: die drei Linking-Mechanismen nebeneinander
+  (Dashboard Links, Data Links, externe Links), darunter die
+  URL-Parameter-Referenz.
+- Nicht jede Code-Zeile vorlesen — pro Mechanismus den Einsatzzweck
+  nennen, der Rest ist Nachschlage-Material.
+-->
+
+---
+hideInToc: true
+---
+
+# Dashboard-Linking: Drill-Down & Text-Panels
+
+<DashboardLinking part="drilldown" />
+
+<!--
+- Referenz-Slide 2/2: links die Drill-Down-Karte (RED/Golden → USE),
+  rechts Text-Panel-Beispiele pro Dashboard-Ebene.
+- Kernbotschaft: Verlinkung folgt dem diagnostischen Trichter — von der
+  Anomalie (Service-Level) zur Root Cause (Ressourcen-Level).
 -->
 
 ---

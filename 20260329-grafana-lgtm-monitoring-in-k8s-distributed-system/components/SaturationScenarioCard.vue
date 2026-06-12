@@ -17,7 +17,8 @@ const C = computed(() => {
     border: d ? "#1e2536" : "#e2e8f0",
     borderHi: d ? "#2a3350" : "#cbd5e1",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     green: d ? "#22c55e" : "#16a34a",
@@ -613,7 +614,7 @@ const scenario = computed(
   border: 1px solid var(--c-border);
   border-radius: 7px;
   padding: 10px 12px;
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
   color: var(--c-text);
   max-width: 420px;
 }
@@ -650,7 +651,7 @@ const scenario = computed(
   font-size: 7px;
   font-weight: 700;
   color: var(--c-orange);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   margin-right: 4px;
 }
 .trigger-text {
@@ -679,7 +680,7 @@ const scenario = computed(
 .phase-severity {
   font-size: 7px;
   font-weight: 700;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .phase-label {
   font-size: 7px;
@@ -703,11 +704,11 @@ const scenario = computed(
   font-size: 7px;
   font-weight: 600;
   color: var(--c-muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .metric-range {
   font-size: 7px;
   color: var(--c-text);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 </style>

@@ -27,7 +27,8 @@ const C = computed(() => {
     surfaceAlt: d ? "#161c2a" : "#f1f5f9",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     orange: d ? "#f97316" : "#ea580c",
@@ -83,7 +84,7 @@ const STAGE_COLORS = computed(() => [
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
 }
 .pipeline-node {
   padding: 6px 14px;

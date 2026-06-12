@@ -6,6 +6,7 @@
  */
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useDarkMode } from "@slidev/client";
+import Tabs from "@shared/components/Tabs.vue";
 
 /* ================================================================
    COLOR CONSTANTS
@@ -21,7 +22,8 @@ const C = computed(() => {
     surfaceAlt: d ? "#161c2a" : "#f1f5f9",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     blueDim: d ? "rgba(59,130,246,0.12)" : "rgba(37,99,235,0.08)",
@@ -463,23 +465,17 @@ const takeaways = computed(() => [
       <h1 class="title">Warteschlangen, Oszillation, Hysterese</h1>
     </div>
 
-    <!-- Tabs -->
-    <div class="tab-bar">
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'sim' }"
-        @click="activeTab = 'sim'"
-      >
-        Simulation
-      </button>
-      <button
-        class="tab-btn"
-        :class="{ active: activeTab === 'theory' }"
-        @click="activeTab = 'theory'"
-      >
-        M/M/1 &amp; Regeln
-      </button>
-    </div>
+    <!-- Tabs: shared Komponente, Panels bleiben als v-if-Geschwister unten
+         (Zustand via v-model). Optik via --sk-tab-* im scoped Style. -->
+    <Tabs
+      v-model="activeTab"
+      class="sd-tabs"
+      :tabs="[
+        { key: 'sim', label: 'Simulation' },
+        { key: 'theory', label: 'M/M/1 & Regeln' },
+      ]"
+      aria-label="Simulator-Ansichten"
+    />
 
     <!-- TAB: Simulation -->
     <template v-if="activeTab === 'sim'">
@@ -593,7 +589,7 @@ const takeaways = computed(() => [
               y="50"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               0s
             </text>
@@ -603,7 +599,7 @@ const takeaways = computed(() => [
               text-anchor="end"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               {{ (sim.steps * dt).toFixed(0) }}s
             </text>
@@ -664,7 +660,7 @@ const takeaways = computed(() => [
               y="57"
               style="font-size: 6px"
               :fill="C.green"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               Input
             </text>
@@ -682,7 +678,7 @@ const takeaways = computed(() => [
                 y="57"
                 style="font-size: 6px"
                 :fill="STAGE_COLORS[i]"
-                font-family="'JetBrains Mono', monospace"
+                class="mono-label"
               >
                 {{ st.name }}
               </text>
@@ -731,7 +727,7 @@ const takeaways = computed(() => [
               y="50"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               0s
             </text>
@@ -741,7 +737,7 @@ const takeaways = computed(() => [
               text-anchor="end"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               {{ (sim.steps * dt).toFixed(0) }}s
             </text>
@@ -781,7 +777,7 @@ const takeaways = computed(() => [
                 y="57"
                 style="font-size: 6px"
                 :fill="STAGE_COLORS[i]"
-                font-family="'JetBrains Mono', monospace"
+                class="mono-label"
               >
                 {{ st.name }}
               </text>
@@ -830,7 +826,7 @@ const takeaways = computed(() => [
               y="50"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               0s
             </text>
@@ -840,7 +836,7 @@ const takeaways = computed(() => [
               text-anchor="end"
               style="font-size: 7px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               {{ (sim.steps * dt).toFixed(0) }}s
             </text>
@@ -880,7 +876,7 @@ const takeaways = computed(() => [
                 y="57"
                 style="font-size: 6px"
                 :fill="STAGE_COLORS[i]"
-                font-family="'JetBrains Mono', monospace"
+                class="mono-label"
               >
                 {{ st.name }}
               </text>
@@ -1095,7 +1091,7 @@ const takeaways = computed(() => [
                 text-anchor="end"
                 style="font-size: 10px"
                 :fill="C.dim"
-                font-family="'JetBrains Mono', monospace"
+                class="mono-label"
               >
                 {{ f }}x
               </text>
@@ -1132,7 +1128,7 @@ const takeaways = computed(() => [
               style="font-size: 10px"
               :fill="C.orange"
               font-weight="700"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               80%
             </text>
@@ -1158,7 +1154,7 @@ const takeaways = computed(() => [
               text-anchor="end"
               style="font-size: 8px"
               :fill="C.dim"
-              font-family="'JetBrains Mono', monospace"
+              class="mono-label"
             >
               T = S/(1-p)
             </text>
@@ -1178,7 +1174,7 @@ const takeaways = computed(() => [
                 style="font-size: 8px"
                 :fill="C.blue"
                 font-weight="700"
-                font-family="'JetBrains Mono', monospace"
+                class="mono-label"
               >
                 {{ (hovU * 100).toFixed(0) }}%={{ mm1HoverF.toFixed(1) }}x
               </text>
@@ -1239,7 +1235,12 @@ const takeaways = computed(() => [
 
 <style scoped>
 /* All sizes scaled ~65% for 960x540 Slidev viewport */
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap");
+
+/* SVG-Achsen-Labels in der Deck-Code-Schrift (ersetzt das frühere JetBrains
+ * Mono aus dem Google-Fonts-Laufzeit-Import). */
+.mono-label {
+  font-family: var(--slidev-code-font-family);
+}
 
 @keyframes fadeIn {
   from {
@@ -1261,7 +1262,7 @@ const takeaways = computed(() => [
 .sim-root {
   background: var(--c-bg);
   color: var(--c-text);
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
   padding: 10px 12px 16px;
   max-width: 960px;
   margin: 0 auto;
@@ -1300,7 +1301,7 @@ const takeaways = computed(() => [
   color: var(--c-orange);
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .title {
   font-size: 15px;
@@ -1316,28 +1317,27 @@ const takeaways = computed(() => [
 }
 
 /* Tabs */
-.tab-bar {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 8px;
+/* Shared-Tabs-Optik: exakt die frühere .tab-btn-Pill (Surface-Pille,
+ * orange im aktiven Zustand). --c-*-Variablen kommen vom Root-Element. */
+.sd-tabs {
+  --sk-tab-gap: 4px;
+  --sk-tab-bar-mb: 8px;
+  --sk-tab-pad: 4px 12px;
+  --sk-tab-radius: 4px;
+  --sk-tab-border: 1px solid var(--c-border);
+  --sk-tab-bg: var(--c-surface);
+  --sk-tab-hover-bg: var(--c-surface);
+  --sk-tab-color: var(--c-muted);
+  --sk-tab-font-size: 8px;
+  --sk-tab-font-weight: 700;
+  --sk-tab-transition: all 0.2s ease;
+  --sk-tab-active-bg: rgba(249, 115, 22, 0.08);
+  --sk-tab-active-border: var(--c-orange);
+  --sk-tab-active-color: var(--c-orange);
 }
-.tab-btn {
-  padding: 4px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--c-border);
-  background: var(--c-surface);
-  color: var(--c-muted);
-  font-size: 8px;
-  font-weight: 700;
-  cursor: pointer;
+.sd-tabs :deep(button.sk-tab) {
   outline: none;
-  font-family: "JetBrains Mono", monospace;
-  transition: all 0.2s ease;
-}
-.tab-btn.active {
-  background: rgba(249, 115, 22, 0.08);
-  border-color: var(--c-orange);
-  color: var(--c-orange);
+  font-family: var(--slidev-code-font-family);
 }
 
 /* Scenario selector */
@@ -1434,7 +1434,7 @@ const takeaways = computed(() => [
 .time-label {
   font-size: 7px;
   color: var(--c-muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
   min-width: 28px;
 }
 
@@ -1498,7 +1498,7 @@ const takeaways = computed(() => [
   font-weight: 700;
   color: var(--c-yellow);
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .phase-svg {
   width: 100%;
@@ -1518,7 +1518,7 @@ const takeaways = computed(() => [
   font-weight: 700;
   color: var(--c-orange);
   margin-bottom: 2px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--slidev-code-font-family);
 }
 .insight-text {
   font-size: 7px;

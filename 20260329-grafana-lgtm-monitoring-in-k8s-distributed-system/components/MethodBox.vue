@@ -19,7 +19,8 @@ const C = computed(() => {
     surface: d ? "#111621" : "#ffffff",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
   };
 });
 </script>
@@ -54,7 +55,7 @@ const C = computed(() => {
             background: colorDim,
             color: color,
             border: `1px solid ${color}30`,
-            fontFamily: `'JetBrains Mono', monospace`,
+            fontFamily: 'var(--slidev-code-font-family)',
             letterSpacing: '0.7px',
           }"
           >{{ tag }}</span

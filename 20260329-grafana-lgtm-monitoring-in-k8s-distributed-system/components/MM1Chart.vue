@@ -15,7 +15,8 @@ const C = computed(() => {
     surface: d ? "#111621" : "#ffffff",
     border: d ? "#1e2536" : "#e2e8f0",
     text: d ? "#e2e8f0" : "#1e293b",
-    muted: "#64748b",
+    // Dark: #64748b erreicht auf dunkler Surface nur ~4:1 — heller abgestuft.
+    muted: d ? "#94a3b8" : "#64748b",
     dim: d ? "#3e4a63" : "#94a3b8",
     blue: d ? "#3b82f6" : "#2563eb",
     green: d ? "#22c55e" : "#16a34a",
@@ -127,7 +128,7 @@ const gridFracs = [2, 5, 10];
           text-anchor="end"
           style="font-size: 10px"
           :fill="C.dim"
-          font-family="'JetBrains Mono', monospace"
+          class="mono-label"
         >
           {{ f }}x
         </text>
@@ -168,7 +169,7 @@ const gridFracs = [2, 5, 10];
         style="font-size: 10px"
         :fill="C.orange"
         font-weight="700"
-        font-family="'JetBrains Mono', monospace"
+        class="mono-label"
       >
         80%
       </text>
@@ -200,7 +201,7 @@ const gridFracs = [2, 5, 10];
         text-anchor="end"
         style="font-size: 11px"
         :fill="C.dim"
-        font-family="'JetBrains Mono', monospace"
+        class="mono-label"
       >
         T = S/(1-p)
       </text>
@@ -222,7 +223,7 @@ const gridFracs = [2, 5, 10];
           style="font-size: 11px"
           :fill="C.blue"
           font-weight="700"
-          font-family="'JetBrains Mono', monospace"
+          class="mono-label"
         >
           {{ (hoveredU * 100).toFixed(0) }}%={{ hoverF.toFixed(1) }}x
         </text>
@@ -250,7 +251,12 @@ const gridFracs = [2, 5, 10];
 
 <style scoped>
 .mm1-chart-wrap {
-  font-family: "DM Sans", "Segoe UI", system-ui, sans-serif;
+  font-family: inherit;
+}
+/* Achsen-Labels in der Deck-Code-Schrift (ersetzt das frühere JetBrains
+ * Mono aus dem Google-Fonts-Laufzeit-Import). */
+.mono-label {
+  font-family: var(--slidev-code-font-family);
 }
 .mm1-title {
   font-size: 12px;
