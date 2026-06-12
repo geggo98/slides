@@ -1,0 +1,918 @@
+{
+  "id": "gradle-deps-2026",
+  "title": "Gradle Dependency Resolution Selbsttest",
+  "questions": [
+    {
+      "id": "locking-grundlagen",
+      "question": "Was leistet Gradle Dependency Locking laut dem Talk?",
+      "difficulty": "easy",
+      "section": "Resolution & Locking",
+      "explanation": "Dependency Locking fixiert die aufgelösten Versionen — inklusive aller transitiven Abhängigkeiten — in einer `gradle.lockfile` pro (Sub-)Projekt und macht die Resolution damit reproduzierbar.",
+      "options": [
+        {
+          "id": "locking-grundlagen-o1",
+          "text": "Das Lock-File fixiert die aufgelösten Versionen aller Abhängigkeiten, einschließlich der transitiven.",
+          "verdict": "true",
+          "explanation": "Genau das ist der Zweck: `gradle.lockfile` hält den exakten Abhängigkeitsbaum fest, nicht nur die direkt deklarierten Dependencies."
+        },
+        {
+          "id": "locking-grundlagen-o2",
+          "text": "Pro (Sub-)Projekt entsteht eine eigene `gradle.lockfile`.",
+          "verdict": "true",
+          "explanation": "Der Lock State liegt pro (Sub-)Projekt vor — jedes Teilprojekt bekommt seine eigene Datei mit seinem exakten Abhängigkeitsbaum."
+        },
+        {
+          "id": "locking-grundlagen-o3",
+          "text": "Mit `./gradlew dependencies --write-locks` erzeugst oder aktualisierst du das Lock-File.",
+          "verdict": "true",
+          "explanation": "Das ist der zentrale Befehl aus dem Talk, um den Lock State zu schreiben — ohne dieses Flag wird das Lock-File nie verändert."
+        },
+        {
+          "id": "locking-grundlagen-o4",
+          "text": "Dependency Locking ist in jedem Gradle-Build automatisch aktiv.",
+          "verdict": "false",
+          "explanation": "Locking muss explizit aktiviert werden, etwa über `dependencyLocking { lockAllConfigurations() }` oder selektiv per `resolutionStrategy.activateDependencyLocking()`."
+        },
+        {
+          "id": "locking-grundlagen-o5",
+          "text": "Das Lock-File prüft auch SHA-256-Hashes der Artefakte.",
+          "verdict": "false",
+          "explanation": "Integritätsprüfung per SHA-256 und PGP ist Aufgabe der Verification Metadata in `verification-metadata.xml` — das Lock-File fixiert nur Versionen."
+        },
+        {
+          "id": "locking-grundlagen-o6",
+          "text": "Das Lock-File liegt global unter `~/.gradle` und gilt für alle Projekte des Rechners.",
+          "verdict": "false",
+          "explanation": "Das Lock-File gehört ins Projekt (pro Sub-Projekt eine Datei) und wird mit committet — nur so funktioniert es als gemeinsame, reviewbare Wahrheitsquelle."
+        },
+        {
+          "id": "locking-grundlagen-o7",
+          "text": "Ein fehlendes Lock-File lässt den Build fehlschlagen.",
+          "verdict": "depends",
+          "explanation": "Das hängt vom LockMode ab: Mit `LockMode.STRICT` schlägt der Build fehl, wenn das Lock-File fehlt oder veraltet ist — ohne STRICT nicht zwingend."
+        },
+        {
+          "id": "locking-grundlagen-o8",
+          "text": "Eine im Lock-File stehende Abhängigkeit ist damit vollständig fixiert.",
+          "verdict": "depends",
+          "explanation": "Bei Releases ja — bei Snapshots fixiert das Lock-File nur den Namen, nicht den Inhalt, weil jeder neue Timestamp neuen Inhalt bedeuten kann."
+        }
+      ]
+    },
+    {
+      "id": "lockmode-strict",
+      "question": "Wie verhält sich Dependency Locking mit `LockMode.STRICT` und wie aktivierst du es?",
+      "difficulty": "medium",
+      "section": "Resolution & Locking",
+      "explanation": "Aktiviert wird Locking über `dependencyLocking { lockAllConfigurations(); lockMode.set(LockMode.STRICT) }`; STRICT lässt den Build fehlschlagen, wenn das Lock-File fehlt oder veraltet ist.",
+      "options": [
+        {
+          "id": "lockmode-strict-o1",
+          "text": "Mit `LockMode.STRICT` schlägt der Build fehl, wenn das Lock-File fehlt oder veraltet ist.",
+          "verdict": "true",
+          "explanation": "Genau das ist die Semantik von STRICT aus dem Talk — der Build verweigert sich, statt stillschweigend ohne bzw. mit veraltetem Lock State zu laufen."
+        },
+        {
+          "id": "lockmode-strict-o2",
+          "text": "`lockAllConfigurations()` aktiviert das Locking für alle Konfigurationen des Projekts.",
+          "verdict": "true",
+          "explanation": "Der Aufruf im `dependencyLocking {}`-Block schaltet Locking pauschal für alle Konfigurationen ein, statt jede einzeln zu konfigurieren."
+        },
+        {
+          "id": "lockmode-strict-o3",
+          "text": "Alternativ kannst du Locking selektiv aktivieren, z.B. via `configurations.compileClasspath { resolutionStrategy.activateDependencyLocking() }`.",
+          "verdict": "true",
+          "explanation": "Der Talk zeigt genau diesen selektiven Weg für den Fall, dass nur bestimmte Konfigurationen gelockt werden sollen."
+        },
+        {
+          "id": "lockmode-strict-o4",
+          "text": "STRICT aktualisiert das Lock-File bei jedem Build automatisch.",
+          "verdict": "false",
+          "explanation": "Das Lock-File wird ausschließlich über `--write-locks` geschrieben — STRICT verschärft nur die Prüfung, es schreibt nichts."
+        },
+        {
+          "id": "lockmode-strict-o5",
+          "text": "STRICT verifiziert zusätzlich die SHA-256-Hashes der Artefakte.",
+          "verdict": "false",
+          "explanation": "Hash- und Signaturprüfung sind Sache der Verification Metadata — LockMode betrifft ausschließlich den Versions-Lock-State."
+        },
+        {
+          "id": "lockmode-strict-o6",
+          "text": "Ohne STRICT ist Dependency Locking komplett wirkungslos.",
+          "verdict": "false",
+          "explanation": "Auch ohne STRICT wird gegen den vorhandenen Lock State aufgelöst — STRICT verschärft nur die Reaktion auf fehlende oder veraltete Lock-Files zum harten Build-Fehler."
+        },
+        {
+          "id": "lockmode-strict-o7",
+          "text": "STRICT sofort in einem Projekt ohne Lock-Files einzuschalten ist eine gute Idee.",
+          "verdict": "depends",
+          "explanation": "Erst müssen die Lock-Files per `--write-locks` existieren — sonst schlägt mit STRICT jeder Build fehl; die Reihenfolge der Einführung entscheidet."
+        },
+        {
+          "id": "lockmode-strict-o8",
+          "text": "Ob du alle oder nur einzelne Konfigurationen lockst, ist eine Projektentscheidung.",
+          "verdict": "depends",
+          "explanation": "Der Talk zeigt beide Wege — `lockAllConfigurations()` als Rundum-Lösung und die selektive Aktivierung, wenn nur bestimmte Klassenpfade reproduzierbar sein müssen."
+        }
+      ]
+    },
+    {
+      "id": "resolution-highest-wins",
+      "question": "Wie löst Gradle Versionskonflikte auf und wo greifen BOM-Constraints ein?",
+      "difficulty": "medium",
+      "section": "Resolution & Locking",
+      "explanation": "Gradles Default-Strategie ist „highest version wins“; BOM-Constraints greifen separat in die Resolution ein, und eine BOM-Änderung (z.B. neue Spring-Boot-Version) verschiebt Dutzende transitive Versionen auf einmal.",
+      "options": [
+        {
+          "id": "resolution-highest-wins-o1",
+          "text": "Gradles Default-Resolution-Strategie ist „highest version wins“.",
+          "verdict": "true",
+          "explanation": "So beschreibt es der Talk in den Kernbegriffen — bei Versionskonflikten gewinnt standardmäßig die höchste Version."
+        },
+        {
+          "id": "resolution-highest-wins-o2",
+          "text": "BOM-Constraints greifen separat von der Konfliktstrategie in die Resolution ein.",
+          "verdict": "true",
+          "explanation": "Die BOM liefert Versions-Constraints über die Constraint-Engine — das ist ein eigener Mechanismus neben der „highest wins“-Konfliktauflösung."
+        },
+        {
+          "id": "resolution-highest-wins-o3",
+          "text": "Änderst du die Spring-Boot-Version, ändern sich über die BOM Dutzende transitive Versionen — danach musst du das Lock-File neu generieren.",
+          "verdict": "true",
+          "explanation": "Der Talk betont genau diese Kette: neue BOM → neue transitive Versionen → `--write-locks` plus Review des Lock-File-Diffs."
+        },
+        {
+          "id": "resolution-highest-wins-o4",
+          "text": "Im Konfliktfall nimmt Gradle standardmäßig die im Baum „nächstgelegene“ Version.",
+          "verdict": "false",
+          "explanation": "Das beschreibt Mavens „nearest wins“-Logik — Gradle wählt per Default die höchste Version, nicht die nächstgelegene."
+        },
+        {
+          "id": "resolution-highest-wins-o5",
+          "text": "Das Lock-File ändert die Konfliktstrategie und erzwingt immer die niedrigste Version.",
+          "verdict": "false",
+          "explanation": "Das Lock-File fixiert nur das Ergebnis der Resolution — es ist keine Konfliktstrategie und bevorzugt schon gar nicht niedrige Versionen."
+        },
+        {
+          "id": "resolution-highest-wins-o6",
+          "text": "BOM-Versionen lassen sich in Gradle grundsätzlich nicht überschreiben.",
+          "verdict": "false",
+          "explanation": "Der Talk zeigt mehrere Override-Wege: `constraints {}`, `enforcedPlatform()`, `ext[\"…\"]` (mit Spring-Plugin) und `resolutionStrategy.force(...)`."
+        },
+        {
+          "id": "resolution-highest-wins-o7",
+          "text": "Ob `platform()` oder das Spring-Plugin die BOM-Version setzt, hängt von den im Build aktiven Mechanismen ab.",
+          "verdict": "depends",
+          "explanation": "Es hängt vom Rang der beteiligten Mechanismen ab: `platform()` hat Rang 5, das Spring-Plugin Rang 6, `enforcedPlatform()` Rang 7 — welche aktiv sind, entscheidet das Ergebnis."
+        },
+        {
+          "id": "resolution-highest-wins-o8",
+          "text": "„Highest version wins“ liefert ein deterministisches Ergebnis.",
+          "verdict": "depends",
+          "explanation": "Bei Release-Versionen ja — sobald Snapshots oder dynamische Versionen im Spiel sind, wird die Auswahl laut Talk non-deterministisch."
+        }
+      ]
+    },
+    {
+      "id": "platform-nativ",
+      "question": "Was stimmt über den nativen BOM-Import mit `platform()`?",
+      "difficulty": "easy",
+      "section": "BOM vs Catalog vs ext",
+      "explanation": "`platform()` ist seit Gradle 5.0 (2018) der native BOM-Import und arbeitet über Gradles Constraint-Engine als Teil der Resolution — im Gegensatz zum älteren Spring-Plugin mit seiner internen Versions-Map.",
+      "options": [
+        {
+          "id": "platform-nativ-o1",
+          "text": "`platform()` ist der native BOM-Import und existiert seit Gradle 5.0 (2018).",
+          "verdict": "true",
+          "explanation": "So steht es in der Vergleichstabelle des Talks — vor 5.0 konnte Gradle keine BOMs importieren, weshalb das Spring-Plugin entstand."
+        },
+        {
+          "id": "platform-nativ-o2",
+          "text": "`platform()` nutzt Gradles Constraint-Engine und wirkt während der Resolution.",
+          "verdict": "true",
+          "explanation": "Die BOM-Versionen werden als Constraints Teil der Resolution — anders als die interne Map des Spring-Plugins, die vor der Resolution injiziert wird."
+        },
+        {
+          "id": "platform-nativ-o3",
+          "text": "`enforcedPlatform()` ist die härtere Variante mit höherem Rang (7).",
+          "verdict": "true",
+          "explanation": "`enforcedPlatform()` steht im Talk auf Rang 7 und übersteuert damit sowohl `platform()` (Rang 5) als auch das Spring-Plugin (Rang 6)."
+        },
+        {
+          "id": "platform-nativ-o4",
+          "text": "`platform()` injiziert Versionen über eine interne `group:artifact → version`-Map vor der Resolution.",
+          "verdict": "false",
+          "explanation": "Das beschreibt den Mechanismus des Spring Dependency Management Plugins — `platform()` arbeitet stattdessen über die Constraint-Engine während der Resolution."
+        },
+        {
+          "id": "platform-nativ-o5",
+          "text": "`platform()` gibt es erst seit Gradle 8.",
+          "verdict": "false",
+          "explanation": "Der native BOM-Support kam bereits mit Gradle 5.0 im Jahr 2018 — nicht erst mit Gradle 8."
+        },
+        {
+          "id": "platform-nativ-o6",
+          "text": "Für einen BOM-Import in Gradle brauchst du zwingend das Spring-Plugin.",
+          "verdict": "false",
+          "explanation": "Seit Gradle 5.0 ist `implementation(platform(...))` der idiomatische Weg — das Spring-Plugin ist nur noch historisch bzw. für `ext`-Overrides relevant."
+        },
+        {
+          "id": "platform-nativ-o7",
+          "text": "Ob du `platform()` oder `enforcedPlatform()` brauchst, hängt von deinem Ziel ab.",
+          "verdict": "depends",
+          "explanation": "`enforcedPlatform()` (Rang 7) übersteuert auch eigene deklarierte Versionen — brauchst du das nicht, reicht das weichere `platform()` (Rang 5)."
+        },
+        {
+          "id": "platform-nativ-o8",
+          "text": "Das Spring-Plugin ist heute schlicht obsolet.",
+          "verdict": "depends",
+          "explanation": "Der Talk nennt es Legacy, aber es ist in Spring-Boot-Projekten weit verbreitet und für `ext`-Property-Overrides weiterhin der einzige Weg — der Kontext entscheidet."
+        }
+      ]
+    },
+    {
+      "id": "bom-rang-prioritaet",
+      "question": "Spring Dependency Management Plugin und natives `platform()` im selben Build — was passiert?",
+      "difficulty": "medium",
+      "section": "BOM vs Catalog vs ext",
+      "explanation": "Der Talk warnt: Beide Ansätze gemischt ergeben eine schwer vorhersagbare Resolution, weil das Spring-Plugin (Rang 6) `platform()` (Rang 5) stillschweigend übersteuert — nur `enforcedPlatform()` (Rang 7) sticht das Plugin.",
+      "options": [
+        {
+          "id": "bom-rang-prioritaet-o1",
+          "text": "Das Spring-Plugin (Rang 6) übersteuert `platform()` (Rang 5) stillschweigend.",
+          "verdict": "true",
+          "explanation": "Genau davor warnt der Talk: Die Übersteuerung passiert ohne Warnung, weil das Plugin seine Versionen vor der Resolution injiziert."
+        },
+        {
+          "id": "bom-rang-prioritaet-o2",
+          "text": "`enforcedPlatform()` (Rang 7) übersteuert auch das Spring-Plugin.",
+          "verdict": "true",
+          "explanation": "Mit Rang 7 steht `enforcedPlatform()` über dem Plugin (Rang 6) — es ist der härteste der drei Mechanismen."
+        },
+        {
+          "id": "bom-rang-prioritaet-o3",
+          "text": "Beide Ansätze im selben Build machen die Resolution schwer vorhersagbar.",
+          "verdict": "true",
+          "explanation": "Der Talk formuliert es als explizite Warnung: „Beide Ansätze im selben Build = schwer vorhersagbare Resolution“ — deshalb nicht mischen."
+        },
+        {
+          "id": "bom-rang-prioritaet-o4",
+          "text": "`platform()` übersteuert das Spring-Plugin.",
+          "verdict": "false",
+          "explanation": "Es ist genau umgekehrt: `platform()` hat Rang 5, das Plugin Rang 6 — das Plugin gewinnt."
+        },
+        {
+          "id": "bom-rang-prioritaet-o5",
+          "text": "Gradle gibt eine deutliche Warnung aus, wenn Plugin und `platform()` kollidieren.",
+          "verdict": "false",
+          "explanation": "Die Übersteuerung geschieht laut Talk stillschweigend — es gibt keine Warnung, was das Mischen so tückisch macht."
+        },
+        {
+          "id": "bom-rang-prioritaet-o6",
+          "text": "Die Ränge sind reine Dokumentation — zur Laufzeit gewinnt immer die höchste Versionsnummer.",
+          "verdict": "false",
+          "explanation": "„Highest wins“ gilt für Versionskonflikte zwischen Dependencies — welcher BOM-Mechanismus die Constraint setzt, entscheiden dagegen die Ränge 5/6/7."
+        },
+        {
+          "id": "bom-rang-prioritaet-o7",
+          "text": "Welche BOM-Version am Ende gewinnt, hängt von der Kombination der Mechanismen ab.",
+          "verdict": "depends",
+          "explanation": "Plugin über `platform()`, `enforcedPlatform()` über Plugin — ohne zu wissen, welche Mechanismen im Build aktiv sind, ist die Frage nicht beantwortbar."
+        },
+        {
+          "id": "bom-rang-prioritaet-o8",
+          "text": "Ob dir die stille Übersteuerung auffällt, hängt von deinem Workflow ab.",
+          "verdict": "depends",
+          "explanation": "Wer `dependencyInsight` nutzt und Lock-File-Diffs reviewt, sieht die Abweichung — wer nur baut, merkt nichts, weil Gradle nicht warnt."
+        }
+      ]
+    },
+    {
+      "id": "ext-properties-mechanik",
+      "question": "Wie funktionieren Extra Properties (`ext[\"…\"]`) als BOM-Override?",
+      "difficulty": "medium",
+      "section": "BOM vs Catalog vs ext",
+      "explanation": "`ext` ist eine `Map<String, Any?>` an jedem Gradle-Projekt; das Spring Dependency Management Plugin mappt Einträge wie `ext[\"jackson-bom.version\"]` auf die Maven-Properties der Spring-BOM — der native Override-Weg ist dagegen `constraints {}` oder `enforcedPlatform()`.",
+      "options": [
+        {
+          "id": "ext-properties-mechanik-o1",
+          "text": "`ext` ist eine `Map<String, Any?>` an jedem Gradle-Projekt — also nicht typsicher.",
+          "verdict": "true",
+          "explanation": "Werte kommen als `Any?` zurück und brauchen Casts; IDE-Support fehlt, wie die Vergleichstabelle im Talk zeigt."
+        },
+        {
+          "id": "ext-properties-mechanik-o2",
+          "text": "`ext[\"jackson-bom.version\"]` wird vom Dependency-Management-Plugin auf die Maven-Property der Spring-BOM gemappt.",
+          "verdict": "true",
+          "explanation": "Die Spring-BOM definiert Versionen über Maven-Properties wie `<jackson-bom.version>`; das Plugin übersetzt den `ext`-Eintrag in genau dieses Property."
+        },
+        {
+          "id": "ext-properties-mechanik-o3",
+          "text": "Der native Gradle-Weg für BOM-Overrides ist `constraints {}` oder `enforcedPlatform()`.",
+          "verdict": "true",
+          "explanation": "So fasst es der Talk zusammen: `ext[\"…\"]`/`force()` für die Spring-BOM, `constraints {}`/`enforcedPlatform()` als nativer Mechanismus für jede BOM."
+        },
+        {
+          "id": "ext-properties-mechanik-o4",
+          "text": "`ext[\"…\"]`-Overrides funktionieren auch mit `platform()` ohne das Spring-Plugin.",
+          "verdict": "false",
+          "explanation": "Ohne das Plugin gibt es niemanden, der das Property-Mapping durchführt — der `ext`-Eintrag bleibt dann ein wirkungsloser Map-Eintrag."
+        },
+        {
+          "id": "ext-properties-mechanik-o5",
+          "text": "`ext`-Zugriffe sind typsicher und haben guten IDE-Support.",
+          "verdict": "false",
+          "explanation": "Die Talk-Tabelle vergibt hier zwei rote Kreuze: `Any?` plus Cast, keine IDE-Unterstützung — das ist gerade der Schwachpunkt des Ansatzes."
+        },
+        {
+          "id": "ext-properties-mechanik-o6",
+          "text": "Extra Properties sind der von Gradle empfohlene, idiomatische Override-Weg für beliebige BOMs.",
+          "verdict": "false",
+          "explanation": "Sie überschreiben nur Spring-BOM-Properties via Plugin — idiomatisch und BOM-unabhängig sind `constraints {}` bzw. `enforcedPlatform()`."
+        },
+        {
+          "id": "ext-properties-mechanik-o7",
+          "text": "Ob du Variante B (Plugin) überhaupt brauchst, hängt von deinen Override-Anforderungen ab.",
+          "verdict": "depends",
+          "explanation": "Der Talk empfiehlt Variante A (natives `platform()`) als Default — B nur dann, wenn du `ext`-Property-Overrides wirklich benötigst."
+        },
+        {
+          "id": "ext-properties-mechanik-o8",
+          "text": "Welcher Override-Mechanismus passt, hängt vom gewählten BOM-Import ab.",
+          "verdict": "depends",
+          "explanation": "Mit Spring-Plugin stehen `ext[\"…\"]` und `force()` bereit, mit nativem `platform()` sind es `constraints {}` und `enforcedPlatform()` — der Import bestimmt die Optionen."
+        }
+      ]
+    },
+    {
+      "id": "catalog-vs-bom-aufloesung",
+      "question": "Im Catalog steht `jackson = \"2.18.3\"`, die Spring-BOM managt Jackson aber auch. Welche Version wird aufgelöst und was folgt daraus?",
+      "difficulty": "hard",
+      "section": "BOM vs Catalog vs ext",
+      "explanation": "Im Talk-Beispiel wird trotz Catalog-Eintrag 2.18.3 die BOM-Version 2.20.1 aufgelöst — der Catalog ist kein Constraint-Mechanismus; die pragmatische Lösung ist, für BOM-gemanagte Deps keine Version im Catalog anzugeben.",
+      "options": [
+        {
+          "id": "catalog-vs-bom-aufloesung-o1",
+          "text": "Aufgelöst wird die BOM-Version (im Talk-Beispiel 2.20.1), nicht die Catalog-Version 2.18.3.",
+          "verdict": "true",
+          "explanation": "Die BOM gewinnt, weil sie als Resolution-Constraint wirkt — der Catalog ist rein deklarativ und hat keinen Einfluss auf die Resolution."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o2",
+          "text": "Die pragmatische Lösung lautet: für BOM-gemanagte Deps keine Version im Catalog angeben.",
+          "verdict": "true",
+          "explanation": "So vermeidest du, dass der Catalog eine Version suggeriert, die nie aufgelöst wird — exakt die Empfehlung aus dem Talk."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o3",
+          "text": "Echtes Enforcement der Catalog-Version geht über `resolutionStrategy { force(libs.jackson.databind.get().toString()) }`.",
+          "verdict": "true",
+          "explanation": "Der Talk zeigt genau dieses Snippet: Erst `force()` macht aus dem Catalog-Eintrag eine erzwungene Version — der Catalog allein kann das nicht."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o4",
+          "text": "Der Catalog gewinnt, weil er näher an der Deklaration steht.",
+          "verdict": "false",
+          "explanation": "Es gibt keine solche „Nähe“-Regel — der Catalog nimmt an der Resolution gar nicht teil, deshalb setzt sich die BOM durch."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o5",
+          "text": "`version.ref` im Catalog wirkt wie ein Constraint in der Resolution.",
+          "verdict": "false",
+          "explanation": "`version.ref` ist nur eine deklarative Referenz innerhalb der TOML-Datei — ein Constraint entsteht erst über `constraints {}`, `platform()` oder `force()`."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o6",
+          "text": "Gradle bricht den Build ab, wenn Catalog- und BOM-Version voneinander abweichen.",
+          "verdict": "false",
+          "explanation": "Es gibt weder Fehler noch Warnung — die BOM gewinnt stillschweigend, was den Fallstrick gerade so gefährlich macht."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o7",
+          "text": "Ob die Catalog-Version aufgelöst wird, hängt von der Dependency ab.",
+          "verdict": "depends",
+          "explanation": "Ist die Dependency BOM-gemanagt, gewinnt die BOM; ist sie es nicht, greift die im Catalog deklarierte Version ganz normal."
+        },
+        {
+          "id": "catalog-vs-bom-aufloesung-o8",
+          "text": "`force()` ist hier die richtige Lösung.",
+          "verdict": "depends",
+          "explanation": "Es erzwingt zwar die Version, bricht aber die BOM-Kohärenz — ab dann trägst du die Kompatibilitäts-Verantwortung selbst, was nur manchmal gerechtfertigt ist."
+        }
+      ]
+    },
+    {
+      "id": "snapshot-sonderfall",
+      "question": "Was macht Snapshot-Versionen wie `1.3.0-SNAPSHOT` laut dem Talk zum Sonderfall?",
+      "difficulty": "easy",
+      "section": "Snapshots & Caching",
+      "explanation": "Snapshots sind mutable — jeder Build kann ein anderes Artefakt liefern — und Gradle behandelt sie wie dynamische Versionen (`1.+`), wodurch Lock-Files, Verification Metadata und Scanner systematisch unterwandert werden.",
+      "options": [
+        {
+          "id": "snapshot-sonderfall-o1",
+          "text": "`1.3.0-SNAPSHOT` ist mutable — jeder Build kann ein anderes Artefakt liefern.",
+          "verdict": "true",
+          "explanation": "Das ist die Kerndefinition aus dem Talk: Ein neuer Timestamp bedeutet potenziell neuen Inhalt unter demselben Versionsnamen."
+        },
+        {
+          "id": "snapshot-sonderfall-o2",
+          "text": "Gradle behandelt Snapshots wie dynamische Versionen (vergleichbar mit `1.+`).",
+          "verdict": "true",
+          "explanation": "Genau so ordnet der Talk Snapshots ein — sie teilen die Eigenschaften dynamischer Versionen inklusive Non-Determinismus."
+        },
+        {
+          "id": "snapshot-sonderfall-o3",
+          "text": "Mit Snapshots wird „highest version wins“ non-deterministisch.",
+          "verdict": "true",
+          "explanation": "Die Vergleichstabelle des Talks stellt Releases (deterministisch) und Snapshots (non-deterministisch) explizit gegenüber."
+        },
+        {
+          "id": "snapshot-sonderfall-o4",
+          "text": "Ein Lock-File fixiert bei Snapshots auch den Inhalt des Artefakts.",
+          "verdict": "false",
+          "explanation": "Es fixiert nur den Namen — der Inhalt kann sich mit jedem neuen Snapshot-Publish ändern, ohne dass das Lock-File es merkt."
+        },
+        {
+          "id": "snapshot-sonderfall-o5",
+          "text": "Releases sind genauso mutable wie Snapshots.",
+          "verdict": "false",
+          "explanation": "Releases sind immutable — genau dieser Unterschied macht Lock-Files und Verification Metadata für Releases verlässlich und für Snapshots nicht."
+        },
+        {
+          "id": "snapshot-sonderfall-o6",
+          "text": "Dependency-Scanner sind bei Snapshots genauso verlässlich wie bei Releases.",
+          "verdict": "false",
+          "explanation": "Der Talk nennt das Ergebnis „falsche Sicherheit“: Der gescannte Inhalt muss nicht dem entsprechen, der später tatsächlich gezogen wird."
+        },
+        {
+          "id": "snapshot-sonderfall-o7",
+          "text": "Ob Verification Metadata für eine Abhängigkeit greift, hängt von der Versionsart ab.",
+          "verdict": "depends",
+          "explanation": "Für immutable Releases funktioniert sie, für mutable Snapshots ist sie praktisch inkompatibel, weil sich der Hash mit jedem neuen Inhalt ändert."
+        },
+        {
+          "id": "snapshot-sonderfall-o8",
+          "text": "Snapshots im Build sind grundsätzlich verboten.",
+          "verdict": "depends",
+          "explanation": "In Feature-Branches und Integrations-Builds sind sie laut Talk in Ordnung — nur Richtung Produktion haben sie nichts verloren."
+        }
+      ]
+    },
+    {
+      "id": "snapshot-caching",
+      "question": "Wie steuert Gradle das Caching von Snapshot-Abhängigkeiten?",
+      "difficulty": "medium",
+      "section": "Snapshots & Caching",
+      "explanation": "Per Default cached Gradle changing modules 24 Stunden; `cacheChangingModulesFor(0, TimeUnit.SECONDS)` erzwingt in der CI immer frische Snapshots, und `--refresh-dependencies` umgeht den Cache komplett.",
+      "options": [
+        {
+          "id": "snapshot-caching-o1",
+          "text": "Das Default-Caching für Snapshots beträgt 24 Stunden.",
+          "verdict": "true",
+          "explanation": "So nennt es der Talk ausdrücklich — innerhalb dieses Fensters fragt Gradle nicht erneut beim Repository nach neuem Snapshot-Inhalt."
+        },
+        {
+          "id": "snapshot-caching-o2",
+          "text": "`cacheChangingModulesFor(0, TimeUnit.SECONDS)` sorgt in der CI für immer frische Snapshots.",
+          "verdict": "true",
+          "explanation": "Mit null Sekunden Cache-Dauer wird jeder Zugriff neu aufgelöst — das Talk-Snippet setzt das in `configurations.all { resolutionStrategy { … } }`."
+        },
+        {
+          "id": "snapshot-caching-o3",
+          "text": "`--refresh-dependencies` umgeht den Cache komplett.",
+          "verdict": "true",
+          "explanation": "Das Flag erzwingt das Neuauflösen unabhängig von Cache-Fristen — der Holzhammer für den Einzelfall."
+        },
+        {
+          "id": "snapshot-caching-o4",
+          "text": "Snapshots werden von Gradle nie gecacht.",
+          "verdict": "false",
+          "explanation": "Doch — per Default sogar 24 Stunden lang; genau deshalb braucht die CI eine explizite Konfiguration für frische Snapshots."
+        },
+        {
+          "id": "snapshot-caching-o5",
+          "text": "`--refresh-dependencies` aktualisiert auch das Lock-File.",
+          "verdict": "false",
+          "explanation": "Das Lock-File wird ausschließlich über `--write-locks` geschrieben — `--refresh-dependencies` betrifft nur den Cache."
+        },
+        {
+          "id": "snapshot-caching-o6",
+          "text": "`snapshotsOnly()` ist eine Caching-Einstellung.",
+          "verdict": "false",
+          "explanation": "`mavenContent { snapshotsOnly() }` ist ein Repository-Content-Filter zur Trennung von Snapshot-Repos (Dependency-Confusion-Schutz) — mit Caching hat er nichts zu tun."
+        },
+        {
+          "id": "snapshot-caching-o7",
+          "text": "Null Sekunden Cache-Dauer ist die richtige Einstellung.",
+          "verdict": "depends",
+          "explanation": "In der CI ja, weil dort Frische zählt — lokal kostet jeder Build dann unnötige Repository-Roundtrips; der Kontext entscheidet."
+        },
+        {
+          "id": "snapshot-caching-o8",
+          "text": "Immer den frischesten Snapshot zu ziehen ist wünschenswert.",
+          "verdict": "depends",
+          "explanation": "Für Integrationstests gegen den aktuellen Teamstand ja — für reproduzierbare Builds ist genau diese Frische das Problem, das der Talk beschreibt."
+        }
+      ]
+    },
+    {
+      "id": "scanner-lockfile-quelle",
+      "question": "Wie arbeiten Dependency-Scanner wie Snyk, Trivy, OWASP oder Dependabot mit Gradle-Projekten?",
+      "difficulty": "easy",
+      "section": "Supply-Chain",
+      "explanation": "Scanner lesen `gradle.lockfile` als Single Source of Truth und kennen damit jede transitive Abhängigkeit mit exakter Version — ohne dass im CI-Scanner-Step ein Gradle-Build laufen muss; veraltete Lock-Files erzeugen dabei blinde Flecken.",
+      "options": [
+        {
+          "id": "scanner-lockfile-quelle-o1",
+          "text": "Scanner lesen `gradle.lockfile` als Single Source of Truth und kennen so jede transitive Abhängigkeit mit exakter Version.",
+          "verdict": "true",
+          "explanation": "Genau dieses Zusammenspiel beschreibt der Talk: Das Lock-File liefert die vollständige Versionsliste für den CVE-Abgleich."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o2",
+          "text": "Im CI-Scanner-Step ist kein Gradle-Build nötig.",
+          "verdict": "true",
+          "explanation": "Weil das Lock-File die aufgelösten Versionen bereits enthält, kann der Scanner es direkt lesen — schneller und weniger fehleranfällig."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o3",
+          "text": "Veraltete Lock-Files erzeugen blinde Flecken, weil neue transitive Deps für den Scanner unsichtbar bleiben.",
+          "verdict": "true",
+          "explanation": "Der Talk nennt das ausdrücklich als Voraussetzung: Das Lock-File muss aktuell und committet sein, sonst meldet der Scanner gegen einen veralteten Stand."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o4",
+          "text": "Scanner müssen den vollständigen Build ausführen, um transitive Abhängigkeiten zu sehen.",
+          "verdict": "false",
+          "explanation": "Das ist gerade der Vorteil des Lock-Files: Es enthält den exakten aufgelösten Baum, ein Build im Scanner-Step entfällt."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o5",
+          "text": "Das Lock-File ist für Scanner irrelevant, weil sie ohnehin das Build-Script parsen.",
+          "verdict": "false",
+          "explanation": "Das Build-Script kennt die transitiven Versionen nicht — erst das Lock-File macht den vollständigen Baum maschinenlesbar."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o6",
+          "text": "Ein aktuelles Lock-File garantiert, dass keine CVEs im Projekt stecken.",
+          "verdict": "false",
+          "explanation": "Es macht Verwundbarkeiten nur auffindbar — der Scanner gleicht die Versionsliste gegen CVE-Datenbanken ab, beseitigt aber nichts."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o7",
+          "text": "Das Scanner-Ergebnis ist vollständig.",
+          "verdict": "depends",
+          "explanation": "Nur wenn das Lock-File aktuell und committet ist — sonst entstehen genau die blinden Flecken, vor denen der Talk warnt."
+        },
+        {
+          "id": "scanner-lockfile-quelle-o8",
+          "text": "Dem Scanner selbst kannst du blind vertrauen.",
+          "verdict": "depends",
+          "explanation": "Der Talk zeigt die Ironie am Trivy-Vorfall 2026: Der vertrauenswürdige Scanner wurde selbst zum Angriffsvektor — auch Scanner brauchen Least Privilege und Sandboxing."
+        }
+      ]
+    },
+    {
+      "id": "verification-metadata-basics",
+      "question": "Was leistet Gradles Verification Metadata (`verification-metadata.xml`)?",
+      "difficulty": "medium",
+      "section": "Supply-Chain",
+      "explanation": "`./gradlew --write-verification-metadata sha256,pgp` erzeugt `gradle/verification-metadata.xml` mit SHA-256-Hash und PGP-Signaturinfo pro Artefakt — gleiche Version mit anderem Inhalt lässt den Build fehlschlagen (Re-Upload-Schutz).",
+      "options": [
+        {
+          "id": "verification-metadata-basics-o1",
+          "text": "`./gradlew --write-verification-metadata sha256,pgp` erzeugt `gradle/verification-metadata.xml`.",
+          "verdict": "true",
+          "explanation": "Das ist der Befehl aus dem Talk — pro Artefakt werden SHA-256-Wert und PGP-Key-Information in der XML-Datei abgelegt."
+        },
+        {
+          "id": "verification-metadata-basics-o2",
+          "text": "Geprüft werden Checksum-Match und PGP-Signatur von einem bekannten Key.",
+          "verdict": "true",
+          "explanation": "Beide Prüfungen ergänzen sich: Der Hash bindet an den exakten Inhalt, die Signatur an den Publisher-Key."
+        },
+        {
+          "id": "verification-metadata-basics-o3",
+          "text": "Re-Upload-Schutz: Gleiche Version mit anderem Inhalt lässt den Build fehlschlagen.",
+          "verdict": "true",
+          "explanation": "Wird ein Artefakt unter identischer Version mit verändertem Inhalt neu hochgeladen, passt der gespeicherte Hash nicht mehr — der Build bricht ab."
+        },
+        {
+          "id": "verification-metadata-basics-o4",
+          "text": "Verification Metadata fixiert die Versionsnummern der Abhängigkeiten.",
+          "verdict": "false",
+          "explanation": "Versionen fixiert das Lock-File — die Verification Metadata prüft ausschließlich die Integrität der Artefakte."
+        },
+        {
+          "id": "verification-metadata-basics-o5",
+          "text": "Die Hashes landen in der Datei `gradle.lockfile`.",
+          "verdict": "false",
+          "explanation": "Sie stehen in `gradle/verification-metadata.xml` — das Lock-File und die Verification Metadata sind zwei getrennte Dateien mit getrennten Aufgaben."
+        },
+        {
+          "id": "verification-metadata-basics-o6",
+          "text": "Die PGP-Prüfung ersetzt die SHA-256-Prüfung vollständig.",
+          "verdict": "false",
+          "explanation": "Beide Mechanismen prüfen Unterschiedliches (Publisher-Key vs. exakter Inhalt) und werden im Talk bewusst kombiniert generiert."
+        },
+        {
+          "id": "verification-metadata-basics-o7",
+          "text": "Ob Verification Metadata in der Praxis greift, hängt von der Versionsart ab.",
+          "verdict": "depends",
+          "explanation": "Für immutable Releases ja — für Snapshots ist sie praktisch inkompatibel, weil sich der Hash mit jedem neuen Inhalt ändert."
+        },
+        {
+          "id": "verification-metadata-basics-o8",
+          "text": "Ob `sha256` allein reicht oder `pgp` dazukommt, ist eine Abwägung.",
+          "verdict": "depends",
+          "explanation": "Der Hash schützt gegen veränderten Inhalt, die Signatur bindet zusätzlich an den Publisher — der Talk generiert beide, der nötige Schutzgrad hängt vom Bedrohungsmodell ab."
+        }
+      ]
+    },
+    {
+      "id": "verification-generierung-fallstrick",
+      "question": "Welche Fallstricke lauern beim Generieren der Verification Metadata mit `--write-verification-metadata`?",
+      "difficulty": "hard",
+      "section": "Supply-Chain",
+      "explanation": "Der Befehl erfasst nur Konfigurationen, die der ausgeführte Task auflöst, und nur Artefakte, die tatsächlich heruntergeladen werden — `--dry-run` reicht für detached configurations (z.B. Checkstyle) nicht, und das typische Symptom ist „Dependency verification failed for configuration 'classpath'“.",
+      "options": [
+        {
+          "id": "verification-generierung-fallstrick-o1",
+          "text": "Erfasst werden nur Konfigurationen, die beim ausgeführten Task tatsächlich aufgelöst werden.",
+          "verdict": "true",
+          "explanation": "Deshalb ist `--write-verification-metadata sha256 assemble` unvollständig — `assemble` löst z.B. keine Test-Konfigurationen auf."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o2",
+          "text": "Gecachte Artefakte in `~/.gradle/caches` werden beim Schreiben übersprungen.",
+          "verdict": "true",
+          "explanation": "Erfasst wird nur, was während der Invocation wirklich heruntergeladen wird — was schon im Cache liegt, bekommt keinen Eintrag."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o3",
+          "text": "Das typische Symptom unvollständiger Metadaten ist „Dependency verification failed for configuration 'classpath'“.",
+          "verdict": "true",
+          "explanation": "Genau diese Fehlermeldung nennt der Talk als Erkennungszeichen dafür, dass beim Generieren Konfigurationen gefehlt haben."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o4",
+          "text": "`--dry-run` reicht in jedem Fall, um alle Konfigurationen zu erfassen.",
+          "verdict": "false",
+          "explanation": "Manche Plugins erzeugen detached configurations, die erst bei echter Task-Ausführung aufgelöst werden — der Talk warnt ausdrücklich, dass `--dry-run` dann nicht reicht."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o5",
+          "text": "`--refresh-dependencies` allein garantiert vollständige Erfassung.",
+          "verdict": "false",
+          "explanation": "Es forciert nur das Re-Checken changing modules — Konfigurationen, die deine aufgerufenen Tasks nicht auflösen, bleiben trotzdem unerfasst."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o6",
+          "text": "`./gradlew --write-verification-metadata sha256 assemble` erfasst auch die Test-Konfigurationen.",
+          "verdict": "false",
+          "explanation": "`assemble` löst keine Test-Konfigurationen auf — der Talk markiert genau diesen Aufruf als unvollständiges Negativbeispiel."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o7",
+          "text": "Ob `--dry-run` genügt, hängt von den eingesetzten Plugins ab.",
+          "verdict": "depends",
+          "explanation": "Plugins wie Checkstyle, JaCoCo oder ErrorProne arbeiten mit detached configurations und müssen echt laufen — ohne solche Plugins kann `--dry-run` reichen."
+        },
+        {
+          "id": "verification-generierung-fallstrick-o8",
+          "text": "Ein frisches `GRADLE_USER_HOME` via `mktemp` ist beim Generieren nötig.",
+          "verdict": "depends",
+          "explanation": "Nur wenn der offizielle Weg — alle CI-Tasks ausführen plus `--refresh-dependencies` — nicht reicht; der Talk führt es als Escape Hatch, nicht als Standard."
+        }
+      ]
+    },
+    {
+      "id": "cooldown-nexus-pep",
+      "question": "Warum greift uvs `exclude-newer`-Cooldown hinter einem Nexus-PyPI-Proxy nicht?",
+      "difficulty": "hard",
+      "section": "Supply-Chain",
+      "explanation": "uv braucht das Upload-Datum aus der PEP-691-JSON-API (`upload-time`), Nexus implementiert aber nur PEP 503 (HTML ohne Metadaten) — in Nexus-Umgebungen ist der Python-Cooldown deshalb wirkungslos; als Ersatz dienen Renovate/Dependabot-Cooldown plus Hash-Pinning in `uv.lock`.",
+      "options": [
+        {
+          "id": "cooldown-nexus-pep-o1",
+          "text": "uvs `exclude-newer` benötigt PEP 691 (JSON-Metadata mit `upload-time` pro Release).",
+          "verdict": "true",
+          "explanation": "Ohne das Upload-Datum aus der JSON-API kann uv schlicht nicht entscheiden, ob ein Release älter als der Cutoff ist."
+        },
+        {
+          "id": "cooldown-nexus-pep-o2",
+          "text": "Nexus implementiert nur PEP 503 (Simple HTML ohne Upload-Datum) — der uv-Cooldown greift dort nicht.",
+          "verdict": "true",
+          "explanation": "Die HTML-Variante enthält weder Upload-Zeitpunkte noch Provenance — uv kann das Alter nicht ermitteln, der Cooldown läuft ins Leere."
+        },
+        {
+          "id": "cooldown-nexus-pep-o3",
+          "text": "PEP-740-Attestations (Provenance) gibt es nur über die JSON-API — laut Talk-Tabelle unterstützt PEP 691 nur PyPI.org selbst.",
+          "verdict": "true",
+          "explanation": "Die Vergleichstabelle ordnet Attestations der PEP-691-Spalte zu und listet als deren Unterstützer ausschließlich PyPI.org — Mirrors und Proxies bleiben außen vor."
+        },
+        {
+          "id": "cooldown-nexus-pep-o4",
+          "text": "PEP 503 liefert das Upload-Datum pro Release mit.",
+          "verdict": "false",
+          "explanation": "Genau das fehlt: PEP 503 ist eine HTML-Seite mit Download-Links — Upload-Datum und Provenance sind ausdrücklich nicht enthalten."
+        },
+        {
+          "id": "cooldown-nexus-pep-o5",
+          "text": "Das Problem betrifft nur Nexus-Proxy-Repositories, nicht Hosted oder Group.",
+          "verdict": "false",
+          "explanation": "Der Talk stellt klar: Es betrifft alle Nexus-PyPI-Repositories — Hosted, Proxy und Group gleichermaßen."
+        },
+        {
+          "id": "cooldown-nexus-pep-o6",
+          "text": "In Nexus-Umgebungen gibt es folglich gar keinen Cooldown-Schutz für Python-Pakete.",
+          "verdict": "false",
+          "explanation": "Der paketmanager-seitige Cooldown fällt aus, aber der Talk nennt Alternativen: Renovate/Dependabot-Cooldown auf Repository-Ebene plus Hash-Pinning in `uv.lock`."
+        },
+        {
+          "id": "cooldown-nexus-pep-o7",
+          "text": "Ob `exclude-newer` funktioniert, hängt vom Registry-Backend ab.",
+          "verdict": "depends",
+          "explanation": "Gegen PyPI.org (PEP 691) funktioniert es, hinter einem PEP-503-only-Proxy wie Nexus nicht — dieselbe Konfiguration, zwei völlig verschiedene Ergebnisse."
+        },
+        {
+          "id": "cooldown-nexus-pep-o8",
+          "text": "Welcher Ersatzschutz passt, ist eine Abwägung im konkreten Setup.",
+          "verdict": "depends",
+          "explanation": "Repository-Ebene-Cooldown über Renovate/Dependabot und Hash-Pinning lassen sich kombinieren — was trägt, hängt von Toolchain und Unternehmensumgebung ab."
+        }
+      ]
+    },
+    {
+      "id": "transfer-clinejection-cooldown",
+      "question": "Im Talk „AI Coding Agents“ (gleicher Tag) wird der Clinejection-Vorfall gezeigt: `cline@2.3.0` wurde am 17. Februar 2026 um 03:26 publiziert und um 11:30 deprecated. Was bedeutet das für die Gradle-Schutzmatrix?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Das vergiftete npm-Paket lebte nur rund acht Stunden — ein 7-Tage-Cooldown (Minimum Release Age) hätte es garantiert nie installiert; das ist die Zeile „Minimum Release Age → frische kompromittierte Releases“ aus der Schutzmatrix dieses Talks, und beide Decks verlinken diese Brücke explizit.",
+      "options": [
+        {
+          "id": "transfer-clinejection-cooldown-o1",
+          "text": "`cline@2.3.0` lebte nur rund acht Stunden — ein 7-Tage-Cooldown hätte die vergiftete Version garantiert abgefangen.",
+          "verdict": "true",
+          "explanation": "Wer Releases erst nach sieben Tagen installiert, hätte das Paket nie gezogen — es war längst deprecated, bevor der Cooldown abgelaufen wäre."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o2",
+          "text": "Das ist exakt das Szenario der Schutzmatrix-Zeile „Minimum Release Age → frische kompromittierte Releases“.",
+          "verdict": "true",
+          "explanation": "Clinejection ist der Lehrbuchfall für diese Zeile: Ein frisch publiziertes bösartiges Release wird durch reines Abwarten gefiltert."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o3",
+          "text": "Beide Talks verweisen explizit aufeinander: gleiche Angriffsklasse, gleiches Vortragsdatum.",
+          "verdict": "true",
+          "explanation": "Der ai-agents-Talk verlinkt vom Clinejection-Zeitverlauf auf den Gradle-Supply-Chain-Teil, und dieser Talk verweist auf der Axios-Slide auf den Clinejection-Bonus."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o4",
+          "text": "Der Cooldown hätte nichts genützt, weil das Paket monatelang unentdeckt online war.",
+          "verdict": "false",
+          "explanation": "Das Gegenteil stimmt: Zwischen Publish (03:26) und Deprecation (11:30) lagen nur rund acht Stunden — weit innerhalb jedes sinnvollen Cooldown-Fensters."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o5",
+          "text": "Ein Cooldown schützt, indem er frische Pakete inhaltlich auf Malware scannt.",
+          "verdict": "false",
+          "explanation": "Cooldown scannt nichts — er wartet nur ab und nutzt aus, dass die Community kompromittierte Releases typischerweise binnen Stunden bis Tagen entdeckt."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o6",
+          "text": "Ein Gradle-Projekt hätte den Cooldown nativ in `gradle.properties` gesetzt.",
+          "verdict": "false",
+          "explanation": "Gradle hat kein natives Minimum Release Age — der Talk verweist auf Renovate (`minimumReleaseAge`) und Dependabot (`cooldown`) als Workaround."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o7",
+          "text": "Ein Cooldown allein reicht als Schutzschicht.",
+          "verdict": "depends",
+          "explanation": "Gegen opportunistische Angriffe wie Clinejection ja — gezielte Angreifer können ihn aussitzen, weshalb der Talk ihn als eine Schicht in Defense-in-Depth einordnet."
+        },
+        {
+          "id": "transfer-clinejection-cooldown-o8",
+          "text": "Wie du „7 Tage“ konfigurierst, hängt vom Ökosystem ab.",
+          "verdict": "depends",
+          "explanation": "npm will `7` (Tage), pnpm/Yarn `10080` (Minuten), Bun `604800` (Sekunden) — und Gradle-Projekte konfigurieren den Wert im Bot statt im Build-Tool."
+        }
+      ]
+    },
+    {
+      "id": "transfer-trivy-vertrauenskette",
+      "question": "Trivy taucht in diesem Talk als vertrauenswürdiger Lock-File-Scanner auf und wurde 2026 selbst zum Angriffsvektor. Welche Lehren ziehen beide Talks aus dieser invertierten Vertrauenskette?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Der Scanner, der `gradle.lockfile` liest, lief beim Angriff mit denselben Privilegien wie der Build und exfiltrierte CI/CD-Secrets — die gemeinsame Schlusslehre beider Talks ist Build-Sandbox plus Least Privilege für CI-Runner, nicht der Verzicht auf Scanner.",
+      "options": [
+        {
+          "id": "transfer-trivy-vertrauenskette-o1",
+          "text": "Derselbe Trivy, der hier als vertrauenswürdiger Lock-File-Scanner vorgestellt wird, wurde im März 2026 selbst zum Angriffsvektor.",
+          "verdict": "true",
+          "explanation": "Der Talk benennt die Ironie auf der Scanning-Slide ausdrücklich und verlinkt direkt auf das Trivy-→-LiteLLM-Fallbeispiel."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o2",
+          "text": "Die manipulierte `trivy-action` lief mit denselben Privilegien wie der Build — deshalb konnten CI/CD-Secrets abfließen.",
+          "verdict": "true",
+          "explanation": "Genau das ist die Pointe des Fallbeispiels: Ein Security-Tool mit Build-Privilegien ist im Kompromittierungsfall so gefährlich wie der Build selbst."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o3",
+          "text": "Beide Talks ziehen dieselbe Schlusslehre: Build-Sandbox und Least Privilege für CI-Runner.",
+          "verdict": "true",
+          "explanation": "Der Gradle-Talk fordert isolierte Container, Network-Policies und minimale Secrets — der ai-agents-Talk landet bei der OS-Sandbox für Agents bei derselben Architektur-Antwort."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o4",
+          "text": "Ein Scanner braucht prinzipbedingt Zugriff auf Produktions-Secrets.",
+          "verdict": "false",
+          "explanation": "Die Build-Sandbox-Empfehlungen sagen das Gegenteil: Secrets nur für den jeweiligen Deployment-Step injizieren — ein Lock-File-Scan braucht gar keine."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o5",
+          "text": "Das Lesen des Lock-Files war der Angriffsvektor.",
+          "verdict": "false",
+          "explanation": "Der Vektor waren die übernommenen Version-Tags der GitHub Action mit manipulierter Binary — das Lock-File-Lesen ist und bleibt harmlos."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o6",
+          "text": "Die richtige Konsequenz aus dem Vorfall ist, auf Dependency-Scanner zu verzichten.",
+          "verdict": "false",
+          "explanation": "Scanner bleiben in der Schutzmatrix die Antwort auf bekannte CVEs — die Lehre betrifft ihre Privilegien und ihr Pinning, nicht ihre Existenz."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o7",
+          "text": "SHA-Pinning der GitHub Action hätte vor dem Vorfall geschützt.",
+          "verdict": "depends",
+          "explanation": "Gegen das Umschreiben der 76 von 77 mutable Tags ja — wer dagegen einen bereits kompromittierten Commit-SHA gepinnt hätte, wäre trotzdem betroffen gewesen."
+        },
+        {
+          "id": "transfer-trivy-vertrauenskette-o8",
+          "text": "Wie viel Vertrauen ein Tool verdient, lässt sich an Popularität ablesen.",
+          "verdict": "depends",
+          "explanation": "32.000+ Stars und 100M+ Downloads haben Trivy nicht geschützt — entscheidend sind Privilegien-Scope und Pinning, Popularität vergrößert im Zweifel nur den Schaden."
+        }
+      ]
+    },
+    {
+      "id": "transfer-angriffsklasse-matrix",
+      "question": "Axios, Clinejection (aus dem ai-agents-Talk) und Trivy → LiteLLM folgen derselben Angriffsklasse. Welche Gradle-Schutzschicht adressiert welche Stufe?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Alle drei Vorfälle folgen dem Muster „kompromittierter Publishing-Weg → frische bösartige Release“; Cooldown adressiert die Frische, Verification Metadata Manipulation/Re-Upload, Repository Filtering Dependency Confusion und das Lock-File unbeabsichtigte Versionsänderungen — die Stufe „gestohlenes legitimes Token publiziert eine legitim aussehende Version“ deckt keine dieser Schichten allein ab.",
+      "options": [
+        {
+          "id": "transfer-angriffsklasse-matrix-o1",
+          "text": "Alle drei Vorfälle folgen dem Muster: kompromittierter Publishing-Weg → frische bösartige Release.",
+          "verdict": "true",
+          "explanation": "Vergiftetes `axios@1.14.1` aus der legitimen Registry, Clinejection über das gestohlene `NPM_RELEASE_TOKEN`, LiteLLM über gestohlene PyPI-Tokens — dreimal dieselbe Klasse."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o2",
+          "text": "Cooldown adressiert die Frische, Verification Metadata Manipulation/Re-Upload, Repository Filtering Dependency Confusion, Lock-File unbeabsichtigte Versionsänderungen.",
+          "verdict": "true",
+          "explanation": "Das ist exakt die Zuordnung der Schutzmatrix — jede Schicht deckt eine andere Stufe der Angriffskette ab, keine ersetzt die andere."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o3",
+          "text": "Gegen die Stufe „gestohlenes legitimes Token publiziert eine legitim aussehende Version“ hilft keine dieser Schichten direkt — hier greifen Token-Hygiene und Build-Sandbox.",
+          "verdict": "true",
+          "explanation": "Die Version kommt aus der legitimen Quelle, korrekt signiert und mit plausiblem Inhalt — verhindern lässt sich nur der Token-Diebstahl selbst (Least Privilege, Rotation, SHA-Pinning)."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o4",
+          "text": "Verification Metadata hätte die frischen bösartigen Releases als solche erkannt.",
+          "verdict": "false",
+          "explanation": "Sie erkennt nur Abweichungen von bekannten Hashes — für eine neue Version gibt es noch keinen Referenz-Hash, der Re-Upload-Schutz greift hier nicht."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o5",
+          "text": "Repository Filtering hätte die Axios-Kompromittierung verhindert.",
+          "verdict": "false",
+          "explanation": "Das vergiftete `axios@1.14.1` kam aus der legitimen npm-Registry unter dem legitimen Namen — Filtering schützt nur gegen falsche Quellen (Dependency Confusion)."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o6",
+          "text": "Ein Lock-File verhindert zuverlässig, dass ein Update die bösartige Version einführt.",
+          "verdict": "false",
+          "explanation": "Das Lock-File schützt nur vor unbeabsichtigten Änderungen — wer bewusst updated (oder einen Bot-PR merged), lockt die bösartige Version ganz regulär ein."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o7",
+          "text": "Welche Schutzschicht greift, hängt von der Angriffsstufe ab.",
+          "verdict": "depends",
+          "explanation": "Frische → Cooldown, nachträgliche Manipulation → Verification Metadata, falsche Quelle → Filtering, stille Versionsdrift → Lock-File — die Stufe bestimmt die wirksame Schicht."
+        },
+        {
+          "id": "transfer-angriffsklasse-matrix-o8",
+          "text": "Ein 7-Tage-Cooldown hätte alle drei Vorfälle abgefangen.",
+          "verdict": "depends",
+          "explanation": "Die frischen Registry-Releases (Axios, cline@2.3.0, LiteLLM-Releases) ja — die umgeschriebenen `trivy-action`-Tags sind aber kein Registry-Release; dort hilft SHA-Pinning, nicht Cooldown."
+        }
+      ]
+    }
+  ]
+}
