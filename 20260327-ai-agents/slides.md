@@ -7,6 +7,7 @@ info: |
   Autonomie & Orchestrierung (Subagents, /goal, /loop, Dynamic Workflows, Agent Teams).
 monaco: true
 hideInToc: true
+lang: de
 ---
 
 # AI Coding Agents: Konfiguration & Autonomie
@@ -63,6 +64,12 @@ hideInToc: true
 
 # Kernbegriffe
 
+<style>
+table {
+  font-size: 0.9em;
+}
+</style>
+
 | Primitiv              | Was es ist                                                                        | Analogie               |
 | --------------------- | --------------------------------------------------------------------------------- | ---------------------- |
 | **Instruktionsdatei** | Markdown-Datei mit Projektkonventionen, bei Sessionstart in System-Prompt geladen | Projekthandbuch        |
@@ -88,6 +95,12 @@ hideInToc: true
 **MCP** stellt Fähigkeiten bereit, die das Modell sonst nicht hätte.
 
 **Subagents** lösen Kontextfenster-Probleme.
+
+<div class="text-sm opacity-70 mt-6">
+
+Wie der Agent-Loop diese Primitive intern verdrahtet → Deep-Dive <TalkXref slug="20260408-agents-details">Wie funktioniert ein Coding-Agent?</TalkXref>
+
+</div>
 
 ---
 clicks: false
@@ -121,13 +134,24 @@ hideInToc: true
 
 Alle Tools: **Plain-Markdown**, kein DSL — optionales YAML-Frontmatter.
 
-| Tool              | Hierarchie                                                                                    |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| **Claude Code**   | `~/.claude/` → Elternverzeichnisse → Projekt-Root → Unterverzeichnisse + `.claude/rules/*.md` |
-| **Codex**         | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert            |
-| **Devin Desktop** | System → Global → Workspace → AGENTS.md (4 Stufen)                                            |
-| **Gemini CLI**    | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine            |
-| **OpenCode**      | Remote-Config via `.well-known/opencode`                                                      |
+<style>
+table {
+  font-size: 0.74em;
+}
+th,
+td {
+  padding: 0.25em 0.5em !important;
+}
+</style>
+
+| Tool              | Hierarchie                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| **Claude Code**   | `~/.claude/` → Elternverzeichnisse → Projekt-Root → Unterverzeichnisse + `.claude/rules/*.md`  |
+| **Codex**         | System → User → Projekt → CLI-Flags. `AGENTS.md` vom Git-Root abwärts konkateniert             |
+| **Devin Desktop** | System → Global → Workspace → AGENTS.md (4 Stufen)                                             |
+| **Gemini CLI**    | System-Defaults → User → Projekt → Overrides → Env-Vars → CLI-Args + Policy Engine             |
+| **OpenCode**      | Remote-Config via `.well-known/opencode`                                                       |
+| **Junie**         | IDE-Defaults → `.junie/guidelines.md`; fremde Configs (`.claude/`/`.codex/`) nur als Vorschlag |
 
 **Universell: Deny gewinnt immer** — keine niedrigere Ebene kann ein Verbot aufheben.
 
@@ -154,19 +178,22 @@ hideInToc: true
 
 # Sandboxing und Permissions
 
-| Tool                   | Technologie                    | Besonderheit                                                     |
-| ---------------------- | ------------------------------ | ---------------------------------------------------------------- |
-| **Codex**              | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                |
-| **Claude Code**        | Seatbelt / bubblewrap          | 6 Modi inkl. `auto` (Classifier-Safety-Net) · Deny → Ask → Allow |
-| **Gemini CLI**         | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine                   |
-| **Devin&nbsp;Desktop** | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen                          |
-| **Junie**              | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando                            |
-| **OpenCode**           | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                                     |
+| Tool                   | Technologie                    | Besonderheit                                                        |
+| ---------------------- | ------------------------------ | ------------------------------------------------------------------- |
+| **Codex**              | Seatbelt / Landlock+seccomp    | `.git/`, `.codex/` immer gesperrt                                   |
+| **Claude Code**        | Seatbelt / bubblewrap          | 6 Modi inkl. `auto` (Klassifikator-Safety-Net) · Deny → Ask → Allow |
+| **Gemini CLI**         | Seatbelt, Docker, Podman, LXC  | Breiteste Backend-Auswahl + TOML Policy Engine                      |
+| **Devin&nbsp;Desktop** | Turbo-Mode Auto-Execution      | `.codeiumignore` für Dateirestriktionen                             |
+| **Junie**              | Safe/Sensitive-Klassifikation  | Regex-basierte Allowlist pro Kommando                               |
+| **OpenCode**           | Per-Agent Permission-Overrides | Pro-Agent MCP-Enable/Disable                                        |
 
-<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;">⚠️ <strong>Sensible Daten lokal?</strong> Agent im <strong>Devcontainer</strong> isolieren, nur unkritische Pfade mounten — Sandboxes schützen nicht vor Skill-/MCP-Exfiltration.</p>
+<Callout tone="warning" dense class="!my-0">
+<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Sensible Daten lokal?</strong> Agent im <strong>Devcontainer</strong> isolieren — Sandboxes schützen nicht vor Skill-/MCP-Exfiltration.</p>
+</Callout>
 
 ---
 hideInToc: true
+routeAlias: permission-modes
 ---
 
 # Claude Code Permission Modes
@@ -178,11 +205,13 @@ Sechs Modi statt zwei. `Shift+Tab` cycelt `default → acceptEdits → plan`; `a
 | `default`           | Nur Reads                               | Sensitives, Onboarding           |
 | `acceptEdits`       | Reads + Edits + `mkdir`/`mv`/`cp`/`sed` | Iterieren, Review per `git diff` |
 | `plan`              | Nur Reads, kein Edit                    | Codebase erkunden                |
-| **`auto`**          | **Alles, mit Background-Classifier**    | **Lange Tasks, Prompt-Fatigue**  |
+| **`auto`**          | **Alles, mit Background-Klassifikator** | **Lange Tasks, Prompt-Fatigue**  |
 | `dontAsk`           | Nur vorab erlaubte Tools (sonst Deny)   | CI/Pipelines                     |
 | `bypassPermissions` | Alles, ohne Checks                      | Container/VM ohne Internet       |
 
-<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Auto Mode</strong> (Research Preview, v2.1.83+, Opus 4.6/4.7 + Sonnet 4.6, Anthropic API) — Classifier blockt <code>curl | bash</code>, Force-Push, Prod-Deploys, IAM-Grants, externe Endpoints; Chat-Aussagen wie „don't push" wirken als Deny. Fallback nach 3 Blocks in Folge / 20 gesamt. <strong>vs. <code>bypassPermissions</code>:</strong> Auto = unsichtbare Checks, Bypass = keine — nur Auto schützt vor Modellfehlern und Prompt-Injection.</p>
+<Callout tone="info" dense class="!my-0">
+<p class="!my-0 !leading-tight" style="font-size: 11px; opacity: 0.85;"><strong>Auto Mode</strong> (Research Preview, v2.1.83+, server-konfiguriertes Klassifikator-Modell) — Klassifikator blockt <code>curl | bash</code>, Force-Push, Prod-Deploys, IAM-Grants, externe Endpoints; Chat-Aussagen wie „don't push“ wirken als Deny. Fallback nach 3 Blocks in Folge / 20 gesamt. <strong>vs. <code>bypassPermissions</code>:</strong> Auto = unsichtbare Checks, Bypass = keine.</p>
+</Callout>
 
 ---
 layout: section
@@ -224,7 +253,7 @@ hideInToc: true
 
 # ACP — Agent Client Protocol
 
-**Zed + JetBrains, 2025** — "LSP für AI-Agenten"
+**Zed + Gemini CLI (Google), 2025** — „LSP für AI-Agenten“ · JetBrains ab 2025-10
 
 **Vor ACP:** N·M Custom-Integrationen (IDE × Agent). **Mit ACP:** einmal implementieren → läuft überall.
 
@@ -324,7 +353,7 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Claude im Pipe-Einsatz — Stolperfallen
+# Claude Code im Pipe-Einsatz — Stolperfallen
 
 **1. 3-Sekunden-Timeout** — wenn binnen 3 s keine Daten ankommen, läuft Claude **ohne** Stdin weiter (Warnung auf stderr). Sobald Daten fließen, wartet er auf **EOF** — `tail -f | claude -p …` hängt deshalb ewig.
 
@@ -386,6 +415,12 @@ Drei Fragen ordnen **jedes** Autonomie-Feature ein:
 | **Bedingung** | Stopp bei Zielerreichung | `/goal` (Haiku prüft je Turn) |
 | **Breite**    | viele parallele Worker   | Dynamic Workflows             |
 
+<div class="text-sm opacity-70 mt-3">
+
+Seit **Fork-Mode** gilt der „Kostenmultiplikator“ nur noch abgeschwächt (~90 % Discount bei parallelen Subagents). Token-Ökonomie im Detail → <TalkXref slug="20260408-agents-details">Wie funktioniert ein Coding-Agent?</TalkXref>
+
+</div>
+
 ---
 hideInToc: true
 ---
@@ -424,7 +459,7 @@ hideInToc: true
 
 # Dynamic Workflows & `ultracode`
 
-<div class="text-sm opacity-75">Research Preview · 28.05.2026 · Opus 4.8</div>
+<div class="text-sm opacity-75">Research Preview · 2026-05-28 · Opus 4.8</div>
 
 **Mechanik:** Claude _schreibt_ ein JS-Skript, das in isolierter Background-Runtime Dutzende bis Hunderte Subagents orchestriert, die sich **adversarisch gegenseitig prüfen**.
 
@@ -434,7 +469,7 @@ hideInToc: true
 
 <Callout tone="warning" class="mt-4">
 
-**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag <TalkXref slug="20260522-open-rewrite">OpenRewrite — Refactoring at Scale</TalkXref>
+**Paradedisziplin & Kostenfalle:** Große Java-Refactorings sind _der_ Workflow-Use-Case — aber Hunderte Subagents = €€€€€. Deterministische **OpenRewrite**-Recipes erledigen den mechanischen Großteil token-frei, KI nur an der Determinismus-Grenze. → Vortrag <TalkXref slug="20260522-open-rewrite" />
 
 </Callout>
 
@@ -450,9 +485,18 @@ hideInToc: true
 - **Antigravity 2.0** — Standalone-Desktop-App, Orchestrierungs-Command-Center, **kein Editor**.
 - **Antigravity CLI (`agy`)** — Nachfolger der **Gemini CLI** (Go), teilt Harness mit der 2.0-App, **nicht** aus der IDE-Linie. Erbt Skills/Hooks/Subagents/Plugins/MCP; neu: async Multi-Agent-Workflows + dynamische Subagents. _Proprietär (Community-Kritik)._
 
-**Junie + JetBrains Air** — Junie: Plan-/Brave-Mode, Subagents in `.junie/agents/`, Junie CLI (Beta 03/2026, LLM-agnostisch, BYOK). **Air = eigenes Produkt** (Preview 03/2026): orchestriert Junie/Claude/Codex/Gemini **gleichzeitig** via Docker + Worktrees.
+**Junie + JetBrains Air** — Junie: Plan-/Brave-Mode, Subagents in `.junie/agents/`, Junie CLI (Beta 2026-03, LLM-agnostisch, BYOK). **Air = eigenes Produkt** (Preview 2026-03): orchestriert Junie/Claude/Codex/Gemini **gleichzeitig** via Docker + Worktrees.
 
 **Cursor & Cloud-Agenten** — `cursor-agent`-CLI, Cloud Agents (≤8 parallel), best-of-n auf Worktrees. Dazu Codex Cloud & Copilot Cloud Agent.
+
+<!--
+Stand: Mai/Juni 2026. Antigravity ist eine Dachmarke über drei getrennte Produkte:
+die IDE (VS-Code-Fork, Nov 2025), die Standalone-Desktop-App Antigravity 2.0
+(Orchestrierung, kein Editor) und die CLI „agy“ (Go-Rewrite der Gemini CLI, proprietär,
+teilt das Harness mit der 2.0-App — nicht aus der IDE-Linie). Junie-CLI ist Beta seit
+2026-03 (LLM-agnostisch, BYOK); JetBrains Air ist ein eigenes Produkt (Preview 2026-03),
+das Junie/Claude/Codex/Gemini gleichzeitig via Docker + Worktrees orchestriert.
+-->
 
 ---
 clicks: false
@@ -475,16 +519,22 @@ hideInToc: true
 
 # Auto-Modi: Wer entscheidet pro Tool-Call?
 
-»Auto« heißt bei jedem Tool etwas anderes — nur **drei** beinhalten ein echtes Urteil: ein _separates_ LLM entscheidet pro Call **allow / block / eskalieren** (reasoning-blind, damit der Hauptagent den Wächter nicht überredet).
+„Auto“ heißt bei jedem Tool etwas anderes — nur **drei** beinhalten ein echtes Urteil: ein _separates_ LLM entscheidet pro Call **allow / block / eskalieren** (reasoning-blind, damit der Hauptagent den Wächter nicht überredet).
 
-| Tool / Gruppe                                      | Echtes Gate-LLM               | Architektur                           |
-| -------------------------------------------------- | ----------------------------- | ------------------------------------- |
-| **Cursor** (Auto-Review)                           | ✓ Classifier-Subagent         | Sandbox-first                         |
-| **Claude Code** (Auto Mode)                        | ✓ Sonnet 4.6, reasoning-blind | Trust-Scope-first                     |
-| **OpenAI Codex** (Auto-review)                     | ✓ Guardian-Subagent           | Sandbox-first **+** Reviewer (Hybrid) |
-| **Gemini · Devin Desktop · Junie · OpenCode · Pi** | ✗ statische Allow/Deny        | — (YOLO/Turbo/Brave = Rückfrage aus)  |
+<style>
+table {
+  font-size: 0.86em;
+}
+</style>
 
-**Sandbox-first** (Cursor/Codex): erst isolieren, Klassifikator zuletzt. **Trust-Scope-first** (Claude): Vertrauensgrenze in Prosa (`autoMode.environment`), Klassifikator primär. → volle Matrix nächste Folie.
+| Tool / Gruppe                                      | Echtes Gate-LLM          | Architektur                           |
+| -------------------------------------------------- | ------------------------ | ------------------------------------- |
+| **Cursor** (Auto-Review)                           | ✓ Klassifikator-Subagent | Sandbox-first                         |
+| **Claude Code** (Auto Mode)                        | ✓ server-konfig. Modell  | Trust-Scope-first                     |
+| **OpenAI Codex** (Auto-review)                     | ✓ Guardian-Subagent      | Sandbox-first **+** Reviewer (Hybrid) |
+| **Gemini · Devin Desktop · Junie · OpenCode · Pi** | ✗ statische Allow/Deny   | — (YOLO/Turbo/Brave = Rückfrage aus)  |
+
+**Sandbox-first** (Cursor/Codex): erst isolieren, Klassifikator zuletzt. **Trust-Scope-first** (Claude): Vertrauensgrenze in Prosa, Klassifikator primär. → volle Matrix nächste Folie.
 
 ---
 clicks: false
@@ -501,14 +551,21 @@ hideInToc: true
 
 # Wie sicher ist der Spaß? — Kein Sicherheits-Boundary
 
-**Alle Anbieter sagen es selbst.** Cursor wörtlich: _„best-effort convenience, not a security boundary."_ Der Klassifikator ist ein täuschbares LLM, nicht-deterministisch.
+**Alle Anbieter sagen es selbst.** Cursor wörtlich: _„best-effort convenience, not a security boundary.“_ Der Klassifikator ist ein täuschbares LLM, nicht-deterministisch.
 
 | Quelle                      | Workload                   | False-Negative-Rate |
 | --------------------------- | -------------------------- | ------------------- |
-| **Anthropic** (n=52)        | reale „overeager"-Aktionen | **17 %**            |
+| **Anthropic** (n=52)        | reale „overeager“-Aktionen | **17 %**            |
 | **AmPermBench** (HKUST/ETH) | _adversariale_ Prompts     | **81 %**            |
 
-**Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → Details im _Bonus_.
+**Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → <Link to="44">Details im Bonus</Link>.
+
+<!--
+Sync-Paar mit der Bonus-Slide „Sicherheit im Detail“: Die Kennzahlen 17 % (Anthropic,
+n=52, reale overeager-Aktionen) und 81 % (AmPermBench, HKUST/ETH, adversariale Prompts)
+stehen bewusst auf beiden Slides — bei einer Aktualisierung BEIDE Stellen anpassen.
+Stand: Mai/Juni 2026; nur AmPermBench ist unabhängig, der Rest ist selbstberichtet.
+-->
 
 ---
 hideInToc: true
@@ -516,11 +573,11 @@ hideInToc: true
 
 # Konsequenz: Klassifikator + Sandbox + Least-Privilege — nie allein
 
-Primärer Failure-Mode (Anthropic): **Consent-Scoping** — der Klassifikator findet „approval-shaped evidence" und verkennt den echten Blast-Radius. **judge = defendant.**
+Primärer Failure-Mode (Anthropic): **Consent-Scoping** — der Klassifikator findet „approval-shaped evidence“ und verkennt den echten Blast-Radius. **judge = defendant.**
 
 <Callout tone="danger" class="mb-3">
 
-**PocketOS, 25.04.2026:** Ein Cursor-Agent löschte Produktions-DB **und** Backups in _einem_ Call (~9 s) — trotz Plan-Mode und „Destructive Guardrails". (→ _Clinejection-Bonus_)
+**PocketOS, 2026-04-25:** Ein Cursor-Agent löschte Produktions-DB **und** Backups in _einem_ Call (~9 s) — trotz Plan-Mode und „Destructive Guardrails“.
 
 </Callout>
 
@@ -550,7 +607,7 @@ clicks: false
 hideInToc: true
 ---
 
-# Clinejection -- Anatomie eines Supply-Chain-Angriffs
+# Clinejection — Anatomie eines Supply-Chain-Angriffs
 
 <ClinejectionAttackChain />
 
@@ -559,7 +616,9 @@ clicks: false
 hideInToc: true
 ---
 
-# Clinejection -- Zeitverlauf und vereitelte Eskalation
+# Clinejection — Zeitverlauf und vereitelte Eskalation
+
+<div class="text-xs opacity-70 mb-1">Gleiche Angriffsklasse, gleiches Vortragsdatum: ein 7-Tage-Cooldown hätte das Cline-npm-Paket abgefangen → <TalkXref slug="20260327-gradle-dependency-resolution">Supply-Chain-Schutz in Gradle</TalkXref></div>
 
 <ClinejectionTimeline />
 
@@ -568,7 +627,7 @@ clicks: 1
 hideInToc: true
 ---
 
-# Clinejection -- Willisons "Lethal Trifecta"
+# Clinejection — Willisons „Lethal Trifecta“
 
 <ClinejectionTrifecta />
 
@@ -580,10 +639,10 @@ hideInToc: true
 
 Zwei Verteidigungs-Layer, ein deklarierter Trust-Scope — und ein **blinder Fleck**.
 
-- **Input-Layer:** serverseitige **Prompt-Injection-Probe** scannt Tool-Outputs (Reads, Web-Fetches, Shell), _bevor_ sie in den Kontext gelangen → „treat as suspect".
-- **Output-Layer:** **2-stufiger Klassifikator auf Sonnet 4.6** — Stufe 1 Single-Token-Yes/No (auf Blocken getrimmt), Stufe 2 Chain-of-Thought nur bei Flag. **Reasoning-blind:** sieht nur User-Msgs, Tool-Calls, `CLAUDE.md` — Claudes eigene Messages & Tool-_Results_ werden gestrippt.
+- **Input-Layer:** serverseitige **Prompt-Injection-Probe** scannt Tool-Outputs (Reads, Web-Fetches, Shell), _bevor_ sie in den Kontext gelangen → „treat as suspect“.
+- **Output-Layer:** **2-stufiger Klassifikator (server-konfiguriertes Modell)** — Stufe 1 Single-Token-Yes/No (auf Blocken getrimmt), Stufe 2 Chain-of-Thought nur bei Flag. **Reasoning-blind:** sieht nur User-Msgs, Tool-Calls, `CLAUDE.md` — Claudes eigene Messages & Tool-_Results_ werden gestrippt.
 
-**Reihenfolge (erster Match):** Allow/Deny-Regeln → Read-only + **In-Project-Edits auto-approved** → Rest zum Klassifikator → Block → Claude versucht Alternative. _(Die sechs Permission-Modi: siehe Kapitel „Claude Code Permission Modes".)_
+**Reihenfolge (erster Match):** Allow/Deny-Regeln → Read-only + **In-Project-Edits auto-approved** → Rest zum Klassifikator → Block → Claude versucht Alternative. (Die sechs Permission-Modi: <Link to="permission-modes">Claude Code Permission Modes</Link>.)
 
 <Callout tone="danger" class="mt-2">
 
@@ -601,7 +660,7 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
 
 | Feld              | Bedeutung                                       | Härte                 |
 | ----------------- | ----------------------------------------------- | --------------------- |
-| **`environment`** | vertrauenswürdige Repos/Buckets/Domains (Prosa) | was gilt als „extern" |
+| **`environment`** | vertrauenswürdige Repos/Buckets/Domains (Prosa) | was gilt als „extern“ |
 | **`hard_deny`**   | unbedingte Boundary — ignoriert Intent & Allows | hart (v2.1.136+)      |
 | **`soft_deny`**   | destruktiv, aber vom Nutzer aufhebbar           | weich                 |
 | **`allow`**       | Carve-out gegen zu strenge Built-in-Block-Regel | Ausnahme              |
@@ -611,7 +670,9 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
   "Trusted buckets: s3://acme-artifacts", "Trusted domains: *.corp.example.com"] }
 ```
 
-<p class="!my-0 !leading-tight" style="font-size: 12px; opacity: 0.85;"><strong>Zwei Fallen:</strong> <code>defaultMode: "auto"</code> aus dem Repo wird <em>ignoriert</em> (ein Repo darf sich nicht selbst Auto Mode geben) · „don't push" im Chat überlebt <strong>keine</strong> Context-Compaction → für Garantien <code>permissions.deny</code> / <code>hard_deny</code>.</p>
+<Callout tone="warning" dense class="!my-0">
+<p class="!my-0 !leading-tight" style="font-size: 12px; opacity: 0.85;"><strong>Zwei Fallen:</strong> <code>defaultMode: "auto"</code> aus dem Repo wird <em>ignoriert</em> (ein Repo darf sich nicht selbst Auto Mode geben) · „don't push“ im Chat überlebt <strong>keine</strong> Context-Compaction → für Garantien <code>permissions.deny</code> / <code>hard_deny</code>.</p>
+</Callout>
 
 ---
 hideInToc: true
@@ -624,7 +685,7 @@ hideInToc: true
 | Quelle                       | Workload                   | Kennzahl                             |
 | ---------------------------- | -------------------------- | ------------------------------------ |
 | **Anthropic** (n=10.000)     | realer Traffic             | 0,4 % False-_Positive_               |
-| **Anthropic** (n=52)         | reale „overeager"-Aktionen | **17 %** False-Negative              |
+| **Anthropic** (n=52)         | reale „overeager“-Aktionen | **17 %** False-Negative              |
 | **Anthropic** (n=1.000)      | synthetische Exfiltration  | 5,7 % FNR                            |
 | **AmPermBench** (unabhängig) | adversariale Prompts       | **81 %** FNR (70,3 % auf Sichtbarem) |
 | **OpenAI** (synthetisch)     | Injection-Recall           | 99,3 % → **90,2 %** über alle Kat.   |
@@ -637,6 +698,15 @@ hideInToc: true
 <p class="!my-0 !leading-tight">Die Zahlen messen <strong>verschiedene Workloads</strong> — keine gemeinsame Skala; nur AmPermBench ist unabhängig, der Rest ist selbstberichtet.</p>
 </Callout>
 
+<!--
+Sync-Paar mit „Wie sicher ist der Spaß?“: Die 17 % (Anthropic, n=52) und 81 %
+(AmPermBench) stehen bewusst auf beiden Slides — bei einer Aktualisierung BEIDE
+Stellen anpassen. Stand: Mai/Juni 2026. Quellen: Anthropic Auto-Mode-Posts
+(self-reported), AmPermBench HKUST/ETH (unabhängig), OpenAI Injection-Recall.
+Die CVEs zum Shell-Builtin-Bypass/CurXecute/MCPoison vor Zitation gegen die
+Primärquelle prüfen (Attribution teils uneinheitlich).
+-->
+
 ---
 hideInToc: true
 ---
@@ -648,7 +718,7 @@ hideInToc: true
 **Schritt 1 — installieren & anmelden:**
 
 ```bash
-brew install --cask claude-code   # Cask: kein Auto-Update → `brew upgrade claude-code`
+brew install --cask claude-code   # Cask = stable-Channel; opt-in Auto-Update via CLAUDE_CODE_PACKAGE_MANAGER_AUTO_UPDATE=1
 claude                            # interaktiv: /login → Subscription wählen
 unset ANTHROPIC_API_KEY           # sonst gewinnt der Key gegen die Subscription
 claude /status                    # aktiven Auth-Modus bestätigen
@@ -660,7 +730,7 @@ hideInToc: true
 
 # Claude Code in IntelliJ via ACP — Agent registrieren
 
-**Schritt 2:** AI-Chat → ⋮ → **Add Custom Agent** öffnet `~/.jetbrains/acp.json`. Sauberer als bloßes `npx` (Latenz/Netz pro Start) ist ein Wrapper mit fixem Pfad und kontrolliertem `env`:
+**Schritt 2:** AI-Chat → ⋮ → **Add Custom Agent** öffnet `~/.jetbrains/acp.json`. Robuster als der direkte `npx`-Aufruf ist ein Wrapper-Skript: GUI-Apps erben den Shell-`PATH` nicht, das Skript setzt `PATH` und `env` kontrolliert:
 
 ```json
 {
@@ -695,6 +765,37 @@ hideInToc: true
 # Gesamtübersicht — Interaktiv
 
 <FullInfographic />
+
+---
+hideInToc: true
+---
+
+# Quellen & Weiterführendes
+
+<div class="text-sm">
+
+**Auto Mode & Permission-Sicherheit**
+
+- Anthropic Help Center — Agent-SDK mit Claude-Plan (Billing-Split, ab 2026-06-15)
+- AmPermBench (HKUST/ETH) — unabhängiger FNR-Benchmark für Permission-Klassifikatoren
+- Simon Willison — „The Lethal Trifecta“ (2025-06-16, `simonwillison.net`)
+
+**Tools & Protokolle**
+
+- Google Developers Blog (2026-05-19) — Gemini CLI → Antigravity CLI · `antigravity.google`
+- Zed Blog — „Anthropic subscription changes“ (ACP ↔ Agent-SDK-Credit)
+- ACP — Agent Client Protocol (Zed) · AGENTS.md — Linux Foundation
+
+**Supply-Chain**
+
+- Clinejection — Adnan Khan, Disclosure 2026-02-09 (Indirect Prompt Injection → npm)
+
+</div>
+
+<!--
+Vollständige URLs in den Presenter Notes der Quell-Slides (S1 Antigravity-Transition,
+S17 Agent-SDK-Billing). Stand: Mai/Juni 2026.
+-->
 
 ---
 layout: end

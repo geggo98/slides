@@ -55,8 +55,8 @@
           "mark": "none"
         },
         "richter": {
-          "teaser": "Classifier-Subagent",
-          "detail": "Separater, nicht-deterministischer Classifier-Subagent. Verwendetes Modell, Latenz und genaue Konfiguration gibt Cursor NICHT öffentlich preis (Inferenz). Steuerbar über autoRun-Custom-Instructions in permissions.json. Token derzeit kostenlos.",
+          "teaser": "Klassifikator-Subagent",
+          "detail": "Separater, nicht-deterministischer Klassifikator-Subagent. Verwendetes Modell, Latenz und genaue Konfiguration gibt Cursor NICHT öffentlich preis (Inferenz). Steuerbar über autoRun-Custom-Instructions in permissions.json. Token derzeit kostenlos.",
           "mark": "yes"
         },
         "sandbox": {
@@ -97,8 +97,8 @@
           "mark": "none"
         },
         "richter": {
-          "teaser": "Sonnet 4.6, reasoning-blind",
-          "detail": "Transcript-Classifier auf Sonnet 4.6 (unabhängig vom Session-Modell). 2 Stufen: Single-Token-Yes/No, dann Chain-of-Thought nur bei Flag. Reasoning-blind: sieht NUR User-Msgs, Tool-Calls, CLAUDE.md — Claudes eigene Messages und Tool-Results werden gestrippt.",
+          "teaser": "server-konfig. Modell, reasoning-blind",
+          "detail": "Transcript-Klassifikator auf einem server-konfigurierten Modell (unabhängig vom Session-Modell). 2 Stufen: Single-Token-Yes/No, dann Chain-of-Thought nur bei Flag. Reasoning-blind: sieht NUR User-Msgs, Tool-Calls, CLAUDE.md — Claudes eigene Messages und Tool-Results werden gestrippt.",
           "mark": "yes"
         },
         "sandbox": {

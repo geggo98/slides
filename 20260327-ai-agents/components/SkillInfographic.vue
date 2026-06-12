@@ -79,10 +79,12 @@ const tabs = [
 
 <template>
   <div class="skill-infographic">
-    <div class="nav">
+    <div class="nav" role="tablist">
       <template v-for="(tab, i) in tabs" :key="tab.id">
         <span v-if="i > 0 && tab.group !== tabs[i - 1].group" class="nav-sep" />
         <button
+          role="tab"
+          :aria-selected="activeTab === tab.id"
           :class="{ active: activeTab === tab.id }"
           @click.stop="
             activeTab = tab.id;

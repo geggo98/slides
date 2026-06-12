@@ -107,7 +107,7 @@ const orchestrators = [
   },
   {
     name: "JetBrains Air",
-    desc: "Eigenes Produkt (Preview 03/2026). Orchestriert Junie/Claude/Codex/Gemini gleichzeitig via Docker + Worktrees.",
+    desc: "Eigenes Produkt (Preview 2026-03). Orchestriert Junie/Claude/Codex/Gemini gleichzeitig via Docker + Worktrees.",
   },
   {
     name: "Cursor Cloud",

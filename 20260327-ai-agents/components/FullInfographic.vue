@@ -30,10 +30,12 @@ const views = [
 
 <template>
   <div class="infographic">
-    <div class="nav">
+    <div class="nav" role="tablist">
       <button
         v-for="v in views"
         :key="v.id"
+        role="tab"
+        :aria-selected="currentView === v.id"
         :class="{ active: currentView === v.id }"
         @click.stop="currentView = v.id"
       >

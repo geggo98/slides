@@ -2,6 +2,7 @@
 // Slidev auto-imports a deck's local components/, but not shared/ ones, so
 // markdown-facing shared components are registered globally here.
 import { defineAppSetup } from "@slidev/types";
+import "@shared/components/SlidevTokens.vue";
 import Callout from "@shared/components/Callout.vue";
 import TalkXref from "@shared/components/TalkXref.vue";
 

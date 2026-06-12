@@ -44,11 +44,11 @@ allowed-tools:
         <tbody>
           <tr>
             <td>MCP-Tools (ohne Optimierung)</td>
-            <td><span class="dng">50.000+ Tokens</span></td>
+            <td><span class="dng">17K–126K, typisch 50K+</span></td>
             <td>—</td>
           </tr>
           <tr>
-            <td>MCP + Tool Search (default on)</td>
+            <td>MCP + Tool Search (auto ab >10 % Context-Anteil, v2.1.7)</td>
             <td>~7.500 Tokens</td>
             <td>~85%</td>
           </tr>

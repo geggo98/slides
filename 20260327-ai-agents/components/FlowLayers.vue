@@ -188,7 +188,7 @@ const examples = [
 .layers {
   display: flex;
   flex-direction: column;
-  max-height: 280px;
+  max-height: 240px;
   overflow-y: auto;
 }
 .layer-box {

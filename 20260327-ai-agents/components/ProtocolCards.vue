@@ -10,7 +10,7 @@ const toggle = (name) => {
 };
 
 const Yhtml = computed(() => {
-  const c = isDark.value ? "#639922" : "#639922";
+  const c = isDark.value ? "#80c050" : "#639922";
   return `<span style="color:${c};font-weight:600">✓</span>`;
 });
 const Nhtml = computed(() => {
