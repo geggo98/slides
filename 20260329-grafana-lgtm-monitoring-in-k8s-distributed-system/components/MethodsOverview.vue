@@ -97,18 +97,18 @@ const methods = computed(() => [
         color: C.value.orangeDim,
       },
       {
-        letter: "T",
-        name: "Traffic",
-        desc: "= RED Rate",
-        accent: C.value.blue,
-        color: C.value.blueDim,
-      },
-      {
         letter: "E",
         name: "Errors",
         desc: "= RED Errors",
         accent: C.value.red,
         color: C.value.redDim,
+      },
+      {
+        letter: "T",
+        name: "Traffic",
+        desc: "= RED Rate",
+        accent: C.value.blue,
+        color: C.value.blueDim,
       },
       {
         letter: "S",

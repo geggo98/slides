@@ -72,6 +72,18 @@ hideInToc: true
 
 <MethodsOverview />
 
+<div v-click style="margin-top: 14px; text-align: center; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.25); background: rgba(148,163,184,0.06);">
+  <div style="font-size: 1.5em; font-weight: 800; letter-spacing: 0.5px;">
+    <span class="text-amber-700 dark:text-amber-400">Let's</span> <span style="color: #a855f7;">use</span> <span style="color: #ef4444;">RED</span>
+  </div>
+  <div class="text-slate-500 dark:text-slate-400" style="font-size: 0.78em; margin-top: 2px;">
+    =
+    <strong class="text-amber-700 dark:text-amber-400">Golden Signals</strong> ·
+    <strong style="color: #a855f7;">USE</strong> ·
+    <strong style="color: #ef4444;">RED</strong>
+  </div>
+</div>
+
 ---
 hideInToc: true
 ---
