@@ -218,12 +218,6 @@ hideInToc: true
 
 <PatternTabs name="singleton" />
 
-<div class="mt-2 text-xs opacity-70">
-
-Das `enum`-Feld ist lazy, aber der Init-Zeitpunkt ist nicht kontrollierbar → <Link to="lazy-init">Lazy Initialization</Link>.
-
-</div>
-
 <!--
 - enum-Singleton ist Blochs Empfehlung; alle drei Java-Idiome sind JLS-fundiert (kein UB).
 - Was NICHT verschwindet: globaler, schwer mockbarer Zustand. Nur DI löst das.

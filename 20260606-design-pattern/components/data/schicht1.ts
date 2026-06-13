@@ -71,7 +71,7 @@ export const schicht1 = {
           },
         ],
         callout:
-          "Das deckt nur den <strong>statischen, arg-losen</strong> Singleton-Fall — und der Init-Zeitpunkt ist nicht steuerbar. Für lazy <em>Instanzfelder</em>, Werte mit Konstruktor-Args oder einen kontrollierten Zeitpunkt → <strong>Lazy Initialization</strong> (eigene Folie).",
+          'Das deckt nur den <strong>statischen, arg-losen</strong> Singleton-Fall — und der Init-Zeitpunkt ist nicht steuerbar. Für lazy <em>Instanzfelder</em>, Werte mit Konstruktor-Args oder einen kontrollierten Zeitpunkt → <a class="pt-xref" href="lazy-init">Lazy Initialization</a> (eigene Folie).',
       },
       {
         label: "Holder (IoDH)",

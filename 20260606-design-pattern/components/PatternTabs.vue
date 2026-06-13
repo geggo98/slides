@@ -208,6 +208,18 @@ const mermaidThemeVars = computed(() =>
   color: var(--color-text-primary);
   font-weight: 500;
 }
+/* Querverweis-Link in einem Callout (z.B. Singleton → Lazy Initialization).
+   Pfad-Deeplink auf das routeAlias der Zielfolie statt Slidev-<Link>, weil der
+   Callout per v-html gerendert wird (PatternTabs liest `current.callout` als
+   HTML-String) — eine Vue-Komponente würde dort nicht kompilieren. Optik wie
+   der geteilte TalkXref: info-Farbe, gepunktete Unterstreichung. */
+.pt-caveat :deep(a.pt-xref),
+.pt-callout :deep(a.pt-xref) {
+  color: var(--color-text-info);
+  font-weight: 500;
+  text-decoration: underline dotted currentColor;
+  text-underline-offset: 0.18em;
+}
 .pt-caveat :deep(code),
 .pt-callout :deep(code) {
   font-family: var(--font-mono);
