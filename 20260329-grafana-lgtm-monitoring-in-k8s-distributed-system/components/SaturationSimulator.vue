@@ -938,20 +938,57 @@ const SCENARIOS = [
   },
 ];
 
-const CATEGORIES = [
-  { id: "all", label: "Alle", icon: "\u25C9" },
-  { id: "compute", label: "Compute", icon: "\u2699\uFE0F" },
-  { id: "pool", label: "Pools", icon: "\u{1F517}" },
-  { id: "component", label: "Infra-Komponente", icon: "\u{1F9F1}" },
-  { id: "external", label: "Extern", icon: "\u{1F310}" },
-  { id: "cascade", label: "Kaskade", icon: "\u{1F30A}" },
-];
+// Kategorie-Metadaten je Szenario: Icon + Kurzlabel f\u00FCrs Badge, plus eine
+// theme-abh\u00E4ngige, farbfehlsichtigkeits-taugliche Farbe (Okabe-Ito / Paul-Tol-
+// inspiriert; Light abgedunkelt f\u00FCr Textkontrast auf heller Fl\u00E4che, Dark
+// aufgehellt). Bewusst KEINE Severity-Farben (gr\u00FCn/gelb/orange/rot), damit ein
+// Kategorie-Badge nicht mit einem HEALTHY/WARNING/\u2026 Severity-Badge verwechselt
+// wird. "all" entf\u00E4llt \u2014 es ist keine Szenario-Kategorie.
+const CAT_META = {
+  compute: {
+    short: "Compute",
+    icon: "\u2699\uFE0F",
+    light: "#0072B2",
+    dark: "#5BB0E5",
+  }, // Blau
+  pool: { short: "Pool", icon: "\u{1F517}", light: "#007A6B", dark: "#34D3A6" }, // Teal
+  component: {
+    short: "Infra",
+    icon: "\u{1F9F1}",
+    light: "#9333A8",
+    dark: "#D08BE8",
+  }, // Violett
+  external: {
+    short: "Extern",
+    icon: "\u{1F310}",
+    light: "#B26A00",
+    dark: "#E69F00",
+  }, // Bernstein
+  cascade: {
+    short: "Kaskade",
+    icon: "\u{1F30A}",
+    light: "#C2255C",
+    dark: "#F06292",
+  }, // Magenta
+};
+function catColor(id) {
+  const m = CAT_META[id];
+  return isDark.value ? m.dark : m.light;
+}
+
+// Szenarien nach Kategorie gruppiert anzeigen (Compute unter Compute …), in der
+// Reihenfolge der CAT_META-Definition; innerhalb einer Kategorie bleibt die
+// Autoren-Reihenfolge erhalten (Array.sort ist stabil). SCENARIOS selbst bleibt
+// unangetastet, damit Lookups per id unverändert funktionieren.
+const CAT_ORDER = Object.keys(CAT_META);
+const SCENARIOS_SORTED = [...SCENARIOS].sort(
+  (a, b) => CAT_ORDER.indexOf(a.category) - CAT_ORDER.indexOf(b.category),
+);
 
 // --- Reactive state ---
 const activeId = ref("cpu-throttle");
 const progress = ref(0);
 const playing = ref(false);
-const catFilter = ref("all");
 const showPromQL = ref(false);
 
 let animFrameId = null;
@@ -959,11 +996,6 @@ let startTime = null;
 
 const scenario = computed(
   () => SCENARIOS.find((s) => s.id === activeId.value) || SCENARIOS[0],
-);
-const filtered = computed(() =>
-  catFilter.value === "all"
-    ? SCENARIOS
-    : SCENARIOS.filter((s) => s.category === catFilter.value),
 );
 
 // --- Animation ---
@@ -1007,8 +1039,36 @@ function handleSliderInput(e) {
   progress.value = parseFloat(e.target.value);
 }
 
+// --- Scroll-Fade-Affordance der Szenario-Liste ---
+// Blendet den oberen/unteren Rand weich aus, solange in die jeweilige Richtung
+// gescrollt werden kann — auf einem schlechten Beamer sofort als „hier gibt es
+// mehr, bitte scrollen" erkennbar. Am tatsächlichen Ende verschwindet der Fade,
+// damit die letzte Kachel voll sicht- und klickbar bleibt.
+const listEl = ref(null);
+const canScrollUp = ref(false);
+const canScrollDown = ref(false);
+function updateScrollFades() {
+  const el = listEl.value;
+  if (!el) return;
+  canScrollUp.value = el.scrollTop > 2;
+  canScrollDown.value = el.scrollTop + el.clientHeight < el.scrollHeight - 2;
+}
+
+// Slidev mountet Folien teils unsichtbar vor (Größe 0) — dann misst onMounted
+// noch keine Überlauf-Höhe. Ein ResizeObserver rechnet den Fade neu, sobald die
+// Liste beim Sichtbarwerden ihre echte Höhe bekommt.
+let listResizeObs = null;
+onMounted(() => {
+  updateScrollFades();
+  if (listEl.value && typeof ResizeObserver !== "undefined") {
+    listResizeObs = new ResizeObserver(() => updateScrollFades());
+    listResizeObs.observe(listEl.value);
+  }
+});
+
 onUnmounted(() => {
   if (animFrameId) cancelAnimationFrame(animFrameId);
+  if (listResizeObs) listResizeObs.disconnect();
 });
 
 // --- Computed metric values ---
@@ -1162,26 +1222,29 @@ function phaseFilled(phases, idx, prog) {
       <div class="sim-layout">
         <!-- Left: scenario list -->
         <div class="sim-sidebar">
-          <!-- Category filter -->
-          <div class="cat-filter">
+          <div
+            ref="listEl"
+            class="scenario-list"
+            :class="{ 'fade-top': canScrollUp, 'fade-bottom': canScrollDown }"
+            @scroll="updateScrollFades"
+          >
             <button
-              v-for="cat in CATEGORIES"
-              :key="cat.id"
-              class="cat-btn"
-              :class="{ active: catFilter === cat.id }"
-              @click="catFilter = cat.id"
-            >
-              {{ cat.icon }} {{ cat.label }}
-            </button>
-          </div>
-          <div class="scenario-list">
-            <button
-              v-for="s in filtered"
+              v-for="s in SCENARIOS_SORTED"
               :key="s.id"
               class="scenario-btn"
               :class="{ active: activeId === s.id }"
               @click="handleSelectScenario(s.id)"
             >
+              <span
+                class="cat-badge"
+                :style="{
+                  background: catColor(s.category) + '22',
+                  color: catColor(s.category),
+                  borderColor: catColor(s.category) + '55',
+                }"
+                >{{ CAT_META[s.category].icon }}
+                {{ CAT_META[s.category].short }}</span
+              >
               <div class="scenario-btn-header">
                 <span class="scenario-icon">{{ s.icon }}</span>
                 <span
@@ -1523,29 +1586,6 @@ function phaseFilled(phases, idx, prog) {
   min-width: 200px;
 }
 
-/* Category filter */
-.cat-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  margin-bottom: 5px;
-}
-.cat-btn {
-  padding: 2px 5px;
-  border-radius: 3px;
-  font-size: 6.5px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid var(--c-border);
-  background: transparent;
-  color: var(--c-muted);
-  transition: all 0.15s ease;
-}
-.cat-btn.active {
-  border-color: var(--c-blue);
-  color: var(--c-blue);
-}
-
 /* Scenario list */
 .scenario-list {
   display: flex;
@@ -1557,14 +1597,47 @@ function phaseFilled(phases, idx, prog) {
      The half-tile bottom padding lets the last card scroll up far enough to
      stay selectable even when the auto-hiding Slidev nav-toolbar overlays
      the bottom-left — it then only covers the padding / lower half of the
-     last tile, never its clickable header. */
-  max-height: 320px;
+     last tile, never its clickable header. Höhe bewusst begrenzt: die Liste
+     soll innerhalb des Slide-Canvas enden (sonst schneidet Slidev unten ab). */
+  max-height: 348px;
   overflow-y: auto;
   padding-right: 3px;
   padding-bottom: 26px;
   overscroll-behavior: contain;
 }
+/* Scroll-Fade: weicher Verlauf am scrollbaren Rand als Scroll-Affordance.
+   ~24px ≈ halbe Kachel; per JS-Klasse nur aktiv, solange in die Richtung
+   gescrollt werden kann. mask + -webkit-mask, da WebKit nur das Präfix kennt. */
+.scenario-list.fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 24px),
+    transparent
+  );
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 24px), transparent);
+}
+.scenario-list.fade-top {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 24px);
+  mask-image: linear-gradient(to bottom, transparent, #000 24px);
+}
+.scenario-list.fade-top.fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 24px,
+    #000 calc(100% - 24px),
+    transparent
+  );
+}
 .scenario-btn {
+  position: relative;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: 5px;
@@ -1575,6 +1648,20 @@ function phaseFilled(phases, idx, prog) {
   outline: none;
   width: 100%;
   color: var(--c-text);
+}
+/* Kategorie-Badge oben rechts (Icon + Kurzlabel, in Kategorie-Farbe) */
+.cat-badge {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  font-size: 6px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 1.3;
+  font-family: var(--slidev-code-font-family);
 }
 .scenario-btn.active {
   border-color: var(--c-blue);
@@ -1588,6 +1675,8 @@ function phaseFilled(phases, idx, prog) {
   align-items: center;
   gap: 4px;
   margin-bottom: 2px;
+  /* Platz für das oben rechts absolut positionierte Kategorie-Badge */
+  padding-right: 48px;
 }
 .scenario-icon {
   font-size: 11px;
