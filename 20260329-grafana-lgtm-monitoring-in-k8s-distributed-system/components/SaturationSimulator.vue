@@ -556,7 +556,7 @@ const SCENARIOS = [
     icon: "\u26A1",
     subtitle:
       "Cache voll \u2192 Evictions \u2192 Miss-Rate steigt \u2192 API-Flut",
-    category: "external",
+    category: "component",
     description:
       "Redis erreicht maxmemory. Die Eviction-Policy (z.B. allkeys-lru) beginnt, Keys zu verdr\u00e4ngen. Cache-Hit-Ratio sinkt \u2192 mehr Requests an B2B-APIs \u2192 Rate-Limiting-Risiko steigt. Kaskadeneffekt: Cache-Miss \u2192 Upstream-Call \u2192 h\u00f6here Latenz \u2192 mehr gleichzeitige Requests \u2192 noch mehr Cache-Misses.",
     trigger:
@@ -644,6 +644,197 @@ const SCENARIOS = [
     ],
     fix: "maxmemory erh\u00f6hen oder Redis-Cluster skalieren. TTL-Strategie reviewen (k\u00fcrzere TTLs f\u00fcr volatile Daten). Cache-Key-Namespace pro Produktsparte. Stale-while-revalidate Pattern: abgelaufene Keys weiter ausliefern, im Hintergrund refreshen.",
     dashboardLevel: 2,
+  },
+  {
+    id: "db-checkpoint",
+    name: "DB Checkpoint-Sättigung",
+    icon: "\u{1F418}",
+    subtitle: "Redo-/WAL-Backlog → Flush-Storm → Commit-Latenz steigt",
+    category: "component",
+    description:
+      "Das Redo-Log/WAL ist ein zirkulärer Puffer fester Größe. Steigt die Checkpoint Age (Abstand zwischen neuen Writes und geflushtem Schwanz) über die Schwellen, eskaliert InnoDB das Flushing: Adaptive-Flushing → Async-Point (7/8) → Sync-Point (15/16) → Voll-Pause aller User-Threads. Flush Storms frieren die Schreiboperationen ein.",
+    trigger:
+      "Write-Burst (Batch-Import, Massen-Update einer Produktsparte) übersteigt die provisionierte IOPS; das Redo-Log ist zu klein, um den Burst zu absorbieren.",
+    phases: [
+      {
+        t: 0,
+        severity: "healthy",
+        label: "Normal",
+        desc: "Checkpoint Age 20%, Commit-Latenz 4ms, sanftes Flushing",
+      },
+      {
+        t: 0.25,
+        severity: "degraded",
+        label: "Adaptive-Flushing",
+        desc: "Checkpoint Age 60%, Flushing rampt, Commit-Latenz 12ms",
+      },
+      {
+        t: 0.5,
+        severity: "warning",
+        label: "Async-Point (7/8)",
+        desc: "Flushing auf max IO-Kapazität, Commit-Latenz 60ms",
+      },
+      {
+        t: 0.75,
+        severity: "critical",
+        label: "Sync-Point (15/16)",
+        desc: "User-Threads pausiert bis Age sinkt, Commit-Latenz >300ms",
+      },
+    ],
+    metrics: [
+      {
+        name: "Checkpoint Age",
+        unit: "%",
+        healthy: 20,
+        degraded: 60,
+        warning: 88,
+        critical: 97,
+        thresholdWarn: 80,
+        thresholdCrit: 94,
+      },
+      {
+        name: "Commit-Latenz",
+        unit: "ms",
+        healthy: 4,
+        degraded: 12,
+        warning: 60,
+        critical: 320,
+        thresholdWarn: 50,
+        thresholdCrit: 200,
+      },
+      {
+        name: "IOPS / Provisioned",
+        unit: "%",
+        healthy: 45,
+        degraded: 75,
+        warning: 95,
+        critical: 100,
+        thresholdWarn: 80,
+        thresholdCrit: 95,
+      },
+      {
+        name: "Pool Pending",
+        unit: "",
+        healthy: 0,
+        degraded: 2,
+        warning: 12,
+        critical: 40,
+        thresholdWarn: 5,
+        thresholdCrit: 20,
+      },
+    ],
+    promql: [
+      {
+        label: "Checkpoint Age (InnoDB)",
+        query:
+          "mysql_global_status_innodb_checkpoint_age\n  / mysql_global_variables_innodb_redo_log_capacity * 100",
+      },
+      {
+        label: "Commit-Latenz p99",
+        query:
+          "histogram_quantile(0.99,\n  sum(rate(db_commit_duration_seconds_bucket[5m])) by (le))",
+      },
+      { label: "Pending Connections", query: "hikaricp_connections_pending" },
+    ],
+    fix: "innodb_redo_log_capacity vergrößern, damit Write-Bursts absorbiert werden, ohne in Sync-Flushing zu kippen. PV mit Provisioned IOPS (gp3). Writes gleichmäßig verteilen (Jitter, Leaky Bucket) statt Batch-Peaks. Innodb_checkpoint_age überwachen — Nähe zum Async-Point = erschöpfte IO-Kapazität.",
+    dashboardLevel: 3,
+  },
+  {
+    id: "queue-broker",
+    name: "Broker Back-Pressure",
+    icon: "\u{1F4EC}",
+    subtitle: "Memory-Watermark / Producer-Buffer voll → Publish blockiert",
+    category: "component",
+    description:
+      "Zwei Spielarten: RabbitMQ überschreitet den vm_memory_high_watermark (~60%) und stoppt das Lesen vom Socket → publizierende Connections blockieren passiv im Socket-Write. Kafka erschöpft den Producer-Buffer (buffer.memory) → send() blockiert bis max.block.ms, dann TimeoutException. Beide sind pegelgetriggert: der Durchsatz bestimmt nur, wie schnell die Schwelle erreicht wird.",
+    trigger:
+      "Consumer/Broker langsamer als der Producer (langsamer Downstream, GC im Broker, Disk-Druck); der Producer schiebt weiter Last nach → der Pegel läuft auf die Schwelle zu.",
+    phases: [
+      {
+        t: 0,
+        severity: "healthy",
+        label: "Normal",
+        desc: "Broker-Memory 40%, Buffer frei, Publish-Latenz 3ms",
+      },
+      {
+        t: 0.25,
+        severity: "degraded",
+        label: "Pegel steigt",
+        desc: "Broker-Memory 55%, Buffer 60%, Publish-Latenz 15ms",
+      },
+      {
+        t: 0.5,
+        severity: "warning",
+        label: "Watermark nah",
+        desc: "58% Memory, erste blocked-Connections, Buffer 90%",
+      },
+      {
+        t: 0.75,
+        severity: "critical",
+        label: "Blockiert",
+        desc: "Watermark überschritten: alle Publisher blockiert, send()-Timeouts",
+      },
+    ],
+    metrics: [
+      {
+        name: "Broker Memory",
+        unit: "%",
+        healthy: 40,
+        degraded: 55,
+        warning: 58,
+        critical: 65,
+        thresholdWarn: 55,
+        thresholdCrit: 60,
+      },
+      {
+        name: "Producer-Buffer",
+        unit: "%",
+        healthy: 20,
+        degraded: 60,
+        warning: 90,
+        critical: 100,
+        thresholdWarn: 75,
+        thresholdCrit: 95,
+      },
+      {
+        name: "Publish-Latenz",
+        unit: "ms",
+        healthy: 3,
+        degraded: 15,
+        warning: 120,
+        critical: 800,
+        thresholdWarn: 50,
+        thresholdCrit: 500,
+      },
+      {
+        name: "Blocked Publisher",
+        unit: "",
+        healthy: 0,
+        degraded: 0,
+        warning: 3,
+        critical: 25,
+        thresholdWarn: 1,
+        thresholdCrit: 10,
+      },
+    ],
+    promql: [
+      {
+        label: "RabbitMQ blocked connections",
+        query: 'rabbitmq_connections{state="blocked"}',
+      },
+      {
+        label: "RabbitMQ Memory vs Watermark",
+        query:
+          "rabbitmq_process_resident_memory_bytes\n  / rabbitmq_resident_memory_limit_bytes * 100",
+      },
+      {
+        label: "Kafka Producer Buffer",
+        query:
+          "kafka_producer_buffer_available_bytes\n  / kafka_producer_buffer_total_bytes * 100",
+      },
+    ],
+    fix: "RabbitMQ: BlockedListener registrieren, Publishing über eigene Queue + dedizierten Thread entkoppeln, bei handleBlocked aufhören nachzuschieben. Kafka: buffer-available-bytes überwachen (→0 = Sättigung), linger.ms/batch.size tunen, Partitionen/Broker skalieren. Generell: Back-Pressure bis an die Quelle weiterreichen statt unbounded Buffer.",
+    dashboardLevel: 3,
   },
   {
     id: "cascade",
@@ -751,6 +942,7 @@ const CATEGORIES = [
   { id: "all", label: "Alle", icon: "\u25C9" },
   { id: "compute", label: "Compute", icon: "\u2699\uFE0F" },
   { id: "pool", label: "Pools", icon: "\u{1F517}" },
+  { id: "component", label: "Infra-Komponente", icon: "\u{1F9F1}" },
   { id: "external", label: "Extern", icon: "\u{1F310}" },
   { id: "cascade", label: "Kaskade", icon: "\u{1F30A}" },
 ];
@@ -1359,6 +1551,18 @@ function phaseFilled(phases, idx, prog) {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  /* Independently scrollable. max-height is in LOGICAL canvas px (the deck
+     renders on a ~1.3x-scaled 980x552 canvas), sized to fill the body all
+     the way down to the visible viewport edge so the list is not short.
+     The half-tile bottom padding lets the last card scroll up far enough to
+     stay selectable even when the auto-hiding Slidev nav-toolbar overlays
+     the bottom-left — it then only covers the padding / lower half of the
+     last tile, never its clickable header. */
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 3px;
+  padding-bottom: 26px;
+  overscroll-behavior: contain;
 }
 .scenario-btn {
   background: var(--c-surface);

@@ -371,11 +371,12 @@ hideInToc: true
 
 <!--
 - Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
-  Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider fährt das
-  Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
+  Infra-Komponente, Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider
+  fährt das Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
   Gauges laufen mit. Slider auch manuell ziehbar.
 - Zeigen: „CPU-Throttling“ komplett durchspielen (GC-Verstärkung beim
-  JVM-Killer von eben!), danach „Kaskaden-Failure“ als Eskalation.
+  JVM-Killer von eben!), danach „DB Checkpoint-Sättigung“ oder „Broker
+  Back-Pressure“ als Infra-Komponente, „Kaskaden-Failure“ als Eskalation.
 - Unten „PromQL-Queries anzeigen“ aufklappen — die Queries entsprechen
   den Schwellwerten der vorigen Folien; Gegenmaßnahmen-Box mitgeben.
 -->
@@ -480,15 +481,109 @@ hideInToc: true
 
 # Hysterese: Warum Systeme nach Überlast „kleben“
 
+<style>
+table { font-size: 0.8em; }
+table td, table th { padding-top: 0.28em; padding-bottom: 0.28em; }
+</style>
+
 Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn die externe Last sinkt:
 
-| Mechanismus         | Feedback-Loop                                                               |
-| ------------------- | --------------------------------------------------------------------------- |
-| **Cache-Stampede**  | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch  |
-| **GC Death Spiral** | Memory-Pressure → mehr GC → CPU verbraucht → Requests langsamer → mehr GC   |
-| **Queue-Backlog**   | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate) |
-| **Circuit-Breaker** | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr         |
-| **Autoscaler-Lag**  | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch       |
+| Mechanismus                      | Feedback-Loop                                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Cache-Stampede**               | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch                                                   |
+| **Runtime GC Death Spiral**      | Heap-Druck → mehr GC → GC frisst CPU → Requests langsamer → mehr GC · _JVM/V8/Go/.NET; Python nur zyklischer GC_             |
+| **Queue-Backlog**                | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate)                                                  |
+| **Circuit-Breaker**              | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr                                                          |
+| **Backing-Service Flow-Control** | Pegel über Set-Schwelle → Broker/DB drosselt (RabbitMQ-Block, Galera-FC, InnoDB-Checkpoint) → löst erst unter Reset-Schwelle |
+| **Metastabiler Fehler**          | Positive Rückkopplung hält die Überlast → Reset-Punkt unerreichbar → nur Load-Shedding/Drain/Restart                         |
+| **Autoscaler-Lag**               | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch                                                        |
+
+---
+hideInToc: true
+---
+
+# Back-Pressure als Regelkreise
+
+Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (Pegel vs. Momentanrate) und **Bremsform** (binär vs. proportional):
+
+<div class="rk-matrix">
+  <div></div>
+  <div class="rk-head">binär · Bang-Bang</div>
+  <div class="rk-head">proportional</div>
+  <div class="rk-side">zustandsbehaftet<br /><span>Pegel · vorhersagbar</span></div>
+  <div class="rk-cell">ZGC-Stall · RabbitMQ-Block · Galera-FC · Kafka-Buffer · OOM-Kill</div>
+  <div class="rk-cell">InnoDB-Checkpoint · MongoDB-FC · CockroachDB · cgroup memory.high</div>
+  <div class="rk-side">zustandsarm<br /><span>Rate · nur detektierbar</span></div>
+  <div class="rk-cell">TCP Zero-Window · RabbitMQ credit_flow · Netty isWritable</div>
+  <div class="rk-cell">Shenandoah-Pacing · Go GC-assist · Reactive Streams · HTTP/2</div>
+</div>
+
+<div class="rk-callouts">
+<Callout tone="info" dense>
+<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code>, Grafana Recovery Threshold).
+</Callout>
+<Callout tone="danger" dense>
+<strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
+</Callout>
+</div>
+
+<div class="text-slate-500" style="margin-top:0.4em; font-size:0.62em;">
+Brendan Gregg · USE-Methode &nbsp;·&nbsp; Neil Gunther · Universal Scalability Law &nbsp;·&nbsp; Bronson et al. · Metastable Failures (HotOS 2021)
+</div>
+
+<style>
+.rk-matrix {
+  display: grid;
+  grid-template-columns: 9em 1fr 1fr;
+  gap: 6px;
+  margin-top: 0.5em;
+  font-size: 0.74em;
+}
+.rk-head {
+  font-weight: 700;
+  text-align: center;
+  padding: 3px;
+  border-radius: 5px;
+  background: rgba(148, 163, 184, 0.12);
+}
+.rk-side {
+  font-weight: 700;
+  font-size: 0.86em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2px 10px 2px 6px;
+}
+.rk-side span {
+  font-weight: 400;
+  font-size: 0.8em;
+  opacity: 0.65;
+}
+.rk-cell {
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.05);
+  line-height: 1.3;
+}
+.rk-callouts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 0.7em;
+  font-size: 0.82em;
+}
+</style>
+
+<!--
+- Bedienung: statische Erklär-Folie vor dem Katalog. Die 2×2-Matrix ordnet jeden
+  folgenden Mechanismus nach Gedächtnis (Achse 1) und Bremsform (Achse 2) ein.
+- Zeigen: das ZGC-vs-Shenandoah-Paar (beide GC, aber binär vs. proportional) und
+  die Diagonale — lange Zeitkonstante neigt zu binär, kurze zu proportional.
+- Merksatz: zustandsbehaftet = vorhersagbar (Pegel-Gauge + dL/dt → Time-to-
+  threshold); zustandsarm = nur detektierbar. Metastabiler Fehler = der
+  gefährliche super-lineare Sonderfall.
+-->
 
 ---
 clicks: false
@@ -500,13 +595,15 @@ hideInToc: true
 <HystereseCatalog />
 
 <!--
-- Bedienung: Filter-Pills oben (Applikation, Infrastruktur, Netzwerk,
-  Kubernetes); Klick auf eine Karte klappt die Detail-Ansicht mit
-  Feedback-Loop auf. Die Kurven-Animation läuft von selbst.
-- Zeigen: „Cache-Stampede“ und „JVM GC Death Spiral“ aufklappen — die
-  zwei Mechanismen von der Tabelle der vorigen Folie, jetzt bewegt.
-- Hinweis: alle 15 Mechanismen teilen dasselbe Muster — interner
-  Zustand bleibt bestehen, obwohl die externe Last längst gesunken ist.
+- Bedienung: Filter-Pills oben (Applikation, Garbage Collection,
+  Infra-Komponente, Plattform, Netzwerk, Kubernetes); Klick auf eine Karte
+  klappt die Detail-Ansicht mit Feedback-Loop + Regelkreis-Badges
+  (Gedächtnis, Bremse, Set/Reset) auf. Die Kurven-Animation läuft von selbst.
+- Zeigen: „Cache-Stampede“ und „Runtime GC Death Spiral“ aufklappen, dann das
+  Paar ZGC Allocation Stall (binär) vs. Shenandoah Pacing (proportional) —
+  die zwei Achsen der vorigen Folie an einem GC-Beispiel.
+- Hinweis: alle 26 Mechanismen teilen dasselbe Muster — interner Zustand
+  bleibt bestehen, obwohl die externe Last längst gesunken ist.
 -->
 
 ---
@@ -829,7 +926,7 @@ hideInToc: true
 
 1. **Excess Capacity ist Pflicht** — ~20% Headroom für Puffer-Recovery
 2. **Gleichmäßiger Flow statt Batches** — TTL+Jitter, Leaky Bucket, Staggered Rollout
-3. **Hysterese einplanen** — Recovery Threshold in Alerting, XY Charts für Post-Incident
+3. **Hysterese einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Backing-Service-Flow-Control (Galera/RabbitMQ/InnoDB) ist Symptom fehlender Kapazität — metastabilen Kollaps via Load-Shedding _vor_ der Komponente brechen
 
 ### Dashboard-Strategie
 

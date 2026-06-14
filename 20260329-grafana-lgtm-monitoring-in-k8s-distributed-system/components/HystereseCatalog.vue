@@ -31,7 +31,9 @@ const C = computed(() => {
 const CATEGORIES = computed(() => [
   { id: "all", label: "Alle", color: C.value.text },
   { id: "app", label: "Applikation", color: C.value.orange },
-  { id: "infra", label: "Infrastruktur", color: C.value.purple },
+  { id: "gc", label: "Garbage Collection", color: C.value.red },
+  { id: "component", label: "Infra-Komponente", color: C.value.purple },
+  { id: "infra", label: "Plattform", color: C.value.green },
   { id: "network", label: "Netzwerk", color: C.value.cyan },
   { id: "k8s", label: "Kubernetes", color: C.value.blue },
 ]);
@@ -88,15 +90,18 @@ const HYSTERESES = computed(() => [
       "Stale-while-revalidate Pattern. Cache-Prewarming nach Incidents. TTL-Jitter gegen synchrone Expiration.",
     severity: "hoch",
     metrics: "cache_hit_ratio, rate(http_client_requests_seconds_count[5m])",
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Hit-Ratio bricht ein · Reset: Cache warm",
   },
   {
     id: "gc-death-spiral",
-    name: "JVM GC Death Spiral",
+    name: "Runtime GC Death Spiral",
     icon: "\uD83D\uDD04",
-    category: "app",
+    category: "gc",
     color: C.value.red,
     x: "CPU-Auslastung",
-    y: "GC Pause (ms)",
+    y: "GC-CPU-Anteil",
     upPath: [
       [0.25, 0.02],
       [0.35, 0.03],
@@ -118,19 +123,23 @@ const HYSTERESES = computed(() => [
       [0.28, 0.15],
     ],
     mechanism:
-      "Memory-Pressure löst häufigere GC-Zyklen aus. GC verbraucht CPU, verlangsamt Request-Verarbeitung, Objekte akkumulieren.",
+      "In jeder Runtime mit Tracing-GC (JVM, V8/Node, Go, .NET) erzwingt Heap-Druck nahe dem Limit häufigere GC. GC und Anwendungscode teilen sich die CPU → Requests langsamer → Objekte leben länger und stauen → noch mehr GC.",
     whyStick:
-      "Heap-Fragmentierung persistiert. Full-GC-Zyklen bleiben häufig bis Compaction abgeschlossen. Stop-the-World kompoundiert mit CFS-Throttling.",
+      "Selbstverstärkend bis CPU-Sättigung oder OOM. Bremsen unterscheiden sich: Go (mutator-assist + ~50%-CPU-Limiter) und Shenandoah (Pacer) drosseln graceful, ZGC stallt binär, V8/.NET haben kein Ventil. Python: Refcounting recycelt synchron, nur der zyklische GC brennt CPU (Asterisk).",
     recovery:
-      "Oft nur Pod-Restart (Heap-Reset). -XX:+UseG1GC mit -XX:MaxGCPauseMillis. -XX:MaxRAMPercentage=75.",
+      "Heap/CPU-Headroom schaffen, Allokationsrate senken, Limits korrekt setzen (JVM -XX:MaxRAMPercentage, Go GOMEMLIMIT, .NET GCHeapHardLimit). Oft hilft nur Pod-Restart (Heap-Reset).",
     severity: "kritisch",
-    metrics: 'jvm_gc_pause_seconds_sum, jvm_memory_used_bytes{area="heap"}',
+    metrics:
+      "go_gc_cpu_fraction / GODEBUG=gctrace, jvm_gc_pause_seconds_*, .NET % Time in GC, node --trace-gc",
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: null,
   },
   {
     id: "heap-fragmentation",
     name: "Heap-Fragmentierung",
     icon: "\uD83E\uDDE9",
-    category: "app",
+    category: "gc",
     color: C.value.orange,
     x: "Allocation Rate",
     y: "Full-GC Frequenz",
@@ -161,6 +170,9 @@ const HYSTERESES = computed(() => [
     severity: "mittel",
     metrics:
       'jvm_gc_pause_seconds_count{gc="G1 Old Generation"}, jvm_memory_pool_bytes_used',
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: null,
   },
   {
     id: "hikari-backlog",
@@ -198,6 +210,9 @@ const HYSTERESES = computed(() => [
       "connectionTimeout auf 10s (Fail-Fast). leakDetectionThreshold=60000. hikaricp_connections_pending monitoren.",
     severity: "kritisch",
     metrics: "hikaricp_connections_pending, hikaricp_connections_timeout_total",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Pool = max · Reset: Connection frei (Timeout 30 s)",
   },
   {
     id: "circuit-breaker",
@@ -233,12 +248,15 @@ const HYSTERESES = computed(() => [
       "waitDurationInOpenState tunen. permittedNumberOfCallsInHalfOpenState erhöhen. Fallback mit Stale-Daten.",
     severity: "hoch",
     metrics: "resilience4j_circuitbreaker_state, provider_quote_success_total",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Fehlerrate > Schwelle · Reset: Half-Open-Probes ok",
   },
   {
     id: "redis-eviction",
     name: "Redis-Eviction-Kaskade",
     icon: "\uD83D\uDCA8",
-    category: "app",
+    category: "component",
     color: C.value.amber,
     x: "Redis Memory %",
     y: "Upstream API Calls/s",
@@ -271,6 +289,9 @@ const HYSTERESES = computed(() => [
     severity: "hoch",
     metrics:
       "redis_evicted_keys_total, redis_memory_used_bytes, redis_keyspace_hits_total",
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: "Set: maxmemory erreicht · Reset: Cache warm",
   },
   {
     id: "tomcat-thread-saturation",
@@ -308,6 +329,9 @@ const HYSTERESES = computed(() => [
       "Root Cause finden (DB-Pool? Upstream-Timeout?). Timeouts verkürzen (<5s). Virtual Threads evaluieren.",
     severity: "kritisch",
     metrics: "tomcat_threads_busy_threads, tomcat_threads_config_max_threads",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Threads + Accept-Queue voll · Reset: Queue leer",
   },
   {
     id: "cfs-throttling",
@@ -346,6 +370,10 @@ const HYSTERESES = computed(() => [
     severity: "hoch",
     metrics:
       "container_cpu_cfs_throttled_periods_total, container_cpu_cfs_periods_total",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset:
+      "Set: Quota/Periode erschöpft · Reset: Backlog leer + Last < Quota",
   },
   {
     id: "oom-restart",
@@ -384,6 +412,9 @@ const HYSTERESES = computed(() => [
     severity: "kritisch",
     metrics:
       "container_memory_working_set_bytes, kube_pod_container_status_restarts_total",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Working-Set > Limit (OOM) · Reset: Cold Start fertig",
   },
   {
     id: "noisy-neighbor-cpu",
@@ -420,6 +451,9 @@ const HYSTERESES = computed(() => [
     severity: "hoch",
     metrics:
       "container_cpu_usage_seconds_total per pod, container_cpu_cfs_throttled_periods_total per pod",
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: null,
   },
   {
     id: "node-imbalance",
@@ -456,6 +490,9 @@ const HYSTERESES = computed(() => [
     severity: "mittel",
     metrics:
       "node_cpu_seconds_total per node, kube_pod_info aggregated per node",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: null,
   },
   {
     id: "hpa-oscillation",
@@ -494,6 +531,9 @@ const HYSTERESES = computed(() => [
     severity: "mittel",
     metrics:
       "kube_horizontalpodautoscaler_status_current_replicas, kube_horizontalpodautoscaler_spec_max_replicas",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: "Set: scale-up-Schwelle · Reset: stabilizationWindow",
   },
   {
     id: "tcp-slowstart",
@@ -531,6 +571,10 @@ const HYSTERESES = computed(() => [
       "TCP BBR statt Cubic. Keep-Alive Connections (HTTP/2, Connection-Pooling). Retransmit-Timeouts tunen.",
     severity: "mittel",
     metrics: "node_netstat_Tcp_RetransSegs, node_netstat_Tcp_OutSegs",
+    brakeForm: "binär",
+    memory: "zustandsarm",
+    setReset:
+      "Set: Paketverlust → cwnd = 1 MSS · Reset: Slow-Start über viele RTT",
   },
   {
     id: "dns-staleness",
@@ -567,6 +611,9 @@ const HYSTERESES = computed(() => [
     severity: "mittel",
     metrics:
       'coredns_dns_requests_total, coredns_dns_responses_total{rcode="NXDOMAIN"}',
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Endpoint-Wechsel · Reset: DNS-TTL abgelaufen",
   },
   {
     id: "pv-io-saturation",
@@ -605,6 +652,452 @@ const HYSTERESES = computed(() => [
     severity: "hoch",
     metrics:
       "node_disk_io_time_seconds_total, node_disk_io_time_weighted_seconds_total",
+    brakeForm: "super-linear",
+    memory: "zustandsbehaftet",
+    setReset: "Set: IOPS > Provisioned · Reset: I/O-Queue abgearbeitet",
+  },
+  {
+    id: "zgc-alloc-stall",
+    name: "ZGC Allocation Stall",
+    icon: "🛑",
+    category: "gc",
+    color: C.value.red,
+    x: "Heap-Allokationsrate",
+    y: "Allocation-Stall (ms)",
+    upPath: [
+      [0.2, 0.01],
+      [0.35, 0.01],
+      [0.5, 0.02],
+      [0.62, 0.03],
+      [0.72, 0.06],
+      [0.82, 0.2],
+      [0.9, 0.6],
+      [0.97, 0.96],
+    ],
+    downPath: [
+      [0.97, 0.96],
+      [0.88, 0.95],
+      [0.78, 0.92],
+      [0.66, 0.86],
+      [0.54, 0.7],
+      [0.44, 0.4],
+      [0.34, 0.14],
+      [0.22, 0.04],
+    ],
+    mechanism:
+      "Hält die GC mit der aggregierten Allokationsrate nicht Schritt, blockiert der jeweils allokierende Thread (irgendeiner) in einem Allocation Stall, bis Speicher frei wird — generisch, nicht threadselektiv.",
+    whyStick:
+      "Reiner Heap-Pegel: solange die Allokation über der Reclaim-Rate liegt, stallen Threads wiederholt. Ein gesundes ZGC stallt praktisch nie — ein Stall heißt, CPU-/Heap-Headroom fehlt.",
+    recovery:
+      "ConcGCThreads / CPU erhöhen, -Xmx anheben, auf Generational ZGC (JDK 21+) wechseln. Stalls als Alarm behandeln, nicht als Feature.",
+    severity: "hoch",
+    metrics: "jdk.ZAllocationStall (JFR, ≥JDK15), -Xlog:gc 'Allocation Stall'",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Kapazität erschöpft · Reset: Speicher frei (sonst OOME)",
+  },
+  {
+    id: "shenandoah-pacing",
+    name: "Shenandoah Pacing",
+    icon: "🐢",
+    category: "gc",
+    color: C.value.amber,
+    x: "GC-Rückstand",
+    y: "Pacing-Delay (≤10 ms)",
+    upPath: [
+      [0.1, 0.02],
+      [0.25, 0.05],
+      [0.4, 0.1],
+      [0.55, 0.16],
+      [0.68, 0.22],
+      [0.8, 0.28],
+      [0.9, 0.33],
+      [0.97, 0.36],
+    ],
+    downPath: [
+      [0.97, 0.36],
+      [0.88, 0.34],
+      [0.76, 0.3],
+      [0.62, 0.24],
+      [0.5, 0.18],
+      [0.38, 0.12],
+      [0.26, 0.07],
+      [0.12, 0.03],
+    ],
+    mechanism:
+      "Der Pacer drosselt allokierende Threads proaktiv und proportional zur Allokationsmenge, während der nebenläufige Zyklus läuft — ein Budget-Modell, das den Thread kurz warten lässt, bevor der Heap erschöpft ist.",
+    whyStick:
+      "Kein langsamer Pegel: das Budget setzt pro Zyklus zurück. Reicht Pacing nicht, eskaliert es: Pacing → Degenerated GC → Full GC.",
+    recovery:
+      "Heuristik 'compact' für Latenz, mehr CPU/Heap statt ShenandoahPacingMaxDelay hochzusetzen. Pacing nur im GC-Log sichtbar — kein JFR-Event, unsichtbar in Profilern.",
+    severity: "mittel",
+    metrics: "-Xlog:gc (Pacing-Delays), Häufung von Degenerated/Full GC",
+    brakeForm: "proportional",
+    memory: "zustandsarm",
+    setReset: "gedeckelt ≤10 ms (ShenandoahPacingMaxDelay)",
+  },
+  {
+    id: "innodb-checkpoint",
+    name: "InnoDB Redo-Log / Checkpoint",
+    icon: "🐬",
+    category: "component",
+    color: C.value.cyan,
+    x: "Checkpoint-Age",
+    y: "Flush-Intensität",
+    upPath: [
+      [0.1, 0.02],
+      [0.3, 0.05],
+      [0.5, 0.12],
+      [0.62, 0.2],
+      [0.72, 0.35],
+      [0.82, 0.58],
+      [0.9, 0.8],
+      [0.97, 0.95],
+    ],
+    downPath: [
+      [0.97, 0.95],
+      [0.88, 0.9],
+      [0.78, 0.78],
+      [0.66, 0.62],
+      [0.54, 0.45],
+      [0.42, 0.3],
+      [0.3, 0.16],
+      [0.16, 0.06],
+    ],
+    mechanism:
+      "Das Redo-Log ist ein zirkulärer Puffer. Mit wachsender Checkpoint Age rampt InnoDB das Flushing über Stufen hoch — Adaptive-Flushing-LWM → Async-Point (7/8) → Sync-Point (15/16) → Soft-Limit (Voll-Pause).",
+    whyStick:
+      "Der Akkumulator (Checkpoint Age) füllt über Minuten und leert nur so schnell wie die IO-Kapazität. 'Flush Storms' frieren Schreiboperationen ein, bis die Age unter die Schwelle fällt.",
+    recovery:
+      "innodb_redo_log_capacity groß genug für Write-Bursts. Innodb_checkpoint_age überwachen; Nähe zum Async-Point = erschöpfte IO-Kapazität.",
+    severity: "hoch",
+    metrics: "Innodb_checkpoint_age, innodb_redo_log_capacity",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: "Set: Async 7/8 · Sync 15/16 · Reset: < LWM 10%",
+  },
+  {
+    id: "galera-flow-control",
+    name: "Galera Flow Control",
+    icon: "🚦",
+    category: "component",
+    color: C.value.purple,
+    x: "Receive-Queue",
+    y: "FC-Pause-Anteil",
+    upPath: [
+      [0.15, 0.0],
+      [0.35, 0.0],
+      [0.55, 0.01],
+      [0.68, 0.03],
+      [0.78, 0.15],
+      [0.86, 0.55],
+      [0.93, 0.85],
+      [0.98, 0.97],
+    ],
+    downPath: [
+      [0.98, 0.97],
+      [0.9, 0.96],
+      [0.8, 0.93],
+      [0.7, 0.88],
+      [0.58, 0.7],
+      [0.48, 0.35],
+      [0.4, 0.08],
+      [0.3, 0.01],
+    ],
+    mechanism:
+      "Wächst die Receive-Queue eines Nodes über gcs.fc_limit, broadcastet er FC_PAUSE und der ganze Cluster stoppt temporär die Replikation neuer Transaktionen — ein einziger langsamer Node drosselt alle.",
+    whyStick:
+      "Doppelschwelle: gelockert wird erst bei gcs.fc_limit · gcs.fc_factor (< 1). Solange der langsame Node nicht aufholt, bleibt der Cluster pausiert.",
+    recovery:
+      "Den langsamen Node fixen, nicht die FC-Limits lockern. wsrep_flow_control_paused (>0 verdächtig) und wsrep_flow_control_sent (Täter-Node) beobachten.",
+    severity: "hoch",
+    metrics:
+      "wsrep_flow_control_paused, wsrep_flow_control_sent, wsrep_local_recv_queue",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: recv-queue > fc_limit · Reset: < fc_limit · fc_factor",
+  },
+  {
+    id: "mongodb-flow-control",
+    name: "MongoDB Flow Control",
+    icon: "🍃",
+    category: "component",
+    color: C.value.green,
+    x: "Replication-Lag",
+    y: "Ticket-Drosselung",
+    upPath: [
+      [0.1, 0.03],
+      [0.28, 0.06],
+      [0.45, 0.12],
+      [0.58, 0.22],
+      [0.7, 0.38],
+      [0.8, 0.58],
+      [0.9, 0.8],
+      [0.97, 0.94],
+    ],
+    downPath: [
+      [0.97, 0.94],
+      [0.87, 0.88],
+      [0.75, 0.74],
+      [0.62, 0.56],
+      [0.5, 0.4],
+      [0.38, 0.26],
+      [0.26, 0.14],
+      [0.13, 0.05],
+    ],
+    mechanism:
+      "Nähert sich der Majority-Committed-Lag dem flowControlTargetLagSeconds (10 s), müssen Writes auf dem Primary erst Tickets erwerben — die Tickets/s begrenzen die Schreibrate, um den Lag unter dem Ziel zu halten.",
+    whyStick:
+      "Credit-/Ticket-basiert auf dem Primary, gesteuert über die Lag-Einschätzung. In PSA-Topologien drohen unnötiges Throttling oder Stalls bei ausgefallenem Secondary.",
+    recovery:
+      "Langsames Secondary fixen. flowControl.isLagged und timeAcquiringMicros beobachten. Nicht das Ziel-Lag blind hochsetzen.",
+    severity: "mittel",
+    metrics: "flowControl.isLagged, flowControl.timeAcquiringMicros",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: "Ziel-Lag 10 s (flowControlTargetLagSeconds)",
+  },
+  {
+    id: "cockroach-admission",
+    name: "CockroachDB Admission Control",
+    icon: "🪳",
+    category: "component",
+    color: C.value.blue,
+    x: "L0-Sublevels",
+    y: "Admission-Wait",
+    upPath: [
+      [0.12, 0.03],
+      [0.3, 0.07],
+      [0.46, 0.14],
+      [0.6, 0.26],
+      [0.71, 0.42],
+      [0.81, 0.62],
+      [0.9, 0.82],
+      [0.97, 0.95],
+    ],
+    downPath: [
+      [0.97, 0.95],
+      [0.88, 0.9],
+      [0.76, 0.76],
+      [0.64, 0.58],
+      [0.52, 0.42],
+      [0.4, 0.28],
+      [0.27, 0.15],
+      [0.14, 0.05],
+    ],
+    mechanism:
+      "Admission Control sortiert wartende Arbeit nach (Tenant, Priorität, Txn-Startzeit) und vergibt IO-Tokens dynamisch aus der LSM-L0-Bandbreite — lock-haltende Transaktionen werden priorisiert.",
+    whyStick:
+      "Token-Bucket über den L0-Druck: steigt der Sublevel-Count, sinken die Tokens. Designt als Kollaps-Schutz, aber kein Ersatz für einen korrekt dimensionierten Cluster.",
+    recovery:
+      "L0-Druck / Admission-Wait-Latenz beobachten. Cluster richtig dimensionieren; Client-Verbindungen separat via server.max_connections_per_gateway.",
+    severity: "mittel",
+    metrics: "admission.wait_durations, storage L0-Sublevels",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: "Token-Bucket ∝ L0-Bandbreite, prio nach Txn-Start",
+  },
+  {
+    id: "rabbitmq-conn-block",
+    name: "RabbitMQ Connection-Blocking",
+    icon: "🐰",
+    category: "component",
+    color: C.value.orange,
+    x: "Broker-Memory %",
+    y: "Blocked Publisher",
+    upPath: [
+      [0.2, 0.0],
+      [0.4, 0.0],
+      [0.55, 0.01],
+      [0.66, 0.03],
+      [0.74, 0.12],
+      [0.82, 0.5],
+      [0.9, 0.85],
+      [0.97, 0.98],
+    ],
+    downPath: [
+      [0.97, 0.98],
+      [0.9, 0.97],
+      [0.82, 0.94],
+      [0.72, 0.88],
+      [0.6, 0.66],
+      [0.5, 0.3],
+      [0.42, 0.08],
+      [0.32, 0.01],
+    ],
+    mechanism:
+      "Übersteigt die Speichernutzung den vm_memory_high_watermark (~60%) oder fällt der freie Disk-Space unter disk_free_limit, stoppt der Broker das Lesen vom Socket — publizierende Connections blockieren passiv im Socket-Write (TCP-Back-Pressure).",
+    whyStick:
+      "Pegelgetriggert und binär: der Durchsatz bestimmt nur, wie schnell der RAM-Pegel die Schwelle erreicht, nicht die Stärke der Bremse. Consumer bleiben unblockiert.",
+    recovery:
+      "BlockedListener registrieren, Publishing über eigene Queue + Thread entkoppeln. Auf blocked/blocking-State überwachen. AMQP 1.0 für selektives Queue-Throttling evaluieren.",
+    severity: "kritisch",
+    metrics:
+      "rabbitmqctl list_connections state (blocked/blocking), memory.used vs watermark",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: mem-watermark ~60% · Reset: Alarm clear",
+  },
+  {
+    id: "rabbitmq-credit-flow",
+    name: "RabbitMQ credit_flow",
+    icon: "🎟️",
+    category: "component",
+    color: C.value.pink,
+    x: "Channel-Durchsatz",
+    y: "Reader-Block-Anteil",
+    upPath: [
+      [0.2, 0.02],
+      [0.38, 0.04],
+      [0.52, 0.08],
+      [0.64, 0.16],
+      [0.74, 0.3],
+      [0.83, 0.5],
+      [0.91, 0.7],
+      [0.97, 0.85],
+    ],
+    downPath: [
+      [0.97, 0.85],
+      [0.9, 0.72],
+      [0.82, 0.54],
+      [0.73, 0.36],
+      [0.63, 0.22],
+      [0.52, 0.12],
+      [0.4, 0.06],
+      [0.26, 0.03],
+    ],
+    mechanism:
+      "Intern fließen Nachrichten reader → channel → queue → msg_store; jeder Prozess gewährt Credits (200 init, +50 / 50 verarbeitet). Verarbeitet der Channel langsamer, blockt er den Reader → Producer werden gedrosselt.",
+    whyStick:
+      "Nicht ressourcengetrieben und mit Millisekunden-Gedächtnis: das Credit-Fenster toggelt mehrmals pro Sekunde — nur als Rate beobachtbar, kein Pegel zum Hochrechnen.",
+    recovery:
+      "Verkettung (queue → channel → reader) entzerren. Interne Flow-Control-Metriken / Channel-Block-Events beobachten.",
+    severity: "mittel",
+    metrics: "interne credit_flow-Metriken, Channel-Block-Events",
+    brakeForm: "binär",
+    memory: "zustandsarm",
+    setReset: "Credits 200 init, +50 / 50 verarbeitet",
+  },
+  {
+    id: "kafka-buffer-memory",
+    name: "Kafka Producer buffer.memory",
+    icon: "🪣",
+    category: "component",
+    color: C.value.lime,
+    x: "Producer-Buffer %",
+    y: "send()-Blockzeit",
+    upPath: [
+      [0.15, 0.0],
+      [0.35, 0.01],
+      [0.52, 0.02],
+      [0.65, 0.05],
+      [0.75, 0.14],
+      [0.84, 0.45],
+      [0.92, 0.8],
+      [0.98, 0.97],
+    ],
+    downPath: [
+      [0.98, 0.97],
+      [0.9, 0.93],
+      [0.8, 0.85],
+      [0.68, 0.66],
+      [0.56, 0.42],
+      [0.44, 0.22],
+      [0.3, 0.08],
+      [0.16, 0.01],
+    ],
+    mechanism:
+      "Ist der Producer-Buffer (buffer.memory, Default 32 MB) erschöpft, blockieren weitere send()-Aufrufe bis max.block.ms (Default 60 s), dann TimeoutException.",
+    whyStick:
+      "Buffer = bounded buffer: der App-Thread blockiert, bis der Sender-Thread Platz schafft. Bei langsamem Broker/Netz bleibt der Buffer voll.",
+    recovery:
+      "buffer-available-bytes überwachen (→ 0 = Sättigung). linger.ms / batch.size tunen, Partitionen/Broker skalieren, Backpressure an die Quelle weiterreichen.",
+    severity: "hoch",
+    metrics:
+      "kafka producer buffer-available-bytes, record-queue-time, buffer-exhausted-rate",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: buffer.memory voll · max.block.ms 60 s",
+  },
+  {
+    id: "cgroup-memory-high",
+    name: "cgroup-v2 memory.high",
+    icon: "🐧",
+    category: "infra",
+    color: C.value.yellow,
+    x: "Memory über memory.high",
+    y: "Reclaim-Drosselung",
+    upPath: [
+      [0.1, 0.02],
+      [0.28, 0.06],
+      [0.44, 0.14],
+      [0.58, 0.26],
+      [0.7, 0.42],
+      [0.8, 0.6],
+      [0.9, 0.8],
+      [0.97, 0.94],
+    ],
+    downPath: [
+      [0.97, 0.94],
+      [0.87, 0.87],
+      [0.75, 0.72],
+      [0.62, 0.54],
+      [0.5, 0.38],
+      [0.38, 0.24],
+      [0.26, 0.13],
+      [0.13, 0.05],
+    ],
+    mechanism:
+      "cgroup-v2 memory.high ist eine weiche Grenze: übersteigt eine Control-Group sie, drosselt der Kernel die Prozesse durch Reclaim-Verzögerung, die mit dem Druck steigt (kein OOM-Kill wie bei memory.max).",
+    whyStick:
+      "Pegelgetrieben und proportional: solange die Allokation über der Reclaim-Rate liegt, akkumuliert der Speicherdruck und die Verzögerung wächst.",
+    recovery:
+      "memory.high korrekt dimensionieren, PSI (memory.pressure) überwachen, Allokationsrate senken. memory.max als harter Backstop.",
+    severity: "mittel",
+    metrics: "memory.pressure (PSI), memory.current vs memory.high",
+    brakeForm: "proportional",
+    memory: "zustandsbehaftet",
+    setReset: "Reclaim-Delay ∝ Druck über memory.high",
+  },
+  {
+    id: "dirty-writeback",
+    name: "Linux Dirty-Page Writeback",
+    icon: "💽",
+    category: "infra",
+    color: C.value.purple,
+    x: "Dirty Pages %",
+    y: "Writer-Throttle",
+    upPath: [
+      [0.15, 0.0],
+      [0.35, 0.01],
+      [0.5, 0.04],
+      [0.6, 0.1],
+      [0.7, 0.22],
+      [0.8, 0.5],
+      [0.9, 0.82],
+      [0.97, 0.96],
+    ],
+    downPath: [
+      [0.97, 0.96],
+      [0.89, 0.92],
+      [0.79, 0.82],
+      [0.68, 0.64],
+      [0.57, 0.42],
+      [0.46, 0.22],
+      [0.34, 0.08],
+      [0.2, 0.02],
+    ],
+    mechanism:
+      "Linux startet Background-Writeback ab dirty_background_ratio; überschreiten die Dirty Pages dirty_ratio, werden schreibende Prozesse synchron gedrosselt, bis genug zurückgeschrieben ist.",
+    whyStick:
+      "Doppelschwelle (dirty_background_ratio < dirty_ratio) erzeugt ein Hystereseband. Bei langsamem Storage stauen sich Dirty Pages und der Throttle bleibt aktiv.",
+    recovery:
+      "dirty_ratio / dirty_background_ratio an die Storage-Geschwindigkeit anpassen, schnelleres Storage, fsync-Verhalten der App prüfen.",
+    severity: "mittel",
+    metrics: "node_vmstat_nr_dirty, dirty_ratio / dirty_background_ratio",
+    brakeForm: "binär",
+    memory: "zustandsbehaftet",
+    setReset: "Set: dirty_ratio · Reset: < dirty_background_ratio",
   },
 ]);
 
@@ -655,6 +1148,16 @@ function sevColor(sev) {
 }
 function catColor(cat) {
   return CATEGORIES.value.find((c) => c.id === cat)?.color || C.value.muted;
+}
+function catLabel(cat) {
+  return CATEGORIES.value.find((c) => c.id === cat)?.label || cat;
+}
+function brakeColor(form) {
+  return form === "binär"
+    ? C.value.red
+    : form === "proportional"
+      ? C.value.amber
+      : C.value.purple;
 }
 
 function toggle(id) {
@@ -1000,7 +1503,7 @@ function startDot(h) {
                   background: catColor(h.category) + '12',
                   color: catColor(h.category),
                 }"
-                >{{ h.category }}</span
+                >{{ catLabel(h.category) }}</span
               >
             </div>
             <div class="card-mechanism">{{ h.mechanism }}</div>
@@ -1013,6 +1516,35 @@ function startDot(h) {
 
         <!-- Expanded -->
         <div v-if="expanded === h.id" class="card-detail">
+          <div v-if="h.memory || h.brakeForm" class="regelkreis-row">
+            <span
+              v-if="h.memory"
+              class="rk-chip"
+              :style="{
+                background: C.blue + '15',
+                color: C.blue,
+                borderColor: C.blue + '30',
+              }"
+              >Gedächtnis · {{ h.memory }}</span
+            >
+            <span
+              v-if="h.brakeForm"
+              class="rk-chip"
+              :style="{
+                background: brakeColor(h.brakeForm) + '15',
+                color: brakeColor(h.brakeForm),
+                borderColor: brakeColor(h.brakeForm) + '30',
+              }"
+              >Bremse · {{ h.brakeForm }}</span
+            >
+            <span v-if="h.setReset" class="rk-setreset">{{ h.setReset }}</span>
+          </div>
+          <div class="detail-box mechanism-box">
+            <div class="detail-label" :style="{ color: h.color }">
+              MECHANISMUS
+            </div>
+            <div class="detail-text">{{ h.mechanism }}</div>
+          </div>
           <div class="detail-grid">
             <div class="detail-box why-box">
               <div class="detail-label" :style="{ color: C.red }">
@@ -1247,6 +1779,35 @@ function startDot(h) {
 
 .card-detail {
   padding: 0 10px 8px;
+}
+
+.regelkreis-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.rk-chip {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid;
+  font-family: var(--slidev-code-font-family);
+}
+
+.rk-setreset {
+  font-size: 9px;
+  color: var(--c-muted);
+  font-family: var(--slidev-code-font-family);
+}
+
+.mechanism-box {
+  background: var(--c-surfaceAlt);
+  border-color: var(--c-border);
+  margin-bottom: 6px;
 }
 
 .detail-grid {
