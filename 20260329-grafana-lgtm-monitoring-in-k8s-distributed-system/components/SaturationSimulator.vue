@@ -992,39 +992,94 @@ const playing = ref(false);
 const showPromQL = ref(false);
 
 let animFrameId = null;
-let startTime = null;
+
+const FULL_DURATION = 8000; // konstante Play-Geschwindigkeit (volle Leiste)
+const STEP_RATE = 2400; // ms pro voller Leiste beim Steppen → spürbar schneller
 
 const scenario = computed(
   () => SCENARIOS.find((s) => s.id === activeId.value) || SCENARIOS[0],
 );
 
 // --- Animation ---
-function animate(timestamp) {
-  if (startTime === null) startTime = timestamp;
-  const elapsed = timestamp - startTime;
-  const duration = 8000;
-  const p = Math.min(elapsed / duration, 1);
-  progress.value = p;
-  if (p < 1) {
-    animFrameId = requestAnimationFrame(animate);
-  } else {
-    playing.value = false;
-  }
-}
-
-function handlePlay() {
-  progress.value = 0;
-  startTime = null;
-  playing.value = true;
-  animFrameId = requestAnimationFrame(animate);
-}
-
-function handleStop() {
-  playing.value = false;
+function cancelAnim() {
   if (animFrameId) {
     cancelAnimationFrame(animFrameId);
     animFrameId = null;
   }
+}
+
+function easeInOut(x) {
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+}
+
+// Generischer Tween von progress.value → `to` über `dur` ms (vorwärts wie
+// rückwärts), optionales Easing. Setzt playing am Ende auf false (Auto-Stop).
+function animateTo(to, dur, ease) {
+  cancelAnim();
+  const from = progress.value;
+  const delta = to - from;
+  if (dur <= 0 || Math.abs(delta) < 1e-4) {
+    progress.value = to;
+    playing.value = false;
+    return;
+  }
+  let start = null;
+  const stepFn = (ts) => {
+    if (start === null) start = ts;
+    const k = Math.min((ts - start) / dur, 1);
+    progress.value = from + delta * (ease ? ease(k) : k);
+    if (k < 1) {
+      animFrameId = requestAnimationFrame(stepFn);
+    } else {
+      progress.value = to;
+      animFrameId = null;
+      playing.value = false;
+    }
+  };
+  animFrameId = requestAnimationFrame(stepFn);
+}
+
+function handlePlay() {
+  // Am Ende erneut Play → von vorn; sonst an aktueller Position fortsetzen.
+  if (progress.value >= 1 - 1e-4) progress.value = 0;
+  playing.value = true;
+  // Restdauer aus verbleibender Strecke → konstante Sweep-Rate, linear.
+  animateTo(1, FULL_DURATION * (1 - progress.value), null);
+}
+
+function handleStop() {
+  cancelAnim();
+  playing.value = false;
+}
+
+function handleReset() {
+  cancelAnim();
+  playing.value = false;
+  progress.value = 0;
+}
+
+// Zentrierte Position je Severity-Stufe (~12/38/62/88 %), generisch aus den
+// Phasen-t-Werten — Badge UND Segment-Füllung zeigen so die aktive Stufe.
+function stageMidpoints() {
+  const ph = scenario.value.phases;
+  return ph.map((p, i) => (p.t + (ph[i + 1]?.t ?? 1)) / 2);
+}
+
+function stepTo(target) {
+  playing.value = false; // Schritt ist kein Full-Playthrough
+  const dur = clamp(Math.abs(target - progress.value) * STEP_RATE, 200, 900);
+  animateTo(target, dur, easeInOut);
+}
+
+function handleStageForward() {
+  const next = stageMidpoints().find((t) => t > progress.value + 1e-3);
+  if (next !== undefined) stepTo(next); // an der Critical-Mitte: No-op
+}
+
+function handleStageBack() {
+  let prev;
+  for (const t of stageMidpoints()) if (t < progress.value - 1e-3) prev = t;
+  if (prev !== undefined) stepTo(prev); // an der Healthy-Mitte: No-op
 }
 
 function handleSelectScenario(id) {
@@ -1297,11 +1352,29 @@ function phaseFilled(phases, idx, prog) {
 
             <!-- Controls -->
             <div class="controls-row">
+              <button class="ctrl-btn" title="Reset" @click="handleReset()">
+                ↺
+              </button>
+              <button
+                class="ctrl-btn"
+                title="Stufe zurück"
+                @click="handleStageBack()"
+              >
+                ⏮
+              </button>
               <button
                 class="play-btn"
+                title="Play / Pause"
                 @click="playing ? handleStop() : handlePlay()"
               >
                 {{ playing ? "⏸" : "▶" }}
+              </button>
+              <button
+                class="ctrl-btn"
+                title="Stufe vor"
+                @click="handleStageForward()"
+              >
+                ⏭
               </button>
               <input
                 type="range"
@@ -1789,6 +1862,25 @@ function phaseFilled(phases, idx, prog) {
 }
 .play-btn:hover {
   background: rgba(59, 130, 246, 0.2);
+}
+.ctrl-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--c-muted);
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+.ctrl-btn:hover {
+  background: rgba(148, 163, 184, 0.18);
+  color: var(--c-text);
 }
 .progress-slider {
   flex: 1;
