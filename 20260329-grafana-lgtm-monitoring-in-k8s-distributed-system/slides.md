@@ -72,17 +72,27 @@ hideInToc: true
 
 <MethodsOverview />
 
-<div v-click style="margin-top: 14px; text-align: center; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.25); background: rgba(148,163,184,0.06);">
-  <div style="font-size: 1.5em; font-weight: 800; letter-spacing: 0.5px;">
-    <span class="text-amber-700 dark:text-amber-400">Let's</span> <span style="color: #a855f7;">use</span> <span style="color: #ef4444;">RED</span>
-  </div>
-  <div class="text-slate-500 dark:text-slate-400" style="font-size: 0.78em; margin-top: 2px;">
-    =
-    <strong class="text-amber-700 dark:text-amber-400">Golden Signals</strong> ·
-    <strong style="color: #a855f7;">USE</strong> ·
-    <strong style="color: #ef4444;">RED</strong>
+<div v-click style="margin-top: 14px; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(148,163,184,0.25); background: rgba(148,163,184,0.06);">
+  <div style="display: grid; grid-template-columns: auto auto auto auto auto; justify-content: center; align-items: center; column-gap: 14px; row-gap: 8px;">
+    <div class="text-amber-700 dark:text-amber-400" style="font-size: 1.5em; font-weight: 800; letter-spacing: 0.5px; text-align: center;">Let's</div>
+    <div></div>
+    <div style="font-size: 1.5em; font-weight: 800; letter-spacing: 0.5px; text-align: center; color: #a855f7;">use</div>
+    <div></div>
+    <div style="font-size: 1.5em; font-weight: 800; letter-spacing: 0.5px; text-align: center; color: #ef4444;">RED</div>
+    <div style="text-align: center;"><span class="text-amber-700 dark:text-amber-400" style="font-family: var(--slidev-code-font-family); font-size: 0.7em; font-weight: 700; letter-spacing: 0.7px; padding: 3px 10px; border-radius: 5px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3); display: inline-block;">HYBRID</span></div>
+    <div class="text-gray-400 dark:text-slate-600" style="font-size: 1.1em; font-weight: 700;">=</div>
+    <div style="text-align: center;"><span style="font-family: var(--slidev-code-font-family); font-size: 0.7em; font-weight: 700; letter-spacing: 0.7px; padding: 3px 10px; border-radius: 5px; color: #a855f7; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3); display: inline-block;">RESOURCE</span></div>
+    <div class="text-gray-400 dark:text-slate-600" style="font-size: 1.1em; font-weight: 700;">+</div>
+    <div style="text-align: center;"><span style="font-family: var(--slidev-code-font-family); font-size: 0.7em; font-weight: 700; letter-spacing: 0.7px; padding: 3px 10px; border-radius: 5px; color: #ef4444; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); display: inline-block;">SERVICE</span></div>
   </div>
 </div>
+
+<!--
+- Merksatz „Let's use RED": die drei Wörter stehen für die drei Methoden —
+  „Let's" → 4 Golden Signals, „use" → USE-Methode, „RED" → RED-Methode.
+- Untere Reihe ordnet jeder Methode ihre Perspektive zu: Golden Signals sind
+  der HYBRID aus RESOURCE (USE, Ressourcen-Sicht) und SERVICE (RED, User-Sicht).
+-->
 
 ---
 hideInToc: true
