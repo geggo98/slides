@@ -56,6 +56,8 @@ function buildPath(points) {
 const HYSTERESES = computed(() => [
   {
     id: "cache-stampede",
+    short:
+      "Unter Last evicten/expiren Cache-Entries; sinkt die Last, ist der Cache kalt.",
     name: "Cache-Stampede",
     icon: "\u26A1",
     category: "app",
@@ -96,6 +98,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "gc-death-spiral",
+    short:
+      "Heap-Druck nahe dem Limit erzwingt mehr GC; GC und App teilen sich die CPU → selbstverstärkend.",
     name: "Runtime GC Death Spiral",
     icon: "\uD83D\uDD04",
     category: "gc",
@@ -418,6 +422,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "noisy-neighbor-cpu",
+    short:
+      "Rechenlast von B verdrängt A von der gemeinsamen Node-CPU → Räuber-Beute-Oszillation.",
     name: "Noisy-Neighbor CPU-Kopplung",
     icon: "\u2694\uFE0F",
     category: "infra",
@@ -658,6 +664,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "zgc-alloc-stall",
+    short:
+      "Hält die GC nicht Schritt, stallt der allokierende Thread, bis Speicher frei wird.",
     name: "ZGC Allocation Stall",
     icon: "🛑",
     category: "gc",
@@ -698,6 +706,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "shenandoah-pacing",
+    short:
+      "Der Pacer drosselt allokierende Threads proaktiv und proportional zur Allokationsmenge.",
     name: "Shenandoah Pacing",
     icon: "🐢",
     category: "gc",
@@ -738,6 +748,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "innodb-checkpoint",
+    short:
+      "Mit wachsender Checkpoint Age rampt InnoDB das Flushing über Stufen hoch.",
     name: "InnoDB Redo-Log / Checkpoint",
     icon: "🐬",
     category: "component",
@@ -778,6 +790,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "galera-flow-control",
+    short:
+      "Wächst die Receive-Queue über gcs.fc_limit, broadcastet der Node FC_PAUSE → Cluster stoppt.",
     name: "Galera Flow Control",
     icon: "🚦",
     category: "component",
@@ -819,6 +833,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "mongodb-flow-control",
+    short:
+      "Nähert sich der Majority-Lag dem Ziel, brauchen Writes Tickets — drosselt die Schreibrate.",
     name: "MongoDB Flow Control",
     icon: "🍃",
     category: "component",
@@ -859,6 +875,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "cockroach-admission",
+    short:
+      "Admission Control sortiert wartende Arbeit nach Priorität und vergibt IO-Tokens dynamisch.",
     name: "CockroachDB Admission Control",
     icon: "🪳",
     category: "component",
@@ -899,6 +917,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "rabbitmq-conn-block",
+    short:
+      "Über dem Memory-Watermark stoppt der Broker das Socket-Lesen → Publisher blockieren (TCP-Back-Pressure).",
     name: "RabbitMQ Connection-Blocking",
     icon: "🐰",
     category: "component",
@@ -940,6 +960,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "rabbitmq-credit-flow",
+    short:
+      "Ein langsamer Channel verbraucht Credits nicht nach → blockt den Reader → Producer gedrosselt.",
     name: "RabbitMQ credit_flow",
     icon: "🎟️",
     category: "component",
@@ -980,6 +1002,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "kafka-buffer-memory",
+    short:
+      "Ist buffer.memory (32 MB) erschöpft, blockiert send() bis max.block.ms, dann TimeoutException.",
     name: "Kafka Producer buffer.memory",
     icon: "🪣",
     category: "component",
@@ -1021,6 +1045,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "cgroup-memory-high",
+    short:
+      "memory.high ist weich: über der Grenze drosselt der Kernel per Reclaim-Verzögerung (kein OOM-Kill).",
     name: "cgroup-v2 memory.high",
     icon: "🐧",
     category: "infra",
@@ -1061,6 +1087,8 @@ const HYSTERESES = computed(() => [
   },
   {
     id: "dirty-writeback",
+    short:
+      "Ab dirty_ratio drosselt der Kernel schreibende Prozesse synchron, bis genug zurückgeschrieben ist.",
     name: "Linux Dirty-Page Writeback",
     icon: "💽",
     category: "infra",
@@ -1506,7 +1534,7 @@ function startDot(h) {
                 >{{ catLabel(h.category) }}</span
               >
             </div>
-            <div class="card-mechanism">{{ h.mechanism }}</div>
+            <div class="card-mechanism">{{ h.short || h.mechanism }}</div>
           </div>
           <!-- Expand -->
           <span class="expand-arrow" :class="{ rotated: expanded === h.id }"
