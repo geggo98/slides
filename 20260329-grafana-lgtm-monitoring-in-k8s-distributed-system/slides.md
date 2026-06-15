@@ -499,93 +499,6 @@ Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn
 | **Autoscaler-Lag**               | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch                                                        |
 
 ---
-hideInToc: true
----
-
-# Back-Pressure als Regelkreise
-
-Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (Pegel vs. Momentanrate) und **Bremsform** (binär vs. proportional):
-
-<div class="rk-matrix">
-  <div></div>
-  <div class="rk-head">binär · Bang-Bang</div>
-  <div class="rk-head">proportional</div>
-  <div class="rk-side">zustandsbehaftet<br /><span>Pegel · vorhersagbar</span></div>
-  <div class="rk-cell">ZGC-Stall · RabbitMQ-Block · Galera-FC · Kafka-Buffer · OOM-Kill</div>
-  <div class="rk-cell">InnoDB-Checkpoint · MongoDB-FC · CockroachDB · cgroup memory.high</div>
-  <div class="rk-side">zustandsarm<br /><span>Rate · nur detektierbar</span></div>
-  <div class="rk-cell">TCP Zero-Window · RabbitMQ credit_flow · Netty isWritable</div>
-  <div class="rk-cell">Shenandoah-Pacing · Go GC-assist · Reactive Streams · HTTP/2</div>
-</div>
-
-<div class="rk-callouts">
-<Callout tone="info" dense>
-<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code>, Grafana Recovery Threshold).
-</Callout>
-<Callout tone="danger" dense>
-<strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
-</Callout>
-</div>
-
-<div class="text-slate-500" style="margin-top:0.4em; font-size:0.62em;">
-Brendan Gregg · USE-Methode &nbsp;·&nbsp; Neil Gunther · Universal Scalability Law &nbsp;·&nbsp; Bronson et al. · Metastable Failures (HotOS 2021)
-</div>
-
-<style>
-.rk-matrix {
-  display: grid;
-  grid-template-columns: 9em 1fr 1fr;
-  gap: 6px;
-  margin-top: 0.5em;
-  font-size: 0.74em;
-}
-.rk-head {
-  font-weight: 700;
-  text-align: center;
-  padding: 3px;
-  border-radius: 5px;
-  background: rgba(148, 163, 184, 0.12);
-}
-.rk-side {
-  font-weight: 700;
-  font-size: 0.86em;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 2px 10px 2px 6px;
-}
-.rk-side span {
-  font-weight: 400;
-  font-size: 0.8em;
-  opacity: 0.65;
-}
-.rk-cell {
-  padding: 5px 8px;
-  border-radius: 5px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(148, 163, 184, 0.05);
-  line-height: 1.3;
-}
-.rk-callouts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 0.7em;
-  font-size: 0.82em;
-}
-</style>
-
-<!--
-- Bedienung: statische Erklär-Folie vor dem Katalog. Die 2×2-Matrix ordnet jeden
-  folgenden Mechanismus nach Gedächtnis (Achse 1) und Bremsform (Achse 2) ein.
-- Zeigen: das ZGC-vs-Shenandoah-Paar (beide GC, aber binär vs. proportional) und
-  die Diagonale — lange Zeitkonstante neigt zu binär, kurze zu proportional.
-- Merksatz: zustandsbehaftet = vorhersagbar (Pegel-Gauge + dL/dt → Time-to-
-  threshold); zustandsarm = nur detektierbar. Metastabiler Fehler = der
-  gefährliche super-lineare Sonderfall.
--->
-
----
 clicks: false
 hideInToc: true
 ---
@@ -601,9 +514,60 @@ hideInToc: true
   (Gedächtnis, Bremse, Set/Reset) auf. Die Kurven-Animation läuft von selbst.
 - Zeigen: „Cache-Stampede“ und „Runtime GC Death Spiral“ aufklappen, dann das
   Paar ZGC Allocation Stall (binär) vs. Shenandoah Pacing (proportional) —
-  die zwei Achsen der vorigen Folie an einem GC-Beispiel.
+  die zwei Achsen der folgenden Quadranten-Folie an einem GC-Beispiel.
 - Hinweis: alle 26 Mechanismen teilen dasselbe Muster — interner Zustand
   bleibt bestehen, obwohl die externe Last längst gesunken ist.
+-->
+
+---
+hideInToc: true
+---
+
+# Back-Pressure als Regelkreise
+
+Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (Pegel vs. Momentanrate) und **Bremsform** (binär vs. proportional):
+
+<div class="bpq-layout">
+<div class="bpq-diagram"><BackpressureQuadrant /></div>
+<div class="bpq-explain">
+<Callout tone="info" dense>
+<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code>, Grafana Recovery Threshold).
+</Callout>
+<Callout tone="danger" dense>
+<strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
+</Callout>
+</div>
+</div>
+
+<div class="text-slate-500" style="margin-top:0.3em; font-size:0.6em;">
+Brendan Gregg · USE-Methode &nbsp;·&nbsp; Neil Gunther · Universal Scalability Law &nbsp;·&nbsp; Bronson et al. · Metastable Failures (HotOS 2021)
+</div>
+
+<style>
+.bpq-layout {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 16px;
+  margin-top: 0.4em;
+  align-items: start;
+}
+.bpq-explain {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.82em;
+}
+</style>
+
+<!--
+- Synthese-Folie nach dem Katalog: der Magic-Quadrant ordnet jeden Mechanismus
+  nach Gedächtnis (Y: Rate → Pegel) und Bremsform (X: binär → proportional) ein
+  und quantifiziert die Ausprägung über die Position.
+- Zeigen: das ZGC-vs-Shenandoah-Paar (beide GC, aber binär vs. proportional) und
+  die Diagonale — lange Zeitkonstante neigt zu binär, kurze zu proportional.
+- Merksatz: zustandsbehaftet = vorhersagbar (Pegel-Gauge + dL/dt → Time-to-
+  threshold); zustandsarm = nur detektierbar. Metastabiler Fehler = die
+  super-lineare Eskalation oben-links (∞ Hysterese).
 -->
 
 ---
