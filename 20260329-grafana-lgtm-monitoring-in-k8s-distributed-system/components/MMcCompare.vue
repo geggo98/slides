@@ -48,6 +48,7 @@ const speed = ref(3);
 const paused = ref(true);
 const metric = ref("T");
 const controlsOpen = ref(false);
+const scopeZoomed = ref(false);
 
 /* ---- nicht-reaktive Holder ---- */
 const world = new World(1.6, 1.0, 3, "tempo");
@@ -588,6 +589,7 @@ onUnmounted(() => {
 
       <div
         class="scope-panel"
+        :class="{ zoomed: scopeZoomed }"
         :style="{ background: C.panel, borderColor: C.border }"
       >
         <div class="scope-head">
@@ -617,6 +619,18 @@ onUnmounted(() => {
           </div>
         </div>
         <canvas ref="scopeCanvas" class="scope-canvas" />
+        <button
+          class="zoom-btn"
+          :style="{
+            background: C.panelHi,
+            borderColor: C.border,
+            color: C.textMid,
+          }"
+          :title="scopeZoomed ? 'Scope zurücksetzen' : 'Scope vergrößern'"
+          @click="scopeZoomed = !scopeZoomed"
+        >
+          {{ scopeZoomed ? "⤡" : "⤢" }}
+        </button>
       </div>
     </div>
   </div>
@@ -629,6 +643,7 @@ onUnmounted(() => {
   padding: 0;
 }
 .sim-root {
+  position: relative;
   background: var(--c-bg);
   color: var(--c-textHi);
   font-family: inherit;
@@ -726,15 +741,21 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-/* Controls */
+/* Controls — HUD-Overlay: position:absolute ohne top (Static-Position) → schwebt
+   an seiner natürlichen Stelle (unter der Toolbar, über den Kantinen) und belegt
+   keinen Flussplatz, daher springen Race-Bar/Scoreboard/Scope beim Öffnen nicht. */
 .controls {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  z-index: 40;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   border: 1px solid;
   border-radius: 8px;
   padding: 10px 14px;
-  margin-bottom: 8px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
 }
 
 /* Canteens */
@@ -885,9 +906,43 @@ onUnmounted(() => {
 
 /* Scope */
 .scope-panel {
+  position: relative;
   border: 1px solid;
   border-radius: 10px;
   padding: 6px 8px;
+}
+/* Zoom: schwebt über der Simulation und füllt deren Fläche (eine Achse). */
+.scope-panel.zoomed {
+  position: absolute;
+  inset: 6px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+}
+.scope-panel.zoomed .scope-head {
+  flex: 0 0 auto;
+}
+.scope-panel.zoomed .scope-canvas {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+.zoom-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  z-index: 2;
+  border: 1px solid;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  cursor: pointer;
+  opacity: 0.85;
 }
 .scope-head {
   display: flex;
