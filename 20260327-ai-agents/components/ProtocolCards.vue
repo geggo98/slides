@@ -125,11 +125,11 @@ const stack = computed(() => {
   const d = isDark.value;
   return [
     {
-      name: "ACP: Agent ↔ IDE",
-      question: '"Welcher Agent arbeitet in welcher IDE?"',
-      bg: d ? "#2a2640" : "#EEEDFE",
-      border: d ? "#7c72d0" : "#534AB7",
-      color: d ? "#a5a0e0" : "#3C3489",
+      name: "LSP: Agent → Code-Verständnis",
+      question: '"Was bedeutet dieser Code semantisch?"',
+      bg: d ? "#1a2840" : "#E6F1FB",
+      border: d ? "#4a8fd0" : "#185FA5",
+      color: d ? "#85b7eb" : "#0C447C",
     },
     {
       name: "MCP: Agent → Externe Welt",
@@ -139,11 +139,11 @@ const stack = computed(() => {
       color: d ? "#5cc0a0" : "#085041",
     },
     {
-      name: "LSP: Agent → Code-Verständnis",
-      question: '"Was bedeutet dieser Code semantisch?"',
-      bg: d ? "#1a2840" : "#E6F1FB",
-      border: d ? "#4a8fd0" : "#185FA5",
-      color: d ? "#85b7eb" : "#0C447C",
+      name: "ACP: Agent ↔ IDE",
+      question: '"Welcher Agent arbeitet in welcher IDE?"',
+      bg: d ? "#2a2640" : "#EEEDFE",
+      border: d ? "#7c72d0" : "#534AB7",
+      color: d ? "#a5a0e0" : "#3C3489",
     },
   ];
 });
