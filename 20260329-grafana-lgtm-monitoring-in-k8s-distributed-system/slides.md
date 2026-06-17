@@ -915,15 +915,7 @@ hideInToc: true
 
 # Korrelation: Der Drill-Down-Workflow
 
-```
-1. Dashboard    → Anomalie in Metrik (P99-Spike)
-       ↓ Exemplar-Diamond klicken
-2. Trace-View   → Langsamer Span identifiziert (Tempo)
-       ↓ Trace-to-Logs klicken
-3. Logs          → Fehlermeldung lesen (Loki)
-       ↓
-4. Root Cause   → "dieser PostgreSQL-Query ist der Bottleneck"
-```
+<DrillDownWorkflow />
 
 ### Exemplars konfigurieren
 
@@ -1038,6 +1030,10 @@ hideInToc: true
 
 # Pyroscope in der Praxis
 
+<div class="pyro-grid">
+
+<div>
+
 ### Java-Agent für Spring Boot
 
 ```bash
@@ -1052,16 +1048,32 @@ java -javaagent:pyroscope.jar \
 
 JFR aktiviert CPU + Allocation + Lock gleichzeitig (async-profiler unter der Haube). Alternative ohne Code-Änderung: eBPF-Auto-Instrumentation via Grafana Alloy.
 
+</div>
+
+<div>
+
 ### Span Profiles: Drill-Down erweitert auf 4 Schritte
 
-```
-1. Dashboard    → P99-Spike                   (Mimir)
-2. Trace        → langsamer Span              (Tempo)
-3. Span Profile → Hot Function im Flamegraph  (Pyroscope)
-4. Root Cause   → konkrete Datei:Zeile
-```
+<DrillDownWorkflow variant="pyroscope" />
 
 Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die Samples, die _während_ dieses Spans gesammelt wurden.
+
+</div>
+
+</div>
+
+<style>
+.pyro-grid {
+  display: grid;
+  grid-template-columns: 1.12fr 1fr;
+  gap: 26px;
+  align-items: start;
+  margin-top: 0.5em;
+}
+.pyro-grid pre {
+  font-size: 0.86em;
+}
+</style>
 
 ---
 layout: end
