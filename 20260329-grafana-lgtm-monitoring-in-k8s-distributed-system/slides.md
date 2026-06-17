@@ -405,9 +405,46 @@ hideInToc: true
 
 # M/M/1: Warum 80%
 
+<div class="mm1-merge">
+<div class="mm1-merge-top">
+<div class="mm1-merge-chart">
+
 <MM1Chart />
 
-Faustregel: **T = S / (1 − ρ)**. Bei 80% Utilization: Response-Time = **5×** Service-Time. Bei 90%: **10×**.
+Faustregel: **T = S / (1 − ρ)** — bei 80%: **5×** Service-Time, bei 90%: **10×**.
+
+</div>
+<div v-click>
+
+<MM1Rules part="caveats" />
+
+</div>
+</div>
+<div v-click>
+
+<MM1Rules part="rules" />
+
+</div>
+</div>
+
+<style>
+.mm1-merge {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+.mm1-merge-top {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1em;
+  align-items: start;
+}
+.mm1-merge-chart p {
+  font-size: 0.82em;
+  line-height: 1.4;
+  margin-top: 0.3em;
+}
+</style>
 
 ---
 hideInToc: true
@@ -451,6 +488,39 @@ layout: section
 # Systemdynamik
 
 Warteschlangen, Oszillation, Hysterese
+
+---
+clicks: false
+hideInToc: true
+---
+
+<MM1Simulator />
+
+<!--
+- Bedienung: ▶ startet die Kantine. λ (Ankunft) und μ (Kapazität) hinter 🛠️;
+  die ρ-Schnellwahl ist immer sichtbar — auf 0.80, dann 0.95 springen.
+- Zeigen: Bei ρ=0,8 pendelt Wq auf ~4× Bedienzeit ein (Gauge-Strich = Theorie);
+  bei 0,95 zappelt der Phosphor-Punkt stark, der Einschwing-Balken braucht lange
+  — läuft aber nicht davon. Erst ρ≥1: der Punkt verlässt das Feld nach oben.
+- Kernaussage: „80 %“ ist ein Punkt auf 1/(1−ρ), keine Klippe.
+-->
+
+---
+clicks: false
+hideInToc: true
+---
+
+<MMcCompare />
+
+<!--
+- Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool) ist Default. Metrik im
+  Scope zwischen Wq und T umschalten — der Gewinner dreht sich. Slider hinter 🛠️.
+- Zeigen: Der Zwillings-Rennbalken (mittig) misst id-gekoppelt, wer zuerst fertig
+  ist: Pool gewinnt P(warten)/Wq (Pooling-Effekt), der schnelle Koch gewinnt T.
+- Dann Modus „Pooling“ (c getrennte Schlangen vs. Pool): der Pool gewinnt alles —
+  Head-of-Line-Blocking in den getrennten Spuren. Rechtfertigt eine gemeinsame
+  Queue / einen Work-Stealing-Pool gegenüber Sharding per Hash.
+-->
 
 ---
 hideInToc: true
