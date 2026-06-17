@@ -168,17 +168,21 @@ const rows = computed(() => {
   font-size: 14.5px;
 }
 .dd-connector {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
   min-height: 16px;
 }
 .dd-arrow {
+  grid-column: 2;
   font-size: 15px;
   line-height: 1;
 }
 .dd-via {
+  grid-column: 3;
+  justify-self: start;
+  margin-left: 8px;
+  white-space: nowrap;
   font-size: 11px;
   font-family: var(--slidev-code-font-family);
 }
