@@ -60,7 +60,7 @@ const STAGE_COLORS = computed(() => [
       Input
     </div>
     <template v-for="(st, i) in props.stages" :key="i">
-      <span class="arrow" :style="{ color: C.dim }">&#8594;</span>
+      <span class="arrow" :style="{ color: C.dim }">&#8595;</span>
       <div
         class="pipeline-node"
         :style="{
@@ -81,9 +81,9 @@ const STAGE_COLORS = computed(() => [
 <style scoped>
 .pipeline-viz {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 6px;
   font-family: inherit;
 }
 .pipeline-node {
@@ -93,9 +93,11 @@ const STAGE_COLORS = computed(() => [
   font-weight: 600;
   border: 1px solid;
   white-space: nowrap;
+  text-align: center;
 }
 .arrow {
   font-size: 16px;
+  line-height: 1;
 }
 .stage-meta {
   opacity: 0.6;
