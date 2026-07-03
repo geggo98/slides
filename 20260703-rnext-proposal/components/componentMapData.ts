@@ -508,6 +508,13 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
+/** Achsenparallele Rechteck-Überlappung (für Kamera-Sichtbarkeits-Filter). */
+export function rectsIntersect(a: Rect, b: Rect): boolean {
+  return (
+    a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
+  );
+}
+
 /** Punkt auf dem Rand von `a`, der in Richtung `b` zeigt. */
 function borderAnchor(a: Rect, b: Rect): { x: number; y: number } {
   const ca = { x: a.x + a.w / 2, y: a.y + a.h / 2 };

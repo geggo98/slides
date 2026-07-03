@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
-import { MAP } from "./componentMapData";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { MAP, rectsIntersect, type Rect } from "./componentMapData";
 import MapDetailPlate from "./MapDetailPlate.vue";
 import MapEdges from "./MapEdges.vue";
 import MapPillar from "./MapPillar.vue";
@@ -36,6 +36,44 @@ const camStyle = computed(() => {
   return { transform: `translate(${tx}px, ${ty}px) scale(${s})` };
 });
 
+// Sichtbarer Welt-Ausschnitt der Kamera. Elemente außerhalb verschwinden
+// nach der Kamerafahrt per v-if KOMPLETT aus dem DOM: Off-Camera-SVG-Text
+// hätte sonst Text-Rects unterhalb der Slide-Grenze — Range.getClientRects()
+// ignoriert bei SVG-<text> sogar display:none auf Vorfahren, der
+// Overflow-Check schlüge also trotzdem an. Während der Fahrt
+// (settled=false) bleibt alles gerendert, damit die Animation nicht ruckt.
+const settled = ref(true);
+let settleTimer: ReturnType<typeof setTimeout> | undefined;
+watch(focus, () => {
+  settled.value = false;
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => (settled.value = true), 750);
+});
+
+const viewRect = computed<Rect>(() => {
+  const r = MAP.targets[focus.value] ?? MAP.world;
+  const s = Math.min(W / (r.w + 2 * PAD), H / (r.h + 2 * PAD));
+  const halfW = W / 2 / s;
+  const halfH = H / 2 / s;
+  return {
+    x: r.x + r.w / 2 - halfW,
+    y: r.y + r.h / 2 - halfH,
+    w: 2 * halfW,
+    h: 2 * halfH,
+  };
+});
+
+// null während der Kamerafahrt (alles rendern), danach der Sichtausschnitt.
+// Wird bis auf Gruppen-Ebene durchgereicht: auch eine nur ANGESCHNITTENE
+// Säule darf keine Texte weit unterhalb des Ausschnitts im DOM behalten.
+const clipRect = computed<Rect | null>(() =>
+  settled.value ? viewRect.value : null,
+);
+
+function inView(r: Rect): boolean {
+  return clipRect.value === null || rectsIntersect(r, clipRect.value);
+}
+
 function zoomTo(id: string) {
   if (id in MAP.targets) focus.value = id;
 }
@@ -58,7 +96,10 @@ function onKeydown(e: KeyboardEvent) {
   up();
 }
 onMounted(() => window.addEventListener("keydown", onKeydown));
-onUnmounted(() => window.removeEventListener("keydown", onKeydown));
+onUnmounted(() => {
+  window.removeEventListener("keydown", onKeydown);
+  clearTimeout(settleTimer);
+});
 
 const breadcrumb = computed(() => {
   if (level.value === 1) return "Übersicht";
@@ -122,19 +163,22 @@ const breadcrumb = computed(() => {
       <rect class="bg" :width="W" :height="H" @click.stop="up()" />
       <g class="camera" :style="camStyle">
         <MapEdges :edges="MAP.edges" :level="level" />
-        <MapPillar
-          v-for="p in MAP.pillars"
-          :key="p.id"
-          :pillar="p"
-          :level="level"
-          @zoom="zoomTo"
-        />
-        <MapDetailPlate
-          v-for="plate in MAP.plates"
-          :key="plate.id"
-          :plate="plate"
-          :active="focus === plate.id"
-        />
+        <template v-for="p in MAP.pillars" :key="p.id">
+          <MapPillar
+            v-if="inView(p.rect)"
+            :pillar="p"
+            :level="level"
+            :clip-rect="clipRect"
+            @zoom="zoomTo"
+          />
+        </template>
+        <template v-for="plate in MAP.plates" :key="plate.id">
+          <MapDetailPlate
+            v-if="inView(plate.rect)"
+            :plate="plate"
+            :active="focus === plate.id"
+          />
+        </template>
       </g>
     </svg>
 

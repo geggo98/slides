@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import type { LaidOutGroup, LaidOutPillar } from "./componentMapData";
+import {
+  rectsIntersect,
+  type LaidOutGroup,
+  type LaidOutPillar,
+  type Rect,
+} from "./componentMapData";
 
 const props = defineProps<{
   pillar: LaidOutPillar;
   level: number;
+  /**
+   * Kamera-Sichtausschnitt (null = Kamerafahrt läuft, alles rendern).
+   * Gruppen außerhalb fliegen aus dem DOM: SVG-Text behält seine Rects
+   * selbst unter display:none — nur echtes Nicht-Rendern hält die
+   * Overflow-Checks sauber.
+   */
+  clipRect?: Rect | null;
 }>();
+
+function groupVisible(g: LaidOutGroup): boolean {
+  return props.clipRect == null || rectsIntersect(g.rect, props.clipRect);
+}
 
 const emit = defineEmits<{ zoom: [id: string] }>();
 
@@ -55,7 +71,7 @@ function onGroupClick(g: LaidOutGroup) {
     </text>
 
     <g
-      v-for="g in pillar.groups"
+      v-for="g in pillar.groups.filter(groupVisible)"
       :key="g.id"
       class="group"
       :class="[tone(g), { clickable: level >= 2 && g.detailId }]"
