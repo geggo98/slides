@@ -63,6 +63,8 @@ export interface DetailPlate {
   /** Säule, zu der Esc/Zurück von dieser Platte zurückführt. */
   parent: string;
   title: string;
+  /** Kurzname für den Schnellwahl-Button. */
+  short: string;
   inAttrs: AttrGroup;
   sharedAttrs: AttrGroup;
   outAttrs: AttrGroup;
@@ -398,6 +400,7 @@ const PLATES: DetailPlate[] = [
     id: "detail:produkt",
     parent: "tarif",
     title: "In/Out: Produktbaustein",
+    short: "In/Out Produkt",
     rect: { x: 1080, y: 40, w: 460, h: 200 },
     inAttrs: {
       label: "Nur Eingabe",
@@ -430,6 +433,7 @@ const PLATES: DetailPlate[] = [
     id: "detail:zahlung",
     parent: "zahlung",
     title: "In/Out: Zahlungsangabe",
+    short: "In/Out Zahlung",
     rect: { x: 1080, y: 290, w: 460, h: 200 },
     inAttrs: {
       label: "Nur Eingabe",
