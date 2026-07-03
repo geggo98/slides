@@ -16,6 +16,8 @@ const props = defineProps<{
    * Overflow-Checks sauber.
    */
   clipRect?: Rect | null;
+  /** Dokumentweit eindeutige Pattern-ID der Fehler-Schraffur (s. ComponentMap). */
+  hatchId?: string;
 }>();
 
 function groupVisible(g: LaidOutGroup): boolean {
@@ -86,6 +88,16 @@ function onGroupClick(g: LaidOutGroup) {
         rx="4"
         :style="{ pointerEvents: level >= 2 ? 'auto' : 'none' }"
         @click.stop="onGroupClick(g)"
+      />
+      <rect
+        v-if="g.category === 'error' && hatchId"
+        class="hatch"
+        :x="g.rect.x"
+        :y="g.rect.y"
+        :width="g.rect.w"
+        :height="g.rect.h"
+        rx="4"
+        :fill="`url(#${hatchId})`"
       />
       <text
         class="group-label lod"
@@ -169,9 +181,12 @@ function onGroupClick(g: LaidOutGroup) {
   fill: var(--color-background-primary);
   stroke: var(--color-border-secondary);
 }
+/* Prozess: gepunkteter Rahmen als Nicht-Farb-Kanal (CVD). */
 .warning .group-box {
   fill: var(--color-background-warning);
   stroke: var(--color-border-warning);
+  stroke-dasharray: 1.2 2.6;
+  stroke-linecap: round;
 }
 .danger .group-box {
   fill: var(--color-background-danger);
@@ -201,6 +216,9 @@ function onGroupClick(g: LaidOutGroup) {
 .group-note {
   font-size: 5.6px;
   fill: var(--color-text-secondary);
+  pointer-events: none;
+}
+.hatch {
   pointer-events: none;
 }
 .lens circle {

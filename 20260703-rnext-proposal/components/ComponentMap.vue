@@ -1,3 +1,9 @@
+<script lang="ts">
+// Modul-Scope (läuft einmal, nicht pro Instanz): Zähler für dokumentweit
+// eindeutige SVG-Def-IDs über alle gemounteten Map-Instanzen hinweg.
+let instanceCounter = 0;
+</script>
+
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { MAP, rectsIntersect, type Rect } from "./componentMapData";
@@ -14,6 +20,13 @@ const props = withDefaults(
   }>(),
   { initialFocus: "overview", showButtons: true, caption: "" },
 );
+
+// SVG-Defs (pattern/marker) brauchen dokumentweit eindeutige IDs: Slidev
+// hält Nachbar-Slides gemountet (display:none), und url(#…) löst auf die
+// ERSTE ID im Dokument auf — Referenzen in versteckte Instanzen rendern
+// als nichts.
+const uid = ++instanceCounter;
+const hatchId = `cmap-hatch-${uid}`;
 
 const focus = ref<string>(
   props.initialFocus in MAP.targets ? props.initialFocus : "overview",
@@ -160,15 +173,31 @@ const breadcrumb = computed(() => {
       role="img"
       aria-label="Komponenten-Landkarte des RNext-Vorschlags"
     >
+      <defs>
+        <!-- Diagonal-Schraffur als Nicht-Farb-Kanal für Fehler-Gruppen:
+             Grün/Orange/Rot kollabieren unter Rot-Grün-Schwäche (ΔE2000
+             teils < 5), daher tragen Prozess (gepunktet), Varianten
+             (gestrichelt) und Fehler (Schraffur) eigene Muster. -->
+        <pattern
+          :id="hatchId"
+          width="6"
+          height="6"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <line class="hatch-line" x1="0" y1="0" x2="0" y2="6" />
+        </pattern>
+      </defs>
       <rect class="bg" :width="W" :height="H" @click.stop="up()" />
       <g class="camera" :style="camStyle">
-        <MapEdges :edges="MAP.edges" :level="level" />
+        <MapEdges :edges="MAP.edges" :level="level" :uid="uid" />
         <template v-for="p in MAP.pillars" :key="p.id">
           <MapPillar
             v-if="inView(p.rect)"
             :pillar="p"
             :level="level"
             :clip-rect="clipRect"
+            :hatch-id="hatchId"
             @zoom="zoomTo"
           />
         </template>
@@ -250,6 +279,11 @@ const breadcrumb = computed(() => {
   fill: transparent;
   cursor: zoom-out;
 }
+.hatch-line {
+  stroke: var(--color-border-danger);
+  stroke-width: 1.1;
+  opacity: 0.45;
+}
 .camera {
   transition: transform 700ms cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: 0 0;
@@ -301,10 +335,16 @@ const breadcrumb = computed(() => {
 }
 .dot.warning {
   background: var(--color-background-warning);
-  border: 1px solid var(--color-border-warning);
+  border: 1px dotted var(--color-border-warning);
 }
 .dot.danger {
-  background: var(--color-background-danger);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-background-danger),
+    var(--color-background-danger) 2px,
+    var(--color-border-danger) 2px,
+    var(--color-border-danger) 3px
+  );
   border: 1px solid var(--color-border-danger);
 }
 .caption {

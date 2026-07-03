@@ -2,15 +2,18 @@
 import type { MapEdge } from "./componentMapData";
 
 // Kanten-Labels nur in der Übersicht (Ebene 1) — beim Zoomen ragen sie sonst
-// abgeschnitten in die Säulen-Ansicht.
-defineProps<{ edges: MapEdge[]; level: number }>();
+// abgeschnitten in die Säulen-Ansicht. uid macht die Marker-ID dokumentweit
+// eindeutig (mehrere Map-Instanzen auf Nachbar-Slides, s. ComponentMap).
+const props = defineProps<{ edges: MapEdge[]; level: number; uid: number }>();
+
+const arrowId = `cmap-arrow-${props.uid}`;
 </script>
 
 <template>
   <g class="edges" aria-hidden="true">
     <defs>
       <marker
-        id="cmapArrow"
+        :id="arrowId"
         viewBox="0 0 10 10"
         refX="8"
         refY="5"
@@ -34,7 +37,7 @@ defineProps<{ edges: MapEdge[]; level: number }>();
         :y1="e.y1"
         :x2="e.x2"
         :y2="e.y2"
-        :marker-end="e.kind === 'flow' ? 'url(#cmapArrow)' : undefined"
+        :marker-end="e.kind === 'flow' ? `url(#${arrowId})` : undefined"
       />
       <text
         v-if="e.label"
