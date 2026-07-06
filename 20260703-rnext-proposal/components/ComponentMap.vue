@@ -14,8 +14,8 @@ const sharedFocus = ref<string>("overview");
 </script>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, watch } from "vue";
-import { onSlideEnter } from "@slidev/client";
+import { computed, onMounted, onUnmounted, watch } from "vue";
+import { onSlideEnter, useIsSlideActive, useNav } from "@slidev/client";
 import { MAP, rectsIntersect, type Rect } from "./componentMapData";
 import MapDetailPlate from "./MapDetailPlate.vue";
 import MapEdges from "./MapEdges.vue";
@@ -48,12 +48,60 @@ const root = ref<HTMLElement | null>(null);
 const target = () =>
   props.initialFocus in MAP.targets ? props.initialFocus : "overview";
 
-// Beim Aktivwerden der Folie von der gemerkten (geteilten) Kamera auf das
-// Ziel dieser Folie fahren. nextTick + rAF stellt sicher, dass der „Von"-
-// Zustand nach dem Slide-Wechsel gerendert ist, damit die CSS-Transition
-// (.camera, 700ms) sichtbar losläuft statt zu springen.
+// Ist DIESE Folie aktiv? Dieselbe Computed, die auch onSlideEnter auslöst —
+// als Guard, damit ein verzögerter Antrieb nie auf eine bereits verlassene
+// Folie schreibt (schnelle Vor-/Zurück-Navigation).
+const isActive = useIsSlideActive();
+// currentTransition ist undefined ohne animierten Übergang; navDirection ist 0
+// vor der ersten Navigation (Direktaufruf/Initial-Mount); isPrintMode deckt
+// PDF/Export ab. In all diesen Fällen wird sofort gefahren.
+const { currentTransition, navDirection, isPrintMode } = useNav();
+
+// Slide-Transitionsdauer zur Laufzeit aus der CSS-Variable lesen
+// (--slidev-transition-duration auf :root, Default 0.5s). Parst „0.5s" und
+// „500ms"; Fallback 500. So folgt die Verzögerung einer geänderten Dauer,
+// statt 500 hart zu verdrahten.
+function transitionMs(): number {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--slidev-transition-duration")
+    .trim();
+  const n = Number.parseFloat(raw);
+  if (!Number.isFinite(n)) return 500;
+  return /ms$/.test(raw) ? n : n * 1000;
+}
+
+// Handle des schwebenden Eintritts-Antriebs (pro Instanz/Closure).
+let driveTimer: ReturnType<typeof setTimeout> | undefined;
+function cancelDrive() {
+  clearTimeout(driveTimer);
+  driveTimer = undefined;
+}
+
+// Kamera erst NACH Abschluss der Slide-Transition aufs Folienziel fahren,
+// damit die 700ms-Kamerafahrt nicht mit dem Slide-Slide-in überlagert.
+// onSlideEnter feuert am START der Transition und re-läuft bei jedem
+// Aktivwerden — daher vorher canceln (idempotent).
 onSlideEnter(() => {
-  nextTick(() => requestAnimationFrame(() => (sharedFocus.value = target())));
+  cancelDrive();
+  // Kein animierter Übergang (Print/Export oder Direktaufruf ohne Vorgänger)
+  // → sofort fahren: sonst fröre die PDF-Ausgabe den Vorzustand ein bzw. bliebe
+  // die Karte beim Direktaufruf ~0,5 s auf der Übersicht hängen.
+  if (
+    isPrintMode.value ||
+    navDirection.value === 0 ||
+    !currentTransition.value
+  ) {
+    if (isActive.value) sharedFocus.value = target();
+    return;
+  }
+  // Sonst bis zum Transitionsende warten (+80 ms Puffer für den ease-Ausklang),
+  // dann erst die Kamerafahrt starten. Beim Feuern prüfen, ob DIESE Folie noch
+  // aktiv ist — ein Timer von Folie 26 darf die Kamera auf Folie 27 nicht
+  // aufs 26-Ziel zurückreißen.
+  driveTimer = setTimeout(() => {
+    driveTimer = undefined;
+    if (isActive.value) sharedFocus.value = target();
+  }, transitionMs() + 80);
 });
 
 const level = computed(() =>
@@ -111,10 +159,16 @@ function inView(r: Rect): boolean {
 }
 
 function zoomTo(id: string) {
+  // Nutzer-Interaktion hat Vorrang: schwebenden Eintritts-Antrieb abbrechen,
+  // sonst reißt sein Timer die Kamera später aufs Folienziel zurück.
+  cancelDrive();
   if (id in MAP.targets) focus.value = id;
 }
 
 function up() {
+  // Nur bei echtem Hochzoomen abbrechen; ein Hintergrund-/Esc-No-op auf
+  // Ebene 1 soll den schwebenden Eintritts-Antrieb NICHT unterdrücken.
+  if (level.value > 1) cancelDrive();
   if (level.value === 3) {
     const plate = MAP.plates.find((p) => p.id === focus.value);
     focus.value = plate ? `pillar:${plate.parent}` : "overview";
@@ -126,6 +180,7 @@ function up() {
 // Recovery: Ansicht UND geteiltes Gedächtnis auf die Ausgangslage zurück,
 // falls die Kamera durch Navigation/Interaktion mal „verrutscht".
 function reset() {
+  cancelDrive();
   sharedFocus.value = "overview";
 }
 
@@ -141,6 +196,7 @@ onMounted(() => window.addEventListener("keydown", onKeydown));
 onUnmounted(() => {
   window.removeEventListener("keydown", onKeydown);
   clearTimeout(settleTimer);
+  cancelDrive();
 });
 
 const breadcrumb = computed(() => {
