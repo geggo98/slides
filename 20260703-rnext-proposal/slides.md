@@ -19,7 +19,14 @@ hideInToc: true
 
 Vom generischen SOAP-Objektbaum zu klaren Strukturen und klarem Datenfluss
 
-<div class="mt-8 text-sm opacity-60">
+<div class="mt-6">
+  <span
+    class="inline-block rounded-full border px-4 py-1.5 text-base font-semibold"
+    style="border-color: var(--color-border-info); color: var(--color-text-info); background: var(--color-background-info)"
+  >RNext 🤖-Edition (Vorschlag)</span>
+</div>
+
+<div class="mt-6 text-sm opacity-60">
 
 Zielgruppe: Dev- und Architektur-Runde — BiPRO-Vorwissen nicht erforderlich
 
