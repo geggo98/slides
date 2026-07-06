@@ -551,7 +551,81 @@ Jede dieser Regeln ist **maschinenprüfbar**. Ein Linter — oder ein Agent — 
 
 <!--
 - Tolerant-Reader-Prinzip: Der Vorschlag ist Vorlage, keine Zwangsjacke.
-- Damit sind die Bausteine komplett — jetzt das Gesamtbild: die Landkarte.
+- Damit sind die Bausteine komplett — zwei Beispiele machen sie konkret, dann das Gesamtbild.
+-->
+
+---
+hideInToc: true
+---
+
+# Beispiel: Zahlung per IBAN (In ≠ Out)
+
+```mermaid {scale: 0.85}
+flowchart LR
+  IN["Eingabe · Consumer → VU<br/>———————<br/>Kontoinhaber<br/>IBAN — vollständig<br/>SEPA-Mandat (Unterschrift)"]
+  OUT["Ausgabe · VU → Consumer<br/>———————<br/>IBAN — maskiert<br/>Mandatsreferenz<br/>Gläubiger-ID<br/>Konto-Referenz"]
+  IN ==>|"VU verarbeitet &<br/>vergibt Referenzen"| OUT
+```
+
+<div class="mt-3 space-y-2 text-[14px]">
+
+- Dieselbe fachliche Zahlung, **zwei Schemas**: die Eingabe trägt nur, was der Consumer liefert; die Ausgabe nur, was der VU **vergibt**.
+- `Mandatsreferenz` und `Gläubiger-ID` entstehen **erst beim VU** — im Eingabe-Schema gäbe es sie nicht.
+- Die vollständige `IBAN` geht rein, **maskiert** (`DE12…3456`) kommt sie zurück.
+- Pointe: die vergebene `Mandatsreferenz` ist später ein **Eingabe**-Feld, um den Bestand zu identifizieren.
+
+</div>
+
+<div class="mt-2 text-xs opacity-50"><em>Beispiel nachempfunden — Klassennamen generisch, Feldnamen sind gängige SEPA-Begriffe.</em></div>
+
+<!--
+- Konkrete Anwendung von Regel 2: die Zahlungsangabe aus der Landkarte, jetzt auf Feldebene.
+- Kontoinhaber, IBAN und Mandat liefert der Consumer; Mandatsreferenz und Gläubiger-ID vergibt der VU beim Anlegen des SEPA-Mandats.
+- IBAN-Maskierung in der Ausgabe: Datensparsamkeit steckt im Schema, nicht in einer Konvention.
+- Der Rückbezug (Mandatsreferenz als späterer Input) ist der Grund, warum vergebene Referenzen getrennt modelliert sind.
+-->
+
+---
+hideInToc: true
+---
+
+# Beispiel: Adresse je Verwendungszweck
+
+```mermaid {scale: 0.6}
+flowchart LR
+  W["Wohnanschrift<br/>Typklasse · Bonität"]
+  G["Geräte-Lieferung<br/>Telematik-Box"]
+  P["Policenversand"]
+  S(["Straßenadresse"])
+  PS(["Packstation"])
+  PF(["Postfach"])
+  W --> S
+  G --> S
+  G --> PS
+  P --> S
+  P --> PF
+```
+
+<div class="mt-3 space-y-2 text-[14px]">
+
+- **Ein Typ-Union** — `Straßenadresse | Postfach | Packstation` als diskriminiertes `oneOf` (Regel 3).
+- Je Zweck ist ein **anderer Ausschnitt** gültig (die Kanten): `Wohnanschrift` nur Straße (Typklasse/Bonität), `Geräte-Lieferung` auch Packstation (kein Postfach), `Policenversand` auch Postfach (keine Packstation).
+
+</div>
+
+<Callout tone="warning" dense class="mt-3">
+
+Der **Typ-Union** steht im Schema. **Welcher** Ausschnitt je Zweck zulässig ist, ist teils Schema (getrennte Refs), teils **Domänen-Validierung beim VU** — genau diese Grenze behandelt die Folie „Grenzen & offene Punkte".
+
+</Callout>
+
+<div class="mt-2 text-xs opacity-50"><em>Beispiel nachempfunden — Klassennamen generisch, Feldnamen alltäglich.</em></div>
+
+<!--
+- Warum die Regeln so sind: Typklasse und Bonitätsprüfung brauchen einen realen Wohnort — Postfach oder Packstation genügen nicht.
+- Geräte-Lieferung ist ein physisches Paket (Telematik-Box): Packstation geht, Postfach nicht.
+- Policenversand ist ein Brief: Postfach geht, Packstation nicht.
+- Kernpunkt: Der Adresstyp gehört ins Schema; die Zuordnung Zweck → erlaubter Typ ist der Grenzfall zwischen Schema und VU-Fachlogik.
 -->
 
 ---
