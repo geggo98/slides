@@ -1,11 +1,21 @@
 <script lang="ts">
+import { ref } from "vue";
+
 // Modul-Scope (läuft einmal, nicht pro Instanz): Zähler für dokumentweit
 // eindeutige SVG-Def-IDs über alle gemounteten Map-Instanzen hinweg.
 let instanceCounter = 0;
+
+// Geteiltes Kamera-Gedächtnis: EIN Fokus-Zustand für ALLE Map-Instanzen.
+// Lebt im Modul-Scope, überlebt also Folienwechsel — jede Karten-Folie zeigt
+// beim Aktivwerden noch den Endzustand der vorigen und fährt von dort aufs
+// Ziel. Nur die aktive Folie ist sichtbar, die geteilte Kamera bleibt also
+// unsichtbar, bis eine Folie sie via onSlideEnter bewegt.
+const sharedFocus = ref<string>("overview");
 </script>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, watch } from "vue";
+import { onSlideEnter } from "@slidev/client";
 import { MAP, rectsIntersect, type Rect } from "./componentMapData";
 import MapDetailPlate from "./MapDetailPlate.vue";
 import MapEdges from "./MapEdges.vue";
@@ -28,10 +38,23 @@ const props = withDefaults(
 const uid = ++instanceCounter;
 const hatchId = `cmap-hatch-${uid}`;
 
-const focus = ref<string>(
-  props.initialFocus in MAP.targets ? props.initialFocus : "overview",
-);
+// Alle Instanzen teilen sich EINEN Fokus (Modul-Scope) → Kamera-Gedächtnis
+// über Folien hinweg. Das Ziel dieser Folie wird beim Eintritt angefahren
+// (onSlideEnter), nicht statisch beim Mounten gesetzt.
+const focus = sharedFocus;
 const root = ref<HTMLElement | null>(null);
+
+// Ziel dieser Folie (verfremdeter Fokus-String); Fallback: Übersicht.
+const target = () =>
+  props.initialFocus in MAP.targets ? props.initialFocus : "overview";
+
+// Beim Aktivwerden der Folie von der gemerkten (geteilten) Kamera auf das
+// Ziel dieser Folie fahren. nextTick + rAF stellt sicher, dass der „Von"-
+// Zustand nach dem Slide-Wechsel gerendert ist, damit die CSS-Transition
+// (.camera, 700ms) sichtbar losläuft statt zu springen.
+onSlideEnter(() => {
+  nextTick(() => requestAnimationFrame(() => (sharedFocus.value = target())));
+});
 
 const level = computed(() =>
   focus.value === "overview" ? 1 : focus.value.startsWith("pillar:") ? 2 : 3,
@@ -100,6 +123,12 @@ function up() {
   }
 }
 
+// Recovery: Ansicht UND geteiltes Gedächtnis auf die Ausgangslage zurück,
+// falls die Kamera durch Navigation/Interaktion mal „verrutscht".
+function reset() {
+  sharedFocus.value = "overview";
+}
+
 // Escape = eine Ebene hoch — aber nur für die sichtbare Instanz: Slidev hält
 // Nachbar-Slides gemountet (display:none), deren Karten sollen nicht springen.
 function onKeydown(e: KeyboardEvent) {
@@ -162,9 +191,7 @@ const breadcrumb = computed(() => {
       >
         {{ plate.short }}
       </button>
-      <button class="back" :disabled="level === 1" @click.stop="up()">
-        ← Zurück
-      </button>
+      <button class="reset" @click.stop="reset()">↺ Reset</button>
     </div>
 
     <svg
@@ -262,7 +289,7 @@ const breadcrumb = computed(() => {
   opacity: 0.35;
   cursor: default;
 }
-.quick .back {
+.quick .reset {
   margin-left: auto;
 }
 .sep {
