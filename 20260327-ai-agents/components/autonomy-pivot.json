@@ -70,17 +70,17 @@
       "cells": {
         "primitive": {
           "teaser": "/plan, /exec, /review, /goal",
-          "detail": "Slash-Primitive /plan, /exec, /review plus /goal (Original-Primitiv, ~2026-04-30) als Completion-Bedingung. Subagent-Workflows (default an) werden nur auf explizite Bitte gespawnt; Custom Agents via TOML.",
+          "detail": "Slash-Primitive /plan, /exec, /review plus /goal (Original-Primitiv, ~2026-04-30) als Completion-Bedingung. Multi-Agent-Modus (V2): Default `ExplicitRequestOnly` — Subagents nur auf explizite Bitte (User/AGENTS.md/Skill); mit `ultra` → `Proactive` (Modell delegiert eigenständig), Konfig-Hint → `Custom`. Custom Agents via TOML.",
           "mark": "none"
         },
         "umsetzung": {
-          "teaser": "Rust-CLI + IDE + ChatGPT-Cloud",
-          "detail": "Open-source Rust-CLI, IDE-Extension und ChatGPT-Cloud, betrieben mit GPT-5.5. Custom Agents als TOML-Config; agents.max_depth default 1 begrenzt die Verschachtelung von Subagents.",
+          "teaser": "Rust-CLI/IDE/Cloud; native ThreadSpawn (kein JS)",
+          "detail": "Open-source Rust-CLI, IDE-Extension und ChatGPT-Cloud. GA auf GPT-5.5; GPT-5.6 Sol als Frontier-Preview (2026-06-26) mit neuer `ultra`-Reasoning-Stufe. Orchestrierung nativ: `ReasoningEffort::Ultra`→`Max` schaltet Proactive-Mode, Subagents laufen als `ThreadSpawn`-Threads (`x-openai-subagent`-Header) — kein generiertes JS-Skript wie bei Claude Code. Custom Agents via TOML; agents.max_depth default 1 begrenzt die Verschachtelung.",
           "mark": "none"
         },
         "kosten": {
-          "teaser": "€€–€€€€ je Cloud-Nutzung",
-          "detail": "Lokale CLI ist open-source, Kosten entstehen über Modell-Calls (GPT-5.5) und parallele Cloud-Sandboxes. Spanne €€ bis €€€€ je nach Subagent- und Cloud-Parallelität.",
+          "teaser": "€€–€€€€€ (ultra +)",
+          "detail": "Lokale CLI ist open-source; Kosten über Modell-Calls (GPT-5.5 GA / GPT-5.6 Sol Preview) und parallele Cloud-Sandboxes. `ultra` (Proactive) delegiert an native ThreadSpawn-Subagents mit je eigenem Kontext → kann den Token-Verbrauch vervielfachen (obere Spanne), gleiche Kostenmechanik wie ultracode.",
           "mark": "none"
         },
         "plan": {
@@ -99,9 +99,9 @@
           "mark": "none"
         },
         "reife": {
-          "teaser": "GA",
-          "detail": "Codex ist GA und produktiv nutzbar. /goal als jüngstes Primitiv kam erst ~2026-04-30 hinzu.",
-          "mark": "yes"
+          "teaser": "GA; Ultra/Sol Preview",
+          "detail": "Basis-Codex ist GA und produktiv nutzbar (/goal seit ~2026-04-30). Die Autonomie-Stufe `ultra` (GPT-5.6 Sol) ist noch limited preview — angekündigt 2026-06-26; laut Sottiaux „Ultra will be in codex“.",
+          "mark": "partial"
         },
         "async": {
           "teaser": "ja, Codex Cloud",

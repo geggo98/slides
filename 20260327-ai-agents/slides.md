@@ -503,6 +503,46 @@ hideInToc: true
 hideInToc: true
 ---
 
+# `ultracode` vs. Codex `ultra` — gleiche Idee, andere Mechanik
+
+<div class="text-sm opacity-75">GPT-5.6 Sol · Preview 26.06.2026 · „Ultra will be in codex" (T. Sottiaux, 06.07.)</div>
+
+<div class="text-sm">
+
+| Aspekt          | Claude Code `ultracode`                             | Codex · GPT-5.6 Sol `ultra`                       |
+| --------------- | --------------------------------------------------- | ------------------------------------------------- |
+| **Auslöser**    | `/effort ultracode` (`xhigh` + Auto-Orchestrierung) | `ReasoningEffort::Ultra` → `Max` + Proactive-Mode |
+| **Koordinator** | Modell _schreibt ein JS-Skript_ (isolierte Runtime) | **kein Skript** — native `ThreadSpawn`-Subagents  |
+| **Steuerung**   | deterministischer JS-Fluss, adversarische Prüfung   | Delegations-Policy: Proactive/Explicit/Custom     |
+
+<Callout tone="info" class="mt-2" dense>
+
+**Faktencheck (Quellcode):** `openai/codex` zeigt die echte Mechanik — `Ultra`→`Max` + native `ThreadSpawn`-Subagents (`x-openai-subagent`-Header), **kein generiertes JavaScript** wie bei `ultracode`. Gleiches Ziel, andere Umsetzung.
+
+</Callout>
+
+<Callout tone="warning" class="mt-2" dense>
+
+**Kostenwarnung:** Beide Wege multiplizieren Subagent-Calls → **sehr hohe Token-Kosten**. `ultracode` mit zusätzlichem Aufschlag, `ultra` vervielfacht den Verbrauch je paralleler Subagent-Ebene. Nur gezielt einsetzen.
+
+</Callout>
+
+</div>
+
+<!--
+Quellen:
+- OpenAI Preview (26.06.2026): https://openai.com/index/previewing-gpt-5-6-sol/
+- Tweet T. Sottiaux „Ultra will be in codex.": https://xcancel.com/thsottiaux/status/2073933490513752151
+- Codex-Quellcode @98d28aab:
+    codex-rs/core/src/client.rs#L172  (Ultra→Max)
+    codex-rs/core/src/session/multi_agents.rs#L53  (MultiAgentMode, ThreadSpawn)
+    codex-rs/core/src/context/multi_agent_mode_instructions.rs#L7  (Delegations-Policy)
+-->
+
+---
+hideInToc: true
+---
+
 # Neue Orchestrierungs-Plattformen
 
 **Antigravity = Dachmarke über drei getrennte Produkte:**
