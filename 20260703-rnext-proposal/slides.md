@@ -798,6 +798,7 @@ hideInToc: true
 - Jede Zelle hat eine Begründung — anklicken (oder hovern) für Details.
 - Das Muster: RClassic scheitert nicht an SOAP, sondern daran, dass die Wahrheit außerhalb der Spezifikation liegt.
 - RNext macht die Spezifikation selbst zur verlässlichen Quelle — genau das braucht ein Agent.
+- Und der Unterschied Agent vs. reiner Code-Generator: Erkennt der Agent dank strikter Struktur eine Lücke, fragt er aktiv nach — statt wie ein Generator plausiblen, aber falschen Code zu raten.
 -->
 
 ---

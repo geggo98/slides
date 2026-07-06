@@ -12,5 +12,6 @@ import {
     :data="AGENT_TASKS_MATRIX"
     :legend="AGENT_TASKS_LEGEND"
     :mark-scheme="AGENT_TASKS_MARKSCHEME"
+    hint="ⓘ Klick für Details · Ein Agent fragt bei Unklarheit nach — ein Code-Generator rät"
   />
 </template>
