@@ -300,6 +300,38 @@ layout: section
 # 4. Token-Ökonomie
 
 ---
+clicks: 4
+hideInToc: true
+---
+
+# Was ist ein Token?
+
+<TokenBasics :clicks="$clicks" />
+
+---
+hideInToc: true
+---
+
+# Autoregression: ein Token nach dem anderen
+
+<AutoregressiveDemo />
+
+---
+clicks: 4
+hideInToc: true
+---
+
+# Ein Bugfix, Token für Token
+
+<div class="text-sm opacity-70 mb-2">
+
+Zwei Dateien lesen, Bug fixen — und der Context wächst mit **jeder** Iteration, weil er komplett neu mitgeschickt wird.
+
+</div>
+
+<TokenAccumulation :clicks="$clicks" />
+
+---
 hideInToc: true
 ---
 
