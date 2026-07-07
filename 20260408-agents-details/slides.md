@@ -316,6 +316,33 @@ hideInToc: true
 
 <AutoregressiveDemo />
 
+<!--
+Sampling-Methoden hier = Baseline. Min-p (im Demo) ist der aktuelle Kontrast:
+Schwelle = min_p · p_max — wandert mit der Konfidenz (scharf → wenige Token,
+flach → viele), statt fester Masse wie Top-p. (Nguyen et al., ICLR 2025,
+arXiv:2407.01082; min_p ~0.05–0.1; breit unterstützt in HF/vLLM/SGLang/llama.cpp/
+Ollama, Default nur llama.cpp; Überlegenheit umstritten: arXiv:2506.13681.)
+
+Praxis-Faustregeln 2025/26 (keine kanonische Vorgabe):
+- Open-Weight / lokal: Temperature + Min-p
+- Kommerzielle APIs: Temperature + Top-p (v.a. weil Min-p dort fehlt)
+- Reasoning-Modelle: Defaults lassen — DeepSeek-R1 empfiehlt temp 0.5–0.7 (0.6),
+  kein System-Prompt; OpenAI o-Serie / GPT-5 verbieten temp/top_p (fix)
+- Deterministische Evals: greedy (temp=0) — auf GPU nicht bit-genau reproduzierbar
+- Format-Zwang: Constrained Decoding oben drauf
+
+Constrained Decoding = Logit-Maskierung, kein freies Sampling: ungültige Token
+werden vor dem Sampling auf −∞ gesetzt → gesampelt wird nur über schema-gültige.
+- XGrammar (mlc-ai): Default in vLLM (seit v0.6.5, Dez 2024) & SGLang, in
+  TensorRT-LLM opt-in. Pushdown-Automat + adaptiver Token-Mask-Cache;
+  < 40 µs/Token für JSON (arXiv:2411.15100, MLSys 2025).
+- llguidance (aus MS Research, jetzt guidance-ai): OpenAI nutzt es für den
+  Grammar/Custom-Tools-Pfad (Lark); JSON-Schema-Modus laut Maintainer seit Mai 2025.
+- Outlines (dottxt-ai): popularisierte den FSM/Regex-Ansatz (Willard & Louf 2023,
+  arXiv:2307.09702) — O(1) pro Token, aber teure Index-Compile-Zeit bei
+  komplexen Schemata.
+-->
+
 ---
 clicks: 4
 hideInToc: true

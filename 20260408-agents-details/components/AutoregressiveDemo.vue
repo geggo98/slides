@@ -21,6 +21,7 @@ const MODES: { id: Mode; label: string }[] = [
   { id: "sample", label: "Sampling" },
   { id: "topk", label: "Top-k" },
   { id: "topp", label: "Top-p" },
+  { id: "minp", label: "Min-p" },
 ];
 
 // ── Zustand ──────────────────────────────────────────────────────────────────
@@ -35,6 +36,7 @@ const mode = ref<Mode>("greedy");
 const T = ref(1);
 const K = ref(5);
 const P_ = ref(0.9);
+const MP = ref(0.1);
 const rootEl = ref<HTMLElement | null>(null);
 
 const generated = computed(() => history.value.map((h) => h.token));
@@ -58,6 +60,7 @@ function doStep() {
     T.value,
     K.value,
     P_.value,
+    MP.value,
   );
   history.value = [
     ...history.value,
@@ -120,7 +123,8 @@ const bars = computed(() => {
   const maxP = shown[0][1];
   const cum = shown.reduce((a, d) => a + d[1], 0);
   const active = new Set(c.working.map((d) => d[0]));
-  const dimMode = mode.value === "topk" || mode.value === "topp";
+  const dimMode =
+    mode.value === "topk" || mode.value === "topp" || mode.value === "minp";
   const rows = shown.map(([tok, p]) => ({
     tok,
     disp: tok === EOS ? "⟨EOS⟩" : tok,
@@ -129,10 +133,15 @@ const bars = computed(() => {
     hi: tok === c.token,
     dim: dimMode && !active.has(tok),
   }));
+  const survivors = rows.filter((r) => !r.dim).length;
+  const mass =
+    mode.value === "minp"
+      ? `Schwelle = ${MP.value.toFixed(2)}·p_max ≈ ${(MP.value * maxP * 100).toFixed(1)} % · ${survivors} Token`
+      : `Top-${shown.length} ≈ ${(cum * 100).toFixed(1)} % der Masse`;
   return {
     rows,
     title: `P(nächstes Token) nach ${c.step.after}`,
-    mass: `Top-${shown.length} ≈ ${(cum * 100).toFixed(1)} % der Masse`,
+    mass,
     cum,
     step: c.step,
   };
@@ -240,6 +249,17 @@ const P = computed(() => {
         <span>p</span>
         <input v-model.number="P_" type="range" min="0.1" max="1" step="0.05" />
         <span class="val">{{ P_.toFixed(2) }}</span>
+      </label>
+      <label v-if="mode === 'minp'" class="slider">
+        <span>min-p</span>
+        <input
+          v-model.number="MP"
+          type="range"
+          min="0.01"
+          max="0.5"
+          step="0.01"
+        />
+        <span class="val">{{ MP.toFixed(2) }}</span>
       </label>
       <div class="spacer" />
       <button class="btn primary" :disabled="done" @click="doStep">

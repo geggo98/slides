@@ -113,7 +113,7 @@ export const STEPS: Step[] = [
   },
 ];
 
-export type Mode = "greedy" | "sample" | "topk" | "topp";
+export type Mode = "greedy" | "sample" | "topk" | "topp" | "minp";
 
 // ── reine Funktionen (auch separat testbar) ──────────────────────────────────
 export function applyTemperature(dist: TokenProb[], T: number): TokenProb[] {
@@ -146,6 +146,14 @@ export function topP(dist: TokenProb[], p: number): TokenProb[] {
   return renorm(out);
 }
 
+export function minP(dist: TokenProb[], mp: number): TokenProb[] {
+  // Konfidenz-relative Schwelle: behalte Token mit p_i >= min_p * p_max.
+  // p_max ist immer >= der Schwelle (für mp <= 1), also überlebt es stets.
+  const pmax = Math.max(...dist.map((d) => d[1]));
+  const thr = mp * pmax;
+  return renorm(dist.filter((d) => d[1] >= thr));
+}
+
 export function sampleFrom(dist: TokenProb[]): string {
   // multinomial
   const n = renorm(dist);
@@ -170,10 +178,12 @@ export function pick(
   T: number,
   k: number,
   p: number,
+  mp: number,
 ): { token: string; working: TokenProb[] } {
   if (mode === "greedy") return { token: argmax(dist), working: renorm(dist) };
   let w = applyTemperature(renorm(dist), T);
   if (mode === "topk") w = topK(w, k);
   if (mode === "topp") w = topP(w, p);
+  if (mode === "minp") w = minP(w, mp);
   return { token: sampleFrom(w), working: w };
 }
