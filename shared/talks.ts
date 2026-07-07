@@ -15,6 +15,8 @@ export const TALKS = {
   "20260428-java-null-pointer": "Java Null-Sicherheit 2026",
   "20260522-open-rewrite": "OpenRewrite — Refactoring at Scale",
   "20260606-design-pattern": "Brauchen wir noch Entwurfsmuster?",
+  "20260703-rnext-proposal": "BiPRO RNext — OpenAPI für LLM-Agents",
+  "20260707-anatomy-of-autonomous-agents": "Anatomie Autonomer Agenten",
 } as const;
 
 export type TalkSlug = keyof typeof TALKS;

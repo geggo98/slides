@@ -295,6 +295,7 @@ Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antw
 
 ---
 layout: section
+routeAlias: token-oekonomie
 ---
 
 # 4. Token-Ökonomie

@@ -449,6 +449,7 @@ Seit **Fork-Mode** gilt der „Kostenmultiplikator“ nur noch abgeschwächt (~9
 
 ---
 hideInToc: true
+routeAlias: autonomie-primitive
 ---
 
 # Claude Code: Sechs Autonomie-Primitive
