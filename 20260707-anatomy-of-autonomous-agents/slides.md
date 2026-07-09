@@ -505,6 +505,57 @@ Die Skills sind **der einzige Code im ganzen System** — nach außen drei Wört
 hideInToc: true
 ---
 
+# Skills: drei Hebel
+
+<div class="grid grid-cols-3 gap-5 mt-4">
+
+<div>
+
+**Kontext klein halten**
+
+Das Skript **post-prozessiert**, bevor etwas im Kontext landet — filtern,
+verdichten, formatieren. Die 5 000-Zeilen-Rohantwort bleibt draußen; nur das
+verdichtete Ergebnis kommt rein.
+
+</div>
+
+<div>
+
+**Häufiges & Komplexes kapseln**
+
+Ein wiederkehrender Mehrschritt-Ablauf wird **ein Aufruf** — einmal geschrieben,
+getestet, versioniert, statt bei jedem Lauf neu improvisiert.
+
+</div>
+
+<div>
+
+**Security**
+
+- **Geprüfter Code** im Skript statt Ad-hoc-Shell
+- **Frontmatter** deklariert die erlaubten Utility-Tools
+- erleichtert dem **Auto-Classifier** die Freigabe
+
+</div>
+
+</div>
+
+<Callout tone="success" class="mt-5">
+
+Und ein Skill ist schnell gebaut: `SKILL.md` + ein Skript — **kein Server, kein Protokoll wie bei MCP**. So bleibt der Agent seiner Natur treu: aus „nur ein Markdown" wird „**Markdown + eine Handvoll Skripte**".
+
+</Callout>
+
+<div class="text-sm opacity-70 mt-3">
+
+Disclosure, Rechte & Auto-Classifier im Detail → <TalkXref slug="20260327-ai-agents" anchor="skills">Agent Skills — im Detail</TalkXref>
+
+</div>
+
+---
+hideInToc: true
+---
+
 # Arbeitsteilung: Skill oder MCP?
 
 <style>

@@ -663,6 +663,7 @@ layout: section
 ---
 clicks: false
 hideInToc: true
+routeAlias: skills
 ---
 
 # Agent Skills — im Detail
