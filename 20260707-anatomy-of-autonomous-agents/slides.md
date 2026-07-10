@@ -130,6 +130,16 @@ hideInToc: true
 </v-clicks>
 
 ---
+layout: image
+image: /anatomie-autonomer-agenten.webp
+backgroundSize: contain
+hideInToc: true
+class: anatomie-poster
+---
+
+<AnatomyPosterDark />
+
+---
 hideInToc: true
 ---
 
