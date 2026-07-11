@@ -598,6 +598,46 @@ OpenAI und Google geben den **Cache-Read ebenfalls mit 0,1×** an. **Google** be
 hideInToc: true
 ---
 
+# `opusplan`: Opus plant, Sonnet führt aus
+
+<div class="text-sm opacity-70 mb-2">
+
+Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige Ausführung für den Rest.
+
+</div>
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Wie es funktioniert
+
+- **Plan-Mode → Opus**, danach **Ausführung → Sonnet** — automatischer Wechsel
+- Setzen via `/model opusplan`, `--model opusplan` oder `model`-Setting
+- Der Wechsel **tauscht das Modell** — und das Modell ist Teil des Prefix-Hash (vorige Slide). Also **bricht der Wechsel den Cache**: die History wird **einmal** ohne Cache neu gelesen
+
+</div>
+<div>
+
+### Warum es sich trotzdem lohnt
+
+- **Sonnet 5** ist stark genug für die Ausführung — Opus ist dafür oft Overkill
+- Der einmalige Cache-Bruch amortisiert sich: der **Plan wird verwendet, nicht weggeworfen**
+- Ein guter Plan von einem starken Modell zahlt sich aus — **wenn** das Ergebnis nutzbar ist
+- Unterm Strich: **massiv billiger** als durchgängig Opus
+
+</div>
+</div>
+
+<div class="mt-4 text-sm opacity-60">
+
+**Codex**: Plan-Mode ja, aber **kein** automatischer Modell-Split — Wechsel nur manuell. Offener Feature-Request: [openai/codex#20596](https://github.com/openai/codex/issues/20596).
+
+</div>
+
+---
+hideInToc: true
+---
+
 # System Prompts: Statisch vs. Dynamisch
 
 <div class="grid grid-cols-2 gap-8">
