@@ -349,6 +349,7 @@ tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
 
 ---
 hideInToc: true
+routeAlias: saturation-schwellwerte
 ---
 
 # Prioritätsmatrix
@@ -379,6 +380,12 @@ hideInToc: true
 
 <SaturationSimulator />
 
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="saturation-szenarien">SRE-Simulationen</TalkXref>
+
+</div>
+
 <!--
 - Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
   Infra-Komponente, Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider
@@ -401,6 +408,7 @@ Warteschlangentheorie und die 80%-Regel
 
 ---
 hideInToc: true
+routeAlias: mm1-80-prozent
 ---
 
 # M/M/1: Warum 80%
@@ -496,6 +504,12 @@ hideInToc: true
 
 <MM1Simulator />
 
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mm1-simulator">SRE-Simulationen</TalkXref>
+
+</div>
+
 <!--
 - Bedienung: ▶ startet die Kantine. λ (Ankunft) und μ (Kapazität) hinter 🛠️;
   die ρ-Schnellwahl ist immer sichtbar — auf 0.80, dann 0.95 springen.
@@ -511,6 +525,12 @@ hideInToc: true
 ---
 
 <MMcCompare />
+
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mmc-vergleich">SRE-Simulationen</TalkXref>
+
+</div>
 
 <!--
 - Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool) ist Default. Metrik im
@@ -557,6 +577,7 @@ Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstell
 
 ---
 hideInToc: true
+routeAlias: hysterese
 ---
 
 # Hysterese: Warum Systeme nach Überlast „kleben“
@@ -586,6 +607,12 @@ hideInToc: true
 # Hysterese-Katalog — Interaktiv
 
 <HystereseCatalog />
+
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="hysterese-katalog">SRE-Simulationen</TalkXref>
+
+</div>
 
 <!--
 - Bedienung: Filter-Pills oben (Applikation, Garbage Collection,
@@ -623,6 +650,12 @@ Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (
 Brendan Gregg · USE-Methode &nbsp;·&nbsp; Neil Gunther · Universal Scalability Law &nbsp;·&nbsp; Bronson et al. · Metastable Failures (HotOS 2021)
 </div>
 
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="backpressure-quadrant">SRE-Simulationen</TalkXref>
+
+</div>
+
 <style>
 .bpq-layout {
   display: grid;
@@ -658,6 +691,12 @@ hideInToc: true
 # Systemdynamik — Interaktiv
 
 <SystemDynamicsSimulator />
+
+<div class="sim-xref">
+
+Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="systemdynamik">SRE-Simulationen</TalkXref>
+
+</div>
 
 <!--
 - Bedienung: Tab „Simulation“: Szenario wählen (Queues als Federn,
@@ -729,6 +768,7 @@ Statt zwei Metriken gegen die Zeit zu plotten, plottet man sie **gegeneinander**
 
 ---
 layout: section
+routeAlias: dashboard-architektur
 ---
 
 # Dashboard-Architektur
@@ -1083,6 +1123,8 @@ hideInToc: true
 # Danke
 
 Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs
+
+Alle Simulationen zum Selbst-Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
 
 ---
 layout: default
