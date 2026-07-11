@@ -32,6 +32,7 @@ export class MM1Engine {
     this.depTimes = [];
     this.settleAnchorDep = 0;
     this.overflow = 0;
+    this.numShed = 0;
   }
   expo(rate) {
     return -Math.log(1 - Math.random()) / rate;
@@ -101,6 +102,33 @@ export class MM1Engine {
       this.nextDeparture = Infinity;
     }
   }
+  /* Batch-Ankunft (Bus): n Kunden auf einen Schlag, als Dirac-Impuls auf die
+     Schlange. Zählt als reguläre Ankünfte; Einschwing-Anker wird neu gesetzt.
+     `tag` wird an die Kunden gehängt (z.B. { robot: true } für die Anzeige). */
+  injectBurst(n, tag) {
+    for (let i = 0; i < n; i++) {
+      const c = { id: this.nextId++, arrival: this.clock, ...tag };
+      this.numArrivals++;
+      if (!this.inService) this.startService(c);
+      else if (this.queue.length < 5000) this.queue.push(c);
+      else this.overflow++;
+    }
+    this.markChange();
+  }
+
+  /* Load-Shedding: verwirft alle Wartenden (nicht den Kunden in Bedienung).
+     Verworfene verlassen das System unbedient — sie tauchen nie in den
+     Abgangs-Statistiken auf (deshalb weicht der Little-Check danach kurz ab).
+     Liefert die verworfenen Kunden für die Abgang-nach-unten-Animation. */
+  shedQueue() {
+    const dropped = this.queue.splice(0, this.queue.length);
+    const total = dropped.length + this.overflow;
+    this.overflow = 0;
+    this.numShed += total;
+    this.markChange();
+    return { dropped, total };
+  }
+
   _meanLast(field, n) {
     const d = this.departures;
     if (!d.length) return null;

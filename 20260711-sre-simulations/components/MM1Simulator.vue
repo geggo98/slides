@@ -44,6 +44,7 @@ const live = shallowRef({
   remaining: 0,
   overflow: 0,
   lqTheory: null,
+  shedTotal: 0,
 });
 const readout = shallowRef({
   rho: 0.6,
@@ -84,9 +85,63 @@ function reset() {
   engine.reset();
   vis.clear();
   trail = [];
+  busAnim = null;
+  busView.value = null;
 }
 function setRho(rr) {
   lambda.value = +(rr * mu.value).toFixed(3);
+}
+
+/* ---- Burst (Bus) & Load-Shedding — didaktische Aktionen, immer sichtbar ---- */
+const BURST_N = 12;
+const BUS_STOP = { x: 150, y: 96 };
+const busView = shallowRef(null); // {x, y, opacity} für die SVG-Anzeige
+let busAnim = null; // {t0, injected} — Zeitachse in Realzeit, unabhängig vom Sim-Takt
+
+function burst() {
+  if (busAnim) return; // ein Bus reicht
+  busAnim = { t0: performance.now(), injected: false };
+}
+function shed() {
+  const { dropped } = engine.shedQueue();
+  for (const c of dropped) {
+    const v = vis.get(c.id);
+    if (!v) continue;
+    v.state = "shed";
+    v.tx = v.x + (Math.random() * 60 - 30);
+    v.ty = ST.H + 70; // nach unten aus dem Bild
+  }
+}
+
+/* Bus-Zeitachse: anfahren (0–0,9 s) → halten & 🤖 aussteigen lassen
+   (0,9–1,9 s, Injektion beim Halt) → zurück nach links (1,9–2,8 s). */
+function tickBus(now) {
+  if (!busAnim) return;
+  const t = (now - busAnim.t0) / 1000;
+  if (t < 0.9) {
+    const e = 1 - Math.pow(1 - t / 0.9, 3);
+    busView.value = {
+      x: -80 + (BUS_STOP.x + 80) * e,
+      y: BUS_STOP.y,
+      opacity: 1,
+    };
+  } else if (t < 1.9) {
+    if (!busAnim.injected) {
+      busAnim.injected = true;
+      engine.injectBurst(BURST_N, { robot: true });
+    }
+    busView.value = { x: BUS_STOP.x, y: BUS_STOP.y, opacity: 1 };
+  } else if (t < 2.8) {
+    const p = (t - 1.9) / 0.9;
+    busView.value = {
+      x: BUS_STOP.x - (BUS_STOP.x + 80) * p * p,
+      y: BUS_STOP.y,
+      opacity: 1 - p * 0.3,
+    };
+  } else {
+    busAnim = null;
+    busView.value = null;
+  }
 }
 
 /* ---- abgeleitete Anzeige ---- */
@@ -230,6 +285,7 @@ function loop(now) {
   raf = requestAnimationFrame(loop);
   const dtReal = Math.min(0.1, (now - last) / 1000);
   last = now;
+  tickBus(now);
   if (!paused.value) engine.advance(engine.clock + dtReal * speed.value);
 
   // Visuelle Reconciliation — „+N“ mittig: vordere 5 + hintere 5 mit Lücke.
@@ -245,6 +301,12 @@ function loop(now) {
     let v = vis.get(c.id);
     if (!v) {
       v = spawn(c.id);
+      if (c.robot) {
+        // Burst-Gäste sind Roboter und steigen am Bus aus (statt links zu spawnen)
+        v.emoji = "🤖";
+        v.x = busView.value ? busView.value.x : BUS_STOP.x;
+        v.y = (busView.value ? busView.value.y : BUS_STOP.y) + 22;
+      }
       vis.set(c.id, v);
     }
     v.tx = ST.qFrontX - slot * ST.qSlot;
@@ -266,6 +328,7 @@ function loop(now) {
     let v = vis.get(c.id);
     if (!v) {
       v = spawn(c.id);
+      if (c.robot) v.emoji = "🤖";
       vis.set(c.id, v);
     }
     v.tx = ST.serviceX;
@@ -274,7 +337,7 @@ function loop(now) {
     v.state = "service";
   }
   for (const [id, v] of vis) {
-    if (!present.has(id) && v.state !== "leaving") {
+    if (!present.has(id) && v.state !== "leaving" && v.state !== "shed") {
       v.state = "leaving";
       v.tx = ST.W + 60;
       v.ty = 60 + Math.random() * 240;
@@ -290,7 +353,16 @@ function loop(now) {
       vis.delete(id);
       continue;
     }
-    v.opacity = v.state === "leaving" ? Math.max(0, 1 - (v.x - ST.W) / 100) : 1;
+    if (v.state === "shed" && v.y > ST.H + 50) {
+      vis.delete(id);
+      continue;
+    }
+    v.opacity =
+      v.state === "leaving"
+        ? Math.max(0, 1 - (v.x - ST.W) / 100)
+        : v.state === "shed"
+          ? Math.max(0.15, 1 - (v.y - ST.lineY) / 220)
+          : 1;
     if (v.draw)
       out.push({ id, x: v.x, y: v.y, emoji: v.emoji, opacity: v.opacity });
   }
@@ -317,6 +389,7 @@ function loop(now) {
       : 0,
     overflow: hiddenCount,
     lqTheory,
+    shedTotal: engine.numShed,
   };
 
   if (now - lastSample > 140) {
@@ -424,6 +497,23 @@ onUnmounted(() => {
         @click="setRho(rr)"
       >
         {{ rr.toFixed(2) }}
+      </button>
+      <span class="presets-gap" />
+      <button
+        class="preset-btn"
+        :style="btnStyle(C.amber)"
+        title="Batch-Ankunft: ein Bus bringt 12 Gäste auf einen Schlag (Dirac-Impuls). Beobachte den Wq-Spike und die Re-Konvergenz im Scope."
+        @click="burst"
+      >
+        🚌 Burst +12
+      </button>
+      <button
+        class="preset-btn"
+        :style="btnStyle(C.red)"
+        title="Load-Shedding: verwirft alle Wartenden (nicht den Gast in Bedienung). Wq sinkt sofort — aber die Requests sind weg; der Little-Check weicht danach kurz ab."
+        @click="shed"
+      >
+        ✂️ Load-Shed
       </button>
     </div>
 
@@ -575,6 +665,18 @@ onUnmounted(() => {
             </text>
           </g>
 
+          <!-- Bus (Burst-Ankunft) -->
+          <text
+            v-if="busView"
+            :x="busView.x"
+            :y="busView.y"
+            style="font-size: 40px"
+            text-anchor="middle"
+            :style="{ opacity: busView.opacity }"
+          >
+            🚌
+          </text>
+
           <!-- Gäste -->
           <text
             v-for="e in entities"
@@ -586,6 +688,19 @@ onUnmounted(() => {
             :style="{ opacity: e.opacity }"
           >
             {{ e.emoji }}
+          </text>
+
+          <!-- Shedding-Zähler: verworfene Requests -->
+          <text
+            v-if="live.shedTotal > 0"
+            :x="badgeX"
+            :y="lineY + 92"
+            text-anchor="middle"
+            :fill="C.red"
+            style="font-size: 13px"
+            class="sim-mono"
+          >
+            ✂️ verworfen: {{ live.shedTotal }}
           </text>
 
           <!-- „+N“-Badge mittig in der Schlange, hervorgehoben -->
@@ -742,7 +857,9 @@ onUnmounted(() => {
       Kantine = Illustration; Scope, Gauges &amp; Balken = quantitative
       Wahrheit. λ bewegen: der Punkt springt seitlich (neues ρ) und
       <em>klettert</em> zur Kurve. Erst ab ρ≥1 verlässt er das Feld nach oben —
-      kein Gleichgewicht.
+      kein Gleichgewicht. 🚌 Burst = Dirac-Impuls: Wq springt, klingt bei ρ&lt;1
+      wieder ab. ✂️ Load-Shed leert die Schlange nach unten — sofortige
+      Entlastung, aber die Requests sind verworfen.
     </div>
   </div>
 </template>
@@ -826,6 +943,9 @@ onUnmounted(() => {
   font-size: 11px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
+}
+.presets-gap {
+  flex: 1;
 }
 
 /* Controls */

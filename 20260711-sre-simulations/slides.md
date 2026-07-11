@@ -345,6 +345,10 @@ routeAlias: mm1-simulator
 - Zeigen: Bei ρ=0,8 pendelt Wq auf ~4× Bedienzeit ein (Gauge-Strich = Theorie);
   bei 0,95 zappelt der Phosphor-Punkt stark, der Einschwing-Balken braucht lange
   — läuft aber nicht davon. Erst ρ≥1: der Punkt verlässt das Feld nach oben.
+- 🚌 Burst +12: der Bus bringt 12 🤖 auf einen Schlag (Dirac-Impuls) — Wq/N
+  springen, bei ρ<1 konvergiert alles zurück zur Kurve. Brücke zu Kap. 4.
+- ✂️ Load-Shed: alle Wartenden gehen nach unten ab — Wq sinkt sofort, der
+  rote Zähler zeigt die Kosten (verworfene Requests). Brücke zu Kap. 5.
 - Kernaussage: „80 %" ist ein Punkt auf 1/(1−ρ), keine Klippe.
 -->
 
