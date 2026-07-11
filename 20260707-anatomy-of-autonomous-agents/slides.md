@@ -693,6 +693,7 @@ hideInToc: true
 
 ---
 hideInToc: true
+routeAlias: alert-analyse
 ---
 
 # Gleiche Anatomie, neuer Use Case
