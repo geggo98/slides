@@ -1,0 +1,81 @@
+/* 0xProto lokal laden (public/fonts-Symlink auf shared/fonts). In den
+ * Monaco-Decks registriert shared/components/MonacoBlock.vue dieses
+ * @font-face — dieses Deck nutzt kein Monaco, braucht die Regel also
+ * selbst, damit --slidev-code-font-family ("0xProto", ui-monospace, …)
+ * nicht stumm auf die System-Monospace zurückfällt. Kein Netz-Download:
+ * Slidevs Google-Provider kennt 0xProto nicht. */
+@font-face {
+  font-family: "0xProto";
+  src: url("/fonts/0xProto-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Wiederkehrende Bausteine der Erklär-/Übersichtsfolien. Deck-global statt
+ * <style> im Slide, weil Slidev Slide-Styles scoped — die Klassen werden
+ * aber über mehrere Intro-Folien hinweg benutzt. */
+.intro-box {
+  border: 1px solid var(--color-border, rgba(128, 128, 128, 0.35));
+  border-radius: 8px;
+  padding: 0.7em 0.9em;
+  font-size: 0.86em;
+  line-height: 1.5;
+}
+.intro-box h3 {
+  margin-bottom: 0.35em;
+  font-weight: 600;
+}
+.intro-box-accent {
+  border-color: var(--color-text-info, #3b82f6);
+}
+.shared-res {
+  display: flex;
+  gap: 0.8em;
+  font-size: 0.9em;
+}
+.shared-res span {
+  border: 1px solid var(--color-border, rgba(128, 128, 128, 0.35));
+  border-radius: 999px;
+  padding: 0.15em 0.7em;
+}
+.chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3em;
+  font-size: 0.82em;
+}
+.chain-node {
+  border: 1px solid var(--color-border, rgba(128, 128, 128, 0.35));
+  border-radius: 6px;
+  padding: 0.25em 0.55em;
+  white-space: nowrap;
+}
+.chain-arrow {
+  opacity: 0.55;
+}
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6em;
+}
+.map-col {
+  border: 1px solid var(--color-border, rgba(128, 128, 128, 0.35));
+  border-radius: 8px;
+  padding: 0.5em 0.6em;
+}
+.map-head {
+  font-weight: 600;
+  font-size: 0.78em;
+  margin-bottom: 0.4em;
+}
+.map-item {
+  font-size: 0.72em;
+  line-height: 1.35;
+  padding: 0.12em 0;
+}
+.map-tag {
+  opacity: 0.55;
+  font-size: 0.9em;
+}

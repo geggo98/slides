@@ -17,6 +17,7 @@ export const TALKS = {
   "20260606-design-pattern": "Brauchen wir noch Entwurfsmuster?",
   "20260703-rnext-proposal": "BiPRO RNext — OpenAPI für LLM-Agents",
   "20260707-anatomy-of-autonomous-agents": "Anatomie Autonomer Agenten",
+  "20260711-sre-simulations": "SRE-Simulationen: Komplexe Systeme interaktiv",
 } as const;
 
 export type TalkSlug = keyof typeof TALKS;
