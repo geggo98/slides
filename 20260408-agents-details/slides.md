@@ -458,6 +458,7 @@ Ankündigung. Drittanbieter-Werte aus den jeweiligen Projekt-READMEs.
 
 ---
 layout: section
+routeAlias: caching
 ---
 
 # 5. Cache & Sessions
@@ -546,6 +547,7 @@ Default-TTL 5 min, Extended 1 h = 2× Cache-Write. Stand 29.04.2026.
 
 ---
 hideInToc: true
+routeAlias: cache-modi
 ---
 
 # Claude Code CLI: Drei Modi, drei Cache-Profile
@@ -604,6 +606,58 @@ FORCE_PROMPT_CACHING_5M seit v2.1.108; Fork-Mode CLAUDE_CODE_FORK_SUBAGENT=1
 seit v2.1.117 (in -p/SDK ab v2.1.121); OpenClaw #19989 (claude -p ohne
 --resume = 10× Kosten). Cache-Defaults werden serverseitig ohne Changelog
 umgeschaltet — vor jedem Talk gegenchecken. Stand 29.04.2026.
+-->
+
+---
+hideInToc: true
+routeAlias: cache-hygiene
+---
+
+# Cache-Hygiene & Batch-Modus
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+### Vier Regeln, damit der Cache greift
+
+1. **Prefix stabil** — volatile Daten (Zeitstempel, IDs) ans **Ende**: System → Doku → History → Metadaten → Frage. Ein Zeitstempel _vor_ der Doku bricht jede Sekunde den Cache.
+2. **Parameter stabil** — nicht nur der Text zählt: `tool_choice`, `extended_thinking`, Bilder & Tool-Defs invalidieren **still**. Hierarchie `tools → system → messages` — oben kippt alles darunter.
+3. **Größe richtig** — Min-Länge **Sonnet 4.6: 2.048**, **Opus 4.x / Haiku 4.5: 4.096** Tok; darunter still ungecacht. Zu groß → Context Rot.
+4. **TTL beachten** — jeder Treffer resettet die 5-Min-Uhr **kostenlos**; der 1h-Cache (2× Write) rechnet sich ab dem **2. Treffer**.
+
+</div>
+<div>
+
+### Batch-Modus: nochmal −50 %
+
+- Bis **100K Anfragen**, Antwort **≤ 24 h**, 256 MB/Batch
+- Rabatt **stapelt multiplikativ** mit dem Cache → Cache-Read nur noch **0,15 $/MTok**
+- Ideal für **autonome Hintergrund-Agenten** — nicht für interaktiv/zeitkritisch
+
+<div class="mt-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-xs">
+
+**Rechenbeispiel** — 10K-Tok-Systemprompt, 500 Anfragen/h:
+
+ohne Cache **$15,00** → mit Cache **$1,53** → + Batch **$0,77**
+
+</div>
+
+<div class="mt-2 text-xs opacity-60">
+
+Praxis: autonome Dauerläufer in <TalkXref slug="20260707-anatomy-of-autonomous-agents">Anatomie Autonomer Agenten</TalkXref>.
+
+</div>
+
+</div>
+</div>
+
+<!--
+Quelle: Stefan Wintermeyer, „KI-Kosten reduzieren: Prompt-Caching" (iX/heise
+2026, heise.de/-11335003). Min-Längen sind modellabhängig; Opus 4.7 nennt die
+Doku 4.096, in Livetests greift der Cache reproduzierbar oft schon ab ~2.048
+Token. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discount
+(0,30 × 0,5 = 0,15 $/MTok). Rechenbeispiel mit Sonnet-4.6-Preisen: 500×10K×$3,00
+= $15,00 ungecacht; 1×10K×$3,75 + 499×10K×$0,30 = $1,53 mit Cache; +Batch $0,77.
 -->
 
 ---
@@ -943,6 +997,7 @@ hideInToc: true
 - Geoff Huntley — _How to Build a Coding Agent_
 - Browser Use — _The Bitter Lesson of Agent Frameworks_
 - Armin Ronacher — `lucumr.pocoo.org`
+- Stefan Wintermeyer — _Prompt-Caching_ (iX/heise 2026) · `heise.de/-11335003`
 
 </div>
 <div>
