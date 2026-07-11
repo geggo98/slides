@@ -371,6 +371,48 @@ routeAlias: mmc-vergleich
 -->
 
 ---
+hideInToc: true
+routeAlias: littles-law
+---
+
+# Kapazitätsplanung & Little's Law
+
+<div class="grid grid-cols-2 gap-4 mt-4">
+<div class="intro-box intro-box-accent">
+
+### L = λ · W
+
+Drei Größen, ein Gesetz — **zwei messen, die dritte ausrechnen**:
+mittlere Anzahl im System, Ankunftsrate, mittlere Verweilzeit.
+Gilt verteilungsfrei für jedes stabile System.
+
+</div>
+<div class="intro-box">
+
+### Was die Übung zeigen wird
+
+- Aus λ und Ziel-Latenz die **nötige Kapazität** herleiten
+- **Headroom-Planung** mit der Wq-Hyperbel aus diesem Kapitel
+- Workshop-Rechenaufgaben mit Auflösung — Zahlen aus echten Systemen
+
+</div>
+</div>
+
+<div class="mt-4">
+
+<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
+Geplant: interaktive Rechen-Drills auf Basis der Kantinen-Simulation — λ, W oder N verdecken, die fehlende Größe schätzen, dann messen. Der Little-Check-Gauge im M/M/1-Simulator ist der Vorgeschmack.
+</Callout>
+
+</div>
+
+<!--
+- Platzhalter-Folie: Konzept steht, Simulation folgt.
+- Mündlich: Little's Law ist der Konsistenz-Check schlechthin — der
+  fünfte Gauge in der Kantinen-Sim rechnet genau das live nach.
+-->
+
+---
 layout: section
 ---
 
@@ -922,6 +964,142 @@ routeAlias: hpa-hunting
 -->
 
 ---
+hideInToc: true
+---
+
+# Debrief: Das gemeinsame Muster
+
+<div class="mt-3" />
+
+| Simulation             | Die unsichtbare Kopplung                           | Der Verstärker                            |
+| ---------------------- | -------------------------------------------------- | ----------------------------------------- |
+| **Retry-Sturm**        | Timeouts koppeln Clients an die Queue              | Timeout → Retry → längere Queue           |
+| **Cache-Stampede**     | Ein TTL synchronisiert hunderte Clients            | Miss → Rebuild → DB langsam → mehr Misses |
+| **Bufferbloat**        | Der Puffer koppelt Last an Latenz                  | Backlog → Deadline-Miss → tote Arbeit     |
+| **Bullwhip**           | Jede Stufe sieht nur Bestellungen der Nachbarstufe | Prognose auf Prognose, je Stufe ×         |
+| **Autoscaler-Hunting** | Der Regler sieht die Welt von vor 60 Sekunden      | Totzeit + Messverzögerung → Schwingen     |
+
+<div v-click class="mt-3">
+
+<Callout tone="info" title="Simon, angewandt">
+Im Architekturdiagramm war jedes dieser Systeme <b>dekomponierbar</b>. Die Kopplung lief über eine geteilte Ressource oder eine Verzögerung — und nahe der Kipp-Schwelle entscheidet der <b>Seed</b>: Der Mittelwert verschweigt die Gefahr.
+</Callout>
+
+</div>
+
+<style>
+table {
+  font-size: 0.72em;
+}
+table td,
+table th {
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+</style>
+
+<!--
+- Debrief nach den fünf Predict-first-Sims: das Muster ist immer gleich —
+  positive Rückkopplung über eine Kopplung, die das Diagramm nicht zeigt.
+- Rückbindung an Simon (Intro): fast-dekomponierbar heißt genau das.
+- Klick: und der Zufall — wer im ⚙-Labor nahe der Schwelle experimentiert
+  hat, hat gesehen: gleicher Parametersatz, anderes Ergebnis.
+-->
+
+---
+layout: section
+---
+
+# Gegenmaßnahmen
+
+Die Verstärker entschärfen — Platzhalter für kommende Simulationen
+
+<!--
+- Kurzes Kapitel: zwei geplante Simulationen, die Konzepte stehen schon.
+-->
+
+---
+hideInToc: true
+routeAlias: cascading-failure
+---
+
+# Kaskadierender Ausfall — die Health-Check-Spirale
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node">Instanz wird <b>langsam</b></span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">Health-Check schlägt fehl</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">LB nimmt sie <b>aus der Rotation</b></span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">Rest bekommt <b>mehr Last</b></span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">nächste wird langsam …</span>
+</div>
+
+- Der Load Balancer ist als **Schutz** gebaut — unter Last wird er zum **Verstärker**
+- Verwandt mit dem Retry-Sturm: dieselbe Selbsterhaltung, eine Ebene höher
+- Klassische Gegenmittel: Panic-Mode/Fail-Open (Envoy), Mindest-Quorum, langsamere Auswurf-Regeln
+
+<div class="mt-4">
+
+<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
+Geplant (Predict-first): N Instanzen hinter einem LB, Health-Check-Schwellen als ⚙-Regler — vorhersagen, ab wie vielen ausgeworfenen Instanzen die Kaskade unumkehrbar wird.
+</Callout>
+
+</div>
+
+<!--
+- Platzhalter: Konzept per Kausalkette erklären, Simulation folgt.
+- Brücke: das ist der Retry-Sturm auf Infrastruktur-Ebene — der „Retry"
+  ist hier die Lastumverteilung des LB.
+-->
+
+---
+hideInToc: true
+routeAlias: circuit-breaker
+---
+
+# Circuit Breaker & Load Shedding
+
+<div class="grid grid-cols-2 gap-4 mt-4">
+<div class="intro-box">
+
+### Schon live gesehen
+
+- **✂️ Load-Shed** in der M/M/1-Kantine: Wartende verwerfen, Wq sofort runter
+- **Shed-Knopf** im Retry-Sturm: aussichtslose Anfragen verwerfen bricht die Selbsterhaltung
+- **Single-Flight** (Cache-Stampede) und **Age-Drop** (Bufferbloat) — dieselbe Familie
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### Der Circuit Breaker als Regelkreis
+
+Closed → Open → Half-Open ist **absichtlich eingebaute Hysterese**
+(Kapitel „Systeme mit Gedächtnis"): getrennte Kipp- und
+Rückkehr-Schwellen gegen das Flattern.
+
+</div>
+</div>
+
+<div class="mt-4">
+
+<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
+Geplant: Retry-Sturm-Szenario mit zuschaltbarem Breaker — vorhersagen, wie sich Recovery-Zeit und verworfene Requests gegen das ungebremste System verschieben.
+</Callout>
+
+</div>
+
+<!--
+- Platzhalter: die Gegenmaßnahmen-Perspektive bündeln — vier Sims dieses
+  Decks haben schon je ein Gegenmittel eingebaut (Shed, Single-Flight,
+  Age-Drop, Stabilization Window).
+- Merksatz: Ein Breaker ist gewollte Hysterese — dieselbe Mechanik, die
+  in Kapitel 3 als Problem auftrat, hier als Werkzeug.
+-->
+
+---
 layout: section
 ---
 
@@ -1238,4 +1416,167 @@ routeAlias: noisy-neighbor
 - ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
   Modell-Hinweis (%steal aus /proc/stat bzw. vmstat: vCPU lauffähig, aber
   keine physische CPU — der Kanal, der in Default-Dashboards oft fehlt).
+-->
+
+---
+hideInToc: true
+---
+
+# Debrief: Dashboards, die diskriminieren
+
+Das Leitsignal war in jedem Drill **identisch** — diagnostiziert hat immer ein Kanal, der im Standard-Dashboard oft fehlt:
+
+<div class="mt-2" />
+
+| Drill                    | Leitsignal (Symptom) | Der Schlüssel-Kanal                            |
+| ------------------------ | -------------------- | ---------------------------------------------- |
+| **Latenz-Verteilung**    | p99 erhöht           | die **Verteilungsform** (Banden vs. Kontinuum) |
+| **RabbitMQ-Queue**       | Queue Depth wächst   | **unacked** (in-flight)                        |
+| **CrashLoopBackOff**     | Restarts steigen     | **Exit-Codes** & Event-Reihenfolge             |
+| **Heap: Leak vs. Cache** | Heap wächst          | das **Post-GC-Minimum**                        |
+| **Noisy Neighbor**       | Latenz-Spikes        | **%steal**                                     |
+
+<div v-click class="mt-3">
+
+<Callout tone="success" title="Merksatz">
+Standard-Dashboards zeigen <b>Symptome</b>. Diagnose braucht <b>Diskriminatoren</b> — Kanäle, die zwischen Hypothesen trennen. Die gehören ins Dashboard, <i>bevor</i> der Incident kommt.
+</Callout>
+
+</div>
+
+<div class="abs-br m-3 text-xs opacity-60">
+
+Dashboard-Ebenen & Drill-Down: <TalkXref slug="20260329-grafana-lgtm-monitoring-in-k8s-distributed-system" anchor="dashboard-architektur">Monitoring-Talk</TalkXref>
+
+</div>
+
+<style>
+table {
+  font-size: 0.72em;
+}
+table td,
+table th {
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+</style>
+
+<!--
+- Debrief der fünf Diagnose-Drills: die Tabelle einmal durchgehen und
+  fragen, welche dieser Kanäle im eigenen Dashboard fehlen.
+- Klick: der Merksatz. Diskriminatoren VOR dem Incident einbauen — im
+  Incident kostet jede neue Query Zeit (das war die Aufdeck-Mechanik).
+- Fußzeile: wie man Dashboards in Ebenen baut → Monitoring-Talk.
+-->
+
+---
+layout: section
+---
+
+# Abschluss
+
+Error-Budgets, Querverweise, Nachspielen
+
+---
+hideInToc: true
+routeAlias: slo-burn-rate
+---
+
+# SLO, Error-Budget & Burn-Rate
+
+<div class="grid grid-cols-2 gap-4 mt-4">
+<div class="intro-box">
+
+### Die Mechanik
+
+- **SLO 99,9 %** ⇒ Budget = 0,1 % Fehler pro Fenster
+- **Burn-Rate** = wie schnell das Budget verbrennt (1× = genau am Limit)
+- Alerting auf **zwei Fenstern**: schnell (Notfall) + langsam (Trend)
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### Warum hier?
+
+Burn-Rate-Alerting ist ein **Regelkreis über den Regelkreisen** — mit
+denselben Fallen: Fenster zu kurz = Flattern (Hysterese!), zu lang =
+das Budget ist weg, bevor jemand aufwacht.
+
+</div>
+</div>
+
+<div class="mt-4">
+
+<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
+Geplant: Fehlerraten-Szenarien (Spike, Schleichend, Flapping) gegen Multi-Window-Burn-Rate-Alerts — vorhersagen, welcher Alert wann feuert und wie viel Budget dann noch übrig ist.
+</Callout>
+
+</div>
+
+<!--
+- Platzhalter: Burn-Rate-Mechanik in zwei Boxen, Simulation folgt.
+- Brücke zurück zu Kapitel 3: Multi-Window-Alerts sind gewollte Hysterese
+  im Alerting — dieselbe Doppelschwellen-Idee wie der Recovery Threshold.
+-->
+
+---
+hideInToc: true
+---
+
+# Querverweise
+
+<TalkXrefPanel
+  variant="neutral"
+  :here="{
+    title: 'Komplexe Systeme im SRE-Alltag',
+    bullets: [
+      'Interaktive Simulationen: Warteschlangen, Sättigung, Hysterese, metastabile Ausfälle, Diagnose-Drills',
+      'Workshop-Mechanik: <b>Predict first</b> und <b>Diagnose durch Konjunktion</b>',
+      'Alle Simulationen einzeln verlinkbar — zum Nachspielen und Weitergeben',
+    ],
+  }"
+  :refs="[
+    {
+      slug: '20260329-grafana-lgtm-monitoring-in-k8s-distributed-system',
+      anchor: 'mm1-80-prozent',
+      bullets: [
+        'Die Theorie hinter diesem Deck: Methoden (RED/USE/Golden Signals), Schwellwerte, Hysterese-Alerting',
+        'Dashboard-Architektur in vier Ebenen und der LGTM-Stack (Mimir · Loki · Tempo)',
+      ],
+    },
+    {
+      slug: '20260707-anatomy-of-autonomous-agents',
+      anchor: 'alert-analyse',
+      bullets: [
+        'Geplanter <b>Monitoring-Agent</b>: „trianguliere neue Alerts&quot; als Runbook — die Diagnose-Drills aus diesem Deck, automatisiert',
+        'Gleiche Agenten-Anatomie wie Ticket-Tests und CVE-Fixes: Runbook + Skills, Zustand im Alert-Ticket',
+      ],
+      hint: 'Die Aufdeck-Reihenfolge der Diagnose-Drills ist genau die Werkzeug-Reihenfolge, die so ein Agent lernen muss.',
+    },
+  ]"
+/>
+
+<!--
+- Links dieses Deck, rechts die zwei Anschluss-Talks.
+- Monitoring-Talk: woher die Theorie und die kopierten Simulationen stammen.
+- Anatomie-Talk: der geplante Monitoring-Agent macht aus den Diagnose-Drills
+  ein Runbook — Alert-Triangulation als automatisierter Workflow.
+-->
+
+---
+layout: end
+hideInToc: true
+---
+
+# Danke
+
+Zum Nachspielen: Jede Simulations-Folie hat einen Deep-Link — Folie öffnen genügt. ⚙ = Experimentier-Regler.
+
+Quellen: Herbert Simon, _The Architecture of Complexity_ (1962) · thesoftwarefrontier.com, _How Systems Really Fail_ · Bronson et al., _Metastable Failures_ (HotOS ’21) · Lee et al., _The Bullwhip Effect_ (1997) · Google SRE Workbook (SLO/Burn-Rate)
+
+<!--
+- Selbststudium-Hinweis wiederholen: Deep-Links, ⚙-Labore, „Gleicher Seed"
+  zum Reproduzieren.
+- Wer nur eine Sache mitnimmt: der Mittelwert verschweigt die Gefahr —
+  nahe der Schwelle entscheidet der Zufall.
 -->
