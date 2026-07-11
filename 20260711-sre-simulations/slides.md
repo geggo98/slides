@@ -584,3 +584,73 @@ routeAlias: systemdynamik
 - Tab „M/M/1 & Regeln": Kurve plus die drei Regeln (Excess Capacity,
   Steady Flow, Hysterese) — als Abschluss der Sektion kurz zeigen.
 -->
+
+---
+layout: section
+---
+
+# Predict first: metastabile Ausfälle
+
+Erst vorhersagen, dann messen — der Fehler ist der Lerneffekt
+
+<!--
+- Regie: ab hier gilt die Workshop-Mechanik von Folie „So funktioniert dieser
+  Workshop". Skizziert eure Vermutung, BEVOR die Simulation läuft.
+- Fünf Szenarien, ein Muster: eine positive Rückkopplung über eine geteilte
+  Ressource, die das Diagramm nicht zeigt.
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Retry-Sturm
+
+Ein Service verarbeitet **μ = 100 req/s**, die Grundlast beträgt **λ = 70 req/s** (Auslastung ρ = 0,7).
+Clients haben **1 s Timeout** und wiederholen fehlgeschlagene Anfragen bis zu **2-mal**.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Clients</b>&ensp;λ = 70 req/s · Timeout 1 s · ≤ 2 Retries</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Queue</b>&ensp;unbegrenzt (FIFO)</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Service</b>&ensp;μ = 100 req/s</span>
+</div>
+
+Bei **t = 20 s** trifft für **10 Sekunden** eine Lastspitze (×2) ein — danach kehrt die Last zur Normalität zurück.
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Wie entwickelt sich der <b>Goodput</b> (erfolgreiche Antworten innerhalb der Deadline), nachdem die Lastspitze vorbei ist? Erholung, dauerhaft reduziert — oder Kollaps?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Zahlen kurz durchgehen: ρ=0,7 klingt gesund,
+  der Burst ist nur 10 Sekunden lang, danach ist die Last wieder normal.
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: retry-sturm
+---
+
+<RetryStormSim />
+
+<!--
+- Bedienung: Vorhersage direkt ins Goodput-Diagramm skizzieren (Maus/Finger)
+  oder Preset wählen (Erholung / teilweise / Kollaps), dann ▶ starten.
+  Coverage-Gate: Skizze muss bis fast zum rechten Rand reichen.
+- Während des Laufs: „Load-Shedding auslösen" zeigt die Gegenmaßnahme live —
+  Queue kappen + Annahme begrenzen rettet den Goodput.
+- Verdict unten vergleicht Vorhersage und Messung (Mittel t ≥ 90 s).
+- ⚙ Experimentieren: Burst-Amplitude & Retries R; nahe der Kipp-Schwelle
+  (~×1,4–1,6) entscheidet der Seed — „Gleicher Seed" vs. „Nochmal" zeigen!
+- Tab „Erklärung & Modell": die Arithmetik (λ_eff = λ·(R+1) > μ),
+  Selbsterhaltung ab R=1, „Der Mittelwert verschweigt die Gefahr".
+-->
