@@ -1,0 +1,162 @@
+/*
+ * Deck-lokales Poster-Theme für „Anatomie Autonomer Agenten".
+ *
+ * Ziel: das ganze Deck an das Anatomie-Poster auf Folie 8 angleichen —
+ *   Light = gealtertes Pergament / Sepia-Kupferstich, Oxblood-Akzent
+ *   Dark  = Neon-Cyberpunk auf Fast-Schwarz, Cyan-Akzent
+ *
+ * Mechanik: Slidev lädt eine Deck-eigene style.css automatisch. Hier
+ * überschreiben wir NUR lokal die von <SlidevTokens /> (shared) geerbten
+ * --color-*-Variablen — shared/ bleibt unangetastet, andere Talks unberührt.
+ * Token-getriebene Komponenten (AnatomyDiagram, TalkXrefPanel, Tabellen,
+ * Inline-Code) färben sich dadurch automatisch mit.
+ *
+ * Der `html.dark`-Selektor ist bewusst als `html.dark.dark` geschrieben:
+ * SlidevTokens setzt Dark auf `html.dark, .dark, :root.dark` — die doppelte
+ * Klasse gibt uns Spezifitäts-Vorrang, unabhängig von der Ladereihenfolge.
+ */
+
+/* (a) Palette-Override ---------------------------------------------------- */
+
+:root {
+  /* Poster-Papier & Sepia-Tinte */
+  --color-text-primary: #2b2420;
+  --color-text-secondary: #5f5140;
+  --color-text-tertiary: #8a7a62;
+  --color-text-info: #2f6f79; /* Teal (Roboteraugen) */
+  --color-text-success: #4f6a2a; /* Oliv */
+  --color-text-warning: #9a6a1a; /* Ocker */
+  --color-text-danger: #9a3b2b; /* Oxblood (Poster-Titel & Herz) */
+
+  --color-background-primary: #f0e7d2;
+  --color-background-secondary: #e3d5b8;
+  --color-background-tertiary: #dccdac;
+  --color-background-info: #dce7e4;
+  --color-background-success: #e4e6cf;
+  --color-background-warning: #efe2c4;
+  --color-background-danger: #eddac9;
+
+  --color-border-tertiary: rgba(70, 50, 28, 0.22);
+  --color-border-secondary: rgba(70, 50, 28, 0.34);
+  --color-border-primary: rgba(70, 50, 28, 0.5);
+  --color-border-info: #7fb0b3;
+  --color-border-success: #a7b06a;
+  --color-border-warning: #d09a45;
+  --color-border-danger: #c47a63;
+
+  /* Deck-eigene Helfer */
+  --deck-accent: #9a3b2b;
+  --deck-surface: #e9ddc4; /* exakt der Poster-Papierrand → Folie 8 nahtlos */
+  --deck-glow: transparent;
+  --font-serif: "Playfair Display", Georgia, serif;
+
+  /* Code-Container dezent anwärmen (Shiki-Vordergrund bleibt unangetastet) */
+  --slidev-code-background: #f3ead6;
+  /* Link-Akzent an Poster-Teal angleichen */
+  --slidev-theme-primary: #2f8f9c;
+}
+
+html.dark.dark {
+  /* Neon auf Fast-Schwarz */
+  --color-text-primary: #dcdce4;
+  --color-text-secondary: #9a9fb0;
+  --color-text-tertiary: #6b7080;
+  --color-text-info: #3fd0e0; /* Cyan */
+  --color-text-success: #8fd14f; /* Lime */
+  --color-text-warning: #e8a13a; /* Amber */
+  --color-text-danger: #ff6b86; /* Neon-Pink (Herz) */
+
+  --color-background-primary: #12121c;
+  --color-background-secondary: #14141f;
+  --color-background-tertiary: #1c1c2a;
+  --color-background-info: #0c2830;
+  --color-background-success: #16240c;
+  --color-background-warning: #2a1e08;
+  --color-background-danger: #2a0f16;
+
+  --color-border-tertiary: rgba(120, 160, 200, 0.18);
+  --color-border-secondary: rgba(120, 160, 200, 0.28);
+  --color-border-primary: rgba(120, 160, 200, 0.4);
+  --color-border-info: rgba(63, 208, 224, 0.5);
+  --color-border-success: rgba(143, 209, 79, 0.5);
+  --color-border-warning: rgba(232, 161, 58, 0.5);
+  --color-border-danger: rgba(255, 107, 134, 0.5);
+
+  --deck-accent: #3fd0e0;
+  --deck-surface: #07070c; /* ≈ Poster-Void #010104 */
+  --deck-glow: rgba(63, 208, 224, 0.35);
+
+  --slidev-code-background: #0d0d16;
+  --slidev-theme-primary: #3fd0e0;
+}
+
+/* (b) Slide-Fläche & Text — Pergament bzw. Fast-Schwarz statt bg-main ------ */
+
+/* Die Poster-Folie (.anatomie-poster) malt ihre eigene Bildfläche → ausnehmen. */
+.slidev-layout:not(.anatomie-poster) {
+  background-color: var(--deck-surface);
+  color: var(--color-text-primary);
+}
+
+/* (c) Überschriften — Playfair Display in der Poster-Akzentfarbe ----------- */
+
+.slidev-layout h1,
+.slidev-layout h2 {
+  font-family: var(--font-serif);
+  color: var(--deck-accent);
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 18px var(--deck-glow); /* transparent im Light Mode */
+}
+
+/* Section-Divider & Cover/Titel: großer Serifen-Titel + Poster-Zierlinie. */
+.slidev-layout.section h1,
+.slidev-layout.cover h1,
+.slidev-layout.intro h1 {
+  font-family: var(--font-serif);
+  color: var(--deck-accent);
+  font-weight: 700;
+}
+
+/* Feine Zierlinie unter Section-/Cover-Titeln — Echo des Poster-Dividers
+   „◄— ein kreislauf intelligenter handlung —►". */
+.slidev-layout.section h1::after,
+.slidev-layout.cover h1::after,
+.slidev-layout.intro h1::after {
+  content: "";
+  display: block;
+  width: 3.5em;
+  max-width: 60%;
+  margin-top: 0.35rem;
+  border-bottom: 2px solid var(--deck-accent);
+  opacity: 0.65;
+}
+
+/* (d) Callouts — der shared Callout nutzt hartcodierte Tailwind-500-Farben.
+   Höher-spezifisch (.slidev-layout …) überschreiben, damit sie der Poster-
+   Palette folgen. */
+.slidev-layout .sk-callout.tone-info {
+  border-left-color: var(--color-text-info);
+  background: color-mix(in srgb, var(--color-text-info) 9%, transparent);
+}
+.slidev-layout .sk-callout.tone-success {
+  border-left-color: var(--color-text-success);
+  background: color-mix(in srgb, var(--color-text-success) 9%, transparent);
+}
+.slidev-layout .sk-callout.tone-warning {
+  border-left-color: var(--color-text-warning);
+  background: color-mix(in srgb, var(--color-text-warning) 9%, transparent);
+}
+.slidev-layout .sk-callout.tone-danger {
+  border-left-color: var(--color-text-danger);
+  background: color-mix(in srgb, var(--color-text-danger) 9%, transparent);
+}
+/* Dezente Neon-Kante an Callouts im Dark Mode. */
+html.dark.dark .slidev-layout .sk-callout {
+  box-shadow: -2px 0 12px -4px currentColor;
+}
+
+/* Hinweis Mermaid: Die zwei Built-in-Flowcharts (Folie 16 & 19) behalten
+   bewusst ihr eigenes, per JS gerendertes Theme (Light: hell / Dark: dunkel).
+   Slidev rendert sie nicht als per-Seiten-CSS erreichbares Inline-SVG, ein
+   Umfärben über die Palette greift daher nicht zuverlässig. Sie sind in
+   beiden Modi gut lesbar — Lesbarkeit vor Kosmetik. */

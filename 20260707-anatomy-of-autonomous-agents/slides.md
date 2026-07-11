@@ -12,7 +12,10 @@ transition: slide-left
 colorSchema: auto
 fonts:
   sans: Inter
+  serif: Playfair Display
   mono: 0xProto
+  weights: "400,500,600,700"
+  italic: true
 hideInToc: true
 lang: de
 ---
