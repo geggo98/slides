@@ -684,8 +684,8 @@ onUnmounted(() => {
   --ml-c3: #c23b58;
   --ml-c4: #2f6f9f;
 }
-:global(html.dark) .ml-main,
-:global(html.dark) .ml-gear {
+:global(html.dark .ml-main),
+:global(html.dark .ml-gear) {
   --ml-field: #10151c;
   --ml-panel: #151b24;
   --ml-ink: #dee5f0;

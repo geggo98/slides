@@ -833,9 +833,9 @@ onUnmounted(() => {
   --rs-shed: #7048a8;
   --rs-ref: #9fb4ac;
 }
-:global(html.dark) .rs-stage,
-:global(html.dark) .rs-charts,
-:global(html.dark) .rs-explain {
+:global(html.dark .rs-stage),
+:global(html.dark .rs-charts),
+:global(html.dark .rs-explain) {
   --rs-paper: #101a1c;
   --rs-panel: #0d1517;
   --rs-ink: #dce8e6;
@@ -1076,7 +1076,7 @@ onUnmounted(() => {
   border-color: #c8912f;
   color: #8a6210;
 }
-:global(html.dark) .rs-warnb {
+:global(html.dark .rs-warnb) {
   color: #d9a62e;
 }
 .rs-ok {

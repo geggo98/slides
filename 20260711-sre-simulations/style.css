@@ -12,6 +12,18 @@
   font-display: swap;
 }
 
+/* Aktions-Buttons der Sims in den SimShell-Slots (Preset-Zeile, Transport)
+ * liegen außerhalb der Familien-Var-Container (.rs-charts, .rq-main, …) und
+ * fielen im Dark Mode auf ihre Light-Fallbacks zurück — hier zentral dunkel
+ * einfärben. Link-artige Buttons (…-linkish) behalten ihren transparenten
+ * Stil. */
+html.dark .shell-presets button:not(.shell-preset-btn):not([class*="linkish"]),
+html.dark .shell-actions button:not(.shell-btn) {
+  background: #1a272b;
+  color: #dce8e6;
+  border-color: #2d4246;
+}
+
 /* Wiederkehrende Bausteine der Erklär-/Übersichtsfolien. Deck-global statt
  * <style> im Slide, weil Slidev Slide-Styles scoped — die Klassen werden
  * aber über mehrere Intro-Folien hinweg benutzt. */

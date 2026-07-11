@@ -702,8 +702,8 @@ onUnmounted(() => {
   --rq-c3: #c23b58;
   --rq-c4: #2f6f9f;
 }
-:global(html.dark) .rq-main,
-:global(html.dark) .rq-gear {
+:global(html.dark .rq-main),
+:global(html.dark .rq-gear) {
   --rq-field: #10151c;
   --rq-panel: #151b24;
   --rq-ink: #dee5f0;

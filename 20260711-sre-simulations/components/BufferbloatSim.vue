@@ -861,10 +861,10 @@ onUnmounted(() => {
   --bb-ref: #9fb4ac;
   --bb-ref-mu: #7a8c86;
 }
-:global(html.dark) .bb-stage,
-:global(html.dark) .bb-charts,
-:global(html.dark) .bb-explain,
-:global(html.dark) .bb-gear {
+:global(html.dark .bb-stage),
+:global(html.dark .bb-charts),
+:global(html.dark .bb-explain),
+:global(html.dark .bb-gear) {
   --bb-paper: #101a1c;
   --bb-panel: #0d1517;
   --bb-ink: #dce8e6;
@@ -1115,7 +1115,7 @@ onUnmounted(() => {
   border-color: #c8912f;
   color: #8a6210;
 }
-:global(html.dark) .bb-warnb {
+:global(html.dark .bb-warnb) {
   color: #d9a62e;
 }
 .bb-ok {

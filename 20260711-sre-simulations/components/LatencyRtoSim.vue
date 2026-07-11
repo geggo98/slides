@@ -443,8 +443,8 @@ onUnmounted(() => {
   --lr-ok: #1f8a82;
   --lr-band: #b08247;
 }
-:global(html.dark) .lr-main,
-:global(html.dark) .lr-gear {
+:global(html.dark .lr-main),
+:global(html.dark .lr-gear) {
   --lr-field: #10151c;
   --lr-panel: #151b24;
   --lr-ink: #dee5f0;

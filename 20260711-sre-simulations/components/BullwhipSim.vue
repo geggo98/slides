@@ -1037,9 +1037,9 @@ onUnmounted(() => {
   --bw-step-ink: #8a6210;
   --bw-scale-ink: #8a5f0c;
 }
-:global(html.dark) .bw-stage,
-:global(html.dark) .bw-charts,
-:global(html.dark) .bw-explain {
+:global(html.dark .bw-stage),
+:global(html.dark .bw-charts),
+:global(html.dark .bw-explain) {
   --bw-paper: #101a1c;
   --bw-panel: #0d1517;
   --bw-ink: #dce8e6;
@@ -1279,14 +1279,14 @@ onUnmounted(() => {
   font-size: 9px;
   font-family: var(--slidev-code-font-family);
 }
-:global(html.dark) .bw-banner :deep(.chip) {
+:global(html.dark .bw-banner .chip) {
   border-color: #2d4246;
 }
 .bw-warnb {
   border-color: #c8912f;
   color: #8a6210;
 }
-:global(html.dark) .bw-warnb {
+:global(html.dark .bw-warnb) {
   color: #d9a62e;
 }
 .bw-ok {

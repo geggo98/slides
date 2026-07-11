@@ -907,9 +907,9 @@ onUnmounted(() => {
   --hh-ok: #3d7a46;
   --hh-ref: #9fb4ac;
 }
-:global(html.dark) .hh-stage,
-:global(html.dark) .hh-charts,
-:global(html.dark) .hh-explain {
+:global(html.dark .hh-stage),
+:global(html.dark .hh-charts),
+:global(html.dark .hh-explain) {
   --hh-paper: #101a1c;
   --hh-panel: #0d1517;
   --hh-ink: #dce8e6;
@@ -1152,7 +1152,7 @@ onUnmounted(() => {
   border-color: #c8912f;
   color: #8a6210;
 }
-:global(html.dark) .hh-warnb {
+:global(html.dark .hh-warnb) {
   color: #d9a62e;
 }
 .hh-ok {

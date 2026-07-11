@@ -839,9 +839,9 @@ onUnmounted(() => {
   --cs-marklbl: #8a6210;
   --cs-blnote: #8a5f0c;
 }
-:global(html.dark) .cs-stage,
-:global(html.dark) .cs-charts,
-:global(html.dark) .cs-explain {
+:global(html.dark .cs-stage),
+:global(html.dark .cs-charts),
+:global(html.dark .cs-explain) {
   --cs-paper: #101a1c;
   --cs-panel: #0d1517;
   --cs-ink: #dce8e6;
@@ -1044,7 +1044,7 @@ onUnmounted(() => {
 .cs-share input {
   accent-color: #0b7285;
 }
-:global(html.dark) .cs-share input {
+:global(html.dark .cs-share input) {
   accent-color: #37b6cf;
 }
 .cs-gear-hint {
@@ -1074,7 +1074,7 @@ onUnmounted(() => {
   border-color: #c8912f;
   color: #8a6210;
 }
-:global(html.dark) .cs-warnb {
+:global(html.dark .cs-warnb) {
   color: #d9a62e;
 }
 .cs-ok {

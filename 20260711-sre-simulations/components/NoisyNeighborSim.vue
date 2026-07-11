@@ -694,8 +694,8 @@ onUnmounted(() => {
   --nn-c3: #c23b58;
   --nn-c4: #2f6f9f;
 }
-:global(html.dark) .nn-main,
-:global(html.dark) .nn-gear {
+:global(html.dark .nn-main),
+:global(html.dark .nn-gear) {
   --nn-field: #10151c;
   --nn-panel: #151b24;
   --nn-ink: #dee5f0;

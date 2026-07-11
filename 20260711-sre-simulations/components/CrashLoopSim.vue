@@ -605,8 +605,8 @@ onUnmounted(() => {
   --cl-ev: #b08247;
   --cl-probe: #6d5bd0;
 }
-:global(html.dark) .cl-main,
-:global(html.dark) .cl-gear {
+:global(html.dark .cl-main),
+:global(html.dark .cl-gear) {
   --cl-field: #10151c;
   --cl-panel: #151b24;
   --cl-ink: #dee5f0;
