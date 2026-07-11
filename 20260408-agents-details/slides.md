@@ -393,16 +393,7 @@ Eine produktive Session füllt das **schnell** — Datei-Inhalte, Tool-Ergebniss
 
 ### Was füllt den Context?
 
-```
-┌─────────────────────────┐
-│ Tool-Definitionen       │ ← Request-Prefix, 19+ Tools
-│ System-Prompt (statisch)│ ← CLAUDE.md, Skills, Rules
-│ MCP-Tool-Definitionen   │ ← 17K–126K pro Server!
-│ Conversation-History    │ ← wächst mit jeder Iteration
-│ Memory (MEMORY.md)      │ ← max 200 Zeilen
-│ User-Message            │ ← ganz am Ende
-└─────────────────────────┘
-```
+<ContextAnatomy />
 
 </div>
 </div>
@@ -614,15 +605,7 @@ hideInToc: true
 
 ### Cache-Optimierung durch Ordering
 
-```
-tools-Array               ← stabil, global gecacht
-System-Prompt (statisch)  ← Verhaltensregeln
-────── CACHE BOUNDARY ──────
-CLAUDE.md / Skills        ← session-spezifisch
-Git-Status / Datum        ← bricht Cache nicht global
-Conversation-History      ← wächst
-User-Message              ← ganz am Ende
-```
+<PromptOrdering />
 
 Der statische Teil wird **global über alle Organisationen gecacht** — massive Kostenoptimierung.
 
