@@ -656,6 +656,272 @@ routeAlias: retry-sturm
 -->
 
 ---
+hideInToc: true
+---
+
+# Setup: Die Cache-Stampede
+
+Ein heißer Cache-Key wird mit **400 req/s** abgefragt. Solange der Key gültig ist, sieht die Datenbank davon **nichts**.
+Die DB verarbeitet **200 einfache Queries/s** und trägt **100 Queries/s Grundlast** von anderen Endpoints.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Clients</b>&ensp;400 req/s auf einen Key</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Cache</b>&ensp;TTL 20 s · 1 heißer Key</span>
+<span class="chain-arrow">→ <i>nur bei Miss</i></span>
+<span class="chain-node"><b>Datenbank</b>&ensp;200 Äq/s · Grundlast 100 Äq/s · Rebuild = 40 Äq</span>
+</div>
+
+Der Neuaufbau des Keys ist teuer: **40 Query-Äquivalente** (≈ 0,2 s reine DB-Zeit — deshalb wird er ja gecacht).
+Der Key lebt **20 s** ab Befüllung; der erste Ablauf ist bei **t = 20 s**. **Jeder Request, der einen Miss sieht, startet einen eigenen Neuaufbau.**
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Wie entwickelt sich die <b>Antwortzeit einer einfachen DB-Query</b> (die Latenz, die alle <i>anderen</i> Endpoints an dieser Datenbank sehen) über 90 Sekunden? Ein kurzer Blip, ein Berg mit Erholung — oder Eskalation?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Zahlen kurz durchgehen: 100 Äq/s freie DB-Kapazität,
+  ein Rebuild kostet 40 Äq — klingt nach viel Luft. Und der Cache fängt ja
+  99 % ab, solange der Key lebt.
+- Wichtig: Solange der Key gültig ist, sieht die DB nichts — die Kopplung
+  zwischen den 400 req/s und der DB ist im Architekturdiagramm unsichtbar.
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: cache-stampede
+---
+
+<CacheStampedeSim />
+
+<!--
+- Bedienung: Vorhersage direkt ins Latenz-Diagramm skizzieren (Maus/Finger)
+  oder Preset wählen (kurzer Blip / Berg, dann Erholung / Eskalation), dann
+  ▶ starten. Coverage-Gate: Skizze muss (fast) den ganzen Zeitraum abdecken.
+- Zeigen: Der erste Ablauf bei t = 20 s ist nur der Auftakt — entscheidend
+  ist der zweite: Er trifft auf den Rest-Backlog, das Miss-Fenster wird
+  länger, jedes Fenster füttert das nächste. Readout unten:
+  Duplikat-Rebuilds = pure verschwendete DB-Arbeit.
+- Verdict unten vergleicht Vorhersage und Messung (Kategorie Blip / Berg /
+  Eskalation, Latenz-Spitze + Endwert, verschwendete Äquivalente).
+- ⚙ Experimentieren: Die Eskalationsschwelle hängt vom Produkt aus
+  Anfragerate und Rebuild-Kosten ab; dann Single-Flight einschalten —
+  genau ein Neuaufbau pro Ablauf, die Stampede verschwindet.
+  „Gleicher Seed" vs. „Nochmal (neuer Seed)" zeigen!
+- Tab „Erklärung & Modell": Synchronisation + Arbeitsduplikation als
+  Mechanik, kein Bullwhip, Verwandter des Retry-Sturms; Gegenmittel-Liste
+  (Single-Flight, XFetch, stale-while-revalidate, TTL-Jitter).
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Puffer, der alles rettet
+
+Ein Service verarbeitet **μ = 100 req/s**, Clients geben nach **1 s** auf — Antworten danach sind wertlos, der Client ist weg.
+Damit bei Lastspitzen **keine Anfrage verloren geht**, hat das Team der Warteschlange großzügige **2 000 Plätze** spendiert.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Clients</b>&ensp;70 → 140 → 70 req/s · Deadline 1 s</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Queue</b>&ensp;Puffer: 2 000 Plätze (FIFO)</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Service</b>&ensp;μ = 100 req/s</span>
+</div>
+
+Von **t = 20 s** bis **t = 50 s** liegt die Last mit **140 req/s** über der Kapazität; davor und danach sind es **70 req/s**. **Es gibt keine Retries** — nur den Puffer.
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Wie entwickelt sich der <b>Goodput</b> — Antworten, die den Client noch <i>innerhalb</i> seiner Deadline erreichen — über die vollen 120 Sekunden? Volle Auslastung, ein begrenzter Einbruch — oder ein Einbruch weit über die Überlast hinaus?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Zahlen kurz durchgehen: 2 000 Puffer-Plätze klingen
+  fürsorglich („keine Anfrage geht verloren"), die Überlast dauert 30 s,
+  danach ist die Last wieder normal.
+- Wichtig: Es gibt KEINE Retries — das ist nicht der Retry-Sturm, sondern
+  der Verstärker darunter. Nur der Puffer.
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: bufferbloat
+---
+
+<BufferbloatSim />
+
+<!--
+- Bedienung: Vorhersage direkt ins Goodput-Diagramm skizzieren (Maus/Finger)
+  oder Preset wählen (volle Auslastung / Einbruch, dann Erholung / Einbruch
+  weit über die Überlast hinaus), dann ▶ starten. Coverage-Gate: Skizze muss
+  (fast) den ganzen Zeitraum 0–120 s abdecken.
+- Zeigen: das Wartezeit-Diagramm unten. Sobald mehr als μ·D = 100 Anfragen
+  warten, reißt jede Antwort die 1-s-Deadline — der Server läuft mit 100 %
+  Auslastung und produziert tote Arbeit. Nach der Überlast fließt der
+  Backlog nur mit μ − λ = 30 req/s ab: Goodput bleibt lange bei null.
+- Verdict unten vergleicht Vorhersage und Messung (minimaler Goodput im
+  Überlastfenster) + Fehlerrate, tote Antworten, Goodput gesamt.
+- ⚙ Experimentieren: Puffergröße 25…3 200 Plätze — der Gesamt-Goodput wird
+  mit wachsendem Puffer monoton schlechter! Oder Age-Drop (CoDel-Idee)
+  einschalten und den Puffer groß lassen. „Gleicher Seed" vs. „Nochmal
+  (neuer Seed)" zeigen.
+- Tab „Erklärung & Modell": w = q/μ, tote Arbeit, „Fehler in Latenz
+  umgewandelt", Abgrenzung zum Retry-Sturm (bewusst keine Retries) +
+  bewusste Vereinfachungen des Modells.
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Bullwhip-Effekt
+
+Endkunden kaufen sehr gleichmäßig: **100 Stück/Woche** (± kleines Rauschen).
+Ab **Woche 15** steigt die Nachfrage **dauerhaft um 20 %** auf **120 Stück/Woche** — mehr passiert nicht.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Endkunden</b>&ensp;100 → 120 Stück/Woche</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Händler</b>&ensp;Stufe 1</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Großhandel</b>&ensp;Stufe 2</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Distributor</b>&ensp;Stufe 3</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Fabrik</b>&ensp;Lieferzeit je Stufe: 2 Wochen</span>
+</div>
+
+Jede Stufe der Kette sieht nur die **Bestellungen ihrer Nachbarstufe**, prognostiziert daraus
+und bestellt nach einer Order-up-to-Politik (Ziel: Prognose × (Lieferzeit + 1) im Bestand + unterwegs).
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Was bestellt die <b>Fabrik</b> pro Woche, wenn die Endkunden-Nachfrage ein einziges Mal dauerhaft um <b>+20 %</b> steigt? Eine glatte Anpassung, moderates Überschwingen — oder starke Oszillation?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Zahlen kurz durchgehen: Die Nachfrage ist fast
+  konstant, +20 % ist die einzige Änderung — und sie ist vorab bekannt.
+  Jede Stufe handelt für sich völlig „vernünftig".
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: bullwhip
+---
+
+<BullwhipSim />
+
+<!--
+- Bedienung: Vorhersage der Fabrik-Bestellungen direkt ins obere Diagramm
+  skizzieren (Maus/Finger) oder Preset wählen (glatte Anpassung /
+  Überschwingen / starke Oszillation), dann ▶ starten. Coverage-Gate:
+  Skizze muss von (fast) links bis (fast) rechts reichen.
+- Zeigen: Die dunkle Linie (Endkunden-Nachfrage) ist vorab vollständig
+  bekannt — nur +20 % ab Woche 15. Nach dem Lauf: Fabrik-Spitze weit über
+  der Nachfrage, danach Wochen mit 0 Bestellungen (Produktionsstopp);
+  unteres Diagramm: Bestand schießt hoch und fällt in den Rückstand
+  (schraffierte Zone). Klick auf Legenden-Einträge blendet einzelne
+  Stufen ein/aus. Beachte: Die Fabrik schwankt schon VOR Woche 15 —
+  reines Rauschen wird genauso verstärkt.
+- Verdict unten vergleicht Vorhersage- und Mess-Kategorie (Spitzenwert)
+  und zeigt die Varianz-Verstärkung je Stufe (× vs. Nachfrage).
+- ⚙ Experimentieren: Lieferzeit L und Prognose-α verstärken die Peitsche;
+  POS-Sharing (alle Stufen sehen die Endkunden-Nachfrage) dämpft sie
+  drastisch — mit „Gleicher Seed" direkt vergleichen! Frühere
+  Fabrik-Läufe bleiben blass sichtbar.
+- Tab „Erklärung & Modell": Order-up-to-Arithmetik (Faktor 1 + (L+1)·α je
+  Stufe, vier Stufen multiplikativ verkettet), P&G/Pampers (Lee et al.
+  1997), IT-Übersetzung: verkettete Autoscaler bauen dieselbe Peitsche.
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Autoscaler, der es gut meint
+
+Ein Deployment mit **7 Pods** à **100 req/s** Kapazität, Ziel-CPU **60 %**. Der Autoscaler rechnet
+alle **15 s** nach der Kubernetes-HPA-Formel `desired = ceil(current · CPU/Ziel)` (mit 10 % Toleranzband).
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Last</b>&ensp;400 → 900 req/s bei t = 2 min</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Pods</b>&ensp;à 100 req/s · Start dauert 60 s</span>
+<span class="chain-arrow">← skaliert</span>
+<span class="chain-node"><b>HPA</b>&ensp;alle 15 s · Ziel-CPU 60 % · Metrik-Lag 60 s</span>
+</div>
+
+Aber: Die CPU-Metrik ist **träge** (≈ 60 s Verzögerung durch Scrape-Intervall und Mittelung), und neue Pods
+brauchen **60 s bis ready**. Bei **t = 2 min** springt die Last dauerhaft von **400** auf **900 req/s** —
+dafür bräuchte es **15 Pods**.
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Wie entwickelt sich die <b>Pod-Anzahl</b> über die vollen 20 Minuten? Eine glatte Treppe auf 15, ein Überschwinger mit anschließender Ruhe — oder Dauerschwingen?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Zahlen kurz durchgehen: die HPA-Formel ist der
+  Kubernetes-Standard, 60 % Ziel-CPU klingt konservativ — verdächtig sind
+  die beiden Verzögerungen: Metrik-Lag ≈ 60 s und Pod-Start 60 s.
+- Kopfrechnung mit dem Publikum: 900 / (100 · 0,6) = 15 Pods. Die Frage
+  ist nicht OB der Autoscaler dort ankommt, sondern WIE.
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: hpa-hunting
+---
+
+<HpaHuntingSim />
+
+<!--
+- Bedienung: Vorhersage (Pod-Anzahl, Minute 0–20) direkt ins obere Diagramm
+  skizzieren oder Preset wählen (glatte Treppe / Überschwingen / Dauerschwingen),
+  dann ▶ starten. Coverage-Gate: von (fast) links bis (fast) rechts zeichnen.
+- Zeigen: die gestrichelte Referenz (benötigt: 6,7 → 15 Pods) und das untere
+  Diagramm — CPU momentan vs. träge gemessen. Der Regler sieht die alte Welt,
+  und bei Überlast steht die Metrik gesättigt bei 100 %.
+- Verdict unten vergleicht die Kategorie (glatt / Überschwinger / Hunting)
+  plus Chips: Schwingungen, Pod-Spitze, CPU-Sättigungszeit (Nutzer leiden).
+- ⚙ Experimentieren: Pod-Startzeit & Metrik-Trägheit τ — die Hunting-Grenze
+  liegt zwischen ~30 s und ~60 s; „Gleicher Seed" vs. „Nochmal" zeigen. Dann
+  Stabilization Window 300 s (K8s-Default) einschalten: die Schwingung beruhigt
+  sich — genau deshalb existiert dieses Feature.
+- Tab „Erklärung & Modell": Totzeit (Pod-Start) + Messverzögerung (Metrik-Lag)
+  ⇒ Hunting; Parallele zum Bullwhip-Effekt; Gegenmittel (Stabilization Window,
+  glattere Metriken, kürzere Pod-Starts, trägere Regler — Smith-Prädiktor).
+-->
+
+---
 layout: section
 ---
 
