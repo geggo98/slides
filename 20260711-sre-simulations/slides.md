@@ -654,3 +654,78 @@ routeAlias: retry-sturm
 - Tab „Erklärung & Modell": die Arithmetik (λ_eff = λ·(R+1) > μ),
   Selbsterhaltung ab R=1, „Der Mittelwert verschweigt die Gefahr".
 -->
+
+---
+layout: section
+---
+
+# Diagnose: ein Symptom, drei Ursachen
+
+Signale gezielt aufdecken — welcher Kanal diskriminiert?
+
+<!--
+- Mechanik-Wechsel: nicht mehr vorhersagen, sondern diagnostizieren.
+- Das Leitsignal ist in allen Szenarien IDENTISCH generiert — erst die
+  Konjunktion mit weiteren Signalen trennt die Ursachen.
+- Jedes Aufdecken „kostet" (wie in echt: Dashboard bauen, Query schreiben).
+  Vor jedem Aufdecken das Publikum tippen lassen!
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Die Queue wächst — warum?
+
+Eine RabbitMQ-Queue wächst seit dem Incident-Zeitpunkt stetig. Drei völlig verschiedene Ursachen erzeugen **exakt dieses Leitsignal**:
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Producer</b>&ensp;publiziert msgs/s</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Queue</b>&ensp;Depth wächst 📈</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Consumer</b>&ensp;prefetcht, verarbeitet, ack't</span>
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2">
+<div class="intro-box"><b>Producer-Spike</b><br>Der Producer publiziert plötzlich mehr, der Consumer arbeitet normal.</div>
+<div class="intro-box"><b>Vergifteter Consumer</b><br>Der Consumer hängt an einer Poison Message / einem blockierenden Call.</div>
+<div class="intro-box"><b>Toter Consumer</b><br>Der Consumer ist weg (Crash, Disconnect).</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Welche <b>zusätzlichen Signale</b> trennen die drei Ursachen — und in welcher Reihenfolge würdest du sie aufdecken? Achtung: einer der Kanäle fehlt in den meisten Standard-Dashboards.
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung: die drei Verdächtigen vorstellen, Publikum
+  diskutieren lassen, welche Metriken sie sehen wollen (Ack-Rate?
+  Producer-Rate? unacked?).
+- Überleitung: in der Simulation kostet jedes Signal einen Klick —
+  genau wie in echt jede neue Query Zeit kostet.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: rabbitmq-queue
+---
+
+<RabbitQueueSim />
+
+<!--
+- Bedienung: Szenario A/B/C wählen (Zuordnung ist gemischt!), dann die
+  Diskriminator-Signale von oben nach unten aufdecken — vor jedem Aufdecken
+  tippen lassen. Bayes-Balken rechts zeigen die Belief-Richtung.
+- Zeigen: die Asymmetrie — beim Producer-Spike ist nach Signal 1 (Ack-Rate
+  konstant) alles klar; vergiftet vs. tot trennt erst Signal 3 (unacked:
+  voller Prefetch vs. → 0).
+- ▶/Scrub spielt die Zeitachse ab; nach vollem Aufdecken zeigen die
+  Szenario-Buttons die Ursache.
+- ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
+  Modell-Hinweis (unacked = der Schlüssel-Kanal, fehlt oft im Dashboard).
+-->
