@@ -85,15 +85,142 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Agent-Loop im Detail
+# Harness vs. Framework vs. Modell
+
+<div class="grid grid-cols-3 gap-6 mt-4">
+<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Modell
+
+Das LLM (Claude Opus 4.6, GPT-5.4, Gemini 3.1 Pro).
+
+Macht das **Reasoning**. Durch RL auf Tool-Use trainiert.
+
+**Hier steckt der Großteil der Intelligenz.**
+
+</div>
+<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Harness
+
+Der dünne Wrapper (Claude Code, Pi, Codex CLI).
+
+Gibt dem Modell Tools und führt den Agent-Loop aus.
+
+**Je weniger Logik, desto besser.**
+
+</div>
+<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### Framework
+
+Höhere Abstraktionsebene (LangChain, CrewAI).
+
+Anthropic warnt: _"Frameworks create extra layers that obscure prompts and responses."_
+
+**Trend: verliert an Relevanz.**
+
+</div>
+</div>
+
+---
+hideInToc: true
+---
+
+# Agent-Loop im Detail <span class="text-sm font-normal opacity-60">— Schnelldurchlauf: jedes Detail bekommt gleich sein Kapitel</span>
 
 <AgentSimulation />
+
+---
+layout: center
+hideInToc: true
+---
+
+# Woher wissen wir das alles?
+
+<div class="text-lg opacity-80 mt-4">
+
+**31. März 2026:** Eine 59,8-MB-Source-Map landet versehentlich in npm —<br/>
+**512K Zeilen** Claude-Code-TypeScript, deobfusziert.
+
+</div>
+
+<div class="text-sm opacity-50 mt-8">
+
+Interne Namen (`nO`), Schwellwerte und Zeilenzahlen in diesem Talk stammen aus diesem Leak — **Details in Kapitel 7.**
+
+</div>
 
 ---
 layout: section
 ---
 
-# 2. Tool-Use
+# 2. Tokens
+
+---
+clicks: 4
+hideInToc: true
+---
+
+# Was ist ein Token?
+
+<TokenBasics :clicks="$clicks" />
+
+---
+hideInToc: true
+---
+
+# Autoregression: ein Token nach dem anderen
+
+<AutoregressiveDemo />
+
+<!--
+Sampling-Methoden hier = Baseline. Min-p (im Demo) ist der aktuelle Kontrast:
+Schwelle = min_p · p_max — wandert mit der Konfidenz (scharf → wenige Token,
+flach → viele), statt fester Masse wie Top-p. (Nguyen et al., ICLR 2025,
+arXiv:2407.01082; min_p ~0.05–0.1; breit unterstützt in HF/vLLM/SGLang/llama.cpp/
+Ollama, Default nur llama.cpp; Überlegenheit umstritten: arXiv:2506.13681.)
+
+Praxis-Faustregeln 2025/26 (keine kanonische Vorgabe):
+- Open-Weight / lokal: Temperature + Min-p
+- Kommerzielle APIs: Temperature + Top-p (v.a. weil Min-p dort fehlt)
+- Reasoning-Modelle: Defaults lassen — DeepSeek-R1 empfiehlt temp 0.5–0.7 (0.6),
+  kein System-Prompt; OpenAI o-Serie / GPT-5 verbieten temp/top_p (fix)
+- Deterministische Evals: greedy (temp=0) — auf GPU nicht bit-genau reproduzierbar
+- Format-Zwang: Constrained Decoding oben drauf
+
+Constrained Decoding = Logit-Maskierung, kein freies Sampling: ungültige Token
+werden vor dem Sampling auf −∞ gesetzt → gesampelt wird nur über schema-gültige.
+- XGrammar (mlc-ai): Default in vLLM (seit v0.6.5, Dez 2024) & SGLang, in
+  TensorRT-LLM opt-in. Pushdown-Automat + adaptiver Token-Mask-Cache;
+  < 40 µs/Token für JSON (arXiv:2411.15100, MLSys 2025).
+- llguidance (aus MS Research, jetzt guidance-ai): OpenAI nutzt es für den
+  Grammar/Custom-Tools-Pfad (Lark); JSON-Schema-Modus laut Maintainer seit Mai 2025.
+- Outlines (dottxt-ai): popularisierte den FSM/Regex-Ansatz (Willard & Louf 2023,
+  arXiv:2307.09702) — O(1) pro Token, aber teure Index-Compile-Zeit bei
+  komplexen Schemata.
+-->
+
+---
+clicks: 4
+hideInToc: true
+---
+
+# Ein Bugfix, Token für Token
+
+<div class="text-sm opacity-70 mb-2">
+
+Zwei Dateien lesen, Bug fixen — und der Context wächst mit **jeder** Iteration, weil er komplett neu mitgeschickt wird.
+
+</div>
+
+<TokenAccumulation :clicks="$clicks" />
+
+---
+layout: section
+---
+
+# 3. Tool-Use & Token-Ökonomie
 
 ---
 hideInToc: true
@@ -109,7 +236,7 @@ hideInToc: true
 1. **Tool-Definitionen** als JSON-Schema im Request-Prefix (separates `tools`-Array)
 2. Modell generiert strukturiertes JSON (`tool_use`-Block)
 3. Harness **parst** Funktionsname + Parameter
-4. Harness **führt aus** (lokal oder via MCP)
+4. Harness **führt aus** (lokal oder via **MCP**, dem Standard-Protokoll für externe Tool-Server)
 5. Ergebnis als `tool_result` zurück ans Modell
 
 </div>
@@ -159,17 +286,88 @@ hideInToc: true
 
 <div class="text-sm opacity-70 mb-2">
 
-Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** (Jan 2026) löst das via On-Demand-Loading.
+Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** löst das — mehr dazu am Ende dieses Kapitels.
 
 </div>
 
 <ToolAccuracyLine />
 
 ---
+clicks: 1
+hideInToc: true
+---
+
+# MCP Token-Bloat
+
+<div class="text-sm opacity-70 mb-2">
+
+MCP-Server saugen **17K–126K Tokens**, bevor der erste Tool-Call passiert — die Tool-Definitionen werden bei **jedem** Request neu injiziert. Praxis-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+
+</div>
+
+<McpTokenBar />
+
+---
+hideInToc: true
+routeAlias: token-oekonomie
+---
+
+# Skills vs MCP: Faktor 40–1100×
+
+<div class="text-sm opacity-70 mb-2">
+
+Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem Request. Skills in der Praxis: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+
+</div>
+
+<SkillsVsMcpLine />
+
+---
+hideInToc: true
+---
+
+# MCP Token-Bloat: Wer löst das Problem?
+
+<div class="text-sm opacity-70 mb-2">
+
+Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manuelles Filtern — oder ignorieren das Problem.
+
+</div>
+
+<McpOptTable />
+
+---
+hideInToc: true
+---
+
+# Claude Code ToolSearch: Stand der Technik
+
+<div class="text-sm opacity-70 mb-2">
+
+Seit v2.1.7 (Jan 2026): Aktiviert automatisch wenn MCP-Tools >10% des Context belegen. Seit v2.1.69: auch System-Tools deferred.
+
+</div>
+
+<ToolSearchImpact />
+
+<div class="mt-4 text-sm opacity-60">
+
+Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) · Speakeasy Dynamic Toolsets (100×) · ToolHive MCP Optimizer (85%).
+
+</div>
+
+<!--
+Stand 06/2026: Tool Search Tool seit Claude Code v2.1.7 (Jan 2026), aktiviert
+automatisch ab >10 % Context-Anteil der MCP-Tools; System-Tool-Deferral seit
+v2.1.69. Accuracy-Zahlen (49→74 %, 79,5→88,1 %) aus Anthropics Tool-Search-
+Ankündigung. Drittanbieter-Werte aus den jeweiligen Projekt-READMEs.
+-->
+
+---
 layout: section
 ---
 
-# 3. Context Management
+# 4. Context Management
 
 ---
 hideInToc: true
@@ -254,214 +452,118 @@ Re-inject kürzlich gelesene Dateien (≤5K/Datei). Budget auf 50K zurück.
 </div>
 
 ---
+layout: section
+---
+
+# 5. Sandbox, Subagents & Memory
+
+---
 hideInToc: true
 ---
 
-# System Prompts: Statisch vs. Dynamisch
+# Sandboxing im Vergleich
+
+| Agent           | Ansatz         | Details                                                                   |
+| --------------- | -------------- | ------------------------------------------------------------------------- |
+| **Claude Code** | AST-basiert    | Tree-sitter WASM-Parser, 22 Validators, 9.707 Zeilen. Deny → Ask → Allow. |
+| **Codex CLI**   | OS-native      | Seatbelt (macOS), Bubblewrap+seccomp (Linux). Netzwerk default aus.       |
+| **Gemini CLI**  | Multi-Strategy | Docker, Podman, gVisor, LXC/LXD + OS-native. Per-Tool-Isolation.          |
+| **Pi**          | **Keines**     | _"Halbherzige Guardrails sind Theater. Lauf in einem Container."_         |
+
+<div class="mt-4 text-sm opacity-60">
+
+Bekannte Schwäche Claude Code: Bei >50 Sub-Commands in einer Pipeline fällt die Validierung auf ein einzelnes "Ask" zurück.
+
+Konfigurations- und Permission-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Subagents
 
 <div class="grid grid-cols-2 gap-8">
 <div>
 
-### Cache-Optimierung durch Ordering
+### Claude Code: AgentTool
 
-```
-tools-Array               ← stabil, global gecacht
-System-Prompt (statisch)  ← Verhaltensregeln
-────── CACHE BOUNDARY ──────
-CLAUDE.md / Skills        ← session-spezifisch
-Git-Status / Datum        ← bricht Cache nicht global
-Conversation-History      ← wächst
-User-Message              ← ganz am Ende
-```
-
-Der statische Teil wird **global über alle Organisationen gecacht** — massive Kostenoptimierung.
+- **Tiefe 1** — Subagents spawnen keine eigenen Subagents
+- Jeder startet mit **frischer Conversation** (kein Parent-History)
+- Lädt eigenes System-Prompt und CLAUDE.md
+- Nur das **finale Summary** geht zurück an den Parent
+- Modi: Standard, Worktree-Isolation, Fork (opt-in via `CLAUDE_CODE_FORK_SUBAGENT=1`)
 
 </div>
 <div>
 
-### System-Prompt-Größen
+### Die Gegenposition
 
-| Agent           | System-Prompt      |
-| --------------- | ------------------ |
-| **Pi**          | **<1.000 Tokens**  |
-| Codex CLI       | Mittel             |
-| Gemini CLI      | Mittel             |
-| **Claude Code** | **Multi-K Tokens** |
+**Pi** hat bewusst **keine Subagents.**
 
-Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antworten.** A/B-Tests zeigten ~1,2% Token-Reduktion mit expliziten Wortzahlen.
+> _"Spawning multiple sub-agents is an anti-pattern; it doesn't work unless you don't care if your codebase devolves into garbage."_
+>
+> — Mario Zechner
+
+Stattdessen: Spawn pi-Instanzen via tmux.
 
 </div>
 </div>
 
----
-layout: section
-routeAlias: token-oekonomie
----
+<div class="mt-4 text-xs opacity-60">
 
-# 4. Token-Ökonomie
+Orchestrierung im Alltag: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref> · Deterministische Alternative zu LLM-Subagents: <TalkXref slug="20260522-open-rewrite">OpenRewrite</TalkXref>.
 
----
-clicks: 4
-hideInToc: true
----
-
-# Was ist ein Token?
-
-<TokenBasics :clicks="$clicks" />
+</div>
 
 ---
 hideInToc: true
 ---
 
-# Autoregression: ein Token nach dem anderen
+# Memory-Systeme
 
-<AutoregressiveDemo />
+| Agent       | Datei                     | Hierarchie                                     |
+| ----------- | ------------------------- | ---------------------------------------------- |
+| Claude Code | `CLAUDE.md`               | `~/.claude/` → Projekt → Subdirs → `.local.md` |
+| Codex CLI   | `AGENTS.md`               | Global → Repo → Subfolder                      |
+| Gemini CLI  | `GEMINI.md`               | `~/.gemini/` → Projekt → Subdirs               |
+| Pi          | `AGENTS.md` + `SYSTEM.md` | Projekt-Kontext + System-Prompt-Modifier       |
 
-<!--
-Sampling-Methoden hier = Baseline. Min-p (im Demo) ist der aktuelle Kontrast:
-Schwelle = min_p · p_max — wandert mit der Konfidenz (scharf → wenige Token,
-flach → viele), statt fester Masse wie Top-p. (Nguyen et al., ICLR 2025,
-arXiv:2407.01082; min_p ~0.05–0.1; breit unterstützt in HF/vLLM/SGLang/llama.cpp/
-Ollama, Default nur llama.cpp; Überlegenheit umstritten: arXiv:2506.13681.)
+<div class="mt-4">
 
-Praxis-Faustregeln 2025/26 (keine kanonische Vorgabe):
-- Open-Weight / lokal: Temperature + Min-p
-- Kommerzielle APIs: Temperature + Top-p (v.a. weil Min-p dort fehlt)
-- Reasoning-Modelle: Defaults lassen — DeepSeek-R1 empfiehlt temp 0.5–0.7 (0.6),
-  kein System-Prompt; OpenAI o-Serie / GPT-5 verbieten temp/top_p (fix)
-- Deterministische Evals: greedy (temp=0) — auf GPU nicht bit-genau reproduzierbar
-- Format-Zwang: Constrained Decoding oben drauf
-
-Constrained Decoding = Logit-Maskierung, kein freies Sampling: ungültige Token
-werden vor dem Sampling auf −∞ gesetzt → gesampelt wird nur über schema-gültige.
-- XGrammar (mlc-ai): Default in vLLM (seit v0.6.5, Dez 2024) & SGLang, in
-  TensorRT-LLM opt-in. Pushdown-Automat + adaptiver Token-Mask-Cache;
-  < 40 µs/Token für JSON (arXiv:2411.15100, MLSys 2025).
-- llguidance (aus MS Research, jetzt guidance-ai): OpenAI nutzt es für den
-  Grammar/Custom-Tools-Pfad (Lark); JSON-Schema-Modus laut Maintainer seit Mai 2025.
-- Outlines (dottxt-ai): popularisierte den FSM/Regex-Ansatz (Willard & Louf 2023,
-  arXiv:2307.09702) — O(1) pro Token, aber teure Index-Compile-Zeit bei
-  komplexen Schemata.
--->
-
----
-clicks: 4
-hideInToc: true
----
-
-# Ein Bugfix, Token für Token
-
-<div class="text-sm opacity-70 mb-2">
-
-Zwei Dateien lesen, Bug fixen — und der Context wächst mit **jeder** Iteration, weil er komplett neu mitgeschickt wird.
+> _"We had all these crazy ideas about memory architectures... in the end, we shipped the simplest thing: a file that has some stuff, auto-read into context."_
+>
+> — Boris Cherny, Head of Claude Code
 
 </div>
-
-<TokenAccumulation :clicks="$clicks" />
-
----
-hideInToc: true
----
-
-# Token-Ökonomie: Wohin gehen die Tokens?
-
-<div class="text-lg font-bold mt-8">
-
-MCP-Server saugen **17K–126K Tokens** bevor der erste Tool-Call passiert.
-
-</div>
-
-<div class="mt-4 text-sm opacity-70">
-
-- Tool-Definitionen werden **bei JEDEM Request** in den Request-Prefix (`tools`-Array) injiziert
-- Sie zählen als **Input-Tokens** und kosten bei jedem API-Call
-- Skills lösen das via Progressive Disclosure: **Faktor 40–1100×** weniger Tokens
-- Prompt-Caching gibt **90% Discount** — aber nur bei exaktem Prefix-Match
-
-</div>
-
-<div class="mt-3 text-xs opacity-60">
-
-Praxis-Sicht auf MCP-Token-Bloat und Tool-Auswahl: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
-
-</div>
-
----
-clicks: 1
-hideInToc: true
----
-
-# MCP Token-Bloat
-
-<div class="text-sm opacity-70 mb-2">
-
-Tool-Definitionen werden bei JEDEM Request injiziert — das ist der direkte Grund für MCP-Token-Bloat.
-
-</div>
-
-<McpTokenBar />
-
----
-hideInToc: true
----
-
-# Skills vs MCP: Faktor 40–1100×
-
-<div class="text-sm opacity-70 mb-2">
-
-Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem Request. Skills in der Praxis: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
-
-</div>
-
-<SkillsVsMcpLine />
-
----
-hideInToc: true
----
-
-# MCP Token-Bloat: Wer löst das Problem?
-
-<div class="text-sm opacity-70 mb-2">
-
-Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manuelles Filtern — oder ignorieren das Problem.
-
-</div>
-
-<McpOptTable />
-
----
-hideInToc: true
----
-
-# Claude Code ToolSearch: Stand der Technik
-
-<div class="text-sm opacity-70 mb-2">
-
-Seit v2.1.7 (Jan 2026): Aktiviert automatisch wenn MCP-Tools >10% des Context belegen. Seit v2.1.69: auch System-Tools deferred.
-
-</div>
-
-<ToolSearchImpact />
 
 <div class="mt-4 text-sm opacity-60">
 
-Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) · Speakeasy Dynamic Toolsets (100×) · ToolHive MCP Optimizer (85%).
+**AGENTS.md** wird zum Cross-Tool-Standard — Linux Foundation, 60.000+ Open-Source-Repos.
 
 </div>
 
-<!--
-Stand 06/2026: Tool Search Tool seit Claude Code v2.1.7 (Jan 2026), aktiviert
-automatisch ab >10 % Context-Anteil der MCP-Tools; System-Tool-Deferral seit
-v2.1.69. Accuracy-Zahlen (49→74 %, 79,5→88,1 %) aus Anthropics Tool-Search-
-Ankündigung. Drittanbieter-Werte aus den jeweiligen Projekt-READMEs.
--->
+---
+hideInToc: true
+---
+
+# Memory: Einfach schlägt komplex
+
+<div class="text-sm opacity-70 mb-2">
+
+Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, hohe Effektivität).
+
+</div>
+
+<MemoryScatter />
 
 ---
 layout: section
 routeAlias: caching
 ---
 
-# 5. Cache & Sessions
+# 6. Cache & Sessions
 
 ---
 hideInToc: true
@@ -505,6 +607,46 @@ OpenAI und Google geben den **Cache-Read ebenfalls mit 0,1×** an. **Google** be
 hideInToc: true
 ---
 
+# System Prompts: Statisch vs. Dynamisch
+
+<div class="grid grid-cols-2 gap-8">
+<div>
+
+### Cache-Optimierung durch Ordering
+
+```
+tools-Array               ← stabil, global gecacht
+System-Prompt (statisch)  ← Verhaltensregeln
+────── CACHE BOUNDARY ──────
+CLAUDE.md / Skills        ← session-spezifisch
+Git-Status / Datum        ← bricht Cache nicht global
+Conversation-History      ← wächst
+User-Message              ← ganz am Ende
+```
+
+Der statische Teil wird **global über alle Organisationen gecacht** — massive Kostenoptimierung.
+
+</div>
+<div>
+
+### System-Prompt-Größen
+
+| Agent           | System-Prompt      |
+| --------------- | ------------------ |
+| **Pi**          | **<1.000 Tokens**  |
+| Codex CLI       | Mittel             |
+| Gemini CLI      | Mittel             |
+| **Claude Code** | **Multi-K Tokens** |
+
+Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antworten.** A/B-Tests zeigten ~1,2% Token-Reduktion mit expliziten Wortzahlen.
+
+</div>
+</div>
+
+---
+hideInToc: true
+---
+
 # Das Session-Resume-Problem
 
 <div class="grid grid-cols-2 gap-8">
@@ -514,7 +656,7 @@ hideInToc: true
 
 - Default-TTL: **5 Minuten** — Resume nach 6 Min = voller Cache-Write
 - Bug in Claude Code (#42338): Cache wird oft komplett invalidiert
-- Thinking-Signaturen werden als Input-Tokens replayed
+- **Thinking-Signaturen** (kryptografische Marker der Reasoning-Blöcke) werden als Input-Tokens replayed
 
 ### Community-Reports
 
@@ -620,7 +762,7 @@ routeAlias: cache-hygiene
 
 ### Vier Regeln, damit der Cache greift
 
-1. **Prefix stabil** — volatile Daten (Zeitstempel, IDs) ans **Ende**: System → Doku → History → Metadaten → Frage. Ein Zeitstempel _vor_ der Doku bricht jede Sekunde den Cache.
+1. **Prefix stabil** — volatile Daten (Zeitstempel, IDs) ans **Ende**: System → Doku → History → Metadaten → Frage. Ein Zeitstempel _vor_ der Doku bricht jede Sekunde den Cache (→ Cache-Boundary).
 2. **Parameter stabil** — nicht nur der Text zählt: `tool_choice`, `extended_thinking`, Bilder & Tool-Defs invalidieren **still**. Hierarchie `tools → system → messages` — oben kippt alles darunter.
 3. **Größe richtig** — Min-Länge **Sonnet 4.6: 2.048**, **Opus 4.x / Haiku 4.5: 4.096** Tok; darunter still ungecacht. Zu groß → Context Rot.
 4. **TTL beachten** — jeder Treffer resettet die 5-Min-Uhr **kostenlos**; der 1h-Cache (2× Write) rechnet sich ab dem **2. Treffer**.
@@ -664,217 +806,7 @@ Token. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discou
 layout: section
 ---
 
-# 6. Sandbox & Subagents
-
----
-hideInToc: true
----
-
-# Sandboxing im Vergleich
-
-| Agent           | Ansatz         | Details                                                                   |
-| --------------- | -------------- | ------------------------------------------------------------------------- |
-| **Claude Code** | AST-basiert    | Tree-sitter WASM-Parser, 22 Validators, 9.707 Zeilen. Deny → Ask → Allow. |
-| **Codex CLI**   | OS-native      | Seatbelt (macOS), Bubblewrap+seccomp (Linux). Netzwerk default aus.       |
-| **Gemini CLI**  | Multi-Strategy | Docker, Podman, gVisor, LXC/LXD + OS-native. Per-Tool-Isolation.          |
-| **Pi**          | **Keines**     | _"Halbherzige Guardrails sind Theater. Lauf in einem Container."_         |
-
-<div class="mt-4 text-sm opacity-60">
-
-Bekannte Schwäche Claude Code: Bei >50 Sub-Commands in einer Pipeline fällt die Validierung auf ein einzelnes "Ask" zurück.
-
-Konfigurations- und Permission-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
-
-</div>
-
----
-hideInToc: true
----
-
-# Subagents
-
-<div class="grid grid-cols-2 gap-8">
-<div>
-
-### Claude Code: AgentTool
-
-- **Tiefe 1** — Subagents spawnen keine eigenen Subagents
-- Jeder startet mit **frischer Conversation** (kein Parent-History)
-- Lädt eigenes System-Prompt und CLAUDE.md
-- Nur das **finale Summary** geht zurück an den Parent
-- Modi: Standard, Worktree-Isolation, Fork (opt-in via `CLAUDE_CODE_FORK_SUBAGENT=1`)
-
-</div>
-<div>
-
-### Die Gegenposition
-
-**Pi** hat bewusst **keine Subagents.**
-
-> _"Spawning multiple sub-agents is an anti-pattern; it doesn't work unless you don't care if your codebase devolves into garbage."_
->
-> — Mario Zechner
-
-Stattdessen: Spawn pi-Instanzen via tmux.
-
-</div>
-</div>
-
-<div class="mt-4 text-xs opacity-60">
-
-Orchestrierung im Alltag: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref> · Deterministische Alternative zu LLM-Subagents: <TalkXref slug="20260522-open-rewrite">OpenRewrite</TalkXref>.
-
-</div>
-
----
-layout: section
----
-
-# 7. Memory
-
----
-hideInToc: true
----
-
-# Memory-Systeme
-
-| Agent       | Datei                     | Hierarchie                                     |
-| ----------- | ------------------------- | ---------------------------------------------- |
-| Claude Code | `CLAUDE.md`               | `~/.claude/` → Projekt → Subdirs → `.local.md` |
-| Codex CLI   | `AGENTS.md`               | Global → Repo → Subfolder                      |
-| Gemini CLI  | `GEMINI.md`               | `~/.gemini/` → Projekt → Subdirs               |
-| Pi          | `AGENTS.md` + `SYSTEM.md` | Projekt-Kontext + System-Prompt-Modifier       |
-
-<div class="mt-4">
-
-> _"We had all these crazy ideas about memory architectures... in the end, we shipped the simplest thing: a file that has some stuff, auto-read into context."_
->
-> — Boris Cherny, Head of Claude Code
-
-</div>
-
-<div class="mt-4 text-sm opacity-60">
-
-**AGENTS.md** wird zum Cross-Tool-Standard — Linux Foundation, 60.000+ Open-Source-Repos.
-
-</div>
-
----
-hideInToc: true
----
-
-# Memory: Einfach schlägt komplex
-
-<div class="text-sm opacity-70 mb-2">
-
-Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, hohe Effektivität).
-
-</div>
-
-<MemoryScatter />
-
----
-layout: section
----
-
-# 8. Architektur-Vergleich
-
----
-hideInToc: true
----
-
-# Architektur-Radar
-
-<div class="text-sm opacity-70 mb-2">
-
-Sechs Harnesses, sechs Philosophien. Klick in der Legende zum Ein-/Ausblenden. Höher ≠ besser.
-
-</div>
-
-<RadarCompare />
-
----
-hideInToc: true
----
-
-# Harness-Vergleich
-
-<HarnessTable />
-
-<div class="mt-3 text-xs opacity-60">
-
-**OpenCode** (sst/opencode) ist TypeScript — in Go geschrieben ist Charm **Crush** (Fork-Linie des Prototyps). · **Gemini CLI** wird ab 2026-06-18 schrittweise von Antigravity abgelöst (<TalkXref slug="20260327-ai-agents">Details im Agents-Talk</TalkXref>). Stand: 29.04.2026.
-
-</div>
-
----
-hideInToc: true
----
-
-# Harness vs. Framework vs. Modell
-
-<div class="grid grid-cols-3 gap-6 mt-4">
-<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-
-### Modell
-
-Das LLM (Claude Opus 4.6, GPT-5.4, Gemini 3.1 Pro).
-
-Macht das **Reasoning**. Durch RL auf Tool-Use trainiert.
-
-**Hier steckt der Großteil der Intelligenz.**
-
-</div>
-<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-
-### Harness
-
-Der dünne Wrapper (Claude Code, Pi, Codex CLI).
-
-Gibt dem Modell Tools und führt den Agent-Loop aus.
-
-**Je weniger Logik, desto besser.**
-
-</div>
-<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-
-### Framework
-
-Höhere Abstraktionsebene (LangChain, CrewAI).
-
-Anthropic warnt: _"Frameworks create extra layers that obscure prompts and responses."_
-
-**Trend: verliert an Relevanz.**
-
-</div>
-</div>
-
----
-layout: center
-hideInToc: true
----
-
-# Die Bitter Lesson
-
-<div class="text-xl opacity-80 mt-4">
-
-> _"All the value is in the RL'd model, not your 10,000 lines of abstractions."_
->
-> — Browser Use
-
-</div>
-
-<div class="text-sm opacity-50 mt-8">
-
-Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks verlieren an Relevanz. Die Modell-Anbieter launchen eigene CLIs, weil der Einstiegspreis für einen Coding-Agent **nahe null** ist.
-
-</div>
-
----
-layout: section
----
-
-# 9. Source-Leak & Brand
+# 7. Source-Leak
 
 ---
 hideInToc: true
@@ -913,6 +845,12 @@ hideInToc: true
 <LeakModuleBar />
 
 ---
+layout: section
+---
+
+# 8. Architektur-Vergleich
+
+---
 hideInToc: true
 ---
 
@@ -927,10 +865,59 @@ hideInToc: true
 <TaxonomyTreemap />
 
 ---
+hideInToc: true
+---
+
+# Architektur-Radar
+
+<div class="text-sm opacity-70 mb-2">
+
+Sechs Harnesses, sechs Philosophien. Klick in der Legende zum Ein-/Ausblenden. Höher ≠ besser.
+
+</div>
+
+<RadarCompare />
+
+---
+hideInToc: true
+---
+
+# Harness-Vergleich
+
+<HarnessTable />
+
+<div class="mt-3 text-xs opacity-60">
+
+**OpenCode** (sst/opencode) ist TypeScript — in Go geschrieben ist Charm **Crush** (Fork-Linie des Prototyps). · **Gemini CLI** wird ab 2026-06-18 schrittweise von Antigravity abgelöst (<TalkXref slug="20260327-ai-agents">Details im Agents-Talk</TalkXref>). Stand: 29.04.2026.
+
+</div>
+
+---
+layout: center
+hideInToc: true
+---
+
+# Die Bitter Lesson
+
+<div class="text-xl opacity-80 mt-4">
+
+> _"All the value is in the RL'd model, not your 10,000 lines of abstractions."_
+>
+> — Browser Use
+
+</div>
+
+<div class="text-sm opacity-50 mt-8">
+
+Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks verlieren an Relevanz. Die Modell-Anbieter launchen eigene CLIs, weil der Einstiegspreis für einen Coding-Agent **nahe null** ist.
+
+</div>
+
+---
 layout: section
 ---
 
-# 10. Kernaussagen
+# 9. Kernaussagen
 
 ---
 hideInToc: true
