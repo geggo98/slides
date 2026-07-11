@@ -221,7 +221,7 @@ function applyScales() {
   CH.forEach((cf) => {
     const c = charts[cf.key];
     if (!c) return;
-    const w = c.svg.node().getBoundingClientRect().width || 600;
+    const w = c.svg.node().parentNode.clientWidth || 600; // logische px — rect.width wäre post-CSS-Transform (~1.3×) und würde rechts clippen
     c.w = w;
     c.svg.attr("width", w);
     c.x = scaleLinear()

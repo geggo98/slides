@@ -941,6 +941,62 @@ Signale gezielt aufdecken — welcher Kanal diskriminiert?
 hideInToc: true
 ---
 
+# Setup: Gleiche p99 — andere Krankheit?
+
+Ein Latenz-Alarm: die **p99** eines Dienstes ist deutlich erhöht. Zwei völlig verschiedene Ursachen können **exakt dieselben Perzentil-Werte** erzeugen:
+
+<div class="grid grid-cols-2 gap-3 mt-4">
+<div class="intro-box"><b>Packet Loss</b><br>Das Netz verliert Pakete — TCP wartet auf den Retransmission-Timeout und sendet erneut.</div>
+<div class="intro-box"><b>Langsame Anwendung</b><br>Der Dienst selbst braucht länger — GC-Pausen, Lock-Contention, langsame Queries.</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Auf dem p50/p99-Dashboard sehen beide Fälle <b>identisch</b> aus. Welche Darstellung der Latenz würdest du anfordern, um die Ursachen zu trennen — und worauf genau würdest du darin achten?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung: nur die zwei Verdächtigen vorstellen. Das Publikum
+  überlegen lassen, welche Ansicht sie anfordern würden (mehr Perzentile?
+  Histogramm? Heatmap? Traces?).
+- Nicht spoilern, WAS man in der Verteilung sieht — das zeigt die Simulation.
+- Überleitung: in der Simulation sind beide Szenarien so kalibriert, dass
+  die p99 identisch ist — Perzentile allein KÖNNEN sie also nicht trennen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: latenz-verteilung
+---
+
+<LatencyRtoSim />
+
+<!--
+- Bedienung: ▶ startet den laufenden Request-Strom (startet bewusst
+  pausiert — Slidev hält Nachbar-Folien gemountet). Szenario oben
+  umschalten: Packet Loss vs. Langsame Anwendung — die p99-Anzeige im
+  Kopf bleibt dabei (fast) gleich, das ist der Kernmoment.
+- Zeigen: Packet Loss sammelt die Masse in diskreten Banden auf den
+  RTO-Stufen (~40 / 240 / 640 / 1440 ms), geometrisch dünner werdend
+  (p, p², p³); die langsame Anwendung erzeugt ein Kontinuum. Gleiche p99,
+  andere Form — das Perzentil vernichtet genau die Information, die
+  diagnostiziert.
+- Ehrlichkeitshinweise (⚙-Modellnotiz): der Median unterscheidet sich
+  sehr wohl; die konkreten RTO-Millisekunden sind Modellannahmen —
+  universell ist die Banden-Struktur, nicht die Zahlen.
+- ⚙: Schweregrad-Regler (beide Szenarien pro Stufe p99-kalibriert, LUT)
+  und Zurücksetzen; der Erklärtext unter den Charts wechselt mit dem
+  Szenario.
+-->
+
+---
+hideInToc: true
+---
+
 # Setup: Die Queue wächst — warum?
 
 Eine RabbitMQ-Queue wächst seit dem Incident-Zeitpunkt stetig. Drei völlig verschiedene Ursachen erzeugen **exakt dieses Leitsignal**:
@@ -994,4 +1050,192 @@ routeAlias: rabbitmq-queue
   Szenario-Buttons die Ursache.
 - ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
   Modell-Hinweis (unacked = der Schlüssel-Kanal, fehlt oft im Dashboard).
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: CrashLoopBackOff — warum stirbt der Pod?
+
+Ein Pod restartet seit dem Deploy im CrashLoopBackOff-Takt. Drei völlig verschiedene Ursachen erzeugen **fast identische Restart-Zähler** (gleiche BackOff-Kadenz):
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>kubelet</b>&ensp;startet Container</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Container</b>&ensp;läuft … und stirbt 💥</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>BackOff</b>&ensp;10 s → 20 s → 40 s … Restart #n</span>
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2">
+<div class="intro-box"><b>OOMKilled</b><br>Der Container frisst sich ans Memory-Limit, der Kernel killt hart.</div>
+<div class="intro-box"><b>Liveness-Probe</b><br>Die App startet nur langsam — eine zu aggressive Probe killt sie vorher.</div>
+<div class="intro-box"><b>App-Crash</b><br>Die Anwendung terminiert selbst mit einer Exception.</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Der Restart-Zähler sieht in allen drei Fällen gleich aus. Welche <b>zusätzliche Evidenz</b> trennt die Ursachen — und wo findest du sie? Achtung: sie steht nicht im CPU/Memory-Dashboard, sondern in <code>kubectl describe pod</code>.
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung: die drei Verdächtigen vorstellen, Publikum
+  diskutieren lassen, welche Evidenz sie sehen wollen (Memory? Events?
+  Exit-Codes? Logs?).
+- Mechanik-Hinweis: hier trennt keine Kurvenform, sondern kategoriale
+  Evidenz — Exit-Codes und Events sind diskrete Fakten, kein Signal.
+- Überleitung: in der Simulation kostet jedes Aufdecken einen Klick —
+  wie in echt jede kubectl-Query bzw. jedes Dashboard Zeit kostet.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: k8s-crashloop
+---
+
+<CrashLoopSim />
+
+<!--
+- Bedienung: Szenario A/B/C wählen (Zuordnung ist gemischt!), dann Spur 2
+  und Spur 3 nacheinander aufdecken — vor jedem Aufdecken tippen lassen.
+  Rail rechts: kategorialer Ausschluss (? / ✗ / ✓), kein Bayes.
+- Zeigen: die Asymmetrie — beim OOM-Fall reicht Spur 2 (Memory-Sägezahn
+  küsst das 512-Mi-Limit und bricht ab); Liveness vs. App-Crash sehen dort
+  gleich aus und trennen sich erst in Spur 3: Exit-Code 137 vs. 143 vs. 1
+  plus „Liveness probe failed"-Events vor jedem Kill.
+- Pointe: der Liveness-Fall ist die häufigste reale Fehldiagnose — ein
+  langsam startender Pod sieht aus wie ein Absturz; Fix ist eine
+  startupProbe / initialDelay, kein App-Debugging.
+- Nach vollem Aufdecken zeigen die Szenario-Buttons die Ursache.
+- ⚙: Zurücksetzen & neu mischen (neue Zuordnung) + Exit-Code-Semantik
+  (137 = 128+SIGKILL, 143 = 128+SIGTERM, 1 = App-Fehler).
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Heap wächst — Leak oder Cache-Warmup?
+
+Seit dem Deploy steigt der Heap eines JVM-Service stetig, die GCs werden hektischer. Zwei völlig verschiedene Ursachen erzeugen **exakt dieses Leitsignal**:
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Allokation</b>&ensp;Requests erzeugen Objekte</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Heap</b>&ensp;Sägezahn steigt 📈</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Full GC</b>&ensp;räumt auf — aber wie tief?</span>
+</div>
+
+<div class="grid grid-cols-2 gap-3 mt-2">
+<div class="intro-box"><b>Memory-Leak</b><br>Unfreigebbare Objekte sammeln sich an — der Heap-Sockel wächst unbegrenzt, bis zum OOM.</div>
+<div class="intro-box"><b>Cache-Warmup (gesund)</b><br>Ein Cache füllt sich nach dem Deploy bis zu seinem Sollmaß — dann ist Schluss.</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Der rohe Heap-Sägezahn sieht in beiden Fällen lange gleich aus. Welche <b>zusätzlichen Signale</b> trennen die beiden Ursachen? Achtung: eine der entscheidenden Achsen ist kein Messwert — sie muss aus dem Roh-Signal <b>berechnet</b> werden.
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung: die zwei Verdächtigen vorstellen, Publikum
+  diskutieren lassen, welche Metriken sie sehen wollen (GC-Frequenz?
+  Reclaim? Heap nach GC?).
+- Pointe vorbereiten: nicht jedes Signal ist ein Messwert — die richtige
+  Achse zu wählen ist selbst Signalkombination.
+- Überleitung: in der Simulation kostet jedes Signal einen Klick —
+  genau wie in echt jede neue Query Zeit kostet.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: memory-leak
+---
+
+<MemoryLeakSim />
+
+<!--
+- Bedienung: Szenario A/B wählen (Zuordnung ist gemischt!), dann die
+  Signale von oben nach unten aufdecken — vor jedem Aufdecken tippen
+  lassen. Bayes-Balken rechts zeigen die Belief-Richtung.
+- Zeigen: Signal 1 (GC-Frequenz) grenzt NICHTS ein — konfundiert mit der
+  Last, ohne Last-Modell nicht attribuierbar. Signal 2 (Reclaim pro GC)
+  trennt: fällt gegen null (Leak) vs. stabilisiert sich (Cache).
+  Signal 3 (Post-GC-Minimum) ist die Pointe: kein neuer Messwert,
+  sondern aus Signal 0 berechnet (untere Hüllkurve) — monoton steigend
+  (Leak) vs. Plateau (Cache).
+- ▶/Scrub spielt die Zeitachse ab; nach vollem Aufdecken zeigen die
+  Szenario-Buttons die Ursache.
+- ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
+  Modell-Hinweis (Roh-Heap & GC-Frequenz bewusst nicht inferenzwirksam;
+  reale Überlagerung LRU-Cache + langsames Leak braucht längere Fenster).
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Latenz-Spikes — Noisy Neighbor, Batch-Job oder GC?
+
+Die p99-Latenz der App steigt seit dem Incident-Zeitpunkt steil an. Drei völlig verschiedene Ursachen erzeugen **exakt dieses Leitsignal**:
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Hypervisor</b>&ensp;teilt physische CPUs zu</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>VM</b>&ensp;Prozesse teilen sich die vCPUs</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>JVM</b>&ensp;App-Threads + GC</span>
+</div>
+
+<div class="grid grid-cols-3 gap-3 mt-2">
+<div class="intro-box"><b>Noisy Neighbor</b><br>Eine fremde VM auf demselben Host frisst die physische CPU — der Täter sitzt <b>außerhalb</b> der VM.</div>
+<div class="intro-box"><b>In-Guest Batch-Job</b><br>Ein Prozess <b>in</b> der VM rechnet plötzlich mit (cron? Backup? Log-Rotation?).</div>
+<div class="intro-box"><b>JVM GC-Druck</b><br>Stop-the-World-Pausen <b>in der JVM</b> fressen die Latenz — die VM sieht von außen unauffällig aus.</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Welche <b>zusätzlichen Signale</b> trennen die drei Ursachen — und in welcher Reihenfolge würdest du sie aufdecken? Achtung: der Schlüssel-Kanal fehlt in den meisten Default-Dashboards.
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung: drei Verdächtige auf drei Ebenen (Hypervisor /
+  VM / JVM) vorstellen, Publikum diskutieren lassen, welche Metriken sie
+  sehen wollen (CPU? GC-Logs? Steal?).
+- Überleitung: in der Simulation kostet jedes Signal einen Klick — genau
+  wie in echt jede neue Query Zeit kostet.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: noisy-neighbor
+---
+
+<NoisyNeighborSim />
+
+<!--
+- Bedienung: Szenario A/B/C wählen (Zuordnung ist gemischt!), dann die
+  Diskriminator-Signale von oben nach unten aufdecken — vor jedem Aufdecken
+  tippen lassen. Bayes-Balken rechts zeigen die Belief-Richtung.
+- Zeigen: User-CPU trennt nur den Batch-Job ab (steigt allein dort);
+  Steal und GC bleiben in der CPU-Kurve unsichtbar. Erst %steal lokalisiert
+  den Täter außerhalb der VM — GC-Pausenzeit bestätigt danach die JVM-These.
+- ▶/Scrub spielt die Zeitachse ab; nach vollem Aufdecken zeigen die
+  Szenario-Buttons die Ursache.
+- ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
+  Modell-Hinweis (%steal aus /proc/stat bzw. vmstat: vCPU lauffähig, aber
+  keine physische CPU — der Kanal, der in Default-Dashboards oft fehlt).
 -->
