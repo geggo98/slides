@@ -737,6 +737,7 @@ hideInToc: true
 - **Rote Befunde** — erst nach unabhängiger Gegenprüfung ins Ticket: Diff lesen, nie der Commit-Message glauben
 - **Fremdes bleibt fremd** — eigene Branches und PRs statt fremde zu verändern
 - **Retries nur für Transientes** — Auth-Hiccups ja, echte Fehler nein
+- **Cache halten** — eine nachts unbeantwortete Permission-Frage lässt den 5-Min-Cache des Laufs verfallen (voller Re-Write). Riskantes vorab per Skill-Frontmatter freigeben, sonst zügig antworten → <TalkXref slug="20260408-agents-details" anchor="cache-modi">Cache-Modi</TalkXref>
 
 </v-clicks>
 
@@ -757,7 +758,7 @@ hideInToc: true
 - **Kein Selbst-Lernen** — für autonome Runbook-Änderungen fehlt das Sicherheitsnetz (etwa eine Eval-Suite für Runbooks); bis dahin bleibt Kuration Handarbeit.
 - **Flaky-Befunde** — ob Rot ein echter Defekt oder ein Umgebungsproblem ist, braucht weiterhin menschliches Urteil.
 - **Markup-Konvertierung** — das tolerante Idempotenz-Matching bleibt die fummeligste Stelle des Systems.
-- **Kontextkosten** — ~50 KB Runbook werden jedem Lauf neu vorgelegt; das Runbook wächst mit jeder Kuration.
+- **Kontextkosten** — ~50 KB Runbook werden jedem Lauf neu vorgelegt; das Runbook wächst mit jeder Kuration. **Ausblick:** nicht-zeitkritische Läufe könnten per Batch-Modus die Token-Kosten halbieren (stapelt mit dem Prompt-Cache) → <TalkXref slug="20260408-agents-details" anchor="cache-hygiene">Cache & Batch</TalkXref>
 
 </v-clicks>
 
