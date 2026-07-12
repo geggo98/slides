@@ -46,3 +46,7 @@ export function withAlpha(hex, a) {
   const b = n & 255;
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
+
+// Feature-Shed (Graceful Degradation): ein Glas Wasser 🥛 wird so viel
+// schneller serviert als ein normales Gericht — geteilt von MM1 und MMc.
+export const WATER_SPEEDUP = 10;

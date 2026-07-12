@@ -70,6 +70,22 @@ console.log(
   `OK shed: N ${nAfterBurst} → ${nAfterShed}, Zähler „${counter?.trim()}"`,
 );
 
+// Feature-Shed: Zähler erscheint sofort, 🥛 landet beim Koch
+await root.getByRole("button", { name: /Feature-Shed/ }).dispatchEvent("click");
+await page.waitForTimeout(300);
+const waterLbl = await root
+  .locator("svg text", { hasText: "nur Wasser" })
+  .textContent();
+if (!waterLbl || !/noch \d+/.test(waterLbl))
+  fail(`Wasser-Zähler fehlt: ${waterLbl}`);
+let waterServed = 0;
+for (let i = 0; i < 20 && waterServed === 0; i++) {
+  await page.waitForTimeout(400);
+  waterServed = await root.locator("svg text", { hasText: "🥛" }).count();
+}
+if (waterServed === 0) fail("kein 🥛 beim Koch nach Feature-Shed");
+console.log(`OK feature-shed: „${waterLbl.trim()}", 🥛 serviert`);
+
 // Screenshot für Vision-QA
 await page.screenshot({
   path: "playwright-tests/qa-p1b-mm1-burst-shed.png",

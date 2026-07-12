@@ -45,6 +45,7 @@ const live = shallowRef({
   overflow: 0,
   lqTheory: null,
   shedTotal: 0,
+  waterLeft: 0,
 });
 const readout = shallowRef({
   rho: 0.6,
@@ -92,8 +93,9 @@ function setRho(rr) {
   lambda.value = +(rr * mu.value).toFixed(3);
 }
 
-/* ---- Burst (Bus) & Load-Shedding — didaktische Aktionen, immer sichtbar ---- */
+/* ---- Burst (Bus), Load- & Feature-Shedding — didaktische Aktionen ---- */
 const BURST_N = 12;
+const FEATURE_SHED_N = 30;
 const BUS_STOP = { x: 150, y: 96 };
 const busView = shallowRef(null); // {x, y, opacity} für die SVG-Anzeige
 let busAnim = null; // {t0, injected} — Zeitachse in Realzeit, unabhängig vom Sim-Takt
@@ -111,6 +113,9 @@ function shed() {
     v.tx = v.x + (Math.random() * 60 - 30);
     v.ty = ST.H + 70; // nach unten aus dem Bild
   }
+}
+function featureShed() {
+  engine.featureShed(FEATURE_SHED_N);
 }
 
 /* Bus-Zeitachse: anfahren (0–0,9 s) → halten & 🤖 aussteigen lassen
@@ -383,13 +388,18 @@ function loop(now) {
   entities.value = out;
   live.value = {
     inService: !!engine.inService,
-    food: engine.inService ? foodFor(engine.inService.serviceTime, meanS) : "",
+    food: engine.inService
+      ? engine.inService.water
+        ? "🥛"
+        : foodFor(engine.inService.serviceTime, meanS)
+      : "",
     remaining: engine.inService
       ? Math.max(0, engine.nextDeparture - engine.clock)
       : 0,
     overflow: hiddenCount,
     lqTheory,
     shedTotal: engine.numShed,
+    waterLeft: engine.waterLeft,
   };
 
   if (now - lastSample > 140) {
@@ -514,6 +524,14 @@ onUnmounted(() => {
         @click="shed"
       >
         ✂️ Load-Shed
+      </button>
+      <button
+        class="preset-btn"
+        :style="btnStyle(C.theory)"
+        title="Feature-Shedding (Graceful Degradation): jeder Wartende wird bedient, aber die nächsten 30 Gäste bekommen nur ein Glas Wasser — 10× schnellere Bedienung, kein verworfener Request."
+        @click="featureShed"
+      >
+        🥛 Feature-Shed
       </button>
     </div>
 
@@ -703,6 +721,19 @@ onUnmounted(() => {
             ✂️ verworfen: {{ live.shedTotal }}
           </text>
 
+          <!-- Feature-Shed: Wasser-Modus aktiv -->
+          <text
+            v-if="live.waterLeft > 0"
+            :x="badgeX"
+            :y="lineY + 112"
+            text-anchor="middle"
+            :fill="C.theory"
+            style="font-size: 13px"
+            class="sim-mono"
+          >
+            🥛 nur Wasser: noch {{ live.waterLeft }} Gäste
+          </text>
+
           <!-- „+N“-Badge mittig in der Schlange, hervorgehoben -->
           <g v-if="live.overflow > 0">
             <rect
@@ -859,7 +890,9 @@ onUnmounted(() => {
       <em>klettert</em> zur Kurve. Erst ab ρ≥1 verlässt er das Feld nach oben —
       kein Gleichgewicht. 🚌 Burst = Dirac-Impuls: Wq springt, klingt bei ρ&lt;1
       wieder ab. ✂️ Load-Shed leert die Schlange nach unten — sofortige
-      Entlastung, aber die Requests sind verworfen.
+      Entlastung, aber die Requests sind verworfen. 🥛 Feature-Shed bedient
+      alle, aber 30 Gäste lang nur Wasser (10× schneller) — Degradation statt
+      Verlust.
     </div>
   </div>
 </template>

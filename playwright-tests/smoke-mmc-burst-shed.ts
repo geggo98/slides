@@ -58,5 +58,24 @@ if (counters.length !== 2)
 console.log(`OK shed: ${counters.map((c) => c.trim()).join(" · ")}`);
 await page.screenshot({ path: "playwright-tests/qa-mmc-shed.png" });
 
+// Feature-Shed: beide Seiten zeigen den Wasser-Zähler, 🥛 wird serviert
+await root.getByRole("button", { name: /Feature-Shed/ }).dispatchEvent("click");
+await page.waitForTimeout(300);
+const waterLbls = await root
+  .locator("svg text", { hasText: "nur Wasser" })
+  .allTextContents();
+if (waterLbls.length !== 2)
+  fail(`erwartete 2 Wasser-Zähler (je Kantine), fand ${waterLbls.length}`);
+let waterServed = 0;
+for (let i = 0; i < 20 && waterServed === 0; i++) {
+  await page.waitForTimeout(400);
+  waterServed = await root.locator("svg text", { hasText: "🥛" }).count();
+}
+if (waterServed === 0) fail("kein 🥛 bei den Köchen nach Feature-Shed");
+console.log(
+  `OK feature-shed: ${waterLbls.map((c) => c.trim()).join(" · ")} · 🥛 ×${waterServed}`,
+);
+await page.screenshot({ path: "playwright-tests/qa-mmc-water.png" });
+
 await browser.close();
 console.log("PASS smoke-mmc-burst-shed");

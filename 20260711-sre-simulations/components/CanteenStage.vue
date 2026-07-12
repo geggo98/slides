@@ -17,6 +17,7 @@ defineProps({
   fast: { type: Boolean, default: false },
   bus: { type: Object, default: null }, // {x, y, opacity} — Burst-Bus
   shedTotal: { type: Number, default: 0 }, // ✂️ verworfene Gäste dieser Seite
+  waterLeft: { type: Number, default: 0 }, // 🥛 Feature-Shed: verbleibende Wasser-Gäste
 });
 const C = useScopeColors();
 </script>
@@ -129,6 +130,19 @@ const C = useScopeColors();
       :style="{ opacity: e.opacity }"
     >
       {{ e.emoji }}
+    </text>
+
+    <!-- Feature-Shed: Wasser-Modus aktiv -->
+    <text
+      v-if="waterLeft > 0"
+      :x="SV.W / 2"
+      :y="SV.H - (shedTotal > 0 ? 22 : 6)"
+      text-anchor="middle"
+      :fill="C.theory"
+      style="font-size: 12px"
+      class="sim-mono"
+    >
+      🥛 nur Wasser: noch {{ waterLeft }}
     </text>
 
     <!-- Shedding-Zähler: verworfene Gäste dieser Seite -->

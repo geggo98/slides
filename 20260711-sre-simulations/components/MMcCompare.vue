@@ -30,11 +30,13 @@ const FONTS = {
   MONO: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
   SANS: "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif",
 };
-// Kurz-Labels ohne „vs Pool" (der Vergleichspartner steht im Titel) —
-// sonst bricht die Toolbar in Firefox in zwei Zeilen und die Folie läuft über.
+// Kurz-Labels: Details stehen in den Stage-Captions („1 Koch @ 3.0/s ⚡" …).
+// Mit Mode-Toggle + ρ-Presets + 3 Aktions-Knöpfen muss die Toolbar auch mit
+// den breiteren Firefox/WebKit-Font-Metriken in EINE Zeile passen, sonst
+// läuft die Folie unten über.
 const MODES = [
-  { key: "tempo", label: "Tempo: 1 schneller Koch" },
-  { key: "pooling", label: "Pooling: getrennte Schlangen" },
+  { key: "tempo", label: "Tempo: 1 Koch ⚡" },
+  { key: "pooling", label: "Pooling: c Schlangen" },
 ];
 const METRICS = [
   { key: "Wq", label: "Wq" },
@@ -114,9 +116,10 @@ function setRhoMMc(rr) {
   lambda.value = +(rr * c.value * mu.value).toFixed(3);
 }
 
-/* ---- Burst (Bus) & Load-Shedding — wie im MM1Simulator, aber gekoppelt:
-   derselbe Bus liefert dieselben 🤖-Zwillinge in BEIDE Kantinen. ---- */
+/* ---- Burst (Bus), Load- & Feature-Shedding — wie im MM1Simulator, aber
+   gekoppelt: derselbe Bus liefert dieselben 🤖-Zwillinge in BEIDE Kantinen. ---- */
 const BURST_N = 12;
+const FEATURE_SHED_N = 30;
 const busView = shallowRef(null); // {x, y, opacity} — in beiden Stages gerendert
 let busAnim = null; // {t0, injected} — Realzeit-Timeline
 
@@ -137,6 +140,9 @@ function shed() {
   };
   markShed(l.dropped, visL);
   markShed(r.dropped, visR);
+}
+function featureShed() {
+  world.featureShed(FEATURE_SHED_N);
 }
 
 /* Bus-Timeline: anfahren (0–0,9 s) → halten & Zwillinge injizieren
@@ -315,6 +321,7 @@ function loop(now) {
     layout: layL,
     fast: world.mode === "tempo",
     shedTotal: world.left.numShed,
+    waterLeft: world.left.waterLeft,
   };
   rightView.value = {
     entities: recR.entities,
@@ -323,6 +330,7 @@ function loop(now) {
     queueLens: world.right.queues.map((q) => q.length),
     layout: layR,
     shedTotal: world.right.numShed,
+    waterLeft: world.right.waterLeft,
   };
 
   if (ctx) {
@@ -467,6 +475,14 @@ onUnmounted(() => {
         >
           ✂️ Load-Shed
         </button>
+        <button
+          class="preset-btn"
+          :style="btnStyle(C.theory)"
+          title="Feature-Shedding (Graceful Degradation): jeder Wartende wird bedient, aber beide Seiten servieren den nächsten 30 Gästen nur ein Glas Wasser — 10× schnellere Bedienung, kein verworfener Request."
+          @click="featureShed"
+        >
+          🥛 Feature-Shed
+        </button>
       </div>
     </div>
 
@@ -540,6 +556,7 @@ onUnmounted(() => {
           :fast="leftView.fast"
           :bus="busView"
           :shed-total="leftView.shedTotal || 0"
+          :water-left="leftView.waterLeft || 0"
         />
       </div>
       <div
@@ -564,6 +581,7 @@ onUnmounted(() => {
           :badges="rightView.badges"
           :bus="busView"
           :shed-total="rightView.shedTotal || 0"
+          :water-left="rightView.waterLeft || 0"
         />
       </div>
     </div>
@@ -788,12 +806,14 @@ onUnmounted(() => {
 }
 
 /* Toolbar: mode + presets */
+/* Eng gepackt: Mode-Toggle + ρ-Presets + 3 Aktions-Knöpfe müssen auch mit
+   Firefox/WebKit-Font-Metriken in EINE Zeile passen (960px − Padding). */
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 8px;
 }
 .mode-toggle {
@@ -804,7 +824,7 @@ onUnmounted(() => {
 }
 .mode-btn {
   border: none;
-  padding: 6px 9px;
+  padding: 5px 7px;
   font-size: 10px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
@@ -812,7 +832,7 @@ onUnmounted(() => {
 .presets {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 .presets-label {
@@ -821,7 +841,7 @@ onUnmounted(() => {
 }
 .preset-btn {
   border-radius: 7px;
-  padding: 3px 8px;
+  padding: 3px 6px;
   font-size: 11px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;

@@ -349,6 +349,10 @@ routeAlias: mm1-simulator
   springen, bei ρ<1 konvergiert alles zurück zur Kurve. Brücke zu Kap. 4.
 - ✂️ Load-Shed: alle Wartenden gehen nach unten ab — Wq sinkt sofort, der
   rote Zähler zeigt die Kosten (verworfene Requests). Brücke zu Kap. 5.
+- 🥛 Feature-Shed (Graceful Degradation): niemand fliegt raus — die nächsten
+  30 Gäste bekommen nur ein Glas Wasser (10× schneller). Die Schlange leert
+  sich, ohne einen Request zu verlieren: Degradation statt Verlust.
+  Gegenüberstellung ✂️ vs. 🥛 live zeigen!
 - Kernaussage: „80 %" ist ein Punkt auf 1/(1−ρ), keine Klippe.
 -->
 
@@ -373,6 +377,9 @@ routeAlias: mmc-vergleich
 - ✂️ Load-Shed: leert beide Schlangen nach unten; die Zähler zeigen die
   verworfenen Gäste je Seite — der Pool hält typischerweise weniger
   Wartende vor und verwirft daher weniger.
+- 🥛 Feature-Shed: beide Seiten servieren den nächsten 30 Gästen nur Wasser
+  (10× schneller, niemand wird verworfen) — beobachten, welche Seite den
+  Rückstau damit schneller abbaut.
 -->
 
 ---
@@ -1072,7 +1079,8 @@ routeAlias: circuit-breaker
 
 ### Schon live gesehen
 
-- **✂️ Load-Shed** in der M/M/1-Kantine: Wartende verwerfen, Wq sofort runter
+- **✂️ Load-Shed** in beiden Kantinen-Sims: Wartende verwerfen, Wq sofort runter
+- **🥛 Feature-Shed** ebendort: alle bedienen, aber nur Wasser — Degradation statt Verlust
 - **Shed-Knopf** im Retry-Sturm: aussichtslose Anfragen verwerfen bricht die Selbsterhaltung
 - **Single-Flight** (Cache-Stampede) und **Age-Drop** (Bufferbloat) — dieselbe Familie
 

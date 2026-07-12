@@ -2,7 +2,7 @@
  * mmc.js — diskreter-Ereignis-Kern (M/M/c-Vergleich) + Crossover-Scope.
  * Aus mmc-compare.jsx übernommen; `drawScope` nimmt jetzt Palette `C` + Fonts.
  */
-import { expo, foodFor, randomPerson } from "./queueing.js";
+import { expo, foodFor, randomPerson, WATER_SPEEDUP } from "./queueing.js";
 
 const K = 120; // gleitendes Fenster (Abgänge)
 const MAXQ = 4000; // Sicherheitsventil je Queue
@@ -61,6 +61,7 @@ export class Subsystem {
     this.numDep = 0;
     this.overflow = 0;
     this.numShed = 0;
+    this.waterLeft = 0; // Feature-Shed: so viele Bedienstarts nur noch 🥛
     this.dep = []; // {w,wq,waited}
   }
   N() {
@@ -95,9 +96,17 @@ export class Subsystem {
     s.cust = cust;
     cust.serviceStartT = clock;
     cust.serverIdx = i;
-    const t = cust.S / this.serviceDiv;
+    let t = cust.S / this.serviceDiv;
+    if (this.waterLeft > 0) {
+      // Feature-Shed: 🥛 statt Menü — derselbe (gekoppelte) Zufallszug S,
+      // nur WATER_SPEEDUP-fach schneller; niemand wird verworfen.
+      this.waterLeft--;
+      t /= WATER_SPEEDUP;
+      s.food = "🥛";
+    } else {
+      s.food = foodFor(t, this.meanRef());
+    }
     s.depart = clock + t;
-    s.food = foodFor(t, this.meanRef());
   }
   arrive(base, clock) {
     const cust = {
@@ -291,6 +300,13 @@ export class World {
       this.left.arrive(base, this.clock);
       this.right.arrive(base, this.clock);
     }
+  }
+
+  /* Feature-Shed (Graceful Degradation): beide Seiten servieren den nächsten
+     n Bedienstarts nur ein Glas Wasser 🥛 — bedient wird jeder. */
+  featureShed(n) {
+    this.left.waterLeft = n;
+    this.right.waterLeft = n;
   }
 
   /* Load-Shedding: verwirft alle Wartenden beider Subsysteme (nicht die in

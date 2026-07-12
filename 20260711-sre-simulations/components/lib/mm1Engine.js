@@ -3,7 +3,7 @@
  * Aus mm1-simulator.jsx übernommen; `drawScope` nimmt jetzt die adaptive
  * Palette `C` + Fonts entgegen (statt modul-globaler fester Farben).
  */
-import { randomPerson, withAlpha } from "./queueing.js";
+import { randomPerson, withAlpha, WATER_SPEEDUP } from "./queueing.js";
 
 const K = 80; // gleitendes Fenster (Anzahl letzter Abgänge)
 
@@ -33,6 +33,7 @@ export class MM1Engine {
     this.settleAnchorDep = 0;
     this.overflow = 0;
     this.numShed = 0;
+    this.waterLeft = 0; // Feature-Shed: so viele Bedienstarts nur noch 🥛
   }
   expo(rate) {
     return -Math.log(1 - Math.random()) / rate;
@@ -50,7 +51,16 @@ export class MM1Engine {
   startService(c) {
     this.inService = c;
     c.serviceStart = this.clock;
-    c.serviceTime = this.expo(this.mu);
+    if (this.waterLeft > 0) {
+      // Feature-Shed: super einfaches Gericht (🥛) — 10× schnellere Bedienung,
+      // niemand wird verworfen.
+      this.waterLeft--;
+      c.water = true;
+      c.serviceTime = this.expo(this.mu * WATER_SPEEDUP);
+    } else {
+      c.water = false;
+      c.serviceTime = this.expo(this.mu);
+    }
     this.nextDeparture = this.clock + c.serviceTime;
   }
   integrate(dt) {
@@ -113,6 +123,14 @@ export class MM1Engine {
       else if (this.queue.length < 5000) this.queue.push(c);
       else this.overflow++;
     }
+    this.markChange();
+  }
+
+  /* Feature-Shed (Graceful Degradation): jeder Wartende wird bedient, aber
+     die nächsten n Bedienstarts servieren nur ein Glas Wasser 🥛 —
+     WATER_SPEEDUP-fach schnellere Bedienung statt verworfener Kunden. */
+  featureShed(n) {
+    this.waterLeft = n;
     this.markChange();
   }
 
