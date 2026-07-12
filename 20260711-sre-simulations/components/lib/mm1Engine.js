@@ -147,6 +147,29 @@ export class MM1Engine {
     return { dropped, total };
   }
 
+  /* „Leichter Cheat“ am Ende des Vorspulens: setzt die Warteschlange
+     deterministisch auf die theoretische Länge Lq = ρ²/(1−ρ). Zu viele
+     Wartende werden abgeschnitten, fehlende ergänzt — so landet die Sim
+     reproduzierbar auf einem definierten Stand, von dem aus Burst/Shed-
+     Experimente vergleichbar starten. Ohne diesen Snap ist die momentane
+     Länge nach dem Vorspulen zufällig (mal viel zu lang, mal leer). */
+  snapToSteadyState() {
+    const rho = this.lambda / this.mu;
+    if (rho >= 1) return; // kein Gleichgewicht → nichts zu tun
+    const Lq = (rho * rho) / (1 - rho);
+    const target = Math.max(0, Math.round(Lq));
+    this.overflow = 0;
+    // Bei Wartenden muss jemand bedient werden, sonst „läuft“ die Schlange nicht ab.
+    if (!this.inService && target > 0)
+      this.startService({ id: this.nextId++, arrival: this.clock });
+    if (this.queue.length > target) {
+      this.queue.length = target; // Überzählige (zuletzt gekommene) abschneiden
+    } else {
+      while (this.queue.length < target)
+        this.queue.push({ id: this.nextId++, arrival: this.clock });
+    }
+  }
+
   _meanLast(field, n) {
     const d = this.departures;
     if (!d.length) return null;

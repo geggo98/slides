@@ -66,6 +66,38 @@ let raf = 0;
 let last = 0;
 let lastSample = 0;
 
+/* ---- Fast-Forward: „Vorspulen“ bis zum Gleichgewicht ----
+   Wie im MM1Simulator: treibt die echte Welt-Uhr über ein festes ~2,5-s-Fenster
+   bis zum Einschwing-Horizont (3τ, aus ρ=λ/(cμ)) — ρ-unabhängig, ohne Cheat. */
+const ffActive = ref(false);
+const ffSpeed = ref(0); // gemessene effektive Beschleunigung (× Echtzeit)
+const ffBadge = shallowRef(null); // {label, opacity} — Overlay-Indikator
+const canFF = computed(() => lambda.value / (c.value * mu.value) < 1);
+let ffFrom = 0,
+  ffTo = 0,
+  ffStart = 0,
+  ffFadeUntil = 0,
+  ffSmooth = 0;
+const FF_DUR = 2500;
+function fmtSpeed(v) {
+  if (v >= 1000) return (Math.round(v / 100) * 100).toLocaleString("de-DE");
+  return Math.round(v).toLocaleString("de-DE");
+}
+function fastForward() {
+  if (ffActive.value) return;
+  const rho = world.lambda / (world.c * world.mu);
+  if (rho >= 1) return; // kein Gleichgewicht
+  const Ntau = rho / (1 - Math.sqrt(rho)) ** 2;
+  const horizon = (3 * Ntau) / Math.max(world.lambda, 1e-3); // Sim-Sekunden
+  ffFrom = world.clock;
+  ffTo = world.clock + horizon;
+  ffStart = performance.now();
+  ffSpeed.value = 0;
+  ffSmooth = 0;
+  paused.value = true;
+  ffActive.value = true;
+}
+
 const zMetrics = () => ({ pw: 0, Wq: 0, T: 0, N: 0, L: 0 });
 const leftView = shallowRef({
   entities: [],
@@ -93,9 +125,11 @@ const race = shallowRef({ n: 0, lPct: 0, rPct: 0, lLead: 0, rLead: 0 });
 watch(lambda, (v) => {
   world.lambda = v;
   world.nextArrival = world.clock + expo(v);
+  ffActive.value = false; // Parameterwechsel bricht ein laufendes Vorspulen ab
 });
 watch(mu, (v) => {
   world.mu = v;
+  ffActive.value = false;
 });
 watch([mode, c], () => {
   world.mode = mode.value;
@@ -103,6 +137,7 @@ watch([mode, c], () => {
   world.configure();
   visL.clear();
   visR.clear();
+  ffActive.value = false;
 });
 
 function reset() {
@@ -111,6 +146,8 @@ function reset() {
   visR.clear();
   busAnim = null;
   busView.value = null;
+  ffActive.value = false;
+  ffBadge.value = null;
 }
 function setRhoMMc(rr) {
   lambda.value = +(rr * c.value * mu.value).toFixed(3);
@@ -301,7 +338,30 @@ function loop(now) {
   const dtReal = Math.min(0.1, (now - last) / 1000);
   last = now;
   tickBus(now);
-  if (!paused.value) world.advance(world.clock + dtReal * speed.value);
+  if (ffActive.value) {
+    // Vorspulen: Welt-Uhr per easeOutCubic über das FF-Fenster zum Horizont ziehen
+    const p = Math.min(1, (now - ffStart) / FF_DUR);
+    const e = 1 - Math.pow(1 - p, 3);
+    const simBefore = world.clock;
+    world.advance(ffFrom + (ffTo - ffFrom) * e);
+    const inst = dtReal > 0 ? (world.clock - simBefore) / dtReal : 0;
+    ffSmooth = ffSmooth * 0.7 + inst * 0.3; // geglättet gegen Jitter
+    if (ffSmooth > ffSpeed.value) ffSpeed.value = ffSmooth; // Spitzenwert halten (nicht auf 0 abklingen)
+    ffFadeUntil = now + 800;
+    if (p >= 1) {
+      world.snapToSteadyState(); // definierter, reproduzierbarer Stand (≈ Lq je Seite)
+      ffActive.value = false;
+      paused.value = false; // danach normal weiterlaufen
+    }
+  } else if (!paused.value) {
+    world.advance(world.clock + dtReal * speed.value);
+  }
+  // Indikator-Badge: während FF sichtbar, danach ~0,8 s ausklingend
+  const ffOp = ffActive.value ? 1 : Math.max(0, (ffFadeUntil - now) / 800);
+  ffBadge.value =
+    ffOp > 0
+      ? { opacity: ffOp, label: `⏩ ${fmtSpeed(ffSpeed.value)}×` }
+      : null;
 
   const layL = makeLayout(world.left);
   const layR = makeLayout(world.right);
@@ -423,6 +483,16 @@ onUnmounted(() => {
         </button>
         <button
           class="btn"
+          :style="btnStyle(canFF ? C.theory : C.border)"
+          :disabled="!canFF"
+          aria-label="Vorspulen"
+          title="Vorspulen: beschleunigt beide Kantinen bis zum Gleichgewicht (definierter, reproduzierbarer Stand ≈ Lq). Bei ρ≥1 gibt es kein Gleichgewicht."
+          @click="fastForward"
+        >
+          ⏩
+        </button>
+        <button
+          class="btn"
           :style="btnStyle(controlsOpen ? C.pool : C.border)"
           :aria-expanded="controlsOpen"
           aria-controls="mmc-ctl"
@@ -533,6 +603,18 @@ onUnmounted(() => {
 
     <!-- Kantinen -->
     <div class="canteens">
+      <!-- Fast-Forward-Indikator: eine Anzeige fürs gekoppelte Gespann -->
+      <div
+        v-if="ffBadge"
+        class="ff-badge"
+        :style="{
+          opacity: ffBadge.opacity,
+          color: C.phosphor,
+          borderColor: C.phosphor,
+        }"
+      >
+        {{ ffBadge.label }}
+      </div>
       <div
         class="canteen"
         :style="{ background: C.panel, borderColor: C.alt + '33' }"
@@ -804,6 +886,10 @@ onUnmounted(() => {
   cursor: pointer;
   white-space: nowrap;
 }
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* Toolbar: mode + presets */
 /* Eng gepackt: Mode-Toggle + ρ-Presets + 3 Aktions-Knöpfe müssen auch mit
@@ -869,11 +955,29 @@ onUnmounted(() => {
 
 /* Canteens */
 .canteens {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   max-width: 580px;
   margin: 0 auto 6px;
+}
+.ff-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  padding: 5px 16px;
+  border: 1px solid;
+  border-radius: 10px;
+  font: 700 22px var(--slidev-code-font-family);
+  background: rgba(0, 0, 0, 0.72);
+  text-shadow: 0 0 8px currentColor;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
 }
 .canteen {
   position: relative;

@@ -72,14 +72,50 @@ let raf = 0;
 let last = 0;
 let lastSample = 0;
 
+/* ---- Fast-Forward: „Vorspulen“ bis zum Gleichgewicht ----
+   Treibt die echte Engine über ein festes ~2,5-s-Fenster bis zum
+   Einschwing-Horizont (3τ) — ρ-unabhängig, kein künstliches Random-Init. */
+const ffActive = ref(false);
+const ffSpeed = ref(0); // gemessene effektive Beschleunigung (× Echtzeit)
+const ffBadge = shallowRef(null); // {label, opacity} — Overlay-Indikator
+const canFF = computed(() => lambda.value / mu.value < 1); // ρ<1 nötig
+let ffFrom = 0,
+  ffTo = 0,
+  ffStart = 0,
+  ffFadeUntil = 0,
+  ffSmooth = 0;
+const FF_DUR = 2500;
+function fmtSpeed(v) {
+  // „19.800“ (de-DE), grob auf 3 signifikante Stellen gerundet
+  if (v >= 1000) return (Math.round(v / 100) * 100).toLocaleString("de-DE");
+  return Math.round(v).toLocaleString("de-DE");
+}
+function fastForward() {
+  if (ffActive.value) return;
+  const rho = engine.lambda / engine.mu;
+  if (rho >= 1) return; // kein Gleichgewicht
+  const Ntau = rho / (1 - Math.sqrt(rho)) ** 2;
+  const horizon = (3 * Ntau) / Math.max(engine.lambda, 1e-3); // Sim-Sekunden
+  ffFrom = engine.clock;
+  ffTo = engine.clock + horizon;
+  ffStart = performance.now();
+  ffSpeed.value = 0;
+  ffSmooth = 0;
+  engine.markChange(); // Einschwing-Anker → Fortschrittsbalken füllt sich mit
+  paused.value = true; // während FF steuern wir advance() selbst
+  ffActive.value = true;
+}
+
 watch(lambda, (v) => {
   engine.lambda = v;
   engine.nextArrival = engine.clock + engine.expo(v);
   engine.markChange();
+  ffActive.value = false; // Parameterwechsel bricht ein laufendes Vorspulen ab
 });
 watch(mu, (v) => {
   engine.mu = v;
   engine.markChange();
+  ffActive.value = false;
 });
 
 function reset() {
@@ -88,6 +124,8 @@ function reset() {
   trail = [];
   busAnim = null;
   busView.value = null;
+  ffActive.value = false;
+  ffBadge.value = null;
 }
 function setRho(rr) {
   lambda.value = +(rr * mu.value).toFixed(3);
@@ -291,7 +329,30 @@ function loop(now) {
   const dtReal = Math.min(0.1, (now - last) / 1000);
   last = now;
   tickBus(now);
-  if (!paused.value) engine.advance(engine.clock + dtReal * speed.value);
+  if (ffActive.value) {
+    // Vorspulen: Sim-Uhr per easeOutCubic über das FF-Fenster zum Horizont ziehen
+    const p = Math.min(1, (now - ffStart) / FF_DUR);
+    const e = 1 - Math.pow(1 - p, 3);
+    const simBefore = engine.clock;
+    engine.advance(ffFrom + (ffTo - ffFrom) * e);
+    const inst = dtReal > 0 ? (engine.clock - simBefore) / dtReal : 0;
+    ffSmooth = ffSmooth * 0.7 + inst * 0.3; // geglättet gegen Jitter
+    if (ffSmooth > ffSpeed.value) ffSpeed.value = ffSmooth; // Spitzenwert halten (nicht auf 0 abklingen)
+    ffFadeUntil = now + 800;
+    if (p >= 1) {
+      engine.snapToSteadyState(); // definierter, reproduzierbarer Stand (≈ Lq)
+      ffActive.value = false;
+      paused.value = false; // danach normal weiterlaufen (Streuung um L sichtbar)
+    }
+  } else if (!paused.value) {
+    engine.advance(engine.clock + dtReal * speed.value);
+  }
+  // Indikator-Badge: während FF sichtbar, danach ~0,8 s ausklingend
+  const ffOp = ffActive.value ? 1 : Math.max(0, (ffFadeUntil - now) / 800);
+  ffBadge.value =
+    ffOp > 0
+      ? { opacity: ffOp, label: `⏩ ${fmtSpeed(ffSpeed.value)}×` }
+      : null;
 
   // Visuelle Reconciliation — „+N“ mittig: vordere 5 + hintere 5 mit Lücke.
   const present = new Set();
@@ -480,6 +541,15 @@ onUnmounted(() => {
         </button>
         <button class="btn" :style="btnStyle(C.border)" @click="reset">
           ↻ Reset
+        </button>
+        <button
+          class="btn"
+          :style="btnStyle(canFF ? C.phosphor : C.border)"
+          :disabled="!canFF"
+          title="Vorspulen: beschleunigt bis zum Gleichgewicht (≈ vorhergesagte Schlangenlänge L = ρ/(1−ρ)). Bei ρ≥1 gibt es kein Gleichgewicht."
+          @click="fastForward"
+        >
+          ⏩ Vorspulen
         </button>
         <button
           class="btn"
@@ -773,6 +843,23 @@ onUnmounted(() => {
               {{ live.remaining.toFixed(1) }} s
             </text>
           </template>
+
+          <!-- Fast-Forward-Indikator: macht das Spulen + die Beschleunigung sichtbar -->
+          <text
+            v-if="ffBadge"
+            x="500"
+            y="78"
+            text-anchor="middle"
+            :fill="C.phosphor"
+            :stroke="C.bg"
+            stroke-width="5"
+            paint-order="stroke"
+            :opacity="ffBadge.opacity"
+            style="font-size: 36px; font-weight: 700"
+            class="sim-mono"
+          >
+            {{ ffBadge.label }}
+          </text>
         </svg>
 
         <!-- Gauges -->
@@ -956,6 +1043,10 @@ onUnmounted(() => {
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
   white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Presets */

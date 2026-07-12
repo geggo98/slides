@@ -173,6 +173,42 @@ export class Subsystem {
       );
     }
   }
+  /* „Leichter Cheat“ nach dem Vorspulen: setzt dieses Subsystem deterministisch
+     auf ~`waiting` Wartende (überzählige abschneiden, fehlende ergänzen) und
+     belegt bei Wartenden alle Server (work-conserving). Frische Kunden bekommen
+     id=-1 → sie zählen NICHT in der Renn-Wertung. Reproduzierbarer Startzustand. */
+  snap(waiting, clock) {
+    waiting = Math.max(0, Math.round(waiting));
+    this.overflow = 0;
+    const mk = () => ({
+      id: -1,
+      arrival: clock,
+      S: expo(this.world.mu),
+      emoji: randomPerson(),
+      waited: true,
+      serviceStartT: clock,
+      serverIdx: -1,
+    });
+    const rho = this.world.lambda / (this.world.c * this.world.mu);
+    // Wartende ⇒ alle Server belegt; sonst im Mittel belegte Serverzahl.
+    const busyTarget =
+      waiting > 0
+        ? this.nServers
+        : Math.min(this.nServers, Math.round(this.nServers * rho));
+    for (let i = 0; i < this.nServers; i++) {
+      const s = this.servers[i];
+      if (i < busyTarget) {
+        if (!s.busy) this.start(i, mk(), clock);
+      } else if (s.busy) {
+        s.busy = false;
+        s.cust = null;
+        s.depart = Infinity;
+        s.food = null;
+      }
+    }
+    for (const q of this.queues) q.length = 0;
+    for (let k = 0; k < waiting; k++) this.queues[k % this.nQueues].push(mk());
+  }
   metrics() {
     const d = this.dep;
     const n = Math.min(K, d.length);
@@ -327,6 +363,21 @@ export class World {
     for (const cust of [...l.dropped, ...r.dropped])
       this.completion.delete(cust.id);
     return { l, r };
+  }
+
+  /* „Leichter Cheat“ am Ende des Vorspulens: beide Subsysteme deterministisch
+     auf ihre theoretische Warteschlangenlänge Lq = λ·Wq (Little) setzen, damit
+     der Vergleich reproduzierbar von einem definierten Stand aus startet.
+     Offene Zwillings-Halbläufe werden verworfen (die neuen Kunden sind id=-1). */
+  snapToSteadyState() {
+    const rho = this.lambda / (this.c * this.mu);
+    if (rho >= 1) return;
+    const leftSys = this.mode === "tempo" ? "tempo" : "pooling";
+    const wqL = theory(leftSys, this.lambda, this.mu, this.c).Wq;
+    const wqR = theory("pool", this.lambda, this.mu, this.c).Wq;
+    this.left.snap(this.lambda * wqL, this.clock);
+    this.right.snap(this.lambda * wqR, this.clock);
+    this.completion.clear();
   }
 
   raceSummary() {
