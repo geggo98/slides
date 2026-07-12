@@ -272,6 +272,51 @@ Die einfachste unsichtbare Kopplung — und die Mutter aller folgenden Effekte
 -->
 
 ---
+routeAlias: warteschlange-ziel
+hideInToc: true
+---
+
+# Worum es geht: die Warteschlange als Systemzustand
+
+<div class="grid grid-cols-3 gap-4 mt-6">
+<div class="intro-box">
+
+### 1 · Zustand = Länge
+
+Die **Länge der Schlange** ist der Zustand des Systems.
+Wächst sie, staut sich Arbeit; schrumpft sie, holt das System auf.
+Alles Weitere liest sich aus dieser einen Zahl.
+
+</div>
+<div class="intro-box">
+
+### 2 · Auslastung ↔ Wartezeit
+
+Mehr **Auslastung ρ** heißt mehr **Wartezeit Wq** — nicht linear,
+sondern als Hyperbel: ab ~80 % explodiert die Wartezeit.
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### 3 · „Besser“ ist eine Frage der Metrik
+
+Wartezeit? Durchsatz? Gesamtzeit, bis der Kunde glücklich ist?
+Welches Szenario **gewinnt**, hängt davon ab, **was man misst** —
+dieselbe Schlange, andere Sieger.
+
+</div>
+</div>
+
+<!--
+- Erklärfolie zu Beginn des Kapitels: roter Faden für M/M/1 & M/M/c.
+- Punkt 1 motiviert die animierte Schlangenlänge — der ⏩-Button spult genau
+  bis zum Gleichgewicht dieses Zustands vor.
+- Punkt 2 ist die Hyperbel der Folgefolie („Warum 80 %“).
+- Punkt 3 ist die Pointe des M/M/c-Vergleichs: der Metrik-Umschalter
+  (Wq / T / P(warten)) zeigt, dass „besser“ von der Messgröße abhängt.
+-->
+
+---
 routeAlias: mm1-theorie
 hideInToc: true
 ---
