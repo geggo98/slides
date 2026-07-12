@@ -60,6 +60,7 @@ export class Subsystem {
     this.cumW = 0;
     this.numDep = 0;
     this.overflow = 0;
+    this.numShed = 0;
     this.dep = []; // {w,wq,waited}
   }
   N() {
@@ -277,6 +278,41 @@ export class World {
     this.integrate(target - this.clock);
     this.clock = target;
   }
+  /* Batch-Ankunft (Bus): n Zwillinge auf einen Schlag in BEIDE Subsysteme —
+     gleiche id, gleicher Arbeitsbedarf S, damit das Rennen fair bleibt. */
+  injectBurst(n) {
+    for (let i = 0; i < n; i++) {
+      const base = {
+        id: this.nextId++,
+        arrival: this.clock,
+        S: expo(this.mu),
+        emoji: "🤖",
+      };
+      this.left.arrive(base, this.clock);
+      this.right.arrive(base, this.clock);
+    }
+  }
+
+  /* Load-Shedding: verwirft alle Wartenden beider Subsysteme (nicht die in
+     Bedienung). Halb gelaufene Zwillinge fliegen aus der Rennwertung —
+     verworfene tauchen nie in den Abgangs-Statistiken auf. Liefert die
+     Verworfenen je Seite für die Abgang-nach-unten-Animation. */
+  shedQueues() {
+    const drop = (sub) => {
+      const dropped = [];
+      for (const q of sub.queues) dropped.push(...q.splice(0, q.length));
+      const total = dropped.length + sub.overflow;
+      sub.overflow = 0;
+      sub.numShed += total;
+      return { dropped, total };
+    };
+    const l = drop(this.left);
+    const r = drop(this.right);
+    for (const cust of [...l.dropped, ...r.dropped])
+      this.completion.delete(cust.id);
+    return { l, r };
+  }
+
   raceSummary() {
     const rr = this.race;
     let lc = 0,
@@ -375,7 +411,7 @@ export function reconcile(sub, vis, layout, dtReal) {
     }
   }
   for (const [id, v] of vis)
-    if (!present.has(id) && v.state !== "leave") {
+    if (!present.has(id) && v.state !== "leave" && v.state !== "shed") {
       v.state = "leave";
       v.tx = 520;
       v.ty = 50 + Math.random() * 260;
@@ -389,20 +425,43 @@ export function reconcile(sub, vis, layout, dtReal) {
       vis.delete(id);
       continue;
     }
-    v.opacity = v.state === "leave" ? Math.max(0, 1 - (v.x - 480) / 24) : 1;
+    if (v.state === "shed" && v.y > SV.H + 16) {
+      vis.delete(id);
+      continue;
+    }
+    v.opacity =
+      v.state === "leave"
+        ? Math.max(0, 1 - (v.x - 480) / 24)
+        : v.state === "shed"
+          ? Math.max(0.15, 1 - (v.y - SV.qy1) / 170)
+          : 1;
     out.push({ id, x: v.x, y: v.y, emoji: v.emoji, opacity: v.opacity });
   }
   return { entities: out, badges };
 }
-export const spawnE = (emoji) => ({
-  emoji,
-  x: -20,
-  y: 50 + Math.random() * 260,
-  tx: 0,
-  ty: 0,
-  state: "q",
-  opacity: 1,
-});
+/* Haltestelle des Burst-Busses (oben links, unter dem „Ankunft"-Label) —
+   Burst-Roboter steigen hier aus statt links zu spawnen. */
+export const BUS_STOP = { x: 58, y: 64 };
+export const spawnE = (emoji) =>
+  emoji === "🤖"
+    ? {
+        emoji,
+        x: BUS_STOP.x,
+        y: BUS_STOP.y + 16,
+        tx: 0,
+        ty: 0,
+        state: "q",
+        opacity: 1,
+      }
+    : {
+        emoji,
+        x: -20,
+        y: 50 + Math.random() * 260,
+        tx: 0,
+        ty: 0,
+        state: "q",
+        opacity: 1,
+      };
 
 /* ---- Crossover-Scope je Metrik (Theoriekurven + Live-Punkte) ---- */
 export const SC = {

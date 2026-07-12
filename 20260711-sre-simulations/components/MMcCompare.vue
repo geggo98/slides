@@ -14,6 +14,8 @@ import {
   reconcile,
   drawScope,
   SC,
+  SV,
+  BUS_STOP,
 } from "./lib/mmc.js";
 import { useScopeColors } from "./lib/useScopeColors";
 import { useInfoPopover } from "./lib/useInfoPopover";
@@ -28,9 +30,11 @@ const FONTS = {
   MONO: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
   SANS: "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif",
 };
+// Kurz-Labels ohne „vs Pool" (der Vergleichspartner steht im Titel) —
+// sonst bricht die Toolbar in Firefox in zwei Zeilen und die Folie läuft über.
 const MODES = [
-  { key: "tempo", label: "Tempo: 1 schneller Koch vs Pool" },
-  { key: "pooling", label: "Pooling: getrennte Schlangen vs Pool" },
+  { key: "tempo", label: "Tempo: 1 schneller Koch" },
+  { key: "pooling", label: "Pooling: getrennte Schlangen" },
 ];
 const METRICS = [
   { key: "Wq", label: "Wq" },
@@ -103,9 +107,67 @@ function reset() {
   world.configure();
   visL.clear();
   visR.clear();
+  busAnim = null;
+  busView.value = null;
 }
 function setRhoMMc(rr) {
   lambda.value = +(rr * c.value * mu.value).toFixed(3);
+}
+
+/* ---- Burst (Bus) & Load-Shedding — wie im MM1Simulator, aber gekoppelt:
+   derselbe Bus liefert dieselben 🤖-Zwillinge in BEIDE Kantinen. ---- */
+const BURST_N = 12;
+const busView = shallowRef(null); // {x, y, opacity} — in beiden Stages gerendert
+let busAnim = null; // {t0, injected} — Realzeit-Timeline
+
+function burst() {
+  if (busAnim) return; // ein Bus reicht
+  busAnim = { t0: performance.now(), injected: false };
+}
+function shed() {
+  const { l, r } = world.shedQueues();
+  const markShed = (dropped, vis) => {
+    for (const cust of dropped) {
+      const v = vis.get(cust.id);
+      if (!v) continue;
+      v.state = "shed";
+      v.tx = v.x + (Math.random() * 40 - 20);
+      v.ty = SV.H + 30; // nach unten aus dem Bild
+    }
+  };
+  markShed(l.dropped, visL);
+  markShed(r.dropped, visR);
+}
+
+/* Bus-Timeline: anfahren (0–0,9 s) → halten & Zwillinge injizieren
+   (0,9–1,9 s) → zurück nach links (1,9–2,8 s). */
+function tickBus(now) {
+  if (!busAnim) return;
+  const t = (now - busAnim.t0) / 1000;
+  if (t < 0.9) {
+    const e = 1 - Math.pow(1 - t / 0.9, 3);
+    busView.value = {
+      x: -40 + (BUS_STOP.x + 40) * e,
+      y: BUS_STOP.y,
+      opacity: 1,
+    };
+  } else if (t < 1.9) {
+    if (!busAnim.injected) {
+      busAnim.injected = true;
+      world.injectBurst(BURST_N);
+    }
+    busView.value = { x: BUS_STOP.x, y: BUS_STOP.y, opacity: 1 };
+  } else if (t < 2.8) {
+    const p = (t - 1.9) / 0.9;
+    busView.value = {
+      x: BUS_STOP.x - (BUS_STOP.x + 40) * p * p,
+      y: BUS_STOP.y,
+      opacity: 1 - p * 0.3,
+    };
+  } else {
+    busAnim = null;
+    busView.value = null;
+  }
 }
 
 const rho = computed(() => lambda.value / (c.value * mu.value));
@@ -232,6 +294,7 @@ function loop(now) {
   raf = requestAnimationFrame(loop);
   const dtReal = Math.min(0.1, (now - last) / 1000);
   last = now;
+  tickBus(now);
   if (!paused.value) world.advance(world.clock + dtReal * speed.value);
 
   const layL = makeLayout(world.left);
@@ -251,6 +314,7 @@ function loop(now) {
     queueLens: world.left.queues.map((q) => q.length),
     layout: layL,
     fast: world.mode === "tempo",
+    shedTotal: world.left.numShed,
   };
   rightView.value = {
     entities: recR.entities,
@@ -258,6 +322,7 @@ function loop(now) {
     servers: sv(world.right),
     queueLens: world.right.queues.map((q) => q.length),
     layout: layR,
+    shedTotal: world.right.numShed,
   };
 
   if (ctx) {
@@ -383,7 +448,24 @@ onUnmounted(() => {
           :style="presetStyle(rr)"
           @click="setRhoMMc(rr)"
         >
-          ρ={{ rr.toFixed(2) }}
+          {{ rr.toFixed(2) }}
+        </button>
+        <span class="presets-sep" />
+        <button
+          class="preset-btn"
+          :style="btnStyle(C.alt)"
+          title="Batch-Ankunft: derselbe Bus liefert 12 🤖-Zwillinge gleichzeitig in beide Kantinen (gleiche Ankunft, gleicher Arbeitsbedarf). Beobachte, welche Seite den Spike schneller abbaut."
+          @click="burst"
+        >
+          🚌 Burst +12
+        </button>
+        <button
+          class="preset-btn"
+          :style="btnStyle(C.red)"
+          title="Load-Shedding: verwirft alle Wartenden in beiden Kantinen (nicht die in Bedienung). Die Zähler zeigen, wie viele Gäste jede Seite verwirft — der Pool hält typischerweise weniger Wartende vor."
+          @click="shed"
+        >
+          ✂️ Load-Shed
         </button>
       </div>
     </div>
@@ -456,6 +538,8 @@ onUnmounted(() => {
           :entities="leftView.entities"
           :badges="leftView.badges"
           :fast="leftView.fast"
+          :bus="busView"
+          :shed-total="leftView.shedTotal || 0"
         />
       </div>
       <div
@@ -478,6 +562,8 @@ onUnmounted(() => {
           :servers="rightView.servers"
           :entities="rightView.entities"
           :badges="rightView.badges"
+          :bus="busView"
+          :shed-total="rightView.shedTotal || 0"
         />
       </div>
     </div>
@@ -718,7 +804,7 @@ onUnmounted(() => {
 }
 .mode-btn {
   border: none;
-  padding: 6px 12px;
+  padding: 6px 9px;
   font-size: 10px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
@@ -739,6 +825,9 @@ onUnmounted(() => {
   font-size: 11px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
+}
+.presets-sep {
+  width: 4px;
 }
 
 /* Controls — HUD-Overlay: position:absolute ohne top (Static-Position) → schwebt
@@ -861,7 +950,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-end;
   gap: 5px;
-  height: 46px;
+  height: 42px;
 }
 .sbv-bar-wrap {
   position: relative;

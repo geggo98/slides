@@ -15,6 +15,8 @@ defineProps({
   entities: { type: Array, default: () => [] },
   badges: { type: Array, default: () => [] },
   fast: { type: Boolean, default: false },
+  bus: { type: Object, default: null }, // {x, y, opacity} — Burst-Bus
+  shedTotal: { type: Number, default: 0 }, // ✂️ verworfene Gäste dieser Seite
 });
 const C = useScopeColors();
 </script>
@@ -104,6 +106,18 @@ const C = useScopeColors();
       </template>
     </g>
 
+    <!-- Bus (Burst-Ankunft) -->
+    <text
+      v-if="bus"
+      :x="bus.x"
+      :y="bus.y"
+      style="font-size: 30px"
+      text-anchor="middle"
+      :style="{ opacity: bus.opacity }"
+    >
+      🚌
+    </text>
+
     <!-- Gäste -->
     <text
       v-for="e in entities"
@@ -115,6 +129,19 @@ const C = useScopeColors();
       :style="{ opacity: e.opacity }"
     >
       {{ e.emoji }}
+    </text>
+
+    <!-- Shedding-Zähler: verworfene Gäste dieser Seite -->
+    <text
+      v-if="shedTotal > 0"
+      :x="SV.W / 2"
+      :y="SV.H - 6"
+      text-anchor="middle"
+      :fill="C.red"
+      style="font-size: 12px"
+      class="sim-mono"
+    >
+      ✂️ verworfen: {{ shedTotal }}
     </text>
 
     <!-- „+N“-Badges mittig in der Schlange, hervorgehoben -->
@@ -131,9 +158,8 @@ const C = useScopeColors();
         :x="b.x"
         :y="b.y + 5"
         text-anchor="middle"
-        font-weight="700"
         :fill="C.bg"
-        style="font-size: 13px"
+        style="font-size: 13px; font-weight: 700"
         class="sim-mono"
       >
         +{{ b.n }}

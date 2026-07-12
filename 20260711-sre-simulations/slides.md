@@ -368,6 +368,11 @@ routeAlias: mmc-vergleich
 - Dann Modus „Pooling" (c getrennte Schlangen vs. Pool): der Pool gewinnt alles —
   Head-of-Line-Blocking in den getrennten Spuren. Rechtfertigt eine gemeinsame
   Queue / einen Work-Stealing-Pool gegenüber Sharding per Hash.
+- 🚌 Burst +12: derselbe Bus liefert 12 🤖-Zwillinge in BEIDE Kantinen —
+  beobachten, welche Seite den Spike schneller abbaut (der Pool!).
+- ✂️ Load-Shed: leert beide Schlangen nach unten; die Zähler zeigen die
+  verworfenen Gäste je Seite — der Pool hält typischerweise weniger
+  Wartende vor und verwirft daher weniger.
 -->
 
 ---
