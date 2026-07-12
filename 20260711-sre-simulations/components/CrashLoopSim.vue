@@ -234,8 +234,8 @@ function applyScales() {
         .attr("x", c.x(t))
         .attr("y", c.h - 6)
         .attr("text-anchor", "middle")
-        .attr("font-family", MONO)
-        .attr("font-size", 9)
+        .style("font-family", MONO)
+        .style("font-size", "9px")
         .attr("fill", "var(--cl-muted)")
         .text(t + "s");
     });
@@ -275,8 +275,8 @@ function render() {
           .attr("x", c.x(r.die))
           .attr("y", y + 27)
           .attr("text-anchor", "middle")
-          .attr("font-family", MONO)
-          .attr("font-size", 9)
+          .style("font-family", MONO)
+          .style("font-size", "9px")
           .attr("fill", "var(--cl-warn)")
           .text("#" + (i + 1));
       });
@@ -284,8 +284,8 @@ function render() {
         .append("text")
         .attr("x", M.l)
         .attr("y", 14)
-        .attr("font-family", MONO)
-        .attr("font-size", 10)
+        .style("font-family", MONO)
+        .style("font-size", "10px")
         .attr("fill", "var(--cl-muted)")
         .text(
           "Running-Phasen · rote Marken = Terminierung · CrashLoopBackOff-Pausen dazwischen",
@@ -315,8 +315,8 @@ function render() {
           .attr("y", y(v))
           .attr("dy", ".32em")
           .attr("text-anchor", "end")
-          .attr("font-family", MONO)
-          .attr("font-size", 9)
+          .style("font-family", MONO)
+          .style("font-size", "9px")
           .attr("fill", v === 512 ? "var(--cl-warn)" : "var(--cl-muted)")
           .text(v);
       });
@@ -325,8 +325,8 @@ function render() {
         .attr("x", c.w - M.r)
         .attr("y", y(512) - 5)
         .attr("text-anchor", "end")
-        .attr("font-family", MONO)
-        .attr("font-size", 9)
+        .style("font-family", MONO)
+        .style("font-size", "9px")
         .attr("fill", "var(--cl-warn)")
         .text("Limit 512 Mi");
       const pts = memSeries(sc, runs);
@@ -355,8 +355,8 @@ function render() {
           .attr("y", laneY[i])
           .attr("dy", ".32em")
           .attr("text-anchor", "end")
-          .attr("font-family", MONO)
-          .attr("font-size", 9)
+          .style("font-family", MONO)
+          .style("font-size", "9px")
           .attr("fill", "var(--cl-muted)")
           .text(n),
       );
@@ -382,9 +382,9 @@ function render() {
             .attr("x", c.x(e.t))
             .attr("y", y + 3)
             .attr("text-anchor", "middle")
-            .attr("font-family", MONO)
-            .attr("font-size", 10)
-            .attr("font-weight", 700)
+            .style("font-family", MONO)
+            .style("font-size", "10px")
+            .style("font-weight", "700")
             .attr("fill", "#fff")
             .text(e.txt);
         } else {
@@ -407,8 +407,8 @@ function render() {
               .append("text")
               .attr("x", c.x(e.t) + 7)
               .attr("y", y + 3)
-              .attr("font-family", MONO)
-              .attr("font-size", 8.5)
+              .style("font-family", MONO)
+              .style("font-size", "8.5px")
               .attr("fill", col)
               .text(e.txt);
         }

@@ -363,8 +363,8 @@ function applyScales() {
         .attr("y", c.y(t))
         .attr("dy", ".32em")
         .attr("text-anchor", "end")
-        .attr("font-family", "var(--slidev-code-font-family)")
-        .attr("font-size", 8.5)
+        .style("font-family", "var(--slidev-code-font-family)")
+        .style("font-size", "8.5px")
         .attr("fill", "var(--nn-muted)")
         .text(t);
     });
@@ -376,8 +376,8 @@ function applyScales() {
             .attr("x", c.x(xt))
             .attr("y", c.h - M.b + 11)
             .attr("text-anchor", "middle")
-            .attr("font-family", "var(--slidev-code-font-family)")
-            .attr("font-size", 8)
+            .style("font-family", "var(--slidev-code-font-family)")
+            .style("font-size", "8px")
             .attr("fill", "var(--nn-muted)")
             .text(xt + "s");
       });
@@ -394,8 +394,8 @@ function applyScales() {
         .append("text")
         .attr("x", c.x(INC_S) + 3)
         .attr("y", M.t + 9)
-        .attr("font-family", "var(--slidev-code-font-family)")
-        .attr("font-size", 8)
+        .style("font-family", "var(--slidev-code-font-family)")
+        .style("font-size", "8px")
         .attr("fill", "#c23b58aa")
         .text("Incident");
     }

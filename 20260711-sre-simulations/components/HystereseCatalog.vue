@@ -1461,7 +1461,7 @@ function startDot(h) {
                 v-if="showUpArrow(h)"
                 :x="upArrowPos(h).x"
                 :y="upArrowPos(h).y"
-                font-size="9"
+                style="font-size: 9px"
                 :fill="C.red"
               >
                 {{ upArrowChar(h) }}
@@ -1470,7 +1470,7 @@ function startDot(h) {
                 v-if="showDownArrow(h)"
                 :x="downArrowPos(h).x"
                 :y="downArrowPos(h).y"
-                font-size="9"
+                style="font-size: 9px"
                 :fill="C.blue"
               >
                 {{ downArrowChar(h) }}
@@ -1493,7 +1493,7 @@ function startDot(h) {
                 :x="pad.l + cw / 2"
                 :y="SVG_H - 1"
                 text-anchor="middle"
-                font-size="3.8"
+                style="font-size: 3.8px"
                 :fill="C.dim"
               >
                 {{ h.x }}
@@ -1503,7 +1503,7 @@ function startDot(h) {
                 :y="pad.t + ch / 2"
                 text-anchor="middle"
                 dominant-baseline="central"
-                font-size="3.8"
+                style="font-size: 3.8px"
                 :fill="C.dim"
                 :transform="`rotate(-90,4,${pad.t + ch / 2})`"
               >
