@@ -170,6 +170,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-item">✏️ M/M/c: Pool vs. Tempo</div>
 <div class="map-item">✏️ Systemdynamik-Pipeline</div>
 <div class="map-item">✏️ Bufferbloat</div>
+<div class="map-item">✏️ Little's-Law-Drill</div>
 <div class="map-item">🔍 RabbitMQ: Queue wächst</div>
 </div>
 <div class="map-col">
@@ -429,7 +430,6 @@ routeAlias: mmc-vergleich
 
 ---
 hideInToc: true
-routeAlias: littles-law
 ---
 
 # Kapazitätsplanung & Little's Law
@@ -446,27 +446,54 @@ Gilt verteilungsfrei für jedes stabile System.
 </div>
 <div class="intro-box">
 
-### Was die Übung zeigen wird
+### Die Übung (nächste Folie)
 
 - Aus λ und Ziel-Latenz die **nötige Kapazität** herleiten
 - **Headroom-Planung** mit der Wq-Hyperbel aus diesem Kapitel
-- Workshop-Rechenaufgaben mit Auflösung — Zahlen aus echten Systemen
+- Fünf Rechen-Drills mit Auflösung — Zahlen aus echten Systemen
 
 </div>
 </div>
 
-<div class="mt-4">
+<div v-click class="mt-4">
 
-<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
-Geplant: interaktive Rechen-Drills auf Basis der Kantinen-Simulation — λ, W oder N verdecken, die fehlende Größe schätzen, dann messen. Der Little-Check-Gauge im M/M/1-Simulator ist der Vorgeschmack.
+<Callout tone="warning" title="Erst schätzen, dann messen">
+Jede Runde zeigt zwei der drei Größen — die dritte ist verdeckt. Der Raum schätzt, die Simulation misst, die Auflösung zeigt den Rechenweg. Der Little-Check-Gauge aus der Kantine war der Vorgeschmack.
 </Callout>
 
 </div>
 
 <!--
-- Platzhalter-Folie: Konzept steht, Simulation folgt.
-- Mündlich: Little's Law ist der Konsistenz-Check schlechthin — der
-  fünfte Gauge in der Kantinen-Sim rechnet genau das live nach.
+- Konzeptfolie: L = λ·W ruhig erklären, die drei Richtungen nennen
+  (N = λ·W, W = N/λ, λ = N/W).
+- Brücke: der fünfte Gauge der Kantinen-Sim rechnet genau diese Gleichung
+  live nach — jetzt wird sie zum Planungswerkzeug.
+- Klick: Übungsmodus ankündigen — „gleich dürfen Sie schätzen“.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: littles-law
+---
+
+<LittleLawDrill />
+
+<!--
+- Bedienung: Runde 1–5 oben wählen. Zwei Karten sind gefüllt, eine zeigt „?“.
+  Publikum schätzen lassen (Zuruf oder Schieberegler), dann ▶ Messen:
+  die Gauges konvergieren, die verdeckte Karte füllt sich. ⏩ Auflösen
+  springt ans Ende; das Verdict zeigt Messwert, Theorie und Rechenweg.
+- R1 Thread-Pool: λ=200/s · W=150 ms → N = 30 in-flight (Pool ≥ 30).
+- R2 Consumer-Lag: 3.000 msg Lag · 25 msg/s → W = 120 s. Lag in Sekunden!
+- R3 Worker: λ=120/s · S=25 ms · Ziel Wq≤10 ms → c=5. Die Falle: c=4 hält
+  den Durchsatz (ρ=0,75), reißt aber das SLO (Erlang-C: ≈12,7 ms).
+- R4 Headroom: erst bei ρ=0,80 messen (≈4 ms), dann „⚡ +15 % einspielen“:
+  ρ=0,92 → Wq ≈ 11,5 ms (≈3×) — die Hyperbel aus dem Scope.
+- R5 Konsistenz-Check: N=24 · W=60 ms → λ=400 req/s — drei Metrik-Quellen
+  müssen Little erfüllen, sonst lügt eine.
+- ⚙: Zeitraffer, gleicher/neuer Seed. Tab „Erklärung & Modell“: Herleitung,
+  Erlang-C, Ehrlichkeitshinweise.
 -->
 
 ---
