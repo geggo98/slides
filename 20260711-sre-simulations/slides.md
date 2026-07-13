@@ -177,7 +177,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-head">🔁 Retry als Verstärker</div>
 <div class="map-item">✏️ Retry-Sturm</div>
 <div class="map-item">✏️ Cache-Stampede</div>
-<div class="map-item">🚧 Cascading Failure</div>
+<div class="map-item">✏️ Cascading Failure</div>
 <div class="map-item">🚧 Circuit Breaker & Shedding</div>
 </div>
 <div class="map-col">
@@ -1104,10 +1104,12 @@ Die Verstärker entschärfen — Platzhalter für kommende Simulationen
 
 ---
 hideInToc: true
-routeAlias: cascading-failure
 ---
 
-# Kaskadierender Ausfall — die Health-Check-Spirale
+# Setup: Die Health-Check-Spirale
+
+**8 Instanzen** à **μ = 100 req/s** hinter einem Load Balancer, Gesamtlast **λ = 560 req/s** (ρ = 0,7).
+Health-Check: Probe **jede Sekunde**, Timeout **0,4 s** — **2 Fails** → raus (Auswurf Nr. k hält **k·5 s**, Envoy-Backoff), danach wieder rein.
 
 <div class="chain mt-4 mb-4">
 <span class="chain-node">Instanz wird <b>langsam</b></span>
@@ -1121,22 +1123,51 @@ routeAlias: cascading-failure
 <span class="chain-node">nächste wird langsam …</span>
 </div>
 
+- Bei **t = 20 s** werden **3 Instanzen** für **15 s** langsam (40 % Kapazität — GC, Noisy Neighbor, schlechtes Canary)
 - Der Load Balancer ist als **Schutz** gebaut — unter Last wird er zum **Verstärker**
 - Verwandt mit dem Retry-Sturm: dieselbe Selbsterhaltung, eine Ebene höher
-- Klassische Gegenmittel: Panic-Mode/Fail-Open (Envoy), Mindest-Quorum, langsamere Auswurf-Regeln
 
-<div class="mt-4">
+<div v-click class="mt-4">
 
-<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
-Geplant (Predict-first): N Instanzen hinter einem LB, Health-Check-Schwellen als ⚙-Regler — vorhersagen, ab wie vielen ausgeworfenen Instanzen die Kaskade unumkehrbar wird.
+<Callout tone="warning" title="Die Frage">
+Die Störung ist nach 15 s vorbei. Wie entwickelt sich die <b>Zahl der Instanzen in Rotation</b> über 120 s — kurzer Dip, Dauer-Flattern oder Kaskade?
 </Callout>
 
 </div>
 
 <!--
-- Platzhalter: Konzept per Kausalkette erklären, Simulation folgt.
+- Setup ohne Auflösung! Kopfrechnung mit dem Publikum: nach k Auswürfen
+  trägt jeder Überlebende 560/(8−k) — k=1: 80, k=2: 93 (knapp), k=3:
+  112 > μ=100. Die dritte Instanz kippt das System.
 - Brücke: das ist der Retry-Sturm auf Infrastruktur-Ebene — der „Retry"
   ist hier die Lastumverteilung des LB.
+- Klick: die Frage stellen, Publikum diskutieren lassen (30 s), dann
+  weiter zur Simulation — dort skizzieren oder Preset wählen.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: cascading-failure
+---
+
+<HealthCheckCascadeSim />
+
+<!--
+- Bedienung: Zahl der Instanzen in Rotation ab t = 20 s skizzieren
+  (Maus/Finger) oder Preset wählen (Dip / Flattern / Kaskade), dann ▶.
+- Während des Laufs: „Panic-Mode (Fail-Open) aktivieren" zeigt das
+  Gegenmittel live — der LB routet wieder an alle, der Goodput erholt
+  sich, obwohl der Health-Check die Instanzen weiter für krank hält.
+- Instanzen-Reihe unten: Füllstand = Queue, Rand grün/amber/rot, ×k =
+  Auswurf-Zähler (Backoff!).
+- Verdict vergleicht Skizze und Messung (Mittel t ≥ 90 s) + Chips
+  (Minimum in Rotation, Sekunden Goodput < 50 %, verlorene Requests).
+- ⚙ Experimentieren: m = 2 ist die Kipp-Kante — der Seed entscheidet
+  („Gleicher Seed" vs. „Nochmal" zeigen!). F = 5, P = 3 (F·P ≈
+  Störungsdauer) rettet: besser kurz langsam als kaskadiert.
+- Tab „Erklärung & Modell": 560/(8−k)-Arithmetik, Envoy-Auswurf-Backoff
+  als Selbsterhaltung, Gegenmittel Panic/Quorum/langsame Auswürfe.
 -->
 
 ---
