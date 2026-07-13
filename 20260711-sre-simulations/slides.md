@@ -184,6 +184,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-head">🎛️ Regelkreis mit Verzögerung</div>
 <div class="map-item">✏️ Autoscaler-Hunting</div>
 <div class="map-item">✏️ Bullwhip-Effekt</div>
+<div class="map-item">✏️ SLO-Burn-Rate-Alerts</div>
 <div class="map-item">🖱️ Hysterese-Katalog</div>
 <div class="map-item">🖱️ Back-Pressure-Quadrant</div>
 </div>
@@ -199,7 +200,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 
 <div class="mt-3 text-xs opacity-60">
 
-✏️ Predict-first &nbsp;·&nbsp; 🔍 Diagnose-Drill &nbsp;·&nbsp; 🖱️ interaktiver Katalog &nbsp;·&nbsp; 🚧 Platzhalter, Simulation folgt
+✏️ Predict-first &nbsp;·&nbsp; 🔍 Diagnose-Drill &nbsp;·&nbsp; 🖱️ interaktiver Katalog
 
 </div>
 
@@ -1624,44 +1625,78 @@ Error-Budgets, Querverweise, Nachspielen
 
 ---
 hideInToc: true
-routeAlias: slo-burn-rate
 ---
 
-# SLO, Error-Budget & Burn-Rate
+# Setup: SLO, Error-Budget & Burn-Rate
 
 <div class="grid grid-cols-2 gap-4 mt-4">
 <div class="intro-box">
 
 ### Die Mechanik
 
-- **SLO 99,9 %** ⇒ Budget = 0,1 % Fehler pro Fenster
+- **SLO 99,9 %** ⇒ Budget = 0,1 % Fehler im 30-Tage-Fenster (= 43 min Totalausfall)
 - **Burn-Rate** = wie schnell das Budget verbrennt (1× = genau am Limit)
-- Alerting auf **zwei Fenstern**: schnell (Notfall) + langsam (Trend)
+- Alert feuert, wenn **langes UND kurzes Fenster** über der Schwelle liegen
 
 </div>
 <div class="intro-box intro-box-accent">
 
-### Warum hier?
+### Die Policy (SRE Workbook)
 
-Burn-Rate-Alerting ist ein **Regelkreis über den Regelkreisen** — mit
-denselben Fallen: Fenster zu kurz = Flattern (Hysterese!), zu lang =
-das Budget ist weg, bevor jemand aufwacht.
+- **Fast Page**: Burn 14,4× über 1 h (+ 5 min)
+- **Slow Page**: 6× über 6 h (+ 30 min)
+- **Ticket**: 1× über 3 d (+ 6 h)
 
 </div>
 </div>
 
-<div class="mt-4">
+Drei Fehlerbilder treffen auf diese Policy: **Spike** (100 % Fehler für 20 min) · **Schleichend** (0,3 % dauerhaft) · **Flattern** (2-min-Bursts à 5 % alle 30 min).
 
-<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
-Geplant: Fehlerraten-Szenarien (Spike, Schleichend, Flapping) gegen Multi-Window-Burn-Rate-Alerts — vorhersagen, welcher Alert wann feuert und wie viel Budget dann noch übrig ist.
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Welcher Alarm feuert je Szenario <b>zuerst</b> — und wie viel <b>Budget ist dann noch übrig</b>? Und wie oft hätte ein naiver 5-Minuten-Alert gefeuert?
 </Callout>
 
 </div>
 
 <!--
-- Platzhalter: Burn-Rate-Mechanik in zwei Boxen, Simulation folgt.
-- Brücke zurück zu Kapitel 3: Multi-Window-Alerts sind gewollte Hysterese
-  im Alerting — dieselbe Doppelschwellen-Idee wie der Recovery Threshold.
+- Setup ohne Auflösung. Burn-Rate an einem Beispiel vorrechnen: 0,3 %
+  Fehler bei 0,1 % Budget = Burn 3×.
+- Burn-Rate-Alerting ist ein Regelkreis über den Regelkreisen — mit
+  denselben Fallen: Fenster zu kurz = Flattern (Hysterese!), zu lang =
+  das Budget ist weg, bevor jemand aufwacht. Multi-Window-Alerts sind
+  gewollte Hysterese im Alerting — dieselbe Doppelschwellen-Idee wie
+  der Recovery Threshold in Kapitel 3.
+- Klick: die Frage stellen — die Antwort-Chips der Sim sind bewusst
+  2/5/10 %-Bänder (θ·W/720 h, die Invariante).
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: slo-burn-rate
+---
+
+<BurnRateSim />
+
+<!--
+- Bedienung: Szenario wählen, ZWEI Tipp-Fragen beantworten (Chips), dann
+  ▶. Die Fehlerraten-Kurve oben ist die Aufgabe (sofort sichtbar);
+  Burn-Raten, Alert-Lanes und Budget decken sich erst beim Abspielen auf.
+- Spike: Fast Page nach 52 s bei 98,0 % Rest — die 2 % sind by design
+  (14,4·1 h/720 h). Teuer ist die Dauer: 20 min = 46 % des Monatsbudgets.
+  Nachlauf: mit Kurzfenster ≈ 5 min statt ≈ 59 min.
+- Schleichend: keine Page (3× < 6×), Ticket nach ≈ 24 h bei 90 % —
+  Readout „Budget“: leer in ~7 Tagen ab Ende.
+- Flattern: naive 5-min-Lane feuert ~130-mal, die Policy genau 1 Ticket.
+  Kernsatz: langes Fenster integriert (feuern), kurzes setzt schnell
+  zurück — gewollte Hysterese, Doppelschwellen wie in Kapitel 3.
+- ⚙: SLO 99 % auf „Schleichend“ (alles verstummt); Fast-Fenster 5 min
+  (Page flattert wie naiv); Intensität ×2 auf „Flattern“ (Slow Page
+  kommt dazu — wieder bei ≈ 95 %, die Invariante).
+- Tab „Erklärung & Modell“: Policy-Tabelle mit 2/5/10 %, Invariante,
+  Ehrlichkeitshinweise (Zeitraffer, ideale Fenster, kein Tagesgang).
 -->
 
 ---
