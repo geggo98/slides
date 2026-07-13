@@ -891,7 +891,8 @@ onUnmounted(() => {
    Der Canvas-Code liest diese Variablen via getComputedStyle(chartWrap). */
 .hh-stage,
 .hh-charts,
-.hh-explain {
+.hh-explain,
+.hh-gear {
   --hh-paper: #e9eeea;
   --hh-panel: #fcfdfc;
   --hh-ink: #16282c;
@@ -909,7 +910,8 @@ onUnmounted(() => {
 }
 :global(html.dark .hh-stage),
 :global(html.dark .hh-charts),
-:global(html.dark .hh-explain) {
+:global(html.dark .hh-explain),
+:global(html.dark .hh-gear) {
   --hh-paper: #101a1c;
   --hh-panel: #0d1517;
   --hh-ink: #dce8e6;

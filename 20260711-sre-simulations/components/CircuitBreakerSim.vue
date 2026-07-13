@@ -874,7 +874,8 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
 /* Papier-Palette wie RetryStormSim; Lane „ohne Breaker" in Rot. */
 .cb-stage,
 .cb-charts,
-.cb-explain {
+.cb-explain,
+.cb-gear {
   --cb-paper: #e9eeea;
   --cb-panel: #fcfdfc;
   --cb-ink: #16282c;
@@ -894,7 +895,8 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
 }
 :global(html.dark .cb-stage),
 :global(html.dark .cb-charts),
-:global(html.dark .cb-explain) {
+:global(html.dark .cb-explain),
+:global(html.dark .cb-gear) {
   --cb-paper: #101a1c;
   --cb-panel: #0d1517;
   --cb-ink: #dce8e6;

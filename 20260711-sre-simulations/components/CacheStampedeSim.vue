@@ -822,7 +822,8 @@ onUnmounted(() => {
    Der Canvas-Code liest diese Variablen via getComputedStyle(chartWrap). */
 .cs-stage,
 .cs-charts,
-.cs-explain {
+.cs-explain,
+.cs-gear {
   --cs-paper: #e9eeea;
   --cs-panel: #fcfdfc;
   --cs-ink: #16282c;
@@ -841,7 +842,8 @@ onUnmounted(() => {
 }
 :global(html.dark .cs-stage),
 :global(html.dark .cs-charts),
-:global(html.dark .cs-explain) {
+:global(html.dark .cs-explain),
+:global(html.dark .cs-gear) {
   --cs-paper: #101a1c;
   --cs-panel: #0d1517;
   --cs-ink: #dce8e6;

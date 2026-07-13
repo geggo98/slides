@@ -1017,7 +1017,8 @@ onUnmounted(() => {
    Der Canvas-Code liest diese Variablen via getComputedStyle(chartWrap). */
 .bw-stage,
 .bw-charts,
-.bw-explain {
+.bw-explain,
+.bw-gear {
   --bw-paper: #e9eeea;
   --bw-panel: #fcfdfc;
   --bw-ink: #16282c;
@@ -1039,7 +1040,8 @@ onUnmounted(() => {
 }
 :global(html.dark .bw-stage),
 :global(html.dark .bw-charts),
-:global(html.dark .bw-explain) {
+:global(html.dark .bw-explain),
+:global(html.dark .bw-gear) {
   --bw-paper: #101a1c;
   --bw-panel: #0d1517;
   --bw-ink: #dce8e6;

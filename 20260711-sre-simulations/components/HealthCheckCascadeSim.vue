@@ -847,7 +847,8 @@ onUnmounted(() => {
 /* Papier-Palette wie RetryStormSim (Canvas liest via getComputedStyle). */
 .hc-stage,
 .hc-charts,
-.hc-explain {
+.hc-explain,
+.hc-gear {
   --hc-paper: #e9eeea;
   --hc-panel: #fcfdfc;
   --hc-ink: #16282c;
@@ -866,7 +867,8 @@ onUnmounted(() => {
 }
 :global(html.dark .hc-stage),
 :global(html.dark .hc-charts),
-:global(html.dark .hc-explain) {
+:global(html.dark .hc-explain),
+:global(html.dark .hc-gear) {
   --hc-paper: #101a1c;
   --hc-panel: #0d1517;
   --hc-ink: #dce8e6;

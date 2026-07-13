@@ -134,6 +134,17 @@ function onPlay() {
 function skipGuess() {
   guessSkipped.value = true;
 }
+/* Zurück zum Tipp-Modus: Chips, Playhead und Verdict löschen —
+   Szenario und ⚙-Regler bleiben, wie sie sind. */
+function resetRound() {
+  phase.value = "predict";
+  guessFirst.value = null;
+  guessBudget.value = null;
+  guessSkipped.value = false;
+  verdict.value = null;
+  transport.stop();
+  transport.scrub(0);
+}
 function rerun(newSeed) {
   if (newSeed) seed = randomSeed();
   verdict.value = null;
@@ -513,6 +524,14 @@ onUnmounted(() => {
       <button class="br-btn br-primary" :disabled="!canPlay" @click="onPlay">
         {{ playing ? "⏸ Pause" : "▶ Abspielen" }}
       </button>
+      <button
+        class="br-btn"
+        :disabled="phase === 'predict'"
+        title="Zurück zum Tippen: Chips, Playhead und Verdict löschen — Szenario und ⚙-Regler bleiben."
+        @click="resetRound"
+      >
+        ↺ Reset
+      </button>
       <input
         class="br-scrub"
         type="range"
@@ -723,7 +742,8 @@ onUnmounted(() => {
 /* Papier-Palette im Deck-Stil; Lane-Farben für Fast/Slow/Ticket/naiv. */
 .br-stage,
 .br-charts,
-.br-explain {
+.br-explain,
+.br-gear {
   --br-paper: #e9eeea;
   --br-panel: #fcfdfc;
   --br-ink: #16282c;
@@ -738,7 +758,8 @@ onUnmounted(() => {
 }
 :global(html.dark .br-stage),
 :global(html.dark .br-charts),
-:global(html.dark .br-explain) {
+:global(html.dark .br-explain),
+:global(html.dark .br-gear) {
   --br-paper: #101a1c;
   --br-panel: #0d1517;
   --br-ink: #dce8e6;

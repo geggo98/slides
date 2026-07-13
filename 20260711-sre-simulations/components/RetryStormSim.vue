@@ -816,7 +816,8 @@ onUnmounted(() => {
    Der Canvas-Code liest diese Variablen via getComputedStyle(chartWrap). */
 .rs-stage,
 .rs-charts,
-.rs-explain {
+.rs-explain,
+.rs-gear {
   --rs-paper: #e9eeea;
   --rs-panel: #fcfdfc;
   --rs-ink: #16282c;
@@ -835,7 +836,8 @@ onUnmounted(() => {
 }
 :global(html.dark .rs-stage),
 :global(html.dark .rs-charts),
-:global(html.dark .rs-explain) {
+:global(html.dark .rs-explain),
+:global(html.dark .rs-gear) {
   --rs-paper: #101a1c;
   --rs-panel: #0d1517;
   --rs-ink: #dce8e6;

@@ -1684,6 +1684,7 @@ routeAlias: slo-burn-rate
 - Bedienung: Szenario wählen, ZWEI Tipp-Fragen beantworten (Chips), dann
   ▶. Die Fehlerraten-Kurve oben ist die Aufgabe (sofort sichtbar);
   Burn-Raten, Alert-Lanes und Budget decken sich erst beim Abspielen auf.
+  „↺ Reset" holt die Tipp-Phase zurück (Szenario + ⚙-Regler bleiben).
 - Spike: Fast Page nach 52 s bei 98,0 % Rest — die 2 % sind by design
   (14,4·1 h/720 h). Teuer ist die Dauer: 20 min = 46 % des Monatsbudgets.
   Nachlauf: mit Kurzfenster ≈ 5 min statt ≈ 59 min.
