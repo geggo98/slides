@@ -178,7 +178,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-item">✏️ Retry-Sturm</div>
 <div class="map-item">✏️ Cache-Stampede</div>
 <div class="map-item">✏️ Cascading Failure</div>
-<div class="map-item">🚧 Circuit Breaker & Shedding</div>
+<div class="map-item">✏️ Circuit Breaker & Shedding</div>
 </div>
 <div class="map-col">
 <div class="map-head">🎛️ Regelkreis mit Verzögerung</div>
@@ -1096,10 +1096,11 @@ layout: section
 
 # Gegenmaßnahmen
 
-Die Verstärker entschärfen — Platzhalter für kommende Simulationen
+Die Verstärker entschärfen — der Load Balancer als Verstärker, der Breaker als gewollte Hysterese
 
 <!--
-- Kurzes Kapitel: zwei geplante Simulationen, die Konzepte stehen schon.
+- Zwei Predict-first-Sims: Health-Check-Spirale (Kaskade + Panic-Mode)
+  und Circuit Breaker (Opfer kauft Erholung).
 -->
 
 ---
@@ -1172,10 +1173,9 @@ routeAlias: cascading-failure
 
 ---
 hideInToc: true
-routeAlias: circuit-breaker
 ---
 
-# Circuit Breaker & Load Shedding
+# Setup: Der Circuit Breaker
 
 <div class="grid grid-cols-2 gap-4 mt-4">
 <div class="intro-box">
@@ -1199,20 +1199,49 @@ Rückkehr-Schwellen gegen das Flattern.
 </div>
 </div>
 
-<div class="mt-4">
+<div v-click class="mt-4">
 
-<Callout tone="info" title="🚧 Simulation in Arbeit — Platz reserviert">
-Geplant: Retry-Sturm-Szenario mit zuschaltbarem Breaker — vorhersagen, wie sich Recovery-Zeit und verworfene Requests gegen das ungebremste System verschieben.
+<Callout tone="warning" title="Die Frage">
+Gleiches Szenario wie der Retry-Sturm (Burst ×2 für 10 s, ≤ 2 Retries) — diesmal mit Breaker: Kippen bei 50 % Fehlerrate, 5 s Cooldown, Half-Open-Proben. Was macht der Breaker mit dem <b>Goodput</b> — rettet er ihn ohne Einbruch, opfert er ihn kurz und kontrolliert, oder hilft er gar nicht?
 </Callout>
 
 </div>
 
 <!--
-- Platzhalter: die Gegenmaßnahmen-Perspektive bündeln — vier Sims dieses
-  Decks haben schon je ein Gegenmittel eingebaut (Shed, Single-Flight,
-  Age-Drop, Stabilization Window).
+- Die Gegenmaßnahmen-Perspektive bündeln — vier Sims dieses Decks haben
+  schon je ein Gegenmittel eingebaut (Shed, Single-Flight, Age-Drop,
+  Stabilization Window). Der Breaker ist die systematische Form davon.
 - Merksatz: Ein Breaker ist gewollte Hysterese — dieselbe Mechanik, die
   in Kapitel 3 als Problem auftrat, hier als Werkzeug.
+- Klick: die Frage stellen — die drei Hypothesen sind die Presets der
+  nächsten Folie.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: circuit-breaker
+---
+
+<CircuitBreakerSim />
+
+<!--
+- Bedienung: Goodput MIT Breaker ab t = 20 s skizzieren oder Preset
+  wählen („rettet ohne Einbruch" ist die verbreitete falsche Intuition),
+  dann ▶. Beide Kurven laufen aus demselben Seed — die rote (ohne
+  Breaker) ist das bekannte Kollaps-Ende aus dem Retry-Sturm.
+- Zustandsband oben zeigen: rot = Open, amber = Half-Open. Während des
+  Bursts re-trippt der Breaker typischerweise einmal.
+- Pointe im Verdict: der Breaker rettet nicht den Burst — er opfert ihn
+  kontrolliert. Chips: Recovery ≈ 10–20 s vs. nie · ≈ 900 billig
+  verworfen vs. ≈ 7.800 teuer verloren (und steigend, Queue → OOM).
+- „Breaker manuell öffnen" = Operator-Kill-Switch: früher öffnen spart
+  Timeout-Verschwendung.
+- ⚙: Cooldown 1 s → Zustandsband flattert (verfrühtes Schließen slammt
+  die Queue); Kipp-Schwelle 0,85 → teurer; ×1,2 → Breaker kippt nie,
+  beide Kurven identisch.
+- Tab „Erklärung & Modell": FSM, gewollte Hysterese (Brücke Kapitel 3),
+  der Handel (billig verworfen kauft Erholung).
 -->
 
 ---
