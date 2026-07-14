@@ -179,6 +179,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-item">✏️ Cache-Stampede</div>
 <div class="map-item">✏️ Cascading Failure</div>
 <div class="map-item">✏️ Circuit Breaker & Shedding</div>
+<div class="map-item">✏️ Metastabilität: MTTF-Klippe <span class="map-tag">Bonus</span></div>
 </div>
 <div class="map-col">
 <div class="map-head">🎛️ Regelkreis mit Verzögerung</div>
@@ -1847,7 +1848,7 @@ Der Sim-Zustand lebt in <b>einfachen JS-Objekten</b>, nicht im Reaktivitätssyst
   Frame → Canvas; ein paar Dutzend Formen → SVG direkt aus dem Template.
 - d3 bewusst klein gehalten: nur Skalen und Pfad-Generatoren, keine
   d3-Datenbindung — die macht Vue.
-- Die SimShell-Schale macht 21 Sims kohärent bedienbar: gleiche Preset-Zeile,
+- Die SimShell-Schale macht 22 Sims kohärent bedienbar: gleiche Preset-Zeile,
   gleiches ⚙-Overlay, gleicher Verdict-Platz.
 -->
 
@@ -1914,8 +1915,8 @@ Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittel
   Aggregationsgrad.
 - Das Motiv-Callout ist das Echo der Schlussfolie: der Mittelwert
   verschweigt die Gefahr — nahe der Schwelle entscheidet der Zufall.
-- Überleitung: „die nächste Folie plottet alle 21 Sims auf diese zwei
-  Achsen."
+- Überleitung: „die nächste Folie plottet alle 22 Sims auf diese zwei
+  Achsen — und danach führen wir die Naht live vor."
 -->
 
 ---
@@ -1937,6 +1938,67 @@ routeAlias: paradigmen-landkarte
   aggregiert).
 - Sockel-Band unten: „kein dynamisches Modell" — Diagnose-Traces sind
   Skript, Kataloge sind Keyframes. Ehrlichkeit vor Eleganz.
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Die Naht live — wie lange hält „stabil"?
+
+Gleiche Gleichungen wie der **Retry-Sturm** (per Import aus `breakerModel.js`) — aber **ohne Burst**: konstante Last **ρ = λ/μ**, nur das Poisson-Rauschen arbeitet.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Clients</b>&ensp;λ = ρ·μ konstant · Timeout 1 s · ≤ 2 Retries</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Queue</b>&ensp;unbegrenzt (FIFO)</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Service</b>&ensp;μ = 100 req/s</span>
+</div>
+
+Das Fluid-Mittel — „die Formel" — verspricht: **stabil für jedes ρ < 1** (die Falte liegt erst bei ρ<sub>c</sub> ≈ 0,999).
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Wie lange überlebt das System <b>wirklich</b>, je nach Last ρ? Skizziere die Überlebenszeit von ρ = 0,80 bis 1,05 (Deckel: 300 s). Wo liegt die Klippe?
+</Callout>
+
+</div>
+
+<!--
+- Der Bogen: „Diskret vs. analytisch" hat die Naht behauptet, die Landkarte
+  hat sie kartiert — diese Sim führt sie live vor. Das ist das Artefakt zur
+  HotOS-'25-Ensemble-Botschaft auf der Quellen-Folie.
+- Setup ohne Auflösung! Kein Burst, kein Trigger — nur konstante Last und
+  Poisson-Zufall. Freidlin-Wentzell einmal aussprechen: metastabil heißt
+  langlebig, aber entrinnbar.
+- Klick: die Frage. 30 s diskutieren lassen — die meisten tippen auf „ewig
+  stabil bis ρ ≈ 1" (das Fluid-Versprechen).
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: mttf-klippe
+---
+
+<MetastabilitySim />
+
+<!--
+- Tab „MTTF-Klippe": Überlebenszeit skizzieren (oder Preset wählen), dann
+  ▶ Sweep — 11 Lastpunkte × 24 Läufe, MTTF als Exponential-MLE mit
+  Zensierung (▲ = ≥ 300 s). Verdict vergleicht die eigene Klippe mit der
+  gemessenen (ρ ≈ 0,96) und der Fluid-Falte (ρc ≈ 0,999).
+- Kernaussage: bei ρ = 0,90 lebt das System im Mittel nur Minuten — die
+  letzten ~10 % Kapazität vor der Falte gehören dem Rauschen. Das ist die
+  Metastabilitäts-Begründung der 80-%-Regel aus Kapitel 1.
+- Tab „Die Naht": Potential-Becken (Fluid-Skelett) mit Ball = Live-Queue;
+  ρ-Regler wirkt live — Becken schrumpft, Entkommen häuft sich. Preset
+  „nahe der Klippe" laufen lassen: ⚡-Marker in der Trajektorie, Histogramm
+  füllt sich (exponentiell verteilt — Entkommen ist gedächtnislos).
+- ⚙: R verschiebt Falte und Klippe; „Gleicher Seed" macht den Sweep
+  reproduzierbar; Reset/Rewind wie bei allen Predict-first-Sims.
 -->
 
 ---
@@ -2095,7 +2157,7 @@ routeAlias: making-of-quellen
 
 <div class="mt-6 text-xs opacity-60">
 
-Und ja, dieses Deck ist selbst ein Exponat: gebaut mit einem LLM-Agenten (Claude Code) in ~3 Tagen — inklusive aller 21 Simulationen; die Commits tragen den 🤖-Trailer.
+Und ja, dieses Deck ist selbst ein Exponat: gebaut mit einem LLM-Agenten (Claude Code) in ~3 Tagen — inklusive aller 22 Simulationen; die Commits tragen den 🤖-Trailer.
 
 </div>
 

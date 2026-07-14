@@ -1,5 +1,5 @@
 <script setup>
-// Paradigmen-Landkarte fürs Making-of: verortet alle 21 Simulationen des
+// Paradigmen-Landkarte fürs Making-of: verortet alle Simulationen des
 // Decks auf den zwei Achsen deterministisch↔stochastisch (x) und
 // aggregiert↔individuell (y). Nicht-dynamische Artefakte (Formel, Keyframe,
 // Skript-Trace) wandern in ein Sockel-Band unter der Ebene — dort gibt es
@@ -214,6 +214,23 @@ const SIMS = [
     archetyp: "✏️ Predict-first",
     slide: "circuit-breaker",
     note: "Zwei Bahnen mit gleichem Seed — Divergenz ab dem Trip.",
+  },
+  {
+    id: "metastable",
+    name: "Metastabilität: MTTF-Klippe",
+    label: "MTTF-Klippe",
+    family: "fluid",
+    x: 0.86,
+    y: 0.24,
+    labelPos: "right",
+    engine:
+      "lib/metastableModel.js · Fluid-Skelett (q*, Falte, Potential) + Poisson-Zwilling — Gleichungen per Import aus breakerModel",
+    takt: "Δt = 0,05 s + analytisches Skelett",
+    rng: "mulberry32 + Knuth-Poisson",
+    rendering: "Canvas",
+    archetyp: "✏️ Predict-first",
+    slide: "mttf-klippe",
+    note: "Beide Hälften derselben Gleichung: Mittelwert-Falte vs. stochastisches Entkommen.",
   },
   {
     id: "hpa",
@@ -440,7 +457,7 @@ function py(s) {
       <div>
         <div class="pm-eyebrow">Making of · unter der Motorhaube</div>
         <div class="pm-title">
-          Paradigmen-Landkarte — 21 Simulationen, zwei Achsen
+          Paradigmen-Landkarte — {{ SIMS.length }} Simulationen, zwei Achsen
         </div>
       </div>
       <div class="pm-chips">
