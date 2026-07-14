@@ -58,9 +58,9 @@ const presets = Object.entries(SCENARIOS).map(([key, s]) => ({
   title: s.title,
 }));
 const Q1 = [
-  { key: "fast", label: "Fast Page" },
-  { key: "slow", label: "Slow Page" },
-  { key: "ticket", label: "Ticket" },
+  { key: "fast", label: "Notfall" },
+  { key: "slow", label: "Warnung" },
+  { key: "ticket", label: "Aufgabe" },
   { key: "none", label: "keiner" },
 ];
 const Q2 = [
@@ -82,7 +82,7 @@ const speedLabel = computed(() =>
 const subtitle = computed(() => {
   void dataVersion.value;
   const s = SCENARIOS[scenario.value];
-  return `SLO ${fmt(sloPct.value, 1)} % (30-Tage-Budget ≙ ${fmt((100 - sloPct.value) * 0.01 * 720 * 60)} min Totalausfall) · Policy: Fast Page 14,4× über ${fmt(fastWinMin.value)} min (+ Kurzfenster) · Slow Page 6× über 6 h (+ 30 min) · Ticket 1× über 3 d (+ 6 h) — Szenario: ${s.title}. Erst tippen, dann ▶.`;
+  return `SLO ${fmt(sloPct.value, 1)} % (30-Tage-Budget ≙ ${fmt((100 - sloPct.value) * 0.01 * 720 * 60)} min Totalausfall) · Policy: Notfall 14,4× über ${fmt(fastWinMin.value)} min (+ Kurzfenster) · Warnung 6× über 6 h (+ 30 min) · Aufgabe 1× über 3 d (+ 6 h) — Szenario: ${s.title}. Erst tippen, dann ▶.`;
 });
 
 /* Sim-Zeit aus normalisiertem Playhead */
@@ -169,9 +169,9 @@ watch(isSlideActive, (a) => {
 const bandOf = (r) =>
   r >= 96.5 ? "98" : r >= 92.5 ? "95" : r >= 85 ? "90" : "80";
 const ALERT_LABEL = {
-  fast: "die Fast Page",
-  slow: "die Slow Page",
-  ticket: "das Ticket",
+  fast: "der Notfall",
+  slow: "die Warnung",
+  ticket: "die Aufgabe",
   none: "keiner",
 };
 function makeVerdict() {
@@ -185,8 +185,8 @@ function makeVerdict() {
   const insight = {
     spike:
       "Die 2 % beim Feuern sind by design: θ·W/720 h = 14,4 · 1 h / 720 h. Teuer ist nicht die Erkennung, sondern die Dauer — 20 min Totalausfall = 46 % des Monatsbudgets.",
-    creep: `Burn 3× ist zu leise für beide Pages (< 6×) — genau dafür gibt es das Ticket (10 % verbraucht). Reichweite: Budget leer in ~${Number.isFinite(data.reachS) ? fmt(data.reachS / 86400, 0) + " Tagen" : "∞"}.`,
-    flap: `Der naive 5-min-Alert hätte <b class="mono">${fmt(data.naiveCount)}</b>-mal gefeuert — die Policy macht daraus genau <b class="mono">${data.lanes.find((l) => l.key === "ticket").segments.length}</b> Ticket. Langes Fenster integriert (feuern), kurzes setzt schnell zurück: gewollte Hysterese.`,
+    creep: `Burn 3× ist zu leise für Notfall und Warnung (< 6×) — genau dafür gibt es die Aufgabe (10 % verbraucht). Reichweite: Budget leer in ~${Number.isFinite(data.reachS) ? fmt(data.reachS / 86400, 0) + " Tagen" : "∞"}.`,
+    flap: `Der naive 5-min-Alert hätte <b class="mono">${fmt(data.naiveCount)}</b>-mal gefeuert — die Policy macht daraus genau <b class="mono">${data.lanes.find((l) => l.key === "ticket").segments.length}</b> Aufgabe. Langes Fenster integriert (feuern), kurzes setzt schnell zurück: gewollte Hysterese.`,
   }[scenario.value];
   if (guessSkipped.value) {
     verdict.value = {
@@ -618,9 +618,9 @@ onUnmounted(() => {
               >
             </span>
             <span class="br-legend">
-              <span><i class="sw f" /> Fast Page</span>
-              <span><i class="sw s" /> Slow Page</span>
-              <span><i class="sw t" /> Ticket</span>
+              <span><i class="sw f" /> Notfall</span>
+              <span><i class="sw s" /> Warnung</span>
+              <span><i class="sw t" /> Aufgabe</span>
               <span><i class="sw n" /> naiv (5 min)</span>
               <span><i class="sw b" /> Budget</span>
             </span>
@@ -635,19 +635,21 @@ onUnmounted(() => {
               ><span>Detektion bei 1000× / 3×</span>
             </div>
             <div class="br-tr">
-              <span>Fast Page</span><span class="mono">14,4×</span
+              <span>Notfall<span class="br-canon">Fast Page</span></span
+              ><span class="mono">14,4×</span
               ><span class="mono">1 h + 5 min</span><span class="mono">2 %</span
               ><span class="mono">52 s / nie</span>
             </div>
             <div class="br-tr">
-              <span>Slow Page</span><span class="mono">6×</span
-              ><span class="mono">6 h + 30 min</span
+              <span>Warnung<span class="br-canon">Slow Page</span></span
+              ><span class="mono">6×</span><span class="mono">6 h + 30 min</span
               ><span class="mono">5 %</span
               ><span class="mono">2,2 min / nie</span>
             </div>
             <div class="br-tr">
-              <span>Ticket</span><span class="mono">1×</span
-              ><span class="mono">3 d + 6 h</span><span class="mono">10 %</span
+              <span>Aufgabe<span class="br-canon">Ticket</span></span
+              ><span class="mono">1×</span><span class="mono">3 d + 6 h</span
+              ><span class="mono">10 %</span
               ><span class="mono">4,3 min / 24 h</span>
             </div>
           </div>
@@ -662,10 +664,10 @@ onUnmounted(() => {
             <b>Warum zwei Fenster (gewollte Hysterese):</b> das lange Fenster
             <b>integriert</b> (feuern ohne Flattern — der naive 5-min-Alert
             zeigt das Gegenteil), das kurze setzt <b>schnell zurück</b>: Beim
-            Spike wäre die Fast Page ohne Kurzfenster noch ≈ 59 min nach dem
-            Ende aktiv, mit Kurzfenster ≈ 5 min. Dieselbe
-            Doppelschwellen-Mechanik wie der Recovery Threshold im Kapitel
-            „Systeme mit Gedächtnis" — hier als Alerting-Werkzeug.
+            Spike wäre der Notfall ohne Kurzfenster noch ≈ 59 min nach dem Ende
+            aktiv, mit Kurzfenster ≈ 5 min. Dieselbe Doppelschwellen-Mechanik
+            wie der Recovery Threshold im Kapitel „Systeme mit Gedächtnis" —
+            hier als Alerting-Werkzeug.
           </p>
           <p class="br-foot">
             <b>Bewusste Vereinfachungen:</b> Zeitraffer ×270 (Spike) bzw. ×12
@@ -701,7 +703,7 @@ onUnmounted(() => {
         />
         <QueueSlider
           :model-value="fastWinMin"
-          label="Fast-Fenster (lang)"
+          label="Notfall-Fenster (lang)"
           :min="5"
           :max="120"
           :step="5"
@@ -710,9 +712,9 @@ onUnmounted(() => {
         />
         <p class="br-gear-hint">
           SLO 99 % auf „Schleichend“: dieselbe Störung, totale Stille (Burn
-          ÷10). Fast-Fenster 5 min: die „richtige“ Page flattert wie die naive.
-          Intensität ×2 auf „Flattern“: die Slow Page kommt dazu — wieder bei ≈
-          95 % (Invariante!).
+          ÷10). Notfall-Fenster 5 min: der „echte“ Notfall flattert wie die
+          naive Lane. Intensität ×2 auf „Flattern“: die Warnung kommt dazu —
+          wieder bei ≈ 95 % (Invariante!).
         </p>
         <div class="br-gear-btns">
           <button class="br-btn br-primary" @click="rerun(true)">
@@ -739,7 +741,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Papier-Palette im Deck-Stil; Lane-Farben für Fast/Slow/Ticket/naiv. */
+/* Papier-Palette im Deck-Stil; Lane-Farben für Notfall/Warnung/Aufgabe/naiv. */
 .br-stage,
 .br-charts,
 .br-explain,
@@ -955,6 +957,14 @@ onUnmounted(() => {
 .br-th {
   font-weight: 650;
   color: var(--br-muted);
+}
+/* kanonischer SRE-Workbook-Name als gedämpfter Nebenverweis (2. Zeile) */
+.br-canon {
+  display: block;
+  font-size: 8px;
+  font-weight: 400;
+  color: var(--br-muted);
+  opacity: 0.85;
 }
 .br-foot {
   font-size: 9px;

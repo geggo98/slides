@@ -1672,9 +1672,9 @@ hideInToc: true
 
 ### Die Policy (SRE Workbook)
 
-- **Fast Page**: Burn 14,4× über 1 h (+ 5 min)
-- **Slow Page**: 6× über 6 h (+ 30 min)
-- **Ticket**: 1× über 3 d (+ 6 h)
+- **Notfall** (Fast Page): Burn 14,4× über 1 h (+ 5 min)
+- **Warnung** (Slow Page): 6× über 6 h (+ 30 min)
+- **Aufgabe** (Ticket): 1× über 3 d (+ 6 h)
 
 </div>
 </div>
@@ -1714,16 +1714,16 @@ routeAlias: slo-burn-rate
   ▶. Die Fehlerraten-Kurve oben ist die Aufgabe (sofort sichtbar);
   Burn-Raten, Alert-Lanes und Budget decken sich erst beim Abspielen auf.
   „↺ Reset" holt die Tipp-Phase zurück (Szenario + ⚙-Regler bleiben).
-- Spike: Fast Page nach 52 s bei 98,0 % Rest — die 2 % sind by design
+- Spike: Notfall nach 52 s bei 98,0 % Rest — die 2 % sind by design
   (14,4·1 h/720 h). Teuer ist die Dauer: 20 min = 46 % des Monatsbudgets.
   Nachlauf: mit Kurzfenster ≈ 5 min statt ≈ 59 min.
-- Schleichend: keine Page (3× < 6×), Ticket nach ≈ 24 h bei 90 % —
-  Readout „Budget“: leer in ~7 Tagen ab Ende.
-- Flattern: naive 5-min-Lane feuert ~130-mal, die Policy genau 1 Ticket.
+- Schleichend: weder Notfall noch Warnung (3× < 6×), Aufgabe nach ≈ 24 h
+  bei 90 % — Readout „Budget“: leer in ~7 Tagen ab Ende.
+- Flattern: naive 5-min-Lane feuert ~130-mal, die Policy genau 1 Aufgabe.
   Kernsatz: langes Fenster integriert (feuern), kurzes setzt schnell
   zurück — gewollte Hysterese, Doppelschwellen wie in Kapitel 3.
-- ⚙: SLO 99 % auf „Schleichend“ (alles verstummt); Fast-Fenster 5 min
-  (Page flattert wie naiv); Intensität ×2 auf „Flattern“ (Slow Page
+- ⚙: SLO 99 % auf „Schleichend“ (alles verstummt); Notfall-Fenster 5 min
+  (Notfall flattert wie naiv); Intensität ×2 auf „Flattern“ (Warnung
   kommt dazu — wieder bei ≈ 95 %, die Invariante).
 - Tab „Erklärung & Modell“: Policy-Tabelle mit 2/5/10 %, Invariante,
   Ehrlichkeitshinweise (Zeitraffer, ideale Fenster, kein Tagesgang).

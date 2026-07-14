@@ -15,9 +15,9 @@ export const PERIOD_S = PERIOD_H * 3600;
 export const BASELINE = 0.00005; // 0,005 % Grundrauschen (Burn 0,05× bei 99,9 %)
 
 export const ALERTS = [
-  { key: "fast", label: "Fast Page", theta: 14.4, longS: 3600, shortS: 300 },
-  { key: "slow", label: "Slow Page", theta: 6, longS: 21600, shortS: 1800 },
-  { key: "ticket", label: "Ticket", theta: 1, longS: 259200, shortS: 21600 },
+  { key: "fast", label: "Notfall", theta: 14.4, longS: 3600, shortS: 300 },
+  { key: "slow", label: "Warnung", theta: 6, longS: 21600, shortS: 1800 },
+  { key: "ticket", label: "Aufgabe", theta: 1, longS: 259200, shortS: 21600 },
 ];
 export const NAIVE = { key: "naive", theta: 14.4, windowS: 300 };
 

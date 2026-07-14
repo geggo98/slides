@@ -2,7 +2,7 @@
  * burnRate.test.ts — verifiziert das Burn-Rate-Modell gegen die analytisch
  * hergeleitete Soll-Tabelle (SRE Workbook, 30-d-SLO 99,9 %):
  * Detektionszeit = θ·W_long/B nach Onset; Budget beim Feuern = θ·W/720 h
- * ⇒ Fast 2 % · Slow 5 % · Ticket 10 % — unabhängig von der Burn-Höhe.
+ * ⇒ Notfall 2 % · Warnung 5 % · Aufgabe 10 % — unabhängig von der Burn-Höhe.
  */
 import { describe, expect, it } from "vitest";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -16,7 +16,7 @@ const segs = (run: any, key: string) =>
 
 describe("Spike (100 % Fehler für 20 min ab t=10 min)", () => {
   const run = buildRun({ scenario: "spike", seed: 1 });
-  it("Fast Page feuert ≈ 52 s nach Onset bei ≈ 98 % Restbudget", () => {
+  it("Notfall feuert ≈ 52 s nach Onset bei ≈ 98 % Restbudget", () => {
     expect(run.firstAlert).toBe("fast");
     const [t0] = seg0(run, "fast");
     expect(t0 - 600).toBeGreaterThan(45);
@@ -24,7 +24,7 @@ describe("Spike (100 % Fehler für 20 min ab t=10 min)", () => {
     expect(run.remainingAtFire).toBeGreaterThan(97.3);
     expect(run.remainingAtFire).toBeLessThan(98.5);
   });
-  it("Slow Page ≈ 130 s, Ticket ≈ 246 s nach Onset (5 % / 10 % verbraucht)", () => {
+  it("Warnung ≈ 130 s, Aufgabe ≈ 246 s nach Onset (5 % / 10 % verbraucht)", () => {
     expect(seg0(run, "slow")[0] - 600).toBeCloseTo(129.6, -1);
     // 259,2 err-s nötig; ≈ 12,9 davon liefert die Baseline-Vorgeschichte
     // des 3-d-Fensters → Feuern ≈ 246 s nach Onset.
@@ -37,7 +37,7 @@ describe("Spike (100 % Fehler für 20 min ab t=10 min)", () => {
     expect(evTicket.remaining).toBeGreaterThan(88.5);
     expect(evTicket.remaining).toBeLessThan(91);
   });
-  it("Ende: ≈ 54 % Restbudget; Fast-Page-Nachlauf ≈ 5 min (Kurzfenster!)", () => {
+  it("Ende: ≈ 54 % Restbudget; Notfall-Nachlauf ≈ 5 min (Kurzfenster!)", () => {
     expect(run.remaining[run.n - 1]).toBeGreaterThan(51);
     expect(run.remaining[run.n - 1]).toBeLessThan(57);
     const [, t1] = seg0(run, "fast");
@@ -48,7 +48,7 @@ describe("Spike (100 % Fehler für 20 min ab t=10 min)", () => {
 
 describe("Schleichend (0,3 % = Burn 3× ab t=6 h)", () => {
   const run = buildRun({ scenario: "creep", seed: 1 });
-  it("keine Page — nur das Ticket nach ≈ 24 h bei ≈ 90 %", () => {
+  it("weder Notfall noch Warnung — nur die Aufgabe nach ≈ 24 h bei ≈ 90 %", () => {
     expect(segs(run, "fast")).toHaveLength(0);
     expect(segs(run, "slow")).toHaveLength(0);
     expect(run.firstAlert).toBe("ticket");
@@ -70,7 +70,7 @@ describe("Schleichend (0,3 % = Burn 3× ab t=6 h)", () => {
 
 describe("Flattern (2-min-Bursts à 5 % alle 30 min ab t=6 h)", () => {
   const run = buildRun({ scenario: "flap", seed: 1 });
-  it("naiver 5-min-Alert feuert ≈ 130-mal, die Policy genau 1 Ticket", () => {
+  it("naiver 5-min-Alert feuert ≈ 130-mal, die Policy genau 1 Aufgabe", () => {
     expect(run.naiveCount).toBeGreaterThan(115);
     expect(run.naiveCount).toBeLessThan(140);
     expect(segs(run, "fast")).toHaveLength(0);
@@ -80,23 +80,23 @@ describe("Flattern (2-min-Bursts à 5 % alle 30 min ab t=6 h)", () => {
     expect(run.remainingAtFire).toBeGreaterThan(89);
     expect(run.remainingAtFire).toBeLessThan(91);
   });
-  it("Intensität ×2: die Slow Page kommt dazu — wieder bei ≈ 95 %", () => {
+  it("Intensität ×2: die Warnung kommt dazu — wieder bei ≈ 95 %", () => {
     const hot = buildRun({ scenario: "flap", intensity: 2, seed: 1 });
     expect(segs(hot, "slow").length).toBeGreaterThan(0);
     const ev = hot.events.find((e: any) => e.key === "slow")!;
     expect(ev.remaining).toBeGreaterThan(93);
     expect(ev.remaining).toBeLessThan(96.5);
   });
-  it("Fast-Fenster 5 min statt 1 h: die Page flattert wie der naive Alert", () => {
+  it("Notfall-Fenster 5 min statt 1 h: der Notfall flattert wie der naive Alert", () => {
     const tight = buildRun({ scenario: "flap", fastWinMin: 5, seed: 1 });
     expect(segs(tight, "fast").length).toBeGreaterThan(50);
   });
 });
 
 describe("Invariante: Budget beim Feuern = θ·W/720 h, unabhängig von B", () => {
-  it("Spike mit halber Intensität: Fast Page später, aber wieder ≈ 98 %", () => {
+  it("Spike mit halber Intensität: Notfall später, aber wieder ≈ 98 %", () => {
     const half = buildRun({ scenario: "spike", intensity: 0.5, seed: 1 });
-    const ev = half.events.find((e: any) => e.key === "fast")!;
+    const ev = half.events.find((e: any) => e.key === "fast")!; // Notfall
     expect(ev.remaining).toBeGreaterThan(97.3);
     expect(ev.remaining).toBeLessThan(98.5);
   });
