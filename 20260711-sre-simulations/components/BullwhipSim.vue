@@ -22,77 +22,36 @@ import { useDarkMode, useIsSlideActive } from "@slidev/client";
 import Tabs from "@shared/components/Tabs.vue";
 import SimShell from "./SimShell.vue";
 import QueueSlider from "./QueueSlider.vue";
-import { fmtDe as fmt, mulberry32, randomSeed } from "./lib/rng.js";
+import { fmtDe as fmt, randomSeed } from "./lib/rng.js";
 import { usePredictSketch } from "./lib/usePredictSketch";
+import {
+  Chain,
+  T,
+  STEP_T,
+  D0,
+  D1,
+  K,
+  O_MAX,
+  I_MIN,
+  I_MAX,
+  SHOCK_T,
+  TIER_NAMES,
+} from "./lib/bullwhipModel.js";
 
-/* ===== Modell (identisch zum verifizierten Original) ===== */
-const T = 60,
-  STEP_T = 15,
-  D0 = 100,
-  D1 = 120,
-  SIGMA = 2,
-  K = 4;
-const O_MAX = 700,
-  I_MIN = -600,
-  I_MAX = 1200;
-const TIER_NAMES = ["Händler", "Großhandel", "Distributor", "Fabrik"];
-/* Okabe-Ito-Farben (als CSS-Variablen, Light/Dark) + je Stufe eigenes
+/* ===== Anzeige-Stile (Modellkern lebt in lib/bullwhipModel.js) =====
+   Okabe-Ito-Farben (als CSS-Variablen, Light/Dark) + je Stufe eigenes
    Strichmuster (redundante Kodierung für Farbschwäche); identisch zu den
    SVG-Proben in der Legende. */
 const TIER_STYLE = [
-  { v: "--bw-t1", w: 1.6, d: [2, 3] }, // Händler: gepunktet
-  { v: "--bw-t2", w: 1.8, d: [9, 4] }, // Großhandel: gestrichelt
-  { v: "--bw-t3", w: 2.0, d: [10, 3, 2, 3] }, // Distributor: Strich-Punkt
-  { v: "--bw-fab", w: 2.8, d: [] }, // Fabrik: durchgezogen, dick
+  { v: "--bw-t1", w: 1.6, d: [2, 3] }, // Lokales Inventar: gepunktet
+  { v: "--bw-t2", w: 1.8, d: [9, 4] }, // Zentrallager: gestrichelt
+  { v: "--bw-t3", w: 2.0, d: [10, 3, 2, 3] }, // DigiKey: Strich-Punkt
+  { v: "--bw-fab", w: 2.8, d: [] }, // Micron: durchgezogen, dick
 ];
 const DEM_STYLE = { v: "--bw-demand", w: 2, d: [] };
 
-function gauss(r) {
-  let u = 0,
-    v = 0;
-  while (u === 0) u = r();
-  while (v === 0) v = r();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-
-class Chain {
-  constructor(seed, L, alpha, share) {
-    this.rnd = mulberry32(seed);
-    this.L = L;
-    this.alpha = alpha;
-    this.share = share;
-    this.F = Array(K).fill(D0);
-    this.NI = Array(K).fill(D0);
-    this.pipe = Array.from({ length: K }, () => Array(L).fill(D0));
-    this.week = 0;
-    this.demand = [];
-    this.orders = Array.from({ length: K }, () => []);
-    this.inv = Array.from({ length: K }, () => []);
-  }
-  step() {
-    const t = this.week;
-    const dCust = (t < STEP_T ? D0 : D1) + SIGMA * gauss(this.rnd);
-    this.demand.push(dCust);
-    let d = dCust;
-    for (let i = 0; i < K; i++) {
-      this.NI[i] += this.pipe[i].shift() - d;
-      const signal = this.share ? dCust : d;
-      this.F[i] += this.alpha * (signal - this.F[i]);
-      const IP = this.NI[i] + this.pipe[i].reduce((a, b) => a + b, 0);
-      const q = Math.max(0, (this.L + 1) * this.F[i] - IP);
-      this.pipe[i].push(q);
-      this.orders[i].push(q);
-      this.inv[i].push(this.NI[i]);
-      d = q;
-    }
-    this.week++;
-  }
-  runTo(w) {
-    while (this.week < w) this.step();
-  }
-}
-
-/* Preset-Vorhersagen (verbatim) */
+/* Preset-Vorhersagen. smooth/overshoot/whip: Grundszenario (verbatim).
+   shockwave: Preisschock — Welle, dann Blackout ab SHOCK_T, dann Erholung. */
 const PRESET_FNS = {
   smooth: (w) => (w < STEP_T ? 100 : Math.min(120, 100 + (w - STEP_T) * 6)),
   overshoot: (w) =>
@@ -106,7 +65,24 @@ const PRESET_FNS = {
     const ph = w - STEP_T;
     return Math.max(0, 120 + 380 * Math.exp(-ph / 12) * Math.sin(ph / 3));
   },
+  shockwave: (w) => {
+    if (w < STEP_T) return 100;
+    if (w < SHOCK_T) {
+      // Bestell-Peak am Sprung, tapert bis zum Preisschock ab
+      const ph = (w - STEP_T) / Math.max(1, SHOCK_T - STEP_T);
+      return 120 + 380 * Math.max(0, 1 - ph);
+    }
+    // Flaute: erst Blackout, dann Erholung der Rate auf ~120
+    const bp = w - SHOCK_T;
+    return bp < 6 ? 0 : Math.min(120, (bp - 6) * 40);
+  },
 };
+const BASE_PRESETS = [
+  { key: "smooth", label: "glatte Anpassung" },
+  { key: "overshoot", label: "Überschwingen" },
+  { key: "whip", label: "starke Oszillation" },
+];
+const SHOCK_PRESETS = [{ key: "shockwave", label: "Welle → Einbruch" }];
 
 /* ===== Zustand ===== */
 const { isDark } = useDarkMode();
@@ -115,10 +91,11 @@ let seed = randomSeed();
 const L = ref(2);
 const alpha = ref(0.4);
 const share = ref(false);
+const scenario = ref("base"); // base | priceshock
 const phase = ref("sketch"); // sketch | running | done
 let sim = null;
 let demandKnown = []; // vorab gezeigte Nachfrage (exakt der spätere Lauf)
-let oldRuns = []; // frühere Fabrik-Order-Arrays
+let oldRuns = []; // frühere Micron-Order-Arrays
 let animId = null;
 const visible = reactive({ dem: true, 0: true, 1: true, 2: true, 3: true });
 
@@ -161,12 +138,23 @@ const showSketchNote = computed(
   () => phase.value === "sketch" && !sketchHasInk.value && !sketchSkipped.value,
 );
 
+/* Szenario 2 (Preisschock) schaltet Presets, Chain-Optionen und Untertitel um. */
+const activePresets = computed(() =>
+  scenario.value === "base" ? BASE_PRESETS : SHOCK_PRESETS,
+);
+const chainOpts = () => ({ priceShock: scenario.value === "priceshock" });
+const subtitle = computed(() =>
+  scenario.value === "priceshock"
+    ? `Server verbrauchen ${fmt(D0)} → ${fmt(D1)} Riegel/Woche (Sprung in Woche ${STEP_T}). In Woche ${SHOCK_T} hebt Micron die Preise → alle Stufen bauen erst ihr Lager ab. Skizziere Microns Bestellungen (Woche 0–${T}), dann starte.`
+    : `Server verbrauchen ${fmt(D0)} Riegel/Woche, ab Woche ${STEP_T} dauerhaft +20 % auf ${fmt(D1)} · Order-up-to-Kette über 4 Stufen, Lieferzeit ${L.value} Wo. je Stufe, α = ${fmt(alpha.value, 2)}. Skizziere Microns Bestellungen (Woche 0–${T}), dann starte.`,
+);
+
 /* ===== Canvas ===== */
 const oCanvas = ref(null);
 const iCanvas = ref(null);
 const chartWrap = ref(null);
-const oH = 230,
-  iH = 70;
+const oH = 180,
+  iH = 58;
 let W = 0,
   dpr = 1,
   resizeObs = null;
@@ -262,6 +250,26 @@ function stepMarker(ctx, h, pad, withLabel) {
   }
   ctx.restore();
 }
+/* Preisschock-Marker (nur Szenario 2): Micron hebt die Preise → Lagerabbau. */
+function shockMarker(ctx, h, pad, withLabel) {
+  if (scenario.value !== "priceshock") return;
+  const x = xOf(SHOCK_T);
+  ctx.save();
+  ctx.strokeStyle = cssVar("--bw-danger");
+  ctx.setLineDash([4, 3]);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x + 0.5, pad.t);
+  ctx.lineTo(x + 0.5, h - pad.b);
+  ctx.stroke();
+  if (withLabel) {
+    ctx.fillStyle = cssVar("--bw-danger");
+    ctx.font = `600 10px ${MONO}`;
+    // eine Zeile tiefer als das Nachfrage-Sprung-Label (nur 5 Wochen entfernt)
+    ctx.fillText("Preis ↑ → Lagerabbau", x + 5, pad.t + 28);
+  }
+  ctx.restore();
+}
 function stepLine(ctx, vals, getY, color, width, dash, alpha = 1, upTo = 1e9) {
   const n = Math.min(vals.length, upTo);
   if (n < 1) return;
@@ -312,11 +320,12 @@ function drawOrders() {
       [600, "600"],
       [700, "700"],
     ],
-    "Bestellungen [Stück/Woche]",
+    "Bestellungen [Riegel/Woche]",
     yOf,
   );
   stepMarker(ctx, oH, PAD, true);
-  // frühere Fabrik-Läufe
+  shockMarker(ctx, oH, PAD, true);
+  // frühere Micron-Läufe
   if (visible[3])
     for (const run of oldRuns)
       stepLine(ctx, run, yOf, cssVar(TIER_STYLE[3].v), 1.6, [], 0.2);
@@ -342,14 +351,14 @@ function drawOrders() {
           TIER_STYLE[i].w,
           TIER_STYLE[i].d,
         );
-    // Overflow-Annotation Fabrik
+    // Overflow-Annotation Micron
     const mx = Math.max(0, ...sim.orders[3]);
     if (visible[3] && mx > O_MAX) {
       ctx.save();
       ctx.fillStyle = cssVar("--bw-danger");
       ctx.font = `600 10px ${MONO}`;
       ctx.fillText(
-        "↑ Fabrik-Spitze: " + fmt(mx) + " — außerhalb der Skala",
+        "↑ Micron-Spitze: " + fmt(mx) + " — außerhalb der Skala",
         xOf(2),
         PAD.t + 24,
       );
@@ -377,35 +386,33 @@ function drawInv() {
     IPAD,
     [
       [0, "0"],
+      [200, "200"],
+      [400, "400"],
       [600, "600"],
-      [1200, "1200"],
-      [-600, "−600"],
     ],
-    "Fabrik-Bestand [Stück]",
+    "Lagerbestand je Stufe [Riegel]",
     yI,
   );
-  // Rückstandszone
-  ctx.save();
-  ctx.fillStyle = cssVar("--bw-neg");
-  ctx.fillRect(PAD.l, yI(0), W - PAD.l - PAD.r, iH - IPAD.b - yI(0));
-  ctx.restore();
   stepMarker(ctx, iH, IPAD, false);
+  shockMarker(ctx, iH, IPAD, false);
   if (sim) {
     let mn = 0,
       mx = 0,
       any = false;
     for (let i = 0; i < K; i++)
       if (visible[i]) {
+        // physisches On-hand-Lager: Netto-Bestand < 0 (Rückstand) zeigt sich als 0
+        const oh = sim.inv[i].map((v) => Math.max(0, v));
         stepLine(
           ctx,
-          sim.inv[i],
+          oh,
           yI,
           cssVar(TIER_STYLE[i].v),
           Math.max(1.3, TIER_STYLE[i].w * 0.75),
           TIER_STYLE[i].d,
         );
-        mn = Math.min(mn, ...sim.inv[i]);
-        mx = Math.max(mx, ...sim.inv[i]);
+        mn = Math.min(mn, ...oh);
+        mx = Math.max(mx, ...oh);
         any = true;
       }
     if (any && (mx > I_MAX || mn < I_MIN)) {
@@ -432,7 +439,7 @@ function drawAll() {
 
 /* ===== Bekannte Nachfrage (vorab gezeigt, exakt der spätere Lauf) ===== */
 function makeDemand() {
-  const probe = new Chain(seed, L.value, alpha.value, share.value);
+  const probe = new Chain(seed, L.value, alpha.value, share.value, chainOpts());
   probe.runTo(T);
   demandKnown = probe.demand; // gleicher Seed-Strom wie der spätere Lauf
 }
@@ -487,7 +494,7 @@ function startRun() {
   if (!canStart.value) return;
   sketch.fillGaps();
   phase.value = "running";
-  sim = new Chain(seed, L.value, alpha.value, share.value);
+  sim = new Chain(seed, L.value, alpha.value, share.value, chainOpts());
   if (reduceMotion) {
     sim.runTo(T);
     drawAll();
@@ -516,7 +523,7 @@ function updateReadout() {
     w,
     d: sim.demand[w],
     f: sim.orders[3][w],
-    inv: sim.inv[3][w],
+    inv: Math.max(0, sim.inv[3][w]),
     z: sim.orders[3].filter((x) => x < 1).length,
   };
 }
@@ -537,9 +544,17 @@ const LABEL = {
 function finishRun() {
   phase.value = "done";
   animId = null;
-  const fab = sim.orders[3];
-  const realPeak = Math.max(...fab);
-  const zeroW = fab.filter((x) => x < 1).length;
+  const top = sim.orders[3]; // Micron-Bestellungen (oberste Stufe)
+  const realPeak = Math.max(...top);
+  const zeroW = top.filter((x) => x < 1).length;
+  // längste zusammenhängende Null-Serie (Blackout) bei Micron
+  let blackout = 0,
+    cur = 0;
+  for (const x of top) {
+    if (x < 1) blackout = Math.max(blackout, ++cur);
+    else cur = 0;
+  }
+  const endOnHand = Math.max(0, sim.inv[3][sim.inv[3].length - 1]);
   let predPeak = null;
   if (!sketchSkipped.value) {
     const vals = sketch
@@ -548,50 +563,7 @@ function finishRun() {
       .map((p) => p.v);
     predPeak = vals.length ? Math.max(...vals) : null;
   }
-  const rc = classifyPeak(realPeak),
-    pc = classifyPeak(predPeak);
-  const zeroTxt =
-    zeroW > 0
-      ? " Dazwischen bestellt die Fabrik <b>" +
-        zeroW +
-        " Wochen lang nichts</b> — Produktionsstopp, während Überbestände abgebaut werden."
-      : "";
-  let t, b;
-  if (pc == null) {
-    t =
-      "Ergebnis: " +
-      LABEL[rc] +
-      " — Fabrik-Spitze " +
-      fmt(realPeak) +
-      " Stück/Woche.";
-    b =
-      'Du hast keine Vorhersage abgegeben. Die Nachfrage stieg um 20 Stück/Woche; die Fabrik-Bestellungen erreichten <b class="mono">' +
-      fmt(realPeak) +
-      "</b>." +
-      zeroTxt;
-  } else if (pc === rc) {
-    t = "Deine Vorhersage trifft die Kategorie: " + LABEL[rc] + ".";
-    b =
-      'Deine Spitze: <b class="mono">' +
-      fmt(predPeak) +
-      '</b> · gemessen: <b class="mono">' +
-      fmt(realPeak) +
-      "</b> Stück/Woche." +
-      zeroTxt;
-  } else {
-    t = "Vorhersage: " + LABEL[pc] + " — tatsächlich: " + LABEL[rc] + ".";
-    b =
-      'Deine Spitze: <b class="mono">' +
-      fmt(predPeak) +
-      '</b> · gemessen: <b class="mono">' +
-      fmt(realPeak) +
-      "</b> Stück/Woche — bei einer Nachfrageänderung von <b>+20</b>." +
-      zeroTxt +
-      (rc === "whip"
-        ? " Und beachte die Zeit <b>vor</b> Woche 15: Die Fabrik schwankt bereits bei praktisch konstanter Nachfrage — der Bullwhip verstärkt auch reines Rauschen."
-        : "");
-  }
-  // Var-Ratio-Chips
+  // Var-Ratio-Chips (beide Szenarien)
   const vd = variance(sim.demand);
   const chips =
     '<span class="chip">Varianz-Verstärkung vs. Nachfrage:</span>' +
@@ -605,6 +577,74 @@ function finishRun() {
           "</b></span>",
       )
       .join("");
+
+  if (scenario.value === "priceshock") {
+    // Szenario 2: Fokus auf Blackout + Lagerabbau. Wichtig — die Bestell-Rate
+    // erholt sich (jeder Riegel wird nachbestellt), nur der Bestand bleibt mager.
+    const t =
+      "Hoher Peak, dann Flaute — Micron " +
+      blackout +
+      " Wochen ohne Bestellung.";
+    const b =
+      'Micron bediente den Peak (<b class="mono">' +
+      fmt(realPeak) +
+      "</b>), hob dann die Preise → alle Stufen bauen Lager ab: <b>" +
+      blackout +
+      " Wochen ohne Bestellung</b> trotz konstantem Verbrauch. Danach erholt sich die Rate, doch der Puffer ist heruntergefahren — Bestand zum Schluss nur noch " +
+      '<b class="mono">' +
+      fmt(endOnHand) +
+      "</b> Riegel (ohne Reserve) — Feast, dann Famine." +
+      (predPeak != null
+        ? ' (Vorhersage: <b class="mono">' + fmt(predPeak) + "</b>.)"
+        : "");
+    verdict.value = { tone: "bad", title: t, html: b, chips };
+    return;
+  }
+
+  // Szenario 1 (Grundszenario): Vorhersage-Kategorie vs. gemessene Spitze.
+  const rc = classifyPeak(realPeak),
+    pc = classifyPeak(predPeak);
+  const zeroTxt =
+    zeroW > 0
+      ? " Dazwischen bestellt Micron <b>" +
+        zeroW +
+        " Wochen lang nichts</b> — Bestellstopp, während Überbestände abgebaut werden."
+      : "";
+  let t, b;
+  if (pc == null) {
+    t =
+      "Ergebnis: " +
+      LABEL[rc] +
+      " — Micron-Spitze " +
+      fmt(realPeak) +
+      " Riegel/Woche.";
+    b =
+      'Du hast keine Vorhersage abgegeben. Die Nachfrage stieg um 20 Riegel/Woche; die Micron-Bestellungen erreichten <b class="mono">' +
+      fmt(realPeak) +
+      "</b>." +
+      zeroTxt;
+  } else if (pc === rc) {
+    t = "Deine Vorhersage trifft die Kategorie: " + LABEL[rc] + ".";
+    b =
+      'Deine Spitze: <b class="mono">' +
+      fmt(predPeak) +
+      '</b> · gemessen: <b class="mono">' +
+      fmt(realPeak) +
+      "</b> Riegel/Woche." +
+      zeroTxt;
+  } else {
+    t = "Vorhersage: " + LABEL[pc] + " — tatsächlich: " + LABEL[rc] + ".";
+    b =
+      'Deine Spitze: <b class="mono">' +
+      fmt(predPeak) +
+      '</b> · gemessen: <b class="mono">' +
+      fmt(realPeak) +
+      "</b> Riegel/Woche — bei einer Nachfrageänderung von <b>+20</b>." +
+      zeroTxt +
+      (rc === "whip"
+        ? " Beachte: Micron schwankt schon <b>vor</b> Woche 15 — der Bullwhip verstärkt auch reines Rauschen."
+        : "");
+  }
   verdict.value = {
     tone: rc === "whip" ? "bad" : pc === rc ? "ok" : "warn",
     title: t,
@@ -639,11 +679,22 @@ function resetAll() {
   L.value = 2;
   alpha.value = 0.4;
   share.value = false;
+  scenario.value = "base";
   seed = randomSeed();
   readout.value = null;
   softResetToSketch();
   drawAll();
 }
+
+/* Szenario umschalten: laufenden Lauf abbrechen, zurück in die Skizze-Phase,
+   alte Läufe verwerfen (stammen aus dem anderen Szenario), neu zeichnen. */
+watch(scenario, () => {
+  if (animId) cancelAnimationFrame(animId);
+  animId = null;
+  oldRuns = [];
+  softResetToSketch();
+  drawAll();
+});
 
 /* ===== Lifecycle ===== */
 watch(isDark, () => requestAnimationFrame(drawAll));
@@ -674,13 +725,9 @@ onUnmounted(() => {
   <SimShell
     eyebrow="Bullwhip-Effekt · Predict first"
     title="Die Peitsche in der Lieferkette"
-    :subtitle="`Endkunden: ${fmt(D0)} Stück/Woche (± kleines Rauschen) — ab Woche ${STEP_T} dauerhaft +20 % auf ${fmt(D1)} · Order-up-to-Kette über 4 Stufen, Lieferzeit ${L} Wochen je Stufe, α = ${fmt(alpha, 2)}. Skizziere, was die Fabrik pro Woche bestellt (Woche 0–60), dann starte.`"
+    :subtitle="subtitle"
     presets-label="Vorhersage:"
-    :presets="[
-      { key: 'smooth', label: 'glatte Anpassung' },
-      { key: 'overshoot', label: 'Überschwingen' },
-      { key: 'whip', label: 'starke Oszillation' },
-    ]"
+    :presets="activePresets"
     gear-title="Experimentieren"
     show-reset
     show-rewind
@@ -692,6 +739,27 @@ onUnmounted(() => {
     @reset="resetAll"
     @rewind="softResetToSketch"
   >
+    <template #transport>
+      <div class="bw-seg" role="group" aria-label="Szenario wählen">
+        <button
+          class="bw-seg-btn"
+          :class="{ 'bw-seg-on': scenario === 'base' }"
+          :aria-pressed="scenario === 'base'"
+          @click="scenario = 'base'"
+        >
+          Grundszenario
+        </button>
+        <button
+          class="bw-seg-btn"
+          :class="{ 'bw-seg-on': scenario === 'priceshock' }"
+          :aria-pressed="scenario === 'priceshock'"
+          @click="scenario = 'priceshock'"
+        >
+          Preisschock
+        </button>
+      </div>
+    </template>
+
     <template #presets-extra>
       <button class="bw-btn bw-primary" :disabled="!canStart" @click="startRun">
         ▶ Simulation starten
@@ -736,8 +804,8 @@ onUnmounted(() => {
               @pointercancel="onOrdUp"
             />
             <div v-if="showSketchNote" class="bw-note">
-              <b>✏️ Skizziere hier</b> die wöchentlichen Bestellungen der
-              Fabrik, Woche 0–60 — oder wähle oben ein Preset.
+              <b>✏️ Skizziere hier</b> die wöchentlichen Bestellungen von
+              Micron, Woche 0–{{ T }} — oder wähle oben ein Preset.
             </div>
           </div>
           <div class="bw-chartbox">
@@ -749,13 +817,13 @@ onUnmounted(() => {
           <div class="bw-strip">
             <span v-if="readout" class="bw-readouts">
               Woche <b>{{ readout.w }}</b> · Nachfrage
-              <b>{{ fmt(readout.d) }}</b> · Fabrik bestellt
+              <b>{{ fmt(readout.d) }}</b> · Micron bestellt
               <b :class="{ bad: readout.f < 1 || readout.f > 300 }">{{
                 fmt(readout.f)
               }}</b>
-              · Fabrik-Bestand
-              <b :class="{ bad: readout.inv < 0 }">{{ fmt(readout.inv) }}</b> ·
-              Produktionsstopp
+              · Micron-Bestand
+              <b :class="{ bad: readout.inv < 1 }">{{ fmt(readout.inv) }}</b> ·
+              {{ scenario === "priceshock" ? "Blackout" : "Bestell-Stopp" }}
               <b :class="{ bad: readout.z > 0 }">{{ readout.z }} Wo.</b>
             </span>
             <span class="bw-legend">
@@ -771,7 +839,7 @@ onUnmounted(() => {
                     style="stroke: var(--bw-pencil)"
                   />
                 </svg>
-                Vorhersage (Fabrik)
+                Vorhersage (Micron)
               </span>
               <button
                 class="lg"
@@ -810,7 +878,7 @@ onUnmounted(() => {
                     style="stroke: var(--bw-t1)"
                   />
                 </svg>
-                Händler
+                Lokales Inventar
               </button>
               <button
                 class="lg"
@@ -830,7 +898,7 @@ onUnmounted(() => {
                     style="stroke: var(--bw-t2)"
                   />
                 </svg>
-                Großhandel
+                Zentrallager
               </button>
               <button
                 class="lg"
@@ -850,7 +918,7 @@ onUnmounted(() => {
                     style="stroke: var(--bw-t3)"
                   />
                 </svg>
-                Distributor
+                DigiKey
               </button>
               <button
                 class="lg"
@@ -869,30 +937,36 @@ onUnmounted(() => {
                     style="stroke: var(--bw-fab)"
                   />
                 </svg>
-                Fabrik
+                Micron
               </button>
             </span>
           </div>
         </div>
 
         <div v-show="activeTab === 'erklaerung'" class="bw-explain">
-          <div class="bw-sys" aria-label="Lieferkette">
+          <div class="bw-sys" aria-label="RAM-Beschaffungskette">
             <span class="node"
-              >Endkunden<span class="lbl"
-                >{{ fmt(D0) }} → {{ fmt(D1) }} Stück/Woche</span
+              >Server / Workloads<span class="lbl"
+                >{{ fmt(D0) }} → {{ fmt(D1) }} Riegel/Woche</span
               ></span
             >
             <span class="arrow">──▶<span class="lbl">Bestellung</span></span>
-            <span class="node">Händler<span class="lbl">Stufe 1</span></span>
-            <span class="arrow">──▶</span>
-            <span class="node">Großhandel<span class="lbl">Stufe 2</span></span>
-            <span class="arrow">──▶</span>
             <span class="node"
-              >Distributor<span class="lbl">Stufe 3</span></span
+              >Lokales Inventar<span class="lbl">Stufe 1</span></span
             >
             <span class="arrow">──▶</span>
             <span class="node"
-              >Fabrik<span class="lbl"
+              >Zentrallager<span class="lbl">Stufe 2</span></span
+            >
+            <span class="arrow">──▶</span>
+            <span class="node"
+              >Distributor (z.&nbsp;B. DigiKey)<span class="lbl"
+                >Stufe 3</span
+              ></span
+            >
+            <span class="arrow">──▶</span>
+            <span class="node"
+              >Hersteller (z.&nbsp;B. Micron)<span class="lbl"
                 >Lieferzeit je Stufe: {{ L }} Wochen</span
               ></span
             >
@@ -914,12 +988,34 @@ onUnmounted(() => {
             <b>null</b> Bestellungen, während die Überbestände abgebaut werden.
           </p>
           <p>
+            <b>Zweites Szenario (Preisschock):</b> Micron sieht die hohe
+            Nachfrage, bedient noch den Bestell-Peak und hebt dann in Woche
+            {{ SHOCK_T }} die Preise für Folgebestellungen leicht an. Jede Stufe
+            senkt daraufhin ihr Ziel-Lager und fährt zuerst den Überbestand
+            herunter — bei Micron kommen
+            <b>wochenlang keine Bestellungen</b> an, obwohl die Server
+            unverändert RAM verbrauchen: hoher Peak, unmittelbar gefolgt von der
+            Flaute. Die Bestell-<b>Rate</b> erholt sich danach wieder (jeder
+            verbrauchte Riegel wird nachbestellt), doch der Lagerbestand bleibt
+            <b>dauerhaft magerer</b> — die Peitsche in Gegenrichtung.
+          </p>
+          <p>
+            <b>Besonders fatal für den Hersteller:</b> Wer die Kapazität am
+            Nachfrage-Peak ausrichtet — eine neue Fab, zusätzliche Linien —, hat
+            <b>Kapital in Überkapazität gebunden</b>, wenn direkt danach die
+            Flaute kommt: die Bestellungen brechen weg, die teure Kapazität
+            steht leer, aus dem Peak wird ein finanzielles Problem. In der IT
+            dasselbe Muster — Kapazität (Nodes, Reserved Instances, Committed
+            Spend) auf einen Last-Peak dimensioniert, der sich als
+            Bullwhip-Artefakt entpuppt.
+          </p>
+          <p>
             Das ist String-Instabilität in Reinform: Die Verstärkung jeder Stufe
             liegt über 1, also wächst jede Störung stromaufwärts — obwohl jede
             Stufe für sich „vernünftig" handelt. P&amp;G beobachtete genau das
             bei Pampers: Babys verbrauchen Windeln gleichmäßig, die
             Bestellschwankungen wuchsen trotzdem Stufe um Stufe (Lee,
-            Padmanabhan &amp; Whang 1997). Beachte in der Simulation: Die Fabrik
+            Padmanabhan &amp; Whang 1997). Beachte in der Simulation: Micron
             schwankt <b>schon vor</b> der Nachfrageänderung deutlich — reines
             Rauschen wird genauso verstärkt wie die Stufe.
           </p>
@@ -928,8 +1024,9 @@ onUnmounted(() => {
             Bullwhip-Ursachen nach Lee et&nbsp;al. (Demand Signal Processing).
             Losgrößen, Preisaktionen und Rationierungs-Gaming kämen in der
             Realität noch obendrauf. Die Gegenmaßnahme im Experimentiermodus —
-            alle Stufen sehen die <b>Endkunden-Nachfrage</b> (POS-Daten) statt
-            der Bestellungen ihrer Nachbarstufe — ist die klassische Empfehlung:
+            alle Stufen sehen die
+            <b>echte Server-Nachfrage</b> (POS-/Fleet-Daten) statt der
+            Bestellungen ihrer Nachbarstufe — ist die klassische Empfehlung:
             Informationsteilung. IT-Übersetzung: verkettete Autoscaler, die auf
             die Last ihrer Nachbarstufe statt auf die echte Endlast reagieren,
             bauen dieselbe Peitsche.
@@ -937,14 +1034,18 @@ onUnmounted(() => {
           <p class="bw-foot">
             <b>Bewusste Vereinfachungen dieses Modells:</b> Order-up-to-Politik
             mit exponentieller Glättung (nach Chen, Drezner, Ryan &amp;
-            Simchi-Levi 2000); nur Ursache 1 nach Lee et&nbsp;al. — keine
-            Losgrößen, Preisaktionen oder Rationierung; Bestellinformation
-            erreicht die nächste Stufe noch in derselben Woche, nur Material
-            braucht L Wochen; unbegrenzte Produktions- und Lieferkapazität
-            (Rückstände werden nachgeliefert, Bestand kann negativ werden =
-            Rückstand); Bestellungen ≥ 0; Nachfragerauschen normalverteilt (σ =
-            2). Kaskaden-Verstärkung, Monotonie in L und α sowie die Wirkung der
-            Informationsteilung wurden numerisch verifiziert.
+            Simchi-Levi 2000); Grundszenario nur Ursache 1 nach Lee et&nbsp;al.
+            (keine Losgrößen oder Rationierung), das Preisschock-Szenario
+            ergänzt eine stilisierte Preisreaktion (abgesenktes Ziel-Lager →
+            Lagerabbau); Bestellinformation erreicht die nächste Stufe noch in
+            derselben Woche, nur Material braucht L Wochen; unbegrenzte
+            Produktions- und Lieferkapazität; intern führt das Modell — wie in
+            der Bestandstheorie üblich — den vorzeichenbehafteten Netto-Bestand
+            (negativ = Rückstand/Backorder), der Chart zeigt daraus den
+            physischen On-hand-Bestand ≥ 0 (0 = Stockout, der Fehlbetrag wird
+            nachgeliefert); Bestellungen ≥ 0; Nachfragerauschen normalverteilt
+            (σ = 2). Kaskaden-Verstärkung, Monotonie in L und α sowie die
+            Wirkung der Informationsteilung wurden numerisch verifiziert.
           </p>
         </div>
       </div>
@@ -972,11 +1073,11 @@ onUnmounted(() => {
         />
         <label class="bw-share">
           <input v-model="share" type="checkbox" />
-          Alle Stufen sehen die Endkunden-Nachfrage (POS-Sharing)
+          Alle Stufen sehen die echte Server-Nachfrage (POS-Sharing)
         </label>
         <p class="bw-gear-hint">
           Längere Lieferzeiten und nervösere Prognosen verstärken die Peitsche —
-          Informationsteilung dämpft sie drastisch. Frühere Fabrik-Läufe bleiben
+          Informationsteilung dämpft sie drastisch. Frühere Micron-Läufe bleiben
           blass sichtbar.
         </p>
         <div class="bw-gear-btns">
@@ -1040,7 +1141,6 @@ onUnmounted(() => {
   --bw-t2: #009e73;
   --bw-t3: #e69f00;
   --bw-fab: #d55e00;
-  --bw-neg: rgba(175, 62, 27, 0.12);
   --bw-danger: #af3e1b;
   --bw-ok: #3d7a46;
   --bw-step: #c8912f;
@@ -1063,7 +1163,6 @@ onUnmounted(() => {
   --bw-t2: #1fbd8e;
   --bw-t3: #f2b02e;
   --bw-fab: #f0762b;
-  --bw-neg: rgba(224, 104, 74, 0.14);
   --bw-danger: #e0684a;
   --bw-ok: #69b877;
   --bw-step: #b98a2e;
@@ -1153,6 +1252,30 @@ onUnmounted(() => {
 .bw-legend .lg.off {
   opacity: 0.35;
   text-decoration: line-through;
+}
+
+/* Szenario-Umschalter (Header/Transport-Slot): über die theme-sicheren
+   SimShell-Chrome-Variablen gefärbt — die scoped --bw-*-Papier-Palette greift
+   im Header NICHT (Light-Fallback in Dark, wie bei Reset/⚙). */
+.bw-seg {
+  display: inline-flex;
+  gap: 4px;
+}
+.bw-seg-btn {
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--slidev-code-font-family);
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--c-panelHi);
+  color: var(--c-textHi);
+  border: 1px solid var(--c-border);
+}
+.bw-seg-on {
+  background: var(--c-panel);
+  border-color: var(--c-phosphor);
+  box-shadow: inset 0 0 0 1px var(--c-phosphor);
 }
 
 /* Buttons in Preset-Zeile & ⚙ */
@@ -1268,11 +1391,11 @@ onUnmounted(() => {
    RetryStormSim-Footer) */
 .bw-banner {
   font-size: 10px;
-  line-height: 1.45;
+  line-height: 1.35;
   border: 1px solid;
   border-radius: 7px;
-  padding: 4px 9px;
-  margin-top: 6px;
+  padding: 3px 9px;
+  margin-top: 4px;
 }
 .bw-banner :deep(.mono) {
   font-family: var(--slidev-code-font-family);

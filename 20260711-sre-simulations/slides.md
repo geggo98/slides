@@ -916,21 +916,21 @@ routeAlias: bufferbloat
 hideInToc: true
 ---
 
-# Setup: Der Bullwhip-Effekt
+# Setup: RAM für die Flotte — der Bullwhip-Effekt
 
-Endkunden kaufen sehr gleichmäßig: **100 Stück/Woche** (± kleines Rauschen).
-Ab **Woche 15** steigt die Nachfrage **dauerhaft um 20 %** auf **120 Stück/Woche** — mehr passiert nicht.
+Die Server-Flotte verbraucht RAM sehr gleichmäßig: **100 Riegel/Woche** (± kleines Rauschen).
+Ab **Woche 15** steigt der Bedarf **dauerhaft um 20 %** auf **120 Riegel/Woche** (Fleet-Wachstum) — mehr passiert nicht.
 
 <div class="chain mt-4 mb-4">
-<span class="chain-node"><b>Endkunden</b>&ensp;100 → 120 Stück/Woche</span>
+<span class="chain-node"><b>Server / Workloads</b>&ensp;100 → 120 Riegel/Woche</span>
 <span class="chain-arrow">→</span>
-<span class="chain-node"><b>Händler</b>&ensp;Stufe 1</span>
+<span class="chain-node"><b>Lokales Inventar</b>&ensp;Stufe 1</span>
 <span class="chain-arrow">→</span>
-<span class="chain-node"><b>Großhandel</b>&ensp;Stufe 2</span>
+<span class="chain-node"><b>Zentrallager</b>&ensp;Stufe 2</span>
 <span class="chain-arrow">→</span>
-<span class="chain-node"><b>Distributor</b>&ensp;Stufe 3</span>
+<span class="chain-node"><b>Distributor</b>&ensp;z. B. DigiKey · Stufe 3</span>
 <span class="chain-arrow">→</span>
-<span class="chain-node"><b>Fabrik</b>&ensp;Lieferzeit je Stufe: 2 Wochen</span>
+<span class="chain-node"><b>Hersteller</b>&ensp;z. B. Micron · Lieferzeit je Stufe: 2 Wochen</span>
 </div>
 
 Jede Stufe der Kette sieht nur die **Bestellungen ihrer Nachbarstufe**, prognostiziert daraus
@@ -939,7 +939,7 @@ und bestellt nach einer Order-up-to-Politik (Ziel: Prognose × (Lieferzeit + 1) 
 <div v-click class="mt-4">
 
 <Callout tone="warning" title="Die Frage">
-Was bestellt die <b>Fabrik</b> pro Woche, wenn die Endkunden-Nachfrage ein einziges Mal dauerhaft um <b>+20 %</b> steigt? Eine glatte Anpassung, moderates Überschwingen — oder starke Oszillation?
+Was bestellt <b>Micron</b> pro Woche, wenn der RAM-Bedarf ein einziges Mal dauerhaft um <b>+20 %</b> steigt? Eine glatte Anpassung, moderates Überschwingen — oder starke Oszillation?
 </Callout>
 
 </div>
@@ -961,23 +961,38 @@ routeAlias: bullwhip
 <BullwhipSim />
 
 <!--
-- Bedienung: Vorhersage der Fabrik-Bestellungen direkt ins obere Diagramm
+- Header-Umschalter „Grundszenario ⇄ Preisschock": beide Predict-first,
+  Micron ist die oberste Stufe (Hersteller). Erst das Grundszenario zeigen.
+- Bedienung: Vorhersage der Micron-Bestellungen direkt ins obere Diagramm
   skizzieren (Maus/Finger) oder Preset wählen (glatte Anpassung /
   Überschwingen / starke Oszillation), dann ▶ starten. Coverage-Gate:
   Skizze muss von (fast) links bis (fast) rechts reichen.
-- Zeigen: Die dunkle Linie (Endkunden-Nachfrage) ist vorab vollständig
-  bekannt — nur +20 % ab Woche 15. Nach dem Lauf: Fabrik-Spitze weit über
-  der Nachfrage, danach Wochen mit 0 Bestellungen (Produktionsstopp);
-  unteres Diagramm: Bestand schießt hoch und fällt in den Rückstand
-  (schraffierte Zone). Klick auf Legenden-Einträge blendet einzelne
-  Stufen ein/aus. Beachte: Die Fabrik schwankt schon VOR Woche 15 —
+- Zeigen: Die dunkle Linie (Server-Nachfrage) ist vorab vollständig
+  bekannt — nur +20 % ab Woche 15. Nach dem Lauf: Micron-Spitze weit über
+  der Nachfrage, danach Wochen mit 0 Bestellungen (Bestell-Stopp);
+  unteres Diagramm: Bestand schießt hoch und fällt bis auf 0 (Stockout,
+  physischer Bestand ≥ 0). Klick auf Legenden-Einträge blendet einzelne
+  Stufen ein/aus. Beachte: Micron schwankt schon VOR Woche 15 —
   reines Rauschen wird genauso verstärkt.
+- Preisschock-Szenario: Micron bedient noch den Bestell-Peak und hebt dann
+  in Woche 20 (kurz nach dem Nachfrage-Sprung) die Preise an → roter Marker;
+  alle Stufen fahren zuerst ihr Lager herunter → bei Micron kommen ~6 Wochen
+  KEINE Bestellungen an (Flaute), obwohl die Server unverändert verbrauchen.
+  Hoher Peak, direkt gefolgt von der Flaute. Danach erholt sich die Rate, der
+  Bestand bleibt dauerhaft magerer (Feast → Famine). Erklärung-Tab: besonders
+  fatal, wenn der Hersteller die Kapazität am Peak ausrichtet (Kapital in
+  Überkapazität → Flaute → Finanzproblem; IT: Nodes / Reserved Instances).
+- Lagerbestand ist physisch nie negativ: der Chart zeigt den On-hand-Bestand
+  ≥ 0 (0 = Stockout). Fachlich üblich (Bestandstheorie) ist der
+  vorzeichenbehaftete Netto-Bestand — negativ = Rückstand/Backorder, der
+  später nachgeliefert wird. Intern rechnen wir so, zeigen aber den
+  physischen Bestand — Standardpraxis, kein Bug.
 - Verdict unten vergleicht Vorhersage- und Mess-Kategorie (Spitzenwert)
   und zeigt die Varianz-Verstärkung je Stufe (× vs. Nachfrage).
 - ⚙ Experimentieren: Lieferzeit L und Prognose-α verstärken die Peitsche;
-  POS-Sharing (alle Stufen sehen die Endkunden-Nachfrage) dämpft sie
+  POS-Sharing (alle Stufen sehen die echte Server-Nachfrage) dämpft sie
   drastisch — mit „Gleicher Seed" direkt vergleichen! Frühere
-  Fabrik-Läufe bleiben blass sichtbar.
+  Micron-Läufe bleiben blass sichtbar.
 - Tab „Erklärung & Modell": Order-up-to-Arithmetik (Faktor 1 + (L+1)·α je
   Stufe, vier Stufen multiplikativ verkettet), P&G/Pampers (Lee et al.
   1997), IT-Übersetzung: verkettete Autoscaler bauen dieselbe Peitsche.
