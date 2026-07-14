@@ -21,8 +21,16 @@ const props = defineProps({
   presetsLabel: { type: String, default: "" },
   modelValue: { type: String, default: null },
   gearTitle: { type: String, default: "Detail-Regler" },
+  showReset: { type: Boolean, default: false },
+  showRewind: { type: Boolean, default: false },
+  resetDisabled: { type: Boolean, default: false },
+  rewindDisabled: { type: Boolean, default: false },
+  resetLabel: { type: String, default: "↺ Reset" },
+  rewindLabel: { type: String, default: "⏮ Rewind" },
+  resetTitle: { type: String, default: "" },
+  rewindTitle: { type: String, default: "" },
 });
-const emit = defineEmits(["update:modelValue", "preset"]);
+const emit = defineEmits(["update:modelValue", "preset", "reset", "rewind"]);
 
 const C = useScopeColors();
 const gearOpen = ref(false);
@@ -113,6 +121,26 @@ defineExpose({ gearOpen });
       </div>
       <div class="shell-actions">
         <slot name="transport" />
+        <button
+          v-if="showReset"
+          class="shell-btn"
+          :style="btnStyle(C.border)"
+          :disabled="resetDisabled"
+          :title="resetTitle"
+          @click="$emit('reset')"
+        >
+          {{ resetLabel }}
+        </button>
+        <button
+          v-if="showRewind"
+          class="shell-btn"
+          :style="btnStyle(C.border)"
+          :disabled="rewindDisabled"
+          :title="rewindTitle"
+          @click="$emit('rewind')"
+        >
+          {{ rewindLabel }}
+        </button>
         <button
           ref="gearBtn"
           class="shell-btn"
@@ -238,6 +266,10 @@ defineExpose({ gearOpen });
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
   white-space: nowrap;
+}
+.shell-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 .shell-presets {
   display: flex;

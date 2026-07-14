@@ -532,6 +532,7 @@ function softResetToSketch() {
   sim = null;
   shedAt.value = null;
   verdict.value = null;
+  readout.value = null;
   makeHistory();
 }
 function resetAll() {
@@ -583,7 +584,15 @@ onUnmounted(() => {
       { key: 'collapse', label: 'Kollaps' },
     ]"
     gear-title="Experimentieren"
+    show-reset
+    show-rewind
+    :reset-disabled="phase === 'running'"
+    :rewind-disabled="phase === 'running' || !sketchHasInk"
+    reset-title="Alles zurücksetzen: Kurve, Parameter und Lauf."
+    rewind-title="Kurve behalten, Lauf zurücksetzen, Parameter wieder editierbar."
     @preset="applyPreset"
+    @reset="resetAll"
+    @rewind="softResetToSketch"
   >
     <template #presets-extra>
       <button class="rs-btn rs-primary" :disabled="!canStart" @click="startRun">

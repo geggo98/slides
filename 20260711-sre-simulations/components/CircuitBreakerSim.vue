@@ -571,6 +571,7 @@ function softResetToSketch() {
   simB = null;
   forcedAt.value = null;
   verdict.value = null;
+  readout.value = null;
   makeHistory();
 }
 function resetAll() {
@@ -630,7 +631,15 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
       { key: 'nohelp', label: 'hilft nicht' },
     ]"
     gear-title="Experimentieren"
+    show-reset
+    show-rewind
+    :reset-disabled="phase === 'running'"
+    :rewind-disabled="phase === 'running' || !sketchHasInk"
+    reset-title="Alles zurücksetzen: Kurve, Parameter und Lauf."
+    rewind-title="Kurve behalten, Lauf zurücksetzen, Parameter wieder editierbar."
     @preset="applyPreset"
+    @reset="resetAll"
+    @rewind="softResetToSketch"
   >
     <template #presets-extra>
       <button class="cb-btn cb-primary" :disabled="!canStart" @click="startRun">

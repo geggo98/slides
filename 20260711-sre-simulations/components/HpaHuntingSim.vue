@@ -616,6 +616,7 @@ function softResetToSketch() {
   phase.value = "sketch";
   sim = null;
   verdict.value = null;
+  readout.value = null;
 }
 function resetAll() {
   if (phase.value === "running") return;
@@ -666,7 +667,15 @@ onUnmounted(() => {
       { key: 'hunting', label: 'Dauerschwingen' },
     ]"
     gear-title="Experimentieren"
+    show-reset
+    show-rewind
+    :reset-disabled="phase === 'running'"
+    :rewind-disabled="phase === 'running' || !sketchHasInk"
+    reset-title="Alles zurücksetzen: Kurve, Parameter und Lauf."
+    rewind-title="Kurve behalten, Lauf zurücksetzen, Parameter wieder editierbar."
     @preset="applyPreset"
+    @reset="resetAll"
+    @rewind="softResetToSketch"
   >
     <template #presets-extra>
       <button class="hh-btn hh-primary" :disabled="!canStart" @click="startRun">

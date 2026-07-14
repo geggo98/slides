@@ -629,6 +629,7 @@ function softResetToSketch() {
   phase.value = "sketch";
   sim = null;
   verdict.value = null;
+  readout.value = null;
   makeDemand();
 }
 function resetAll() {
@@ -681,7 +682,15 @@ onUnmounted(() => {
       { key: 'whip', label: 'starke Oszillation' },
     ]"
     gear-title="Experimentieren"
+    show-reset
+    show-rewind
+    :reset-disabled="phase === 'running'"
+    :rewind-disabled="phase === 'running' || !sketchHasInk"
+    reset-title="Alles zurücksetzen: Kurve, Parameter und Lauf."
+    rewind-title="Kurve behalten, Lauf zurücksetzen, Parameter wieder editierbar."
     @preset="applyPreset"
+    @reset="resetAll"
+    @rewind="softResetToSketch"
   >
     <template #presets-extra>
       <button class="bw-btn bw-primary" :disabled="!canStart" @click="startRun">

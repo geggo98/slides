@@ -533,6 +533,8 @@ function softResetToSketch() {
   sim = null;
   panicAt.value = null;
   verdict.value = null;
+  readout.value = null;
+  instView.value = [];
   makeHistory();
 }
 function resetAll() {
@@ -591,7 +593,15 @@ onUnmounted(() => {
       { key: 'cascade', label: 'Kaskade' },
     ]"
     gear-title="Experimentieren"
+    show-reset
+    show-rewind
+    :reset-disabled="phase === 'running'"
+    :rewind-disabled="phase === 'running' || !sketchHasInk"
+    reset-title="Alles zurücksetzen: Kurve, Parameter und Lauf."
+    rewind-title="Kurve behalten, Lauf zurücksetzen, Parameter wieder editierbar."
     @preset="applyPreset"
+    @reset="resetAll"
+    @rewind="softResetToSketch"
   >
     <template #presets-extra>
       <button class="hc-btn hc-primary" :disabled="!canStart" @click="startRun">
