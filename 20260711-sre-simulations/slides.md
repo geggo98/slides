@@ -1774,6 +1774,340 @@ hideInToc: true
 -->
 
 ---
+layout: section
+---
+
+# Making of
+
+Unter der Motorhaube: Architektur, Paradigmen, Didaktik
+
+<!--
+- Bonus-Kapitel für Selbststudium und Nachbauer; im Live-Talk je nach
+  Zeitbudget kürzbar oder ganz überspringbar.
+- Roter Faden: erst WIE gebaut (Architektur), dann WAS simuliert wird
+  (Paradigmen + Landkarte), dann WARUM so bedient (Didaktik), zuletzt
+  Ehrlichkeit (Grenzen, Quellen).
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-architektur
+---
+
+# Architektur: drei Render-Pfade, eine Schale
+
+<div class="grid grid-cols-3 gap-3 mt-3">
+<div class="intro-box">
+
+### 🖼️ Canvas
+
+- Oszilloskop-Scopes (M/M/1, M/M/c) und alle Fixed-Step-Sims
+- dichte Traces, Redraw pro Frame
+- Theme-Wechsel wirkt sofort: Farben werden pro Frame gelesen
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### 📐 Rohes SVG
+
+- Systemdynamik, Sparklines, Hysterese-Loops, Kantinen-Bühne
+- deklarativ aus Vue-Templates
+- kein Chart-Framework nötig
+
+</div>
+<div class="intro-box">
+
+### 📊 d3 — nur wo nötig
+
+- nur die 5 Diagnose-Sims
+- nur `d3-scale` / `-selection` / `-shape`
+- kein d3-zoom, kein d3-force
+
+</div>
+</div>
+
+<div class="chain mt-4">
+<span class="chain-node">SimShell<br/><small>Titel · Presets · ⚙ · Verdict</small></span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">Composables<br/><small>useSimTransport · usePredictSketch · useScopeColors</small></span>
+<span class="chain-arrow">→</span>
+<span class="chain-node">Engines<br/><small>lib/mm1Engine · breakerModel · burnRate · rng</small></span>
+</div>
+
+<div v-click class="mt-3">
+
+<Callout tone="info" title="Das Muster">
+Der Sim-Zustand lebt in <b>einfachen JS-Objekten</b>, nicht im Reaktivitätssystem — Vue rendert Rahmen und Regler, die heiße Schleife zeichnet selbst.
+</Callout>
+
+</div>
+
+<!--
+- Entscheidungskriterium ist die Punktdichte: tausende Trace-Punkte pro
+  Frame → Canvas; ein paar Dutzend Formen → SVG direkt aus dem Template.
+- d3 bewusst klein gehalten: nur Skalen und Pfad-Generatoren, keine
+  d3-Datenbindung — die macht Vue.
+- Die SimShell-Schale macht 21 Sims kohärent bedienbar: gleiche Preset-Zeile,
+  gleiches ⚙-Overlay, gleicher Verdict-Platz.
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-paradigmen
+---
+
+# Diskret vs. analytisch? Die falsche Achse
+
+<div class="grid grid-cols-2 gap-4 mt-3">
+<div class="intro-box">
+
+### Die Bauart täuscht
+
+- fast jede Sim **mischt**: fester Takt (Fluid) **plus** Poisson-Züge
+- Burn-Rate: analytisch vorberechnet **plus** Seed-Rauschen
+- M/M/1: echtes Next-Event-DES **mit** Theorie-Overlay
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### Die zwei echten Achsen
+
+- **deterministisch ↔ stochastisch** — entscheidet der Zufall nahe der Schwelle?
+- **aggregiert ↔ individuell** — Flüsse und Mittelwerte oder einzelne Jobs?
+
+</div>
+</div>
+
+<table class="mo-quad mt-3">
+<tbody>
+<tr><td class="mo-axis"></td><td class="mo-axis">deterministisch</td><td class="mo-axis">stochastisch</td></tr>
+<tr><td class="mo-axis">individuell</td><td>— (selten sinnvoll)</td><td>M/M/1-Kantine (DES)</td></tr>
+<tr><td class="mo-axis">aggregiert</td><td>Systemdynamik-Pipeline</td><td>Retry-Sturm (Fluid + Poisson)</td></tr>
+</tbody>
+</table>
+
+<div v-click class="mt-3">
+
+<Callout tone="warning" title="Wiederkehrendes Motiv">
+Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittelwert</b>, die Simulation die <b>Streuung</b> — genau dort lebt das Risiko.
+</Callout>
+
+</div>
+
+<style>
+.mo-quad {
+  font-size: 0.72em;
+  line-height: 1.3;
+}
+.mo-quad td {
+  padding: 0.2em 0.8em;
+}
+.mo-quad .mo-axis {
+  opacity: 0.55;
+  font-weight: 600;
+}
+</style>
+
+<!--
+- Kernaussage: „diskret vs. analytisch" beschreibt die Bauart, nicht den
+  Erkenntniswert. Die didaktisch relevanten Achsen sind Zufall und
+  Aggregationsgrad.
+- Das Motiv-Callout ist das Echo der Schlussfolie: der Mittelwert
+  verschweigt die Gefahr — nahe der Schwelle entscheidet der Zufall.
+- Überleitung: „die nächste Folie plottet alle 21 Sims auf diese zwei
+  Achsen."
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: paradigmen-landkarte
+---
+
+<ParadigmMap />
+
+<!--
+- Bedienung: Punkt oder Pill anklicken → Detail-Karte rechts (Engine,
+  Zeitschritt, Zufall, Rendering, Mechanik, Folien-Link). Chips oben dimmen
+  fremde Familien, „Alle" oder erneuter Klick hebt auf.
+- Regie, drei Kontraste zeigen: M/M/1 oben rechts (stochastisch +
+  individuell — gestrichelter Rand = läuft ehrlich ungeseeded auf
+  Math.random) vs. Systemdynamik unten links (deterministisch + aggregiert)
+  vs. Retry-Sturm in der Mitte (Fluid mit Poisson: stochastisch, aber
+  aggregiert).
+- Sockel-Band unten: „kein dynamisches Modell" — Diagnose-Traces sind
+  Skript, Kataloge sind Keyframes. Ehrlichkeit vor Eleganz.
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-didaktik
+---
+
+# Didaktik: erst festlegen, dann anschauen
+
+<div class="grid grid-cols-2 gap-4 mt-3">
+<div class="intro-box">
+
+### ✏️ Commitment-Device
+
+- **Predict first**: ▶ schaltet erst frei, wenn die Skizze **55 % Abdeckung** erreicht (`usePredictSketch`)
+- **Verdict-Banner** nach dem Lauf: Treffer oder Überraschung — beides ist der Lernmoment
+- drei Archetypen: ✏️ Predict-first · 🔍 Diagnose-Drill · 🖱️ Katalog
+
+</div>
+<div class="intro-box intro-box-accent">
+
+### 🎛️ Bedien-Philosophie
+
+- wenige sichtbare Regler (1–3), alles Weitere hinter ⚙
+- Presets = Szenarien mit Geschichte, keine Parameterwüste
+- **↺ Reset** löscht alles, **⏮ Rewind** nur den Lauf — die Skizze bleibt
+- Deep-Link pro Sim (`routeAlias`) fürs Nachspielen
+
+</div>
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Warum der Zwang?">
+Wer erst tippt, kann sich hinterher nicht einreden, er hätte es eh gewusst — die Überraschung wird messbar und bleibt hängen.
+</Callout>
+
+</div>
+
+<!--
+- Das Coverage-Gate ist bewusst unbequem: ohne festgehaltene Erwartung
+  kein Start. Skippen geht, kostet aber das Verdict.
+- Muster stammt aus den Explorable Explanations (Bret Victor, Nicky Case):
+  „You draw it" — Vorhersage einzeichnen, bevor die Daten kommen.
+- Die ⚙-Regler sind fürs Zuhause-Experimentieren; live lenken sie nur ab.
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-engineering
+---
+
+# Engineering: Determinismus, Performance, Tests
+
+<div class="grid grid-cols-2 gap-3 mt-3">
+<div class="intro-box">
+
+### 🎲 Zufall mit Seed
+
+- mulberry32-PRNG, Poisson nach Knuth, Box-Muller (`lib/rng.js`)
+- gleicher Seed ⇒ exakt gleicher Lauf — reproduzierbar und teilbar
+- ehrliche Ausnahme: die Kantinen-Sims laufen ungeseeded auf `Math.random`
+
+</div>
+<div class="intro-box">
+
+### ⚡ Heiße Pfade
+
+- Sim-Zustand nicht-reaktiv, ein Version-Tick benachrichtigt Vue
+- Engines in `shallowRef`, Canvas für dichte Traces
+- rAF bündelt Schritte pro Frame; `prefers-reduced-motion` respektiert
+
+</div>
+<div class="intro-box">
+
+### ✅ Tests (Vitest)
+
+- `bullwhipModel` und `burnRate` gegen analytisch gerechnete Tabellen gepinnt
+- Modelle sind pure JS-Module — testbar ganz ohne Browser
+
+</div>
+<div class="intro-box">
+
+### 🔍 QA (Playwright)
+
+- Overflow-Checker rendert jede Folie in Chromium, Firefox **und** WebKit — hell und dunkel
+- nötig, weil Slidev Überlauf stumm abschneidet
+
+</div>
+</div>
+
+<!--
+- Version-Tick-Muster: ein ref zählt hoch, Computeds hängen daran — das
+  Zustandsobjekt selbst bleibt für Vues Proxy unsichtbar (kein Tracking
+  im 50-Hz-Takt).
+- Warum die Kantinen ungeseeded blieben: 1:1-Portierung der Originale,
+  und die sichtbare Streuung ist dort didaktisch erwünscht.
+- Die Modell-Extraktion nach lib/ passierte genau für die Tests: Formeln
+  raus aus den .vue-Dateien, dann gegen Erwartungstabellen gepinnt.
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-grenzen
+---
+
+# Grenzen: was die Modelle bewusst weglassen
+
+<div class="mo-limits">
+
+| Vereinfachung                               | Warum das okay ist                                                |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| kein Event-Heap-DES in den Fluid-Sims       | fester Takt (Δt = 0,02–0,05 s) reicht für Flüsse und Schwellen    |
+| kein RK4, nur Vorwärts-Euler                | Δt ist klein gegen die Zeitkonstanten der Systeme                 |
+| Fluid-Approximation verschweigt Tail-Latenz | dafür gibt es die Latenz-Sim (Monte-Carlo) separat                |
+| keine Netzwerk-Topologie                    | ein Service, ein Pool — Mesh-Effekte wären ein eigenes Deck       |
+| Diagnose-Familie = **skriptete Traces**     | Drill-Ziel ist das Ablesen der Diskriminatoren, nicht die Dynamik |
+
+</div>
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Merksatz">
+Jedes Modell ist falsch — diese hier sagen dir wenigstens, <b>wo</b>.
+</Callout>
+
+</div>
+
+<style>
+.mo-limits table {
+  font-size: 0.8em;
+  line-height: 1.35;
+}
+</style>
+
+<!--
+- Das Muster stammt von Nicky Case: jede Explorable veröffentlicht ihre
+  Vereinfachungsliste mit — Modellgrenzen sichtbar machen statt kaschieren.
+- Wichtigste Zeile ist die dritte: Fluid-Modelle können prinzipiell keine
+  Tail-Latenz zeigen. Wer p99 sehen will, braucht Einzelereignisse —
+  deshalb existiert die Latenz-Sim als Monte-Carlo-Sampling daneben.
+-->
+
+---
+hideInToc: true
+routeAlias: making-of-quellen
+---
+
+# Quellen & Inspiration
+
+- Bret Victor — _Explorable Explanations_ (2011) · reaktive Dokumente statt toter Text
+- Nicky Case — _Why Simulate?_ · _Explorable Explanations: 4 More Design Patterns_ · Predict-first & Scaffolding
+- Isaacs et al. — _Analyzing Metastable Failures_ (HotOS '25) · AWS nutzt ein **Ensemble**: CTMC-Modelle + diskrete Ereignissimulation + Emulation
+- Habibi et al. — _MSF-Model_ (SRDS 2024, arXiv:2309.16181) · Metastabilität warteschlangentheoretisch modelliert
+- Mor Harchol-Balter — _Performance Modeling and Design of Computer Systems_ (2013) · die Warteschlangen-Referenz
+
+<div class="mt-6 text-xs opacity-60">
+
+Und ja, dieses Deck ist selbst ein Exponat: gebaut mit einem LLM-Agenten (Claude Code) in ~3 Tagen — inklusive aller 21 Simulationen; die Commits tragen den 🤖-Trailer.
+
+</div>
+
+<!--
+- HotOS-'25-Botschaft hervorheben: Profis wählen nicht EIN Paradigma,
+  sondern staffeln bewusst mehrere Abstraktionsebenen fürs selbe Problem —
+  genau die Aussage der Paradigmen-Landkarte.
+- Victor/Case sind die didaktische Blaupause (Predict-first, ehrliche
+  Vereinfachungsliste); Harchol-Balter die Theorie hinter Kapitel 1.
+-->
+
+---
 layout: end
 hideInToc: true
 ---
