@@ -451,3 +451,43 @@ export const MODULE_SIZES: ModuleSize[] = [
   { name: "MCP Client", lines: 1500 },
   { name: "Subagent (Task)", lines: 1200 },
 ];
+
+// ── Systima-Messung an der API-Grenze (Claude Code vs. OpenCode) ────────────
+// Logging-Proxy zwischen Harness und Endpoint, Juli 2026 (Claude Code 2.1.207
+// vs. OpenCode 1.17.18, sonnet-4-5 gepinnt, Fable-5-Teilmatrix). Quelle:
+// systima.ai/blog/claude-code-vs-opencode-token-overhead — Werte am
+// Primärtext verifiziert 14.07.2026.
+export interface SystimaStat {
+  value: string;
+  label: string;
+  desc: string;
+  /** OpenCode-Vergleichswert für die Footer-Zeile der Karte. */
+  oc: string;
+}
+
+export const SYSTIMA_STATS: SystimaStat[] = [
+  {
+    value: "4,7×",
+    label: "Baseline vor dem ersten Prompt",
+    desc: "~33K Tokens Bootstrap: 27 Tool-Schemas (~24K), System-Prompt in 3 Blöcken, 3 Reminder-Blöcke",
+    oc: "~7K Tokens — 10 Tools, 1 System-Block",
+  },
+  {
+    value: "3 vs. 9",
+    label: "Requests im Multi-Step-Task",
+    desc: "Paralleles Tool-Batching zahlt die fette Baseline nur 3× — die Totals konvergieren bei ~121K",
+    oc: "~132K total, trotz 7K-Baseline",
+  },
+  {
+    value: "bis 54×",
+    label: "Cache-Writes, identischer Task",
+    desc: "Instabile Prefixes, 3 Request-Klassen pro Session: Mid-Session-Rewrites von 37K–86K Tokens zu Premium-Raten",
+    oc: "1.003 Write-Tokens — Prefix byte-identisch",
+  },
+  {
+    value: "3,7×",
+    label: "Input-Tokens bei gleicher Qualität",
+    desc: "10-Lane-Benchmark, beide 5/5 bestanden: ~268K Input-Tokens pro Run, 4–8 min Laufzeit",
+    oc: "~72K pro Run, 1–2 min",
+  },
+];

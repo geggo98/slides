@@ -987,6 +987,46 @@ Sechs Harnesses, sechs Philosophien. Klick in der Legende zum Ein-/Ausblenden. H
 
 ---
 hideInToc: true
+routeAlias: api-grenze
+---
+
+# Gemessen an der API-Grenze: Claude Code vs. OpenCode
+
+<div class="text-sm opacity-70 mb-2">
+
+Logging-Proxy zwischen Harness und Model-Endpoint (Systima, 07/2026) — exakte Payloads + Usage-Blöcke, 273 hash-verkettete Records.
+
+</div>
+
+<ApiBoundaryStats />
+
+<div class="mt-3 text-xs opacity-60">
+
+**Modellabhängig:** Auf Fable 5 schrumpft die Baseline auf 3,3× (62% weniger Prompt-Zeichen, gleiche 27 Tools) — aber die Konvergenz kippt: 6 statt 3 Requests, ~298K vs. 133K Tokens. **Batching ist Modell-Verhalten, keine Harness-Konstante.**
+
+</div>
+
+<!--
+Quelle: systima.ai/blog/claude-code-vs-opencode-token-overhead (12.07.2026),
+Zahlen am Primärtext verifiziert 14.07.2026. Setup: Claude Code 2.1.207 vs.
+OpenCode 1.17.18, claude-sonnet-4-5 gepinnt; reduzierte Matrix auf Fable 5.
+- 27 Tools vs. „19+" im Leak-Kapitel: der Leak (März 2026) zählte registrierte
+  Kern-Tools; Systima zählte das tools-Array über den Draht inkl. Background-
+  Agent-/Orchestration-Suite (Task-Familie, CronCreate, Monitor, …).
+- Cache-Writes: Spanne 5,9×–54× je nach Cache-Temperatur; Mid-Session-Rewrites
+  reproduziert (43K/37K auf Sonnet, 50K/86K auf Fable). OpenCode blieb bis auf
+  einen ~6K-Write byte-stabil.
+- Caveats: Gateway (Meridian) im Messpfad, Envelope (~6,2K Sonnet / ~3,5K
+  Fable) herausgerechnet; Payload-Zahlen exakt, Metered-Zahlen Cold-Cache-
+  Anker. T3-Konvergenz = eine Beobachtung einer Task-Form; Fable-Lanes kleine
+  Stichprobe. Nebenfund: Gateway tauschte still Modell-Snapshots aus — „wer
+  nicht an der API-Grenze loggt, weiß nicht, welches Modell antwortet."
+- Instruction-File-Mechanik: CC 2.1.207 ignorierte AGENTS.md still (nur
+  CLAUDE.md); OpenCode liest beide. → Memory-Slide Kapitel 5.
+-->
+
+---
+hideInToc: true
 ---
 
 # Harness-Vergleich
@@ -1092,6 +1132,7 @@ hideInToc: true
 - Browser Use — _The Bitter Lesson of Agent Frameworks_
 - Armin Ronacher — `lucumr.pocoo.org`
 - Stefan Wintermeyer — _Prompt-Caching_ (iX/heise 2026) · `heise.de/-11335003`
+- Systima — _Claude Code vs OpenCode: Token Overhead_ · `systima.ai`
 
 </div>
 <div>
