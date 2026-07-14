@@ -1116,13 +1116,80 @@ Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die 
 </style>
 
 ---
+layout: section
+routeAlias: sentry-vergleich
+---
+
+# Bonus: LGTM vs. Sentry
+
+Konkurrenz oder Ergänzung? Zwei Blickwinkel auf dasselbe System
+
+---
+hideInToc: true
+---
+
+# Zwei Werkzeuge, zwei Blickwinkel
+
+LGTM beobachtet die **Plattform**, Sentry die **Applikation aus Entwicklersicht**. Die Matrix ist klickbar:
+
+<SentryCompare />
+
+<div class="text-slate-500" style="margin-top: 0.4em; font-size: 0.65em;">
+Stand Mitte 2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ Open Beta seit 11/2025 · Self-Hosted-Anforderungen laut getsentry/self-hosted
+</div>
+
+<!--
+- Kernbotschaft: kein Entweder-oder. Sentry schaut aus der App heraus
+  (Exceptions, Releases, User-Sessions), LGTM auf die Plattform
+  (Metriken, SLOs, Cluster).
+- Klick-Demo 1: Sentry × „Metriken & SLO/Burn-Rate" — Custom-Metrics-Beta
+  10/2024 eingestellt, neue Application Metrics erst Open Beta, kein
+  OTLP-Metrics-Ingest, kein natives Burn-Rate-Alerting.
+- Klick-Demo 2: Sentry × „K8s" — sentry-kubernetes (Beta) macht aus
+  K8s-Events Sentry-Errors, mehr nicht.
+-->
+
+---
+hideInToc: true
+---
+
+# Besser zusammen: Sentry neben LGTM
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
+<Callout tone="info">
+<h4 style="color: #3b82f6; margin: 0 0 8px;">Offiziell komplementär</h4>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Grafana Labs pflegt die <b>Sentry-Datasource</b> (v2.x): Issues, Events, Spans und Stats direkt neben Mimir-Metriken im Dashboard. Sentry wirbt selbst für die Kopplung mit Prometheus-Infrastrukturdaten — „You don't need to pick one".</p>
+</Callout>
+<Callout tone="success">
+<h4 style="color: #22c55e; margin: 0 0 8px;">Arbeitsteilung bei Tickets</h4>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Sentry</b>: Alert Rules legen pro Issue automatisch Jira-/GitHub-Tickets an — mit Stacktrace, Release, Two-Way-Sync. <b>LGTM</b>: Die Burn-Rate-Policy liefert die „Aufgabe (Ticket)“-Lane — SLO-getrieben statt exception-getrieben.</p>
+</Callout>
+</div>
+
+**Faustregel**: LGTM alarmiert auf Symptom & SLO — Sentry gruppiert die Ursache im Code und hängt das Ticket dran. Natives SLO-/Burn-Rate-Alerting hat Sentry nicht; diese Lücke schließt der LGTM-Stack.
+
+<div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
+Burn-Rate-Policy zum Ausprobieren: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref>
+</div>
+
+<!--
+- Beide Anbieter vermarkten das Zusammenspiel offiziell: Grafana pflegt
+  die Sentry-Datasource, Sentry die Prometheus-Kopplung.
+- Ticket-Kontrast: Sentry = exception-getrieben, Ticket entsteht
+  automatisch am Issue; LGTM = SLO-getrieben, Ticket ist die langsamste
+  Lane der Policy (Burn 1× über 3 Tage).
+- Deep-Link öffnet die BurnRateSim aus dem SRE-Sim-Deck — dort zeigen,
+  wann die Aufgabe-Lane feuert.
+-->
+
+---
 layout: end
 hideInToc: true
 ---
 
 # Danke
 
-Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs
+Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs · Sentry Docs
 
 Alle Simulationen zum Selbst-Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
 
