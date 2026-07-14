@@ -17,9 +17,11 @@ import {
   B0,
   B1,
   BreakerSim,
+  D,
   GP_MAX,
   HALF_FAIL,
   HALF_OK,
+  L_BASE,
   LAMBDA0,
   MU,
   Q_MAX,
@@ -37,6 +39,8 @@ const R = ref(2);
 const eTrip = ref(0.5);
 const tOpen = ref(5);
 const phase = ref("sketch"); // sketch | running | done
+const mode = ref("manual"); // manual (Sandbox) | predict (Vorhersage)
+const autoBreaker = ref(false); // nur im manual-Modus relevant
 let simA = null; // ohne Breaker
 let simB = null; // mit Breaker
 let history = null;
@@ -61,23 +65,51 @@ const readout = shallowRef(null);
 const verdict = shallowRef(null);
 const forcedAt = ref(null);
 
-const canStart = computed(() => phase.value === "sketch" && sketchReady.value);
+/* Automatik läuft im Vorhersage-Modus immer, im Manuell-Modus nur auf Wunsch. */
+const autoOn = computed(() =>
+  mode.value === "predict" ? true : autoBreaker.value,
+);
+const canStart = computed(
+  () =>
+    phase.value === "sketch" && (mode.value === "manual" || sketchReady.value),
+);
 const canForce = computed(
   () =>
     phase.value === "running" &&
-    forcedAt.value === null &&
     readout.value &&
     readout.value.state === "closed",
 );
-const showSketchNote = computed(
-  () => phase.value === "sketch" && !sketchHasInk.value && !sketchSkipped.value,
+const breakerOpen = computed(
+  () => !!readout.value && readout.value.state !== "closed",
 );
-const subtitle = computed(
+const canToggleBreaker = computed(
+  () => phase.value === "running" && !!readout.value,
+);
+const showSketchNote = computed(
   () =>
-    `Gleiches Szenario wie der Retry-Sturm: μ = ${MU} · λ = ${LAMBDA0} req/s (ρ = 0,7) · Timeout 1 s · ≤ ${R.value} Retries · Burst ×${fmt(amp.value, 2)} für 10 s — diesmal mit Breaker (kippt bei ${fmt(eTrip.value * 100)} % Fehlerrate, Cooldown ${fmt(tOpen.value, 1)} s, Half-Open-Proben). Skizziere den Goodput MIT Breaker ab t = 20 s; die rote Kurve läuft ungebremst mit.`,
+    mode.value === "predict" &&
+    phase.value === "sketch" &&
+    !sketchHasInk.value &&
+    !sketchSkipped.value,
+);
+const subtitleBase = computed(
+  () =>
+    `Gleiches Szenario wie der Retry-Sturm: μ = ${MU} · λ = ${LAMBDA0} req/s (ρ = 0,7) · Timeout 1 s · ≤ ${R.value} Retries · Burst ×${fmt(amp.value, 2)} für 10 s`,
+);
+const eyebrowManual = "Gegenmaßnahmen · Sandbox";
+const eyebrowPredict = "Gegenmaßnahmen · Predict first";
+const subtitle = computed(() =>
+  mode.value === "manual"
+    ? `${subtitleBase.value}. Manuell-Modus: ▶ starten (der Lauf beginnt vor dem Incident), dann den Breaker von Hand öffnen und schließen — sieh, wie die Latenz vom Timeout auf ~0 fällt und der Goodput sich erholt. „Auto-Breaker" zuschalten lässt ihn selbst kippen (bei ${fmt(eTrip.value * 100)} % Fehlerrate).`
+    : `${subtitleBase.value} — diesmal mit Breaker (kippt bei ${fmt(eTrip.value * 100)} % Fehlerrate, Cooldown ${fmt(tOpen.value, 1)} s, Half-Open-Proben). Skizziere den Goodput MIT Breaker ab t = 20 s; die rote Kurve läuft ungebremst mit.`,
 );
 
-/* Preset-Vorhersagen */
+/* Preset-Vorhersagen (nur im Vorhersage-Modus sichtbar) */
+const PRESETS = [
+  { key: "painless", label: "rettet ohne Einbruch" },
+  { key: "sacrifice", label: "kurzes Opfer" },
+  { key: "nohelp", label: "hilft nicht" },
+];
 const PRESET_FNS = {
   painless: (t) =>
     t < 30 ? 70 - 25 * Math.sin((Math.PI * (t - 20)) / 10) : 70,
@@ -89,14 +121,18 @@ const PRESET_FNS = {
 /* ===== Canvas ===== */
 const gpCanvas = ref(null);
 const qCanvas = ref(null);
+const lCanvas = ref(null);
 const chartWrap = ref(null);
-const gpH = 162,
-  qH = 46;
+const gpH = 150,
+  qH = 46,
+  lH = 46;
+const L_MAX = D * 1000; // Latenz-Achse [ms], Deckel = Timeout
 let W = 0,
   dpr = 1,
   resizeObs = null;
 const PAD = { l: 46, r: 12, t: 14, b: 20 },
-  QPAD = { l: 46, r: 12, t: 5, b: 14 };
+  QPAD = { l: 46, r: 12, t: 5, b: 14 },
+  LPAD = { l: 46, r: 12, t: 5, b: 14 };
 const MONO = "'0xProto', ui-monospace, Menlo, Consolas, monospace";
 
 const xOf = (t) => PAD.l + (t / T_END) * (W - PAD.l - PAD.r);
@@ -106,6 +142,8 @@ const yOf = (g) =>
 const gOf = (y) => (1 - (y - PAD.t) / (gpH - PAD.t - PAD.b)) * GP_MAX;
 const yQ = (q) =>
   QPAD.t + (1 - Math.min(q, Q_MAX) / Q_MAX) * (qH - QPAD.t - QPAD.b);
+const yL = (ms) =>
+  LPAD.t + (1 - Math.min(ms, L_MAX) / L_MAX) * (lH - LPAD.t - LPAD.b);
 
 function cssVar(name) {
   if (!chartWrap.value) return "#888";
@@ -114,7 +152,7 @@ function cssVar(name) {
 
 function sizeCanvases() {
   const wrap = chartWrap.value;
-  if (!wrap || !gpCanvas.value || !qCanvas.value) return;
+  if (!wrap || !gpCanvas.value || !qCanvas.value || !lCanvas.value) return;
   W = wrap.clientWidth;
   const scale = wrap.offsetWidth
     ? wrap.getBoundingClientRect().width / wrap.offsetWidth
@@ -123,6 +161,7 @@ function sizeCanvases() {
   for (const [c, h] of [
     [gpCanvas.value, gpH],
     [qCanvas.value, qH],
+    [lCanvas.value, lH],
   ]) {
     c.width = Math.round(W * dpr);
     c.height = Math.round(h * dpr);
@@ -298,16 +337,18 @@ function drawGoodput() {
     );
     stateBand(ctx, simB.pts);
   }
-  const predPts = sketch.points();
-  plotLine(
-    ctx,
-    predPts,
-    (p) => (p.v == null ? null : xOf(p.t)),
-    (p) => (p.v == null ? null : yOf(p.v)),
-    cssVar("--cb-pencil"),
-    2,
-    [7, 5],
-  );
+  if (mode.value === "predict") {
+    const predPts = sketch.points();
+    plotLine(
+      ctx,
+      predPts,
+      (p) => (p.v == null ? null : xOf(p.t)),
+      (p) => (p.v == null ? null : yOf(p.v)),
+      cssVar("--cb-pencil"),
+      2,
+      [7, 5],
+    );
+  }
   if (simB && forcedAt.value !== null) {
     const x = xOf(forcedAt.value);
     ctx.save();
@@ -373,9 +414,73 @@ function drawQueue() {
       1.8,
     );
 }
+/* Latenz-Chart: die eigentliche Pointe. Ohne Breaker klebt die Latenz am
+   Timeout-Deckel D (stiller Drop, keine Fehlermeldung); der offene Breaker
+   weist sofort ab → Latenz stürzt auf Fast-Fail-Niveau, unter den Good-Case. */
+function drawLatency() {
+  const c = lCanvas.value;
+  if (!c || !W) return;
+  const ctx = c.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  grid(ctx, lH, LPAD, L_MAX, 500, "Latenz [ms]");
+  burstBand(ctx, lH, LPAD, false);
+  const baseMs = L_BASE * 1000; // Good-Case-Sockel (Basis-Antwortzeit)
+  plotLine(
+    ctx,
+    [{ t: 0 }, { t: T_END }],
+    (p) => xOf(p.t),
+    () => yL(baseMs),
+    cssVar("--cb-ref"),
+    1,
+    [2, 4],
+  );
+  if (history)
+    plotLine(
+      ctx,
+      history.pts,
+      (p) => xOf(p.t),
+      (p) => yL(p.lat * 1000),
+      cssVar("--cb-signal"),
+      1.8,
+    );
+  if (simA)
+    plotLine(
+      ctx,
+      simA.pts,
+      (p) => xOf(p.t),
+      (p) => yL(p.lat * 1000),
+      cssVar("--cb-nobrake"),
+      1.4,
+      [],
+      0.7,
+    );
+  if (simB)
+    plotLine(
+      ctx,
+      simB.pts,
+      (p) => xOf(p.t),
+      (p) => yL(p.lat * 1000),
+      cssVar("--cb-signal"),
+      1.8,
+    );
+  ctx.save();
+  ctx.fillStyle = cssVar("--cb-muted");
+  ctx.font = `9px ${MONO}`;
+  ctx.fillText("gut", xOf(2), yL(baseMs) - 3);
+  ctx.fillStyle = cssVar("--cb-nobrake");
+  ctx.font = `600 9px ${MONO}`;
+  ctx.textAlign = "right";
+  ctx.fillText(
+    "Timeout — stiller Drop, kein Error",
+    W - LPAD.r - 4,
+    LPAD.t + 9,
+  );
+  ctx.restore();
+}
 function drawAll() {
   drawGoodput();
   drawQueue();
+  drawLatency();
 }
 
 /* ===== Historie (t < 20 s) ===== */
@@ -393,7 +498,7 @@ function evToTV(ev) {
   return { t: tOf(x), v: gOf(y) };
 }
 function onDown(ev) {
-  if (phase.value !== "sketch") return;
+  if (phase.value !== "sketch" || mode.value !== "predict") return;
   sketch.strokeStart();
   gpCanvas.value.setPointerCapture(ev.pointerId);
   onMove(ev);
@@ -433,11 +538,17 @@ function startRun() {
   simA = new BreakerSim(seed, amp.value, R.value, { enabled: false });
   simB = new BreakerSim(seed, amp.value, R.value, {
     enabled: true,
+    auto: autoOn.value,
     eTrip: eTrip.value,
     tOpen: tOpen.value,
   });
-  simA.runTo(B0);
-  simB.runTo(B0);
+  // Bei rein manueller Bedienung (Auto-Breaker aus) beginnt die Animation
+  // schon VOR dem Incident (t = 0) — so bleibt Zeit, die Maus zum
+  // Breaker-Knopf zu bewegen. Mit Auto-Breaker springt sie wie gehabt an
+  // den Incident (B0), die ruhige Vorlaufphase ist vorberechnet.
+  const startAt = autoOn.value ? B0 : 0;
+  simA.runTo(startAt);
+  simB.runTo(startAt);
   history = { pts: simB.pts.slice() };
   simA.pts = [];
   simB.pts = [];
@@ -467,6 +578,16 @@ function triggerForce() {
   simB.forceOpen();
   forcedAt.value = simB.t;
 }
+/* Manuell-Modus: ein Knopf, der zwischen Öffnen und Schließen wechselt. */
+function toggleBreaker() {
+  if (!simB || phase.value !== "running") return;
+  if (simB.state === "closed") {
+    simB.forceOpen();
+    forcedAt.value = simB.t;
+  } else {
+    simB.forceClose();
+  }
+}
 function updateReadout() {
   if (!simB || !simB.pts.length) return;
   const b = simB.pts[simB.pts.length - 1];
@@ -479,6 +600,8 @@ function updateReadout() {
     g: b.g,
     gA: a ? a.g : 0,
     rejected: simB.rejected,
+    lat: b.lat * 1000,
+    latA: a ? a.lat * 1000 : 0,
   };
 }
 
@@ -532,7 +655,11 @@ function finishRun() {
   let t, b;
   if (pc == null) {
     t = "Ergebnis mit Breaker: " + LABEL[rc] + ".";
-    b = `Keine Vorhersage abgegeben. Goodput (Mittel t ≥ 90 s): <b class="mono">${fmt(tailB)} req/s</b>.`;
+    const lead =
+      mode.value === "manual"
+        ? `Manuell-Modus (${autoBreaker.value ? "Auto-Breaker an" : "nur von Hand"}). `
+        : "Keine Vorhersage abgegeben. ";
+    b = `${lead}Goodput (Mittel t ≥ 90 s): <b class="mono">${fmt(tailB)} req/s</b>.`;
   } else if (pc === rc) {
     t = "Deine Vorhersage stimmt: " + LABEL[rc] + ".";
     b = `Vorhergesagt: <b class="mono">${fmt(predTail)}</b> · gemessen: <b class="mono">${fmt(tailB)} req/s</b> (Mittel t ≥ 90 s).`;
@@ -563,7 +690,7 @@ function archiveAndRun(newSeed) {
   makeHistory();
   drawAll();
   phase.value = "sketch";
-  if (sketchReady.value) startRun();
+  if (canStart.value) startRun();
 }
 function softResetToSketch() {
   phase.value = "sketch";
@@ -582,6 +709,8 @@ function resetAll() {
   R.value = 2;
   eTrip.value = 0.5;
   tOpen.value = 5;
+  mode.value = "manual";
+  autoBreaker.value = false;
   seed = randomSeed();
   readout.value = null;
   softResetToSketch();
@@ -590,6 +719,20 @@ function resetAll() {
 watch([amp, R, eTrip, tOpen], () => {
   if (phase.value === "running") return;
   makeHistory();
+  drawAll();
+});
+/* Auto-Breaker mitten im Lauf zuschalten wirkt sofort (kippt live). */
+watch(autoBreaker, (v) => {
+  if (simB) simB.auto = v;
+});
+/* Moduswechsel verwirft den laufenden/fertigen Lauf und geht zurück in die
+   Sketch-Phase; die gemalte Kurve bleibt erhalten (nur im Vorhersage-Modus
+   sichtbar). */
+watch(mode, () => {
+  if (animId) cancelAnimationFrame(animId);
+  animId = null;
+  oldRuns = [];
+  softResetToSketch();
   drawAll();
 });
 
@@ -621,15 +764,11 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
 
 <template>
   <SimShell
-    eyebrow="Gegenmaßnahmen · Predict first"
+    :eyebrow="mode === 'manual' ? eyebrowManual : eyebrowPredict"
     title="Der Circuit Breaker"
     :subtitle="subtitle"
-    presets-label="Vorhersage:"
-    :presets="[
-      { key: 'painless', label: 'rettet ohne Einbruch' },
-      { key: 'sacrifice', label: 'kurzes Opfer' },
-      { key: 'nohelp', label: 'hilft nicht' },
-    ]"
+    :presets-label="mode === 'predict' ? 'Vorhersage:' : ''"
+    :presets="mode === 'predict' ? PRESETS : []"
     gear-title="Experimentieren"
     show-reset
     show-rewind
@@ -641,36 +780,87 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
     @reset="resetAll"
     @rewind="softResetToSketch"
   >
+    <template #transport>
+      <div class="cb-seg" role="group" aria-label="Modus wählen">
+        <button
+          class="cb-seg-btn"
+          :class="{ 'cb-seg-on': mode === 'manual' }"
+          :aria-pressed="mode === 'manual'"
+          @click="mode = 'manual'"
+        >
+          Manuell
+        </button>
+        <button
+          class="cb-seg-btn"
+          :class="{ 'cb-seg-on': mode === 'predict' }"
+          :aria-pressed="mode === 'predict'"
+          @click="mode = 'predict'"
+        >
+          Vorhersage
+        </button>
+      </div>
+    </template>
+
     <template #presets-extra>
-      <button class="cb-btn cb-primary" :disabled="!canStart" @click="startRun">
-        ▶ Simulation starten
-      </button>
-      <button
-        class="cb-btn"
-        :disabled="phase === 'running'"
-        @click="clearSketch"
-      >
-        Skizze löschen
-      </button>
-      <button
-        class="cb-btn cb-forcebtn"
-        :disabled="!canForce"
-        title="Operator-Kill-Switch: den Breaker sofort öffnen, bevor das Fehlerraten-Fenster kippt — je früher, desto weniger Timeout-Verschwendung."
-        @click="triggerForce"
-      >
-        {{
-          forcedAt !== null
-            ? `manuell geöffnet ab t = ${fmt(forcedAt, 1)} s`
-            : "Breaker manuell öffnen"
-        }}
-      </button>
-      <button
-        v-if="phase === 'sketch' && !sketchSkipped"
-        class="cb-btn cb-linkish"
-        @click="sketch.skip()"
-      >
-        ohne Vorhersage starten
-      </button>
+      <template v-if="mode === 'manual'">
+        <button
+          class="cb-btn cb-primary"
+          :disabled="!canStart"
+          @click="startRun"
+        >
+          ▶ Simulation starten
+        </button>
+        <button
+          class="cb-btn cb-forcebtn"
+          :disabled="!canToggleBreaker"
+          title="Den Breaker von Hand öffnen bzw. wieder schließen — komplett manuell. Ohne Auto-Breaker bleibt er offen, bis du ihn schließt."
+          @click="toggleBreaker"
+        >
+          {{ breakerOpen ? "Breaker schließen" : "Breaker öffnen" }}
+        </button>
+        <label
+          class="cb-toggle"
+          title="Automatisches Auslösen bei hoher Fehlerrate zuschalten. Manuelles Öffnen bleibt möglich."
+        >
+          <input v-model="autoBreaker" type="checkbox" />
+          Auto-Breaker
+        </label>
+      </template>
+      <template v-else>
+        <button
+          class="cb-btn cb-primary"
+          :disabled="!canStart"
+          @click="startRun"
+        >
+          ▶ Simulation starten
+        </button>
+        <button
+          class="cb-btn"
+          :disabled="phase === 'running'"
+          @click="clearSketch"
+        >
+          Skizze löschen
+        </button>
+        <button
+          class="cb-btn cb-forcebtn"
+          :disabled="!canForce"
+          title="Operator-Kill-Switch: den Breaker sofort öffnen, bevor das Fehlerraten-Fenster kippt — je früher, desto weniger Timeout-Verschwendung."
+          @click="triggerForce"
+        >
+          {{
+            forcedAt !== null
+              ? `manuell geöffnet ab t = ${fmt(forcedAt, 1)} s`
+              : "Breaker manuell öffnen"
+          }}
+        </button>
+        <button
+          v-if="phase === 'sketch' && !sketchSkipped"
+          class="cb-btn cb-linkish"
+          @click="sketch.skip()"
+        >
+          ohne Vorhersage starten
+        </button>
+      </template>
     </template>
 
     <template #stage>
@@ -704,6 +894,12 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
           <div class="cb-chartbox">
             <canvas ref="qCanvas" aria-label="Queue-Tiefe über Zeit" />
           </div>
+          <div class="cb-chartbox">
+            <canvas
+              ref="lCanvas"
+              aria-label="Downstream-Latenz über Zeit, mit und ohne Breaker"
+            />
+          </div>
           <div class="cb-strip">
             <span v-if="readout" class="cb-readouts">
               t <b>{{ fmt(readout.t, 1) }} s</b> · Zustand
@@ -718,10 +914,17 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
               <span class="cb-vs"
                 >(ohne: {{ fmt(Math.max(0, readout.gA)) }})</span
               >
-              · verworfen <b>{{ fmt(readout.rejected) }}</b>
+              · Latenz
+              <b :class="{ good: readout.lat < 30, bad: readout.lat > 500 }">{{
+                fmt(readout.lat)
+              }}</b>
+              ms <span class="cb-vs">(ohne: {{ fmt(readout.latA) }})</span> ·
+              verworfen <b>{{ fmt(readout.rejected) }}</b>
             </span>
             <span class="cb-legend">
-              <span><i class="sw pred" /> Vorhersage</span>
+              <span v-if="mode === 'predict'"
+                ><i class="sw pred" /> Vorhersage</span
+              >
               <span><i class="sw real" /> mit Breaker</span>
               <span><i class="sw nob" /> ohne Breaker</span>
               <span><i class="sw band" /> Open/Half-Open</span>
@@ -1054,6 +1257,48 @@ const STATE_LABEL = { closed: "CLOSED", open: "OPEN", half: "HALF-OPEN" };
   background: none;
   text-decoration: underline;
   opacity: 0.7;
+}
+
+/* Modus-Umschalter (Header/Transport-Slot) & Auto-Breaker-Toggle: über die
+   theme-sicheren SimShell-Chrome-Variablen gefärbt — die scoped --cb-*-Palette
+   greift im Header NICHT (Light-Fallback in Dark, siehe Gear-/Reset-Knöpfe). */
+.cb-seg {
+  display: inline-flex;
+  gap: 4px;
+}
+.cb-seg-btn {
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--slidev-code-font-family);
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--c-panelHi);
+  color: var(--c-textHi);
+  border: 1px solid var(--c-border);
+}
+.cb-seg-on {
+  background: var(--c-panel);
+  border-color: var(--c-phosphor);
+  box-shadow: inset 0 0 0 1px var(--c-phosphor);
+}
+.cb-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 7px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-family: var(--slidev-code-font-family);
+  cursor: pointer;
+  user-select: none;
+  background: var(--c-panelHi);
+  color: var(--c-textHi);
+  border: 1px solid var(--c-border);
+}
+.cb-toggle input {
+  accent-color: var(--c-phosphor);
+  cursor: pointer;
 }
 
 /* Erklärung-Tab */

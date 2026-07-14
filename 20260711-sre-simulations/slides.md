@@ -1227,17 +1227,31 @@ routeAlias: circuit-breaker
 <CircuitBreakerSim />
 
 <!--
-- Bedienung: Goodput MIT Breaker ab t = 20 s skizzieren oder Preset
-  wählen („rettet ohne Einbruch" ist die verbreitete falsche Intuition),
-  dann ▶. Beide Kurven laufen aus demselben Seed — die rote (ohne
-  Breaker) ist das bekannte Kollaps-Ende aus dem Retry-Sturm.
-- Zustandsband oben zeigen: rot = Open, amber = Half-Open. Während des
-  Bursts re-trippt der Breaker typischerweise einmal.
+- Header-Umschalter „Manuell ⇄ Vorhersage" — die Folie startet im
+  MANUELL-Modus. Erst ein Gefühl geben, dann vorhersagen lassen.
+- Manuell (Sandbox, kein Zeichnen): ▶ startet den Lauf schon VOR dem
+  Incident — Zeit, die Maus zum Knopf zu bringen. Ohne Auto-Breaker
+  kollabieren beide Kurven (Lane B == Lane A). „Breaker öffnen" von Hand
+  → Lane B erholt sich sofort, Latenz stürzt vom Timeout auf ~0. Der Knopf
+  wechselt dann zu „Breaker schließen": komplett manuell, der Breaker
+  bleibt offen, bis du ihn schließt (kein Auto-Cooldown ohne Auto-Breaker).
+- Der Latenz-Graph (unten) ist die Pointe: ohne Breaker klebt die Latenz
+  am Timeout-Deckel (1 s) — ein stiller Drop, KEINE Fehlermeldung. Der
+  offene Breaker weist sofort ab → Latenz fällt unter den Good-Case
+  („billiger Fehler statt teurem Timeout").
+- „Auto-Breaker" zuschalten (auch mitten im Kollaps) → der Breaker kippt
+  selbst bei 50 % Fehlerrate und erholt sich per Cooldown/Half-Open; der
+  Lauf startet dann wie gehabt direkt am Incident. Manuelles Öffnen und
+  Schließen bleibt möglich.
+- Vorhersage-Modus: der bekannte Flow — Goodput MIT Breaker ab t = 20 s
+  skizzieren oder Preset wählen („rettet ohne Einbruch" ist die
+  verbreitete falsche Intuition), dann ▶. Beide Kurven aus demselben
+  Seed; die rote (ohne Breaker) ist das Kollaps-Ende aus dem Retry-Sturm.
+- Zustandsband oben: rot = Open, amber = Half-Open. Während des Bursts
+  re-trippt der Breaker typischerweise einmal.
 - Pointe im Verdict: der Breaker rettet nicht den Burst — er opfert ihn
   kontrolliert. Chips: Recovery ≈ 10–20 s vs. nie · ≈ 900 billig
   verworfen vs. ≈ 7.800 teuer verloren (und steigend, Queue → OOM).
-- „Breaker manuell öffnen" = Operator-Kill-Switch: früher öffnen spart
-  Timeout-Verschwendung.
 - ⚙: Cooldown 1 s → Zustandsband flattert (verfrühtes Schließen slammt
   die Queue); Kipp-Schwelle 0,85 → teurer; ×1,2 → Breaker kippt nie,
   beide Kurven identisch.

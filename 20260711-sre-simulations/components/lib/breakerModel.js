@@ -22,6 +22,8 @@ export const TAU_ERR = 2; // Fehlerraten-EMA [s]
 export const HALF_ADMIT = 0.1; // Half-Open: Anteil zugelassener Proben
 export const HALF_FAIL = 3; // Probe-Fails → wieder Open
 export const HALF_OK = 20; // Probe-OKs → Closed
+export const FASTFAIL_LAT = 0.005; // Latenz einer sofort abgewiesenen Anfrage [s]
+export const L_BASE = 0.25; // Good-Case-Antwortzeit (Basis-Servicezeit) [s]
 
 const sig = (x) => 1 / (1 + Math.exp(-x));
 export const pT = (q) => sig((q / MU - D) / S_SIG);
@@ -34,14 +36,22 @@ export class BreakerSim {
    *                Ströme bis zur ersten Divergenz)
    * @param amp     Burst-Amplitude
    * @param R       max. Retries
-   * @param opts    { enabled, eTrip, tOpen } — enabled=false ⇒ Lane „ohne
-   *                Breaker" (verhält sich exakt wie RetryStormSim)
+   * @param opts    { enabled, auto, eTrip, tOpen } — enabled=false ⇒ Lane
+   *                „ohne Breaker" (verhält sich exakt wie RetryStormSim);
+   *                auto=false ⇒ Breaker vorhanden, kippt aber nur per
+   *                forceOpen() von Hand (kein automatisches Auslösen).
    */
-  constructor(seed, amp, R, { enabled = true, eTrip = 0.5, tOpen = 5 } = {}) {
+  constructor(
+    seed,
+    amp,
+    R,
+    { enabled = true, auto = true, eTrip = 0.5, tOpen = 5 } = {},
+  ) {
     this.rnd = mulberry32(seed);
     this.amp = amp;
     this.R = R;
     this.enabled = enabled;
+    this.auto = auto;
     this.eTrip = eTrip;
     this.tOpen = tOpen;
     this.t = 0;
@@ -69,6 +79,16 @@ export class BreakerSim {
   forceOpen() {
     if (this.enabled && this.state === "closed") this.open();
   }
+  /* Operator schließt den Breaker von Hand wieder (komplett manuelle
+     Bedienung, ohne auf den Cooldown/Half-Open-Zyklus zu warten). */
+  forceClose() {
+    if (this.enabled && this.state !== "closed") {
+      this.state = "closed";
+      this.errEMA = 0;
+      this.probeOk = 0;
+      this.probeFail = 0;
+    }
+  }
   step() {
     const lamNow = this.lam(this.t);
     const p = pT(this.q);
@@ -76,14 +96,18 @@ export class BreakerSim {
     if (!this.enabled || this.state === "closed") {
       arr = pois(lamNow * att(p, this.R) * DT, this.rnd);
       if (this.enabled) {
+        // Fehlerraten-EMA läuft immer mit (auch bei auto=false), damit ein
+        // Zuschalten von „Auto" mitten im Lauf sofort kippen kann.
         this.errEMA += (DT / TAU_ERR) * (p - this.errEMA);
-        if (this.errEMA > this.eTrip) this.open();
+        if (this.auto && this.errEMA > this.eTrip) this.open();
       }
     } else if (this.state === "open") {
       // Basis-Requests werden sofort billig abgewiesen (kein Retry, kein
       // Timeout) — die Queue draint derweil mit voller Kapazität.
       this.rejected += pois(lamNow * DT, this.rnd);
-      if (this.t - this.openedAt >= this.tOpen) {
+      // Cooldown → Half-Open nur automatisch; von Hand geöffnet (auto=false)
+      // bleibt der Breaker offen, bis der Operator ihn wieder schließt.
+      if (this.auto && this.t - this.openedAt >= this.tOpen) {
         this.state = "half";
         this.probeOk = 0;
         this.probeFail = 0;
@@ -114,7 +138,26 @@ export class BreakerSim {
     const g = good / DT;
     this.ema = this.ema + (DT / 0.8) * (g - this.ema);
     this.t += DT;
-    this.pts.push({ t: this.t, q: this.q, g: this.ema, state: this.state });
+    // Effektive Downstream-Antwortzeit: Basis-Servicezeit L_BASE plus
+    // Queue-Wartezeit, affin auf [L_BASE .. D] skaliert — erreicht den
+    // Timeout-Deckel D genau am Timeout-Punkt (q/MU = D) wie zuvor, nur mit
+    // sichtbarem Good-Case-Sockel statt ~20 ms. Stiller Timeout = keine
+    // Fehlermeldung. Offener Breaker weist sofort ab → billige Fast-Fail-
+    // Latenz, klar unter dem Good-Case.
+    const wait = Math.min(this.q / MU, D);
+    const served = L_BASE + (D - L_BASE) * (wait / D);
+    let lat;
+    if (this.enabled && this.state === "open") lat = FASTFAIL_LAT;
+    else if (this.enabled && this.state === "half")
+      lat = HALF_ADMIT * served + (1 - HALF_ADMIT) * FASTFAIL_LAT;
+    else lat = served;
+    this.pts.push({
+      t: this.t,
+      q: this.q,
+      g: this.ema,
+      state: this.state,
+      lat,
+    });
   }
   runTo(t) {
     while (this.t < t - 1e-9) this.step();
