@@ -149,6 +149,8 @@ hideInToc: true
 
 Interne Namen (`nO`), Schwellwerte und Zeilenzahlen in diesem Talk stammen aus diesem Leak — **Details in Kapitel 8.**
 
+Zweite Quelle: ein **Logging-Proxy an der API-Grenze** (Systima, 07/2026) — der Leak zeigt den Code, der Proxy die tatsächlichen Payloads. **Messwerte in Kapitel 8.**
+
 </div>
 
 ---
@@ -398,6 +400,12 @@ Eine produktive Session füllt das **schnell** — Datei-Inhalte, Tool-Ergebniss
 </div>
 </div>
 
+<div class="mt-4 text-sm opacity-60">
+
+Gemessen: Ein 85K-Bootstrap (Harness + Config) belegt **>40% eines 200K-Windows** — auf jedem Request, immun gegen Cache-Discounts. Compaction kommt entsprechend früher (Messung: **Kapitel 8**).
+
+</div>
+
 ---
 hideInToc: true
 ---
@@ -485,6 +493,7 @@ hideInToc: true
 - Lädt eigenes System-Prompt und CLAUDE.md
 - Nur das **finale Summary** geht zurück an den Parent
 - Modi: Standard, Worktree-Isolation, Fork (opt-in via `CLAUDE_CODE_FORK_SUBAGENT=1`)
+- **Gemessen:** Fan-out auf 2 Subagents = 121K → **513K Tokens (4,2×)** — jeder liest seinen Bootstrap bei jedem Turn neu
 
 </div>
 <div>
@@ -531,7 +540,7 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-60">
 
-**AGENTS.md** wird zum Cross-Tool-Standard — Linux Foundation, 60.000+ Open-Source-Repos.
+**AGENTS.md** wird zum Cross-Tool-Standard — Linux Foundation, 60.000+ Open-Source-Repos. Aber: Claude Code 2.1.207 ignorierte es **still** (las nur `CLAUDE.md`) — und eine 72-KB-Datei kostet **~20K Tokens pro Request** (Messung: Kapitel 8).
 
 </div>
 
@@ -662,6 +671,12 @@ Der statische Teil wird **global über alle Organisationen gecacht** — massive
 | **Claude Code** | **Multi-K Tokens** |
 
 Claude Code: **≤25 Wörter zwischen Tool-Calls, ≤100 Wörter in finalen Antworten.** A/B-Tests zeigten ~1,2% Token-Reduktion mit expliziten Wortzahlen.
+
+<!--
+Der Prompt ist außerdem modell-konditional: an Fable 5 sendet Claude Code 62%
+weniger Instruktions-Zeichen als an Sonnet 4.5 (27.787 → 10.526) — Messung und
+Details auf der API-Grenze-Slide in Kapitel 8 (dort in der Fußzeile).
+-->
 
 </div>
 </div>
@@ -1080,7 +1095,7 @@ Der Kern ist trivial — ~10 Zeilen Pseudocode. Kein Classifier, kein Router, ke
 
 ### 2. Token-Budget ist die echte Constraint
 
-MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40–1100×. Cache-Management ist kritisch. Und: Kosten sind **multiplikativ** — je weiter außen die Schleife (Iterationen → Turns → Runs → Versuche), desto größer der Hebel.
+MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40–1100×. Beim Cache zählen **Request-Anzahl und Prefix-Stabilität** mehr als die Baseline-Größe — und Kosten sind **multiplikativ**: je weiter außen die Schleife, desto größer der Hebel.
 
 ### 3. Einfach schlägt komplex
 
