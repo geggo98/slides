@@ -308,6 +308,88 @@ e4f5a6b Follow-up-Kommentare: kurz statt Vollreport
 </Callout>
 
 ---
+hideInToc: true
+routeAlias: kontext-aufteilen
+---
+
+# Ausblick: Aufteilen statt anwachsen
+
+<div class="grid grid-cols-2 gap-6">
+
+<div>
+
+```text
+runbooks/
+  ticket-tests.md   ← Index, schlank
+  steps/
+    testplan.md
+    umgebung.md
+    report.md
+  test-arten/
+    regression.md
+    neues-feature.md
+```
+
+<div class="text-xs opacity-60 mt-2">
+
+Der Index behält Grundregeln + Ablauf — die Details wandern in Module.
+
+</div>
+
+</div>
+
+<div>
+
+<v-clicks>
+
+- **On-demand statt Vorleistung** — eine Detail-Datei wird erst gelesen, wenn ihr Schritt dran ist. Wie bei Skills: `SKILL.md` + Referenz-Dateien → <TalkXref slug="20260327-ai-agents" anchor="skills">Agent Skills</TalkXref>
+- **Subagent bekommt nur sein Modul** — jedes Ticket läuft heute schon im eigenen Subagenten; künftig mit Test-Art-Datei statt 50-KB-Runbook
+- **Kuration wird chirurgisch** — Notizen fließen in die eine betroffene Datei; kleine, reviewbare Diffs
+
+</v-clicks>
+
+</div>
+
+</div>
+
+<Callout v-click tone="info" class="mt-3">
+
+Runbooks sind Programme — Wachstum behandelt man wie bei Code: **modularisieren statt anbauen**.
+
+</Callout>
+
+---
+hideInToc: true
+---
+
+# Ausblick: Wissen wohnt im Repo
+
+Repo-spezifisches Wissen gehört nicht ins zentrale Runbook, sondern **dorthin, wo gearbeitet wird**:
+
+```text
+preis-service/
+  AGENTS.md            ← wie baut & testet man dieses Repo
+  docs/agent/
+    testing.md         ← Test-Arten, Staging-URLs, bekannte Flakes
+    cve-updates.md     ← wo Dependencies liegen, wie man sie bumpt
+```
+
+<v-clicks>
+
+- **Vor Ort gelesen** — der Agent lädt das Wissen erst, wenn er im Repo arbeitet; das Runbook muss nicht N Repos kennen
+- **Ownership** — das Repo-Team pflegt sein Agenten-Wissen selbst; die Kuration verteilt sich
+- **Skalierung** — neues Repo anschließen = Datei ins Repo legen; das zentrale Runbook bleibt unverändert
+- **Doppelnutzen** — dieselbe Datei hilft menschlichem Onboarding und jedem anderen Agenten (IDE, CI, Review)
+
+</v-clicks>
+
+<Callout v-click tone="info" class="mt-3">
+
+`AGENTS.md` / `CLAUDE.md` liest praktisch jeder Harness ab Werk — der natürliche Ort für dieses Wissen.
+
+</Callout>
+
+---
 layout: section
 routeAlias: notizen
 ---
@@ -759,7 +841,7 @@ hideInToc: true
 - **Kein Selbst-Lernen** — für autonome Runbook-Änderungen fehlt das Sicherheitsnetz (etwa eine Eval-Suite für Runbooks); bis dahin bleibt Kuration Handarbeit.
 - **Flaky-Befunde** — ob Rot ein echter Defekt oder ein Umgebungsproblem ist, braucht weiterhin menschliches Urteil.
 - **Markup-Konvertierung** — das tolerante Idempotenz-Matching bleibt die fummeligste Stelle des Systems.
-- **Kontextkosten** — ~50 KB Runbook werden jedem Lauf neu vorgelegt; das Runbook wächst mit jeder Kuration. **Ausblick:** nicht-zeitkritische Läufe könnten per Batch-Modus die Token-Kosten halbieren (stapelt mit dem Prompt-Cache) → <TalkXref slug="20260408-agents-details" anchor="cache-hygiene">Cache & Batch</TalkXref>
+- **Kontextkosten** — ~50 KB Runbook werden jedem Lauf neu vorgelegt und wachsen mit jeder Kuration. **Gegenmittel geplant:** <Link to="kontext-aufteilen">aufteilen statt anwachsen</Link> · Batch-Modus für nicht-zeitkritische Läufe halbiert die Token-Kosten (stapelt mit dem Prompt-Cache) → <TalkXref slug="20260408-agents-details" anchor="cache-hygiene">Cache & Batch</TalkXref>
 
 </v-clicks>
 
@@ -777,7 +859,7 @@ hideInToc: true
 
 <v-clicks>
 
-1. **Das Runbook ist ein Programm** — in Prosa, versioniert, reviewbar. Der Agent ist nur der Interpreter.
+1. **Das Runbook ist ein Programm** — in Prosa, versioniert, reviewbar; wächst es, wird es **modularisiert wie Code**. Der Agent ist nur der Interpreter.
 2. **Zustand gehört ins Ticketsystem** — der Idempotenz-Header macht jeden Lauf gefahrlos wiederholbar.
 3. **Lernen = Agent notiert, Mensch kuratiert** — die Git-History des Runbooks ist die Lernkurve.
 4. **Der einzige Code sind die Skills** — Standard-Harness + Markdown + eine Schleife. Keine Hooks, kein Framework.
@@ -797,6 +879,7 @@ hideInToc: true
       'Runbooks als <strong>Programme in Prosa</strong>',
       'Idempotenz-Header: <strong>der Kommentar ist der Zustand</strong>',
       'Lernen durch <strong>Notizen + menschliche Kuration</strong>',
+      'Kontext klein halten: <strong>Aufteilen + Wissen im Repo</strong>',
     ],
   }"
   :refs="[
