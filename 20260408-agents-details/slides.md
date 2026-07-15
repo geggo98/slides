@@ -147,7 +147,7 @@ hideInToc: true
 
 <div class="text-sm opacity-50 mt-8">
 
-Interne Namen (`nO`), Schwellwerte und Zeilenzahlen in diesem Talk stammen aus diesem Leak — **Details in Kapitel 7.**
+Interne Namen (`nO`), Schwellwerte und Zeilenzahlen in diesem Talk stammen aus diesem Leak — **Details in Kapitel 8.**
 
 </div>
 
@@ -829,7 +829,91 @@ Token. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discou
 layout: section
 ---
 
-# 7. Source-Leak
+# 7. Die fünf Schleifen
+
+<div class="text-lg opacity-70 mt-4">
+
+Vom Token zum Retry: **Kosten entstehen multiplikativ.**
+
+</div>
+
+---
+clicks: 6
+hideInToc: true
+routeAlias: fuenf-schleifen
+---
+
+# Ein Agent ist eine Schleife aus Schleifen
+
+<NestedLoops :clicks="$clicks" />
+
+<div class="mt-3 text-xs opacity-60">
+
+Autonomie-Primitive (`/goal`, `/loop`): <TalkXref slug="20260327-ai-agents" anchor="autonomie-primitive">AI Coding Agents</TalkXref> · Dauerläufer in der Praxis: <TalkXref slug="20260707-anatomy-of-autonomous-agents">Anatomie Autonomer Agenten</TalkXref>
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Die Rechnung: multiplikativ, nicht additiv
+
+<div class="text-sm opacity-70 mb-2">
+
+Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (Input $3/MTok · Cache-Write $3,75 · Cache-Read $0,30).
+
+</div>
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### 😤 Naiv
+
+- **2 Versuche** — unklare Aufgabe, erstes Ergebnis verworfen
+- **× 8 Runs** — 1-h-Intervall, TTL 5 min ⇒ jeder Run cache-kalt
+- **× 20 Turns** — vages Ziel, kein Abbruchkriterium
+- **× Ø 40K Tokens** — ungepflegter Context
+
+**= 12,8 MTok Input ≈ $38/Tag**
+
+</div>
+<div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+### 😌 Optimiert
+
+- **1 Versuch** — Plan-Mode + klare Aufgabe
+- **× 8 Runs** — gleiche Frequenz
+- **× 10 Turns** — präzises `/goal` mit Abbruchkriterium
+- **× Ø 30K Tokens** — Context-Hygiene, **~85 % aus dem Cache**
+
+**= 2,4 MTok Input ≈ $2/Tag**
+
+</div>
+</div>
+
+<div class="mt-4 p-3 border-1.5 border-amber-500 rounded-lg text-sm" style="background: rgba(245,158,11,0.08)">
+
+**Faktor ~20×** — kein einzelner Trick, sondern **ein Hebel pro Schleife**. Je weiter außen, desto größer.
+
+</div>
+
+<!--
+Modellrechnung (Input-Tokens, Output der Einfachheit halber ignoriert):
+- Naiv: 2 × 8 × 20 × 40.000 = 12,8 MTok, cache-kalt ohne Cache-Nutzen
+  → 12,8 × $3,00 = $38,40/Tag.
+- Optimiert: 1 × 8 × 10 × 30.000 = 2,4 MTok, davon 85 % Cache-Read
+  ($0,30) und 15 % Cache-Write ($3,75)
+  → 2,4 × (0,85 × 0,30 + 0,15 × 3,75) = 2,4 × 0,8175 = $1,96/Tag.
+- Verhältnis: 38,40 / 1,96 ≈ 19,6 → „Faktor ~20ד.
+Preise: Sonnet 4.6, siehe Kap. 6 (KV-Cache: 90% Discount).
+-->
+
+---
+layout: section
+---
+
+# 8. Source-Leak
 
 ---
 hideInToc: true
@@ -871,7 +955,7 @@ hideInToc: true
 layout: section
 ---
 
-# 8. Architektur-Vergleich
+# 9. Architektur-Vergleich
 
 ---
 hideInToc: true
@@ -940,7 +1024,7 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 layout: section
 ---
 
-# 9. Kernaussagen
+# 10. Kernaussagen
 
 ---
 hideInToc: true
@@ -956,7 +1040,7 @@ Der Kern ist trivial — ~10 Zeilen Pseudocode. Kein Classifier, kein Router, ke
 
 ### 2. Token-Budget ist die echte Constraint
 
-MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40–1100×. Cache-Management ist kritisch.
+MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40–1100×. Cache-Management ist kritisch. Und: Kosten sind **multiplikativ** — je weiter außen die Schleife (Iterationen → Turns → Runs → Versuche), desto größer der Hebel.
 
 ### 3. Einfach schlägt komplex
 

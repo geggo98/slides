@@ -744,6 +744,120 @@
       ]
     },
     {
+      "id": "fuenf-schleifen-multiplikation",
+      "question": "Ein Coding-Agent besteht aus fünf geschachtelten Schleifen — vom Token-Loop innen bis zu Deinen Versuchen außen. Welche Aussagen über ihre Kostenwirkung treffen zu?",
+      "difficulty": "easy",
+      "section": "Die fünf Schleifen",
+      "explanation": "Die Ebenen wirken multiplikativ (Tokens ≈ Versuche × Runs × Turns × Iterationen × Ø-Tokens), deshalb gilt der Merksatz: Je weiter außen die Schleife, desto größer der Hebel — ein gesparter Versuch außen spart alles darunter gleich mit.",
+      "options": [
+        {
+          "id": "fuenf-schleifen-multiplikation-o0",
+          "text": "Die Gesamtkosten ergeben sich multiplikativ: Tokens ≈ Versuche × Runs × Turns × Iterationen × Ø-Tokens pro Iteration.",
+          "verdict": "true",
+          "explanation": "Genau diese Multiplikation ist der Kern des Modells — jede Ebene skaliert alle Ebenen darunter mit."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o1",
+          "text": "Die Kosten der fünf Ebenen addieren sich, deshalb lohnt sich Optimieren auf jeder Ebene ungefähr gleich viel.",
+          "verdict": "false",
+          "explanation": "Die Ebenen multiplizieren sich, statt sich zu addieren — deshalb wirkt derselbe Spar-Faktor außen auf alles darunter, innen nur auf die eigene Ebene."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o2",
+          "text": "Je weiter außen die Schleife, desto größer der Hebel: Ein eingesparter Nutzer-Versuch spart alle Runs, Turns und Tokens darunter gleich mit.",
+          "verdict": "true",
+          "explanation": "Das ist der Merksatz der Sektion — der äußerste Loop läuft am Schreibtisch und ist zugleich der teuerste."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o3",
+          "text": "Der innerste Token-Loop hat den größten Hebel, weil dort mit jedem Forward-Pass die eigentliche Rechenarbeit stattfindet.",
+          "verdict": "false",
+          "explanation": "Häufigster Durchlauf heißt nicht größter Hebel: Token-Ersparnisse wirken nur lokal, während äußere Schleifen alle inneren Kosten vervielfachen."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o4",
+          "text": "Im Agent-Loop wird bei jeder Iteration der komplette Context erneut geschickt — und er wächst mit jedem Tool-Ergebnis weiter an.",
+          "verdict": "true",
+          "explanation": "Genau deshalb sind Cache, Context-Hygiene und Skills statt MCP-Bloat die Hebel auf dieser Ebene."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o5",
+          "text": "Der Agent-Loop endet nach einer fest konfigurierten Maximalzahl von Iterationen.",
+          "verdict": "false",
+          "explanation": "Der Agent-Loop terminiert, wenn das Modell keinen Tool-Call mehr ausgibt — es ist eine inhaltliche Abbruchbedingung, kein fester Zähler."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o6",
+          "text": "Zusätzliche Turns pro Run sind ein Kostenproblem, das Du vermeiden solltest.",
+          "verdict": "depends",
+          "explanation": "Turns multiplizieren zwar die Kosten darunter — aber wenn sie nötig sind, um das Ziel wirklich zu erreichen, sind sie deutlich billiger als ein komplett verworfener Versuch, der alles noch einmal zahlt."
+        },
+        {
+          "id": "fuenf-schleifen-multiplikation-o7",
+          "text": "Der 90-%-Cache-Discount fängt das Context-Wachstum im Agent-Loop weitgehend ab.",
+          "verdict": "depends",
+          "explanation": "Das gilt nur, solange der Prefix exakt stabil bleibt und die Folge-Requests innerhalb der 5-Minuten-TTL kommen — ändert sich der Prefix oder läuft die TTL ab, zahlst Du wieder den vollen Input-Preis."
+        }
+      ]
+    },
+    {
+      "id": "goal-bedingung-haiku",
+      "question": "Du lässt einen Agenten per /goal so lange arbeiten, bis ein Ziel erreicht ist. Welche Aussagen über diese Schleife treffen zu?",
+      "difficulty": "medium",
+      "section": "Die fünf Schleifen",
+      "explanation": "/goal ist die bedingungsgesteuerte Schleife (until goalErreicht): Sie wiederholt Turns, bis das Ziel erreicht ist, wobei Haiku nach jedem Turn prüft — präzise, konkrete, überschaubare und erreichbare Ziele sind deshalb der Hebel für weniger Turns.",
+      "options": [
+        {
+          "id": "goal-bedingung-haiku-o0",
+          "text": "/goal wiederholt Turns so lange, bis das Ziel erreicht ist — es ist eine Bedingungs-Schleife, kein Zeit-Trigger.",
+          "verdict": "true",
+          "explanation": "/goal entspricht einem until (goalErreicht) und unterscheidet sich damit grundlegend vom cron-artigen /loop."
+        },
+        {
+          "id": "goal-bedingung-haiku-o1",
+          "text": "Nach jedem Turn prüft Haiku, ob das Ziel erreicht ist.",
+          "verdict": "true",
+          "explanation": "Die Zielprüfung übernimmt bewusst das kleine, günstige Haiku — nicht das Hauptmodell, das die eigentliche Arbeit macht."
+        },
+        {
+          "id": "goal-bedingung-haiku-o2",
+          "text": "Die Zielprüfung läuft mit demselben Hauptmodell, das auch die Turns bearbeitet — nur so versteht es den Kontext.",
+          "verdict": "false",
+          "explanation": "Gerade nicht: Haiku prüft nach jedem Turn, weil ein Erreicht-Check deutlich günstiger ist als ein voller Arbeits-Turn des Hauptmodells."
+        },
+        {
+          "id": "goal-bedingung-haiku-o3",
+          "text": "Präzise, konkrete, überschaubare und erreichbare Ziele senken die Zahl der Turns bis „done“.",
+          "verdict": "true",
+          "explanation": "Das ist der Hebel dieser Ebene — je klarer die Zielbedingung, desto früher meldet die Prüfung Erfolg."
+        },
+        {
+          "id": "goal-bedingung-haiku-o4",
+          "text": "/goal löst wie ein Cron-Job in festen Zeitintervallen erneut aus.",
+          "verdict": "false",
+          "explanation": "Das beschreibt /loop — /goal wird von der Zielbedingung gesteuert, nicht von der Uhr."
+        },
+        {
+          "id": "goal-bedingung-haiku-o5",
+          "text": "Ein unerreichbares Ziel ist harmlos, weil /goal das erkennt und früh abbricht.",
+          "verdict": "false",
+          "explanation": "Die Schleife wiederholt Turns, bis die Bedingung erfüllt ist — ein unerreichbares Ziel treibt die Turn-Zahl und damit die multiplizierten Kosten immer weiter hoch."
+        },
+        {
+          "id": "goal-bedingung-haiku-o6",
+          "text": "Mehr Kontext in die Zielbeschreibung zu packen spart unterm Strich Kosten.",
+          "verdict": "depends",
+          "explanation": "Konkretere Ziele senken die Turn-Zahl — aber jedes zusätzliche Prompt-Token wandert in jeder Agent-Loop-Iteration erneut mit; es lohnt sich nur, wenn der Zusatzkontext tatsächlich Turns einspart."
+        },
+        {
+          "id": "goal-bedingung-haiku-o7",
+          "text": "Weniger Turns pro Lauf bedeutet automatisch weniger Gesamtkosten.",
+          "verdict": "depends",
+          "explanation": "Innerhalb eines Laufs ja — aber wenn der Agent das Ziel dadurch verfehlt und Du einen kompletten neuen Versuch startest, zahlst Du die gesamte Multiplikation darunter noch einmal."
+        }
+      ]
+    },
+    {
       "id": "transfer-skills-mcp-token",
       "question": "Skills vs. MCP — wie passen Token-Mechanik (dieser Talk) und Praxisregel (Companion-Talk) zusammen?",
       "difficulty": "medium",
@@ -911,6 +1025,63 @@
           "text": "Mehr Harness-Code bedeutet mehr Sicherheit.",
           "verdict": "depends",
           "explanation": "Deterministische Schichten helfen, haben aber selbst Luecken (etwa der >50-Sub-Commands-Fallback) — Pis Gegenthese lautet: lieber Container als tausende Zeilen In-Process-Guardrails."
+        }
+      ]
+    },
+    {
+      "id": "transfer-dauerlaeufer-cache-kalt",
+      "question": "Im Talk „Anatomie Autonomer Agenten“ läuft ein Dauerläufer per „/loop 1h Lies und befolge runbooks/ticket-test-runbook.md“. Was folgt daraus im Fünf-Schleifen-Modell für die Kosten?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Ein 1-Stunden-Intervall liegt weit über der Default-Cache-TTL von 5 Minuten — jeder Run dieses Dauerläufers startet also cache-kalt, und die Run-Zahl der /loop-Ebene multipliziert alle inneren Schleifen mit vollem Input-Preis.",
+      "options": [
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o0",
+          "text": "Mit 1 Stunde Intervall liegt jeder Run weit über der Cache-TTL von 5 Minuten — der Bot startet jedes Mal cache-kalt und zahlt vollen Input-Preis.",
+          "verdict": "true",
+          "explanation": "Genau das ist der TTL-Fallstrick der /loop-Ebene: 60 Minuten Pause lassen jeden gecachten Prefix ablaufen, bevor der nächste Run ihn lesen könnte."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o1",
+          "text": "Der Cache überdauert das 1-Stunden-Intervall, weil das Runbook zwischen den Runs unverändert bleibt.",
+          "verdict": "false",
+          "explanation": "Unveränderter Inhalt hilft nur beim Prefix-Match, nicht gegen die Zeit — die TTL von 5 Minuten läuft unabhängig davon ab, ob sich am Prompt etwas geändert hat."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o2",
+          "text": "Die Zahl der Runs pro Tag multipliziert die Kosten aller inneren Schleifen — jeder stündliche Lauf zahlt Turns, Iterationen und Tokens komplett neu.",
+          "verdict": "true",
+          "explanation": "Der Dauerläufer sitzt auf der /loop-Ebene, und dort gilt die Multiplikation: Runs × Turns × Iterationen × Ø-Tokens."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o3",
+          "text": "Cache-kalt zu starten ist unkritisch, weil Cache-Writes ohnehin günstiger sind als regulärer Input.",
+          "verdict": "false",
+          "explanation": "Cache-Writes kosten mit $3,75/MTok mehr als regulärer Input ($3) — cache-kalte Runs verlieren also den 90-%-Read-Discount, ohne irgendwo billiger zu werden."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o4",
+          "text": "Für so eine Schleife braucht es kein Agent-Framework — /loop oder drei Zeilen Shell genügen als äußere Schleife.",
+          "verdict": "true",
+          "explanation": "Der Anatomie-Talk macht genau diesen Punkt: Die äußere Wiederhol-Schleife ist trivial, die eigentliche Komplexität und die Kosten stecken in den inneren Ebenen."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o5",
+          "text": "Bei einem Dauerläufer dominiert der innerste Token-Loop die Kosten, weil er mit Abstand am häufigsten durchlaufen wird.",
+          "verdict": "false",
+          "explanation": "Häufigkeit ist nicht Hebel: Die äußeren Ebenen (Runs, Versuche) multiplizieren alle Token-Kosten — an der Frequenz oder am Runbook zu drehen spart mehr als jede Token-Feinoptimierung."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o6",
+          "text": "Das Intervall unter 5 Minuten zu drücken senkt die Tageskosten des Bots.",
+          "verdict": "depends",
+          "explanation": "Pro Run wird es dank Cache-Reads (0,10×) deutlich billiger, aber die Run-Zahl steigt dabei um mehr als Faktor 12 — ob netto gespart wird, hängt vom erreichbaren Cache-Anteil und der Arbeit pro Run ab."
+        },
+        {
+          "id": "transfer-dauerlaeufer-cache-kalt-o7",
+          "text": "Für diesen Anwendungsfall wäre /goal die günstigere Schleife als /loop.",
+          "verdict": "depends",
+          "explanation": "Die Kostenprofile unterscheiden sich: /goal skaliert mit Turns bis zur erfüllten Bedingung, /loop mit der Laufzeit — für abschließbare Aufgaben kann /goal früher terminieren und sparen, für echtes Dauer-Monitoring ohne „done“-Zustand passt nur /loop."
         }
       ]
     }
