@@ -46,6 +46,30 @@ export const totals = computed(() => {
   };
 });
 
+// Grobe €/MTok-Rate (Blended ≈ Input-Listenpreis, wie im MCP-Slide von
+// agents-details). GROBE SCHÄTZWERTE — die GPT-5.6-Preise sind Platzhalter,
+// im Code leicht anpassbar. Pro Vendor UND Rolle, weil Haupt- und Sub-Modell
+// (siehe TOKEN_LABELS) unterschiedlich kosten.
+const PRICE_EUR_PER_MTOK = {
+  claude: { main: 4.6, sub: 2.8 }, // Opus xhigh / Sonnet 5
+  codex: { main: 4.0, sub: 0.4 }, // gpt-5.6-sol ultra / low
+} as const;
+
+export const costs = computed(() => {
+  const p = PRICE_EUR_PER_MTOK[vendor.value];
+  // Codex-Faktor 0,87 steckt bereits in totals — hier nur Token × Rate.
+  const eur = (tok: number, rate: number) => (tok * rate) / 1_000_000;
+  const main = eur(totals.value.main, p.main);
+  const sub = eur(totals.value.sub, p.sub);
+  return {
+    main,
+    sub,
+    // Workflow-Token stecken alle im Sub-Feld → Sub-Modellpreis.
+    workflow: eur(totals.value.workflow, p.sub),
+    run: main + sub,
+  };
+});
+
 const multiplierIndex = STEPS_OVERVIEW.findIndex(
   (s) => s.flag === "multiplier",
 );
@@ -70,4 +94,14 @@ export function stepRefFor(view: "overview" | "zoom") {
 
 export function formatTokens(n: number) {
   return n.toLocaleString("de-DE");
+}
+
+// Auto-Einheit: unter 1 € als „15 ct", darüber als „1,20 €".
+export function formatCost(eur: number) {
+  return eur < 1
+    ? Math.round(eur * 100) + " ct"
+    : eur.toLocaleString("de-DE", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + " €";
 }

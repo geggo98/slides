@@ -13,6 +13,8 @@ import AgentRunEvent from "./AgentRunEvent.vue";
 import { SUBAGENT_COUNT, TOKEN_LABELS } from "./agentRunScript";
 import {
   activeView,
+  costs,
+  formatCost,
   formatTokens,
   multiplierRevealed,
   playing,
@@ -193,24 +195,39 @@ watch([() => events.value.length, vendor, isActive], async () => {
         <div class="sim-tile-label">
           Hauptagent · {{ TOKEN_LABELS[vendor].main }}
         </div>
-        <div class="sim-tile-value">{{ formatTokens(totals.main) }}</div>
+        <div class="sim-tile-value">
+          {{ formatTokens(totals.main)
+          }}<span class="sim-tile-cost">≈ {{ formatCost(costs.main) }}</span>
+        </div>
       </div>
       <div class="sim-tile">
         <div class="sim-tile-label">
           Subagents ({{ SUBAGENT_COUNT }}×) · {{ TOKEN_LABELS[vendor].sub }}
         </div>
-        <div class="sim-tile-value">{{ formatTokens(totals.sub) }}</div>
+        <div class="sim-tile-value">
+          {{ formatTokens(totals.sub)
+          }}<span class="sim-tile-cost">≈ {{ formatCost(costs.sub) }}</span>
+        </div>
       </div>
       <div v-if="view === 'zoom'" class="sim-tile sim-tile--wf">
         <div class="sim-tile-label">Dieser Workflow · PROJ-1043</div>
-        <div class="sim-tile-value">{{ formatTokens(totals.workflow) }}</div>
+        <div class="sim-tile-value">
+          {{ formatTokens(totals.workflow)
+          }}<span class="sim-tile-cost"
+            >≈ {{ formatCost(costs.workflow) }}</span
+          >
+        </div>
+      </div>
+      <div class="sim-run-total">
+        Lauf gesamt <strong>≈ {{ formatCost(costs.run) }}</strong>
       </div>
       <div v-if="multiplierRevealed" class="sim-mult">
         <strong>×{{ SUBAGENT_COUNT }} Subagent-Multiplikator</strong> — jedes
         isolierte Kontextfenster liest Runbook-Modul + Ticket neu
       </div>
       <div class="sim-footnote">
-        Token grob geschätzt — Messwerte aus echtem Lauf folgen
+        Token &amp; Kosten grob geschätzt (Blended-Input-Rate) — Messwerte
+        folgen
       </div>
     </aside>
   </div>
@@ -337,6 +354,19 @@ watch([() => events.value.length, vendor, isActive], async () => {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   transition: color 0.3s;
+}
+.sim-tile-cost {
+  margin-left: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+.sim-run-total {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  text-align: right;
+  padding: 0 2px;
 }
 .sim-mult {
   border-left: 3px solid #cd694a;
