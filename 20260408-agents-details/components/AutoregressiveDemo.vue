@@ -312,10 +312,10 @@ const P = computed(() => {
 
     <!-- Fußzeile: Compute vs. Abrechnung -->
     <p class="foot">
-      <b>Prefill/Decode = Compute</b> (KV-Cache mildert). Die
-      <b>Rechnung</b> explodiert erst, wenn jede Tool-Iteration den vollen
-      Context erneut als <b>Input</b> schickt → nächste Slide.
-      <span class="dim-foot">(KV-Cache-Details: Sektion 5)</span>
+      <b>Prefill</b> = ein paralleler Pass über den Prompt, <b>Decode</b> = ein
+      Pass <b>pro Token</b> — und jeder liest den wachsenden KV-Cache mit. Was
+      die Preisliste daraus macht → nächste Slide.
+      <span class="dim-foot">(KV-Cache-Details: Sektion 6)</span>
     </p>
   </div>
 </template>
