@@ -147,6 +147,8 @@ const browser = await chromium.launch();
   await page.waitForTimeout(800);
 
   // Nach Deep-Link muss die Übersicht als abgeschlossen zählen (32.400).
+  // .sim-tile-value enthält seit dem Kosten-Feature auch die €-Angabe
+  // ("32.400≈ 15 ct") — daher startsWith statt exaktem Vergleich.
   const deepVal =
     (
       await page
@@ -157,7 +159,7 @@ const browser = await chromium.launch();
     )?.trim() ?? "";
   check(
     "Deep-Link /31: Übersichtslauf zählt als komplett",
-    deepVal === "32.400",
+    deepVal.startsWith("32.400"),
     deepVal,
   );
   await page
