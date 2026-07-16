@@ -16,6 +16,7 @@ import CodexDiff from "@shared/components/brainless/codex/CodexDiff.vue";
 import CodexExec from "@shared/components/brainless/codex/CodexExec.vue";
 import CodexHeader from "@shared/components/brainless/codex/CodexHeader.vue";
 import CodexMessage from "@shared/components/brainless/codex/CodexMessage.vue";
+import CodexPermissions from "@shared/components/brainless/codex/CodexPermissions.vue";
 import CodexPrompt from "@shared/components/brainless/codex/CodexPrompt.vue";
 import CodexWorking from "@shared/components/brainless/codex/CodexWorking.vue";
 import type { TermEvent, Vendor } from "./agentRunScript";
@@ -37,6 +38,13 @@ function anyOf(v: unknown) {
 }
 
 const isClaude = () => props.vendor === "claude";
+
+// Codex-Freigabe-Optionen (per-Command-Approval; Codex hat keinen Auto-Modus).
+const APPROVAL_OPTIONS = [
+  { label: "Ja", description: "Diesen Befehl einmalig ausführen" },
+  { label: "Ja, in dieser Session nicht mehr fragen", description: "" },
+  { label: "Nein, abbrechen und Rückmeldung geben", description: "" },
+];
 </script>
 
 <template>
@@ -169,6 +177,11 @@ const isClaude = () => props.vendor === "claude";
     </div>
   </div>
 
+  <div v-else-if="event.kind === 'approval'" class="ev-block ev-approval">
+    <div class="ev-approval-cmd">$ {{ event.text }}</div>
+    <CodexPermissions :title="event.title" :options="APPROVAL_OPTIONS" />
+  </div>
+
   <ClaudePrompt
     v-else-if="event.kind === 'composer' && isClaude()"
     :effort="anyOf(event.effort ?? 'xhigh')"
@@ -250,5 +263,12 @@ const isClaude = () => props.vendor === "claude";
 .ev-panel-link {
   color: #5cc2e0;
   text-decoration: underline;
+}
+.ev-approval-cmd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  color: #f6e2b7;
+  margin-bottom: 6px;
+  overflow-wrap: break-word;
 }
 </style>

@@ -23,7 +23,8 @@ export interface TermEvent {
     | "diff"
     | "diffPager"
     | "promptPanel"
-    | "composer";
+    | "composer"
+    | "approval";
   // generic text (user / msg / wrapper)
   text?: string;
   // tool / exec
@@ -191,6 +192,34 @@ export const STEPS_OVERVIEW: SimStep[] = [
         kind: "tool",
         label: "jira search --status offen --label testautomation",
         result: "3 offene Tickets: PROJ-1041 · PROJ-1042 · PROJ-1043",
+      },
+    ],
+  },
+  {
+    // Freigabe-Weiche: Claude Code läuft im Auto-Modus mit serverseitigem
+    // Klassifikator (keine Rückfrage); Codex CLI unterbricht mit einer
+    // Freigabefrage und blockiert damit den unbeaufsichtigten while-Lauf.
+    // Kein tokens-Delta: Control-Plane, hält Kosten-/Deep-Link-Zahlen stabil.
+    id: "guard",
+    dwellMs: 2800,
+    note: "Ohne Klassifikator stoppt der unbeaufsichtigte Lauf und wartet auf Freigabe",
+    claude: [
+      {
+        kind: "msg",
+        text: "Auto-Classifier (serverseitig): externer Endpoint als sicher eingestuft → automatisch freigegeben, keine Rückfrage",
+      },
+      {
+        kind: "tool",
+        label: "curl",
+        arg: "https://preis-service.staging.internal/health",
+        result: "200 OK",
+      },
+    ],
+    codex: [
+      {
+        kind: "approval",
+        title: "Zugriff außerhalb der Sandbox — freigeben?",
+        text: "curl https://preis-service.staging.internal/health",
       },
     ],
   },

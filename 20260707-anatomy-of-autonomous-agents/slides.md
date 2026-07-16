@@ -746,7 +746,7 @@ routeAlias: agent-run-sim
 
 <div class="text-xs opacity-70 mt-1">
 
-`/loop` & Subagents → <TalkXref slug="20260327-ai-agents" anchor="autonomie-primitive">Autonomie-Primitive</TalkXref> · Claude ⇄ Codex → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · Terminal-UI: <a href="https://github.com/theswerd/brainless" target="_blank">brainless</a> (Ben Swerdlow, MIT)
+`/loop` & Subagents → <TalkXref slug="20260327-ai-agents" anchor="autonomie-primitive">Autonomie-Primitive</TalkXref> · Claude ⇄ Codex → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · Auto-Modus → <TalkXref slug="20260327-ai-agents" anchor="permission-modes">Klassifikator</TalkXref> · Terminal-UI: <a href="https://github.com/theswerd/brainless" target="_blank">brainless</a> (Ben Swerdlow, MIT)
 
 </div>
 
