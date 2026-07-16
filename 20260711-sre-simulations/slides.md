@@ -2157,7 +2157,7 @@ routeAlias: making-of-quellen
 
 <div class="mt-6 text-xs opacity-60">
 
-Und ja, dieses Deck ist selbst ein Exponat: gebaut mit einem LLM-Agenten (Claude Code) in ~3 Tagen — inklusive aller 22 Simulationen; die Commits tragen den 🤖-Trailer.
+Und ja, dieses Deck ist selbst ein Exponat: gebaut mit einem LLM-Agenten (Claude Code) in ~3 Tagen — inklusive aller 22 Simulationen; die Commits tragen den 🤖-Trailer. Die Simulationen selbst sind älter: eine erste Fassung in reinem HTML hatte mich zuvor — auch mit LLM-Agent-Unterstützung — mehrere Monate gekostet, bis alles lief und von den Lernenden bedient und verstanden wurde.
 
 </div>
 
