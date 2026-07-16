@@ -429,13 +429,18 @@ export const STEPS_OVERVIEW: SimStep[] = [
   {
     id: "done",
     dwellMs: 2400,
-    note: "Lauf beendet — Orchestrierung wartet stumpf auf die nächste Stunde",
+    // Schluss-Unterschied: Claude läuft im /loop in derselben Session weiter
+    // und verdichtet den Kontext (/compact), damit er nicht unbegrenzt wächst;
+    // Codex beendet den Prozess (/exit), damit die externe while-Schleife den
+    // nächsten codex exec startet.
+    note: "Lauf beendet: Claude verdichtet den Kontext (/compact), Codex beendet den Prozess (/exit) — der nächste Lauf startet frisch",
     tokens: { main: 700 },
     claude: [
       {
         kind: "msg",
         text: "3 Tickets verarbeitet: 1× übersprungen, 1× Nachtest, 1× voller Report. Nächster Lauf in 1 h.",
       },
+      { kind: "user", text: "/compact" },
       { kind: "composer", effort: "ultracode", mode: "auto" },
     ],
     codex: [
@@ -443,6 +448,7 @@ export const STEPS_OVERVIEW: SimStep[] = [
         kind: "msg",
         text: "3 Tickets verarbeitet: 1× übersprungen, 1× Nachtest, 1× voller Report. Die while-Schleife schläft 3600 s.",
       },
+      { kind: "user", text: "/exit" },
       { kind: "composer", model: "gpt-5.6-sol ultra", cwd: CWD },
     ],
   },

@@ -203,6 +203,27 @@ const browser = await chromium.launch();
       path: `playwright-tests/agent-sim-qa/interact-${slide}-codex-end.png`,
     });
   }
+
+  // Schluss-Befehle je Vendor (/30 ist nach der Schleife voll durchgesteppt).
+  // Auf das Terminal-Pane einschränken — die Sidebar-note nennt beide Befehle.
+  const pane30 = page.locator(".sim-pane").filter({ visible: true }).first();
+  const exitCmd = pane30.getByText("/exit", { exact: true });
+  check(
+    "Folie 30 (Codex, Ende): /exit für die externe Schleife",
+    await exitCmd.isVisible().catch(() => false),
+  );
+  await page
+    .getByRole("button", { name: "Claude Code" })
+    .filter({ visible: true })
+    .first()
+    .click();
+  await page.waitForTimeout(300);
+  const compactCmd = pane30.getByText("/compact", { exact: true });
+  check(
+    "Folie 30 (Claude, Ende): /compact gegen Kontext-Wachstum",
+    await compactCmd.isVisible().catch(() => false),
+  );
+
   await ctx.close();
 }
 
