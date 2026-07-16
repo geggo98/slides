@@ -737,6 +737,35 @@ table {
 
 ---
 hideInToc: true
+routeAlias: agent-run-sim
+---
+
+# Simulation: Ein stündlicher Lauf, drei Tickets
+
+<AgentRunSim view="overview" />
+
+<div class="text-xs opacity-70 mt-1">
+
+`/loop` & Subagents → <TalkXref slug="20260327-ai-agents" anchor="autonomie-primitive">Autonomie-Primitive</TalkXref> · Claude ⇄ Codex → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · Terminal-UI: <a href="https://github.com/theswerd/brainless" target="_blank">brainless</a> (Ben Swerdlow, MIT)
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Zoom: Ein Ticket-Workflow von innen
+
+<AgentRunSim view="zoom" />
+
+<div class="text-xs opacity-70 mt-1">
+
+Prompt vom Hauptagenten generiert · Codex CLI verschlüsselt Sub-Agent-Prompts (PR #26210 · Issue #28058) · Skills → <Link to="skills-mcp">Kap. 6</Link>
+
+</div>
+
+---
+hideInToc: true
 ---
 
 # Use Case 2: Tägliches CVE-Fixen

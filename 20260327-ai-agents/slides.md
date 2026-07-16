@@ -502,6 +502,7 @@ hideInToc: true
 
 ---
 hideInToc: true
+routeAlias: ultracode-vs-ultra
 ---
 
 # `ultracode` vs. Codex `ultra` — gleiche Idee, andere Mechanik
