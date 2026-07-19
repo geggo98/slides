@@ -450,6 +450,12 @@ Der Agent arbeitet seine Notizen **nicht selbständig** ins Runbook ein — der 
 
 </Callout>
 
+<div v-click class="text-sm opacity-70 mt-3">
+
+Das Gegenextrem: Buns Meta-Workflows editieren ihre Regeln selbst → <Link to="bun-phasen">Bonus: Fallstudie Bun</Link>
+
+</div>
+
 ---
 layout: section
 routeAlias: idempotenz
@@ -828,8 +834,15 @@ Es ändern sich nur **Runbook + Skills**. Orchestrierung, Idempotenz-Muster, Not
 
 </Callout>
 
+<div v-click class="text-sm opacity-70 mt-3">
+
+Und am anderen Ende der Skala: 64 parallele Claudes porten eine JS-Runtime → <Link to="bun-fallstudie">Bonus: Fallstudie Bun</Link>
+
+</div>
+
 ---
 layout: section
+routeAlias: leitplanken
 ---
 
 # 8. Leitplanken & Grenzen
@@ -930,6 +943,60 @@ hideInToc: true
     },
   ]"
 />
+
+---
+layout: section
+---
+
+# 9. Bonus: Fallstudie Bun
+
+---
+hideInToc: true
+routeAlias: bun-fallstudie
+---
+
+# Bun: Zig → Rust in 11 Tagen
+
+<div class="text-sm opacity-75 -mt-2">Agentengestützter Rewrite mit Claude Fable 5 (Pre-Release) — gleiche Bausteine wie hier, andere Größenordnung</div>
+
+<BunCaseOverview />
+
+<!--
+Fallstudie als Kontrast zum Vortrag: Worktrees, Subagents, adversarielle
+Reviews — aber Peak 64 parallele Claudes statt einer Schleife. Kosten in Euro
+umgerechnet und gegen die Fable-5-Listenpreise nachgerechnet (Details im
+Kennzahlen-Popup; Token-Zahlen belegt, Preis war Schätzung der Quellen).
+-->
+
+---
+hideInToc: true
+routeAlias: bun-phasen
+---
+
+# Die 11 Tage: Phasen und Teamgröße
+
+<BunCaseGantt />
+
+<div class="text-xs opacity-70 mt-1">
+
+PORTING.md ist ein Runbook → <Link to="runbooks">Kap. 3</Link> · Meta-Workflows editieren die eigenen Regeln — Kontrast: <Link to="notizen">Mensch kuratiert (Kap. 4)</Link> · Worktrees & Subagents → <TalkXref slug="20260327-ai-agents" anchor="autonomie-primitive">Autonomie-Primitive</TalkXref>
+
+</div>
+
+---
+hideInToc: true
+routeAlias: bun-kritik
+---
+
+# Kritik und offene Punkte
+
+<BunCaseCritique />
+
+<div class="text-xs opacity-70 mt-2">
+
+Mensch als finales Gate ↔ <Link to="leitplanken">Kap. 8 Leitplanken</Link> — dort Checkpoint-Aufsicht, hier ein einziger Merge-Review für 1 Mio. Zeilen
+
+</div>
 
 ---
 layout: end
