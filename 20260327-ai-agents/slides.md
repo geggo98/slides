@@ -482,6 +482,44 @@ Drei **orthogonale** Achsen — verschiedene Kostenprofile: loop ∝ Laufzeit, g
 
 ---
 hideInToc: true
+routeAlias: goal-vs-goal
+---
+
+# `/goal` vs. `/goal` — gleiche Bedingung, zwei Mechaniken
+
+<div class="text-sm opacity-75">Codex ≥ 0.128.0 (`features.goals`) · Analyse C. Azam, 17.07.2026</div>
+
+<div class="text-sm">
+
+| Aspekt          | Claude Code `/goal`                       | Codex `/goal`                                         |
+| --------------- | ----------------------------------------- | ----------------------------------------------------- |
+| **Prüfer**      | separater **Haiku-Evaluator** (Stop-Hook) | Modell selbst: `update_goal(complete)`                |
+| **Evidenz**     | nur Transcript, **kein Tool-Zugriff**     | evidence-based: Diffs, Tests, Artefakte               |
+| **Zustand**     | session-scoped                            | Thread-State (SQLite), überlebt Compaction & `/clear` |
+| **Fortsetzung** | jeder Turn geprüft                        | event-driven bei Idle, optionales Token-Budget        |
+
+<Callout tone="info" class="mt-2" dense>
+
+**Faktencheck:** Codex-`/goal` ist ein **Harness-Feature** (seit 0.128.0, Flag `features.goals`) — _nicht_ an die 5.6-Modelle gebunden. Model-facing sind nur `create_goal` + `update_goal(complete)`; pause/resume/clear bleiben beim Nutzer.
+
+</Callout>
+
+</div>
+
+<!--
+Quellen:
+- C. Azam, „Fable 5 vs. GPT-5.6 Sol on an NP-Hard Problem: Does /goal Help?" (17.07.2026): https://charlesazam.com/blog/fable-5-gpt-5-6-sol-goal/
+- OpenAI-Doku „Follow a goal": https://developers.openai.com/codex/use-cases/follow-goals
+- OpenAI Cookbook „Using Goals in Codex" („a Goal is a thread-scoped completion contract", verfügbar seit Codex 0.128.0): https://developers.openai.com/cookbook/examples/codex/using_goals_in_codex
+- Codex-Quellcode @rust-v0.128.0:
+    codex-rs/tools/src/goal_tool.rs  (nur create_goal + update_goal(complete) model-facing)
+    codex-rs/core/src/goals.rs  (SQLite: ein Goal pro Thread, Status + Token-Budget)
+- PR openai/codex#18075 „Add goal model tools"
+- Parität bei Claude Code nachgefordert: anthropics/claude-code#56085
+-->
+
+---
+hideInToc: true
 ---
 
 # Dynamic Workflows & `ultracode`
@@ -539,6 +577,39 @@ Quellen:
     codex-rs/core/src/client.rs#L172  (Ultra→Max)
     codex-rs/core/src/session/multi_agents.rs#L53  (MultiAgentMode, ThreadSpawn)
     codex-rs/core/src/context/multi_agent_mode_instructions.rs#L7  (Delegations-Policy)
+-->
+
+---
+hideInToc: true
+routeAlias: goal-tiefe-breite
+---
+
+# `/goal` ≈ Tiefensuche · `ultra` ≈ Breitensuche
+
+<div class="text-sm opacity-75">Benchmark C. Azam (KIRO-Glasfasernetz, NP-hart) · 17.07.2026 · + HN-Diskussion</div>
+
+**Messung** — Fable 5 & GPT-5.6 Sol, je 3 Paare à 30 min: `/goal` gewinnt **4 von 6** Trials, verschlechtert aber **beide Mittelwerte** (+759 / +868 Punkte; weniger = besser). Persistenz verlängert auch schlechte Pfade:
+
+> "A persistence feature can win most individual trials while making observed average performance worse."
+
+**Heuristik**
+
+- `/goal` ≈ **Tiefensuche** — Single-Track-Investigations, kleines Scatter/Gather
+- `ultracode` / `ultra` ≈ **Breitensuche** — parallele Investigators, adversariale Reviews an Checkpoints → entgeht lokalen Optima
+
+<Callout tone="warning" class="mt-2" dense>
+
+**Einordnung:** Eine unveröffentlichte Aufgabe, n = 3 Paare, 30-min-Budget. Die Suchstrategie-Analogie ist **Community-Intuition**, kein Messergebnis — gemessen wurde nur `/goal` vs. plain.
+
+</Callout>
+
+<!--
+Quellen:
+- Blog (17.07.2026): https://charlesazam.com/blog/fable-5-gpt-5-6-sol-goal/
+  Details: Harbor 0.1.43 in Docker, Codex CLI 0.144.4; Fable-5-Mittelwert 32.386 (−1.875 vs. Sol, weniger = besser), Spannweite 319 vs. 1.958; Paris: 532 Terminals, ≥10^1223 Lösungen.
+- HN-Thread: https://news.ycombinator.com/item?id=48956879
+  Zitat theptip (Kommentar 48959572): „Great eval! If you are comparing search strategies, ultra mode is likely superior. Ultra can fan out parallel investigators, run adversarial review at defined checkpoints, and do a bunch of other smart stuff to avoid getting stuck in a local optimum. Generally as the OP notes, /goal works better for single-track investigations or small scale scatter/gather."
+  Achtung: theptips „as the OP notes" ist großzügig — der Artikel selbst erwähnt weder „single-track" noch ultra/ultracode. Deshalb hier als Community-Intuition gekennzeichnet.
 -->
 
 ---
@@ -626,7 +697,7 @@ hideInToc: true
 | **Anthropic** (n=52)        | reale „overeager“-Aktionen | **17 %**            |
 | **AmPermBench** (HKUST/ETH) | _adversariale_ Prompts     | **81 %**            |
 
-**Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → <Link to="44">Details im Bonus</Link>.
+**Kein Widerspruch:** ~**37 %** aller zustandsändernden Aktionen (In-Project-Edits) erreichen den Klassifikator _per Design_ nie — andere Last, nicht geschönt. Dazu: Nutzer winken **93 %** aller Prompts durch (Approval-Fatigue). → <Link to="bonus-security">Details im Bonus</Link>.
 
 <!--
 Sync-Paar mit der Bonus-Slide „Sicherheit im Detail“: Die Kennzahlen 17 % (Anthropic,
@@ -745,6 +816,7 @@ Vier Felder. Das einzige, das die meisten brauchen, ist **Prosa** — kein Regex
 
 ---
 hideInToc: true
+routeAlias: bonus-security
 ---
 
 # Sicherheit im Detail — Zahlen, Vorfälle, Bypässe

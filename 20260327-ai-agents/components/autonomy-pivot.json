@@ -85,7 +85,7 @@
         },
         "plan": {
           "teaser": "gemischt",
-          "detail": "Du dispatchst Tasks und steuerst /plan, das Modell hält den Plan turn-by-turn. /goal setzt eine Completion-Bedingung, gegen die jeder Turn geprüft wird.",
+          "detail": "Du dispatchst Tasks und steuerst /plan, das Modell hält den Plan turn-by-turn. /goal setzt eine Completion-Bedingung als persistenten Thread-State (SQLite, überlebt Compaction und /clear); das Modell bewertet die Erfüllung selbst evidence-based via update_goal(complete) — anders als Claudes Haiku-Evaluator je Turn.",
           "mark": "none"
         },
         "kommunikation": {
