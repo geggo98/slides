@@ -74,7 +74,8 @@ const idx = ref<number | null>(null);
 
     <div class="bun-footer">
       Gegenposition insgesamt: 100 % Test-Pass auf allen Plattformen · Binary
-      3–8 MB kleiner · Miri-CI nachgerüstet · seit Mitte Mai in Produktion
+      3–8 MB kleiner · Miri-CI nachgerüstet · seit Juni produktiv in Claude Code
+      (Mio. Geräte)
     </div>
 
     <BunPopover :open="idx !== null" @close="idx = null">

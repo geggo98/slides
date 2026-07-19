@@ -7,7 +7,7 @@ import BunPopover from "./BunPopover.vue";
 // Bun-Rewrites (Zig → Rust). Inhalte aus den Quellen (bun.com-Blogpost,
 // Pragmatic Engineer 16.07.2026, andrewkelley.me); Kosten in Euro,
 // nachgerechnet zu Fable-5-Listenpreisen (siehe Kennzahlen-Popup).
-const pop = ref<null | "zahlen" | "rollen" | "kelley">(null);
+const pop = ref<null | "zahlen" | "rollen" | "kelley" | "produktiv">(null);
 
 const metrics = [
   { label: "Dauer", value: "11 Tage" },
@@ -37,6 +37,7 @@ const timeline = [
   { date: "Anf. Mai 2026", label: "11-Tage-Rewrite" },
   { date: "14. Mai", label: "Merge in main" },
   { date: "21. Mai", label: "Unsafe-Audit" },
+  { date: "17. Jun", label: "Rust-Bun produktiv", pop: "produktiv" as const },
   { date: "8. Jul", label: "Blogpost erscheint" },
   { date: "9. Jul", label: "Zig-Schöpfer antwortet", pop: "kelley" as const },
 ];
@@ -119,7 +120,7 @@ const timeline = [
 
     <div class="bun-sources">
       Quellen: bun.com/blog/bun-in-rust · The Pragmatic Engineer (16. Jul 2026)
-      · andrewkelley.me
+      · andrewkelley.me · Simon Willison (19. Jul 2026)
     </div>
 
     <BunPopover :open="pop !== null" @close="pop = null">
@@ -160,6 +161,21 @@ const timeline = [
           waren rund 50 dynamische Claude-Code-Workflows über die 11 Tage. Jeder
           Commit musste 2 adversarielle Reviews passieren — ein menschliches
           Code-Review gab es nicht. Modell: Pre-Release von Claude Fable 5.
+        </div>
+      </template>
+      <template v-else-if="pop === 'produktiv'">
+        <div class="bun-pop-h">Läuft der Rust-Port schon produktiv?</div>
+        <div class="bun-pop-t">
+          Ja — aber nicht über das Standalone-Bun, das man selbst installiert.
+          Claude Code bündelt Bun intern: Seit Version 2.1.181 (17. Juni 2026)
+          shippt Claude Code den Rust-Port (Bun 1.4.0) und läuft damit „in
+          production across millions of different devices". Standalone-Bun ist
+          im Stable-Release weiter Zig — die Rust-Variante gibt es bislang nur
+          als Canary (<code>bun upgrade --canary</code>), noch in keinem
+          getaggten Stable.
+        </div>
+        <div class="bun-pop-meta">
+          Quelle: Simon Willison, „Claude Code in Bun in Rust" (19. Juli 2026)
         </div>
       </template>
       <template v-else-if="pop === 'kelley'">
@@ -252,7 +268,7 @@ const timeline = [
 
 .bun-tl {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 .bun-tl-item {
   text-align: center;
