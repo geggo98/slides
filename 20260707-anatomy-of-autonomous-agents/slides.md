@@ -994,7 +994,7 @@ routeAlias: bun-kritik
 
 <div class="text-xs opacity-70 mt-2">
 
-Mensch als finales Gate ↔ <Link to="leitplanken">Kap. 8 Leitplanken</Link> — dort Checkpoint-Aufsicht, hier ein einziger Merge-Review für 1 Mio. Zeilen
+Mensch als finales Gate ↔ <Link to="leitplanken">Kap. 8 Leitplanken</Link> — dort Checkpoint-Aufsicht, hier ein einziger Merge-Review für 1 Mio. Zeilen · Gegenentwurf: der deterministische, reviewbare Migrationsweg → <TalkXref slug="20260522-open-rewrite" anchor="determinismus-grenze">OpenRewrite: Determinismus-Grenze</TalkXref>
 
 </div>
 

@@ -219,7 +219,7 @@ function tipTextX(p) {
 .axis-wrap svg {
   width: 100%;
   height: auto;
-  max-height: 380px;
+  max-height: 360px;
 }
 .axis {
   stroke: var(--color-text-tertiary);

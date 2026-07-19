@@ -270,11 +270,18 @@ hideInToc: true
 ---
 hideInToc: true
 clicks: 6
+routeAlias: determinismus-grenze
 ---
 
 # Die Determinismus-Grenze als Achsenkreuz
 
-<DeterminismAxisChart class="mt-4" />
+<DeterminismAxisChart class="mt-2" />
+
+<div class="text-xs opacity-70 mt-1">
+
+Gegenbeispiel in dieser Ecke: Bun (Zig→Rust) — ohne Determinismus, ohne Review, trotzdem produktiv → <TalkXref slug="20260707-anatomy-of-autonomous-agents" anchor="bun-fallstudie">Anatomie: Fallstudie Bun</TalkXref>
+
+</div>
 
 <!--
 - Je näher der LLM-Output zur PR-Boundary kommt, desto schmerzhafter die Verletzung.
