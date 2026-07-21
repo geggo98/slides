@@ -7,7 +7,7 @@
       "dependencies": {
         "d3": "^7.9.0",
         "echarts": "^6.1.0",
-        "playwright": "^1.58.2",
+        "playwright": "1.58.2",
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -16,6 +16,7 @@
         "eslint": "^10.1.0",
         "eslint-plugin-vue": "^10.8.0",
         "jsdom": "^29.0.2",
+        "playwright-chromium": "1.58.2",
         "prettier": "^3.8.1",
         "prettier-plugin-slidev": "^1.0.5",
         "typescript-eslint": "^8.57.2",
@@ -1275,6 +1276,8 @@
     "plantuml-encoder": ["plantuml-encoder@1.4.0", "", {}, "sha512-sxMwpDw/ySY1WB2CE3+IdMuEcWibJ72DDOsXLkSmEaSzwEUaYBT6DWgOfBiHGCux4q433X6+OEFWjlVqp7gL6g=="],
 
     "playwright": ["playwright@1.58.2", "", { "dependencies": { "playwright-core": "1.58.2" }, "optionalDependencies": { "fsevents": "2.3.2" }, "bin": { "playwright": "cli.js" } }, "sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A=="],
+
+    "playwright-chromium": ["playwright-chromium@1.58.2", "", { "dependencies": { "playwright-core": "1.58.2" }, "bin": { "playwright": "cli.js" } }, "sha512-SCoQ3hjBs7FfO46CoOtgAUg77BuYwCni1bzQgm47IUyLBTipnGkLxLnaUNRKXvPYO4hAyt8++Z6wVShVnhrzmw=="],
 
     "playwright-core": ["playwright-core@1.58.2", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-yZkEtftgwS8CsfYo7nm0KE8jsvm6i/PTgVtB8DL726wNf6H2IMsDuxCpJj59KDaxCtSnrWan2AeDqM7JBaultg=="],
 

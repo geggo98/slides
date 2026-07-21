@@ -15,6 +15,7 @@
     "eslint": "^10.1.0",
     "eslint-plugin-vue": "^10.8.0",
     "jsdom": "^29.0.2",
+    "playwright-chromium": "1.58.2",
     "prettier": "^3.8.1",
     "prettier-plugin-slidev": "^1.0.5",
     "typescript-eslint": "^8.57.2",
@@ -23,6 +24,6 @@
   "dependencies": {
     "d3": "^7.9.0",
     "echarts": "^6.1.0",
-    "playwright": "^1.58.2"
+    "playwright": "1.58.2"
   }
 }

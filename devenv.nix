@@ -1,7 +1,7 @@
 { pkgs, lib, config, inputs, ... }:
 
 {
-  packages = [ pkgs.bun ];
+  packages = [ pkgs.bun pkgs.playwright-driver.browsers ];
 
   tasks."local:dev" = {
     exec = ''
@@ -43,6 +43,30 @@
       done
     '';
     after = [ "slides:install" ];
+  };
+
+  tasks."slides:export" = {
+    exec = ''
+      # Export each deck to a light and a dark PDF alongside its built SPA, so the
+      # PDFs deploy as part of dist/. Fail-soft: a failed export logs a warning and
+      # continues (a missing PDF must not break the whole Pages deploy; the landing
+      # page only links PDFs that actually exist). Collapsed (one page per slide,
+      # final revealed state) — no --with-clicks.
+      for dir in "$DEVENV_ROOT"/*/; do
+        [ -f "$dir/slides.md" ] || continue
+        name="$(basename "$dir")"
+        echo "Exporting PDF: $name"
+        bun run slidev export "$dir/slides.md" \
+          --output "$DEVENV_ROOT/dist/$name/$name.pdf" \
+          --timeout 60000 \
+          || echo "WARN: light PDF export failed for $name"
+        bun run slidev export "$dir/slides.md" --dark \
+          --output "$DEVENV_ROOT/dist/$name/$name-dark.pdf" \
+          --timeout 60000 \
+          || echo "WARN: dark PDF export failed for $name"
+      done
+    '';
+    after = [ "slides:build" ];
   };
 
   tasks."slides:spa-redirect" = {
@@ -92,7 +116,11 @@
         <title>Slides</title>
         <style>
           body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-          a { display: block; padding: 0.5rem 0; }
+          ul { list-style: none; padding: 0; }
+          li { padding: 0.5rem 0; }
+          a.title { display: block; padding: 0.25rem 0; }
+          .pdf { font-size: 0.85em; }
+          .pdf a { display: inline; padding: 0; margin-right: 0.75rem; color: #06c; }
         </style>
       </head>
       <body>
@@ -103,9 +131,13 @@
       for dir in "$DEVENV_ROOT"/*/; do
         [ -f "$dir/slides.md" ] || continue
         name="$(basename "$dir")"
-        title=$(grep -m1 '^title:' "$dir/slides.md" | sed 's/^title: *//' || echo "$name")
+        title=$(grep -m1 '^title:' "$dir/slides.md" | sed 's/^title: *//; s/^"\(.*\)"$/\1/' || echo "$name")
         [ -z "$title" ] && title="$name"
-        echo "      <li><a href=\"./$name/\">$title</a></li>" >> "$DEVENV_ROOT/dist/index.html"
+        pdfs=""
+        [ -f "$DEVENV_ROOT/dist/$name/$name.pdf" ]      && pdfs="$pdfs<a href=\"./$name/$name.pdf\">PDF (hell)</a>"
+        [ -f "$DEVENV_ROOT/dist/$name/$name-dark.pdf" ] && pdfs="$pdfs<a href=\"./$name/$name-dark.pdf\">PDF (dunkel)</a>"
+        [ -n "$pdfs" ] && pdfs=" <span class=\"pdf\">$pdfs</span>"
+        echo "      <li><a class=\"title\" href=\"./$name/\">$title</a>$pdfs</li>" >> "$DEVENV_ROOT/dist/index.html"
       done
 
       cat >> "$DEVENV_ROOT/dist/index.html" << 'FOOTER'
@@ -114,7 +146,7 @@
       </html>
       FOOTER
     '';
-    after = [ "slides:spa-redirect" ];
+    after = [ "slides:spa-redirect" "slides:export" ];
   };
 
   tasks."slides:deploy" = {
@@ -140,6 +172,14 @@
   };
 
   env.SLIDES_BASE_PATH = "slides";
+
+  # Chromium for `slidev export` (PDF). Use the Nix-provided browsers so the build
+  # is reproducible and offline — matches the nixpkgs `playwright-driver` version
+  # against the `playwright-chromium` npm dep (both 1.58.2). The skip flags keep
+  # `bun install` from downloading a redundant browser via postinstall.
+  env.PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
+  env.PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+  env.PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS = "1";
 
   enterShell = ''
     echo "Bun $(bun --version) ready"
