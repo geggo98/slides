@@ -171,6 +171,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 <div class="map-item">✏️ Systemdynamik-Pipeline</div>
 <div class="map-item">✏️ Bufferbloat</div>
 <div class="map-item">✏️ Little's-Law-Drill</div>
+<div class="map-item">✏️ Voll ODER leer? <span class="map-tag">Einwand</span></div>
 <div class="map-item">🔍 RabbitMQ: Queue wächst</div>
 </div>
 <div class="map-col">
@@ -496,6 +497,73 @@ routeAlias: littles-law
   müssen Little erfüllen, sonst lügt eine.
 - ⚙: Zeitraffer, gleicher/neuer Seed. Tab „Erklärung & Modell“: Herleitung,
   Erlang-C, Ehrlichkeitshinweise.
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der Einwand aus dem Publikum
+
+„Schöne Theorie — aber **in echt** ist so eine Schlange doch fast immer **entweder ganz voll oder ganz leer**!" An der Supermarktkasse: Band frei **oder** Traube bis ins Regal — selten das brave Mittelfeld.
+
+<div class="chain mt-4 mb-4">
+<span class="chain-node"><b>Ankünfte</b>&ensp;λ̄ = 0,9 · vier Verkehrsmuster</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Puffer</b>&ensp;endlich, K = 40</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Service</b>&ensp;μ = 1</span>
+</div>
+
+Vier Szenarien, (fast) gleiche mittlere Last: **gleichmäßig** · **kurze Schübe** · **lange Phasen** · **selbstverstärkend** (Retries).
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Der Einwand beschreibt eine <b>bimodale</b> Verteilung: Masse an beiden Rändern, Loch in der Mitte. Reicht dafür schon „die Last kommt in Schüben" — oder braucht es mehr? Pro Szenario erst tippen, dann zeigt die <b>exakte</b> Verteilung die Wahrheit.
+</Callout>
+
+</div>
+
+<!--
+- Echter Einwand nach dem Vortrag — ernst nehmen: er beschreibt eine
+  Beobachtung, keinen Denkfehler. Die Frage ist, WANN sie zutrifft.
+- Zahlen: mittlere Last 0,9 in drei der vier Fälle identisch — nur die
+  DYNAMIK unterscheidet sich (Fall C: 0,6 Grundlast + Retry-Feedback).
+- Klick: 30 s diskutieren lassen — die meisten tippen „Schübe reichen".
+- Nicht verraten: Burstiness allein reicht nicht — es braucht lange
+  Phasen (Korrelationszeit) oder Feedback. Der Einwand wird damit selbst
+  zum Diagnose-Werkzeug.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: voll-oder-leer
+---
+
+<QueueDynamikSim />
+
+<!--
+- Bedienung: Szenario oben wählen → Vorhersage-Maske über dem Histogramm:
+  unimodal („nur leer") oder bimodal („voll ODER leer") tippen, erst dann
+  deckt sich die exakte Hülle auf. Regie-Reihenfolge: 0 → B1 → B2 → C.
+- Fall 0 (gleichmäßig, ρ=0,9): geometrisch fallend, unimodal — Referenz.
+- Fall B1 (kurze Schübe): gleiche marginale Varianz wie B2, aber τ_c=0,05 —
+  die Bursts mitteln sich weg, weiterhin unimodal. Kernsatz: Burstiness
+  allein erzeugt keine Bimodalität.
+- Fall B2 (lange Phasen): identischer Mix, nur q=0,01 → τ_c=50: Stoßzeit
+  vs. Nacht → bimodal. Treiber ist die Korrelationszeit, nicht die Varianz.
+- Fall C (heizt sich auf): ρ̄=0,6 + lineares Retry-Feedback → bimodal UND
+  metastabil: MFPT ≈ 6 900 — der volle Ast kommt spontan fast nie.
+  ⚡ Laststoß (Sprung auf n=K) oder ⏩ π auffüllen (Batch) zeigen ihn.
+  Brücke zum Bonus: exakt der Mechanismus der MTTF-Klippe (mttf-klippe).
+- Konvergenz = 1 − TV-Distanz: bei Fall C plateaut sie — ehrlich zeigen!
+- ⚙: ρ̄ · Burst-Amplitude b · Umschaltrate q (log) · Feedback r · Tempo ·
+  Lesehilfe Wartezeit-Zonen · Vorhersage-Modus · Seeds.
+- Auflösung des Einwands: „voll ODER leer" stimmt — aber nur bei langen
+  Lastphasen oder Selbstverstärkung. Wer es an der Kasse sieht, hat
+  Stoßzeiten vor sich; wer es im System sieht, Phasen-Last oder Retries.
 -->
 
 ---
@@ -1802,7 +1870,7 @@ routeAlias: making-of-architektur
 
 ### 🖼️ Canvas
 
-- Oszilloskop-Scopes (M/M/1, M/M/c) und alle Fixed-Step-Sims
+- Oszilloskop-Scopes (M/M/1, M/M/c), Fixed-Step- und Gillespie-Sims
 - dichte Traces, Redraw pro Frame
 - Theme-Wechsel wirkt sofort: Farben werden pro Frame gelesen
 
@@ -1830,9 +1898,9 @@ routeAlias: making-of-architektur
 <div class="chain mt-4">
 <span class="chain-node">SimShell<br/><small>Titel · Presets · ⚙ · Verdict</small></span>
 <span class="chain-arrow">→</span>
-<span class="chain-node">Composables<br/><small>useSimTransport · usePredictSketch · useScopeColors</small></span>
+<span class="chain-node">Composables<br/><small>useSimTransport · usePredictSketch · …</small></span>
 <span class="chain-arrow">→</span>
-<span class="chain-node">Engines<br/><small>lib/mm1Engine · breakerModel · burnRate · rng</small></span>
+<span class="chain-node">Engines<br/><small>lib/mm1Engine · breakerModel · queueDynamikModel · …</small></span>
 </div>
 
 <div v-click class="mt-3">
@@ -1848,7 +1916,7 @@ Der Sim-Zustand lebt in <b>einfachen JS-Objekten</b>, nicht im Reaktivitätssyst
   Frame → Canvas; ein paar Dutzend Formen → SVG direkt aus dem Template.
 - d3 bewusst klein gehalten: nur Skalen und Pfad-Generatoren, keine
   d3-Datenbindung — die macht Vue.
-- Die SimShell-Schale macht 22 Sims kohärent bedienbar: gleiche Preset-Zeile,
+- Die SimShell-Schale macht 23 Sims kohärent bedienbar: gleiche Preset-Zeile,
   gleiches ⚙-Overlay, gleicher Verdict-Platz.
 -->
 
@@ -1882,7 +1950,7 @@ routeAlias: making-of-paradigmen
 <table class="mo-quad mt-3">
 <tbody>
 <tr><td class="mo-axis"></td><td class="mo-axis">deterministisch</td><td class="mo-axis">stochastisch</td></tr>
-<tr><td class="mo-axis">individuell</td><td>— (selten sinnvoll)</td><td>M/M/1-Kantine (DES)</td></tr>
+<tr><td class="mo-axis">individuell</td><td>— (selten sinnvoll)</td><td>M/M/1-Kantine (DES) · Voll-oder-leer (Gillespie)</td></tr>
 <tr><td class="mo-axis">aggregiert</td><td>Systemdynamik-Pipeline</td><td>Retry-Sturm (Fluid + Poisson)</td></tr>
 </tbody>
 </table>
@@ -1890,7 +1958,7 @@ routeAlias: making-of-paradigmen
 <div v-click class="mt-3">
 
 <Callout tone="warning" title="Wiederkehrendes Motiv">
-Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittelwert</b>, die Simulation die <b>Streuung</b> — genau dort lebt das Risiko.
+Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittelwert</b>, die Simulation die <b>Streuung</b> — genau dort lebt das Risiko. Am reinsten in der Voll-oder-leer-Sim: die <b>exakte</b> stationäre Verteilung (Gauß-Elimination auf dem CTMC-Generator) liegt als Hülle über dem empirischen Histogramm.
 </Callout>
 
 </div>
@@ -1915,7 +1983,7 @@ Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittel
   Aggregationsgrad.
 - Das Motiv-Callout ist das Echo der Schlussfolie: der Mittelwert
   verschweigt die Gefahr — nahe der Schwelle entscheidet der Zufall.
-- Überleitung: „die nächste Folie plottet alle 22 Sims auf diese zwei
+- Überleitung: „die nächste Folie plottet alle 23 Sims auf diese zwei
   Achsen — und danach führen wir die Naht live vor."
 -->
 
@@ -1958,6 +2026,8 @@ Gleiche Gleichungen wie der **Retry-Sturm** (per Import aus `breakerModel.js`) �
 
 Das Fluid-Mittel — „die Formel" — verspricht: **stabil für jedes ρ < 1** (die Falte liegt erst bei ρ<sub>c</sub> ≈ 0,999).
 
+Der Mechanismus ist dir schon begegnet: **Fall C („heizt sich selbst auf")** der Voll-oder-leer-Sim — dort lineares Minimal-Feedback, hier die echten Retry-Gleichungen.
+
 <div v-click class="mt-4">
 
 <Callout tone="warning" title="Die Frage">
@@ -1975,6 +2045,9 @@ Wie lange überlebt das System <b>wirklich</b>, je nach Last ρ? Skizziere die �
   langlebig, aber entrinnbar.
 - Klick: die Frage. 30 s diskutieren lassen — die meisten tippen auf „ewig
   stabil bis ρ ≈ 1" (das Fluid-Versprechen).
+- Rückverweis: Fall C der Voll-oder-leer-Sim (voll-oder-leer) hat denselben
+  Kipp-Mechanismus als Minimalmodell gezeigt — MFPT ≈ 6 900 dort ist die
+  Kramers-Barriere, die hier zur MTTF-Klippe wird.
 -->
 
 ---
@@ -2076,7 +2149,7 @@ routeAlias: making-of-engineering
 
 ### ✅ Tests (Vitest)
 
-- `bullwhipModel` und `burnRate` gegen analytisch gerechnete Tabellen gepinnt
+- `bullwhipModel`, `burnRate`, `metastableModel` und `queueDynamikModel` gegen analytisch gerechnete Tabellen gepinnt (u. a. geometrisches π, MFPT ≈ 6 900)
 - Modelle sind pure JS-Module — testbar ganz ohne Browser
 
 </div>
@@ -2109,13 +2182,14 @@ routeAlias: making-of-grenzen
 
 <div class="mo-limits">
 
-| Vereinfachung                               | Warum das okay ist                                                |
-| ------------------------------------------- | ----------------------------------------------------------------- |
-| kein Event-Heap-DES in den Fluid-Sims       | fester Takt (Δt = 0,02–0,05 s) reicht für Flüsse und Schwellen    |
-| kein RK4, nur Vorwärts-Euler                | Δt ist klein gegen die Zeitkonstanten der Systeme                 |
-| Fluid-Approximation verschweigt Tail-Latenz | dafür gibt es die Latenz-Sim (Monte-Carlo) separat                |
-| keine Netzwerk-Topologie                    | ein Service, ein Pool — Mesh-Effekte wären ein eigenes Deck       |
-| Diagnose-Familie = **skriptete Traces**     | Drill-Ziel ist das Ablesen der Diskriminatoren, nicht die Dynamik |
+| Vereinfachung                                        | Warum das okay ist                                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| kein Event-Heap-DES in den Fluid-Sims                | fester Takt (Δt = 0,02–0,05 s) reicht für Flüsse und Schwellen                     |
+| kein RK4, nur Vorwärts-Euler                         | Δt ist klein gegen die Zeitkonstanten der Systeme                                  |
+| Fluid-Approximation verschweigt Tail-Latenz          | dafür gibt es die Latenz-Sim (Monte-Carlo) separat                                 |
+| keine Netzwerk-Topologie                             | ein Service, ein Pool — Mesh-Effekte wären ein eigenes Deck                        |
+| Diagnose-Familie = **skriptete Traces**              | Drill-Ziel ist das Ablesen der Diskriminatoren, nicht die Dynamik                  |
+| „Voll ODER leer": 2-Phasen-MMPP, Feedback nur linear | Korrelationszeit statt Varianz ist der Treiber — Details im Erklärungs-Tab der Sim |
 
 </div>
 

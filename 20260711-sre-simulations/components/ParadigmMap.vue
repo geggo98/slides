@@ -5,7 +5,7 @@
 // Skript-Trace) wandern in ein Sockel-Band unter der Ebene — dort gibt es
 // keine sinnvolle y-Position. Klick auf Punkt/Pill → Detail-Karte rechts.
 // Bewusst ohne SimShell (kein Transport, keine Presets, kein Verdict) und
-// ohne d3 (21 handplatzierte Punkte, lineare Skalen).
+// ohne d3 (22 handplatzierte Punkte, lineare Skalen).
 import { ref, computed } from "vue";
 import { useDarkMode, useNav } from "@slidev/client";
 
@@ -118,6 +118,23 @@ const SIMS = [
     archetyp: "✏️ Predict-first",
     slide: "littles-law",
     note: "Verankerte Zwei-Phasen-Statistik: λ̂·Ŵ gegen L̂.",
+  },
+  {
+    id: "queuedyn",
+    name: "Queue-Dynamik: voll ODER leer",
+    label: "Voll/Leer",
+    family: "des",
+    x: 0.97,
+    y: 0.78,
+    labelPos: "left",
+    engine:
+      "lib/queueDynamikModel.js · Gillespie-CTMC + exakte stationäre Verteilung (Gauß-Elimination)",
+    takt: "ereignisbasiert (Gillespie)",
+    rng: "mulberry32 — Seed teilbar",
+    rendering: "Canvas (Scope + Histogramm)",
+    archetyp: "✏️ Predict-first",
+    slide: "voll-oder-leer",
+    note: "Exakte Hülle vs. empirisches Histogramm — Konvergenz = 1 − TV-Distanz.",
   },
   {
     id: "latency",
