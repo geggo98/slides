@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 
 // Port von Tab 2 der Infografik: DeepSWE-Score vs. €/Task als statisches
@@ -126,6 +126,34 @@ const aBody = [
   .map((p) => p.join(","))
   .join(" ");
 const aMid = (aLen - aHL) / 2;
+
+// Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
+// (erneuter Klick löst). Mehrere Pins gleichzeitig — die Einfüge-Reihenfolge
+// bestimmt die Farbe (Cycle über die Deck-Töne).
+const allPts = [...front, ...dom];
+const byLabel = new Map(allPts.map((p) => [p.label, p]));
+const hovered = ref<string | null>(null);
+const pinned = ref<string[]>([]);
+
+function togglePin(label: string) {
+  const i = pinned.value.indexOf(label);
+  if (i >= 0) pinned.value.splice(i, 1);
+  else pinned.value.push(label);
+}
+
+const crosshairs = computed(() => {
+  const active = pinned.value.map((label, i) => ({
+    label,
+    cls: `mp-ch-${i % 4}`,
+  }));
+  if (hovered.value && !pinned.value.includes(hovered.value)) {
+    active.push({ label: hovered.value, cls: "mp-ch-hover" });
+  }
+  return active.flatMap(({ label, cls }) => {
+    const p = byLabel.get(label);
+    return p ? [{ p, cls }] : [];
+  });
+});
 </script>
 
 <template>
@@ -133,7 +161,9 @@ const aMid = (aLen - aHL) / 2;
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
-      <span class="mp-note">Score vs. €/Task — Best Effort pro Modell</span>
+      <span class="mp-note">
+        Best Effort pro Modell · Hover: Fadenkreuz, Klick: fixieren
+      </span>
       <button
         class="mp-ib"
         aria-label="Quellen und Einschränkungen anzeigen"
@@ -297,6 +327,54 @@ const aMid = (aLen - aHL) / 2;
           {{ p.label }}
         </text>
       </g>
+
+      <!-- Fadenkreuze: Hover temporär, Klick fixiert (Vergleichsmodus) -->
+      <g
+        v-for="c in crosshairs"
+        :key="`ch-${c.p.label}`"
+        class="mp-ch"
+        :class="c.cls"
+      >
+        <line :x1="px(c.p.x)" :y1="T" :x2="px(c.p.x)" :y2="H - B" />
+        <line :x1="L" :y1="py(c.p.y)" :x2="W - R" :y2="py(c.p.y)" />
+        <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="8" class="mp-ch-ring" />
+        <text
+          :x="px(c.p.x)"
+          :y="H - B + 15"
+          text-anchor="middle"
+          class="mp-ch-badge"
+        >
+          {{ c.p.eur }} €
+        </text>
+        <text
+          :x="L - 7"
+          :y="py(c.p.y) + 3"
+          text-anchor="end"
+          class="mp-ch-badge"
+        >
+          {{ c.p.y }} %
+        </text>
+      </g>
+
+      <!-- Unsichtbare Hit-Targets — zuletzt gerendert, fangen also die Events -->
+      <circle
+        v-for="p in allPts"
+        :key="`hit-${p.label}`"
+        :cx="px(p.x)"
+        :cy="py(p.y)"
+        r="11"
+        class="mp-hit"
+        role="button"
+        tabindex="0"
+        :aria-pressed="pinned.includes(p.label)"
+        :aria-label="`Fadenkreuz für ${p.label}`"
+        @mouseenter="hovered = p.label"
+        @mouseleave="hovered = null"
+        @click.stop="togglePin(p.label)"
+        @keydown.enter.prevent="togglePin(p.label)"
+      >
+        <title>{{ tip(p) }}</title>
+      </circle>
     </svg>
 
     <ModelRoutingSources :open="sourcesOpen" @close="sourcesOpen = false" />
@@ -436,5 +514,54 @@ const aMid = (aLen - aHL) / 2;
 }
 .mp-label-dom {
   fill: var(--color-text-tertiary);
+}
+
+/* Fadenkreuze: --ch trägt die Farbe pro Pin (Cycle) bzw. neutral beim Hover. */
+.mp-ch {
+  pointer-events: none;
+}
+.mp-ch line {
+  stroke: var(--ch);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 3;
+}
+.mp-ch-ring {
+  fill: none;
+  stroke: var(--ch);
+  stroke-width: 1.5;
+}
+.mp-ch-badge {
+  font-family: var(--slidev-code-font-family, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  fill: var(--ch);
+  paint-order: stroke;
+  stroke: var(--deck-surface, var(--color-background-primary));
+  stroke-width: 3px;
+}
+.mp-ch-0 {
+  --ch: var(--color-text-info);
+}
+.mp-ch-1 {
+  --ch: var(--color-text-danger);
+}
+.mp-ch-2 {
+  --ch: var(--color-text-warning);
+}
+.mp-ch-3 {
+  --ch: var(--color-text-success);
+}
+.mp-ch-hover {
+  --ch: var(--color-text-secondary);
+  opacity: 0.55;
+}
+.mp-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.mp-hit:focus-visible {
+  outline: none;
+  stroke: var(--slidev-theme-primary);
+  stroke-width: 1.5;
 }
 </style>
