@@ -114,18 +114,34 @@ const aLen = Math.hypot(ax2 - ax1, ay2 - ay1);
 const aW = 12; // halbe Schaftbreite
 const aHW = 24; // halbe Spitzenbreite
 const aHL = 34; // Spitzenlänge
-const aBody = [
-  [0, -aW],
-  [aLen - aHL, -aW],
-  [aLen - aHL, -aHW],
-  [aLen, 0],
-  [aLen - aHL, aHW],
-  [aLen - aHL, aW],
-  [0, aW],
-]
-  .map((p) => p.join(","))
-  .join(" ");
+const arrowPoly = (len: number, w: number, hw: number, hl: number) =>
+  [
+    [0, -w],
+    [len - hl, -w],
+    [len - hl, -hw],
+    [len, 0],
+    [len - hl, hw],
+    [len - hl, w],
+    [0, w],
+  ]
+    .map((p) => p.join(","))
+    .join(" ");
+const aBody = arrowPoly(aLen, aW, aHW, aHL);
 const aMid = (aLen - aHL) / 2;
+
+// Zwei Komponenten-Pfeile vom selben Ursprung (ax1,ay1): waagerecht nach links
+// („Billiger" = niedrigere Kosten) und senkrecht nach oben („Leistungsfähiger"
+// = höherer Pass@1). Bewusst dünner/heller als der Resultierende — sie zerlegen
+// den Diagonalpfeil in seine zwei Achsen-Komponenten.
+const cW = 9; // halbe Schaftbreite (Komponenten)
+const cHW = 17; // halbe Spitzenbreite
+const cHL = 24; // Spitzenlänge
+const bLen = 250; // „Billiger" nach links
+const cLen = 150; // „Leistungsfähiger" nach oben
+const bBody = arrowPoly(bLen, cW, cHW, cHL);
+const cBody = arrowPoly(cLen, cW, cHW, cHL);
+const bMid = (bLen - cHL) / 2;
+const cMid = (cLen - cHL) / 2;
 
 // Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
 // (erneuter Klick löst). Mehrere Pins gleichzeitig — die Einfüge-Reihenfolge
@@ -278,16 +294,50 @@ const crosshairs = computed(() => {
         </text>
       </g>
 
-      <!-- Pfeil: Richtung besseres Preis-Leistungs-Verhältnis -->
-      <g
-        :transform="`translate(${ax1},${ay1}) rotate(${aAng})`"
-        class="mp-arrow"
-      >
-        <polygon :points="aBody" />
-        <g :transform="`translate(${aMid},0) rotate(180)`">
-          <text text-anchor="middle" dominant-baseline="middle">
-            Besseres Preis-Leistungs-Verhältnis
+      <!-- Formen-Cluster der drei Blockpfeile: EIN opacity (auf
+           .mp-arrow-cluster), Füllungen intern voll deckend & gleichfarbig →
+           interne Überlappungen verschmelzen im Offscreen-Buffer nahtlos (keine
+           dunklen Flecken, keine Nähte). Der Hub-Kreis (r ≥ größte Schaft-
+           Halbbreite aW) schluckt die überstehenden Schaftecken → runder Knoten.
+           Z-Order innerhalb egal (vereinte Silhouette). -->
+      <g class="mp-arrow-cluster">
+        <circle :cx="ax1" :cy="ay1" :r="aW + 2" />
+        <g :transform="`translate(${ax1},${ay1}) rotate(180)`">
+          <polygon :points="bBody" />
+        </g>
+        <g :transform="`translate(${ax1},${ay1}) rotate(-90)`">
+          <polygon :points="cBody" />
+        </g>
+        <g :transform="`translate(${ax1},${ay1}) rotate(${aAng})`">
+          <polygon :points="aBody" />
+        </g>
+      </g>
+
+      <!-- Labels separat gerendert: erben NICHT die Cluster-Opacity, bleiben
+           crisp. Jedes Label behält den Transform seines Pfeils. -->
+      <g class="mp-arrow-labels">
+        <g :transform="`translate(${ax1},${ay1}) rotate(180)`">
+          <g :transform="`translate(${bMid},0) rotate(180)`">
+            <text text-anchor="middle" dominant-baseline="middle">
+              Billiger
+            </text>
+          </g>
+        </g>
+        <g :transform="`translate(${ax1},${ay1}) rotate(-90)`">
+          <text :x="cMid" y="0" text-anchor="middle" dominant-baseline="middle">
+            Leistungsfähiger
           </text>
+        </g>
+        <g :transform="`translate(${ax1},${ay1}) rotate(${aAng})`">
+          <g :transform="`translate(${aMid},0) rotate(180)`">
+            <text
+              class="mp-label-lead"
+              text-anchor="middle"
+              dominant-baseline="middle"
+            >
+              Besseres Preis-Leistungs-Verhältnis
+            </text>
+          </g>
         </g>
       </g>
 
@@ -480,14 +530,25 @@ const crosshairs = computed(() => {
   fill: color-mix(in srgb, var(--color-text-danger) 65%, transparent);
 }
 
-.mp-arrow polygon {
-  fill: color-mix(in srgb, var(--color-text-success) 14%, transparent);
-  stroke: color-mix(in srgb, var(--color-text-success) 45%, transparent);
-  stroke-width: 1.5;
+/* Ein Alpha für den ganzen Pfeil-Cluster (nicht pro Polygon): SVG komponiert die
+   Gruppe erst in einen Offscreen-Buffer und blendet dann als Ganzes — gleich-
+   farbige, intern voll deckende Überlappungen verschwinden dabei nahtlos (kein
+   Alpha-Stacking, keine Nähte). fill wird an Kreis + Polygone vererbt. */
+.mp-arrow-cluster {
+  fill: var(--color-text-success);
+  opacity: 0.38;
 }
-.mp-arrow text {
+/* Labels außerhalb der Opacity-Gruppe, damit sie crisp bleiben; grüner Text auf
+   grüner Transluzenz + Gitter braucht ein Surface-Halo (wie .mp-ch-badge). */
+.mp-arrow-labels text {
+  font-size: 11px;
+  fill: color-mix(in srgb, var(--color-text-success) 85%, transparent);
+  paint-order: stroke;
+  stroke: var(--deck-surface, var(--color-background-primary));
+  stroke-width: 3px;
+}
+.mp-label-lead {
   font-size: 12px;
-  fill: color-mix(in srgb, var(--color-text-success) 80%, transparent);
 }
 
 .mp-front-line {
