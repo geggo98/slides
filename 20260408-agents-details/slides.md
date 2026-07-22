@@ -718,6 +718,12 @@ Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige A
 
 </div>
 
+<div class="mt-2 text-sm opacity-60">
+
+Weitergedacht — Rollen-Routing über Modellfamilien & Harnesse hinweg: <TalkXref slug="20260707-anatomy-of-autonomous-agents" anchor="modell-routing">Anatomie Autonomer Agenten, Kap. 9</TalkXref>
+
+</div>
+
 ---
 hideInToc: true
 ---
