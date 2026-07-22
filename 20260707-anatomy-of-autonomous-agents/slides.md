@@ -939,7 +939,7 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Benchmarks sind der Prior; entschieden wird mit eigenen Evals.
+**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks: Teste Deinen eigenen Use-Case selbst, nutze diese Werte nur zur Orientierung.
 
 </div>
 
