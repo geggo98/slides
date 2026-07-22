@@ -166,7 +166,7 @@ done
 <v-clicks>
 
 - **Frischer Kontext pro Lauf** — kein Zustand im Prozess. Deshalb muss der Zustand woanders leben (→ Ticketsystem).
-- **Harness-agnostisch** — dieselben Runbooks laufen mit Claude Code, Codex oder jedem anderen CLI-Agenten.
+- **Harness-agnostisch** — dieselben Runbooks laufen mit Claude Code, Codex oder jedem anderen CLI-Agenten; perspektivisch sogar kombiniert → <Link to="modell-routing">Kap. 9</Link>
 
 </v-clicks>
 
@@ -894,6 +894,62 @@ Autonomie heißt hier: **unbeaufsichtigt zwischen den Checkpoints** — nicht un
 </Callout>
 
 ---
+layout: section
+routeAlias: modell-routing
+---
+
+# 9. Ausblick: Modell-Routing
+
+<div class="text-sm opacity-75 mt-4">
+
+Verschiedene Modelle & Harnesse pro Rolle kombinieren — noch nicht umgesetzt, als Prototyp mit Claude CLI + Codex CLI getestet.
+
+</div>
+
+<AnatomyDiagram mini highlight="orchestrierung" class="mt-6" />
+
+---
+hideInToc: true
+clicks: 5
+---
+
+# Modell-Routing: Rollen statt Einheitsmodell
+
+<div class="text-sm opacity-75 -mt-1">
+
+Kostendruck auf **hochfrequente** Rollen, Premium auf **niedrigfrequente** — entscheidend ist €/Task (Preis × Tokens × Steps), nicht €/Mtok.
+
+</div>
+
+<ModelRoutingRoles :active="[null, 'plan', 'exec', 'res', 'ver', 'ext'][$clicks]" />
+
+<div class="text-xs opacity-70 mt-2">
+
+Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" target="_blank">Quesma — „Custom Deep Research Pipeline"</a> (07/2026) · Claude ⇄ Codex im Detail → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · alle Quellen & Einschränkungen → ⓘ
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Welches Modell wofür? Die Datenlage
+
+<ModelRoutingPareto />
+
+<div v-click class="text-sm mt-1">
+
+**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Benchmarks sind der Prior; entschieden wird mit eigenen Evals.
+
+</div>
+
+<div class="text-xs opacity-70 mt-1">
+
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve, 17.07.2026 · 1 USD = 0,876 € (21.07.) · Quadranten redaktionell (8 € / 50 %)
+
+</div>
+
+---
 hideInToc: true
 ---
 
@@ -948,7 +1004,7 @@ hideInToc: true
 layout: section
 ---
 
-# 9. Bonus: Fallstudie Bun
+# 10. Bonus: Fallstudie Bun
 
 ---
 hideInToc: true

@@ -5,7 +5,8 @@ import { onBeforeUnmount, watch } from "vue";
 // Klick irgendwohin oder Escape schließt (wie in den HTML-Originalen).
 // position:fixed wird durch den CSS-Transform des Slidev-Scalers zum
 // Containing-Block "Slide-Canvas" — deckt also genau die Folie ab.
-const props = defineProps<{ open: boolean }>();
+// `wide` für zweispaltige Inhalte (Modell-Routing-Quellen).
+const props = defineProps<{ open: boolean; wide?: boolean }>();
 const emit = defineEmits<{ (e: "close"): void }>();
 
 function onKey(ev: KeyboardEvent) {
@@ -25,7 +26,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 
 <template>
   <div v-if="open" class="bun-pop-overlay" @click="emit('close')">
-    <div class="bun-pop-card">
+    <div class="bun-pop-card" :class="{ 'bun-pop-wide': wide }">
       <slot />
       <div class="bun-pop-hint">Klick irgendwohin schließt</div>
     </div>
@@ -50,6 +51,11 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   background: var(--color-background-tertiary);
   border: 0.5px solid var(--color-border-secondary);
   border-radius: var(--border-radius-lg, 12px);
+}
+.bun-pop-card.bun-pop-wide {
+  max-width: 800px;
+  max-height: 480px;
+  overflow-y: auto;
 }
 .bun-pop-card .bun-pop-h {
   margin-bottom: 6px;
