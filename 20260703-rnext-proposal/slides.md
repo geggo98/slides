@@ -7,7 +7,7 @@ info: |
   Schnittstellen-Erstellung, -Test und -Pflege für LLM-Agents zugänglich macht.
 monaco: true
 mdc: true
-transition: slide-left
+transition: fade
 colorSchema: auto
 fonts:
   sans: Inter
