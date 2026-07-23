@@ -720,7 +720,7 @@ Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige A
 
 <div class="mt-2 text-sm opacity-60">
 
-Weitergedacht — Rollen-Routing über Modellfamilien & Harnesse hinweg: <TalkXref slug="20260707-anatomy-of-autonomous-agents" anchor="modell-routing">Anatomie Autonomer Agenten, Kap. 9</TalkXref>
+Weitergedacht — Rollen-Routing über Modellfamilien & Harnesse hinweg: <Link to="modell-routing">Kap. 7</Link>
 
 </div>
 
@@ -923,9 +923,63 @@ Token. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discou
 
 ---
 layout: section
+routeAlias: modell-routing
 ---
 
-# 7. Die fünf Schleifen
+# 7. Modell-Routing
+
+<div class="text-sm opacity-75 mt-4">
+
+Verschiedene Modelle & Harnesse pro Rolle kombinieren — noch nicht umgesetzt, als Prototyp mit Claude CLI + Codex CLI getestet.
+
+</div>
+
+---
+hideInToc: true
+clicks: 5
+---
+
+# Modell-Routing: Rollen statt Einheitsmodell
+
+<div class="text-sm opacity-75 -mt-1">
+
+Kostendruck auf **hochfrequente** Rollen, Premium auf **niedrigfrequente** — entscheidend ist €/Task (Preis × Tokens × Steps), nicht €/Mtok.
+
+</div>
+
+<ModelRoutingRoles :active="[null, 'plan', 'exec', 'res', 'ver', 'ext'][$clicks]" />
+
+<div class="text-xs opacity-70 mt-2">
+
+Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" target="_blank">Quesma — „Custom Deep Research Pipeline"</a> (07/2026) · Claude ⇄ Codex im Detail → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · alle Quellen & Einschränkungen → ⓘ
+
+</div>
+
+---
+hideInToc: true
+---
+
+# Welches Modell wofür? Die Datenlage
+
+<ModelRoutingPareto />
+
+<div v-click class="text-sm mt-1">
+
+**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks: Teste Deinen eigenen Use-Case selbst, nutze diese Werte nur zur Orientierung.
+
+</div>
+
+<div class="text-xs opacity-70 mt-1">
+
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve, 17.07.2026 · 1 USD = 0,876 € (21.07.) · Quadranten redaktionell (8 € / 50 %)
+
+</div>
+
+---
+layout: section
+---
+
+# 8. Die fünf Schleifen
 
 <div class="text-lg opacity-70 mt-4">
 
@@ -1011,7 +1065,7 @@ Output-Dimension bewusst weggelassen — die steckt in Kap. 2
 layout: section
 ---
 
-# 8. Source-Leak
+# 9. Source-Leak
 
 ---
 hideInToc: true
@@ -1053,7 +1107,7 @@ hideInToc: true
 layout: section
 ---
 
-# 9. Architektur-Vergleich
+# 10. Architektur-Vergleich
 
 ---
 hideInToc: true
@@ -1162,7 +1216,7 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 layout: section
 ---
 
-# 10. Kernaussagen
+# 11. Kernaussagen
 
 ---
 hideInToc: true

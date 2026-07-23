@@ -166,7 +166,7 @@ done
 <v-clicks>
 
 - **Frischer Kontext pro Lauf** — kein Zustand im Prozess. Deshalb muss der Zustand woanders leben (→ Ticketsystem).
-- **Harness-agnostisch** — dieselben Runbooks laufen mit Claude Code, Codex oder jedem anderen CLI-Agenten; perspektivisch sogar kombiniert → <Link to="modell-routing">Kap. 9</Link>
+- **Harness-agnostisch** — dieselben Runbooks laufen mit Claude Code, Codex oder jedem anderen CLI-Agenten; perspektivisch sogar kombiniert → <TalkXref slug="20260408-agents-details" anchor="modell-routing">Modell-Routing</TalkXref>
 
 </v-clicks>
 
@@ -884,6 +884,7 @@ hideInToc: true
 - **Flaky-Befunde** — ob Rot ein echter Defekt oder ein Umgebungsproblem ist, braucht weiterhin menschliches Urteil.
 - **Markup-Konvertierung** — das tolerante Idempotenz-Matching bleibt die fummeligste Stelle des Systems.
 - **Kontextkosten** — ~50 KB Runbook werden jedem Lauf neu vorgelegt und wachsen mit jeder Kuration. **Gegenmittel geplant:** <Link to="kontext-aufteilen">aufteilen statt anwachsen</Link> · Batch-Modus für nicht-zeitkritische Läufe halbiert die Token-Kosten (stapelt mit dem Prompt-Cache) → <TalkXref slug="20260408-agents-details" anchor="cache-hygiene">Cache & Batch</TalkXref>
+- **Modell-Routing** — verschiedene Modelle & Harnesse pro Rolle kombinieren bleibt Prototyp (Claude CLI + Codex CLI) → <TalkXref slug="20260408-agents-details" anchor="modell-routing">Modell-Routing</TalkXref>
 
 </v-clicks>
 
@@ -892,62 +893,6 @@ hideInToc: true
 Autonomie heißt hier: **unbeaufsichtigt zwischen den Checkpoints** — nicht unbeaufsichtigt insgesamt.
 
 </Callout>
-
----
-layout: section
-routeAlias: modell-routing
----
-
-# 9. Ausblick: Modell-Routing
-
-<div class="text-sm opacity-75 mt-4">
-
-Verschiedene Modelle & Harnesse pro Rolle kombinieren — noch nicht umgesetzt, als Prototyp mit Claude CLI + Codex CLI getestet.
-
-</div>
-
-<AnatomyDiagram mini highlight="orchestrierung" class="mt-6" />
-
----
-hideInToc: true
-clicks: 5
----
-
-# Modell-Routing: Rollen statt Einheitsmodell
-
-<div class="text-sm opacity-75 -mt-1">
-
-Kostendruck auf **hochfrequente** Rollen, Premium auf **niedrigfrequente** — entscheidend ist €/Task (Preis × Tokens × Steps), nicht €/Mtok.
-
-</div>
-
-<ModelRoutingRoles :active="[null, 'plan', 'exec', 'res', 'ver', 'ext'][$clicks]" />
-
-<div class="text-xs opacity-70 mt-2">
-
-Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" target="_blank">Quesma — „Custom Deep Research Pipeline"</a> (07/2026) · Claude ⇄ Codex im Detail → <TalkXref slug="20260327-ai-agents" anchor="ultracode-vs-ultra">`ultracode` vs. `ultra`</TalkXref> · alle Quellen & Einschränkungen → ⓘ
-
-</div>
-
----
-hideInToc: true
----
-
-# Welches Modell wofür? Die Datenlage
-
-<ModelRoutingPareto />
-
-<div v-click class="text-sm mt-1">
-
-**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks: Teste Deinen eigenen Use-Case selbst, nutze diese Werte nur zur Orientierung.
-
-</div>
-
-<div class="text-xs opacity-70 mt-1">
-
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve, 17.07.2026 · 1 USD = 0,876 € (21.07.) · Quadranten redaktionell (8 € / 50 %)
-
-</div>
 
 ---
 hideInToc: true
@@ -1004,7 +949,7 @@ hideInToc: true
 layout: section
 ---
 
-# 10. Bonus: Fallstudie Bun
+# 9. Bonus: Fallstudie Bun
 
 ---
 hideInToc: true
