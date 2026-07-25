@@ -965,13 +965,13 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Stand 07/2026 liegt kein Claude-Modell auf der Front** — aber Harness-Transfer verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks: Teste Deinen eigenen Use-Case selbst, nutze diese Werte nur zur Orientierung.
+**Seit 24.07. liegt mit Opus 5 erstmals ein Claude-Modell auf der Front** — 74 % ± 4, gleichauf mit gpt-5.6-sol (Konfidenzintervalle überlappen). Der Einsatz des modellspezifischen Harness verbessert den Score um 10–30 Prozent-Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks: Teste Deinen eigenen Use-Case selbst, nutze diese Werte nur zur Orientierung.
 
 </div>
 
 <div class="text-xs opacity-70 mt-1">
 
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve, 17.07.2026 · 1 USD = 0,876 € (21.07.) · Quadranten redaktionell (8 € / 50 %)
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve, 25.07.2026 · 1 USD = 0,876 € (21.07.) · Quadranten redaktionell (8 € / 50 %)
 
 </div>
 

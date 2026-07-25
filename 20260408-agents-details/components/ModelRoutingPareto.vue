@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 
 // Port von Tab 2 der Infografik: DeepSWE-Score vs. €/Task als statisches
-// Inline-SVG (16 fixe Punkte — kein Chart.js/echarts nötig). Farben über die
+// Inline-SVG (18 fixe Punkte — kein Chart.js/echarts nötig). Farben über die
 // Deck-Tokens, Werte bereits in EUR (1 USD = 0,876 €, 21.07.2026). Bewusst
 // ohne <defs> — keine IDs, die zwischen Nachbar-Slides kollidieren könnten.
 interface Pt {
@@ -30,7 +30,7 @@ const QX = px(8); // Quadranten-Trennung: 8 € …
 const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 
 const front: Pt[] = [
-  { x: 2.07, y: 53, label: "muse-spark-1.1", eur: "2,07", ax: "right", dy: 14 },
+  { x: 2.07, y: 53, label: "muse-spark-1.1", eur: "2,07", ax: "right", dy: 8 },
   { x: 2.12, y: 54, label: "grok-4.5", eur: "2,12", ax: "right", dy: -6 },
   { x: 2.65, y: 67, label: "gpt-5.6-luna", eur: "2,65", ax: "center", dy: 18 },
   { x: 4.07, y: 69, label: "kimi-k3", eur: "4,07", ax: "right", dy: 12 },
@@ -42,7 +42,8 @@ const front: Pt[] = [
     ax: "center",
     dy: -11,
   },
-  { x: 7.35, y: 73, label: "gpt-5.6-sol", eur: "7,35", ax: "right", dy: 4 },
+  { x: 7.35, y: 73, label: "gpt-5.6-sol", eur: "7,35", ax: "right", dy: -8 },
+  { x: 10.37, y: 74, label: "claude-opus-5", eur: "10,37", ax: "right", dy: 4 },
 ];
 
 const dom: Pt[] = [
@@ -66,6 +67,14 @@ const dom: Pt[] = [
   },
   { x: 4.95, y: 52, label: "gpt-5.4", eur: "4,95", ax: "right", dy: -8 },
   { x: 3.43, y: 44, label: "glm-5.2", eur: "3,43", ax: "right", dy: 4 },
+  {
+    x: 3.09,
+    y: 49,
+    label: "gemini-3.6-flash",
+    eur: "3,09",
+    ax: "left",
+    dy: 16,
+  },
   {
     x: 6.43,
     y: 37,
@@ -193,7 +202,7 @@ const crosshairs = computed(() => {
       class="mp-chart"
       :viewBox="`0 0 ${W} ${H}`"
       role="img"
-      aria-label="Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke (billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front: muse-spark-1.1, grok-4.5, gpt-5.6-luna, kimi-k3, gpt-5.6-terra, gpt-5.6-sol. Alle Claude-Modelle sind dominiert."
+      aria-label="Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke (billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front: muse-spark-1.1, grok-4.5, gpt-5.6-luna, kimi-k3, gpt-5.6-terra, gpt-5.6-sol, claude-opus-5. Claude Opus 5 ist das erste Claude-Modell auf der Front."
     >
       <!-- Quadranten-Tints -->
       <rect

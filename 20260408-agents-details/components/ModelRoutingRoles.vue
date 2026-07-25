@@ -26,12 +26,12 @@ const roles: Role[] = [
   {
     key: "plan",
     title: "Planen & Judge",
-    models: "gpt-5.6-sol · fable-5",
+    models: "opus-5 · gpt-5.6-sol",
     cost: "Preis egal — 1× pro Task",
     freq: 1,
     detailTitle: "Planen & Judge — Premium trotz Kosten, nicht wegen",
     detailText:
-      "Niedrigfrequent (1× pro Task) → Kostendruck hier ist irrational. Es existiert kein Benchmark, der Planungsqualität isoliert misst; die Wahl stützt sich auf End-to-End-Spitzen (DeepSWE: sol 73 %, Terminal-Bench 2.1: sol 88,8 %) und HLE als Reasoning-Proxy.",
+      "Niedrigfrequent (1× pro Task) → Kostendruck hier ist irrational. Es existiert kein Benchmark, der Planungsqualität isoliert misst; die Wahl stützt sich auf End-to-End-Spitzen (DeepSWE: opus-5 74 % · sol 73 %, Terminal-Bench 2.1: sol 88,8 %) und HLE als Reasoning-Proxy.",
     ev: "Evidenz: schwach — Proxy-Schluss, kein isolierter Planungs-Benchmark",
   },
   {
