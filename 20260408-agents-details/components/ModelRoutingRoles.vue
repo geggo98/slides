@@ -5,7 +5,8 @@ import ModelRoutingSources from "./ModelRoutingSources.vue";
 // Port von Tab 1 der vorbereiteten Infografik „Modell-Routing: Agenten
 // kombinieren": Orchestrator (Claude Code) → Rollen-Karten mit Detail-Panel.
 // Beträge auf Euro vereinheitlicht (1 USD = 0,876 €, 21.07.2026 — dieselben
-// Werte wie im Pareto-Chart). Steuerung doppelt: `active`-Prop vom Slide
+// Werte wie im Pareto-Chart, inkl. der OpenAI-Preissenkung vom 30.07.2026).
+// Steuerung doppelt: `active`-Prop vom Slide
 // ($clicks cycelt die Rollen durch) plus Karten-Klick als lokaler Override.
 type RoleKey = "plan" | "exec" | "res" | "ver" | "ext";
 
@@ -38,11 +39,11 @@ const roles: Role[] = [
     key: "exec",
     title: "Umsetzung",
     models: "gpt-5.6-terra · kimi-k3",
-    cost: "~4 €/Task @ ~70 %",
+    cost: "~3,50 €/Task @ ~70 %",
     freq: 3,
     detailTitle: "Umsetzung — der Ort für Kostendruck",
     detailText:
-      "DeepSWE v1.1 (ein Harness, CIs): terra 70 % / 4,34 € · kimi-k3 69 % / 4,07 € · luna 67 % / 2,65 €. Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € (214k Tokens, 268 Steps) — strikt dominiert. €/Mtok ist nicht die Kostenmetrik, Frugalität ist es.",
+      "DeepSWE v1.1 (ein Harness, CIs): terra 70 % / 3,47 € · luna 67 % / 0,53 € — seit dem 30.07. dominiert terra auch kimi-k3 (69 % / 4,07 €). Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € (214k Tokens, 268 Steps) — strikt dominiert. €/Task: Frugalität steuerst Du, der Preis kippt über Nacht.",
     ev: "Evidenz: gut — konsistenter Harness, Konfidenzintervalle ausgewiesen",
   },
   {

@@ -6,6 +6,11 @@ import ModelRoutingSources from "./ModelRoutingSources.vue";
 // Inline-SVG (18 fixe Punkte — kein Chart.js/echarts nötig). Farben über die
 // Deck-Tokens, Werte bereits in EUR (1 USD = 0,876 €, 21.07.2026). Bewusst
 // ohne <defs> — keine IDs, die zwischen Nachbar-Slides kollidieren könnten.
+//
+// Tokens/Steps: Datacurve-Snapshot 25.07.2026. Preise: OpenAI-Senkung vom
+// 30.07.2026 (Luna −80 %, Terra −20 %). Da Input, Output *und* Cached-Input um
+// denselben Faktor fielen, skaliert €/Task exakt mit — unabhängig von Token-Mix
+// und Wechselkurs (luna 2,65 × 0,2 = 0,53 · terra 4,34 × 0,8 = 3,47).
 interface Pt {
   x: number; // €/Task
   y: number; // Pass@1 %
@@ -13,40 +18,61 @@ interface Pt {
   eur: string; // deutsches Zahlenformat für den Tooltip
   ax: "left" | "right" | "center";
   dy: number;
+  old?: { x: number; eur: string }; // Position vor der Preissenkung 30.07.2026
 }
 
 const sourcesOpen = ref(false);
 
-// Geometrie (logische Pixel im 932er-viewBox)
+// Geometrie (logische Pixel im 932er-viewBox). Vorher 316/38: B um 5 gesenkt
+// (schmaleres Band unter der X-Achse, Tick-Baseline H - B + 15 und Achsentitel
+// H - 4 behalten 14 px Abstand), H um 10 — die Plotfläche H - T - B schrumpft
+// dadurch von 268 auf 263. Beides zusammen schafft den Platz, den die um eine
+// Zeile gewachsene Pointe unter dem Chart braucht.
 const W = 932;
-const H = 316;
+const H = 306;
 const L = 46;
 const R = 10;
 const T = 10;
-const B = 38;
+const B = 33;
 const px = (v: number) => L + (v / 25) * (W - L - R);
 const py = (v: number) => H - B - (v / 80) * (H - T - B);
 const QX = px(8); // Quadranten-Trennung: 8 € …
 const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 
+// Aufsteigend nach x — `frontPath` verbindet die Punkte in Deklarations-
+// reihenfolge, unsortiert entsteht ein Zickzack.
 const front: Pt[] = [
-  { x: 2.07, y: 53, label: "muse-spark-1.1", eur: "2,07", ax: "right", dy: 8 },
-  { x: 2.12, y: 54, label: "grok-4.5", eur: "2,12", ax: "right", dy: -6 },
-  { x: 2.65, y: 67, label: "gpt-5.6-luna", eur: "2,65", ax: "center", dy: 18 },
-  { x: 4.07, y: 69, label: "kimi-k3", eur: "4,07", ax: "right", dy: 12 },
   {
-    x: 4.34,
+    x: 0.53,
+    y: 67,
+    label: "gpt-5.6-luna",
+    eur: "0,53",
+    ax: "right",
+    dy: 16,
+    old: { x: 2.65, eur: "2,65" },
+  },
+  {
+    x: 3.47,
     y: 70,
     label: "gpt-5.6-terra",
-    eur: "4,34",
-    ax: "center",
-    dy: -11,
+    eur: "3,47",
+    ax: "right",
+    dy: -14,
+    old: { x: 4.34, eur: "4,34" },
   },
   { x: 7.35, y: 73, label: "gpt-5.6-sol", eur: "7,35", ax: "right", dy: -8 },
   { x: 10.37, y: 74, label: "claude-opus-5", eur: "10,37", ax: "right", dy: 4 },
 ];
 
 const dom: Pt[] = [
+  // Erst durch die Preissenkung vom 30.07.2026 verdrängt: luna (0,53 € / 67 %)
+  // dominiert muse-spark-1.1 und grok-4.5, terra (3,47 € / 70 %) dominiert
+  // kimi-k3 — billiger *und* besser, in beiden Achsen.
+  { x: 2.07, y: 53, label: "muse-spark-1.1", eur: "2,07", ax: "right", dy: 8 },
+  { x: 2.12, y: 54, label: "grok-4.5", eur: "2,12", ax: "right", dy: -6 },
+  // Tiefer gesetzt als üblich: direkt rechts daneben sitzt terras Geisterring,
+  // näher am Marker gelesen wirkte „kimi-k3“ wie dessen Beschriftung.
+  { x: 4.07, y: 69, label: "kimi-k3", eur: "4,07", ax: "right", dy: 20 },
   { x: 6.33, y: 67, label: "gpt-5.5", eur: "6,33", ax: "right", dy: 4 },
   { x: 18.95, y: 70, label: "claude-fable-5", eur: "18,95", ax: "left", dy: 4 },
   {
@@ -110,7 +136,31 @@ const frontPath = front.map((p) => `${px(p.x)},${py(p.y)}`).join(" ");
 const anchor = (p: Pt) =>
   p.ax === "center" ? "middle" : p.ax === "left" ? "end" : "start";
 const ldx = (p: Pt) => (p.ax === "center" ? 0 : p.ax === "left" ? -9 : 9);
-const tip = (p: Pt) => `${p.label}: ${p.y} % · ${p.eur} €/Task`;
+const tip = (p: Pt) =>
+  `${p.label}: ${p.y} % · ${p.eur} €/Task` +
+  (p.old ? ` (vorher ${p.old.eur} €)` : "");
+
+// Wanderung durch die Preissenkung: nur x ändert sich, y bleibt — die Strecke
+// läuft also waagerecht. Sie wird vor den Markern gezeichnet und verschwindet
+// damit hinter ihnen (terras Geisterpunkt liegt nur ~10 px neben kimi-k3);
+// das ist die übliche Konvention und lesbarer als ein Bogen drumherum.
+const moved = front.flatMap((p) => {
+  if (!p.old) return [];
+  const gx = px(p.old.x);
+  const gy = py(p.y);
+  const tipX = px(p.x) + 9; // kurz vor dem Front-Punkt enden
+  return [
+    {
+      label: p.label,
+      eur: p.old.eur,
+      gx,
+      gy,
+      x1: gx - 6, // am Geisterring absetzen
+      x2: tipX,
+      head: `${tipX},${gy} ${tipX + 8},${gy - 4} ${tipX + 8},${gy + 4}`,
+    },
+  ];
+});
 
 // Pfeil „Besseres Preis-Leistungs-Verhältnis" von (20,5 € / 20 %) nach
 // (12 € / 44 %) — Polygon in Pfeil-Koordinaten, per Gruppe rotiert.
@@ -166,19 +216,30 @@ function togglePin(label: string) {
   else pinned.value.push(label);
 }
 
-const crosshairs = computed(() => {
-  const active = pinned.value.map((label, i) => ({
-    label,
-    cls: `mp-ch-${i % 4}`,
-  }));
-  if (hovered.value && !pinned.value.includes(hovered.value)) {
-    active.push({ label: hovered.value, cls: "mp-ch-hover" });
+// label → Farbklasse (Pin-Farbe aus dem Cycle, bzw. neutral beim Hover).
+// Fadenkreuz UND Wanderung lesen dieselbe Quelle, damit Geisterpunkt und Pfeil
+// im selben Ton mitleuchten wie das Fadenkreuz ihres Punkts.
+const activeCls = computed(() => {
+  const m = new Map<string, string>();
+  pinned.value.forEach((label, i) => m.set(label, `mp-ch-${i % 4}`));
+  if (hovered.value && !m.has(hovered.value)) {
+    m.set(hovered.value, "mp-ch-hover");
   }
-  return active.flatMap(({ label, cls }) => {
+  return m;
+});
+
+const crosshairs = computed(() =>
+  [...activeCls.value].flatMap(([label, cls]) => {
     const p = byLabel.get(label);
     return p ? [{ p, cls }] : [];
-  });
-});
+  }),
+);
+
+// Leer, solange der zugehörige Punkt weder gehovt noch gepinnt ist.
+const movedCls = (label: string) => {
+  const cls = activeCls.value.get(label);
+  return cls ? `mp-moved-on ${cls}` : "";
+};
 </script>
 
 <template>
@@ -186,6 +247,7 @@ const crosshairs = computed(() => {
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
+      <span><i class="mp-sw mp-sw-old" />vor der Preissenkung</span>
       <span class="mp-note">
         Best Effort pro Modell · Hover: Fadenkreuz, Klick: fixieren
       </span>
@@ -202,7 +264,7 @@ const crosshairs = computed(() => {
       class="mp-chart"
       :viewBox="`0 0 ${W} ${H}`"
       role="img"
-      aria-label="Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke (billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front: muse-spark-1.1, grok-4.5, gpt-5.6-luna, kimi-k3, gpt-5.6-terra, gpt-5.6-sol, claude-opus-5. Claude Opus 5 ist das erste Claude-Modell auf der Front."
+      aria-label="Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke (billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front nach der OpenAI-Preissenkung vom 30.07.2026: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, claude-opus-5. Claude Opus 5 ist das erste Claude-Modell auf der Front. Dieselbe Preisrunde hat muse-spark-1.1, grok-4.5 und kimi-k3 von der Front verdrängt."
     >
       <!-- Quadranten-Tints -->
       <rect
@@ -350,6 +412,23 @@ const crosshairs = computed(() => {
         </g>
       </g>
 
+      <!-- Preissenkung 30.07.2026: Geisterpunkt an der alten Position, gestri-
+           chelte Wanderungslinie zur neuen. Vor den Front-Punkten gerendert,
+           damit deren Kreise oben liegen. Pfeilspitze als <polygon> statt
+           <marker> — die Komponente kommt bewusst ohne <defs> aus. -->
+      <g
+        v-for="m in moved"
+        :key="`old-${m.label}`"
+        class="mp-moved"
+        :class="movedCls(m.label)"
+      >
+        <line :x1="m.x1" :y1="m.gy" :x2="m.x2" :y2="m.gy" />
+        <polygon :points="m.head" />
+        <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
+          <title>{{ m.label }}: vorher {{ m.eur }} €/Task (Stand 25.07.)</title>
+        </circle>
+      </g>
+
       <!-- Pareto-Front -->
       <polyline :points="frontPath" class="mp-front-line" />
       <g v-for="p in front" :key="p.label">
@@ -442,13 +521,13 @@ const crosshairs = computed(() => {
 
 <style scoped>
 .mp-wrap {
-  margin-top: 4px;
+  margin-top: 0;
 }
 .mp-legend {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 2px;
+  gap: 14px;
+  margin-bottom: 0;
   font-size: 11px;
   color: var(--color-text-secondary);
 }
@@ -466,6 +545,13 @@ const crosshairs = computed(() => {
 .mp-sw-dom {
   border-radius: 2px;
   background: var(--color-text-tertiary);
+}
+.mp-sw-old {
+  box-sizing: border-box;
+  border: 1.4px solid var(--color-text-tertiary);
+  border-radius: 50%;
+  background: none;
+  opacity: 0.75;
 }
 .mp-note {
   margin-left: auto;
@@ -558,6 +644,44 @@ const crosshairs = computed(() => {
 }
 .mp-label-lead {
   font-size: 12px;
+}
+
+/* Wanderung durch die Preissenkung: Geisterpunkt, Linie und Spitze in der
+   „dominiert"-Farbe — die alte Position soll klar als überholt lesen und dem
+   Front-Ton (Primary) nicht die Aufmerksamkeit wegnehmen. */
+.mp-moved {
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+.mp-moved line {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+.mp-moved polygon {
+  fill: var(--color-text-tertiary);
+}
+.mp-old-pt {
+  fill: none;
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1.4;
+}
+/* Punkt gehovt oder gepinnt → seine Herkunft leuchtet mit, im selben --ch-Ton
+   wie das Fadenkreuz. Macht bei mehreren Pins zuordenbar, welcher Geisterpunkt
+   zu welchem Modell gehört. */
+.mp-moved-on {
+  opacity: 1;
+}
+.mp-moved-on line {
+  stroke: var(--ch);
+  stroke-width: 1.6;
+}
+.mp-moved-on polygon {
+  fill: var(--ch);
+}
+.mp-moved-on .mp-old-pt {
+  stroke: var(--ch);
+  stroke-width: 2;
 }
 
 .mp-front-line {

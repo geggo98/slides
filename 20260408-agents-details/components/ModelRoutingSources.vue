@@ -15,7 +15,12 @@ const sources = [
   {
     href: "https://deepswe.datacurve.ai/",
     label: "DeepSWE v1.1",
-    note: "Pareto-Daten, Kosten, Tokens, Steps",
+    note: "Pareto-Daten, Tokens, Steps (25.07.)",
+  },
+  {
+    href: "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/",
+    label: "OpenAI-Preise, 30.07.2026",
+    note: "Luna −80 %, Terra −20 %",
   },
   {
     href: "https://www.tbench.ai/",
@@ -71,7 +76,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand Juli 2026. Benchmarks + Preise ändern sich monatlich — als Prior nutzen, eigene Evals bauen.",
+    text: "Stand Juli 2026 — und schon in sich veraltet: fünf Tage nach dem Datenstand fiel luna um 80 %, was drei Modelle von der Front räumte. Als Prior nutzen, eigene Evals bauen.",
   },
 ];
 </script>
