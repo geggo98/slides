@@ -100,3 +100,37 @@ für die JSpecify-Migration.
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
+
+### Install Policy (`bunfig.toml`)
+
+The repo ships a `bunfig.toml`: a 14-day release cooldown, an exemption for the
+pinned Playwright trio, and no lifecycle scripts. Two consequences worth knowing
+before touching dependencies:
+
+**Do not enable lifecycle scripts here.** The slidev skill tells you to opt out
+of a machine-wide `ignoreScripts` so `playwright-chromium` can download its
+browser — that advice does not apply to this repo. Browsers come from Nix
+(`PLAYWRIGHT_BROWSERS_PATH`, `devenv.nix`), and `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`
+suppresses that download on purpose. The only other dependency with an install
+script is `esbuild`, which resolves its native binary from `@esbuild/<platform>`
+at runtime and does not need one. If a PDF export fails, the cause is the
+Playwright/nixpkgs version pairing below, not a missing script.
+
+**Bumping the Playwright pin.** `playwright` and `playwright-chromium` must match
+`pkgs.playwright-driver` exactly — no caret (see the comment in `devenv.nix`):
+
+1. update `devenv.lock`, then read the version Nix now ships:
+   `nix eval --raw github:cachix/devenv-nixpkgs/rolling#playwright-driver.version`
+   (that flake ref is the `nixpkgs` input from `devenv.yaml`)
+2. `bun add -E playwright@X.Y.Z playwright-chromium@X.Y.Z`
+3. confirm the pairing — the browser revisions on both sides must be identical:
+   ```sh
+   bun -e 'console.log(require("./node_modules/playwright-core/browsers.json").browsers.map(b=>b.name+"-"+b.revision).join("\n"))'
+   ls "$PLAYWRIGHT_BROWSERS_PATH"
+   ```
+4. verify the export still works: `devenv tasks run slides:export`
+
+The cooldown exemption in `bunfig.toml` covers step 2 even for a same-week
+Playwright release. Should a bump still be refused with
+`blocked by minimum-release-age`, re-run that one command with
+`--minimum-release-age=0` rather than weakening the policy file.

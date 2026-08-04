@@ -1,0 +1,28 @@
+# Bun install policy for this repo.
+#
+# A 14-day release cooldown and a lifecycle-script block already apply on the
+# maintainer's machine (~/.bunfig.toml, ~/.npmrc). This file exists for two
+# reasons: CI runs without those global files, and the cooldown would otherwise
+# block the one version bump this repo has to be able to perform.
+
+[install]
+
+# Mirror of the machine-wide cooldown so CI gates the same way. Locally this
+# value is inherited from ~/.bunfig.toml anyway — bun shallow-merges the two
+# per key, so a local [install] table does not drop global keys it omits.
+minimumReleaseAge = 1209600
+
+# playwright/playwright-chromium are pinned to the exact version that
+# pkgs.playwright-driver ships (see devenv.nix); a caret has broken PDF export
+# before. The cooldown cannot protect that choice — nixpkgs already made it —
+# it can only reject the bump with
+#   error: No version matching "playwright" found for specifier "X.Y.Z"
+#          (blocked by minimum-release-age: 1209600 seconds)
+# so exempt the pinned trio. Everything else stays gated.
+minimumReleaseAgeExcludes = ["playwright", "playwright-core", "playwright-chromium"]
+
+# Off on purpose, and no opt-out here: browsers come from Nix via
+# PLAYWRIGHT_BROWSERS_PATH (devenv.nix), never from playwright-chromium's
+# install script, and esbuild resolves its native binary from
+# @esbuild/<platform> at runtime. See AGENTS.md before re-enabling.
+ignoreScripts = true
