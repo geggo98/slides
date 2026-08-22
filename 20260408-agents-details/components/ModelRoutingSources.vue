@@ -99,6 +99,10 @@ const caveats = [
     text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08.). Die Sol-Senkung vom 21.08. rechnen wir selbst ein, das Board noch nicht. Ältere Datenstände zeigen den damals veröffentlichten Wert; zwei davon sind rekonstruiert und im Chart markiert.",
   },
   {
+    lead: "DeepSWE v1 war kontaminiert:",
+    text: "In der ersten Runde lief die Verifikation im selben Container wie der Agent, und das Repo kam mit voller Git-Historie. Wer die Lösung las statt sie zu erarbeiten, holte sich Punkte, die er ohne sie vielleicht nicht bekommen hätte — und brauchte dafür kaum Tokens. Scores zu hoch, Kosten zu niedrig, beides nicht mit v1.1 vergleichbar. Im Historien-Chart ist das die erste Station.",
+  },
+  {
     lead: "Abo ist kein API-Preis:",
     text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 31.08.2026 gibt Claude Code 50 % mehr Kontingent pro Woche; die Kosten pro Task sinken damit auf zwei Drittel. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort dann die Position ab 01.09.2026.",
   },

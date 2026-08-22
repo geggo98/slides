@@ -121,8 +121,10 @@ const at = (p: Pt, ax: Ax, dy: number, dx = 0, lbl?: boolean): Pt => ({
 // Stand 1 — DeepSWE v1, Board-Stand 20.06.2026 (21 Modelle)
 // ---------------------------------------------------------------------------
 // Andere Methodik als alles Folgende: Verifikation lief im selben Container wie
-// der Agent, das Repo enthielt die vollständige Git-Historie. Scores sind
-// deshalb NICHT mit v1.1 vergleichbar.
+// der Agent, das Repo enthielt die vollständige Git-Historie. Wer die Lösung
+// las statt sie zu erarbeiten, bekam davon beide Achsen geschenkt — Score zu
+// hoch und, weil Lesen kaum Tokens kostet, €/Task zu niedrig. Weder Scores noch
+// Kosten sind deshalb mit v1.1 vergleichbar.
 // Die fünf billigsten Front-Punkte liegen in einem 40-px-Nest an der Achse —
 // dort passt keine Beschriftung, die noch eindeutig zuzuordnen wäre. Sie bleiben
 // unbeschriftet (Tooltip); die Aussage der Station steckt in den fünf Modellen
@@ -380,14 +382,14 @@ export const SNAPSHOTS: Snapshot[] = [
     id: "v1",
     date: "v1 · Juni",
     title: "Erste Runde",
-    note: "gpt-5.5 führt mit 70 %, alles andere bleibt unter 60 %. Anthropics bestes Modell kommt auf 58 % für 11 €. Bei Opus 4.7 stammten rund 18 % der Treffer aus `git log --all` — der Container enthielt die Lösung.",
+    note: "gpt-5.5 führt mit 70 %, alles andere bleibt unter 60 %. Anthropics bestes Modell kommt auf 58 % für 11 €. Opus 4.7 holte rund 18 % seiner Treffer per `git log --all`: Im Task-Container des Benchmarks lag die Musterlösung — abgeschrieben statt gelöst. Score zu hoch, Tokens und damit gemessene Kosten zu niedrig.",
     pts: S_V1,
   },
   {
     id: "v11",
     date: "15.06.",
     title: "v1.1: strengere Verifikation",
-    note: "Die Verifikation zieht in einen eigenen Container um, das Repo kommt nur noch als Shallow Clone ohne die Lösungs-Commits. Acht Modelle, dieselben 113 Tasks, an der Spitze dieselbe Reihenfolge.",
+    note: "Die Verifikation zieht aus dem Task-Container aus, das Repo kommt nur noch als Shallow Clone ohne die Lösungs-Commits. Acht Modelle, dieselben 113 Tasks, an der Spitze dieselbe Reihenfolge.",
     reconstructed: true,
     pts: S_V11,
   },

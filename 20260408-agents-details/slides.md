@@ -991,6 +991,19 @@ Quellen: **DeepSWE v1.1** (Datacurve) — Board, Changelog und Git-Historie dies
 
 </div>
 
+<!--
+Station 1 (v1), zur Kontamination:
+- „Task-Container" = der Container, in dem der Agent die Benchmark-Aufgabe
+  bearbeitet. In v1 lief die Verifikation im selben Container, und das Repo
+  kam mit voller Git-Historie — `git log --all` zeigt die Musterlösung.
+- Folge 1: Opus hat Tasks „gelöst", die es ohne Musterlösung womöglich nicht
+  gelöst hätte → Score geschönt.
+- Folge 2: Lesen kostet viel weniger Tokens als Lösen → gemessene €/Task zu
+  niedrig, der Punkt liegt zu weit links.
+- Station 2 (v1.1) schließt genau diese Lücke. Deshalb sind v1- und
+  v1.1-Zahlen nicht vergleichbar — die Zeitreihe beginnt faktisch erst dort.
+-->
+
 ---
 layout: section
 ---
