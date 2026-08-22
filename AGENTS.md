@@ -35,7 +35,8 @@ The Slidev dev server requires a full TTY and **will not start as a sub-process 
 
 - **Talk directories**: Any top-level directory containing a `slides.md` is treated as a presentation. The build script in `devenv.nix` auto-discovers them.
 - **`playwright-tests/`**: Scratch directory for Playwright debug scripts and screenshots. Git-ignored by default; `git add -f` individual files to keep them.
-- **devenv.nix**: Defines the build pipeline as chained devenv tasks (`slides:install` → `slides:build` → `slides:landing-page` → `slides:deploy`). `SLIDES_BASE_PATH` env var controls the URL base path (defaults to `slides`, overridden in CI to the repo name).
+- **`deploy/`**: Post-build step for GitHub Pages, run by the `slides:spa-redirect` task. `spa-scripts.ts` generates `dist/404.html` plus the per-deck restore script injected into each `index.html`; `inject-spa.ts` writes them out. Together they make a reload of a deep link (`/<base>/<talk>/41`, a `routeAlias`, `presenter/…`) survive on a host that can't rewrite URLs. The contract: the `__spa` parameter carries the **full** path including the base — `deploy/__tests__/spa-redirect.test.ts` round-trips it, `playwright-tests/spa-deep-link-check.ts` checks the built `dist/` end-to-end.
+- **devenv.nix**: Defines the build pipeline as chained devenv tasks (`slides:install` → `slides:build` → `slides:spa-redirect` → `slides:landing-page` → `slides:deploy`). `SLIDES_BASE_PATH` env var controls the URL base path (defaults to `slides`, overridden in CI to the repo name).
 - **CI**: `.github/workflows/deploy.yml` builds via `devenv tasks run slides` and deploys to GitHub Pages.
 
 ## Adding a New Talk

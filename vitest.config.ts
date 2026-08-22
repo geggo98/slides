@@ -7,6 +7,7 @@ export default defineConfig({
     include: [
       "shared/**/*.test.ts",
       "shared/**/__tests__/**/*.test.ts",
+      "deploy/**/__tests__/**/*.test.ts",
       "*/components/lib/__tests__/**/*.test.ts",
     ],
     coverage: {

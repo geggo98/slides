@@ -70,38 +70,11 @@
   };
 
   tasks."slides:spa-redirect" = {
-    exec = ''
-      # Inject SPA redirect script into each talk's index.html so that
-      # GitHub Pages 404 → redirect → history.replaceState works.
-      SPA_SCRIPT='<script>(function(){var q=new URLSearchParams(location.search).get("__spa");if(q){history.replaceState(null,"",q)}})()</script>'
-      for dir in "$DEVENV_ROOT"/dist/*/; do
-        idx="$dir/index.html"
-        [ -f "$idx" ] || continue
-        ${pkgs.gnused}/bin/sed -i "s|<head>|<head>$SPA_SCRIPT|" "$idx"
-        echo "Patched: $idx"
-      done
-
-      # Create root 404.html that redirects /<base>/<talk>/<path> to
-      # /<base>/<talk>/?__spa=/<path> so the SPA can pick it up.
-      cat > "$DEVENV_ROOT/dist/404.html" << 'EOF404'
-      <!DOCTYPE html><html><head><meta charset="utf-8"><title>Redirecting…</title></head><body><script>
-      (function(){
-        var segs = location.pathname.replace(/\/+$/,"").split("/").filter(Boolean);
-        // segs: ["<base>", "<talk>", ...rest]
-        if (segs.length >= 3) {
-          var talkBase = "/" + segs.slice(0,2).join("/") + "/";
-          var rest = "/" + segs.slice(2).join("/");
-          location.replace(talkBase + "?__spa=" + encodeURIComponent(rest + location.search + location.hash));
-        } else if (segs.length >= 1) {
-          location.replace("/" + segs[0] + "/");
-        } else {
-          location.replace("/");
-        }
-      })();
-      </script></body></html>
-      EOF404
-      echo "Created root 404.html"
-    '';
+    # Writes dist/404.html and injects the path-restore script into each talk's
+    # index.html, so GitHub Pages 404 → redirect → history.replaceState works for
+    # deep links. Both scripts live in deploy/spa-scripts.ts — they have to agree
+    # on the `__spa` payload, and that contract is unit-tested there.
+    exec = "bun run $DEVENV_ROOT/deploy/inject-spa.ts";
     after = [ "slides:build" ];
   };
 

@@ -15,5 +15,10 @@
       "@shared/*": ["./shared/*"]
     }
   },
-  "include": ["shared/**/*.ts", "shared/**/*.vue", "playwright-tests/**/*.ts"]
+  "include": [
+    "shared/**/*.ts",
+    "shared/**/*.vue",
+    "deploy/**/*.ts",
+    "playwright-tests/**/*.ts"
+  ]
 }

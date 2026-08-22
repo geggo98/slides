@@ -40,6 +40,7 @@ export default [
     files: [
       "**/components/**/*.ts",
       "shared/**/*.ts",
+      "deploy/**/*.ts",
       "playwright-tests/**/*.ts",
     ],
     languageOptions: {
