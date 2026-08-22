@@ -415,8 +415,8 @@ export const SNAPSHOTS: Snapshot[] = [
   {
     id: "0814",
     date: "14.08.",
-    title: "Ein Abrechnungsfehler kippt die Front",
-    note: "Datacurve korrigiert zwei Fehler: Gemini-Tokens waren doppelt gezählt, DeepSeek V4 Pro doppelt rabattiert abgerechnet. Zwei DeepSeek-Modelle landen für 9 und 21 Cent auf der Front, drei Gemini-Punkte wandern nach links.",
+    title: "Sechs Neuzugänge, zwei Korrekturen",
+    note: "In zwei Wochen kommen sechs Modelle dazu, darunter zwei von DeepSeek für 9 und 21 Cent — die Front bekommt ein billiges Ende. Parallel korrigiert Datacurve zwei Abrechnungsfehler: Gemini-Tokens waren doppelt gezählt, DeepSeek V4 Pro doppelt rabattiert. Die drei Gemini-Punkte wandern dadurch nach links, ohne die Front zu berühren.",
     reconstructed: true,
     pts: S_0814,
   },

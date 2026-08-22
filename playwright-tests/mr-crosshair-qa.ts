@@ -114,7 +114,7 @@ if (ANATOMY === null) {
   // Wie beim Chart weiter unten: die Xref-Komponente steckt in einem Lazy-Chunk
   // und ist noch nicht da, wenn die Folien-Container schon Inhalt haben.
   await page
-    .waitForSelector("a.talk-xref", { state: "attached", timeout: 30_000 })
+    .waitForSelector("a.talk-xref", { state: "attached", timeout: 60_000 })
     .catch(() => null);
   const xrefs = await page.$$eval(
     'a.talk-xref[href*="modell-routing"]',
@@ -154,7 +154,7 @@ if (DETAILS === null) {
   // fehlen. `attached` reicht: in /print sind alle Folien bis auf die erste
   // ausgeblendet.
   await page
-    .waitForSelector("svg.mp-chart", { state: "attached", timeout: 30_000 })
+    .waitForSelector("svg.mp-chart", { state: "attached", timeout: 60_000 })
     .catch(() => null);
   const chartSlide = await page.evaluate(
     () =>

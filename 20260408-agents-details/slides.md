@@ -965,7 +965,7 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter und ist seit dem 21.08. um 23 % billiger; klick beide Punkte an, die Fehlerbalken überlappen fast vollständig. Neu auf der Front: zwei DeepSeek-Modelle für 9 und 21 Cent — **nicht wegen eines Releases, sondern weil ein Abrechnungsfehler korrigiert wurde.** Der modellspezifische Harness verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
+**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter und ist seit dem 21.08. um 23 % billiger; klick beide Punkte an, die Fehlerbalken überlappen fast vollständig. Am billigen Ende sind **zwei DeepSeek-Modelle für 9 und 21 Cent** dazugekommen — beide erst im August aufs Board. Der modellspezifische Harness verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
 
 </div>
 

@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import BunPopover from "./BunPopover.vue";
 
-// Gemeinsames (i)-Modal der beiden Modell-Routing-Folien: Quellen und
-// Einschränkungen aus der vorbereiteten Infografik (Wortlaut übernommen).
+// Gemeinsames ⓘ-Modal von DREI Folien: ModelRoutingRoles (Rollen),
+// ModelRoutingPareto (Datenlage), ModelRoutingHistory (Historie).
+//
+// Regel für jeden Eintrag: er muss auf allen drei Folien stimmen. Kein „hier",
+// kein „diese Folie". Fadenkreuz, Fehlerbalken und der Kontingent-Schalter
+// existieren nur im Pareto-Chart — wer sie erwähnt, benennt die Folie dazu.
+// Folienspezifisches gehört in die jeweilige Host-Komponente, nicht hierher.
+//
+// Falls das je zu eng wird: ein `chart?: boolean` je Eintrag (Chart-Folien vs.
+// Rollen-Folie), keine Drei-Wege-Fallunterscheidung — die würde 11 Einträge ×
+// 3 Folien zu pflegen geben und bei jeder Folienverschiebung verrotten.
 defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: "close"): void }>();
 
@@ -40,12 +49,12 @@ const sources = [
   {
     href: "https://www.tbench.ai/",
     label: "Terminal-Bench 2.1",
-    note: "Terminal-/Tool-Arbeit",
+    note: "Terminal-/Tool-Arbeit — belegt die Rollen-Karten",
   },
   {
     href: "https://benchlm.ai/benchmarks/browseComp",
     label: "BrowseComp (BenchLM)",
-    note: "Web-Recherche",
+    note: "Web-Recherche — belegt die Rollen-Karten",
   },
   {
     href: "https://scale.com/leaderboard/swe_bench_pro_public",
@@ -66,32 +75,32 @@ const sources = [
 
 const caveats = [
   {
-    lead: "Harness-Transfer:",
-    text: "Scaffold-Wahl verschiebt Scores um 10–30 Punkte. mini-swe-agent-Zahlen ≠ Claude Code / Codex CLI. Anthropic-Modelle laufen im eigenen Harness typischerweise besser.",
+    lead: "Anderer Harness, andere Zahlen:",
+    text: "Der Harness verschiebt Scores um 10–30 Punkte. Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI. Anthropic-Modelle laufen im eigenen Harness meist besser.",
   },
   {
-    lead: "n = 113, CIs ±2–6 pt:",
-    text: "Rangfolgen innerhalb von ~5 Punkten sind Rauschen. Nur die grobe Schichtung ist belastbar.",
+    lead: "113 Tasks, Streuung ±2–6 Punkte:",
+    text: "Die Spanne zeigt, wie stark ein Modell zwischen Wiederholungsläufen schwankt — nicht den Stichprobenfehler über die 113 Tasks; der läge bei rund ±8 Punkten. Zwei Modelle mit weniger als 5 Punkten Abstand sind gleichauf. Belastbar ist nur die grobe Schichtung.",
   },
   {
-    lead: "Effort [max]:",
-    text: "Punkte zeigen das beste Effort-Level je Modell; niedrigere Level liegen anders (billiger, schwächer).",
+    lead: "Höchste Effort-Stufe:",
+    text: "Jedes Modell zählt mit seiner höchsten Effort-Stufe, nicht mit seinem besten Score — je nach Modell max, xhigh, high oder medium. Niedrigere Stufen sind billiger und meist schwächer; grok-4.6 liegt auf medium sogar höher als auf xhigh.",
   },
   {
     lead: "Quadranten:",
-    text: "Die Trennlinien bei 8 €/Task und 50 % Pass@1 sind redaktionell gesetzt, nicht aus den Daten abgeleitet.",
+    text: "Die Trennlinien in den Charts bei 8 €/Task und 50 % Pass@1 haben wir selbst gewählt. Sie stecken nicht in den Daten.",
   },
   {
     lead: "Board-Default:",
-    text: "Das Leaderboard zeigt 18 von 25 Modellen; sieben ältere sind ausgeblendet. gpt-5.6-terra ist hier wieder eingeblendet — es ist bestellbar und läge auf der Front. Die Historien-Folie zeigt alle je gemessenen Modelle.",
+    text: "Das Board zeigt per Default 18 von 25 Modellen; sieben ältere blendet es aus. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
   },
   {
     lead: "Kosten sind kein Messwert:",
-    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08.), die Sol-Senkung vom 21.08. rechnen wir selbst ein. Historische Stände zeigen den damals veröffentlichten Wert.",
+    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08.). Die Sol-Senkung vom 21.08. rechnen wir selbst ein, das Board noch nicht. Ältere Datenstände zeigen den damals veröffentlichten Wert; zwei davon sind rekonstruiert und im Chart markiert.",
   },
   {
-    lead: "Abo ≠ API:",
-    text: "Das Claude-Code-Overlay ist eine Kontingentrechnung, kein Preis: Abo-Preis fix, Wochenlimit bindend ⇒ €/Task ∝ 1/Kontingent ⇒ ×2/3 bis 31.08.2026. Deshalb per Schalter, Default aus.",
+    lead: "Abo ist kein API-Preis:",
+    text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 31.08.2026 gibt Claude Code 50 % mehr Kontingent pro Woche; die Kosten pro Task sinken damit auf zwei Drittel. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort dann die Position ab 01.09.2026.",
   },
   {
     lead: "Interessenkonflikte:",
@@ -103,11 +112,11 @@ const caveats = [
   },
   {
     lead: "Zielfunktion:",
-    text: "API-Kosten ≠ Quota-Arbitrage über Abos. Optimales Routing unterscheidet sich je nach Ziel.",
+    text: "Optimierst Du API-Kosten oder das Kontingent eines Abos? Je nach Ziel sieht das beste Routing anders aus.",
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 21.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni sechsmal verschoben, zweimal ohne ein einziges neues Modell. Als Prior nutzen, eigene Evals bauen.",
+    text: "Stand 21.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni sechsmal verschoben, zweimal allein durch Preissenkungen. Als Prior nutzen, eigene Evals bauen.",
   },
 ];
 </script>
@@ -115,6 +124,11 @@ const caveats = [
 <template>
   <BunPopover :open="open" wide @close="emit('close')">
     <div class="bun-pop-h">Quellen &amp; Einschränkungen</div>
+    <!-- Der Geltungsbereich muss dastehen: dasselbe Modal hängt an drei Folien,
+         und einzelne Einträge benennen die Folie, für die sie gelten. -->
+    <div class="mrs-scope">
+      Gilt für alle drei Modell-Routing-Folien: Rollen, Datenlage, Historie.
+    </div>
     <div class="mrs-grid">
       <div>
         <div class="mrs-col-h">Quellen</div>
@@ -138,6 +152,11 @@ const caveats = [
 </template>
 
 <style scoped>
+.mrs-scope {
+  margin: -2px 0 10px;
+  font-size: 10.5px;
+  color: var(--color-text-tertiary);
+}
 .mrs-grid {
   display: grid;
   grid-template-columns: 1fr 1.25fr;

@@ -216,7 +216,16 @@ const movedCls = (label: string) => {
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
-      <span><i class="mp-sw mp-sw-old" />vor der Preisanpassung</span>
+      <!-- Mit Overlay hat der Geisterring zwei Bedeutungen: bei sol den Preis
+           vor der Senkung, bei den Claude-Punkten den API-Preis — also die
+           Position nach dem Ende der Kontingent-Aktion. Der Text wird getauscht
+           statt ergänzt, sonst bricht die Legendenzeile um. Ausführlich steht
+           es im Tooltip des Rings und im ⓘ. -->
+      <span>
+        <i class="mp-sw mp-sw-old" />{{
+          subOn ? "Preis vorher / ab 01.09." : "vor der Preisanpassung"
+        }}
+      </span>
       <button
         class="mp-tg"
         :class="{ on: subOn }"

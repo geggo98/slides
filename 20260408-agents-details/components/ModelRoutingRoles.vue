@@ -43,7 +43,7 @@ const roles: Role[] = [
     freq: 3,
     detailTitle: "Umsetzung — der Ort für Kostendruck",
     detailText:
-      "DeepSWE v1.1 (ein Harness, CIs): terra 70 % / 3,47 € · luna 67 % / 0,53 € — seit dem 30.07. dominiert terra auch kimi-k3 (69 % / 4,07 €). Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € (214k Tokens, 268 Steps) — strikt dominiert. €/Task: Frugalität steuerst Du, der Preis kippt über Nacht.",
+      "DeepSWE v1.1 (ein Harness, CIs): terra 70 % / 3,47 € · luna 67 % / 0,53 € — seit dem 30.07. dominiert terra auch kimi-k3 (69 % / 4,08 €). Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € (214k Tokens, 268 Steps) — strikt dominiert. €/Task: Frugalität steuerst Du, der Preis kippt über Nacht.",
     ev: "Evidenz: gut — konsistenter Harness, Konfidenzintervalle ausgewiesen",
   },
   {
