@@ -1,25 +1,26 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
+import {
+  CURRENT,
+  anchor,
+  fmt,
+  leader,
+  lx,
+  ly,
+  makeScale,
+  movedSegments,
+  paretoFront,
+  tip,
+  type Pt,
+} from "./paretoData";
 
-// Port von Tab 2 der Infografik: DeepSWE-Score vs. €/Task als statisches
-// Inline-SVG (18 fixe Punkte — kein Chart.js/echarts nötig). Farben über die
-// Deck-Tokens, Werte bereits in EUR (1 USD = 0,876 €, 21.07.2026). Bewusst
-// ohne <defs> — keine IDs, die zwischen Nachbar-Slides kollidieren könnten.
+// DeepSWE-Score vs. €/Task als statisches Inline-SVG — kein Chart.js/echarts
+// nötig. Farben über die Deck-Tokens. Bewusst ohne <defs>: keine IDs, die
+// zwischen Nachbar-Slides kollidieren könnten.
 //
-// Tokens/Steps: Datacurve-Snapshot 25.07.2026. Preise: OpenAI-Senkung vom
-// 30.07.2026 (Luna −80 %, Terra −20 %). Da Input, Output *und* Cached-Input um
-// denselben Faktor fielen, skaliert €/Task exakt mit — unabhängig von Token-Mix
-// und Wechselkurs (luna 2,65 × 0,2 = 0,53 · terra 4,34 × 0,8 = 3,47).
-interface Pt {
-  x: number; // €/Task
-  y: number; // Pass@1 %
-  label: string;
-  eur: string; // deutsches Zahlenformat für den Tooltip
-  ax: "left" | "right" | "center";
-  dy: number;
-  old?: { x: number; eur: string }; // Position vor der Preissenkung 30.07.2026
-}
+// Daten, Umrechnung und die Herleitung der Sol-Preissenkung stehen in
+// `paretoData.ts`; hier liegt nur die Darstellung.
 
 const sourcesOpen = ref(false);
 
@@ -28,139 +29,85 @@ const sourcesOpen = ref(false);
 // H - 4 behalten 14 px Abstand), H um 10 — die Plotfläche H - T - B schrumpft
 // dadurch von 268 auf 263. Beides zusammen schafft den Platz, den die um eine
 // Zeile gewachsene Pointe unter dem Chart braucht.
-const W = 932;
-const H = 306;
-const L = 46;
-const R = 10;
-const T = 10;
-const B = 33;
-const px = (v: number) => L + (v / 25) * (W - L - R);
-const py = (v: number) => H - B - (v / 80) * (H - T - B);
+const S = makeScale({
+  W: 932,
+  H: 306,
+  L: 46,
+  R: 10,
+  T: 10,
+  B: 33,
+  xMax: 25,
+  yMax: 80,
+});
+const { W, H, L, R, T, B, px, py } = S;
 const QX = px(8); // Quadranten-Trennung: 8 € …
 const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 
-// Aufsteigend nach x — `frontPath` verbindet die Punkte in Deklarations-
-// reihenfolge, unsortiert entsteht ein Zickzack.
-const front: Pt[] = [
-  {
-    x: 0.53,
-    y: 67,
-    label: "gpt-5.6-luna",
-    eur: "0,53",
-    ax: "right",
-    dy: 16,
-    old: { x: 2.65, eur: "2,65" },
-  },
-  {
-    x: 3.47,
-    y: 70,
-    label: "gpt-5.6-terra",
-    eur: "3,47",
-    ax: "right",
-    dy: -14,
-    old: { x: 4.34, eur: "4,34" },
-  },
-  { x: 7.35, y: 73, label: "gpt-5.6-sol", eur: "7,35", ax: "right", dy: -8 },
-  { x: 10.37, y: 74, label: "claude-opus-5", eur: "10,37", ax: "right", dy: 4 },
-];
+// Optionales Overlay: Claude Code läuft vom 13.05. bis 31.08.2026 mit 50 %
+// höherem Wochenlimit. Das ist kein API-Preis, sondern eine Kontingentrechnung
+// (Abo-Preis fix, Wochenlimit bindend ⇒ €/Task ∝ 1/Kontingent ⇒ ×2/3), deshalb
+// Default aus. An: die Claude-Punkte wandern auf ihre Kontingent-Kosten, am
+// API-Preis bleibt ein Geisterring — das ist die Position ab 01.09.2026.
+const subOn = ref(false);
 
-const dom: Pt[] = [
-  // Erst durch die Preissenkung vom 30.07.2026 verdrängt: luna (0,53 € / 67 %)
-  // dominiert muse-spark-1.1 und grok-4.5, terra (3,47 € / 70 %) dominiert
-  // kimi-k3 — billiger *und* besser, in beiden Achsen.
-  { x: 2.07, y: 53, label: "muse-spark-1.1", eur: "2,07", ax: "right", dy: 8 },
-  { x: 2.12, y: 54, label: "grok-4.5", eur: "2,12", ax: "right", dy: -6 },
-  // Tiefer gesetzt als üblich: direkt rechts daneben sitzt terras Geisterring,
-  // näher am Marker gelesen wirkte „kimi-k3“ wie dessen Beschriftung.
-  { x: 4.07, y: 69, label: "kimi-k3", eur: "4,07", ax: "right", dy: 20 },
-  { x: 6.33, y: 67, label: "gpt-5.5", eur: "6,33", ax: "right", dy: 4 },
-  { x: 18.95, y: 70, label: "claude-fable-5", eur: "18,95", ax: "left", dy: 4 },
-  {
-    x: 11.58,
-    y: 59,
-    label: "claude-opus-4.8",
-    eur: "11,58",
-    ax: "right",
-    dy: 4,
-  },
-  {
-    x: 23.13,
-    y: 54,
-    label: "claude-sonnet-5",
-    eur: "23,13",
-    ax: "left",
-    dy: 4,
-  },
-  { x: 4.95, y: 52, label: "gpt-5.4", eur: "4,95", ax: "right", dy: -8 },
-  { x: 3.43, y: 44, label: "glm-5.2", eur: "3,43", ax: "right", dy: 4 },
-  {
-    x: 3.09,
-    y: 49,
-    label: "gemini-3.6-flash",
-    eur: "3,09",
-    ax: "left",
-    dy: 16,
-  },
-  {
-    x: 6.43,
-    y: 37,
-    label: "gemini-3.5-flash",
-    eur: "6,43",
-    ax: "right",
-    dy: 4,
-  },
-  {
-    x: 2.47,
-    y: 31,
-    label: "kimi-k2.7-code",
-    eur: "2,47",
-    ax: "right",
-    dy: -10,
-  },
-  {
-    x: 4.84,
-    y: 30,
-    label: "claude-sonnet-4.6",
-    eur: "4,84",
-    ax: "right",
-    dy: 12,
-  },
-  { x: 8.3, y: 12, label: "gemini-3.1-pro", eur: "8,30", ax: "right", dy: 4 },
-];
+const pts = computed<Pt[]>(() =>
+  subOn.value
+    ? CURRENT.map((p) =>
+        p.sub
+          ? {
+              ...p,
+              x: p.sub,
+              eur: fmt(p.sub),
+              old: {
+                x: p.x,
+                eur: p.eur,
+                why: "ohne Kontingent-Aktion — Stand ab 01.09.2026",
+              },
+            }
+          : p,
+      )
+    : CURRENT,
+);
+
+const front = computed(() => paretoFront(pts.value).front);
+const dom = computed(() => paretoFront(pts.value).dom);
+const allPts = computed(() => pts.value);
+const frontPath = computed(() =>
+  front.value.map((p) => `${px(p.x)},${py(p.y)}`).join(" "),
+);
+
+// Wanderungen: die Sol-Preissenkung vom 21.08. immer, die Kontingent-Rechnung
+// nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
+const moved = computed(() => movedSegments(pts.value, S));
+
+// Führungslinien für die weit abgesetzten Beschriftungen im 2–5-€-Gedränge.
+const leaders = computed(() =>
+  pts.value.flatMap((p) => {
+    const l = leader(p, S);
+    return l ? [{ label: p.label, ...l }] : [];
+  }),
+);
+const LX = (p: Pt) => lx(p, S);
+const LY = (p: Pt) => ly(p, S);
+
+const chartLabel = computed(
+  () =>
+    "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
+    "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
+    "(billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front am 21.08.2026: " +
+    front.value
+      .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
+      .join(", ") +
+    ". Claude Opus 5 führt, gpt-5.6-sol liegt einen Punkt dahinter — die Konfidenzintervalle " +
+    "überlappen." +
+    (subOn.value
+      ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
+        "zwei Dritteln ihrer API-Kosten, die Geisterringe zeigen die Position ab 01.09.2026."
+      : ""),
+);
 
 const xTicks = [0, 5, 10, 15, 20, 25];
 const yTicks = [0, 20, 40, 60, 80];
-
-const frontPath = front.map((p) => `${px(p.x)},${py(p.y)}`).join(" ");
-
-const anchor = (p: Pt) =>
-  p.ax === "center" ? "middle" : p.ax === "left" ? "end" : "start";
-const ldx = (p: Pt) => (p.ax === "center" ? 0 : p.ax === "left" ? -9 : 9);
-const tip = (p: Pt) =>
-  `${p.label}: ${p.y} % · ${p.eur} €/Task` +
-  (p.old ? ` (vorher ${p.old.eur} €)` : "");
-
-// Wanderung durch die Preissenkung: nur x ändert sich, y bleibt — die Strecke
-// läuft also waagerecht. Sie wird vor den Markern gezeichnet und verschwindet
-// damit hinter ihnen (terras Geisterpunkt liegt nur ~10 px neben kimi-k3);
-// das ist die übliche Konvention und lesbarer als ein Bogen drumherum.
-const moved = front.flatMap((p) => {
-  if (!p.old) return [];
-  const gx = px(p.old.x);
-  const gy = py(p.y);
-  const tipX = px(p.x) + 9; // kurz vor dem Front-Punkt enden
-  return [
-    {
-      label: p.label,
-      eur: p.old.eur,
-      gx,
-      gy,
-      x1: gx - 6, // am Geisterring absetzen
-      x2: tipX,
-      head: `${tipX},${gy} ${tipX + 8},${gy - 4} ${tipX + 8},${gy + 4}`,
-    },
-  ];
-});
 
 // Pfeil „Besseres Preis-Leistungs-Verhältnis" von (20,5 € / 20 %) nach
 // (12 € / 44 %) — Polygon in Pfeil-Koordinaten, per Gruppe rotiert.
@@ -205,8 +152,7 @@ const cMid = (cLen - cHL) / 2;
 // Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
 // (erneuter Klick löst). Mehrere Pins gleichzeitig — die Einfüge-Reihenfolge
 // bestimmt die Farbe (Cycle über die Deck-Töne).
-const allPts = [...front, ...dom];
-const byLabel = new Map(allPts.map((p) => [p.label, p]));
+const byLabel = computed(() => new Map(pts.value.map((p) => [p.label, p])));
 const hovered = ref<string | null>(null);
 const pinned = ref<string[]>([]);
 
@@ -228,10 +174,33 @@ const activeCls = computed(() => {
   return m;
 });
 
-const crosshairs = computed(() =>
-  [...activeCls.value].flatMap(([label, cls]) => {
-    const p = byLabel.get(label);
-    return p ? [{ p, cls }] : [];
+// Zwei Pins mit einem Punkt Score-Unterschied liegen gut 3 px auseinander —
+// ihre Achsen-Badges lägen übereinander. Deshalb werden sie beim Aufbau
+// auseinandergeschoben (die Fadenkreuz-Linie bleibt exakt): 22 px, sobald ein
+// Badge zweizeilig wird, sonst 11.
+const crosshairs = computed(() => {
+  const list = [...activeCls.value].flatMap(([label, cls]) => {
+    const p = byLabel.value.get(label);
+    return p ? [{ p, cls, badgeY: py(p.y) + 3 }] : [];
+  });
+  const gap = list.some((c) => c.p.ci && pinned.value.includes(c.p.label))
+    ? 22
+    : 11;
+  let last = -Infinity;
+  for (const c of [...list].sort((a, b) => a.badgeY - b.badgeY)) {
+    c.badgeY = Math.max(c.badgeY, last + gap);
+    last = c.badgeY;
+  }
+  return list;
+});
+
+// Fehlerbalken nur an gepinnten Punkten — beim bloßen Hover wäre das Flackern.
+// Kernaussage der Folie: opus-5 74 ± 3,9 und sol 73 ± 2,8 überlappen deutlich,
+// die Rangfolge an der Spitze ist Rauschen.
+const whiskers = computed(() =>
+  pinned.value.flatMap((label, i) => {
+    const p = byLabel.value.get(label);
+    return p?.ci ? [{ p, ci: p.ci, cls: `mp-ch-${i % 4}` }] : [];
   }),
 );
 
@@ -247,10 +216,17 @@ const movedCls = (label: string) => {
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
-      <span><i class="mp-sw mp-sw-old" />vor der Preissenkung</span>
-      <span class="mp-note">
-        Best Effort pro Modell · Hover: Fadenkreuz, Klick: fixieren
-      </span>
+      <span><i class="mp-sw mp-sw-old" />vor der Preisanpassung</span>
+      <button
+        class="mp-tg"
+        :class="{ on: subOn }"
+        :aria-pressed="subOn"
+        @click="subOn = !subOn"
+      >
+        Claude-Code-Kontingent +50 %
+        <span class="mp-tg-note">kein API-Preis</span>
+      </button>
+      <span class="mp-note">Punkt/Label klicken: Fehlerbalken</span>
       <button
         class="mp-ib"
         aria-label="Quellen und Einschränkungen anzeigen"
@@ -264,7 +240,7 @@ const movedCls = (label: string) => {
       class="mp-chart"
       :viewBox="`0 0 ${W} ${H}`"
       role="img"
-      aria-label="Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke (billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front nach der OpenAI-Preissenkung vom 30.07.2026: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, claude-opus-5. Claude Opus 5 ist das erste Claude-Modell auf der Front. Dieselbe Preisrunde hat muse-spark-1.1, grok-4.5 und kimi-k3 von der Front verdrängt."
+      :aria-label="chartLabel"
     >
       <!-- Quadranten-Tints -->
       <rect
@@ -412,22 +388,33 @@ const movedCls = (label: string) => {
         </g>
       </g>
 
-      <!-- Preissenkung 30.07.2026: Geisterpunkt an der alten Position, gestri-
-           chelte Wanderungslinie zur neuen. Vor den Front-Punkten gerendert,
-           damit deren Kreise oben liegen. Pfeilspitze als <polygon> statt
-           <marker> — die Komponente kommt bewusst ohne <defs> aus. -->
+      <!-- Preisanpassungen: Geisterpunkt an der alten Position, gestrichelte
+           Wanderungslinie zur neuen. Vor den Front-Punkten gerendert, damit
+           deren Kreise oben liegen. Pfeilspitze als <polygon> statt <marker> —
+           die Komponente kommt bewusst ohne <defs> aus. -->
       <g
         v-for="m in moved"
         :key="`old-${m.label}`"
         class="mp-moved"
         :class="movedCls(m.label)"
       >
-        <line :x1="m.x1" :y1="m.gy" :x2="m.x2" :y2="m.gy" />
+        <line :x1="m.x1" :y1="m.y1" :x2="m.x2" :y2="m.y2" />
         <polygon :points="m.head" />
         <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
-          <title>{{ m.label }}: vorher {{ m.eur }} €/Task (Stand 25.07.)</title>
+          <title>{{ m.label }}: vorher {{ m.eur }} €/Task — {{ m.why }}</title>
         </circle>
       </g>
+
+      <!-- Führungslinien vor den Markern, damit deren Kreise oben liegen -->
+      <line
+        v-for="l in leaders"
+        :key="`ld-${l.label}`"
+        :x1="l.x1"
+        :y1="l.y1"
+        :x2="l.x2"
+        :y2="l.y2"
+        class="mp-leader"
+      />
 
       <!-- Pareto-Front -->
       <polyline :points="frontPath" class="mp-front-line" />
@@ -436,10 +423,14 @@ const movedCls = (label: string) => {
           <title>{{ tip(p) }}</title>
         </circle>
         <text
-          :x="px(p.x) + ldx(p)"
-          :y="py(p.y) + p.dy"
+          :x="LX(p)"
+          :y="LY(p)"
           :text-anchor="anchor(p)"
           class="mp-label mp-label-front"
+          :data-model="p.label"
+          @mouseenter="hovered = p.label"
+          @mouseleave="hovered = null"
+          @click.stop="togglePin(p.label)"
         >
           {{ p.label }}
         </text>
@@ -457,13 +448,73 @@ const movedCls = (label: string) => {
           <title>{{ tip(p) }}</title>
         </rect>
         <text
-          :x="px(p.x) + ldx(p)"
-          :y="py(p.y) + p.dy"
+          :x="LX(p)"
+          :y="LY(p)"
           :text-anchor="anchor(p)"
           class="mp-label mp-label-dom"
+          :data-model="p.label"
+          @mouseenter="hovered = p.label"
+          @mouseleave="hovered = null"
+          @click.stop="togglePin(p.label)"
         >
           {{ p.label }}
         </text>
+      </g>
+
+      <!-- Fehlerbalken der gepinnten Punkte: senkrechter Whisker am Punkt plus
+           zwei waagerechte Grenzlinien quer durch den Plot. Erst die Grenzlinien
+           machen sichtbar, dass zwei Intervalle einander überlappen. -->
+      <g
+        v-for="w in whiskers"
+        :key="`ci-${w.p.label}`"
+        class="mp-ci"
+        :class="w.cls"
+      >
+        <!-- Transluzentes Band zwischen den Intervallgrenzen: zwei gepinnte
+             Punkte zeigen ihre Überlappung als dunklere Schnittfläche, ohne dass
+             man Linien abzählen muss. -->
+        <rect
+          :x="L"
+          :y="py(w.p.y + w.ci)"
+          :width="W - R - L"
+          :height="py(w.p.y - w.ci) - py(w.p.y + w.ci)"
+          class="mp-ci-band"
+        />
+        <line
+          :x1="L"
+          :y1="py(w.p.y + w.ci)"
+          :x2="W - R"
+          :y2="py(w.p.y + w.ci)"
+          class="mp-ci-bound"
+        />
+        <line
+          :x1="L"
+          :y1="py(w.p.y - w.ci)"
+          :x2="W - R"
+          :y2="py(w.p.y - w.ci)"
+          class="mp-ci-bound"
+        />
+        <line
+          :x1="px(w.p.x)"
+          :y1="py(w.p.y - w.ci)"
+          :x2="px(w.p.x)"
+          :y2="py(w.p.y + w.ci)"
+          class="mp-ci-bar"
+        />
+        <line
+          :x1="px(w.p.x) - 5"
+          :y1="py(w.p.y + w.ci)"
+          :x2="px(w.p.x) + 5"
+          :y2="py(w.p.y + w.ci)"
+          class="mp-ci-bar"
+        />
+        <line
+          :x1="px(w.p.x) - 5"
+          :y1="py(w.p.y - w.ci)"
+          :x2="px(w.p.x) + 5"
+          :y2="py(w.p.y - w.ci)"
+          class="mp-ci-bar"
+        />
       </g>
 
       <!-- Fadenkreuze: Hover temporär, Klick fixiert (Vergleichsmodus) -->
@@ -484,13 +535,19 @@ const movedCls = (label: string) => {
         >
           {{ c.p.eur }} €
         </text>
-        <text
-          :x="L - 7"
-          :y="py(c.p.y) + 3"
-          text-anchor="end"
-          class="mp-ch-badge"
-        >
+        <text :x="L - 7" :y="c.badgeY" text-anchor="end" class="mp-ch-badge">
           {{ c.p.y }} %
+        </text>
+        <!-- Das Konfidenzintervall in den linken Rand statt an den Whisker: im
+             Chart selbst ist um die Spitzenmodelle herum keine Zeile mehr frei. -->
+        <text
+          v-if="c.p.ci && pinned.includes(c.p.label)"
+          :x="L - 7"
+          :y="c.badgeY + 10"
+          text-anchor="end"
+          class="mp-ch-badge mp-ci-badge"
+        >
+          ± {{ String(c.p.ci).replace(".", ",") }}
         </text>
       </g>
 
@@ -526,7 +583,7 @@ const movedCls = (label: string) => {
 .mp-legend {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin-bottom: 0;
   font-size: 11px;
   color: var(--color-text-secondary);
@@ -552,6 +609,32 @@ const movedCls = (label: string) => {
   border-radius: 50%;
   background: none;
   opacity: 0.75;
+}
+/* Opt-in-Overlay, deshalb als Schalter und nicht als Legenden-Swatch: der
+   Kontingent-Wert ist eine Rechnung, kein gemessener Preis. */
+.mp-tg {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 1px 7px;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+.mp-tg:hover {
+  color: var(--color-text-secondary);
+}
+.mp-tg.on {
+  border-color: var(--color-text-info);
+  background: color-mix(in srgb, var(--color-text-info) 12%, transparent);
+  color: var(--color-text-primary);
+}
+.mp-tg-note {
+  font-size: 9.5px;
+  opacity: 0.7;
 }
 .mp-note {
   margin-left: auto;
@@ -646,7 +729,7 @@ const movedCls = (label: string) => {
   font-size: 12px;
 }
 
-/* Wanderung durch die Preissenkung: Geisterpunkt, Linie und Spitze in der
+/* Wanderung durch eine Preisanpassung: Geisterpunkt, Linie und Spitze in der
    „dominiert"-Farbe — die alte Position soll klar als überholt lesen und dem
    Front-Ton (Primary) nicht die Aufmerksamkeit wegnehmen. */
 .mp-moved {
@@ -699,15 +782,50 @@ const movedCls = (label: string) => {
   fill: var(--color-text-tertiary);
   opacity: 0.8;
 }
+/* Haarlinie zwischen Marker und abgesetzter Beschriftung — bewusst dünner als
+   das Gitter, sie soll führen und nicht auffallen. */
+.mp-leader {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 0.6;
+  opacity: 0.7;
+}
+/* Die Beschriftung ist der zweite Griff an einem Punkt — und für gpt-5.6-terra
+   der einzige: sein Marker liegt einen Pixel neben dem von glm-5.3, dessen
+   Hit-Target ihn vollständig überdeckt. */
 .mp-label {
   font-family: var(--slidev-code-font-family, monospace);
   font-size: 10px;
+  paint-order: stroke;
+  stroke: var(--deck-surface, var(--color-background-primary));
+  stroke-width: 2.5px;
+  cursor: pointer;
 }
 .mp-label-front {
   fill: var(--color-text-primary);
 }
 .mp-label-dom {
   fill: var(--color-text-tertiary);
+}
+
+/* Fehlerbalken: Whisker kräftig am Punkt, Grenzlinien quer durch den Plot nur
+   angedeutet — zwei gepinnte Punkte zeigen so auf einen Blick, ob sich ihre
+   Intervalle schneiden. */
+.mp-ci {
+  pointer-events: none;
+}
+.mp-ci-bar {
+  stroke: var(--ch);
+  stroke-width: 1.8;
+}
+.mp-ci-band {
+  fill: var(--ch);
+  opacity: 0.09;
+}
+.mp-ci-bound {
+  stroke: var(--ch);
+  stroke-width: 0.8;
+  stroke-dasharray: 1 4;
+  opacity: 0.55;
 }
 
 /* Fadenkreuze: --ch trägt die Farbe pro Pin (Cycle) bzw. neutral beim Hover. */

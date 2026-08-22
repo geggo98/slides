@@ -111,6 +111,11 @@ if (ANATOMY === null) {
   );
 } else {
   const total = await openPrint(page, ANATOMY);
+  // Wie beim Chart weiter unten: die Xref-Komponente steckt in einem Lazy-Chunk
+  // und ist noch nicht da, wenn die Folien-Container schon Inhalt haben.
+  await page
+    .waitForSelector("a.talk-xref", { state: "attached", timeout: 30_000 })
+    .catch(() => null);
   const xrefs = await page.$$eval(
     'a.talk-xref[href*="modell-routing"]',
     (els) =>
@@ -144,6 +149,13 @@ if (DETAILS === null) {
   );
 } else {
   const total = await openPrint(page, DETAILS);
+  // `openPrint` wartet nur darauf, dass alle Folien-Container Inhalt haben —
+  // die Chart-Komponente selbst kommt aus einem Lazy-Chunk und kann noch
+  // fehlen. `attached` reicht: in /print sind alle Folien bis auf die erste
+  // ausgeblendet.
+  await page
+    .waitForSelector("svg.mp-chart", { state: "attached", timeout: 30_000 })
+    .catch(() => null);
   const chartSlide = await page.evaluate(
     () =>
       document
@@ -201,15 +213,21 @@ if (DETAILS === null) {
       badges.join(" | "),
     );
 
-    // Preissenkung 30.07.2026: die Badges lesen p.eur, die Punkte p.x — beide
-    // Felder müssen synchron sein, sonst zeigt das Fadenkreuz alte Preise an.
+    // Preisrunden 30.07. (luna, terra) und 21.08. (sol): die Badges lesen
+    // p.eur, die Punkte p.x — beide Felder müssen synchron sein, sonst zeigt
+    // das Fadenkreuz alte Preise an. `eur` wird in paretoData.ts aus `x`
+    // abgeleitet, dieser Check bewacht genau das.
     await fable.click();
     await sol.click();
     for (const [name, want] of [
       ["gpt-5.6-luna", "0,53 €"],
       ["gpt-5.6-terra", "3,47 €"],
+      ["gpt-5.6-sol", "5,67 €"],
     ] as const) {
-      const btn = page.getByRole("button", { name: `Fadenkreuz für ${name}` });
+      // Über die Beschriftung statt über den Marker: terras Hit-Target liegt
+      // vollständig unter dem von glm-5.3 (die Punkte trennt ein Pixel), der
+      // Klick auf den Marker landet dort. Das Label ist der zweite Griff.
+      const btn = page.locator(`text.mp-label[data-model="${name}"]`);
       await btn.click();
       await page.mouse.move(640, 60);
       await page.waitForTimeout(150);

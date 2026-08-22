@@ -1,5 +1,6 @@
-// Verifiziert den GitHub-Pages-Deploy der Modell-Routing-Infografik im echten
-// Browser: rendert das Xref-Ziel, stimmen die Preise, steht die Pareto-Front?
+// Verifiziert den GitHub-Pages-Deploy der Modell-Routing-Folien im echten
+// Browser: rendert das Xref-Ziel, stimmen die Preise, steht die Pareto-Front,
+// und klickt sich die Historien-Folie durch ihre sieben Datenstände?
 //
 //   bun run playwright-tests/verify-deploy.ts
 //   BASE=https://geggo98.github.io/slides bun run playwright-tests/verify-deploy.ts
@@ -117,38 +118,71 @@ const pointTip = (model: string, now: string) =>
   chart.titles.find((t) => t.startsWith(`${model}:`) && t.includes(now));
 
 for (const [model, now] of [
-  ["gpt-5.6-luna", "0,53 €"],
+  ["gpt-5.6-sol", "5,67 €"],
   ["gpt-5.6-terra", "3,47 €"],
+  ["deepseek-v4-flash", "0,09 €"],
 ] as const) {
   const tip = pointTip(model, now);
   check(`${model} steht bei ${now}`, tip !== undefined, tip ?? "kein Treffer");
 }
 
 check(
-  "Front = luna, terra, sol, opus-5 (kimi-k3 dominiert)",
-  chart.frontLabels.length === 4 &&
+  "Front = 2× deepseek, luna, terra, sol, opus-5 (glm-5.3 dominiert)",
+  chart.frontLabels.length === 6 &&
     chart.frontLabels.includes("claude-opus-5") &&
-    !chart.frontLabels.includes("kimi-k3"),
+    chart.frontLabels.includes("deepseek-v4-flash") &&
+    !chart.frontLabels.includes("glm-5.3"),
   chart.frontLabels.join(", "),
 );
 check(
-  "zwei Geisterpunkte (luna, terra) gerendert",
-  chart.ghosts === 2,
+  "ein Geisterpunkt (sol vor der Senkung vom 21.08.)",
+  chart.ghosts === 1,
   `${chart.ghosts}`,
 );
 check(
-  "Legende nennt die Preissenkung",
-  chart.legend.includes("vor der Preissenkung"),
+  "Legende nennt Preisanpassung und Kontingent-Schalter",
+  chart.legend.includes("vor der Preisanpassung") &&
+    chart.legend.includes("Claude-Code-Kontingent"),
   chart.legend,
 );
 check(
   "Fußzeile trennt Benchmark- und Preis-Stand",
-  chart.footer.includes("Datacurve 25.07.") &&
-    chart.footer.includes("Preise 30.07."),
+  chart.footer.includes("Datacurve 20.08.") &&
+    chart.footer.includes("Preise 21.08."),
   chart.footer || "keine Fußzeile gefunden",
 );
 
 await page.screenshot({ path: "playwright-tests/qa/deployed-pareto.png" });
+
+// (4) Die Historien-Folie: eigener Alias, eigene Chart-Klasse (`.mh-chart`,
+// damit der `querySelector` oben nicht hier landet), sieben Stationen.
+await page.goto(`${DECK}/pareto-historie`, { waitUntil: "networkidle" });
+await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+await page.waitForTimeout(500);
+const hist = await page.evaluate(() => ({
+  stations: document.querySelectorAll(".mh-tl-item").length,
+  active:
+    document
+      .querySelector(".mh-tl-item.active .mh-tl-date")
+      ?.textContent?.trim() ?? "",
+  note:
+    document
+      .querySelector(".mh-note")
+      ?.textContent?.replace(/\s+/g, " ")
+      .trim() ?? "",
+}));
+check(
+  "Historien-Folie hat sieben Stationen",
+  hist.stations === 7,
+  `${hist.stations}`,
+);
+check(
+  "startet auf dem v1-Stand",
+  hist.active.startsWith("v1") && hist.note.includes("1/7"),
+  `${hist.active} · ${hist.note.slice(0, 60)}`,
+);
+await page.screenshot({ path: "playwright-tests/qa/deployed-history.png" });
+
 await browser.close();
 console.log(failures === 0 ? "\nDEPLOY OK" : `\n${failures} FEHLGESCHLAGEN`);
 process.exit(failures === 0 ? 0 : 1);
