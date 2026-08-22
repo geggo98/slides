@@ -977,7 +977,7 @@ DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 20.08. · Pre
 
 ---
 hideInToc: true
-clicks: 6
+clicks: 7
 routeAlias: pareto-historie
 ---
 
@@ -1002,6 +1002,11 @@ Station 1 (v1), zur Kontamination:
   niedrig, der Punkt liegt zu weit links.
 - Station 2 (v1.1) schließt genau diese Lücke. Deshalb sind v1- und
   v1.1-Zahlen nicht vergleichbar — die Zeitreihe beginnt faktisch erst dort.
+
+Achter Klick (nach Station 7): blendet alle Modellnamen ein und schaltet das
+Fadenkreuz frei — Punkt oder Label anklicken pinnt, mehrere gleichzeitig
+möglich. Derselbe Schalter sitzt in der Legende, geht also auch auf jeder
+anderen Station. Zurück (←) schaltet ihn wieder aus.
 -->
 
 ---

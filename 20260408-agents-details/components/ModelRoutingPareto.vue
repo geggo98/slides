@@ -14,6 +14,7 @@ import {
   tip,
   type Pt,
 } from "./paretoData";
+import { useCrosshairs } from "./useCrosshairs";
 
 // DeepSWE-Score vs. €/Task als statisches Inline-SVG — kein Chart.js/echarts
 // nötig. Farben über die Deck-Tokens. Bewusst ohne <defs>: keine IDs, die
@@ -150,49 +151,11 @@ const bMid = (bLen - cHL) / 2;
 const cMid = (cLen - cHL) / 2;
 
 // Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
-// (erneuter Klick löst). Mehrere Pins gleichzeitig — die Einfüge-Reihenfolge
-// bestimmt die Farbe (Cycle über die Deck-Töne).
-const byLabel = computed(() => new Map(pts.value.map((p) => [p.label, p])));
-const hovered = ref<string | null>(null);
-const pinned = ref<string[]>([]);
-
-function togglePin(label: string) {
-  const i = pinned.value.indexOf(label);
-  if (i >= 0) pinned.value.splice(i, 1);
-  else pinned.value.push(label);
-}
-
-// label → Farbklasse (Pin-Farbe aus dem Cycle, bzw. neutral beim Hover).
-// Fadenkreuz UND Wanderung lesen dieselbe Quelle, damit Geisterpunkt und Pfeil
-// im selben Ton mitleuchten wie das Fadenkreuz ihres Punkts.
-const activeCls = computed(() => {
-  const m = new Map<string, string>();
-  pinned.value.forEach((label, i) => m.set(label, `mp-ch-${i % 4}`));
-  if (hovered.value && !m.has(hovered.value)) {
-    m.set(hovered.value, "mp-ch-hover");
-  }
-  return m;
-});
-
-// Zwei Pins mit einem Punkt Score-Unterschied liegen gut 3 px auseinander —
-// ihre Achsen-Badges lägen übereinander. Deshalb werden sie beim Aufbau
-// auseinandergeschoben (die Fadenkreuz-Linie bleibt exakt): 22 px, sobald ein
-// Badge zweizeilig wird, sonst 11.
-const crosshairs = computed(() => {
-  const list = [...activeCls.value].flatMap(([label, cls]) => {
-    const p = byLabel.value.get(label);
-    return p ? [{ p, cls, badgeY: py(p.y) + 3 }] : [];
-  });
-  const gap = list.some((c) => c.p.ci && pinned.value.includes(c.p.label))
-    ? 22
-    : 11;
-  let last = -Infinity;
-  for (const c of [...list].sort((a, b) => a.badgeY - b.badgeY)) {
-    c.badgeY = Math.max(c.badgeY, last + gap);
-    last = c.badgeY;
-  }
-  return list;
-});
+// (erneuter Klick löst). Mechanik im Composable, weil die Historien-Folie
+// dasselbe kann; `ciBadge` schaltet die zweizeilige Badge-Entzerrung ein, die
+// nur hier gebraucht wird (Fehlerbalken sind Sache dieser Folie).
+const { byLabel, hovered, pinned, togglePin, activeCls, crosshairs, movedCls } =
+  useCrosshairs(pts, S, { ciBadge: true });
 
 // Fehlerbalken nur an gepinnten Punkten — beim bloßen Hover wäre das Flackern.
 // Kernaussage der Folie: opus-5 74 ± 3,9 und sol 73 ± 2,8 überlappen deutlich,
@@ -203,12 +166,6 @@ const whiskers = computed(() =>
     return p?.ci ? [{ p, ci: p.ci, cls: `mp-ch-${i % 4}` }] : [];
   }),
 );
-
-// Leer, solange der zugehörige Punkt weder gehovt noch gepinnt ist.
-const movedCls = (label: string) => {
-  const cls = activeCls.value.get(label);
-  return cls ? `mp-moved-on ${cls}` : "";
-};
 </script>
 
 <template>

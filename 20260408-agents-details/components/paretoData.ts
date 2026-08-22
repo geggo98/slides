@@ -499,10 +499,15 @@ export const ly = (p: Pt, s: Scale) => s.py(p.y) + p.dy;
  * Marker an und endet 3 px vor dem Text.
  */
 export function leader(p: Pt, s: Scale) {
-  const ox = s.px(p.x);
-  const oy = s.py(p.y);
-  const tx = lx(p, s);
-  const ty = ly(p, s) - 3; // grob auf die Mittelhöhe der Zeile
+  return leaderLine(s.px(p.x), s.py(p.y), lx(p, s), ly(p, s));
+}
+
+/**
+ * Dieselbe Linie für frei berechnete Label-Positionen (Detailmodus der
+ * Historien-Folie, der die Beschriftungen selbst platziert).
+ */
+export function leaderLine(ox: number, oy: number, tx: number, ly_: number) {
+  const ty = ly_ - 3; // grob auf die Mittelhöhe der Zeile
   const len = Math.hypot(tx - ox, ty - oy);
   if (len < 24) return null;
   const ux = (tx - ox) / len;

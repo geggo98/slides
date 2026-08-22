@@ -5,8 +5,9 @@ import BunPopover from "./BunPopover.vue";
 // ModelRoutingPareto (Datenlage), ModelRoutingHistory (Historie).
 //
 // Regel für jeden Eintrag: er muss auf allen drei Folien stimmen. Kein „hier",
-// kein „diese Folie". Fadenkreuz, Fehlerbalken und der Kontingent-Schalter
-// existieren nur im Pareto-Chart — wer sie erwähnt, benennt die Folie dazu.
+// kein „diese Folie". Fehlerbalken und der Kontingent-Schalter existieren nur im
+// Pareto-Chart, das Fadenkreuz zusätzlich im Historien-Chart (dort opt-in über
+// „alle Namen + Fadenkreuz") — wer sie erwähnt, benennt die Folie dazu.
 // Folienspezifisches gehört in die jeweilige Host-Komponente, nicht hierher.
 //
 // Falls das je zu eng wird: ein `chart?: boolean` je Eintrag (Chart-Folien vs.

@@ -25,7 +25,10 @@ type Box = {
 const overlap = (a: Box, b: Box) =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
-function report(where: string, boxes: Box[]) {
+// `soft`: Kollisionen nur berichten, nicht zählen. Gilt für den Detailmodus der
+// Historien-Folie — dort sind alle 25 Namen ausdrücklich gewollt, und dass sie
+// sich auf 250 px Höhe berühren, ist der Preis dafür, kein Fehler.
+function report(where: string, boxes: Box[], soft = false) {
   const labels = boxes.filter((b) => b.kind === "label");
   const marks = boxes.filter((b) => b.kind !== "label");
   const hits: string[] = [];
@@ -42,8 +45,9 @@ function report(where: string, boxes: Box[]) {
   }
   console.log(`\n${where}: ${labels.length} Labels, ${marks.length} Marker`);
   if (hits.length === 0) console.log("  OK — keine Überschneidung");
+  else if (soft) console.log(`  ${hits.length} Überschneidungen (erwartet)`);
   else console.log(hits.join("\n"));
-  return hits.length;
+  return soft ? 0 : hits.length;
 }
 
 const collect = (sel: string) =>
@@ -189,6 +193,100 @@ for (const theme of ["light", "dark"] as const) {
     if (SHOT)
       await page.screenshot({ path: `${OUT}/history-41-${theme}-${step}.png` });
   }
+
+  // Achter Klick: Detailmodus — alle Namen plus Fadenkreuz. Die Beschriftung
+  // muss dann jeden Punkt der Station treffen, und zwei Pins müssen zwei
+  // Fadenkreuze ergeben.
+  await page.keyboard.press("ArrowRight");
+  await page.waitForTimeout(450);
+  const detail = await page.evaluate(`(() => {
+    const svg = document.querySelector("svg.mh-chart");
+    const pts = svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt']").length;
+    return {
+      labels: svg.querySelectorAll("text.mh-label").length,
+      pts,
+      hits: svg.querySelectorAll("circle.mp-hit").length,
+      toggleOn: !!document.querySelector("button.mh-tg.on"),
+    };
+  })()`);
+  console.log(
+    `\n[${theme}] Folie 41 · Detailmodus: ${detail.labels} Labels / ${detail.pts} Punkte, ` +
+      `${detail.hits} Hit-Targets, Schalter ${detail.toggleOn ? "an" : "AUS"}`,
+  );
+  if (detail.labels !== detail.pts || detail.hits !== detail.pts) {
+    console.log("  FEHLER: nicht jeder Punkt ist beschriftet/anklickbar");
+    problems++;
+  }
+  if (!detail.toggleOn) {
+    console.log("  FEHLER: Legenden-Schalter zeigt den Detailmodus nicht an");
+    problems++;
+  }
+
+  for (const label of ["claude-opus-5", "gpt-5.6-luna"]) {
+    await page.click(
+      `svg.mh-chart circle.mp-hit[aria-label="Fadenkreuz für ${label}"]`,
+    );
+  }
+  await page.waitForTimeout(250);
+  const chs = await page.evaluate(
+    `document.querySelectorAll("svg.mh-chart g.mp-ch").length`,
+  );
+  console.log(`  Fadenkreuze nach zwei Pins: ${chs} (erwartet 2)`);
+  if (chs !== 2) problems++;
+  problems += report(
+    `[${theme}] Folie 41 · Detailmodus + 2 Pins`,
+    await page.evaluate(collect("svg.mh-chart")),
+    true,
+  );
+  if (SHOT)
+    await page.screenshot({ path: `${OUT}/history-41-${theme}-detail.png` });
+
+  // Zurück: der Detailmodus muss wieder aus sein, die Pins weg.
+  await page.keyboard.press("ArrowLeft");
+  await page.waitForTimeout(400);
+  const off = await page.evaluate(`(() => {
+    const svg = document.querySelector("svg.mh-chart");
+    return {
+      ch: svg.querySelectorAll("g.mp-ch").length,
+      hits: svg.querySelectorAll("circle.mp-hit").length,
+      toggleOn: !!document.querySelector("button.mh-tg.on"),
+    };
+  })()`);
+  console.log(
+    `  Nach ←: ${off.ch} Fadenkreuze, ${off.hits} Hit-Targets, Schalter ${off.toggleOn ? "AN" : "aus"}`,
+  );
+  if (off.ch !== 0 || off.hits !== 0 || off.toggleOn) {
+    console.log("  FEHLER: Detailmodus bleibt hängen");
+    problems++;
+  }
+
+  // Zweiter Weg: Legenden-Schalter auf einer anderen Station. Das Label-Layout
+  // wird je Station neu gerechnet, also muss auch v1 (21 Punkte) aufgehen.
+  await page.click(".mh-tl-item:first-child .mh-tl-btn");
+  await page.click("button.mh-tg");
+  await page.waitForTimeout(400);
+  const v1 = await page.evaluate(`(() => {
+    const svg = document.querySelector("svg.mh-chart");
+    return {
+      date: document.querySelector(".mh-tl-item.active .mh-tl-date").textContent.trim(),
+      labels: svg.querySelectorAll("text.mh-label").length,
+      pts: svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt']").length,
+    };
+  })()`);
+  console.log(
+    `  Schalter auf Station „${v1.date}": ${v1.labels} Labels / ${v1.pts} Punkte`,
+  );
+  if (v1.labels !== v1.pts) {
+    console.log("  FEHLER: Detailmodus greift nur auf der letzten Station");
+    problems++;
+  }
+  problems += report(
+    `[${theme}] Folie 41 · Detailmodus Station 1`,
+    await page.evaluate(collect("svg.mh-chart")),
+    true,
+  );
+  if (SHOT)
+    await page.screenshot({ path: `${OUT}/history-41-${theme}-detail-v1.png` });
 
   await ctx.close();
 }
