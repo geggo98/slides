@@ -424,7 +424,7 @@ export const SNAPSHOTS: Snapshot[] = [
     id: "0821",
     date: "21.08.",
     title: "Heutiger Stand",
-    note: "glm-5.3 kommt auf 69 % und verfehlt die Front um drei Cent. sol wird um 23 % billiger und schiebt sich näher an Opus 5. Sechs Punkte auf der Front, von 9 Cent bis 10,37 €.",
+    note: "glm-5.3 kommt auf 69 % und verfehlt die Front um drei Cent. sol wird um 23 % billiger und rückt damit von Opus 5 weg: Für dessen einen Punkt Vorsprung zahlst Du 83 % Aufpreis statt 41 %. Sechs Punkte auf der Front, von 9 Cent bis 10,37 €.",
     pts: S_0821_HIST,
   },
 ];
