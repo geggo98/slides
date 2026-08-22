@@ -116,7 +116,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 21.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni sechsmal verschoben, zweimal allein durch Preissenkungen. Als Prior nutzen, eigene Evals bauen.",
+    text: "Stand 21.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni sechsmal verschoben, zweimal allein durch Preissenkungen. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
   },
 ];
 </script>

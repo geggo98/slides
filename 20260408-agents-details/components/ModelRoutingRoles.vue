@@ -167,7 +167,10 @@ const activeRole = computed(
             <span class="mr-card-title">Eigene Evals</span>
           </div>
           <div class="mr-models">50–100 Tasks loggen</div>
-          <div class="mr-cost">Benchmarks = Prior</div>
+          <!-- „Prior" stand hier bis 22.08. und wurde im Vortrag mehrfach
+               nachgefragt: statistischer Jargon ohne Erklärung. Der ⓘ-Caveat
+               „Verfallsdatum" benutzt jetzt dasselbe Wort. -->
+          <div class="mr-cost">Benchmarks = Startpunkt</div>
         </div>
       </div>
     </div>
