@@ -416,7 +416,7 @@ export const SNAPSHOTS: Snapshot[] = [
     id: "0814",
     date: "14.08.",
     title: "Sechs Neuzugänge, zwei Korrekturen",
-    note: "In zwei Wochen kommen sechs Modelle dazu, darunter zwei von DeepSeek für 9 und 21 Cent — die Front bekommt ein billiges Ende. Parallel korrigiert Datacurve zwei Abrechnungsfehler: Gemini-Tokens waren doppelt gezählt, DeepSeek V4 Pro doppelt rabattiert. Die drei Gemini-Punkte wandern dadurch nach links, ohne die Front zu berühren.",
+    note: "In zwei Wochen kommen sechs Modelle dazu, darunter zwei von DeepSeek für 9 und 21 Cent — die Front bekommt ein billiges Ende. Parallel korrigiert Datacurve zwei Abrechnungsfehler im DeepSWE-Benchmark: Gemini-Tokens doppelt gezählt, DeepSeek V4 Pro doppelt rabattiert. Die drei Gemini-Punkte wandern dadurch nach links, ohne die Front zu berühren — geändert hatte sich nicht das Modell, sondern die Rechnung des Benchmarks.",
     reconstructed: true,
     pts: S_0814,
   },

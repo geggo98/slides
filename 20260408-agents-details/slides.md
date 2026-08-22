@@ -965,7 +965,7 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter und ist seit dem 21.08. um 23 % billiger; klick beide Punkte an, die Fehlerbalken überlappen fast vollständig. Am billigen Ende sind **zwei DeepSeek-Modelle für 9 und 21 Cent** dazugekommen — beide erst im August aufs Board. Der modellspezifische Harness verschiebt Scores um 10–30 Punkte (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
+**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter, seit dem 21.08. um 23 % billiger; klick beide an, die Fehlerbalken überlappen fast vollständig. Neu am billigen Ende: **zwei DeepSeek-Modelle für 9 und 21 Cent**. Ein anderer Harness verschiebt Scores um 10–30 Punkte, und auch die Zahlen werden nachträglich korrigiert (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
 
 </div>
 
@@ -987,7 +987,7 @@ routeAlias: pareto-historie
 
 <div class="text-xs opacity-70 mt-1">
 
-Quellen: Datacurve-Changelog + Git-Historie dieses Charts · Wechselkurs konstant (1 USD = 0,876 €) · Kosten je Station: der **damals veröffentlichte** Stand
+Quellen: **DeepSWE v1.1** (Datacurve) — Board, Changelog und Git-Historie dieses Charts · Wechselkurs konstant (1 USD = 0,876 €) · Kosten je Station: der **damals veröffentlichte** Stand
 
 </div>
 
