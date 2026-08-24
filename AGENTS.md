@@ -10,6 +10,31 @@ Multi-presentation Slidev setup. Each talk lives in its own top-level directory 
 
 Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell` or use direnv.
 
+### The `devenv` Input Is Pinned
+
+`devenv.yaml` pins the devenv modules to a release tag:
+
+```yaml
+devenv:
+  url: github:cachix/devenv/v2.2.2?dir=src/modules
+```
+
+Without that entry devenv injects `github:cachix/devenv?dir=src/modules` — no
+ref, so every `devenv update` jumps to `main` HEAD. Modules from `main` may
+call CLI primops (`loadDotenv`, for one) that an older installed CLI does not
+provide, and evaluation then fails with an undefined-variable error. Modules
+older than the CLI are the supported direction, so a release tag is the safe
+pin: the tag must be **≤** the installed CLI (`devenv version`) and ≤ whatever
+`nix profile add nixpkgs#devenv` gives CI.
+
+To raise it: put the new tag in `devenv.yaml`, then `devenv update devenv` —
+naming the input keeps the bump to that one node.
+
+Run **`devenv update` without an argument only deliberately**: it also moves
+`nixpkgs`, which changes `pkgs.playwright-driver` and silently breaks its
+pairing with the pinned `playwright` npm version (see the Playwright section
+below).
+
 ## Common Commands
 
 Prefer **devenv tasks** over direct `bun run` commands — they handle dependencies automatically and simplify the Claude Code allow-list.
