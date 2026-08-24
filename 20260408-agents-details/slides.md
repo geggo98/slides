@@ -726,6 +726,62 @@ Weitergedacht — Rollen-Routing über Modellfamilien & Harnesse hinweg: <Link t
 
 ---
 hideInToc: true
+clicks: 2
+---
+
+# `opusplan` durchgerechnet: Ersparnis & Break-even
+
+<div class="text-sm opacity-70 mb-2">
+
+Die Behauptung der letzten Folie in Euro — Regler mit Median-Defaults aus 42,8k eigenen Claude-Code-Requests.
+
+</div>
+
+<OpusplanBreakEven :step="$clicks" />
+
+<div class="text-xs opacity-70 mt-1">
+
+Listenpreise/MTok: Sonnet $3 In / $15 Out · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h, Max-Abo) · 1 USD = 0,876 € · Defaults = Mediane aus 42,8k eigenen Requests
+
+</div>
+
+<!--
+Rechenmodell (components/lib/opusplanMath.ts, per vitest gepinnt):
+Kosten je Phase = Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×
+TTL-Faktor×In (1,25× bei 5 min, 2× bei 1 h). Plan-Phase (Median): 100k
+Out, 7M Read, 360k Write. Exec: Regler. Cache-Bruch beim Modellwechsel:
+~93 % des Kontexts werden als Write neu berechnet (n=625 beobachtete
+Bruch-Events) — bei 180k Kontext ≈ 0,55 € statt ~0,07 € als Opus-Read.
+
+Break-even bewusst NUR gegen „Nur Opus" erzählt: beide planen mit Opus,
+die Plan-Prämie (~3 $) kürzt sich raus. „Nur Sonnet" ist der
+Referenzboden — noch billiger, aber mit schwächerem Plan; das ist ein
+Qualitäts-, kein Preisvergleich. Break-even bei Defaults: ~2,5 MTok
+Exec-Cache-Read (Output skaliert mit) — typische Exec-Phasen liegen bei
+5–120 MTok, also Faktor 10–50 darüber. Ersparnis bei Defaults: 6,02 €
+(−25 %); die Exec-Phase allein wird 40 % billiger — daher das „massiv
+billiger" der vorigen Folie.
+
+Anti-Pattern (aus der eigenen Historie: 60 % der Sessions kehren in den
+Plan-Mode zurück, 72 % davon ohne Compaction, max. 13 Zyklen): Jede
+Rückkehr ohne /compact = ZWEI Cache-Brüche — erst der Kontext als
+OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 1,47 €,
+plus Re-Plan (~45k Output) ≈ 0,99 €. Allein die Brüche fressen ab
+5 Rückkehren (1h-TTL: ab 3) die gesamte Ersparnis auf. Merksatz: vor
+erneutem Planen /compact — das schrumpft den Kontext und damit beide
+Brüche.
+
+TTL-Toggle: Max-Abo nutzt 1h-TTL (2× Write, Folie „Drei Modi") → Brüche
+×1,6, Break-even ~4 MTok. Abo zahlt Kontingent statt Token; die €-Werte
+sind das API-Äquivalent. Vereinfachungen (bewusst): input_tokens
+(~90/Request) ignoriert; laufende Exec-Cache-Writes weggelassen (fallen
+überall ähnlich an; Sonnet-Writes billiger → konservativ pro opusplan);
+Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
+(Median dort 174k ≈ 177k beim Erst-Wechsel).
+-->
+
+---
+hideInToc: true
 ---
 
 # System Prompts: Statisch vs. Dynamisch
