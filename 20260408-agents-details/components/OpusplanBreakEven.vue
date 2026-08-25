@@ -194,21 +194,24 @@ const chartLabel = computed(
         <input v-model.number="n" type="range" min="0" max="13" step="1" />
         <span class="ob-val">{{ n }}×</span>
       </label>
-      <div class="ob-ttl" role="group" aria-label="Cache-TTL wählen">
-        <button
-          :class="{ on: ttl === '5min' }"
-          :aria-pressed="ttl === '5min'"
-          @click="ttl = '5min'"
-        >
-          5 min
-        </button>
-        <button
-          :class="{ on: ttl === '1h' }"
-          :aria-pressed="ttl === '1h'"
-          @click="ttl = '1h'"
-        >
-          1 h
-        </button>
+      <div class="ob-ttl-wrap">
+        <span id="ob-ttl-label" class="ob-ttl-label">TTL</span>
+        <div class="ob-ttl" role="group" aria-labelledby="ob-ttl-label">
+          <button
+            :class="{ on: ttl === '5min' }"
+            :aria-pressed="ttl === '5min'"
+            @click="ttl = '5min'"
+          >
+            5 min
+          </button>
+          <button
+            :class="{ on: ttl === '1h' }"
+            :aria-pressed="ttl === '1h'"
+            @click="ttl = '1h'"
+          >
+            1 h
+          </button>
+        </div>
       </div>
     </div>
 
@@ -449,9 +452,18 @@ const chartLabel = computed(
   text-align: right;
   color: var(--color-text-primary);
 }
+.ob-ttl-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.ob-ttl-label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
 .ob-ttl {
   display: inline-flex;
-  margin-left: auto;
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: 999px;
   overflow: hidden;

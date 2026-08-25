@@ -729,19 +729,20 @@ hideInToc: true
 clicks: 2
 ---
 
-# `opusplan` durchgerechnet: Ersparnis & Break-even
+# `opusplan`: Ersparnis & Break-even in Euro
 
 <div class="text-sm opacity-70 mb-2">
 
-Die Behauptung der letzten Folie in Euro — Regler mit Median-Defaults aus 42,8k eigenen Claude-Code-Requests.
+Die Behauptung der letzten Folie nachgerechnet — Regler mit Median-Defaults aus 42,8k eigenen Claude-Code-Requests.
 
 </div>
 
 <OpusplanBreakEven :step="$clicks" />
 
-<div class="text-xs opacity-70 mt-1">
+<div class="text-xs opacity-70 leading-snug mt-1">
 
-Listenpreise/MTok: Sonnet $3 In / $15 Out · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h, Max-Abo) · 1 USD = 0,876 € · Defaults = Mediane aus 42,8k eigenen Requests
+„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso wenn die Session ein neues Ziel mit anderem Inhalt bekommt: sonst wird alter Kontext bei jedem Bruch mitbezahlt.<br>
+Listenpreise/MTok: Sonnet $3 / $15 · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h, Max-Abo) · 1 USD = 0,876 €
 
 </div>
 
@@ -769,7 +770,10 @@ OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 1,47 €,
 plus Re-Plan (~45k Output) ≈ 0,99 €. Allein die Brüche fressen ab
 5 Rückkehren (1h-TTL: ab 3) die gesamte Ersparnis auf. Merksatz: vor
 erneutem Planen /compact — das schrumpft den Kontext und damit beide
-Brüche.
+Brüche. Gleiches gilt beim Themenwechsel: wer eine Session über lauter
+fremde Aufgaben weiterlaufen lässt, schleppt deren Kontext mit und zahlt
+ihn bei jedem Bruch erneut — /compact (oder eine neue Session) macht ihn
+klein.
 
 TTL-Toggle: Max-Abo nutzt 1h-TTL (2× Write, Folie „Drei Modi") → Brüche
 ×1,6, Break-even ~4 MTok. Abo zahlt Kontingent statt Token; die €-Werte
