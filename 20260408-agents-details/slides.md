@@ -876,6 +876,105 @@ Default-TTL 5 min, Extended 1 h = 2× Cache-Write. Stand 29.04.2026.
 
 ---
 hideInToc: true
+routeAlias: rewind-fork
+---
+
+# Rewind & Fork: die billigen Operationen
+
+<div class="text-sm opacity-70 mb-2">
+
+Einen Pfad verlassen oder verzweigen — ohne den Prefix neu zu bauen.
+
+</div>
+
+<div class="grid grid-cols-2 gap-8 text-sm">
+<div>
+
+### `/rewind` — zurück auf einen früheren Turn
+
+- `Esc Esc` oder `/rewind`: **Code**, **Konversation** oder **beides**
+- Cache-seitig **gratis**: der gekürzte Verlauf _ist_ der alte Prefix — von jedem späteren Turn **warm gehalten**, über die TTL hinaus
+- `/compact` **baut** einen neuen Prefix (voller Write), Rewind **trifft** einen alten
+- Im selben Menü: **Summarize from/up to here** — zielgenaues `/compact`, mit dessen Kosten
+- Rollt **nicht** zurück: `bash`-Edits, Subagent-Edits, Symlinks — kein Git-Ersatz
+
+</div>
+<div>
+
+### `/branch` — Konversation verzweigen
+
+- Kopiert die History in eine **neue Session-ID**; das Original bleibt unangetastet
+- Gleicher Prozess, gleicher Prefix ⇒ der erste Request der Verzweigung **liest aus dem Cache**
+- `--fork-session` startet dagegen einen **neuen Prozess**: frischer Git-Snapshot, der Prefix kann kippen
+- Praxis: zwei Ansätze aus demselben Kontext, statt zweimal zu erklären
+- Nicht der **Fork-Subagent** der <Link to="cache-modi">nächsten Folie</Link> — gleiche Idee, andere Ebene
+
+</div>
+</div>
+
+<div class="mt-3 text-sm opacity-60">
+
+**Codex**: `Esc Esc` editiert die vorige Nachricht und **forkt** den Chat, `/fork` und `codex fork` verzweigen eine Session — ein Code-Restore wie das Checkpointing fehlt ([#11626](https://github.com/openai/codex/issues/11626), [#12558](https://github.com/openai/codex/issues/12558)).
+
+</div>
+
+<!--
+Anschluss an die opusplan-Folie: dort hieß der Merksatz „vor erneutem
+Planen /compact". Hier die andere Hälfte — wer den Pfad ganz verlässt,
+braucht gar kein /compact. Faustregel ansagen: Compaction ist für
+„Kontext ist gut, aber zu groß", Rewind für „Kontext ist falsch".
+
+Die Cache-Aussage steht wörtlich in der Doku (code.claude.com/docs/en/
+prompt-caching, „Rewinding the conversation", geprüft 25.08.2026):
+„/rewind truncates your conversation back to an earlier turn. The
+remaining history is the same content the cache was built from at that
+point … so the next request hits the earlier cache entry. Every turn
+since then has read through that prefix, which kept the entry warm even
+if the original turn was longer ago than the TTL." Genau das ist der
+Punkt für die Bühne: der alte Eintrag lebt, weil JEDER spätere Turn
+durch ihn gelesen hat — deshalb greift Rewind auch nach Stunden noch.
+Der Tip-Kasten derselben Seite empfiehlt Rewind ausdrücklich statt
+/compact, wenn man einen Pfad aufgibt. Code-Restore hat laut Doku keine
+eigene Cache-Wirkung (Dateien kommen ohnehin erst per Read in den
+Kontext).
+
+Ehrlichkeitshinweis zu /branch: dass der erste Request der Verzweigung
+aus dem Cache liest, ist ABGELEITET, nicht wörtlich belegt — aus der
+Prefix-Regel („any two requests with the same model and prefix read the
+same cache") plus der Sessions-Doku: „/branch copies the transcript and
+switches the running Claude Code process to write to it". Gleicher
+Prozess ⇒ gleicher System-Prompt ⇒ identischer Prefix. Bei
+--fork-session in einem NEUEN Prozess gilt das nicht zwingend:
+sequenzielle Sessions teilen den Prefix nur, wenn der Git-Snapshot beim
+Start passt (Branch + letzte Commits stecken im System-Prompt).
+
+Abgrenzung zur nächsten Folie: dort der Fork-SUBAGENT
+(CLAUDE_CODE_FORK_SUBAGENT) — ein Kind-Agent erbt den Parent-Prefix.
+Hier verzweigt die eigene Session. Gleiche Idee, andere Ebene; das ist
+die einzige Stelle im Deck, wo „Fork" zweierlei heißt.
+
+Summarize from/up to here: praktisch top („die verbose Debug-Strecke ab
+hier zusammenfassen, die Anfangsinstruktionen behalten"), cache-seitig
+aber ein zielgenaues /compact — neuer, kürzerer Prefix, voller Write.
+Nicht als billig verkaufen.
+
+Grenzen einmal laut sagen: bash-Änderungen (rm/mv/cp) und Edits von
+Hintergrund-Subagents kommen NICHT zurück, Symlinks und Hardlinks
+werden übersprungen („Restored the code, but skipped N files"), 100
+Checkpoints pro Session, 30 Tage Retention. Kein Git-Ersatz.
+
+Codex-Stand am 25.08.2026 gegen learn.chatgpt.com/docs/developer-
+commands?surface=cli geprüft: „/fork — Create a branching chat from a
+previous point in conversation, preserving the original transcript" und
+„Press Esc twice with an empty composer to edit the previous user
+message and fork the chat from that point", dazu das Subcommand
+`codex fork`. Ein Checkpoint-Restore für Code ist dort nicht
+dokumentiert; die Slash-Command-Liste bewegt sich schnell, vor dem Talk
+erneut gegenchecken.
+-->
+
+---
+hideInToc: true
 routeAlias: cache-modi
 ---
 
@@ -1403,6 +1502,7 @@ hideInToc: true
 - Mario Zechner — **Pi** (`pi-mono`)
 - Boris Cherny — **Claude Code**
 - Claude Code Source-Leak — `cli.js.map`, 31.03.2026
+- Claude Code Docs — _Prompt-Caching_, _Checkpointing_, _Manage sessions_ · `code.claude.com/docs`
 
 </div>
 </div>
