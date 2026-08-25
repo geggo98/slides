@@ -741,8 +741,8 @@ Die Behauptung der letzten Folie nachgerechnet — Regler mit Median-Defaults au
 
 <div class="text-xs opacity-70 leading-snug mt-1">
 
-„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso wenn die Session ein neues Ziel mit anderem Inhalt bekommt: sonst wird alter Kontext bei jedem Bruch mitbezahlt.<br>
-Listenpreise/MTok: Sonnet $3 / $15 · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h, Max-Abo) · 1 USD = 0,876 €
+„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso bei neuem Ziel mit anderem Inhalt: sonst zahlt jeder Bruch den alten Kontext mit. Die 1-h-TTL ist Default in jedem Claude-Abo, auch Enterprise.<br>
+Listenpreise/MTok: Sonnet $3 / $15 · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h) · 1 USD = 0,876 €
 
 </div>
 
@@ -775,9 +775,17 @@ fremde Aufgaben weiterlaufen lässt, schleppt deren Kontext mit und zahlt
 ihn bei jedem Bruch erneut — /compact (oder eine neue Session) macht ihn
 klein.
 
-TTL-Toggle: Max-Abo nutzt 1h-TTL (2× Write, Folie „Drei Modi") → Brüche
-×1,6, Break-even ~4 MTok. Abo zahlt Kontingent statt Token; die €-Werte
-sind das API-Äquivalent. Vereinfachungen (bewusst): input_tokens
+TTL-Toggle: Die 1h-TTL ist der Default der Hauptkonversation in JEDEM
+Claude-Abo, solange das Kontingent reicht — Pro, Max, Team und
+Enterprise gleichermaßen; auf 5 min fällt nur, wer per API-Key,
+Usage-Credits oder Cloud-Provider arbeitet (code.claude.com/docs/en/
+prompt-caching, „Which TTL each request gets", geprüft 25.08.2026).
+Also explizit ansagen: Enterprise-Zuhörer sind gemeint. Gemessen habe
+ich mit einem Max-Abo; Enterprise-Seats zahlen Kontingent statt Token,
+die Aussage bleibt identisch — Brüche ×1,6, Break-even ~4 MTok. Die
+€-Werte sind durchweg das API-Äquivalent. Zwei Enterprise-Feinheiten:
+Admins können die TTL org-weit per Managed Settings (promptCacheTtl)
+setzen, und über dem Kontingent schaltet Claude Code selbst auf 5 min. Vereinfachungen (bewusst): input_tokens
 (~90/Request) ignoriert; laufende Exec-Cache-Writes weggelassen (fallen
 überall ähnlich an; Sonnet-Writes billiger → konservativ pro opusplan);
 Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
@@ -884,7 +892,7 @@ Derselbe Harness, drei Cache-Charakteristiken — wer das ignoriert, zahlt schne
 
 ### Interaktiv (`claude`)
 
-**TTL: 1 h** (2× Write-Kosten) auf Max · **5 min** auf Pro/API.
+**TTL: 1 h** (2× Write) im Abo-Kontingent — Pro/Max/Team/Enterprise · **5 min** bei API-Key & Usage-Credits.
 
 Server-controlled — März-2026-Regression drückte 1h → 5m für viele Nutzer (#46829, ~17–25% Mehrkosten).
 
@@ -922,6 +930,12 @@ Stand verifiziert: 29.04.2026 — Anthropic schaltet Cache-Defaults serverseitig
 </div>
 
 <!--
+Abo-Zeile am 25.08.2026 gegen code.claude.com/docs/en/prompt-caching
+gegengecheckt: 1h gilt für die Hauptkonversation in jedem Claude-Abo im
+Kontingent (nicht nur Max), 5 min für API-Key/Usage-Credits/Cloud —
+und für Subagents, Workflows und Compaction immer, sofern nicht per
+subagentPromptCacheTtl umgestellt.
+
 Quellen: 1h→5m-Regression #46829; ENABLE_PROMPT_CACHING_1H /
 FORCE_PROMPT_CACHING_5M seit v2.1.108; Fork-Mode CLAUDE_CODE_FORK_SUBAGENT=1
 seit v2.1.117 (in -p/SDK ab v2.1.121); OpenClaw #19989 (claude -p ohne
