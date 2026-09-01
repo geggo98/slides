@@ -658,23 +658,22 @@ hideInToc: true
 
 - Server hasht **Prefix** (Modell + Tools + System-Prompt + History)
 - **Nur exakter Prefix-Match** — ein Token Änderung invalidiert alles danach
-- Default-TTL: **5 Minuten**
-- Extended: 1 Stunde (2× Write-Kosten)
+- TTL: **5 Min** (API-Default) · **1 h** = 2× Write — im Abo fordert Claude Code die Stunde an
 
-### Anthropic Pricing (Sonnet 4.6)
+### Anthropic Pricing (Sonnet 5)
 
 | Typ            | Preis/MTok        |
 | -------------- | ----------------- |
-| Base Input     | $3.00             |
-| Cache Write    | $3.75 (1.25×)     |
-| **Cache Read** | **$0.30 (0.10×)** |
+| Base Input     | $2.00             |
+| Cache Write    | $2.50 (1.25×)     |
+| **Cache Read** | **$0.20 (0.10×)** |
 
 </div>
 </div>
 
 <div class="mt-2 text-xs opacity-60">
 
-OpenAI und Google geben den **Cache-Read ebenfalls mit 0,1×** an. **Google** berechnet bei explizitem Caching zusätzlich Storage-Kosten — Details auf der nächsten Slide.
+**Cache-Read: überall 0,1×.** Write: **OpenAI** seit GPT-5.6 ebenfalls **1,25×**, **Google** nur 0,1× — dafür Storage pro Stunde, nächste Slide.
 
 </div>
 
@@ -885,12 +884,12 @@ hideInToc: true
 | Provider      | Default  | Max            |
 | ------------- | -------- | -------------- |
 | **Anthropic** | 5 Min ¹  | 1h (2× Write)  |
-| **OpenAI**    | 5-10 Min | 24h            |
+| **OpenAI**    | 30 Min ² | fest           |
 | **Google**    | 1h       | Konfigurierbar |
 
-Google verlangt **Storage-Kosten**: $1–4.50/MTok/h. Min. 32.768 Tokens.
+Google verlangt **Storage-Kosten**: $0,50–4,50/MTok/h. Min. 32.768 Tokens.
 
-¹ API-Default. Claude Code fordert für die Hauptkonversation 1 h an, solange ein Abo-Kontingent trägt.
+¹ API-Default; Claude Code fordert im Abo-Kontingent 1 h an. ² GPT-5.6+ kennt nur 30 Min, ältere Modelle 5–10 Min bzw. 24 h.
 
 </div>
 </div>

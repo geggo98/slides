@@ -214,9 +214,20 @@ export const SKILLS_VS_MCP = {
 };
 
 // ── Cache Pricing ───────────────────────────────────────────────────────────
+// Vielfaches des Base-Input-Preises, alle drei am 01.09.2026 an der
+// Preistabelle des jeweiligen Anbieters geprüft:
+// - Anthropic: Write 1,25× (5-min-TTL) bzw. 2× (1 h), Read 0,1×
+//   platform.claude.com/docs/en/about-claude/pricing
+// - OpenAI: seit der GPT-5.6-Generation EBENFALLS 1,25× Write — sol $4 → $5,
+//   terra $2 → $2,50, luna $0,20 → $0,25; Read 0,1×. Vorher stand hier 1,0×,
+//   das galt für ältere Modelle.  developers.openai.com/api/docs/pricing
+// - Google: rechnet das Anlegen zum Cache-Preis ab (0,1×) und verlangt dafür
+//   Storage pro Stunde — $0,50/MTok/h bei 3.7 Flash bis $4,50 bei 3.1 Pro.
+//   Die Miete lässt sich auf einer „×-Base-Preis"-Achse nicht abbilden und
+//   steht deshalb in der Fußzeile.  ai.google.dev/gemini-api/docs/pricing
 export const CACHE_PRICING = {
   providers: ["Anthropic", "OpenAI", "Google"],
-  cacheWrite: [1.25, 1.0, 1.0],
+  cacheWrite: [1.25, 1.25, 0.1],
   cacheRead: [0.1, 0.1, 0.1],
 };
 
