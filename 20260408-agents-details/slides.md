@@ -741,8 +741,8 @@ Die Behauptung der letzten Folie nachgerechnet — Regler mit Median-Defaults au
 
 <div class="text-xs opacity-70 leading-snug mt-1">
 
-„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso bei neuem Ziel mit anderem Inhalt: sonst zahlt jeder Bruch den alten Kontext mit. Die 1-h-TTL ist Default in jedem Claude-Abo, auch Enterprise.<br>
-Listenpreise/MTok: Sonnet $3 / $15 · Opus $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h) · 1 USD = 0,876 €
+„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso bei neuem Ziel mit anderem Inhalt: sonst zahlt jeder Bruch den alten Kontext mit. Gerechnet mit 1 h — die bekommt die Hauptkonversation in jedem Claude-Abo im Kontingent.<br>
+Listenpreise/MTok: Sonnet 5 $2 / $10 · Opus 5 $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h) · 1 USD = 0,876 €
 
 </div>
 
@@ -752,23 +752,38 @@ Kosten je Phase = Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×
 TTL-Faktor×In (1,25× bei 5 min, 2× bei 1 h). Plan-Phase (Median): 100k
 Out, 7M Read, 360k Write. Exec: Regler. Cache-Bruch beim Modellwechsel:
 ~93 % des Kontexts werden als Write neu berechnet (n=625 beobachtete
-Bruch-Events) — bei 180k Kontext ≈ 0,55 € statt ~0,07 € als Opus-Read.
+Bruch-Events) — bei 180k Kontext ≈ 0,59 € statt ~0,07 € als Opus-Read.
+
+Preisbasis: opusplan löst in der TUI auf Opus 5 (Plan) und Sonnet 5
+(Exec) auf; Sonnet 4.6 steht im /model-Picker gar nicht mehr. Sonnet 5
+kostet $2/$10 — die zum 01.09.2026 angekündigte Erhöhung auf $3/$15
+wurde gestrichen (platform.claude.com/docs/en/about-claude/pricing,
+geprüft 01.09.2026). Die KV-Cache-Folie in Kapitel 6 rechnet weiter mit
+Sonnet 4.6, dort geht es nur um die Multiplikatoren. Tokenizer-Falle,
+falls jemand fragt: Sonnet 5 zählt ~30 % mehr Tokens als 4.6, aber Opus 5
+und Sonnet 5 teilen sich denselben Tokenizer — der übergebene Kontext und
+damit der Cache-Bruch sind davon unberührt. Nur die beiden Exec-Regler
+stammen aus einem Messfenster über den Wechsel hinweg.
 
 Break-even bewusst NUR gegen „Nur Opus" erzählt: beide planen mit Opus,
 die Plan-Prämie (~3 $) kürzt sich raus. „Nur Sonnet" ist der
 Referenzboden — noch billiger, aber mit schwächerem Plan; das ist ein
-Qualitäts-, kein Preisvergleich. Break-even bei Defaults: ~2,5 MTok
+Qualitäts-, kein Preisvergleich. Break-even bei Defaults: ~1,8 MTok
 Exec-Cache-Read (Output skaliert mit) — typische Exec-Phasen liegen bei
-5–120 MTok, also Faktor 10–50 darüber. Ersparnis bei Defaults: 6,02 €
-(−25 %); die Exec-Phase allein wird 40 % billiger — daher das „massiv
+5–120 MTok, also Faktor 3–67 darüber. Ersparnis bei Defaults: 9,27 €
+(−37 %); die Exec-Phase allein wird 60 % billiger — daher das „massiv
 billiger" der vorigen Folie.
 
 Anti-Pattern (aus der eigenen Historie: 60 % der Sessions kehren in den
 Plan-Mode zurück, 72 % davon ohne Compaction, max. 13 Zyklen): Jede
 Rückkehr ohne /compact = ZWEI Cache-Brüche — erst der Kontext als
-OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 1,47 €,
+OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 2,05 €,
 plus Re-Plan (~45k Output) ≈ 0,99 €. Allein die Brüche fressen ab
-5 Rückkehren (1h-TTL: ab 3) die gesamte Ersparnis auf. Merksatz: vor
+5 Rückkehren die gesamte Ersparnis auf (mit 5-min-TTL erst ab 8).
+Beachte den Regler-Default n=2: der Anti-Pattern-Balken liegt dort noch
+UNTER „Nur Opus" — er überholt es erst ab der vierten Rückkehr. Mit den
+alten Sonnet-4.6-Preisen war er schon bei zwei darüber; wer die Pointe
+auf der Folie sehen will, schiebt den Regler auf 4. Merksatz: vor
 erneutem Planen /compact — das schrumpft den Kontext und damit beide
 Brüche. Gleiches gilt beim Themenwechsel: wer eine Session über lauter
 fremde Aufgaben weiterlaufen lässt, schleppt deren Kontext mit und zahlt
@@ -782,7 +797,8 @@ Usage-Credits oder Cloud-Provider arbeitet (code.claude.com/docs/en/
 prompt-caching, „Which TTL each request gets", geprüft 25.08.2026).
 Also explizit ansagen: Enterprise-Zuhörer sind gemeint. Gemessen habe
 ich mit einem Max-Abo; Enterprise-Seats zahlen Kontingent statt Token,
-die Aussage bleibt identisch — Brüche ×1,6, Break-even ~4 MTok. Die
+die Aussage bleibt identisch — Brüche ×1,6 gegenüber 5 min, Break-even
+1,8 statt 1,1 MTok. Die
 €-Werte sind durchweg das API-Äquivalent. Zwei Enterprise-Feinheiten:
 Admins können die TTL org-weit per Managed Settings (promptCacheTtl)
 setzen, und über dem Kontingent schaltet Claude Code selbst auf 5 min.
@@ -851,7 +867,7 @@ hideInToc: true
 
 ### Was schiefgeht
 
-- Default-TTL: **5 Minuten** — Resume nach 6 Min = voller Cache-Write
+- **API**-Default: 5 Minuten — Resume nach 6 Min = voller Cache-Write (im Abo fordert Claude Code 1 h an)
 - Bug in Claude Code (#42338): Cache wird oft komplett invalidiert
 - **Thinking-Signaturen** (kryptografische Marker der Reasoning-Blöcke) werden als Input-Tokens replayed
 
@@ -868,11 +884,13 @@ hideInToc: true
 
 | Provider      | Default  | Max            |
 | ------------- | -------- | -------------- |
-| **Anthropic** | 5 Min    | 1h (2× Write)  |
+| **Anthropic** | 5 Min ¹  | 1h (2× Write)  |
 | **OpenAI**    | 5-10 Min | 24h            |
 | **Google**    | 1h       | Konfigurierbar |
 
 Google verlangt **Storage-Kosten**: $1–4.50/MTok/h. Min. 32.768 Tokens.
+
+¹ API-Default. Claude Code fordert für die Hauptkonversation 1 h an, solange ein Abo-Kontingent trägt.
 
 </div>
 </div>

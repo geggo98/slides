@@ -562,7 +562,7 @@
           "id": "drei-cache-profile-o6",
           "text": "Deine interaktive Session hat eine TTL von 1 Stunde.",
           "verdict": "depends",
-          "explanation": "Auf Max ja, auf Pro/API nur 5 Minuten — und Regression #46829 drueckte die TTL zeitweise auf 5 min (~17–25 % Mehrkosten); seit v2.1.108 per `ENABLE_PROMPT_CACHING_1H` bzw. `FORCE_PROMPT_CACHING_5M` steuerbar."
+          "explanation": "Es haengt nicht am Abo-Tarif, sondern am Request-Topf: die Hauptkonversation (Deine Turns, `-p`-Laeufe, Agent-SDK-Turns) bekommt 1 h in JEDEM Claude-Abo im Kontingent — Pro, Max, Team, Enterprise. Auf 5 min faellt, wer per API-Key, Usage-Credits oder Cloud arbeitet oder sein Kontingent aufgebraucht hat; Subagents, Workflows und Compaction liegen im anderen Topf und bekommen auch im Abo 5 min. Steuerbar per `promptCacheTtl` bzw. `subagentPromptCacheTtl`, daneben `FORCE_PROMPT_CACHING_5M` und `ENABLE_PROMPT_CACHING_1H`."
         },
         {
           "id": "drei-cache-profile-o7",

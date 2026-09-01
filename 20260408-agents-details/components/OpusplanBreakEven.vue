@@ -19,6 +19,7 @@ import {
   kostenGerade,
   szenarien,
   toEur,
+  DEFAULT_TTL,
   type Ttl,
 } from "./lib/opusplanMath";
 
@@ -30,7 +31,7 @@ const ctxK = ref(180); // Kontext beim Wechsel, kTok (Median 177k)
 const readM = ref(30); // Exec-Cache-Read, MTok (Median lange Läufe ~31M)
 const outK = ref(150); // Exec-Output, kTok
 const n = ref(2); // Re-Plans ohne /compact (beobachtetes Maximum: 13)
-const ttl = ref<Ttl>("5min");
+const ttl = ref<Ttl>(DEFAULT_TTL); // 1 h — Begründung in opusplanMath.ts
 
 const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
 
@@ -87,7 +88,9 @@ const XW = 394;
 const XH = 156;
 const ratio = computed(() => outK.value / 1000 / readM.value);
 const xStar = computed(() => erg.value.breakEvenRead);
-// x-Leiter {12, 20}: bei 1-h-TTL kann der Break-even bis ~18,9 MTok wachsen.
+// x-Leiter {12, 20}: mit Sonnet 5 bleibt der Break-even überall unter
+// 8,4 MTok (per Test gepinnt), die 20er-Sprosse ist also Reserve für den
+// nächsten Preiswechsel — mit Sonnet 4.6 wurden es bis zu 18,9 MTok.
 const xMax = computed(() => (xStar.value > 12 ? 20 : 12));
 const yOpus = (x: number) =>
   toEur(kostenGerade(OPUS, OPUS, ttl.value, ratio.value, 0, x));
@@ -102,9 +105,15 @@ const yPlan = (x: number) =>
       x,
     ),
   );
-const Y_LEITER = [15, 25, 40, 60];
+// 8 % Luft über der oberen Geraden: ohne sie darf sie die Decke berühren, und
+// das Label „Nur Opus" sitzt 5 px darüber — also außerhalb der viewBox. Trat
+// bei 288 durchgefahrenen Reglerstellungen 8× auf, mit 1-h-TTL schon bei den
+// Defaults (14,98 € gegen Sprosse 15). Die Sprosse 20 verhindert, dass die
+// Luft direkt auf 25 springt und die Geraden im unteren Drittel kleben.
+const Y_LEITER = [15, 20, 25, 40, 60];
+const Y_LUFT = 1.08;
 const yMax = computed(() =>
-  sprosse(Y_LEITER, Math.max(yOpus(xMax.value), yPlan(xMax.value))),
+  sprosse(Y_LEITER, Math.max(yOpus(xMax.value), yPlan(xMax.value)) * Y_LUFT),
 );
 const sx = (x: number) => XL + (x / xMax.value) * XW;
 const sy = (v: number) => XT + XH - (v / yMax.value) * XH;
@@ -113,6 +122,7 @@ const xTicks = computed(() =>
 );
 const yTickMap: Record<number, number[]> = {
   15: [5, 10, 15],
+  20: [10, 20],
   25: [10, 20],
   40: [20, 40],
   60: [30, 60],

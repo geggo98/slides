@@ -3,9 +3,10 @@
  *
  * Datenherkunft der Konstanten: eigene Claude-Code-Historie (42.802 Requests,
  * 48 Plan-Sessions, Juni–August 2026). BREAK_SHARE aus n=625 beobachteten
- * Cache-Bruch-Events (Median cache_creation/Kontext = 0,93). Preise sind
- * API-Listenpreise wie auf der KV-Cache-Folie: Read 0,1× Input, Write 1,25×
- * (5-min-TTL) bzw. 2× (1-h-TTL, Max-Abo).
+ * Cache-Bruch-Events (Median cache_creation/Kontext = 0,93). Multiplikatoren:
+ * Read 0,1× Input, Write 1,25× (5-min-TTL) bzw. 2× (1-h-TTL) — geprüft am
+ * 01.09.2026 gegen platform.claude.com/docs/en/about-claude/pricing.
+ * Gerechnet wird per Default mit der 1-h-TTL, siehe DEFAULT_TTL.
  *
  * Bewusste Vereinfachungen (siehe Presenter-Notes der Folie):
  * - input_tokens (~90/Request) ignoriert,
@@ -25,12 +26,64 @@ export interface Modell {
   output: number;
 }
 
-export const SONNET: Modell = { input: 3, output: 15 };
+/**
+ * Die Modelle, auf die `opusplan` in der TUI tatsächlich auflöst: `opus` → Opus 5,
+ * `sonnet` → Sonnet 5 (code.claude.com/docs/en/model-config, Anthropic-API-Zeile;
+ * der /model-Picker bietet Sonnet 4.6 gar nicht mehr an, nur noch per --model).
+ *
+ * Sonnet 5 kostet $2/$10 — nicht $3/$15. Die $2/$10 waren als Einführungspreis
+ * bis 31.08.2026 angekündigt; die Erhöhung wurde gestrichen: „The previously
+ * scheduled increase to $3/$15 per million input/output tokens on September 1,
+ * 2026 will not occur." (platform.claude.com/.../pricing, geprüft 01.09.2026.)
+ * Die KV-Cache-Folie in Kapitel 6 rechnet weiter mit Sonnet 4.6 ($3/$15) — dort
+ * geht es um die Multiplikatoren, nicht um opusplan.
+ *
+ * Zum Tokenizer: Opus 4.7+ und Sonnet 5 teilen sich denselben neuen Tokenizer,
+ * Sonnet 4.6 nicht (~30 % weniger Tokens für denselben Text). Für die teure
+ * Hälfte dieser Rechnung ist das folgenlos: `ctx` ist der Kontext, den die
+ * Opus-Seite übergibt, und Sonnet 5 zählt ihn genauso — der Cache-Bruch und
+ * damit Break-even und Anti-Pattern sind tokenizer-neutral. Nur die beiden
+ * Exec-Regler stammen aus einem Messfenster, das den Wechsel überspannt; sie
+ * sind Vortrags-Eingaben, keine gepinnte Behauptung.
+ */
+export const SONNET: Modell = { input: 2, output: 10 };
 export const OPUS: Modell = { input: 5, output: 25 };
 
 export const READ_FAKTOR = 0.1;
 export const TTL_WRITE = { "5min": 1.25, "1h": 2.0 } as const;
 export type Ttl = keyof typeof TTL_WRITE;
+
+/**
+ * Womit die Folie rechnet, wenn niemand am Schalter dreht.
+ *
+ * 1 h, nicht 5 min. Claude Code teilt seine Requests in zwei Töpfe, und die
+ * TTL hängt am Topf, NICHT an der Interaktivität:
+ *
+ *   Hauptkonversation  — Deine Turns, `-p`-Läufe und Agent-SDK-Turns
+ *                        → 1 h im Claude-Abo im Kontingent, sonst 5 min
+ *   alles Übrige       — Subagents, Workflows, Forks, Compaction
+ *                        → 5 min, auch im Abo
+ *
+ * Die opusplan-Rechnung ist eine Hauptkonversation, also 1 h. Wörtlich:
+ * „Unless you choose a TTL yourself, Claude Code requests the one-hour TTL
+ * only on a Claude subscription within your plan's included usage."
+ * (code.claude.com/docs/en/prompt-caching, „Which TTL each request gets",
+ * geprüft 01.09.2026.)
+ *
+ * Zwei Dinge, die man hier leicht falsch begründet:
+ * - Der API-Default bleibt 5 min. Die Stunde ist nichts, was die API von sich
+ *   aus gibt, sondern was Claude Code anfordert. Die €-Beträge der Folie sind
+ *   API-Äquivalente, deshalb steht der 5-min-Schalter weiter daneben.
+ * - Der Plan-Modus ist nicht interaktiv-only: `--permission-mode plan` gilt
+ *   laut CLI-Referenz auch für `-p`, und das Agent SDK, Subagent-Frontmatter
+ *   und Cloud-Sessions kennen ihn ebenfalls. Nur bekommen Subagents dann die
+ *   5-min-TTL, weil sie im anderen Topf liegen.
+ *
+ * Auf 5 min fällt außerdem, wer per API-Key, Usage-Credits oder Cloud-Provider
+ * arbeitet, wessen Kontingent erschöpft ist (Claude Code schaltet dann selbst
+ * um) oder wessen Admin `promptCacheTtl` org-weit gesetzt hat.
+ */
+export const DEFAULT_TTL: Ttl = "1h";
 
 /** Anteil des Kontexts, der beim Cache-Bruch als Write neu anfällt (n=625) */
 export const BREAK_SHARE = 0.93;
