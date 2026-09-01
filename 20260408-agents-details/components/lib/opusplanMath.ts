@@ -127,8 +127,20 @@ export interface Ergebnis {
   rueckkehrBrueche: number;
   /** Volle Zusatzkosten einer Rückkehr (Brüche + Re-Plan-Output zu Opus-Preisen) */
   rueckkehrGesamt: number;
-  /** Ab so vielen Rückkehren fressen allein die Brüche die Ersparnis auf (0 = keine Ersparnis vorhanden) */
+  /**
+   * Ab so vielen Rückkehren fressen allein die Brüche die Ersparnis auf
+   * (0 = keine Ersparnis vorhanden). Strengerer Maßstab als `balkenUeberAb`:
+   * der Re-Plan-Output bleibt hier draußen, weil er auch bei „Nur Opus“
+   * anfiele — nur die Brüche sind der Preis des Modellwechsels.
+   */
   ersparnisWegAb: number;
+  /**
+   * Ab so vielen Rückkehren liegt der Anti-Pattern-BALKEN über „Nur Opus“.
+   * Kleiner als `ersparnisWegAb`, weil der Balken zusätzlich den Re-Plan-Output
+   * zu Opus-Preisen trägt, während der „Nur Opus“-Balken gar keine Rückkehren
+   * kennt. Beide Zahlen stehen nebeneinander auf der Folie, darum benannt.
+   */
+  balkenUeberAb: number;
 }
 
 export const readPreis = (m: Modell): number => m.input * READ_FAKTOR;
@@ -213,5 +225,10 @@ export function szenarien(e: Eingaben): Ergebnis {
     rueckkehrBrueche,
     rueckkehrGesamt,
     ersparnisWegAb: ersparnis > 0 ? Math.ceil(ersparnis / rueckkehrBrueche) : 0,
+    // floor+1 statt ceil: gefragt ist das erste n, bei dem der Balken STRIKT
+    // über „Nur Opus“ liegt. ersparnisWegAb fragt „ist die Ersparnis auf?“ (≥)
+    // und rundet deshalb auf.
+    balkenUeberAb:
+      ersparnis > 0 ? Math.floor(ersparnis / rueckkehrGesamt) + 1 : 0,
   };
 }

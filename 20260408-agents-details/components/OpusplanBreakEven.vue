@@ -30,7 +30,10 @@ const step = computed(() => props.step ?? 0);
 const ctxK = ref(180); // Kontext beim Wechsel, kTok (Median 177k)
 const readM = ref(30); // Exec-Cache-Read, MTok (Median lange Läufe ~31M)
 const outK = ref(150); // Exec-Output, kTok
-const n = ref(2); // Re-Plans ohne /compact (beobachtetes Maximum: 13)
+// Default 3: dort liegen Anti-Pattern und „Nur Opus“ praktisch gleichauf — der
+// Schnittpunkt der Balken liegt bei 3,05, die vierte Rückkehr schiebt den
+// Balken klar darüber. Beobachtetes Maximum der eigenen Historie: 13.
+const n = ref(3); // Re-Plans ohne /compact
 const ttl = ref<Ttl>(DEFAULT_TTL); // 1 h — Begründung in opusplanMath.ts
 
 const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
@@ -139,6 +142,11 @@ const reglerRechts = computed(() => sx(readM.value) > XL + XW / 2);
 const bruchEur = computed(() => fmt(toEur(erg.value.bruchEinmal)));
 const proMtokEur = computed(() => fmt(toEur(erg.value.proMtokErsparnis)));
 const bruchPaarEur = computed(() => fmt(toEur(erg.value.rueckkehrBrueche)));
+// Der Re-Plan-Output einer Rückkehr — im Anti-Pattern-Balken enthalten, im
+// „Nur Opus“-Balken nicht. Ohne ihn geht die Rechnung der Notiz-Box nicht auf.
+const replanEur = computed(() =>
+  fmt(toEur(erg.value.rueckkehrGesamt - erg.value.rueckkehrBrueche)),
+);
 
 const warnung = computed(() => showAnti.value && n.value >= 1);
 const noteText = computed(() => {
@@ -147,9 +155,9 @@ const noteText = computed(() => {
       return `Regler „Re-Plans“: jede Rückkehr in den Plan-Mode ohne /compact kostet 2 zusätzliche Cache-Brüche (≈ ${bruchPaarEur.value} €).`;
     const schluss =
       erg.value.ersparnisWegAb > 0
-        ? `ab ${erg.value.ersparnisWegAb}× ist die gesamte Ersparnis weg`
+        ? `ab ${erg.value.balkenUeberAb}× liegt der Balken über „Nur Opus“, allein die Brüche fressen die Ersparnis ab ${erg.value.ersparnisWegAb}×`
         : `und schon ohne Rückkehr ist opusplan hier teurer als Nur Opus`;
-    return `${n.value}× zurück in den Plan-Mode ohne /compact: je Rückkehr 2 Cache-Brüche ≈ ${bruchPaarEur.value} € oben drauf (einer als Opus-Write!) — ${schluss}. Vor erneutem Planen: /compact.`;
+    return `${n.value}× zurück in den Plan-Mode ohne /compact: je Rückkehr 2 Cache-Brüche ≈ ${bruchPaarEur.value} € (einer als Opus-Write!) + neuer Plan ≈ ${replanEur.value} € — ${schluss}. Vor erneutem Planen: /compact.`;
   }
   if (showChart.value)
     return `Break-even bei ~${fmt1(xStar.value)} MTok Exec-Cache-Read: der eine Bruch kostet ${bruchEur.value} €, jedes weitere MTok spart ${proMtokEur.value} €. Dein Regler: ${readM.value} MTok.`;

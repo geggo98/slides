@@ -779,15 +779,21 @@ Rückkehr ohne /compact = ZWEI Cache-Brüche — erst der Kontext als
 OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 2,05 €,
 plus Re-Plan (~45k Output) ≈ 0,99 €. Allein die Brüche fressen ab
 5 Rückkehren die gesamte Ersparnis auf (mit 5-min-TTL erst ab 8).
-Beachte den Regler-Default n=2: der Anti-Pattern-Balken liegt dort noch
-UNTER „Nur Opus" — er überholt es erst ab der vierten Rückkehr. Mit den
-alten Sonnet-4.6-Preisen war er schon bei zwei darüber; wer die Pointe
-auf der Folie sehen will, schiebt den Regler auf 4. Merksatz: vor
-erneutem Planen /compact — das schrumpft den Kontext und damit beide
-Brüche. Gleiches gilt beim Themenwechsel: wer eine Session über lauter
-fremde Aufgaben weiterlaufen lässt, schleppt deren Kontext mit und zahlt
-ihn bei jedem Bruch erneut — /compact (oder eine neue Session) macht ihn
-klein.
+Der Regler-Default steht auf n=3: dort liegen Anti-Pattern (24,68 €) und
+„Nur Opus" (24,83 €) praktisch gleichauf — 0,15 € Abstand, 0,6 %, auf der
+Leinwand nicht unterscheidbar. Die vierte Rückkehr schiebt den Balken mit
+27,72 € (+11,6 %) klar darüber. Falls jemand fragt, warum die Box dann
+„ab 5×" sagt: zwei Maßstäbe. Der Balkenschnitt liegt bei 3,05, weil der
+Anti-Pattern-Balken auch den neuen Plan-Output mitzahlt, den der „Nur
+Opus"-Balken gar nicht kennt; die 5 zählt nur die Brüche, also den Preis
+des Modellwechsels allein. Mit 5-min-TTL werden daraus 4,2 und 8. Mit den
+alten Sonnet-4.6-Preisen lag der Balken schon bei zwei darüber — Sonnet 5
+macht die Exec-Phase billiger, also braucht das Anti-Pattern mehr
+Anläufe. Merksatz: vor erneutem Planen /compact — das schrumpft den
+Kontext und damit beide Brüche. Gleiches gilt beim Themenwechsel: wer
+eine Session über lauter fremde Aufgaben weiterlaufen lässt, schleppt
+deren Kontext mit und zahlt ihn bei jedem Bruch erneut — /compact (oder
+eine neue Session) macht ihn klein.
 
 TTL-Toggle: Die 1h-TTL ist der Default der Hauptkonversation in JEDEM
 Claude-Abo, solange das Kontingent reicht — Pro, Max, Team und
