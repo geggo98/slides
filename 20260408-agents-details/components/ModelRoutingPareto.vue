@@ -44,11 +44,13 @@ const { W, H, L, R, T, B, px, py } = S;
 const QX = px(8); // Quadranten-Trennung: 8 € …
 const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 
-// Optionales Overlay: Claude Code läuft vom 13.05. bis 31.08.2026 mit 50 %
-// höherem Wochenlimit. Das ist kein API-Preis, sondern eine Kontingentrechnung
-// (Abo-Preis fix, Wochenlimit bindend ⇒ €/Task ∝ 1/Kontingent ⇒ ×2/3), deshalb
-// Default aus. An: die Claude-Punkte wandern auf ihre Kontingent-Kosten, am
-// API-Preis bleibt ein Geisterring — das ist die Position ab 01.09.2026.
+// Optionales Overlay auf das Claude-Code-Wochenkontingent. Kein API-Preis,
+// sondern eine Kontingentrechnung (Abo-Preis fix, Wochenlimit bindend ⇒
+// €/Task ∝ 1/Kontingent), deshalb Default aus. An: die Claude-Punkte stehen auf
+// den Kosten unter der +50-%-Aktion (×2/3, läuft bis 13.09.2026), der
+// Geisterring auf denen ab 14.09., wenn Anthropic sie durch dauerhafte +25 %
+// ersetzt (×0,8). Eine Rückkehr auf das Basislimit gibt es nicht — der Ring
+// zeigt deshalb einen künftigen Stand, nicht den API-Preis.
 const subOn = ref(false);
 
 const pts = computed<Pt[]>(() =>
@@ -60,9 +62,10 @@ const pts = computed<Pt[]>(() =>
               x: p.sub,
               eur: fmt(p.sub),
               old: {
-                x: p.x,
-                eur: p.eur,
-                why: "ohne Kontingent-Aktion — Stand ab 01.09.2026",
+                x: p.sub25 ?? p.x,
+                eur: fmt(p.sub25 ?? p.x),
+                pre: "ab 14.09.",
+                why: "dauerhaft +25 % statt +50 % — Stand ab 14.09.2026",
               },
             }
           : p,
@@ -84,6 +87,7 @@ const moved = computed(() => movedSegments(pts.value, S));
 // Führungslinien für die weit abgesetzten Beschriftungen im 2–5-€-Gedränge.
 const leaders = computed(() =>
   pts.value.flatMap((p) => {
+    if (p.lbl === false) return [];
     const l = leader(p, S);
     return l ? [{ label: p.label, ...l }] : [];
   }),
@@ -95,7 +99,7 @@ const chartLabel = computed(
   () =>
     "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
     "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
-    "(billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front am 21.08.2026: " +
+    "(billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front am 26.08.2026: " +
     front.value
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
       .join(", ") +
@@ -103,7 +107,8 @@ const chartLabel = computed(
     "überlappen." +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
-        "zwei Dritteln ihrer API-Kosten, die Geisterringe zeigen die Position ab 01.09.2026."
+        "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
+        "Geisterringe zeigen mit vier Fünfteln die Position ab 14.09.2026."
       : ""),
 );
 
@@ -174,13 +179,12 @@ const whiskers = computed(() =>
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
       <!-- Mit Overlay hat der Geisterring zwei Bedeutungen: bei sol den Preis
-           vor der Senkung, bei den Claude-Punkten den API-Preis — also die
-           Position nach dem Ende der Kontingent-Aktion. Der Text wird getauscht
-           statt ergänzt, sonst bricht die Legendenzeile um. Ausführlich steht
-           es im Tooltip des Rings und im ⓘ. -->
+           vor der Senkung, bei den Claude-Punkten den Kontingent-Stand ab
+           14.09. Der Text wird getauscht statt ergänzt, sonst bricht die
+           Legendenzeile um. Ausführlich steht es im Tooltip des Rings und im ⓘ. -->
       <span>
         <i class="mp-sw mp-sw-old" />{{
-          subOn ? "Preis vorher / ab 01.09." : "vor der Preisanpassung"
+          subOn ? "Preis vorher / ab 14.09." : "vor der Preisanpassung"
         }}
       </span>
       <button
@@ -189,8 +193,8 @@ const whiskers = computed(() =>
         :aria-pressed="subOn"
         @click="subOn = !subOn"
       >
-        Claude-Code-Kontingent +50 %
-        <span class="mp-tg-note">kein API-Preis</span>
+        Claude-Code-Kontingent
+        <span class="mp-tg-note">kein API-Preis · ab 14.09. +25 %</span>
       </button>
       <span class="mp-note">Punkt/Label klicken: Fehlerbalken</span>
       <button
@@ -367,7 +371,9 @@ const whiskers = computed(() =>
         <line :x1="m.x1" :y1="m.y1" :x2="m.x2" :y2="m.y2" />
         <polygon :points="m.head" />
         <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
-          <title>{{ m.label }}: vorher {{ m.eur }} €/Task — {{ m.why }}</title>
+          <title>
+            {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
+          </title>
         </circle>
       </g>
 
@@ -389,6 +395,7 @@ const whiskers = computed(() =>
           <title>{{ tip(p) }}</title>
         </circle>
         <text
+          v-if="p.lbl !== false"
           :x="LX(p)"
           :y="LY(p)"
           :text-anchor="anchor(p)"
@@ -414,6 +421,7 @@ const whiskers = computed(() =>
           <title>{{ tip(p) }}</title>
         </rect>
         <text
+          v-if="p.lbl !== false"
           :x="LX(p)"
           :y="LY(p)"
           :text-anchor="anchor(p)"

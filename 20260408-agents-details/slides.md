@@ -785,7 +785,17 @@ ich mit einem Max-Abo; Enterprise-Seats zahlen Kontingent statt Token,
 die Aussage bleibt identisch — Brüche ×1,6, Break-even ~4 MTok. Die
 €-Werte sind durchweg das API-Äquivalent. Zwei Enterprise-Feinheiten:
 Admins können die TTL org-weit per Managed Settings (promptCacheTtl)
-setzen, und über dem Kontingent schaltet Claude Code selbst auf 5 min. Vereinfachungen (bewusst): input_tokens
+setzen, und über dem Kontingent schaltet Claude Code selbst auf 5 min.
+
+Das Kontingent selbst verschiebt sich gerade: bis 13.09.2026 gilt die
++50-%-Aktion auf die Wochenlimits, ab 14.09. ersetzt Anthropic sie durch
+dauerhafte +25 % über der Basis — von heute aus gerechnet also ein Minus
+von 17 %. Wer öfter über das Kontingent läuft, fällt entsprechend öfter
+auf die 5-min-TTL zurück, und genau dann werden die Cache-Brüche hier
+teuer. Ausführlich in den Notes der Folie „Welches Modell wofür?" in
+Kapitel 7, dort hängt der Kontingent-Toggle dran.
+
+Vereinfachungen (bewusst): input_tokens
 (~90/Request) ignoriert; laufende Exec-Cache-Writes weggelassen (fallen
 überall ähnlich an; Sonnet-Writes billiger → konservativ pro opusplan);
 Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
@@ -1138,13 +1148,13 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter, seit dem 21.08. um 23 % billiger; klick beide an, die Fehlerbalken überlappen fast vollständig. Neu am billigen Ende: **zwei DeepSeek-Modelle für 9 und 21 Cent**. Ein anderer Harness verschiebt Scores um 10–30 Punkte, und auch die Zahlen werden nachträglich korrigiert (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
+**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter, seit dem 21.08. um 23 % billiger; klick beide an, die Fehlerbalken überlappen fast vollständig. Am billigen Ende löst **glm-5.3-flash** DeepSeek ab — nicht per Score, sondern per Preiserhöhung am 16.08. Ein anderer Harness verschiebt Scores um 10–30 Punkte, und auch die Preise ändern sich laufend (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
 
 </div>
 
 <div class="text-xs opacity-70 mt-1">
 
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 20.08. · Preise 21.08. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 26.08. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
 
 </div>
 

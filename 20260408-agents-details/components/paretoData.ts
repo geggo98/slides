@@ -4,10 +4,14 @@
 //
 // Herkunft der Zahlen
 // -------------------
-// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 20.08.2026). Maßgeblich ist
+// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 26.08.2026). Maßgeblich ist
 // die in die Seite eingebettete SSR-Payload — die Datei unter
-// /artifacts/v1.1/leaderboard-live.json ist eine veraltete CDN-Kopie, deren
-// mean_cost_usd die Preiskorrekturen vom 30.07. und 14.08. NICHT enthält.
+// /artifacts/v1.1/leaderboard-live.json ist eine veraltete CDN-Kopie. Am
+// 01.09.2026 nachgemessen: sie führt sol zu $8,39 (Preis vor dem 21.08.), luna
+// zu $3,03 (vor dem 30.07.), gemini-3.6-flash zu $4,42 (vor der Zählfehler-
+// Korrektur) und terra zu $4,95 gegen $3,96 in der SSR-Payload. Der Fehler wäre
+// in jede Richtung gegangen — also curl auf die Seite und die
+// `$R[n]={model:…}`-Objektliterale parsen, nicht die JSON ziehen.
 // Auswahlregel „Best" wie auf dem Board: höchste verfügbare Effort-Stufe je
 // Modell (nicht der höchste Score — grok-4.6 liegt auf medium höher als auf
 // xhigh). Mit dieser Regel reproduziert die Extraktion die Board-Tabelle exakt.
@@ -19,11 +23,11 @@
 // Stände konstant: die Zeitreihe soll Modell- und Preisbewegungen zeigen, nicht
 // Wechselkurs-Rauschen.
 //
-// Preissenkung gpt-5.6-sol vom 21.08.2026
-// ---------------------------------------
+// Preissenkung gpt-5.6-sol vom 21.08.2026 — nachträglich bestätigt
+// ---------------------------------------------------------------
 // OpenAI senkte Input von $5 auf $4 (−20 %) und Output von $30 auf $20 (−33 %),
-// befristet bis mindestens 21.11.2026. Das Board rechnet die Senkung noch nicht
-// ein, also hier selbst:
+// befristet bis mindestens 21.11.2026. Das Board rechnete die Senkung damals
+// noch nicht ein, also hier selbst:
 //
 //   Output-Anteil alt = 60 014 Tok × $30/Mtok = $1,800
 //   Input-Anteil alt  = $8,386 − $1,800       = $6,586
@@ -35,6 +39,33 @@
 // Rechnung reproduziert für gpt-5.6-terra aus den Listenpreisen $2/$12 einen
 // Uncached-Anteil von 7,5 % gegen 7,4 % bei sol. terra selbst wurde am 21.08.
 // nicht gesenkt.
+// Das Board hat inzwischen selbst nachgezogen und nennt $6,456 → 5,66 €. Die
+// Herleitung lag also einen Cent daneben; der Wert unten ist jetzt der des
+// Boards.
+//
+// DeepSeek-Preiserhöhung vom 16.08.2026
+// -------------------------------------
+// DeepSeek stellte am 16.08. um 16:00 UTC auf Peak/Off-Peak um und hob die
+// Listenpreise dabei kräftig an (V4 Pro Output $0,87 → $3,96/Mtok zur Hauptzeit,
+// V4 Flash $0,28 → $1,32). Datacurve rechnete am 21.08. nach — im selben
+// Changelog-Eintrag wie die Sol-Senkung. Beim Übernehmen der Sol-Zahl ist das
+// hier zunächst untergegangen; korrigiert am 01.09.2026:
+//
+//   deepseek-v4-pro    $0,24 → $1,666   →  0,21 € → 1,46 €   (×6,9)
+//   deepseek-v4-flash  $0,10 → $0,464   →  0,09 € → 0,41 €   (×4,6)
+//
+// Beide fallen damit von der Front. WICHTIG für die Einordnung: das Board rechnet
+// mit den Peak-Raten, off-peak ist die Hälfte — V4 Pro läge dann bei 0,73 €, auch
+// dann noch von glm-5.3-flash dominiert.
+//
+// glm-5.3-flash, neu am 26.08.2026
+// --------------------------------
+// Erscheinungstag und Board-Aufnahme fallen zusammen. 63 % für 0,21 € — Score und
+// Preis exakt der Platz, den deepseek-v4-pro fünf Tage vorher geräumt hat.
+// Der Board-Preis ist ein Aktionspreis: Listenpreis $0,15/$0,50 pro Mtok, aktuell
+// $0,07/$0,25 (Z.ai, 50 % befristet). Läuft die Aktion aus, verdoppelt sich der
+// Punkt auf rund 0,42 € — er bliebe auf der Front, aber knapp hinter
+// deepseek-v4-flash. Vor dem nächsten Vortrag nachsehen.
 
 export type Ax = "left" | "right" | "center";
 
@@ -44,6 +75,8 @@ export interface Origin {
   y?: number; // Pass@1 vorher — weglassen heißt „unverändert" (Normalfall)
   eur: string;
   why: string;
+  /** Tooltip-Präfix statt „vorher" — für Ringe, die einen künftigen Stand zeigen. */
+  pre?: string;
 }
 
 export interface Pt {
@@ -59,7 +92,8 @@ export interface Pt {
   /** Beschriftung erzwingen (true) oder unterdrücken (false); sonst Chart-Default. */
   lbl?: boolean;
   old?: Origin;
-  sub?: number; // €/Task unter dem Claude-Code-Wochenkontingent (nur Stand 7)
+  sub?: number; // €/Task unter dem Wochenkontingent, +50 % (bis 13.09., nur Stand 7)
+  sub25?: number; // dasselbe mit den dauerhaften +25 % ab 14.09.
 }
 
 export interface Snapshot {
@@ -90,6 +124,7 @@ function P(
     lbl?: boolean;
     old?: Omit<Origin, "eur">;
     sub?: number;
+    sub25?: number;
   } = {},
 ): Pt {
   return {
@@ -103,6 +138,7 @@ function P(
     ci: extra.ci,
     lbl: extra.lbl,
     sub: extra.sub,
+    sub25: extra.sub25,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
   };
 }
@@ -300,27 +336,44 @@ const S_0814: Pt[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Stand 7 — 21.08.2026 (Board-Default + gpt-5.6-terra, 19 Modelle)
+// Stand 7 — 26.08.2026 (Board-Default + gpt-5.6-terra, 20 Modelle)
 // ---------------------------------------------------------------------------
-// Board-Stand 20.08. (glm-5.3 als 25. Modell dazu) plus die Sol-Preissenkung
-// vom 21.08. Das Board blendet per Default sieben Modelle aus; gpt-5.6-terra
-// ist hier wieder eingeblendet, weil es bestellbar ist und auf der Front läge.
-// Die übrigen sechs (grok-4.5, muse-spark-1.1, gpt-5.4, kimi-k2.7-code,
+// Board-Stand 26.08. Das Board blendet per Default sieben von 26 Modellen aus;
+// gpt-5.6-terra ist hier wieder eingeblendet, weil es bestellbar ist und auf der
+// Front liegt. Die übrigen sechs (grok-4.5, muse-spark-1.1, gpt-5.4, kimi-k2.7-code,
 // claude-sonnet-4.6, gemini-3.1-pro) bleiben nur auf der Historien-Folie
 // stehen — dort geht es um Bewegung, hier um den aktuellen Stand.
 //
-// `sub` = Kosten unter dem Claude-Code-Wochenkontingent (13.05.–31.08.2026,
-// +50 % Wochenlimit). Modell: Abo-Preis fix, Wochenlimit bindend ⇒
-// €/Task ∝ 1/Kontingent ⇒ ×2/3. Kein API-Preis, deshalb per Toggle abschaltbar.
+// Zwei Bewegungen gegenüber dem 14.08., beide vom Board übernommen: die beiden
+// DeepSeek-Punkte sind durch die Preiserhöhung vom 16.08. nach rechts gewandert
+// und von der Front gefallen, glm-5.3-flash ist am 26.08. neu dazugekommen —
+// auf 0,21 € und 63 %, also Pixel für Pixel dem Platz, den deepseek-v4-pro
+// geräumt hat. Bewusst OHNE `old`-Geisterringe: der Ring von deepseek-v4-pro
+// läge exakt unter dem neuen glm-5.3-flash-Marker, und der Pfeil sähe dann so
+// aus, als sei glm-5.3-flash teurer geworden. Die Wanderung steht im Stationstext
+// und im ⓘ-Dialog, nicht im Chart.
+//
+// `sub`/`sub25` = Kosten unter dem Claude-Code-Wochenkontingent. Modell:
+// Abo-Preis fix, Wochenlimit bindend ⇒ €/Task ∝ 1/Kontingent. Basis = 100 %.
+// Bis 13.09.2026 läuft die +50-%-Aktion (`sub`, ×2/3), ab 14.09. ersetzt
+// Anthropic sie durch dauerhafte +25 % (`sub25`, ×0,8). Kein API-Preis, deshalb
+// per Toggle abschaltbar.
 // Sieben Modelle drängen sich zwischen 1,9 € und 4,9 € — terra und glm-5.3
 // liegen 3 Cent und einen Punkt auseinander, auf dem Canvas rund ein Pixel.
 // Deren Beschriftungen sitzen deshalb versetzt und bekommen eine Führungslinie
 // (`leader()` ab ~24 px Versatz), sonst wäre nicht zu erkennen, welches Label zu
-// welchem Marker gehört.
-const S_0821: Pt[] = [
-  P("deepseek-v4-flash", 0.09, 53, "right", 8, 0, { ci: 3.6 }),
-  P("deepseek-v4-pro", 0.21, 63, "right", 14, 0, { ci: 6.3 }),
+// welchem Marker gehört. Dasselbe gilt jetzt am billigen Ende: glm-5.3-flash,
+// deepseek-v4-flash und luna liegen innerhalb von 12 px nebeneinander.
+const S_0826: Pt[] = [
+  P("glm-5.3-flash", 0.21, 63, "right", 14, 0, { ci: 4.4 }),
+  // Beide DeepSeek-Punkte bleiben unbeschriftet — wie schon der 9-Cent-Punkt in
+  // Stand 6. Sie sind nach der Preiserhöhung zwischen glm-5.3-flash, luna und
+  // das 3-€-Gedränge gerutscht; jede Platzierung ihrer 15 bzw. 17 Zeichen läuft
+  // dort in einen Nachbarmarker oder ein Nachbarlabel. Sie sind dominiert, die
+  // Wanderung steht im Folientext, und der Tooltip nennt sie weiterhin.
+  P("deepseek-v4-flash", 0.41, 53, "right", 8, 0, { ci: 3.6, lbl: false }),
   P("gpt-5.6-luna", 0.53, 67, "right", -8, 0, { ci: 4.0 }),
+  P("deepseek-v4-pro", 1.46, 63, "right", 14, 0, { ci: 6.3, lbl: false }),
   P("gemini-3.7-flash", 1.91, 65, "right", 8, 0, { ci: 1.8 }),
   P("gemini-3.6-flash", 1.94, 47, "right", 0, 0, { ci: 3.7 }),
   P("gemini-3.5-flash", 3.02, 36, "right", 12, 0, { ci: 4.0 }),
@@ -334,17 +387,34 @@ const S_0821: Pt[] = [
   // (rechts) bleibt keine freie Zeile — das Label geht mit Führungslinie in die
   // leere Fläche rechts unterhalb.
   P("grok-4.6", 4.82, 67, "right", 32, 34, { ci: 2.2 }),
-  P("gpt-5.6-sol", 5.67, 73, "right", -14, 20, {
+  P("gpt-5.6-sol", 5.66, 73, "right", -14, 20, {
     ci: 2.8,
     old: { x: 7.35, why: "OpenAI-Preissenkung 21.08.: −20 % / −33 %" },
   }),
   P("gpt-5.5", 6.33, 67, "right", 14, 0, { ci: 6.5 }),
   // dy so gewählt, dass das Label auch mit eingeschaltetem Abo-Overlay (Punkt
-  // wandert auf 6,91 €) nicht in den Sol-Geisterring läuft.
-  P("claude-opus-5", 10.37, 74, "right", 20, 0, { ci: 3.9, sub: 6.91 }),
-  P("claude-opus-4.8", 11.58, 59, "right", 4, 0, { ci: 1.8, sub: 7.72 }),
-  P("claude-fable-5", 18.95, 70, "left", 4, 0, { ci: 4.0, sub: 12.63 }),
-  P("claude-sonnet-5", 23.13, 54, "left", 4, 0, { ci: 4.2, sub: 15.42 }),
+  // wandert auf 6,91 €, Geisterring auf 8,30 €) nicht in den Sol-Geisterring
+  // läuft.
+  P("claude-opus-5", 10.37, 74, "right", 20, 0, {
+    ci: 3.9,
+    sub: 6.91,
+    sub25: 8.3,
+  }),
+  P("claude-opus-4.8", 11.58, 59, "right", 4, 0, {
+    ci: 1.8,
+    sub: 7.72,
+    sub25: 9.26,
+  }),
+  P("claude-fable-5", 18.95, 70, "left", 4, 0, {
+    ci: 4.0,
+    sub: 12.63,
+    sub25: 15.16,
+  }),
+  P("claude-sonnet-5", 23.13, 54, "left", 4, 0, {
+    ci: 4.2,
+    sub: 15.42,
+    sub25: 18.5,
+  }),
 ];
 
 // Stand 7 der Historie: dieselben Messwerte, plus die sechs vom Board
@@ -353,8 +423,9 @@ const S_0821: Pt[] = [
 // Die Platzierungen sind eigene: das Historien-Chart ist flacher, und es
 // beschriftet nur Front, Wanderung und ausdrücklich markierte Punkte.
 const HIST_PLACE: Record<string, [Ax, number, number?, boolean?]> = {
+  "glm-5.3-flash": ["right", 14],
   "deepseek-v4-flash": ["right", 24, 0, false], // siehe Kommentar bei Stand 6
-  "deepseek-v4-pro": ["right", 14],
+  "deepseek-v4-pro": ["right", 14, 0, false],
   "gpt-5.6-luna": ["right", -8],
   "gpt-5.6-terra": ["left", -16, -20],
   "glm-5.3": ["right", 22, 30, true],
@@ -362,8 +433,8 @@ const HIST_PLACE: Record<string, [Ax, number, number?, boolean?]> = {
   "claude-opus-5": ["right", 4],
 };
 
-const S_0821_HIST: Pt[] = [
-  ...S_0821,
+const S_0826_HIST: Pt[] = [
+  ...S_0826,
   P("gemini-3.1-pro", 1.88, 12, "right", 4),
   P("muse-spark-1.1", 2.07, 53, "right", -8),
   P("grok-4.5", 2.12, 54, "right", -20),
@@ -423,16 +494,16 @@ export const SNAPSHOTS: Snapshot[] = [
     pts: S_0814,
   },
   {
-    id: "0821",
-    date: "21.08.",
-    title: "Heutiger Stand",
-    note: "glm-5.3 kommt auf 69 % und verfehlt die Front um drei Cent. sol wird um 23 % billiger und rückt damit von Opus 5 weg: Für dessen einen Punkt Vorsprung zahlst Du jetzt rund 80 % Aufpreis gegenüber sol, anstatt wie vorher rund 40 %. Sechs Punkte auf der Front, von 9 Cent bis 10,37 €.",
-    pts: S_0821_HIST,
+    id: "0826",
+    date: "26.08.",
+    title: "Der billige Boden wechselt den Besitzer",
+    note: "Am billigen Ende passieren zwei Dinge, die einander fast aufheben. DeepSeek stellt am 16.08. auf Peak/Off-Peak um und hebt die Preise an; das Board rechnet am 21.08. nach, und beide DeepSeek-Punkte wandern von 9 und 21 Cent auf 41 Cent und 1,46 € — von der Front gefallen, ohne dass sich ein Score geändert hätte. Fünf Tage später kommt glm-5.3-flash und landet auf 63 % für 21 Cent: exakt der Platz, den deepseek-v4-pro geräumt hat. Dazu wird sol um 23 % billiger und rückt von Opus 5 weg — für dessen einen Punkt Vorsprung zahlst Du jetzt rund 80 % Aufpreis statt rund 40 %. Fünf Punkte auf der Front, von 21 Cent bis 10,37 €.",
+    pts: S_0826_HIST,
   },
 ];
 
 /** Der Stand, den die Hauptfolie zeigt. */
-export const CURRENT: Pt[] = S_0821;
+export const CURRENT: Pt[] = S_0826;
 
 // ---------------------------------------------------------------------------
 // Geometrie
@@ -522,11 +593,13 @@ export function leaderLine(ox: number, oy: number, tx: number, ly_: number) {
 
 export const tip = (p: Pt) =>
   `${p.label}: ${p.y} %${p.ci ? ` ± ${fmt(p.ci).replace(",00", "")}` : ""} · ${p.eur} €/Task` +
-  (p.old ? ` (vorher ${p.old.eur} €)` : "");
+  (p.old ? ` (${p.old.pre ?? "vorher"} ${p.old.eur} €)` : "");
 
 export interface MovedSeg {
   label: string;
   eur: string;
+  /** Tooltip-Präfix, siehe `Origin.pre` — „vorher“, wenn nichts gesetzt ist. */
+  pre: string;
   why: string;
   gx: number;
   gy: number;
@@ -571,6 +644,7 @@ export function movedSegments(
       {
         label: p.label,
         eur: o.eur,
+        pre: o.pre ?? "vorher",
         why: o.why,
         gx,
         gy,

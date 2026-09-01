@@ -397,7 +397,7 @@ const noteParts = computed(() =>
           <polygon :points="m.head" />
           <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
             <title>
-              {{ m.label }}: vorher {{ m.eur }} €/Task — {{ m.why }}
+              {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
             </title>
           </circle>
         </g>

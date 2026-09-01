@@ -25,7 +25,7 @@ const sources = [
   {
     href: "https://deepswe.datacurve.ai/",
     label: "DeepSWE v1.1",
-    note: "Pareto-Daten, Tokens, Steps (20.08.)",
+    note: "Pareto-Daten, Tokens, Steps (26.08.)",
   },
   {
     href: "https://deepswe.datacurve.ai/changelog",
@@ -43,9 +43,19 @@ const sources = [
     note: "Sol $5/$30 → $4/$20, befristet bis 21.11.",
   },
   {
+    href: "https://deepseek.ai/pricing",
+    label: "DeepSeek-Preise ab 16.08.2026",
+    note: "Peak/Off-Peak statt Flat — V4 Pro und Flash je rund 4×",
+  },
+  {
+    href: "https://x.com/ClaudeDevs/status/2093742322525810912",
+    label: "Claude-Code-Wochenlimits, 29.08.2026",
+    note: "+50 % bis 13.09., ab 14.09. dauerhaft +25 % über der Basis",
+  },
+  {
     href: "https://support.claude.com/en/articles/15910845-claude-code-may-august-2026-weekly-limits-promotion",
-    label: "Claude-Code-Wochenlimits",
-    note: "+50 % vom 13.05. bis 31.08.2026",
+    label: "Claude-Code-Aktion (Support)",
+    note: "stand am 01.09.2026 noch auf „bis 31.08.“ — als Beleg überholt",
   },
   {
     href: "https://www.tbench.ai/",
@@ -93,11 +103,11 @@ const caveats = [
   },
   {
     lead: "Board-Default:",
-    text: "Das Board zeigt per Default 18 von 25 Modellen; sieben ältere blendet es aus. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
+    text: "Das Board zeigt per Default 19 von 26 Modellen; sieben ältere blendet es aus. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
   },
   {
     lead: "Kosten sind kein Messwert:",
-    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08.). Die Sol-Senkung vom 21.08. rechnen wir selbst ein, das Board noch nicht. Ältere Datenstände zeigen den damals veröffentlichten Wert; zwei davon sind rekonstruiert und im Chart markiert.",
+    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08., DeepSeek-Preiserhöhung 21.08.). Die Sol-Senkung vom 21.08. hatten wir zuerst selbst eingerechnet; das Board rechnet sie inzwischen auch — auf den Cent gleich. Ältere Datenstände zeigen den damals veröffentlichten Wert; zwei davon sind rekonstruiert und im Chart markiert.",
   },
   {
     lead: "DeepSWE v1 war kontaminiert:",
@@ -105,7 +115,11 @@ const caveats = [
   },
   {
     lead: "Abo ist kein API-Preis:",
-    text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 31.08.2026 gibt Claude Code 50 % mehr Kontingent pro Woche; die Kosten pro Task sinken damit auf zwei Drittel. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort dann die Position ab 01.09.2026.",
+    text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 13.09.2026 gibt Claude Code 50 % mehr Kontingent pro Woche, die Kosten pro Task sinken damit auf zwei Drittel; ab 14.09. ersetzt Anthropic die Aktion durch dauerhafte 25 % über der Basis, also vier Fünftel. Eine Rückkehr auf das Basislimit gibt es nicht. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort den Stand ab 14.09.",
+  },
+  {
+    lead: "Peak-Raten und Aktionspreise:",
+    text: "Zwei Punkte am billigen Ende stehen auf Preisen, die so nicht dauerhaft gelten. DeepSeek rechnet seit dem 16.08. nach Haupt- und Nebenzeit ab; das Board nimmt die Hauptzeit, off-peak ist die Hälfte — V4 Pro läge dann bei 0,73 € und wäre immer noch dominiert. Und glm-5.3-flash läuft auf einem befristeten 50-%-Aktionspreis; ohne ihn verdoppelt sich der Punkt auf rund 0,42 €.",
   },
   {
     lead: "Interessenkonflikte:",
@@ -121,7 +135,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 21.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni sechsmal verschoben, zweimal allein durch Preissenkungen. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
+    text: "Stand 26.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni siebenmal verschoben, dreimal allein durch Preisanpassungen. Dieser Stand korrigiert obendrein den vorigen, der beim letzten Mal aktuell aussah. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
   },
 ];
 </script>
