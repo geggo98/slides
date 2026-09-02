@@ -1206,6 +1206,39 @@ Kernaussage 4 sagt „die Harness-Schicht wird austauschbar". Für
 Long-Horizon-Arbeit ist das hier die Gegenposition. Beides kann
 stimmen: Ein kurzer Coding-Task braucht wenig Harness, ein
 Wochen-Experiment braucht einen, der nicht aufgibt.
+
+Kontingent-Toggle im Chart, die Limits im Detail:
+
+1) Was der Toggle rechnet. Der Abo-Preis ist fix, begrenzt wird über
+das Wochenlimit, also €/Task ∝ 1/Kontingent. Bis 13.09.2026 läuft die
++50-%-Aktion (×2/3, der volle Punkt); ab 14.09. ersetzt Anthropic sie
+durch dauerhafte +25 % über der Basis (×0,8, der Geisterring) — Pro,
+Max, Team und seat-basiertes Enterprise. Von der Basis aus gerechnet
+ist das ein Plus, von heute aus ein Minus von 17 % (1,25/1,50 = 0,83).
+Beide Rechnungen stimmen, sie haben nur verschiedene Nullpunkte. Eine
+Rückkehr auf das Basislimit gibt es nicht. Quelle in ⓘ; NICHT aus dem
+Support-Artikel zitieren, der stand am 01.09. noch auf „bis 31.08.".
+
+2) Warum „20x" nicht das Vierfache von „5x" ist. Max 5x kostet 100 $,
+Max 20x kostet 200 $ — das liest sich wie vierfaches Kontingent für
+doppeltes Geld. Der Faktor gilt aber nur im 5-Stunden-Fenster.
+Wöchentlich, und das ist bei Agenten-Arbeit das bindende Limit, liegt
+der Abstand bei ungefähr 2×. Genau deshalb hängt der Toggle hier am
+Wochenlimit: In dem Regime, in dem er rechnet, ist die 5-h-Zahl
+irrelevant. https://x.com/i/status/2094121392229028236 (30.08.2026)
+
+3) Die Gegenrede vom Wettbewerb. Tibo Sottiaux, der bei OpenAI Codex
+verantwortet, hält dagegen: Bei Codex beziehe sich das 20X ausdrücklich
+auf Wochenlimits, 5-h-Limits gebe es auf beiden Pro-Plänen gar nicht,
+und Pro 20X sei genau 20× Plus. Das ist Marketing-Konter, der Punkt
+darunter trägt trotzdem: Wer zwei Abos vergleicht, muss dieselbe
+Fensterlänge vergleichen. Das ist die „Zielfunktion"-Einschränkung aus
+ⓘ an einem konkreten Fall.
+https://x.com/thsottiaux/status/2094254532020818191 (31.08.2026)
+
+Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
+Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
+Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 -->
 
 ---
