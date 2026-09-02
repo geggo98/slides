@@ -33,6 +33,11 @@ const sources = [
     note: "Neuzugänge und Preiskorrekturen je Datum",
   },
   {
+    href: "https://news.ycombinator.com/item?id=49528037",
+    label: "Erfahrungsbericht: Harness und Abbruch",
+    note: "HN, 01.09.2026 — eigener Harness statt Claude Code, 200+ Versuche",
+  },
+  {
     href: "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/",
     label: "OpenAI-Preise, 30.07.2026",
     note: "Luna −80 %, Terra −20 %",
@@ -87,7 +92,7 @@ const sources = [
 const caveats = [
   {
     lead: "Anderer Harness, andere Zahlen:",
-    text: "Der Harness verschiebt Scores um 10–30 Punkte. Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI. Anthropic-Modelle laufen im eigenen Harness meist besser.",
+    text: "Der Harness verschiebt Scores um 10–30 Punkte. Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI. Anthropic-Modelle laufen im eigenen Harness meist besser. Der Hebel ist dabei nicht nur Werkzeug und Prompt, sondern die Abbruch-Option: Wer dem Agenten erlaubt aufzugeben, bekommt irgendwann ein „geht nicht“; nimmt man sie ihm, probiert dasselbe Modell dreistellig viele Varianten durch — Erfahrungsbericht, keine Messung. Der Score misst also Modell und Harness gemeinsam, nie das Modell allein.",
   },
   {
     lead: "113 Tasks, Streuung ±2–6 Punkte:",

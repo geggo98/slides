@@ -1181,6 +1181,33 @@ DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 26.08. · 1 U
 
 </div>
 
+<!--
+Zum Harness-Halbsatz auf der Folie: Die 10–30 Punkte sind nicht nur
+andere Werkzeuge und ein anderer Prompt. Der schärfste Hebel ist die
+Abbruch-Option. Ein RLVR-Task-Designer beschreibt es auf HN so: Claude
+Code mit Fable 5 neigt dazu aufzugeben — Sackgasse, „geht nicht",
+Abbruch. Dasselbe Modell über die API, in einem eigenen Harness,
+probiert 200+ Varianten durch und scheitert sich zum Ziel. Sein
+Merksatz: Wer dem Agenten eine Abbruch-Option lässt, bekommt sie
+irgendwann benutzt; nimmt man sie weg, deckt allein die
+Nicht-Determiniertheit des Modells fast den ganzen verwandten
+Lösungsraum ab. Gilt besonders für Long-Horizon-Aufgaben.
+https://news.ycombinator.com/item?id=49528037 (01.09.2026)
+
+Ehrlich einordnen: ein Erfahrungsbericht, keine Messung — eine Person,
+kein Anthropic-Mitarbeiter, keine nachrechenbaren Zahlen. Trotzdem die
+beste Erklärung dafür, warum die Board-Zahl Modell UND Harness misst:
+DeepSWE fährt mini-swe-agent, und dessen Abbruchverhalten steckt in
+jedem Punkt dieser Front mit drin. Der Score ist nie das Modell allein.
+
+Wer mag, sagt den Widerspruch im eigenen Deck dazu an: Kapitel 10
+schließt mit „die Community konvergiert auf dünne Harnesses", und
+Kernaussage 4 sagt „die Harness-Schicht wird austauschbar". Für
+Long-Horizon-Arbeit ist das hier die Gegenposition. Beides kann
+stimmen: Ein kurzer Coding-Task braucht wenig Harness, ein
+Wochen-Experiment braucht einen, der nicht aufgibt.
+-->
+
 ---
 hideInToc: true
 clicks: 7
