@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CURRENT, labOf, paretoFront } from "../../paretoData";
+import { CURRENT, labOf, paretoFront, type Lab } from "../../paretoData";
 import {
+  PRESETS,
   TOOLS,
-  memberOf,
-  optionsFor,
-  type Selection,
+  labRows,
+  matchingPreset,
+  presetModels,
+  toggleLab,
+  toolHas,
+  type ModelSet,
+  type PresetId,
 } from "../../providerFilter";
 
 // Der Filter behauptet auf der Folie eine konkrete Sache: Für einen
@@ -13,10 +18,13 @@ import {
 // Bricht einer dieser Tests, hat ein Anbieter seinen Katalog geändert und die
 // Aussage der Folie muss nachgezogen werden, statt still falsch zu werden.
 
-const frontOf = (sel: Selection) =>
-  paretoFront(CURRENT.filter((p) => memberOf(sel, p.label))).front.map(
+const front = (sel: ModelSet) =>
+  paretoFront(CURRENT.filter((p) => sel.has(p.label))).front.map(
     (p) => p.label,
   );
+const vonPreset = (id: PresetId) => new Set(presetModels(id, CURRENT));
+const nurLabs = (...labs: Lab[]) =>
+  labs.reduce<ModelSet>((s, l) => toggleLab(s, l, CURRENT), new Set<string>());
 
 describe("labOf()", () => {
   it("ordnet jedes gezeigte Modell einem Lab zu, keines landet in „Andere“", () => {
@@ -29,21 +37,6 @@ describe("labOf()", () => {
     expect(labOf("glm-5.3-flash")).toBe("Zhipu");
     expect(labOf("mimo-v2.5-pro")).toBe("Xiaomi");
     expect(labOf("composer-2.5")).toBe("Cursor");
-  });
-
-  it("verteilt die 21 Punkte auf neun Labs", () => {
-    const { labs } = optionsFor(CURRENT);
-    expect(labs.map((l) => [l.label, l.count])).toStrictEqual([
-      ["Anthropic", 4],
-      ["Google", 4],
-      ["OpenAI", 4],
-      ["Zhipu", 3],
-      ["DeepSeek", 2],
-      ["Alibaba", 1],
-      ["Meta", 1],
-      ["Moonshot", 1],
-      ["xAI", 1],
-    ]);
   });
 });
 
@@ -66,20 +59,41 @@ describe("Werkzeug-Kataloge", () => {
   });
 });
 
-describe("Front je Auswahl", () => {
+// Das hier ist der Grund für das ganze Datenmodell. Ein Preset schreibt eine
+// MODELLMENGE. Würde es stattdessen nur Lab-Häkchen setzen, bekäme Windsurf das
+// Google-Lab vollständig — und damit gemini-3.8-flash, das Windsurf gar nicht
+// anbietet. Seine Front wäre dann die von „Alle", und die Aussage der Folie wäre
+// still weg. Bricht dieser Test, hat jemand genau das vereinfacht.
+describe("Presets schreiben Modellmengen, keine Lab-Häkchen", () => {
+  const windsurf = vonPreset("windsurf");
+  const labsVonWindsurf = [...new Set([...windsurf].map(labOf))];
+
+  it("lässt gemini-3.8-flash bei Windsurf draußen, obwohl Google dabei ist", () => {
+    expect(labsVonWindsurf).toContain("Google");
+    expect(windsurf.has("gemini-3.8-flash")).toBe(false);
+    // Über die Labs gerechnet käme es fälschlich herein:
+    expect(front(nurLabs(...labsVonWindsurf))).toContain("gemini-3.8-flash");
+  });
+
+  it("deckt drei Labs bei Windsurf nur teilweise ab", () => {
+    const teil = labRows(windsurf, CURRENT)
+      .filter((r) => r.zustand === "teilweise")
+      .map((r) => `${r.lab} ${r.drin}/${r.gesamt}`);
+    expect(teil).toStrictEqual(["Google 2/4", "Zhipu 1/3", "DeepSeek 1/2"]);
+  });
+});
+
+describe("Front je Preset", () => {
   it("zeigt ungefiltert drei Punkte", () => {
-    expect(frontOf("all")).toStrictEqual([
+    expect(front(vonPreset("all"))).toStrictEqual([
       "glm-5.3-flash",
       "gpt-5.6-luna",
       "gemini-3.8-flash",
     ]);
   });
 
-  // Der Kern der Folie: dasselbe Board, dieselbe Woche, zwei Werkzeuge, zwei
-  // völlig verschiedene Antworten. Windsurfs Katalog endet bei Gemini 3.6
-  // Flash, deshalb gilt dort weiter die Front von vorletzter Woche.
   it("gibt einem Windsurf-Nutzer noch die alte Front mit Opus 5 an der Spitze", () => {
-    expect(frontOf("windsurf")).toStrictEqual([
+    expect(front(vonPreset("windsurf"))).toStrictEqual([
       "gpt-5.6-luna",
       "gpt-5.6-terra",
       "gpt-5.6-sol",
@@ -88,33 +102,98 @@ describe("Front je Auswahl", () => {
   });
 
   it("gibt einem Cursor-Nutzer denselben Score für ein Fünftel", () => {
-    expect(frontOf("cursor")).toStrictEqual([
+    expect(front(vonPreset("cursor"))).toStrictEqual([
       "gpt-5.6-luna",
       "gemini-3.8-flash",
     ]);
-    const front = paretoFront(
-      CURRENT.filter((p) => memberOf("cursor", p.label)),
-    ).front;
-    const spitze = front.at(-1)!;
+    const neu = CURRENT.find((p) => p.label === "gemini-3.8-flash")!;
     const opus = CURRENT.find((p) => p.label === "claude-opus-5")!;
-    expect(spitze.y).toBe(opus.y);
-    expect(opus.x / spitze.x).toBeGreaterThan(4.9);
+    expect(neu.y).toBe(opus.y);
+    expect(opus.x / neu.x).toBeGreaterThan(4.9);
   });
 
   it("behandelt JetBrains AI auf Providerebene", () => {
-    expect(frontOf("jetbrains-ai")).toStrictEqual([
-      "gpt-5.6-luna",
-      "gemini-3.8-flash",
-    ]);
-    // Obergrenze: alles von OpenAI, Anthropic, Google und xAI, sonst nichts.
-    const drin = CURRENT.filter((p) => memberOf("jetbrains-ai", p.label));
-    expect(new Set(drin.map((p) => labOf(p.label)))).toStrictEqual(
+    const jb = vonPreset("jetbrains-ai");
+    expect(front(jb)).toStrictEqual(["gpt-5.6-luna", "gemini-3.8-flash"]);
+    expect(new Set([...jb].map(labOf))).toStrictEqual(
       new Set(["OpenAI", "Anthropic", "Google", "xAI"]),
     );
   });
+});
 
-  // Wer an einen einzigen Anbieter gebunden ist, hat keine Kurve mehr.
-  it("lässt Anthropic mit einem einzigen Frontpunkt zurück", () => {
-    expect(frontOf("Anthropic")).toStrictEqual(["claude-opus-5"]);
+// Wofür der Umbau auf Checkboxen gemacht ist: einzeln sind die Labs nichts,
+// kombiniert werden sie zur Aussage.
+describe("Labs kombinieren", () => {
+  it("macht aus zwei mageren Fronten eine brauchbare", () => {
+    expect(front(nurLabs("Anthropic"))).toStrictEqual(["claude-opus-5"]);
+    expect(front(nurLabs("OpenAI"))).toStrictEqual([
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+    ]);
+    // Zusammen — der realistische Fall „bei uns sind beide freigegeben":
+    expect(front(nurLabs("OpenAI", "Anthropic"))).toStrictEqual([
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+      "claude-opus-5",
+    ]);
+  });
+
+  it("füllt ein teilweise enthaltenes Lab auf und leert ein volles", () => {
+    const windsurf = vonPreset("windsurf");
+    const zustand = (s: ModelSet, l: Lab) =>
+      labRows(s, CURRENT).find((r) => r.lab === l)!.zustand;
+
+    expect(zustand(windsurf, "Google")).toBe("teilweise");
+    const voll = toggleLab(windsurf, "Google", CURRENT);
+    expect(zustand(voll, "Google")).toBe("an");
+    expect(voll.has("gemini-3.8-flash")).toBe(true);
+
+    const leer = toggleLab(voll, "Google", CURRENT);
+    expect(zustand(leer, "Google")).toBe("aus");
+    expect([...leer].some((m) => labOf(m) === "Google")).toBe(false);
+  });
+
+  it("verlässt den Werkzeug-Blick sichtbar, sobald ein Lab dazukommt", () => {
+    const windsurf = vonPreset("windsurf");
+    expect(matchingPreset(windsurf, CURRENT)?.id).toBe("windsurf");
+    expect(
+      matchingPreset(toggleLab(windsurf, "Google", CURRENT), CURRENT),
+    ).toBeUndefined();
+  });
+});
+
+describe("Menü-Einträge", () => {
+  it("führt „Alle“ und die drei Werkzeuge als Presets", () => {
+    expect(PRESETS.map((p) => p.id)).toStrictEqual([
+      "all",
+      "cursor",
+      "windsurf",
+      "jetbrains-ai",
+    ]);
+  });
+
+  it("sortiert Labs nach Modellzahl, dann alphabetisch", () => {
+    const alle = vonPreset("all");
+    expect(labRows(alle, CURRENT).map((r) => [r.lab, r.gesamt])).toStrictEqual([
+      ["Anthropic", 4],
+      ["Google", 4],
+      ["OpenAI", 4],
+      ["Zhipu", 3],
+      ["DeepSeek", 2],
+      ["Alibaba", 1],
+      ["Meta", 1],
+      ["Moonshot", 1],
+      ["xAI", 1],
+    ]);
+    expect(labRows(alle, CURRENT).every((r) => r.zustand === "an")).toBe(true);
+  });
+
+  it("kennt für jedes Werkzeug die Zugehörigkeit einzelner Modelle", () => {
+    expect(toolHas("windsurf", "gemini-3.6-flash")).toBe(true);
+    expect(toolHas("windsurf", "gemini-3.8-flash")).toBe(false);
+    expect(toolHas("cursor", "gemini-3.8-flash")).toBe(true);
+    expect(toolHas("cursor", "glm-5.3-flash")).toBe(false);
   });
 });

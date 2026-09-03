@@ -1,17 +1,22 @@
 // Anbieter-Filter der Folie „Welches Modell wofür? Die Datenlage".
 //
-// Zwei Arten von Auswahl, bewusst in einem Menü:
+// Zwei Arten von Einträgen in einem Menü, mit verschiedener Rolle:
 //
-//   Labs      — wer das Modell gebaut hat. Kommt aus `labOf()` in
-//               `paretoData.ts`, dessen Präfixregeln 1:1 die des Boards sind.
-//   Werkzeuge — was Du in Deiner IDE tatsächlich auswählen kannst. Kommt aus
-//               der jeweiligen Hersteller-Doku, siehe `source` je Eintrag.
+//   Labs      — Checkboxen, beliebig kombinierbar. Wer das Modell gebaut hat,
+//               kommt aus `labOf()` in `paretoData.ts`, dessen Präfixregeln 1:1
+//               die des Boards sind.
+//   Werkzeuge — Presets. Was Du in Deiner IDE tatsächlich auswählen kannst;
+//               ein Klick überschreibt die Auswahl. Quelle je Eintrag unten.
 //
-// Der Zweck ist die zweite Sorte: Ein Nutzer von Cursor oder Windsurf sieht mit
-// einem Klick, welche der für ihn VERFÜGBAREN Modelle auf der Front liegen —
-// und das ist am 03.09.2026 nicht dieselbe Antwort. Windsurfs Katalog endet bei
-// Gemini 3.6 Flash, dort führt weiter Opus 5 für 10,37 €; bei Cursor kostet
-// derselbe Score 2,07 €.
+// Der Zweck der Presets: Ein Nutzer von Cursor oder Windsurf sieht mit einem
+// Klick, welche der für ihn VERFÜGBAREN Modelle auf der Front liegen — und das
+// ist am 03.09.2026 nicht dieselbe Antwort. Windsurfs Katalog endet bei Gemini
+// 3.6 Flash, dort führt weiter Opus 5 für 10,37 €; bei Cursor kostet derselbe
+// Score 2,07 €.
+//
+// Der Zweck der Checkboxen: Ein einzelnes Lab hat ein bis vier Punkte, seine
+// „Front" ist dann kaum mehr als der beste Punkt. Interessant wird es
+// kombiniert — „bei uns sind OpenAI und Anthropic freigegeben".
 //
 // Was der Filter NICHT tut
 // ------------------------
@@ -36,7 +41,22 @@
 import { labOf, type Lab, type Pt } from "./paretoData";
 
 export type ToolId = "cursor" | "windsurf" | "jetbrains-ai";
-export type Selection = "all" | Lab | ToolId;
+export type PresetId = "all" | ToolId;
+
+/**
+ * Der Zustand des Filters ist eine MODELLMENGE, keine Lab-Menge — und das ist
+ * kein Geschmack, sondern Rechnung. Ein Werkzeug deckt Labs oft nur teilweise
+ * ab: Windsurf führt von Google nur 3.5 und 3.6 Flash. Schriebe ein Preset auf
+ * Lab-Häkchen, bekäme Windsurf das ganze Google-Lab und damit gemini-3.8-flash,
+ * das es gar nicht anbietet — seine Front wäre dann Zeichen für Zeichen die von
+ * „Alle" (19 statt 14 Modelle), und die Aussage, für die es diesen Filter gibt,
+ * wäre weg. Cursor bekäme auf demselben Weg glm-5.3-flash dazu.
+ *
+ * Deshalb: Presets schreiben Modellmengen, die Lab-Checkboxen arbeiten auf
+ * derselben Menge, und ein nur teilweise enthaltenes Lab wird als „teilweise"
+ * angezeigt statt gerundet. `providerFilter.test.ts` hält das fest.
+ */
+export type ModelSet = ReadonlySet<string>;
 
 export interface Tool {
   id: ToolId;
@@ -125,47 +145,100 @@ export const TOOLS: readonly Tool[] = [
 
 const TOOL_BY_ID = new Map(TOOLS.map((t) => [t.id, t]));
 
-/** Gehört das Modell zur aktuellen Auswahl? */
-export function memberOf(sel: Selection, label: string): boolean {
-  if (sel === "all") return true;
-  const tool = TOOL_BY_ID.get(sel as ToolId);
-  if (!tool) return labOf(label) === sel;
-  return tool.labs
-    ? tool.labs.includes(labOf(label))
-    : (tool.models?.includes(label) ?? false);
+/** Bietet das Werkzeug dieses Modell an? Baut die Preset-Mengen. */
+export function toolHas(id: ToolId, label: string): boolean {
+  const t = TOOL_BY_ID.get(id);
+  if (!t) return false;
+  return t.labs
+    ? t.labs.includes(labOf(label))
+    : (t.models?.includes(label) ?? false);
 }
 
-export interface Option {
-  value: Selection;
+export interface Preset {
+  id: PresetId;
   label: string;
-  /** Wie viele der gezeigten Punkte diese Auswahl übrig lässt. */
-  count: number;
-  /** Schlüssel in `LOGOS`; fehlt, wenn es kein Glyph gibt (JetBrains). */
+  /** Schlüssel in `LOGOS`; fehlt, wo es kein Glyph gibt (Alle, JetBrains). */
   logo?: string;
   caveat?: string;
 }
 
-/**
- * Menü-Einträge für die übergebenen Punkte. Labs nach Modellzahl absteigend —
- * so stehen die drei, an die man sich real bindet, oben; die Einzelgänger
- * (ein bis zwei Modelle, triviale „Front") fallen ans Ende.
- */
-export function optionsFor(pts: Pt[]): { labs: Option[]; tools: Option[] } {
-  const byLab = new Map<Lab, number>();
-  for (const p of pts)
-    byLab.set(labOf(p.label), (byLab.get(labOf(p.label)) ?? 0) + 1);
-
-  const labs: Option[] = [...byLab.entries()]
-    .map(([lab, count]) => ({ value: lab, label: lab, count, logo: lab }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-
-  const tools: Option[] = TOOLS.map((t) => ({
-    value: t.id,
+/** „Alle" und die drei Werkzeuge in einer Liste — kein Sonderfall im Menü. */
+export const PRESETS: readonly Preset[] = [
+  { id: "all", label: "Alle" },
+  ...TOOLS.map((t) => ({
+    id: t.id,
     label: t.label,
-    count: pts.filter((p) => memberOf(t.id, p.label)).length,
     logo: t.id,
     caveat: t.caveat,
-  }));
+  })),
+];
 
-  return { labs, tools };
+/** Die Modelle, die ein Preset auswählt. */
+export function presetModels(id: PresetId, pts: Pt[]): string[] {
+  return id === "all"
+    ? pts.map((p) => p.label)
+    : pts.filter((p) => toolHas(id, p.label)).map((p) => p.label);
+}
+
+export interface LabRow {
+  lab: Lab;
+  /** Wie viele Modelle dieses Labs stecken in der Auswahl … */
+  drin: number;
+  /** … und wie viele hat es überhaupt im Chart. */
+  gesamt: number;
+  zustand: "an" | "aus" | "teilweise";
+  logo: string;
+}
+
+/**
+ * Eine Zeile je Lab, nach Modellzahl absteigend und dann alphabetisch — so
+ * stehen die drei, an die man sich real bindet, oben, und die Einzelgänger
+ * fallen ans Ende.
+ */
+export function labRows(sel: ModelSet, pts: Pt[]): LabRow[] {
+  const nach = new Map<Lab, Pt[]>();
+  for (const p of pts) {
+    const l = labOf(p.label);
+    nach.set(l, [...(nach.get(l) ?? []), p]);
+  }
+  return [...nach.entries()]
+    .map(([lab, ms]) => {
+      const drin = ms.filter((p) => sel.has(p.label)).length;
+      return {
+        lab,
+        drin,
+        gesamt: ms.length,
+        zustand: drin === 0 ? "aus" : drin === ms.length ? "an" : "teilweise",
+        logo: lab,
+      } as LabRow;
+    })
+    .sort((a, b) => b.gesamt - a.gesamt || a.lab.localeCompare(b.lab));
+}
+
+/**
+ * Klick auf ein Lab. Vollständig enthalten heißt leeren, sonst auffüllen —
+ * „teilweise" wird also zu „an", nicht zu „aus". Das ist das übliche
+ * Tri-State-Verhalten und zugleich das des DeepSWE-Boards.
+ */
+export function toggleLab(sel: ModelSet, lab: Lab, pts: Pt[]): Set<string> {
+  const meins = pts.filter((p) => labOf(p.label) === lab).map((p) => p.label);
+  const naechste = new Set(sel);
+  const voll = meins.every((m) => naechste.has(m));
+  for (const m of meins)
+    if (voll) naechste.delete(m);
+    else naechste.add(m);
+  return naechste;
+}
+
+/**
+ * Deckt sich die Auswahl exakt mit einem Preset? Sonst ist es eine eigene
+ * Zusammenstellung, und der Auslöser sagt das auch — sonst stünde dort noch
+ * „Windsurf", obwohl ein zugeschaltetes Lab den Werkzeug-Blick längst verlassen
+ * hat.
+ */
+export function matchingPreset(sel: ModelSet, pts: Pt[]): Preset | undefined {
+  return PRESETS.find((p) => {
+    const m = presetModels(p.id, pts);
+    return m.length === sel.size && m.every((x) => sel.has(x));
+  });
 }

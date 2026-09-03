@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import ProviderPicker from "./ProviderPicker.vue";
-import { memberOf, optionsFor, type Selection } from "./providerFilter";
+import { matchingPreset, presetModels } from "./providerFilter";
 import {
   CURRENT,
   anchor,
@@ -55,22 +55,27 @@ const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 // zeigt deshalb einen künftigen Stand, nicht den API-Preis.
 const subOn = ref(false);
 
-// Anbieter-Filter. „all" ist Default; jede andere Auswahl blendet Punkte aus und
+// Anbieter-Filter. Der Zustand ist eine Modellmenge (warum, steht in
+// `providerFilter.ts`); Default ist alles. Jede Teilmenge blendet Punkte aus und
 // die Front wird über den Rest neu gerechnet. Achsen und Quadranten bleiben fest
 // — sonst wären die gefilterten Ansichten nicht miteinander vergleichbar.
 //
 // Der Filter greift VOR dem Kontingent-Overlay, damit sich beide kombinieren
-// lassen: „Anthropic" plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
-const sel = ref<Selection>("all");
-const opts = computed(() => optionsFor(CURRENT));
+// lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
+const sel = ref<ReadonlySet<string>>(new Set(presetModels("all", CURRENT)));
+const preset = computed(() => matchingPreset(sel.value, CURRENT));
 const shown = computed<Pt[]>(() => {
-  if (sel.value === "all") return CURRENT;
-  // Gefiltert wird auch die Beschriftungs-Unterdrückung aufgehoben. `lbl: false`
-  // steht an den beiden DeepSeek-Punkten, weil sie in der Gesamtansicht im
-  // Gedränge zwischen glm-5.3-flash und luna liegen — sobald gefiltert ist, ist
-  // dort Platz. Ohne das zeigte die Auswahl „DeepSeek" zwei namenlose Quadrate.
-  return CURRENT.filter((p) => memberOf(sel.value, p.label)).map((p) =>
-    p.lbl === false ? { ...p, lbl: undefined } : p,
+  if (sel.value.size === CURRENT.length) return CURRENT;
+  // Unterdrückte Beschriftungen kommen zurück, sobald der Platz da ist. `lbl:
+  // false` steht an den beiden DeepSeek-Punkten, weil sie in der Gesamtansicht
+  // im Gedränge liegen; ohne das zeigte die Auswahl „DeepSeek" zwei namenlose
+  // Quadrate. Maßgeblich ist dabei NICHT, wie viele Punkte übrig sind, sondern
+  // ob die konkreten Nachbarn noch da sind, an denen es scheitert — siehe
+  // `blockers` in `paretoData.ts`.
+  return CURRENT.filter((p) => sel.value.has(p.label)).map((p) =>
+    p.lbl === false && !p.blockers?.some((b) => sel.value.has(b))
+      ? { ...p, lbl: undefined }
+      : p,
   );
 });
 
@@ -121,9 +126,9 @@ const chartLabel = computed(
     "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
     "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
     "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 02.09.2026" +
-    (sel.value === "all"
+    (sel.value.size === CURRENT.length
       ? ""
-      : `, gefiltert auf ${current.value.label} mit ${pts.value.length} von ${CURRENT.length} Modellen`) +
+      : `, gefiltert auf ${preset.value?.label ?? "eine eigene Auswahl"} mit ${pts.value.length} von ${CURRENT.length} Modellen`) +
     ". Pareto-Front: " +
     front.value
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
@@ -138,15 +143,6 @@ const chartLabel = computed(
       : "") +
     " Der Geisterring an gemini-3.8-flash markiert 4,14 Euro — den Listenpreis ab dem " +
     "1. Januar 2027, wenn Googles Einführungspreis ausläuft.",
-);
-
-const current = computed(
-  () =>
-    [
-      { value: "all" as Selection, label: "Alle" },
-      ...opts.value.labs,
-      ...opts.value.tools,
-    ].find((o) => o.value === sel.value) ?? { label: "Alle" },
 );
 
 const xTicks = [0, 5, 10, 15, 20, 25];
@@ -236,12 +232,7 @@ const whiskers = computed(() =>
         Claude-Code-Kontingent
         <span class="mp-tg-note">kein API-Preis · ab 14.09. +25 %</span>
       </button>
-      <ProviderPicker
-        v-model="sel"
-        :labs="opts.labs"
-        :tools="opts.tools"
-        :total="CURRENT.length"
-      />
+      <ProviderPicker v-model="sel" :pts="CURRENT" />
       <button
         class="mp-ib"
         aria-label="Quellen und Einschränkungen anzeigen"
@@ -432,6 +423,14 @@ const whiskers = computed(() =>
         :y2="l.y2"
         class="mp-leader"
       />
+
+      <!-- Leere Auswahl. Achsen und Quadranten bleiben stehen, damit sichtbar
+           bleibt, dass hier nichts fehlt, sondern nichts gewählt ist. Der
+           Hinweis sitzt oben links im Sweet-Spot-Quadranten: mittig liefe er
+           quer durch die beiden Richtungspfeile und wäre unlesbar. -->
+      <text v-if="!pts.length" :x="L + 12" :y="T + 52" class="mp-leer">
+        Kein Modell ausgewählt — im Anbieter-Menü mindestens ein Lab anhaken
+      </text>
 
       <!-- Pareto-Front -->
       <polyline :points="frontPath" class="mp-front-line" />
@@ -786,6 +785,11 @@ const whiskers = computed(() =>
 .mp-moved-on .mp-old-pt {
   stroke: var(--ch);
   stroke-width: 2;
+}
+
+.mp-leer {
+  font-size: 12px;
+  fill: var(--color-text-tertiary);
 }
 
 .mp-front-line {

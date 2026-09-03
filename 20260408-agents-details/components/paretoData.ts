@@ -107,6 +107,15 @@ export interface Pt {
   dx: number;
   /** Beschriftung erzwingen (true) oder unterdrücken (false); sonst Chart-Default. */
   lbl?: boolean;
+  /**
+   * Wer die Beschriftung blockiert. Gilt nur zusammen mit `lbl: false`: Sobald
+   * der Anbieter-Filter KEINEN dieser Nachbarn mehr zeigt, ist Platz und die
+   * Beschriftung kommt zurück. Gemessen, nicht geschätzt — die Alternative wäre
+   * eine Schwelle „ab N Punkten unterdrücken", und die trennt nicht: bei 17
+   * sichtbaren Punkten kollidieren dieselben Paare wie bei 20, während Cursor
+   * mit 15 sauber bleibt. Es hängt an den Nachbarn, nicht an der Anzahl.
+   */
+  blockers?: readonly string[];
   old?: Origin;
   sub?: number; // €/Task unter dem Wochenkontingent, +50 % (bis 13.09., nur Stand 7)
   sub25?: number; // dasselbe mit den dauerhaften +25 % ab 14.09.
@@ -138,6 +147,7 @@ function P(
   extra: {
     ci?: number;
     lbl?: boolean;
+    blockers?: readonly string[];
     old?: Omit<Origin, "eur">;
     sub?: number;
     sub25?: number;
@@ -153,6 +163,7 @@ function P(
     dx,
     ci: extra.ci,
     lbl: extra.lbl,
+    blockers: extra.blockers,
     sub: extra.sub,
     sub25: extra.sub25,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
@@ -387,9 +398,17 @@ const S_0826: Pt[] = [
   // das 3-€-Gedränge gerutscht; jede Platzierung ihrer 15 bzw. 17 Zeichen läuft
   // dort in einen Nachbarmarker oder ein Nachbarlabel. Sie sind dominiert, die
   // Wanderung steht im Folientext, und der Tooltip nennt sie weiterhin.
-  P("deepseek-v4-flash", 0.41, 53, "right", 8, 0, { ci: 3.6, lbl: false }),
+  P("deepseek-v4-flash", 0.41, 53, "right", 8, 0, {
+    ci: 3.6,
+    lbl: false,
+    blockers: ["muse-spark-1.2"],
+  }),
   P("gpt-5.6-luna", 0.53, 67, "right", -8, 0, { ci: 4.0 }),
-  P("deepseek-v4-pro", 1.46, 63, "right", 14, 0, { ci: 6.3, lbl: false }),
+  P("deepseek-v4-pro", 1.46, 63, "right", 14, 0, {
+    ci: 6.3,
+    lbl: false,
+    blockers: ["glm-5.3-flash", "qwen3.8-max"],
+  }),
   P("gemini-3.7-flash", 1.91, 65, "right", 8, 0, { ci: 1.8 }),
   P("gemini-3.6-flash", 1.94, 47, "right", 0, 0, { ci: 3.7 }),
   P("gemini-3.5-flash", 3.02, 36, "right", 12, 0, { ci: 4.0 }),
