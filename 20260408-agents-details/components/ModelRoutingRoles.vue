@@ -32,18 +32,18 @@ const roles: Role[] = [
     freq: 1,
     detailTitle: "Planen & Judge — Premium trotz Kosten, nicht wegen",
     detailText:
-      "Niedrigfrequent (1× pro Task) → Kostendruck hier ist irrational. Es existiert kein Benchmark, der Planungsqualität isoliert misst; die Wahl stützt sich auf End-to-End-Spitzen (DeepSWE: opus-5 74 % · sol 73 %, Terminal-Bench 2.1: sol 88,8 %) und HLE als Reasoning-Proxy.",
+      "Niedrigfrequent (1× pro Task) → Kostendruck hier ist irrational. Es existiert kein Benchmark, der Planungsqualität isoliert misst; die Wahl stützt sich auf End-to-End-Spitzen (DeepSWE: gemini-3.8-flash und opus-5 je 74 %, sol 73 %, Terminal-Bench 2.1: sol 88,8 %) und HLE als Reasoning-Proxy. Dass der Neuzugang gleichauf und billiger ist, ändert hier nichts: DeepSWE misst Coding, nicht Planung — und der Preis zählt in dieser Rolle ohnehin nicht.",
     ev: "Evidenz: schwach — Proxy-Schluss, kein isolierter Planungs-Benchmark",
   },
   {
     key: "exec",
     title: "Umsetzung",
-    models: "gpt-5.6-terra · kimi-k3",
-    cost: "~3,50 €/Task @ ~70 %",
+    models: "gemini-3.8-flash · luna",
+    cost: "2,07 €/Task @ 74 %",
     freq: 3,
     detailTitle: "Umsetzung — der Ort für Kostendruck",
     detailText:
-      "DeepSWE v1.1 (ein Harness, CIs): terra 70 % / 3,47 € · luna 67 % / 0,53 € — seit dem 30.07. dominiert terra auch kimi-k3 (69 % / 4,08 €). Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € (214k Tokens, 268 Steps) — strikt dominiert. €/Task: Frugalität steuerst Du, der Preis kippt über Nacht.",
+      "DeepSWE v1.1 (ein Harness, CIs): gemini-3.8-flash 74 % / 2,07 € schlägt seit dem 02.09. terra (70 % / 3,47 €) und kimi-k3 (69 % / 4,08 €) auf beiden Achsen — die standen hier bis vorige Woche. Frugaler: luna 67 % / 0,53 €. Gegenbeispiel Sonnet 5 [max]: 54 % für 23,13 € — strikt dominiert. Der Preis kippt über Nacht, hier wörtlich: der neue Punkt steht auf einem Einführungspreis bis 31.12.2026.",
     ev: "Evidenz: gut — konsistenter Harness, Konfidenzintervalle ausgewiesen",
   },
   {
@@ -65,7 +65,7 @@ const roles: Role[] = [
     freq: 2,
     detailTitle: "Verifikation — Diversität schlägt Ranking",
     detailText:
-      "Wer findet, verifiziert nicht. Eine andere Modellfamilie teilt nicht dieselben blinden Flecken — das ist der eigentliche Grund für Gemini in diesem Slot, nicht ein Benchmark-Platz. Nichts landet ohne Primärquelle und Zitat in der Wissensbasis.",
+      "Wer findet, verifiziert nicht. Eine andere Modellfamilie teilt nicht dieselben blinden Flecken — das ist der eigentliche Grund für Gemini in diesem Slot, nicht ein Benchmark-Platz — seit dem 02.09. kostet die Wahl aber auch keine Qualität mehr, gemini-3.8-flash führt das Coding-Board an. Nichts landet ohne Primärquelle und Zitat in der Wissensbasis.",
     ev: "Evidenz: Prinzip (Quesma-Regeln), kein Benchmark",
   },
   {

@@ -25,12 +25,32 @@ const sources = [
   {
     href: "https://deepswe.datacurve.ai/",
     label: "DeepSWE v1.1",
-    note: "Pareto-Daten, Tokens, Steps (26.08.)",
+    note: "Pareto-Daten, Tokens, Steps (Stand 02.09.)",
   },
   {
     href: "https://deepswe.datacurve.ai/changelog",
     label: "DeepSWE-Changelog",
     note: "Neuzugänge und Preiskorrekturen je Datum",
+  },
+  {
+    href: "https://ai.google.dev/gemini-api/docs/pricing",
+    label: "Google-Preisliste (Gemini)",
+    note: "3.8 Flash 0,75/3,75 $ bis 31.12.2026, danach das Doppelte",
+  },
+  {
+    href: "https://cursor.com/docs/models",
+    label: "Cursor: unterstützte Modelle",
+    note: "Modell-Liste des Anbieter-Filters, abgerufen 03.09.2026",
+  },
+  {
+    href: "https://docs.devin.ai/desktop/models",
+    label: "Windsurf: unterstützte Modelle",
+    note: "dito; docs.windsurf.com leitet seit der Übernahme hierher",
+  },
+  {
+    href: "https://www.jetbrains.com/ai-ides/buy/",
+    label: "JetBrains AI: Preisseite",
+    note: "nennt nur Anbieter (OpenAI, Anthropic, Google, xAI), keine Modelle",
   },
   {
     href: "https://news.ycombinator.com/item?id=49528037",
@@ -95,7 +115,7 @@ const caveats = [
     text: "Der Harness verschiebt Scores um 10–30 Punkte. Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI. Anthropic-Modelle laufen im eigenen Harness meist besser. Der Hebel ist dabei nicht nur Werkzeug und Prompt, sondern die Abbruch-Option: Wer dem Agenten erlaubt aufzugeben, bekommt irgendwann ein „geht nicht“; nimmt man sie ihm, probiert dasselbe Modell dreistellig viele Varianten durch — Erfahrungsbericht, keine Messung. Der Score misst also Modell und Harness gemeinsam, nie das Modell allein.",
   },
   {
-    lead: "113 Tasks, Streuung ±2–6 Punkte:",
+    lead: "113 Tasks, Streuung ±1,4–6,5 Punkte:",
     text: "Die Spanne zeigt, wie stark ein Modell zwischen Wiederholungsläufen schwankt — nicht den Stichprobenfehler über die 113 Tasks; der läge bei rund ±8 Punkten. Zwei Modelle mit weniger als 5 Punkten Abstand sind gleichauf. Belastbar ist nur die grobe Schichtung.",
   },
   {
@@ -108,7 +128,11 @@ const caveats = [
   },
   {
     lead: "Board-Default:",
-    text: "Das Board zeigt per Default 19 von 26 Modellen; sieben ältere blendet es aus. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
+    text: "Das Board zeigt per Default 20 von 27 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
+  },
+  {
+    lead: "Anbieter-Filter:",
+    text: "Nur auf der Folie „Welches Modell wofür?“. Die Labs kommen aus der Zuordnung des Boards selbst; die drei Werkzeuge aus der jeweiligen Hersteller-Doku, abgerufen am 03.09.2026 — solche Kataloge ändern sich monatlich. Der Filter zeigt Verfügbarkeit, nicht Preis: Cursor und Windsurf rechnen nach eigenen Tarifen ab, geplottet bleibt der API-Listenpreis. Das jeweils eigene Modell fehlt jeder Werkzeug-Ansicht, weil DeepSWE es nicht misst — Cursors Composer so wenig wie Windsurfs SWE-1.x. JetBrains AI ist nur auf Providerebene belegt (OpenAI, Anthropic, Google, xAI) und deshalb eine Obergrenze; Junie fehlt ganz, dort veröffentlicht JetBrains keinen Modellkatalog. Achsen und Quadranten bleiben in jeder Auswahl gleich, nur die Front wird neu gerechnet.",
   },
   {
     lead: "Kosten sind kein Messwert:",
@@ -120,11 +144,11 @@ const caveats = [
   },
   {
     lead: "Abo ist kein API-Preis:",
-    text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 13.09.2026 gibt Claude Code 50 % mehr Kontingent pro Woche, die Kosten pro Task sinken damit auf zwei Drittel; ab 14.09. ersetzt Anthropic die Aktion durch dauerhafte 25 % über der Basis, also vier Fünftel. Eine Rückkehr auf das Basislimit gibt es nicht. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort den Stand ab 14.09.",
+    text: "Der Abo-Preis ist fix, begrenzt wird die Arbeit über das Wochenlimit. Bis 13.09.2026 gibt Claude Code 50 % mehr Kontingent pro Woche, die Kosten pro Task sinken damit auf zwei Drittel; ab 14.09. ersetzt Anthropic die Aktion durch dauerhafte 25 % über der Basis, also vier Fünftel. Eine Rückkehr auf das Basislimit gibt es nicht. Das ist eine Kontingentrechnung, kein Listenpreis. Nur die Folie „Welches Modell wofür?“ kann sie zuschalten, normal ist sie aus; der Geisterring zeigt dort den Stand ab 14.09. Seit dem 02.09. dreht der Schalter die Front nicht mehr: Opus 5 ist auch zum Kontingentpreis von 6,91 € dominiert, weil gemini-3.8-flash denselben Score für 2,07 € liefert.",
   },
   {
     lead: "Peak-Raten und Aktionspreise:",
-    text: "Zwei Punkte am billigen Ende stehen auf Preisen, die so nicht dauerhaft gelten. DeepSeek rechnet seit dem 16.08. nach Haupt- und Nebenzeit ab; das Board nimmt die Hauptzeit, off-peak ist die Hälfte — V4 Pro läge dann bei 0,73 € und wäre immer noch dominiert. Und glm-5.3-flash läuft auf einem befristeten 50-%-Aktionspreis; ohne ihn verdoppelt sich der Punkt auf rund 0,42 €.",
+    text: "Das betrifft seit dem 02.09. auch den obersten Frontpunkt: gemini-3.8-flash läuft auf Googles Einführungspreis bis 31.12.2026 — Input, Output und Cache verdoppeln sich am 01.01.2027, der Punkt also von 2,07 € auf 4,14 €. Er bliebe auf der Front, dann hinter gpt-5.6-terra, das zurückkäme. Dieselbe Aktion tragen gemini-3.7-flash und -3.6-flash. Dazu zwei Punkte am billigen Ende. DeepSeek rechnet seit dem 16.08. nach Haupt- und Nebenzeit ab; das Board nimmt die Hauptzeit, off-peak ist die Hälfte — V4 Pro läge dann bei 0,73 € und wäre immer noch dominiert. Und glm-5.3-flash läuft auf einem befristeten 50-%-Aktionspreis; ohne ihn verdoppelt sich der Punkt auf rund 0,42 €.",
   },
   {
     lead: "Interessenkonflikte:",
@@ -140,7 +164,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 26.08.2026 — und schon in sich veraltet: die Front hat sich seit Juni siebenmal verschoben, dreimal allein durch Preisanpassungen. Dieser Stand korrigiert obendrein den vorigen, der beim letzten Mal aktuell aussah. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
+    text: "Stand 02.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni achtmal verschoben, dreimal allein durch Preisanpassungen. Wie schnell das geht, zeigt dieser Stand selbst: Sieben Tage vorher sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
   },
 ];
 </script>
