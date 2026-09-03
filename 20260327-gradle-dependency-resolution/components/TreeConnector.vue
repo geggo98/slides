@@ -1,15 +1,12 @@
 <script setup>
 defineProps({
-  type: { type: String, default: 'single' }, // single, fork, parallel, left-single, right-single
+  type: { type: String, default: "single" }, // single, fork, parallel, left-single, right-single
   width: { type: Number, default: 180 },
-})
+});
 </script>
 
 <template>
-  <div
-    v-if="type === 'single'"
-    class="tc tc-single"
-  />
+  <div v-if="type === 'single'" class="tc tc-single" />
   <div
     v-else-if="type === 'fork'"
     class="tc tc-fork"
@@ -33,7 +30,9 @@ defineProps({
 </template>
 
 <style scoped>
-.tc { margin: 0 auto; }
+.tc {
+  margin: 0 auto;
+}
 
 /* Single vertical line */
 .tc-single {
@@ -48,7 +47,7 @@ defineProps({
   position: relative;
 }
 .tc-fork::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 0;
@@ -58,7 +57,7 @@ defineProps({
   transform: translateX(-50%);
 }
 .tc-fork::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 0;

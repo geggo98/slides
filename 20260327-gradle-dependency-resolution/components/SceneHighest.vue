@@ -5,7 +5,8 @@
 <template>
   <div class="scene-wrap">
     <div class="scene-desc">
-      Zwei Libraries fordern unterschiedliche Versionen derselben transitiven Dependency. Gradle wählt die höchste — stillschweigend, ohne Warning.
+      Zwei Libraries fordern unterschiedliche Versionen derselben transitiven
+      Dependency. Gradle wählt die höchste — stillschweigend, ohne Warning.
     </div>
     <div class="graph">
       <div class="g-row">
@@ -32,9 +33,29 @@
 </template>
 
 <style scoped>
-.scene-wrap { width: 100%; }
-.scene-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; margin: 0 0 10px; }
-.graph { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 0 10px; }
-.g-row { display: flex; align-items: center; justify-content: center; gap: 12px; }
-.g-gap { width: 24px; }
+.scene-wrap {
+  width: 100%;
+}
+.scene-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+.graph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 0 0 10px;
+}
+.g-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.g-gap {
+  width: 24px;
+}
 </style>
