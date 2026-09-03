@@ -33,6 +33,18 @@ if (process.argv[4] === "toggle") {
   await page.waitForTimeout(800);
 }
 
+// `--pick=<Name>` wählt vorher im Anbieter-Filter aus (nur Pareto-Folie). Beim
+// Filtern werden dominierte Punkte zu Frontpunkten und tauschen ihr 9×9-Quadrat
+// gegen einen Kreis mit r=5.5 — der Marker wächst also — und unterdrückte
+// Beschriftungen kommen zurück. Beides kann neu kollidieren, deshalb prüfbar.
+const pick = process.argv.find((a) => a.startsWith("--pick="))?.split("=")[1];
+if (pick) {
+  await page.getByRole("button", { name: /Anbieter filtern/ }).click();
+  await page.waitForTimeout(250);
+  await page.getByRole("option", { name: new RegExp(`^${pick} `) }).click();
+  await page.waitForTimeout(400);
+}
+
 const boxes = await page.evaluate(() => {
   // Nachbarfolien sind mitgemountet — deshalb auf das sichtbare Chart der
   // Pareto-Folie einschränken, sonst mischen sich fremde Beschriftungen ein.

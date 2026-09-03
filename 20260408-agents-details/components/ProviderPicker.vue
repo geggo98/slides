@@ -102,7 +102,7 @@ const indexOf = (o: Option) => flat.value.indexOf(o);
 <template>
   <div class="pp">
     <button
-      class="mp-tg pp-trigger"
+      class="pp-trigger"
       :class="{ on: modelValue !== 'all' }"
       type="button"
       aria-haspopup="listbox"
@@ -120,7 +120,7 @@ const indexOf = (o: Option) => flat.value.indexOf(o);
         <path :d="LOGOS[current.logo]" />
       </svg>
       {{ current.label }}
-      <span class="mp-tg-note">{{ current.count }} ▾</span>
+      <span class="pp-note">{{ current.count }} ▾</span>
     </button>
 
     <ul
@@ -187,8 +187,41 @@ const indexOf = (o: Option) => flat.value.indexOf(o);
   position: relative;
 }
 
+/* Bewusst eigene Regeln statt der `.mp-tg` aus ModelRoutingPareto.vue: Vue
+   gibt scoped CSS nur an das Wurzelelement einer Kindkomponente weiter, nicht
+   an deren Inneres. Der Knopf trug die Klasse `mp-tg` und bekam trotzdem NICHTS
+   davon — kein Rahmen, kein Padding, `inline-block` statt `inline-flex`. Mit
+   Logo brach der Inhalt dadurch auf zwei Zeilen (22 px auf 36 px).
+   Die Werte spiegeln `.mp-tg`, damit beide Bedienelemente gleich aussehen; eine
+   Änderung dort muss hier nachgezogen werden. `align-items` weicht ab: `.mp-tg`
+   richtet an der Grundlinie aus, hier muss das Glyph mittig zur Schrift sitzen. */
 .pp-trigger {
+  display: inline-flex;
   align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  white-space: nowrap;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}
+
+.pp-trigger:hover {
+  color: var(--color-text-secondary);
+}
+
+.pp-trigger.on {
+  border-color: var(--color-text-info);
+  background: color-mix(in srgb, var(--color-text-info) 12%, transparent);
+  color: var(--color-text-primary);
+}
+
+.pp-note {
+  font-size: 9.5px;
+  opacity: 0.7;
 }
 
 .pp-logo {

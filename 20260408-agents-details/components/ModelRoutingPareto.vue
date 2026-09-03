@@ -63,9 +63,16 @@ const subOn = ref(false);
 // lassen: „Anthropic" plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const sel = ref<Selection>("all");
 const opts = computed(() => optionsFor(CURRENT));
-const shown = computed<Pt[]>(() =>
-  CURRENT.filter((p) => memberOf(sel.value, p.label)),
-);
+const shown = computed<Pt[]>(() => {
+  if (sel.value === "all") return CURRENT;
+  // Gefiltert wird auch die Beschriftungs-Unterdrückung aufgehoben. `lbl: false`
+  // steht an den beiden DeepSeek-Punkten, weil sie in der Gesamtansicht im
+  // Gedränge zwischen glm-5.3-flash und luna liegen — sobald gefiltert ist, ist
+  // dort Platz. Ohne das zeigte die Auswahl „DeepSeek" zwei namenlose Quadrate.
+  return CURRENT.filter((p) => memberOf(sel.value, p.label)).map((p) =>
+    p.lbl === false ? { ...p, lbl: undefined } : p,
+  );
+});
 
 const pts = computed<Pt[]>(() =>
   subOn.value
