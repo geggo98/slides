@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
+import ProviderPicker from "./ProviderPicker.vue";
+import { memberOf, optionsFor, type Selection } from "./providerFilter";
 import {
   CURRENT,
   anchor,
@@ -53,9 +55,21 @@ const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 // zeigt deshalb einen künftigen Stand, nicht den API-Preis.
 const subOn = ref(false);
 
+// Anbieter-Filter. „all" ist Default; jede andere Auswahl blendet Punkte aus und
+// die Front wird über den Rest neu gerechnet. Achsen und Quadranten bleiben fest
+// — sonst wären die gefilterten Ansichten nicht miteinander vergleichbar.
+//
+// Der Filter greift VOR dem Kontingent-Overlay, damit sich beide kombinieren
+// lassen: „Anthropic" plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
+const sel = ref<Selection>("all");
+const opts = computed(() => optionsFor(CURRENT));
+const shown = computed<Pt[]>(() =>
+  CURRENT.filter((p) => memberOf(sel.value, p.label)),
+);
+
 const pts = computed<Pt[]>(() =>
   subOn.value
-    ? CURRENT.map((p) =>
+    ? shown.value.map((p) =>
         p.sub
           ? {
               ...p,
@@ -70,7 +84,7 @@ const pts = computed<Pt[]>(() =>
             }
           : p,
       )
-    : CURRENT,
+    : shown.value,
 );
 
 const front = computed(() => paretoFront(pts.value).front);
@@ -99,17 +113,33 @@ const chartLabel = computed(
   () =>
     "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
     "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
-    "(billig und schwach), Geldverbrennung (teuer und schwach). Pareto-Front am 26.08.2026: " +
+    "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 02.09.2026" +
+    (sel.value === "all"
+      ? ""
+      : `, gefiltert auf ${current.value.label} mit ${pts.value.length} von ${CURRENT.length} Modellen`) +
+    ". Pareto-Front: " +
     front.value
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
       .join(", ") +
-    ". Claude Opus 5 führt, gpt-5.6-sol liegt einen Punkt dahinter — die Konfidenzintervalle " +
-    "überlappen." +
+    ". Seit dem 01.09. hält gemini-3.8-flash den höchsten Score des Boards und kostet ein " +
+    "Fünftel von Claude Opus 5, das denselben Score erreicht; terra, sol und Opus 5 sind " +
+    "dadurch dominiert." +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
         "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
         "Geisterringe zeigen mit vier Fünfteln die Position ab 14.09.2026."
-      : ""),
+      : "") +
+    " Der Geisterring an gemini-3.8-flash markiert 4,14 Euro — den Listenpreis ab dem " +
+    "1. Januar 2027, wenn Googles Einführungspreis ausläuft.",
+);
+
+const current = computed(
+  () =>
+    [
+      { value: "all" as Selection, label: "Alle" },
+      ...opts.value.labs,
+      ...opts.value.tools,
+    ].find((o) => o.value === sel.value) ?? { label: "Alle" },
 );
 
 const xTicks = [0, 5, 10, 15, 20, 25];
@@ -178,13 +208,16 @@ const whiskers = computed(() =>
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
-      <!-- Mit Overlay hat der Geisterring zwei Bedeutungen: bei sol den Preis
-           vor der Senkung, bei den Claude-Punkten den Kontingent-Stand ab
-           14.09. Der Text wird getauscht statt ergänzt, sonst bricht die
-           Legendenzeile um. Ausführlich steht es im Tooltip des Rings und im ⓘ. -->
+      <!-- Seit Stand 8 zeigt der Ring ausschließlich KÜNFTIGE Preise, nie mehr
+           vergangene: ohne Overlay den Listenpreis von gemini-3.8-flash ab
+           01.01.2027, mit Overlay zusätzlich den Kontingent-Stand der
+           Claude-Punkte ab 14.09. Der Sol-Ring („vorher 7,35 €") ist mit dem
+           Stand vom 02.09. weggefallen und lebt nur noch auf der
+           Historien-Folie. Der Text wird getauscht statt ergänzt, sonst bricht
+           die Legendenzeile um; ausführlich steht es im Tooltip und im ⓘ. -->
       <span>
         <i class="mp-sw mp-sw-old" />{{
-          subOn ? "Preis vorher / ab 14.09." : "vor der Preisanpassung"
+          subOn ? "künftig: ab 01.01. / 14.09." : "Preis ab 01.01.2027"
         }}
       </span>
       <button
@@ -196,7 +229,12 @@ const whiskers = computed(() =>
         Claude-Code-Kontingent
         <span class="mp-tg-note">kein API-Preis · ab 14.09. +25 %</span>
       </button>
-      <span class="mp-note">Punkt/Label klicken: Fehlerbalken</span>
+      <ProviderPicker
+        v-model="sel"
+        :labs="opts.labs"
+        :tools="opts.tools"
+        :total="CURRENT.length"
+      />
       <button
         class="mp-ib"
         aria-label="Quellen und Einschränkungen anzeigen"
@@ -556,8 +594,10 @@ const whiskers = computed(() =>
 }
 .mp-legend {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  white-space: nowrap;
   margin-bottom: 0;
   font-size: 11px;
   color: var(--color-text-secondary);
