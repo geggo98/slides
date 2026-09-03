@@ -23,10 +23,13 @@ import { useCrosshairs } from "./useCrosshairs";
 // findet die Pareto-Folie per `querySelector("svg.mp-chart")` und würde sonst
 // hier hängenbleiben.
 //
-// Klick-Vertrag: `step` kommt aus `$clicks` (Frontmatter `clicks: 7`).
+// Klick-Vertrag: `step` kommt aus `$clicks` (Frontmatter `clicks: 8`).
 //
-//   Schritt 0…6 → Station 1…7, Detailmodus aus
-//   Schritt 7   → Station bleibt 7, Detailmodus an (← schaltet ihn wieder aus)
+//   Schritt 0…7 → Station 1…8, Detailmodus aus
+//   Schritt 8   → Station bleibt 8, Detailmodus an (← schaltet ihn wieder aus)
+//
+// Die Zahl steht nur hier im Text — die Logik liest `SNAPSHOTS.length`, die
+// Timeline `--n`. Beim Anlegen einer Station also nur das Frontmatter nachziehen.
 //
 // Ein Klick auf einen Timeline-Punkt bzw. auf den Legenden-Schalter übersteuert;
 // der nächste Pfeiltastendruck holt die Kontrolle zurück (Muster aus

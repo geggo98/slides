@@ -1171,27 +1171,61 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Opus 5 führt mit 74 % — der Vorsprung ist Rauschen.** gpt-5.6-sol liegt einen Punkt dahinter, seit dem 21.08. um 23 % billiger; klick beide an, die Fehlerbalken überlappen fast vollständig. Am billigen Ende löst **glm-5.3-flash** DeepSeek ab — nicht per Score, sondern per Preiserhöhung am 16.08. Ein anderer Harness verschiebt Scores um 10–30 Punkte, und auch die Preise ändern sich laufend (→ ⓘ). Verlasse Dich nicht blind auf Benchmarks — teste Deinen eigenen Use-Case selbst.
+**Ein Modell räumt die halbe Front.** Seit dem 01.09. steht **gemini-3.8-flash** auf dem Board: 74 % für 2,07 € — derselbe Score wie Opus 5 zu einem Fünftel des Preises. Von fünf Frontpunkten bleiben drei; terra, sol und Opus 5 fallen herunter, Opus 5 auch mit Kontingent-Rabatt. Ob das für Dich gilt, hängt am Werkzeug (Filter oben): Windsurf bietet Gemini 3.8 nicht an — dort führt weiter Opus 5 für 10,37 €. Anderer Harness, andere Zahlen (→ ⓘ) — teste Deinen Use-Case selbst.
 
 </div>
 
 <div class="text-xs opacity-70 mt-1">
 
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 26.08. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 02.09. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
 
 </div>
 
 <!--
-Zum Harness-Halbsatz auf der Folie: Die 10–30 Punkte sind nicht nur
-andere Werkzeuge und ein anderer Prompt. Der schärfste Hebel ist die
-Abbruch-Option. Ein RLVR-Task-Designer beschreibt es auf HN so: Claude
-Code mit Fable 5 neigt dazu aufzugeben — Sackgasse, „geht nicht",
+Der Neuzugang zuerst, und zwar vorsichtig formuliert: gemini-3.8-flash
+hat mit 73,8 % den höchsten Score des Boards, Opus 5 hat 73,7 %. Nach
+unserem eigenen Kriterium — weniger als 5 Punkte Abstand heißt
+gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt deshalb
+nicht „Gemini ist besser", sondern: derselbe Score kostet jetzt ein
+Fünftel. Was sich geändert hat, ist der Preis. Nebenbei hat der Punkt
+mit ±1,4 den engsten Fehlerbalken im Feld, Opus 5 hat ±3,9.
+
+Der Geisterring rechts davon ist der Listenpreis: Googles
+Einführungspreis läuft am 31.12.2026 aus, danach verdoppelt sich der
+Punkt auf 4,14 €. Auch dann bliebe er auf der Front — dann hinter
+terra, das zurückkäme.
+
+Drei Klicks im Anbieter-Filter, die sich lohnen:
+- Anthropic: ein einziger Punkt, keine Kurve. Wer an einen Anbieter
+  gebunden ist, hat keine Preis-Leistungs-Wahl mehr, nur noch eine
+  Entscheidung.
+- Windsurf: vier Frontpunkte mit Opus 5 für 10,37 € an der Spitze —
+  also genau die Front von letzter Woche. Windsurfs Katalog endet bei
+  Gemini 3.6 Flash. Für diese Nutzer ist der Befund dieser Folie noch
+  gar nicht passiert.
+- Cursor: zwei Punkte, Spitze der Neuzugang für 2,07 €. Dieselbe
+  Woche, dasselbe Board, ein anderes Werkzeug, ein Fünftel des Preises.
+
+Was der Filter NICHT sagt: Er zeigt Verfügbarkeit, nicht Preis. Cursor
+und Windsurf rechnen nach eigenen Tarifen ab; geplottet ist der
+API-Listenpreis. Und das jeweils eigene Modell fehlt — DeepSWE misst
+weder Cursors Composer noch Windsurfs SWE-1.x.
+
+Wenn jemand fragt, warum das Deck so ein Datum betont: Diese Folie
+sagte vor sieben Tagen „Opus 5 führt mit 74 %". Ein einziger
+Board-Eintrag hat das widerlegt. Das ist nicht die Ausnahme, das ist
+das Thema des Kapitels.
+
+Zum Harness-Halbsatz auf der Folie: Die 10–30 Punkte aus dem ⓘ sind
+nicht nur andere Werkzeuge und ein anderer Prompt. Der schärfste Hebel
+ist die Abbruch-Option. Ein RLVR-Task-Designer beschreibt es auf HN so:
+Claude Code mit Fable 5 neigt dazu aufzugeben — Sackgasse, „geht nicht",
 Abbruch. Dasselbe Modell über die API, in einem eigenen Harness,
 probiert 200+ Varianten durch und scheitert sich zum Ziel. Sein
 Merksatz: Wer dem Agenten eine Abbruch-Option lässt, bekommt sie
-irgendwann benutzt; nimmt man sie weg, deckt allein die
-Nicht-Determiniertheit des Modells fast den ganzen verwandten
-Lösungsraum ab. Gilt besonders für Long-Horizon-Aufgaben.
+irgendwann benutzt; nimmt man sie weg, deckt allein die Nicht-
+Determiniertheit des Modells fast den ganzen verwandten Lösungsraum ab.
+Gilt besonders für Long-Horizon-Aufgaben.
 https://news.ycombinator.com/item?id=49528037 (01.09.2026)
 
 Ehrlich einordnen: ein Erfahrungsbericht, keine Messung — eine Person,
@@ -1243,7 +1277,7 @@ Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
 ---
 hideInToc: true
-clicks: 7
+clicks: 8
 routeAlias: pareto-historie
 ---
 
