@@ -38,11 +38,45 @@ if (process.argv[4] === "toggle") {
 // gegen einen Kreis mit r=5.5 — der Marker wächst also — und unterdrückte
 // Beschriftungen kommen zurück. Beides kann neu kollidieren, deshalb prüfbar.
 const pick = process.argv.find((a) => a.startsWith("--pick="))?.split("=")[1];
-if (pick) {
-  await page.getByRole("button", { name: /Anbieter filtern/ }).click();
-  await page.waitForTimeout(250);
-  await page.getByRole("option", { name: new RegExp(`^${pick} `) }).click();
-  await page.waitForTimeout(400);
+// `--untick=<Lab>` haakt danach ein Lab AB. Damit erreicht man den dichtesten
+// beschrifteten Zustand überhaupt: fast alle Punkte, und weil ein Filter aktiv
+// ist, zusätzlich die sonst unterdrückten DeepSeek-Beschriftungen.
+const untick = process.argv
+  .find((a) => a.startsWith("--untick="))
+  ?.split("=")[1];
+// `--only=<Lab>` lässt genau ein Lab stehen. `--pick` trifft nur Presets
+// (Werkzeuge und „Alle"); Labs sind Checkboxen, kein Einzelziel.
+const only = process.argv.find((a) => a.startsWith("--only="))?.split("=")[1];
+if (pick || untick || only) {
+  const oeffnen = async () => {
+    await page.getByRole("button", { name: /Anbieter filtern/ }).click();
+    await page.waitForTimeout(250);
+  };
+  if (pick) {
+    await oeffnen();
+    await page.getByRole("menuitem", { name: new RegExp(`^${pick} `) }).click();
+    await page.waitForTimeout(400);
+  }
+  if (untick) {
+    await oeffnen();
+    await page
+      .getByRole("menuitemcheckbox", { name: new RegExp(`^${untick} `) })
+      .click();
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+  }
+  if (only) {
+    // Ein einzelnes Lab ist kein Preset — es entsteht, indem man von „Alle"
+    // aus alle anderen abwählt. Genau so muss es auch geprüft werden.
+    await oeffnen();
+    const boxen = await page.getByRole("menuitemcheckbox").all();
+    for (const b of boxen) {
+      const name = (await b.textContent())?.trim() ?? "";
+      if (!name.startsWith(only)) await b.click();
+    }
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+  }
 }
 
 const boxes = await page.evaluate(() => {
