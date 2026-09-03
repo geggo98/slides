@@ -1206,6 +1206,13 @@ Drei Klicks im Anbieter-Filter, die sich lohnen:
 - Cursor: zwei Punkte, Spitze der Neuzugang für 2,07 €. Dieselbe
   Woche, dasselbe Board, ein anderes Werkzeug, ein Fünftel des Preises.
 
+Wenn aus dem Publikum „bei uns ist nur X freigegeben" kommt: Die Labs
+darunter sind Checkboxen, mehrere gehen gleichzeitig. Anthropic allein
+ist ein einziger Punkt, OpenAI allein sind drei — zusammen sind es
+vier, und Opus 5 steht wieder an der Spitze. Ein Werkzeug-Preset setzt
+dabei Modelle, keine Lab-Häkchen: Deshalb steht Google nach „Windsurf"
+auf 2/4 und nicht auf 4/4.
+
 Was der Filter NICHT sagt: Er zeigt Verfügbarkeit, nicht Preis. Cursor
 und Windsurf rechnen nach eigenen Tarifen ab; geplottet ist der
 API-Listenpreis. Und das jeweils eigene Modell fehlt — DeepSWE misst
