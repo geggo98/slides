@@ -1,23 +1,35 @@
 import { describe, expect, it } from "vitest";
 import { CURRENT, SNAPSHOTS, paretoFront, tip } from "../../paretoData";
 
-// Die Folie „Welches Modell wofür?" behauptet eine Zahl („fünf Punkte auf der
-// Front") und eine Pointe („glm-5.3-flash auf dem Platz von deepseek-v4-pro").
-// Beides ist abgeleitet, nicht getippt: es kippt still, sobald irgendwo ein
-// Preis wandert. Genau so ist der DeepSeek-Stand am 21.08.2026 veraltet, ohne
-// dass es jemandem auffiel — deshalb dieser Test.
+// Die Folie „Welches Modell wofür?" behauptet eine Zahl („drei Punkte auf der
+// Front") und eine Pointe. Beides ist abgeleitet, nicht getippt: es kippt still,
+// sobald irgendwo ein Preis wandert. Genau so ist der DeepSeek-Stand am
+// 21.08.2026 veraltet, ohne dass es jemandem auffiel — deshalb dieser Test.
+//
+// Er hat am 03.09.2026 seinen Zweck erfüllt: gemini-3.8-flash kam ins Board und
+// die Erwartung „fünf Punkte bis 10,37 €" brach. Die Zahlen unten sind der
+// Nachfolgestand, nicht eine gelockerte Erwartung.
 
-describe("Pareto-Front, Stand 26.08.2026", () => {
+describe("Pareto-Front, Stand 02.09.2026", () => {
   const { front, dom } = paretoFront(CURRENT);
 
-  it("besteht aus fünf Punkten von 0,21 € bis 10,37 €", () => {
+  it("besteht aus drei Punkten von 0,21 € bis 2,07 €", () => {
     expect(front.map((p) => [p.label, p.eur, p.y] as const)).toStrictEqual([
       ["glm-5.3-flash", "0,21", 63],
       ["gpt-5.6-luna", "0,53", 67],
-      ["gpt-5.6-terra", "3,47", 70],
-      ["gpt-5.6-sol", "5,66", 73],
-      ["claude-opus-5", "10,37", 74],
+      ["gemini-3.8-flash", "2,07", 74],
     ]);
+  });
+
+  it("hat terra, sol und Opus 5 an den Neuzugang verloren", () => {
+    const gefallen = ["gpt-5.6-terra", "gpt-5.6-sol", "claude-opus-5"];
+    expect(dom.map((p) => p.label)).toEqual(expect.arrayContaining(gefallen));
+    // Opus 5 ist nicht knapp draußen, sondern beim gleichen Score fünfmal so
+    // teuer — das ist die Aussage der Folie.
+    const opus = CURRENT.find((p) => p.label === "claude-opus-5")!;
+    const neu = CURRENT.find((p) => p.label === "gemini-3.8-flash")!;
+    expect(neu.y).toBe(opus.y);
+    expect(opus.x / neu.x).toBeGreaterThan(4.9);
   });
 
   it("hat beide DeepSeek-Modelle nach der Preiserhöhung vom 16.08. verloren", () => {
@@ -36,9 +48,29 @@ describe("Pareto-Front, Stand 26.08.2026", () => {
     expect([glm.x, glm.y]).toStrictEqual([vorher.x, vorher.y]);
   });
 
-  it("zeigt 20 Modelle: Board-Default plus gpt-5.6-terra", () => {
-    expect(CURRENT).toHaveLength(20);
+  it("zeigt 21 Modelle: Board-Default plus gpt-5.6-terra", () => {
+    expect(CURRENT).toHaveLength(21);
     expect(CURRENT.map((p) => p.label)).toContain("gpt-5.6-terra");
+  });
+
+  // Der Board-Preis von gemini-3.8-flash ist ein Einführungspreis: Google
+  // verdoppelt Input, Output UND Cache am 01.01.2027, der Punkt verdoppelt sich
+  // also exakt. Steht die Rechnung hier, veraltet sie nicht still, wenn Google
+  // die Aktion verlängert oder streicht.
+  it("führt den Einführungspreis als Geisterring auf dem Doppelten", () => {
+    const neu = CURRENT.find((p) => p.label === "gemini-3.8-flash")!;
+    expect(neu.old?.pre).toBe("ab 01.01.");
+    expect(neu.old!.x).toBeCloseTo(neu.x * 2, 2);
+    // Auch zum Listenpreis bliebe er auf der Front — dann hinter terra.
+    const zumListenpreis = paretoFront(
+      CURRENT.map((p) => (p === neu ? { ...p, x: p.old!.x } : p)),
+    ).front.map((p) => p.label);
+    expect(zumListenpreis).toStrictEqual([
+      "glm-5.3-flash",
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gemini-3.8-flash",
+    ]);
   });
 });
 
@@ -66,7 +98,12 @@ describe("Kontingent-Overlay", () => {
 });
 
 describe("tip()", () => {
-  const sol = CURRENT.find((p) => p.label === "gpt-5.6-sol")!;
+  // Der Sol-Ring ist mit Stand 8 auf der aktuellen Folie weggefallen (dort zeigt
+  // der einzige Ring einen künftigen Preis). Die Wanderung selbst steht weiter
+  // in Stand 7 — von dort kommt der Prüfling.
+  const sol = SNAPSHOTS.find((s) => s.id === "0826")!.pts.find(
+    (p) => p.label === "gpt-5.6-sol",
+  )!;
 
   it("nennt den alten Preis mit dem Standard-Präfix", () => {
     expect(tip(sol)).toBe(

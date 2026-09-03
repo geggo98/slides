@@ -1,11 +1,12 @@
 // Datenbasis der beiden Modell-Routing-Charts: DeepSWE-Pass@1 gegen Ø-Kosten
 // pro Task. `ModelRoutingPareto.vue` zeigt den letzten Stand, `ModelRoutingHistory.vue`
-// klickt durch alle sieben.
+// klickt durch alle acht.
 //
 // Herkunft der Zahlen
 // -------------------
-// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 26.08.2026). Maßgeblich ist
-// die in die Seite eingebettete SSR-Payload — die Datei unter
+// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 02.09.2026 laut dem
+// `generated_at` der Payload). Maßgeblich ist die in die Seite eingebettete
+// SSR-Payload — die Datei unter
 // /artifacts/v1.1/leaderboard-live.json ist eine veraltete CDN-Kopie. Am
 // 01.09.2026 nachgemessen: sie führt sol zu $8,39 (Preis vor dem 21.08.), luna
 // zu $3,03 (vor dem 30.07.), gemini-3.6-flash zu $4,42 (vor der Zählfehler-
@@ -15,6 +16,21 @@
 // Auswahlregel „Best" wie auf dem Board: höchste verfügbare Effort-Stufe je
 // Modell (nicht der höchste Score — grok-4.6 liegt auf medium höher als auf
 // xhigh). Mit dieser Regel reproduziert die Extraktion die Board-Tabelle exakt.
+//
+// Am 03.09.2026 nicht mehr nur an der Tabelle geprüft, sondern am Quellcode des
+// Boards. `/assets/live-leaderboard-*.js` enthält beides:
+//
+//   _t(s) = [...s].sort((a,b) => V(b.reasoning_effort) - V(a.reasoning_effort))[0]
+//   V     = {none:0, minimal:1, low:2, medium:3, high:4, xhigh:5, max:6}
+//
+// also tatsächlich Effort-Rang, nicht Score. Und die Default-Ausblendung ist
+// dort hartcodiert:
+//
+//   mt = new Set(["gpt-5-6-terra","gpt-5-4","grok-4-5","kimi-k2-7-code",
+//                 "claude-sonnet-4-6","gemini-3-1-pro-preview","muse-spark-1-1"])
+//
+// Default = alle Modelle mit best >= 5 % außer diesen sieben. Seit
+// gemini-3.8-flash sind das 20 von 27; dieses Chart zeigt 21 (Default + terra).
 //
 // Die Stände 1 (v1) stammen aus /artifacts/v1/leaderboard-live.json, die Stände
 // 3–5 aus der Git-Historie dieses Charts (75a256c, 099c187, 94e26a2).
@@ -380,7 +396,7 @@ const S_0826: Pt[] = [
   P("muse-spark-1.2", 3.24, 55, "right", 14, 0, { ci: 2.1 }),
   P("qwen3.8-max", 3.27, 57, "right", -6, 0, { ci: 2.7 }),
   P("glm-5.2", 3.43, 44, "right", 12, 0, { ci: 1.7 }),
-  P("gpt-5.6-terra", 3.47, 70, "right", -24, 0, { ci: 2.6 }),
+  P("gpt-5.6-terra", 3.47, 70, "right", -14, 120, { ci: 2.6 }),
   P("glm-5.3", 3.5, 69, "right", 46, 34, { ci: 3.0 }),
   P("kimi-k3", 4.08, 69, "right", -14, -4, { ci: 4.5 }),
   // Zwischen Sol-Marker (oben), qwen3.8-max-Label (links) und gpt-5.5-Marker
@@ -448,6 +464,74 @@ const S_0826_HIST: Pt[] = [
   })
   .sort((a, b) => a.x - b.x);
 
+// ---------------------------------------------------------------------------
+// Stand 8 — 02.09.2026 (Board-Default + gpt-5.6-terra, 21 Modelle)
+// ---------------------------------------------------------------------------
+// Eine einzige Zeile hat sich im Board geändert: Changelog „Sep 1, 2026 — Added
+// Gemini 3.8 Flash results." Das Artefakt trägt `generated_at`
+// 2026-09-02T15:18:19Z — deshalb sah die Messung vom 01.09. es noch nicht. Alle
+// 26 bisherigen Modelle sind auf den Cent unverändert; Stand 8 wird deshalb aus
+// Stand 7 abgeleitet statt abgeschrieben. Was gleich bleibt, kann so nicht
+// versehentlich abweichen.
+//
+// Der Neuzugang ist der höchste Punkt des ganzen Boards — roh, nicht nur
+// gerundet (73,83 % gegen 73,65 % bei Opus 5) — und hat mit ±1,4 den engsten
+// Fehlerbalken im Feld. Für 2,07 € statt 10,37 €. Damit fallen terra, sol und
+// Opus 5 von der Front; übrig bleiben drei Punkte statt fünf. Opus 5 fällt auch
+// mit eingeschaltetem Kontingent-Overlay (6,91 € bzw. 8,30 € bei gleichem
+// Score) — der Toggle rechnet die Front mit.
+//
+// WICHTIG für die Einordnung: Nach dem eigenen Kriterium („weniger als 5 Punkte
+// Abstand = gleichauf") sind gemini-3.8-flash, Opus 5 und sol auf dem Score
+// gleichauf. Der Unterschied ist der Preis, nicht die Qualität.
+//
+// Geisterring statt Sol-Pfeil
+// ---------------------------
+// Der Board-Preis ist ein Einführungspreis: Google nimmt bis 31.12.2026
+// $0,75/$3,75/$0,075 pro Mtok (Input/Output/Cache) und ab 01.01.2027 exakt das
+// Doppelte. Alle drei Raten verdoppeln sich, also verdoppelt sich der Punkt:
+// 2,3623 × 2 × 0,876 = 4,14 €. Gegenprobe, dass das Board wirklich auf den
+// Aktionsraten rechnet:
+//
+//   0,278 M Input (unc.) × $0,75  = $0,209
+//  21,456 M Cache        × $0,075 = $1,609
+//   0,143 M Output       × $3,75  = $0,537
+//                          Summe  = $2,355   gegen $2,362 gemeldet
+//
+// Zum Listenpreis bliebe der Punkt auf der Front — dann hinter terra, das
+// zurückkäme. Deshalb der Ring: er zeigt, dass der Befund die Verdopplung
+// überlebt.
+//
+// Sol verliert hier sein `old`. Die Senkung vom 21.08. ist die Pointe von
+// Stand 7 und steht dort weiter; auf der aktuellen Folie lägen beide Pfeile auf
+// derselben Höhe (py(74) = 29,7 gegen py(73) = 32,9, also 3 px auseinander) und
+// zeigten beide nach links — zwei gestrichelte Waagerechte, die wie eine
+// aussehen. So bedeutet der eine verbliebene Ring eindeutig einen KÜNFTIGEN
+// Stand, nicht eine vergangene Wanderung.
+const withoutSolGhost = (p: Pt): Pt =>
+  p.label === "gpt-5.6-sol" ? { ...p, old: undefined } : p;
+
+const S_0902: Pt[] = [
+  ...S_0826.map(withoutSolGhost),
+  P("gemini-3.8-flash", 2.07, 74, "right", -10, 0, {
+    ci: 1.4,
+    old: {
+      x: 4.14,
+      pre: "ab 01.01.",
+      why: "Einführungspreis endet am 31.12.2026 — Listenpreis ist das Doppelte",
+    },
+  }),
+].sort((a, b) => a.x - b.x);
+
+// Historien-Variante: eigene Platzierung (flacheres Chart) und OHNE den
+// Zukunfts-Ring. Die Historie zeigt, was war — ein Ring, der auf 2027 zeigt,
+// läse sich dort als vergangene Wanderung. Gleiche Entscheidung wie bei
+// glm-5.3-flash in Stand 7.
+const S_0902_HIST: Pt[] = [
+  ...S_0826_HIST.map(withoutSolGhost),
+  P("gemini-3.8-flash", 2.07, 74, "right", 14, 0, { ci: 1.4 }),
+].sort((a, b) => a.x - b.x);
+
 export const SNAPSHOTS: Snapshot[] = [
   {
     id: "v1",
@@ -500,10 +584,71 @@ export const SNAPSHOTS: Snapshot[] = [
     note: "Am billigen Ende passieren zwei Dinge, die einander fast aufheben. DeepSeek stellt am 16.08. auf Peak/Off-Peak um und hebt die Preise an; das Board rechnet am 21.08. nach, und beide DeepSeek-Punkte wandern von 9 und 21 Cent auf 41 Cent und 1,46 € — von der Front gefallen, ohne dass sich ein Score geändert hätte. Fünf Tage später kommt glm-5.3-flash und landet auf 63 % für 21 Cent: exakt der Platz, den deepseek-v4-pro geräumt hat. Dazu wird sol um 23 % billiger und rückt von Opus 5 weg — für dessen einen Punkt Vorsprung zahlst Du jetzt rund 80 % Aufpreis statt rund 40 %. Fünf Punkte auf der Front, von 21 Cent bis 10,37 €.",
     pts: S_0826_HIST,
   },
+  {
+    id: "0902",
+    date: "02.09.",
+    title: "Die halbe Front verschwindet",
+    note: "Ein einziger Neuzugang räumt drei der fünf Frontpunkte ab. gemini-3.8-flash kommt am 01.09. auf 74 % für 2,07 € — derselbe Score wie Opus 5 zu einem Fünftel des Preises, und mit ±1,4 der engste Fehlerbalken im Feld. terra, sol und Opus 5 sind damit dominiert; übrig bleiben glm-5.3-flash, luna und der Neuzugang. Gleichauf heißt dabei wirklich gleichauf: Nach dem eigenen 5-Punkte-Kriterium liegen gemini-3.8-flash, Opus 5 und sol auf einem Niveau — was sich geändert hat, ist der Preis, nicht die Qualität. Kein anderes Modell hat sich bewegt, kein Preis wurde korrigiert.",
+    pts: S_0902_HIST,
+  },
 ];
 
 /** Der Stand, den die Hauptfolie zeigt. */
-export const CURRENT: Pt[] = S_0826;
+export const CURRENT: Pt[] = S_0902;
+
+// ---------------------------------------------------------------------------
+// Labs
+// ---------------------------------------------------------------------------
+// Welches Labor hinter einem Modellnamen steckt. Die Präfixregeln sind 1:1 die
+// des Boards (`/assets/stats-*.js`, Funktion `B()`) — bewusst abgeschrieben und
+// nicht selbst erfunden, damit die Zuordnung dieselbe ist wie dort. Vier Fälle
+// errät man sonst falsch: `muse-` ist Meta, `glm-` ist Zhipu, `mimo-` ist
+// Xiaomi, `composer-` ist Cursor.
+//
+// Die Reihenfolge ist Teil der Regel: das Board prüft `gpt-` zuerst. Für die
+// heutigen Namen ist das folgenlos, aber ein künftiges „gpt-oss-qwen" landete so
+// bei OpenAI und nicht bei Alibaba — genau wie dort.
+
+export type Lab =
+  | "OpenAI"
+  | "Anthropic"
+  | "Google"
+  | "xAI"
+  | "Meta"
+  | "Zhipu"
+  | "Moonshot"
+  | "DeepSeek"
+  | "Mistral"
+  | "Alibaba"
+  | "Xiaomi"
+  | "MiniMax"
+  | "Cursor"
+  | "Andere";
+
+const LAB_PREFIXES: ReadonlyArray<readonly [string, Lab]> = [
+  ["gpt-", "OpenAI"],
+  ["o1-", "OpenAI"],
+  ["o3-", "OpenAI"],
+  ["o4-", "OpenAI"],
+  ["claude-", "Anthropic"],
+  ["gemini-", "Google"],
+  ["grok-", "xAI"],
+  ["muse-", "Meta"],
+  ["glm-", "Zhipu"],
+  ["kimi-", "Moonshot"],
+  ["deepseek-", "DeepSeek"],
+  ["mistral-", "Mistral"],
+  ["mimo-", "Xiaomi"],
+  ["minimax", "MiniMax"],
+  ["qwen", "Alibaba"],
+  ["composer-", "Cursor"],
+];
+
+export function labOf(label: string): Lab {
+  const l = label.toLowerCase();
+  for (const [prefix, lab] of LAB_PREFIXES) if (l.includes(prefix)) return lab;
+  return "Andere";
+}
 
 // ---------------------------------------------------------------------------
 // Geometrie
