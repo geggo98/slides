@@ -13,6 +13,8 @@ import {
   makeScale,
   movedSegments,
   paretoFront,
+  selfDominated,
+  configFront,
   tip,
   type Pt,
 } from "./paretoData";
@@ -54,6 +56,20 @@ const QY = py(50); // … / 50 % (redaktionell, wie im Original)
 // ersetzt (×0,8). Eine Rückkehr auf das Basislimit gibt es nicht — der Ring
 // zeigt deshalb einen künftigen Stand, nicht den API-Preis.
 const subOn = ref(false);
+
+// Zweites Overlay: was die Auswahlregel des Boards kostet. Default aus, wie beim
+// Kontingent — die Folie soll zuerst zeigen, was das Board zeigt.
+//
+// Das Board nimmt je Modell die höchste Effort-Stufe. Bei vier der 22 Modelle
+// ist das nicht die beste: eine billigere eigene Stufe ist gleich gut oder
+// besser. Eingeschaltet erscheinen deshalb
+//   - ein hohler Ring auf der billigeren Stufe, mit Pfeil auf den gezeigten
+//     Punkt — dieselbe Bildsprache wie die Preis-Geisterringe: „derselbe Punkt,
+//     andere Position",
+//   - die beiden Frontpunkte, die es nur unter der anderen Regel gibt
+//     (gemini-3.8-flash auf medium, gpt-6-astra auf xhigh),
+//   - die Front über alle Konfigurationen als gestrichelte Linie.
+const effortOn = ref(false);
 
 // Anbieter-Filter. Der Zustand ist eine Modellmenge (warum, steht in
 // `providerFilter.ts`); Default ist alles. Jede Teilmenge blendet Punkte aus und
@@ -121,6 +137,71 @@ const leaders = computed(() =>
 const LX = (p: Pt) => lx(p, S);
 const LY = (p: Pt) => ly(p, S);
 
+// --- Effort-Overlay -------------------------------------------------------
+// Alles hier respektiert den Anbieter-Filter: Wer auf Cursor filtert, soll auch
+// im Overlay nur Cursor-Modelle sehen.
+const sichtbar = (label: string) => sel.value.has(label);
+
+/** Ring auf der billigeren eigenen Stufe, Pfeil auf den vom Board gezeigten. */
+const effortRings = computed(() =>
+  !effortOn.value
+    ? []
+    : selfDominated()
+        .filter((d) => sichtbar(d.label))
+        .map((d) => {
+          const gx = px(d.besser.x);
+          const gy = py(d.besser.y);
+          const tx = px(d.gezeigt.x);
+          const ty = py(d.gezeigt.y);
+          const len = Math.hypot(tx - gx, ty - gy) || 1;
+          const ux = (tx - gx) / len;
+          const uy = (ty - gy) / len;
+          const x2 = tx - ux * 9;
+          const y2 = ty - uy * 9;
+          const bx = x2 - ux * 8;
+          const by = y2 - uy * 8;
+          return {
+            label: d.label,
+            gx,
+            gy,
+            x1: gx + ux * 6,
+            y1: gy + uy * 6,
+            x2,
+            y2,
+            head: `${x2},${y2} ${bx - uy * 4},${by + ux * 4} ${bx + uy * 4},${by - ux * 4}`,
+            tip: `${d.label} auf ${d.besser.effort}: ${d.besser.y.toFixed(1)} % für ${fmt(d.besser.x)} € — das Board zeigt ${d.gezeigt.effort} für ${fmt(d.gezeigt.x)} €, also ${fmt(d.spart)} € mehr (${Math.round(d.prozent)} %)`,
+          };
+        }),
+);
+
+/** Frontpunkte, die es nur unter der Regel „beste Konfiguration" gibt. */
+const effortExtra = computed(() =>
+  !effortOn.value
+    ? []
+    : configFront()
+        .filter(
+          (c) =>
+            sichtbar(c.label) &&
+            !pts.value.some((p) => p.label === c.label && p.x === c.x),
+        )
+        .map((c) => ({
+          label: c.label,
+          effort: c.effort,
+          cx: px(c.x),
+          cy: py(c.y),
+          tip: `${c.label} auf ${c.effort}: ${c.y.toFixed(1)} % für ${fmt(c.x)} € — auf der Front nur nach der Regel „beste Konfiguration"`,
+        })),
+);
+
+const effortFrontPath = computed(() =>
+  !effortOn.value
+    ? ""
+    : configFront()
+        .filter((c) => sichtbar(c.label))
+        .map((c) => `${px(c.x)},${py(c.y)}`)
+        .join(" "),
+);
+
 const chartLabel = computed(
   () =>
     "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
@@ -144,7 +225,14 @@ const chartLabel = computed(
         "Geisterringe zeigen mit vier Fünfteln die Position ab 14.09.2026."
       : "") +
     " Der Geisterring an gemini-3.8-flash markiert 4,14 Euro — den Listenpreis ab dem " +
-    "1. Januar 2027, wenn Googles Einführungspreis ausläuft.",
+    "1. Januar 2027, wenn Googles Einführungspreis ausläuft." +
+    (effortOn.value
+      ? " Das Effort-Overlay ist eingeschaltet: Bei vier Modellen zeigt ein Ring die " +
+        "billigere eigene Effort-Stufe, die mindestens so gut ist wie die vom Board " +
+        "gezeigte, mit Pfeil auf den gezeigten Punkt. Die gestrichelte Linie ist die " +
+        "Front über alle Konfigurationen; sie hat mit gemini-3.8-flash auf medium und " +
+        "gpt-6-astra auf xhigh zwei Punkte mehr als die Front nach der Board-Regel."
+      : ""),
 );
 
 const xTicks = [0, 5, 10, 15, 20, 25];
@@ -233,6 +321,20 @@ const whiskers = computed(() =>
       >
         Claude-Code-Kontingent
         <span class="mp-tg-note">kein API-Preis · ab 14.09. +25 %</span>
+      </button>
+      <!-- Die Legendenzeile ist nowrap und mit diesem dritten Schalter exakt
+           voll: gemessen scrollWidth == clientWidth == 868 px. Jedes weitere
+           Wort schiebt Anbieter-Menü und ⓘ aus der Folie, und der gebündelte
+           Overflow-Checker sieht das NICHT — er misst nur nach unten. Wer hier
+           Text ergänzt, prüft mit playwright-tests/legend-width-check.ts. -->
+      <button
+        class="mp-tg"
+        :class="{ on: effortOn }"
+        :aria-pressed="effortOn"
+        @click="effortOn = !effortOn"
+      >
+        Beste Effort-Stufe
+        <span class="mp-tg-note">statt höchster</span>
       </button>
       <ProviderPicker v-model="sel" :pts="CURRENT" />
       <button
@@ -433,6 +535,23 @@ const whiskers = computed(() =>
       <text v-if="!pts.length" :x="L + 12" :y="T + 52" class="mp-leer">
         Kein Modell ausgewählt — im Anbieter-Menü mindestens ein Lab anhaken
       </text>
+
+      <!-- Effort-Overlay: die Front unter der Regel „beste Konfiguration",
+           die Ringe auf den billigeren eigenen Stufen. Vor der echten Front
+           gezeichnet, damit diese oben liegt. -->
+      <polyline v-if="effortOn" :points="effortFrontPath" class="mp-eff-line" />
+      <g v-for="e in effortRings" :key="`eff-${e.label}`" class="mp-eff">
+        <circle :cx="e.gx" :cy="e.gy" r="5.5" class="mp-eff-pt">
+          <title>{{ e.tip }}</title>
+        </circle>
+        <line :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2" class="mp-eff-arm" />
+        <polygon :points="e.head" class="mp-eff-head" />
+      </g>
+      <g v-for="e in effortExtra" :key="`effx-${e.label}-${e.effort}`">
+        <circle :cx="e.cx" :cy="e.cy" r="5.5" class="mp-eff-pt mp-eff-pt-front">
+          <title>{{ e.tip }}</title>
+        </circle>
+      </g>
 
       <!-- Pareto-Front -->
       <polyline :points="frontPath" class="mp-front-line" />
@@ -766,6 +885,38 @@ const whiskers = computed(() =>
 .mp-moved polygon {
   fill: var(--color-text-tertiary);
 }
+/* Effort-Overlay. Bewusst dieselbe Grammatik wie die Preis-Geisterringe (hohler
+   Ring = andere Position desselben Modells), aber in der Warnfarbe: hier geht es
+   nicht um einen künftigen Preis, sondern um Geld, das die Auswahlregel liegen
+   lässt. */
+.mp-eff-pt {
+  fill: none;
+  stroke: var(--color-text-warning);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 2;
+}
+.mp-eff-pt-front {
+  stroke-dasharray: none;
+  stroke-width: 2.2;
+}
+.mp-eff-arm {
+  stroke: var(--color-text-warning);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+  opacity: 0.8;
+}
+.mp-eff-head {
+  fill: var(--color-text-warning);
+  opacity: 0.8;
+}
+.mp-eff-line {
+  fill: none;
+  stroke: var(--color-text-warning);
+  stroke-width: 1.6;
+  stroke-dasharray: 6 4;
+  opacity: 0.75;
+}
+
 .mp-old-pt {
   fill: none;
   stroke: var(--color-text-tertiary);

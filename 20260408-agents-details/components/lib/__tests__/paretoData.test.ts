@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CURRENT, SNAPSHOTS, paretoFront, tip } from "../../paretoData";
+import {
+  bestByEffort,
+  configFront,
+  CURRENT,
+  EFFORTS,
+  ownFront,
+  paretoFront,
+  selfDominated,
+  SNAPSHOTS,
+  tip,
+} from "../../paretoData";
 
 // Die Folie „Welches Modell wofür?" behauptet eine Zahl („drei Punkte auf der
 // Front") und eine Pointe. Beides ist abgeleitet, nicht getippt: es kippt still,
@@ -206,5 +216,107 @@ describe("Wie oft sich die Front verschoben hat", () => {
     expect(SNAPSHOTS[n]!.id).toBe("0903");
     expect(front(n)).toBe(front(n - 1));
     expect(front(n)).toBe("glm-5.3-flash|gpt-5.6-luna|gemini-3.8-flash");
+  });
+});
+
+// Die Effort-Tabelle ist eine ZWEITE Datenquelle neben den Punkten oben. Zwei
+// Quellen driften, sobald niemand hinsieht — deshalb der erste Test: Er rechnet
+// die Board-Regel über die Tabelle und muss exakt die Punkte des aktuellen
+// Stands ergeben. Bricht er, meinen Tabelle und Chart verschiedene Board-Stände.
+describe("Effort-Tabelle gegen die gezeigten Punkte", () => {
+  it("reproduziert CURRENT über die Board-Regel", () => {
+    const aus = bestByEffort().map((c) => [c.label, Math.round(c.y), c.x]);
+    const soll = [...CURRENT]
+      .sort((a, b) => a.x - b.x)
+      .map((p) => [p.label, p.y, p.x]);
+    expect(aus).toStrictEqual(soll);
+  });
+
+  it("kennt jedes gezeigte Modell und kein weiteres", () => {
+    const inTabelle = new Set(EFFORTS.map((c) => c.label));
+    expect([...inTabelle].sort()).toStrictEqual(
+      CURRENT.map((p) => p.label).sort(),
+    );
+    expect(EFFORTS).toHaveLength(63);
+  });
+});
+
+// Das ist die Aussage des Effort-Overlays. Die Zahlen stammen aus derselben
+// Payload wie die Punkte; hier wird nur nachgerechnet, welche Modelle das Board
+// auf einer Stufe zeigt, die ihre eigene billigere schlägt.
+describe("Wo die Board-Regel danebengreift", () => {
+  const sd = selfDominated();
+
+  it("betrifft genau vier der 22 Modelle", () => {
+    expect(
+      sd.map((d) => [
+        d.label,
+        d.gezeigt.effort,
+        d.besser.effort,
+        Number(d.spart.toFixed(2)),
+        Math.round(d.prozent),
+      ]),
+    ).toStrictEqual([
+      ["claude-fable-5", "max", "xhigh", 7.2, 38],
+      ["gpt-6-astra", "max", "high", 5.83, 54],
+      ["grok-4.6", "xhigh", "medium", 1.8, 37],
+      ["gemini-3.7-flash", "high", "medium", 0.14, 7],
+    ]);
+  });
+
+  // Bei dreien ist die billigere Stufe sogar die bessere — das ist der Teil,
+  // den man nicht erwartet und der die Folie trägt.
+  it("liefert bei dreien von vieren auch den höheren Score", () => {
+    const hoeher = sd
+      .filter((d) => d.besser.y > d.gezeigt.y)
+      .map((d) => d.label);
+    expect(hoeher).toStrictEqual([
+      "claude-fable-5",
+      "grok-4.6",
+      "gemini-3.7-flash",
+    ]);
+  });
+
+  it("zeigt astra auf einer Stufe, die dieselben Aufgaben löst", () => {
+    const astra = sd.find((d) => d.label === "gpt-6-astra")!;
+    expect(astra.gezeigt.y).toBe(astra.besser.y);
+    expect(astra.gezeigt.x / astra.besser.x).toBeGreaterThan(2);
+  });
+});
+
+describe("Front über alle Konfigurationen", () => {
+  it("bekommt zwei Punkte mehr als die Board-Regel", () => {
+    expect(configFront().map((c) => [c.label, c.effort, c.x])).toStrictEqual([
+      ["glm-5.3-flash", "max", 0.21],
+      ["gpt-5.6-luna", "max", 0.53],
+      ["gemini-3.8-flash", "medium", 1.72],
+      ["gemini-3.8-flash", "high", 2.07],
+      ["gpt-6-astra", "xhigh", 5.71],
+    ]);
+  });
+
+  // Der Boden ist redaktionell, also muss belegt sein, warum es ihn gibt:
+  // ohne ihn führt die Front Punkte, die niemand empfehlen würde.
+  it("braucht den Boden gegen entartete Punkte", () => {
+    const ohne = configFront(0);
+    expect(ohne[0]!.y).toBeLessThan(2);
+    expect(ohne[0]!.x).toBeLessThan(0.02);
+    expect(ohne.length).toBeGreaterThan(configFront().length);
+  });
+
+  it("nimmt für astra xhigh, nicht die vom Board gezeigte max-Stufe", () => {
+    const astra = configFront().find((c) => c.label === "gpt-6-astra")!;
+    expect(astra.effort).toBe("xhigh");
+    // Höchster Rohwert des ganzen Boards — höher als jeder gezeigte Punkt.
+    expect(Math.max(...bestByEffort().map((c) => c.y))).toBeLessThan(astra.y);
+  });
+
+  it("führt für astra vier nicht selbst-dominierte Stufen", () => {
+    expect(ownFront("gpt-6-astra").map((c) => c.effort)).toStrictEqual([
+      "low",
+      "medium",
+      "high",
+      "xhigh",
+    ]);
   });
 });

@@ -728,6 +728,218 @@ export const SNAPSHOTS: Snapshot[] = [
 export const CURRENT: Pt[] = S_0903;
 
 // ---------------------------------------------------------------------------
+// Effort-Stufen — die Auswahlregel nachrechenbar machen
+// ---------------------------------------------------------------------------
+// Bis Stand 8 stand die Board-Regel („höchste Effort-Stufe je Modell") nur als
+// Satz im Kopf dieser Datei. Mit gpt-6-astra reicht das nicht mehr: Dort ist die
+// gezeigte Stufe von einer eigenen, billigeren geschlagen, und die Front sähe
+// unter einer anderen Regel anders aus. Eine Behauptung dieser Größe gehört
+// gerechnet, nicht geschrieben.
+//
+// Deshalb hier ALLE 63 Konfigurationen der 22 gezeigten Modelle, so wie die
+// SSR-Payload sie am 03.09.2026 führt. Vollständig und nicht nur die vier
+// auffälligen: Nur so lässt sich `bestByEffort()` gegen `CURRENT` verriegeln —
+// der Test, der beweist, dass diese Tabelle dieselbe Quelle meint wie die
+// Punkte oben.
+//
+// `y` ist hier der ROHwert, nicht auf ganze Prozent gerundet wie in `Pt`. Die
+// interessanten Abstände liegen unter einem Prozentpunkt: astra trennt `xhigh`
+// von `max` um 0,89 Punkte, und gerundet wären beide 73 %.
+
+export type Effort = "low" | "medium" | "high" | "xhigh" | "max";
+
+export interface Cfg {
+  /** Modellname wie im Chart. */
+  label: string;
+  effort: Effort;
+  /** Pass@1 in Prozent, ungerundet. */
+  y: number;
+  /** halbes 95-%-Konfidenzintervall in Prozentpunkten. */
+  ci: number;
+  /** €/Task, mit demselben Kurs wie alle Punkte oben. */
+  x: number;
+}
+
+const C = (
+  label: string,
+  effort: Effort,
+  y: number,
+  ci: number,
+  x: number,
+): Cfg => ({
+  label,
+  effort,
+  y,
+  ci,
+  x,
+});
+
+export const EFFORTS: readonly Cfg[] = [
+  C("claude-fable-5", "low", 59.58, 2.79, 3.29),
+  C("claude-fable-5", "medium", 65.37, 4.42, 5.33),
+  C("claude-fable-5", "high", 68.6, 1.12, 8.04),
+  C("claude-fable-5", "xhigh", 69.91, 3.24, 11.75),
+  C("claude-fable-5", "max", 69.72, 4.03, 18.95),
+  C("claude-opus-4.8", "low", 40.8, 1.46, 2.01),
+  C("claude-opus-4.8", "medium", 48.67, 2.24, 3.02),
+  C("claude-opus-4.8", "high", 51.77, 4.56, 3.75),
+  C("claude-opus-4.8", "xhigh", 54.36, 3.71, 7.01),
+  C("claude-opus-4.8", "max", 58.97, 1.76, 11.58),
+  C("claude-opus-5", "low", 58.13, 2.33, 1.46),
+  C("claude-opus-5", "medium", 68.9, 1.17, 2.88),
+  C("claude-opus-5", "high", 72.83, 1.95, 5.32),
+  C("claude-opus-5", "xhigh", 73.15, 3.06, 7.95),
+  C("claude-opus-5", "max", 73.65, 3.87, 10.37),
+  C("claude-sonnet-5", "medium", 39.78, 3.13, 3.57),
+  C("claude-sonnet-5", "high", 48.23, 4.51, 6.5),
+  C("claude-sonnet-5", "xhigh", 49.67, 3.45, 10.42),
+  C("claude-sonnet-5", "max", 53.85, 4.24, 23.13),
+  C("deepseek-v4-flash", "max", 53.32, 3.57, 0.41),
+  C("deepseek-v4-pro", "max", 62.83, 6.33, 1.46),
+  C("gemini-3.5-flash", "high", 36.06, 3.97, 3.02),
+  C("gemini-3.6-flash", "high", 46.68, 3.7, 1.94),
+  C("gemini-3.7-flash", "low", 53.76, 2.59, 1.61),
+  C("gemini-3.7-flash", "medium", 65.49, 3.09, 1.77),
+  C("gemini-3.7-flash", "high", 65.27, 1.79, 1.91),
+  C("gemini-3.8-flash", "medium", 71.02, 2.28, 1.72),
+  C("gemini-3.8-flash", "high", 73.83, 1.42, 2.07),
+  C("glm-5.2", "high", 36.28, 4.75, 2.48),
+  C("glm-5.2", "max", 43.78, 1.73, 3.43),
+  C("glm-5.3", "max", 68.96, 3.02, 3.5),
+  C("glm-5.3-flash", "max", 63.39, 4.38, 0.21),
+  C("gpt-5.5", "low", 26.99, 2.29, 1.05),
+  C("gpt-5.5", "medium", 53.98, 2.55, 2.41),
+  C("gpt-5.5", "high", 64.38, 3.12, 4.47),
+  C("gpt-5.5", "xhigh", 67.04, 6.47, 6.33),
+  C("gpt-5.6-luna", "low", 1.55, 0.83, 0.01),
+  C("gpt-5.6-luna", "medium", 11.28, 0.83, 0.04),
+  C("gpt-5.6-luna", "high", 44.25, 2.92, 0.14),
+  C("gpt-5.6-luna", "xhigh", 56.86, 2.17, 0.27),
+  C("gpt-5.6-luna", "max", 67.19, 3.99, 0.53),
+  C("gpt-5.6-sol", "low", 45.35, 2.39, 0.72),
+  C("gpt-5.6-sol", "medium", 61.06, 1.58, 1.24),
+  C("gpt-5.6-sol", "high", 69.4, 1.43, 2.33),
+  C("gpt-5.6-sol", "xhigh", 70.73, 0.82, 3.15),
+  C("gpt-5.6-sol", "max", 72.67, 2.83, 5.66),
+  C("gpt-5.6-terra", "low", 24.05, 0.78, 0.3),
+  C("gpt-5.6-terra", "medium", 35.11, 3.38, 0.41),
+  C("gpt-5.6-terra", "high", 53.76, 4.33, 0.79),
+  C("gpt-5.6-terra", "xhigh", 60.18, 2.12, 1.49),
+  C("gpt-5.6-terra", "max", 69.62, 2.56, 3.47),
+  C("gpt-6-astra", "low", 67.04, 1.3, 1.92),
+  C("gpt-6-astra", "medium", 72.79, 2.59, 3.84),
+  C("gpt-6-astra", "high", 73.23, 3.42, 5.01),
+  C("gpt-6-astra", "xhigh", 74.12, 2.87, 5.71),
+  C("gpt-6-astra", "max", 73.23, 0.83, 10.84),
+  C("grok-4.6", "low", 41.65, 2.32, 0.91),
+  C("grok-4.6", "medium", 67.48, 2.28, 3.02),
+  C("grok-4.6", "high", 65.19, 1.53, 3.84),
+  C("grok-4.6", "xhigh", 66.74, 2.18, 4.82),
+  C("kimi-k3", "max", 68.51, 4.54, 4.08),
+  C("muse-spark-1.2", "xhigh", 54.87, 2.12, 3.24),
+  C("qwen3.8-max", "xhigh", 57.46, 2.66, 3.27),
+];
+
+/** Effort-Rang wie im Board-Bundle (`/assets/live-leaderboard-*.js`). */
+const RANG: Record<Effort, number> = {
+  low: 2,
+  medium: 3,
+  high: 4,
+  xhigh: 5,
+  max: 6,
+};
+
+/**
+ * Die Board-Regel: je Modell die höchste Effort-Stufe. Reproduziert `CURRENT`
+ * bis auf die Rundung — `paretoData.test.ts` prüft genau das.
+ */
+export function bestByEffort(cfgs: readonly Cfg[] = EFFORTS): Cfg[] {
+  const best = new Map<string, Cfg>();
+  for (const c of cfgs) {
+    const da = best.get(c.label);
+    if (!da || RANG[c.effort] > RANG[da.effort]) best.set(c.label, c);
+  }
+  return [...best.values()].sort((a, b) => a.x - b.x);
+}
+
+/** Konfigurationen eines Modells, die keine andere desselben Modells schlägt. */
+export function ownFront(label: string, cfgs: readonly Cfg[] = EFFORTS): Cfg[] {
+  const meins = cfgs.filter((c) => c.label === label).sort((a, b) => a.x - b.x);
+  const out: Cfg[] = [];
+  let bestY = -Infinity;
+  for (const c of meins)
+    if (c.y > bestY) {
+      out.push(c);
+      bestY = c.y;
+    }
+  return out;
+}
+
+export interface SelfDom {
+  label: string;
+  /** Was das Board zeigt. */
+  gezeigt: Cfg;
+  /** Die billigste eigene Stufe, die mindestens so gut ist. */
+  besser: Cfg;
+  /** €/Task, die die Board-Regel liegen lässt. */
+  spart: number;
+  /** dasselbe in Prozent des gezeigten Preises. */
+  prozent: number;
+}
+
+/**
+ * Modelle, deren GEZEIGTE Stufe von einer eigenen, billigeren geschlagen wird —
+ * gleicher oder höherer Score für weniger Geld. Das ist der Kern des
+ * Effort-Overlays: nicht „billiger ist schlechter", sondern „die Regel greift
+ * bei diesen Modellen daneben".
+ */
+export function selfDominated(cfgs: readonly Cfg[] = EFFORTS): SelfDom[] {
+  return bestByEffort(cfgs)
+    .flatMap((gezeigt) => {
+      const besser = cfgs
+        .filter(
+          (c) =>
+            c.label === gezeigt.label && c.y >= gezeigt.y && c.x < gezeigt.x,
+        )
+        .sort((a, b) => a.x - b.x)[0];
+      if (!besser) return [];
+      const spart = gezeigt.x - besser.x;
+      return [
+        {
+          label: gezeigt.label,
+          gezeigt,
+          besser,
+          spart,
+          prozent: (100 * spart) / gezeigt.x,
+        },
+      ];
+    })
+    .sort((a, b) => b.spart - a.spart);
+}
+
+/**
+ * Front über ALLE Konfigurationen statt über eine je Modell — die Antwort auf
+ * „was, wenn man die beste statt der höchsten Stufe nimmt".
+ *
+ * `boden` ist redaktionell und nötig: Ohne ihn besteht das billige Ende aus
+ * entarteten Punkten, die zwar pareto-optimal, als Empfehlung aber unsinnig
+ * sind — gpt-5.6-luna auf `low` erreicht 1,55 % für einen Cent. 60 % ist die
+ * Höhe, ab der das Hauptchart überhaupt Frontpunkte hat (glm-5.3-flash, 63 %).
+ */
+export function configFront(boden = 60, cfgs: readonly Cfg[] = EFFORTS): Cfg[] {
+  const out: Cfg[] = [];
+  let bestY = -Infinity;
+  for (const c of [...cfgs]
+    .filter((c) => c.y >= boden)
+    .sort((a, b) => a.x - b.x))
+    if (c.y > bestY) {
+      out.push(c);
+      bestY = c.y;
+    }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Labs
 // ---------------------------------------------------------------------------
 // Welches Labor hinter einem Modellnamen steckt. Die Präfixregeln sind 1:1 die
