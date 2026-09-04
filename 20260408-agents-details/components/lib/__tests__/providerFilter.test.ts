@@ -140,14 +140,17 @@ describe("Labs kombinieren", () => {
       "gpt-5.6-luna",
       "gpt-5.6-terra",
       "gpt-5.6-sol",
+      "gpt-6-astra",
     ]);
     // Zusammen — der realistische Fall „bei uns sind beide freigegeben":
-    expect(front(nurLabs("OpenAI", "Anthropic"))).toStrictEqual([
-      "gpt-5.6-luna",
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
-      "claude-opus-5",
-    ]);
+    // Seit gpt-6-astra bringt Anthropic hier NICHTS mehr ein: astra erreicht
+    // denselben gerundeten Score wie Opus 5 fuer 5,71 € statt 10,37 €, und
+    // damit faellt der einzige Anthropic-Punkt von der kombinierten Front.
+    // Das ist keine Nebensache fuer die Folie — es ist der einzige Fall im
+    // Filter, in dem ein zusaetzliches Lab die Front NICHT verbessert.
+    expect(front(nurLabs("OpenAI", "Anthropic"))).toStrictEqual(
+      front(nurLabs("OpenAI")),
+    );
   });
 
   it("füllt ein teilweise enthaltenes Lab auf und leert ein volles", () => {

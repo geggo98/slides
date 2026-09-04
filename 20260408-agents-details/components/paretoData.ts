@@ -22,17 +22,49 @@
 // (Nebenbei bestätigt dieselbe Datei die 0,42-€-Rechnung für glm-5.3-flash
 // weiter unten — sie führt dessen Listenpreis statt des Aktionspreises.)
 //
-// Auswahlregel „Best" wie auf dem Board: höchste verfügbare Effort-Stufe je
-// Modell (nicht der höchste Score — grok-4.6 liegt auf medium höher als auf
-// xhigh). Mit dieser Regel reproduziert die Extraktion die Board-Tabelle exakt.
+// Auswahlregel: je Modell die BESTE gemessene Konfiguration
+// ---------------------------------------------------------
+// Höchster Pass@1, bei Gleichstand die billigere Stufe. `bestByScore()` weiter
+// unten rechnet es aus, `paretoData.test.ts` verriegelt es gegen die Punkte.
 //
-// Am 03.09.2026 nicht mehr nur an der Tabelle geprüft, sondern am Quellcode des
-// Boards. `/assets/live-leaderboard-*.js` enthält beides:
+// Das Board macht es anders: es nimmt die höchste EFFORT-Stufe. Am 03.09.2026
+// im Quellcode nachgesehen, `/assets/live-leaderboard-*.js`:
 //
 //   _t(s) = [...s].sort((a,b) => V(b.reasoning_effort) - V(a.reasoning_effort))[0]
 //   V     = {none:0, minimal:1, low:2, medium:3, high:4, xhigh:5, max:6}
 //
-// also tatsächlich Effort-Rang, nicht Score. Und die Default-Ausblendung ist
+// also tatsächlich Effort-Rang, nicht Score. Diese Regel war ein Stellvertreter:
+// Solange mehr Aufwand mehr Ergebnis hieß, zeigte sie jedes Modell von seiner
+// besten Seite — und genau das braucht die Folie, die empfiehlt, den billigsten
+// Frontpunkt zu nehmen, der die Aufgabe löst. Der Stellvertreter hält nicht
+// mehr. Gegen alle acht abrufbaren Board-Zustände gerechnet, weichen die beiden
+// Regeln in vier Fällen ab, und immer zugunsten der billigeren Stufe:
+//
+//   claude-fable-5    Board max   69,72 % 18,95 €   best xhigh  69,91 % 11,75 €
+//   grok-4.6          Board xhigh 66,74 %  4,82 €   best medium 67,48 %  3,02 €
+//   gemini-3.7-flash  Board high  65,27 %  1,91 €   best medium 65,49 %  1,77 €
+//   gpt-6-astra       Board max   73,23 % 10,84 €   best xhigh  74,12 %  5,71 €
+//
+// In drei von vier Fällen ist die billigere Stufe auch die bessere. Bei astra
+// kostet die höchste das Doppelte für keine einzige zusätzlich gelöste Aufgabe.
+//
+// Was die Umstellung NICHT ändert: die Front — in keinem der neun Stände und
+// unter keinem Anbieter-Preset. Alle vier Punkte rücken nach links, keiner
+// erreicht dabei eine Front. Die Front-Tests sind deshalb unverändert geblieben
+// und grün; das ist die maschinelle Fassung dieser Aussage.
+//
+// Datiert ist die Abweichung, sie gilt nicht rückwirkend: fable-5 ab dem
+// 14.06., grok-4.6 ab dem 13.08., gemini-3.7-flash ab dem 13.08. Alle Stände
+// sind gegen das Archiv unter `data/deepswe/` nachgerechnet, nicht gegen die
+// Erinnerung — `boardArchive.test.ts` tut es bei jedem Testlauf erneut.
+//
+// Wie nötig das ist, zeigt der 13.08.2026: Das Board hatte an dem Tag ZWEI
+// Zustände. Der um 03:56 führt gemini-3.7-flash nur auf `high`, der um 16:11
+// auch auf `medium` — und der Stand 14.08. dieses Decks gehört zum zweiten.
+// Wer den erstbesten Crawl des Tages nimmt, bekommt 1,91 € statt 1,77 € und
+// merkt nichts davon.
+//
+// Und die Default-Ausblendung ist
 // dort hartcodiert:
 //
 //   mt = new Set(["gpt-5-6-terra","gpt-5-4","grok-4-5","kimi-k2-7-code",
@@ -276,9 +308,9 @@ const S_V11: Pt[] = [
   P("gpt-5.4", 4.95, 52, "right", -8),
   P("gpt-5.5", 6.33, 67, "right", -8),
   P("gemini-3.5-flash", 6.43, 37, "right", 14),
-  P("gemini-3.1-pro", 8.3, 12, "right", 4),
+  P("gemini-3.1-pro", 8.31, 12, "right", 4),
   P("claude-opus-4.8", 11.58, 59, "right", 4, 0, { lbl: true }),
-  P("claude-fable-5", 18.95, 70, "left", 4),
+  P("claude-fable-5", 11.75, 70, "left", 4),
 ];
 
 // ---------------------------------------------------------------------------
@@ -299,9 +331,9 @@ const S_0722: Pt[] = [
   P("gpt-5.5", 6.33, 67, "right", 4),
   P("gemini-3.5-flash", 6.43, 37, "right", 4),
   P("gpt-5.6-sol", 7.35, 73, "right", 4),
-  P("gemini-3.1-pro", 8.3, 12, "right", 4),
+  P("gemini-3.1-pro", 8.31, 12, "right", 4),
   P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 18.95, 70, "left", 4),
+  P("claude-fable-5", 11.75, 70, "left", 4),
   P("claude-sonnet-5", 23.13, 54, "left", 4),
 ];
 
@@ -323,10 +355,10 @@ const S_0725: Pt[] = [
   P("gpt-5.5", 6.33, 67, "right", 4),
   P("gemini-3.5-flash", 6.43, 37, "right", 4),
   P("gpt-5.6-sol", 7.35, 73, "right", -8),
-  P("gemini-3.1-pro", 8.3, 12, "right", 4),
+  P("gemini-3.1-pro", 8.31, 12, "right", 4),
   P("claude-opus-5", 10.37, 74, "right", 4),
   P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 18.95, 70, "left", 4),
+  P("claude-fable-5", 11.75, 70, "left", 4),
   P("claude-sonnet-5", 23.13, 54, "left", 4),
 ];
 
@@ -355,10 +387,10 @@ const S_0730: Pt[] = [
   P("gpt-5.5", 6.33, 67, "right", 4),
   P("gemini-3.5-flash", 6.43, 37, "right", 4),
   P("gpt-5.6-sol", 7.35, 73, "right", -8),
-  P("gemini-3.1-pro", 8.3, 12, "right", 4),
+  P("gemini-3.1-pro", 8.31, 12, "right", 4),
   P("claude-opus-5", 10.37, 74, "right", 4),
   P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 18.95, 70, "left", 4),
+  P("claude-fable-5", 11.75, 70, "left", 4),
   P("claude-sonnet-5", 23.13, 54, "left", 4),
 ];
 
@@ -383,7 +415,7 @@ const S_0814: Pt[] = [
   P("gemini-3.1-pro", 1.88, 12, "right", 14, 0, {
     old: { x: 8.3, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
-  P("gemini-3.7-flash", 1.91, 65, "right", 14),
+  P("gemini-3.7-flash", 1.77, 65, "right", 14),
   P("gemini-3.6-flash", 1.94, 47, "right", 6, 60, {
     old: { x: 3.09, y: 49, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
@@ -398,14 +430,14 @@ const S_0814: Pt[] = [
   P("glm-5.2", 3.43, 44, "right", 4),
   P("gpt-5.6-terra", 3.47, 70, "left", -16, -20),
   P("kimi-k3", 4.08, 69, "right", 16),
-  P("grok-4.6", 4.82, 67, "right", -8),
+  P("grok-4.6", 3.02, 67, "right", -8),
   P("claude-sonnet-4.6", 4.84, 30, "right", 12),
   P("gpt-5.4", 4.95, 52, "right", -8),
   P("gpt-5.5", 6.33, 67, "right", 12),
   P("gpt-5.6-sol", 7.35, 73, "right", -10, 10),
   P("claude-opus-5", 10.37, 74, "right", 4),
   P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 18.95, 70, "left", 4),
+  P("claude-fable-5", 11.75, 70, "left", 4),
   P("claude-sonnet-5", 23.13, 54, "left", 4),
 ];
 
@@ -456,7 +488,7 @@ const S_0826: Pt[] = [
     lbl: false,
     blockers: ["glm-5.3-flash", "qwen3.8-max"],
   }),
-  P("gemini-3.7-flash", 1.91, 65, "right", 8, 0, { ci: 1.8 }),
+  P("gemini-3.7-flash", 1.77, 65, "right", 8, 0, { ci: 1.8 }),
   P("gemini-3.6-flash", 1.94, 47, "right", 0, 0, { ci: 3.7 }),
   P("gemini-3.5-flash", 3.02, 36, "right", 12, 0, { ci: 4.0 }),
   P("muse-spark-1.2", 3.24, 55, "right", 14, 0, { ci: 2.1 }),
@@ -468,7 +500,7 @@ const S_0826: Pt[] = [
   // Zwischen Sol-Marker (oben), qwen3.8-max-Label (links) und gpt-5.5-Marker
   // (rechts) bleibt keine freie Zeile — das Label geht mit Führungslinie in die
   // leere Fläche rechts unterhalb.
-  P("grok-4.6", 4.82, 67, "right", 32, 34, { ci: 2.2 }),
+  P("grok-4.6", 3.02, 67, "right", 32, 34, { ci: 2.2 }),
   P("gpt-5.6-sol", 5.66, 73, "right", -14, 20, {
     ci: 2.8,
     old: { x: 7.35, why: "OpenAI-Preissenkung 21.08.: −20 % / −33 %" },
@@ -493,10 +525,10 @@ const S_0826: Pt[] = [
     sub: 7.72,
     sub25: 9.26,
   }),
-  P("claude-fable-5", 18.95, 70, "left", 4, 0, {
+  P("claude-fable-5", 11.75, 70, "left", 4, 0, {
     ci: 4.0,
-    sub: 12.63,
-    sub25: 15.16,
+    sub: 7.83,
+    sub25: 9.4,
   }),
   P("claude-sonnet-5", 23.13, 54, "left", 4, 0, {
     ci: 4.2,
@@ -621,29 +653,30 @@ const S_0902_HIST: Pt[] = [
 // DIE FRONT BLEIBT: glm-5.3-flash, luna, gemini-3.8-flash. Der Neuzugang ist
 // dominiert — und das ist die Pointe der Station, nicht ihr Nebensatz.
 //
-// gpt-6-astra und die Auswahlregel
-// --------------------------------
-// Das Board zeigt je Modell die HÖCHSTE Effort-Stufe (siehe Kopf dieser Datei),
-// nicht die beste. Bei astra fallen die beiden zum ersten Mal weit auseinander:
+// gpt-6-astra: der teuerste Punkt der Folie, und trotzdem dominiert
+// -----------------------------------------------------------------
+// Dieses Chart zeigt je Modell die BESTE gemessene Konfiguration (siehe Kopf
+// dieser Datei), das Board die höchste Effort-Stufe. Bei astra fallen die
+// beiden zum ersten Mal weit auseinander:
 //
 //   low     67,04 %  303/452  ±1,30   1,92 €
 //   medium  72,79 %  329/452  ±2,59   3,84 €
 //   high    73,23 %  331/452  ±3,42   5,01 €
-//   xhigh   74,12 %  335/452  ±2,87   5,71 €   höchster Rohwert des Boards
+//   xhigh   74,12 %  335/452  ±2,87   5,71 €   ← hier geplottet, bester Score
 //   max     73,23 %  331/452  ±0,83  10,84 €   ← das Board zeigt DIESE Zeile
 //
-// `high` und `max` lösen dieselben 331 Aufgaben. Die höchste Stufe kostet also
-// das Doppelte für keine einzige zusätzliche gelöste Aufgabe, und `xhigh` ist
-// besser UND billiger als `max`. Der gezeigte Punkt ist damit von einer eigenen
-// Konfiguration dominiert.
+// `xhigh` ist besser UND billiger als `max`, und `high` löst dieselben 331
+// Aufgaben wie `max` für die Hälfte. Die höchste Stufe ist hier also die
+// schlechteste Wahl in beiden Achsen — genau der Fall, an dem die alte Regel
+// zerbrochen ist.
 //
-// Folge für die Front: Nach der Board-Regel liegt astra bei 73 % / 10,84 € und
-// ist von gemini-3.8-flash (74 % / 2,07 €) wie von Opus 5 (74 % / 10,37 €,
-// billiger UND besser) dominiert. Nach der Regel „beste Konfiguration je
-// Modell" läge astra mit xhigh bei 74,12 % / 5,71 € auf der Front. Welche der
-// beiden Fronten man sieht, hängt an der Auswahlregel — nicht an den Modellen.
-// `EFFORTS` weiter unten trägt die Zahlen, `selfDominated()` und
-// `configFront()` rechnen es aus.
+// Und die Pointe der Station: Auch mit seiner besten Konfiguration erreicht
+// astra die Front NICHT. 74,12 % ist der höchste Rohwert des ganzen Boards,
+// aber gemini-3.8-flash steht bei 73,83 % — auf ganze Prozent gerundet, wie
+// dieses Chart es tut, sind das beide 74 %, und gemini kostet 2,07 € statt
+// 5,71 €. Die 0,29 Punkte Unterschied liegen tief in den Konfidenzintervallen
+// (±2,87 gegen ±1,42). Wer der Empfehlung dieser Folie folgt — den billigsten
+// Frontpunkt nehmen, der die Aufgabe löst —, landet nicht bei astra.
 //
 // Preisvorbehalt: astra ist das EINZIGE Modell des Boards mit einem
 // `cost_basis`-Feld, und dort steht „Expected launch pricing at all context
@@ -654,12 +687,14 @@ const S_0902_HIST: Pt[] = [
 // Hier ist der eine bekannte Preis selbst vorläufig, und das gehört in den
 // Text, nicht in die Geometrie.
 //
-// Platzierung: astra (10,84 €/73 %) liegt 16 px rechts und 3 px unter Opus 5
-// (10,37 €/74 %). Das Label geht deshalb nach oben in die leere Fläche über
-// 74 % — dort steht nichts, und `leader()` zieht ab ~24 px die Linie dahin.
+// Platzierung: astra (5,71 €/74 %) liegt fast auf gpt-5.6-sol (5,66 €/73 %) —
+// 2 px daneben und 3 px darüber, die Marker überlappen. Dieselbe Lage wie bei
+// gpt-5.6-terra/glm-5.3 (3,47 € und 3,50 €), und dieselbe Lösung: Das Label
+// weicht in die leere Fläche über 74 % aus, `leader()` zieht ab ~24 px die
+// Linie dahin. Nach jeder Änderung hier: pareto-label-qa.ts.
 const S_0903: Pt[] = [
   ...S_0902,
-  P("gpt-6-astra", 10.84, 73, "right", -20, 58, { ci: 0.83 }),
+  P("gpt-6-astra", 5.71, 74, "center", 0, -16, { ci: 0.83 }),
 ].sort((a, b) => a.x - b.x);
 
 // `lbl: true` wie bei kimi-k3 in Stand 5: Das Historien-Chart beschriftet sonst
@@ -668,7 +703,7 @@ const S_0903: Pt[] = [
 // Beschriftung sieht niemand, welcher der 28 Punkte der Neuzugang ist.
 const S_0903_HIST: Pt[] = [
   ...S_0902_HIST,
-  P("gpt-6-astra", 10.84, 73, "right", -12, 22, { ci: 0.83, lbl: true }),
+  P("gpt-6-astra", 5.71, 74, "center", 0, -14, { ci: 0.83, lbl: true }),
 ].sort((a, b) => a.x - b.x);
 
 export const SNAPSHOTS: Snapshot[] = [
@@ -865,14 +900,34 @@ const RANG: Record<Effort, number> = {
 };
 
 /**
- * Die Board-Regel: je Modell die höchste Effort-Stufe. Reproduziert `CURRENT`
- * bis auf die Rundung — `paretoData.test.ts` prüft genau das.
+ * Die Board-Regel: je Modell die höchste Effort-Stufe. Steht hier als Beleg,
+ * nicht als Auswahl — dieses Chart benutzt `bestByScore()`.
  */
 export function bestByEffort(cfgs: readonly Cfg[] = EFFORTS): Cfg[] {
   const best = new Map<string, Cfg>();
   for (const c of cfgs) {
     const da = best.get(c.label);
     if (!da || RANG[c.effort] > RANG[da.effort]) best.set(c.label, c);
+  }
+  return [...best.values()].sort((a, b) => a.x - b.x);
+}
+
+/**
+ * Die Regel dieses Charts: je Modell die BESTE gemessene Konfiguration —
+ * höchster Pass@1, bei Gleichstand die billigere. Reproduziert `CURRENT` bis
+ * auf die Rundung; `paretoData.test.ts` prüft genau das.
+ *
+ * Sie ist per Konstruktion nie selbst-dominiert: nichts desselben Modells hat
+ * einen höheren Score, und bei gleichem Score ist nichts billiger. Genau das
+ * macht sie zur richtigen Grundlage für die Empfehlung auf der Folie — wer die
+ * Front hochsteigt, soll auf jeder Sprosse das Beste bekommen, was das Modell
+ * hergibt, und nicht die teuerste Einstellung.
+ */
+export function bestByScore(cfgs: readonly Cfg[] = EFFORTS): Cfg[] {
+  const best = new Map<string, Cfg>();
+  for (const c of cfgs) {
+    const da = best.get(c.label);
+    if (!da || c.y > da.y || (c.y === da.y && c.x < da.x)) best.set(c.label, c);
   }
   return [...best.values()].sort((a, b) => a.x - b.x);
 }

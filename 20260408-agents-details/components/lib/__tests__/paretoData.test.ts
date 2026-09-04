@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   bestByEffort,
+  bestByScore,
   configFront,
   CURRENT,
   EFFORTS,
   fmt,
   ownFront,
   paretoFront,
+  type Pt,
   selfDominated,
   SNAPSHOTS,
   tip,
@@ -70,14 +72,18 @@ describe("Pareto-Front, Stand 03.09.2026", () => {
   // Board-Regel aber `max` mit 73,23 % für 10,84 €, und das ist doppelt
   // dominiert: von gemini-3.8-flash (besser und ein Fünftel des Preises) und
   // von Opus 5 (gleicher gerundeter Score, 47 Cent billiger).
+  // astra hat mit 74,12 % den hoechsten Rohwert des Boards und erreicht die
+  // Front trotzdem nicht: gerundet steht es gleichauf mit gemini-3.8-flash,
+  // das ein Drittel kostet. Das ist die Aussage der Folie in einem Test.
   it("nimmt gpt-6-astra auf, ohne dass die Front sich bewegt", () => {
     const astra = CURRENT.find((p) => p.label === "gpt-6-astra")!;
-    expect([astra.eur, astra.y]).toStrictEqual(["10,84", 73]);
+    expect([astra.eur, astra.y]).toStrictEqual(["5,71", 74]);
     expect(dom.map((p) => p.label)).toContain("gpt-6-astra");
 
-    const opus = CURRENT.find((p) => p.label === "claude-opus-5")!;
-    expect(opus.x).toBeLessThan(astra.x);
-    expect(opus.y).toBeGreaterThan(astra.y);
+    const gemini = CURRENT.find((p) => p.label === "gemini-3.8-flash")!;
+    expect(gemini.y).toBe(astra.y);
+    expect(gemini.x).toBeLessThan(astra.x);
+    expect(astra.x / gemini.x).toBeGreaterThan(2.5);
   });
 
   // Der Board-Preis von gemini-3.8-flash ist ein Einführungspreis: Google
@@ -108,7 +114,7 @@ describe("Kontingent-Overlay", () => {
     expect(claude.map((p) => [p.label, p.sub, p.sub25])).toStrictEqual([
       ["claude-opus-5", 6.91, 8.3],
       ["claude-opus-4.8", 7.72, 9.26],
-      ["claude-fable-5", 12.63, 15.16],
+      ["claude-fable-5", 7.83, 9.4],
       ["claude-sonnet-5", 15.42, 18.5],
     ]);
   });
@@ -231,8 +237,8 @@ describe("Wie oft sich die Front verschoben hat", () => {
 // die Board-Regel über die Tabelle und muss exakt die Punkte des aktuellen
 // Stands ergeben. Bricht er, meinen Tabelle und Chart verschiedene Board-Stände.
 describe("Effort-Tabelle gegen die gezeigten Punkte", () => {
-  it("reproduziert CURRENT über die Board-Regel", () => {
-    const aus = bestByEffort().map((c) => [c.label, Math.round(c.y), c.x]);
+  it("reproduziert CURRENT über die Regel dieses Charts", () => {
+    const aus = bestByScore().map((c) => [c.label, Math.round(c.y), c.x]);
     const soll = [...CURRENT]
       .sort((a, b) => a.x - b.x)
       .map((p) => [p.label, p.y, p.x]);
@@ -246,11 +252,18 @@ describe("Effort-Tabelle gegen die gezeigten Punkte", () => {
     );
     expect(EFFORTS).toHaveLength(63);
   });
+
+  // Der Kern der Umstellung: Die gewählte Konfiguration wird per Konstruktion
+  // von keiner eigenen billigeren geschlagen. Unter der Board-Regel gilt das
+  // für vier Modelle nicht — der Test darunter zählt sie.
+  it("wählt nie eine selbst-dominierte Konfiguration", () => {
+    expect(selfDominated(bestByScore())).toStrictEqual([]);
+  });
 });
 
-// Das ist die Aussage des Effort-Overlays. Die Zahlen stammen aus derselben
-// Payload wie die Punkte; hier wird nur nachgerechnet, welche Modelle das Board
-// auf einer Stufe zeigt, die ihre eigene billigere schlägt.
+// Warum dieses Chart die Board-Regel nicht übernimmt. Die Zahlen stammen aus
+// derselben Payload wie die Punkte; hier wird nachgerechnet, welche Modelle das
+// Board auf einer Stufe zeigt, die ihre eigene billigere schlägt.
 describe("Wo die Board-Regel danebengreift", () => {
   const sd = selfDominated();
 
@@ -272,7 +285,7 @@ describe("Wo die Board-Regel danebengreift", () => {
   });
 
   // Bei dreien ist die billigere Stufe sogar die bessere — das ist der Teil,
-  // den man nicht erwartet und der die Folie trägt.
+  // den man nicht erwartet.
   it("liefert bei dreien von vieren auch den höheren Score", () => {
     const hoeher = sd
       .filter((d) => d.besser.y > d.gezeigt.y)
@@ -289,10 +302,37 @@ describe("Wo die Board-Regel danebengreift", () => {
     expect(astra.gezeigt.y).toBe(astra.besser.y);
     expect(astra.gezeigt.x / astra.besser.x).toBeGreaterThan(2);
   });
+
+  // Genau diese vier Modelle sind die, die sich beim Regelwechsel bewegt haben.
+  // Wandert der Kreis, muss auch paretoData.ts wandern.
+  it("bewegt genau die vier Punkte, die im Chart links stehen", () => {
+    const board = new Map(bestByEffort().map((c) => [c.label, c.x]));
+    const anders = [...CURRENT]
+      .filter((p) => board.get(p.label) !== p.x)
+      .map((p) => [p.label, board.get(p.label), p.x]);
+    expect(anders).toStrictEqual([
+      ["gemini-3.7-flash", 1.91, 1.77],
+      ["grok-4.6", 4.82, 3.02],
+      ["gpt-6-astra", 10.84, 5.71],
+      ["claude-fable-5", 18.95, 11.75],
+    ]);
+  });
+
+  // Die Aussage der Folie und des ⓘ-Dialogs: Die Front hängt NICHT an der
+  // Auswahlregel — nur die dominierten Punkte bewegen sich.
+  it("lässt die Front beider Regeln gleich", () => {
+    const alsPt = (cs: { label: string; y: number; x: number }[]) =>
+      cs
+        .map((c) => ({ label: c.label, x: c.x, y: Math.round(c.y) }) as Pt)
+        .sort((a, b) => a.x - b.x);
+    expect(paretoFront(alsPt(bestByScore())).front.map((p) => p.label)).toEqual(
+      paretoFront(alsPt(bestByEffort())).front.map((p) => p.label),
+    );
+  });
 });
 
 describe("Front über alle Konfigurationen", () => {
-  it("bekommt zwei Punkte mehr als die Board-Regel", () => {
+  it("hat zwei Punkte mehr als die Front über die Modelle", () => {
     expect(configFront().map((c) => [c.label, c.effort, c.x])).toStrictEqual([
       ["glm-5.3-flash", "max", 0.21],
       ["gpt-5.6-luna", "max", 0.53],
@@ -311,11 +351,17 @@ describe("Front über alle Konfigurationen", () => {
     expect(ohne.length).toBeGreaterThan(configFront().length);
   });
 
-  it("nimmt für astra xhigh, nicht die vom Board gezeigte max-Stufe", () => {
+  // astra steht auf der Konfig-Front, aber nicht auf der Modell-Front: Sein
+  // Rohwert ist der höchste des Boards, gerundet ist er der von
+  // gemini-3.8-flash — und das kostet ein Drittel. Genau der Unterschied, den
+  // die Folie meint, wenn sie „der billigste, der die Aufgabe löst" sagt.
+  it("führt astra, obwohl es die Modell-Front nicht erreicht", () => {
     const astra = configFront().find((c) => c.label === "gpt-6-astra")!;
     expect(astra.effort).toBe("xhigh");
-    // Höchster Rohwert des ganzen Boards — höher als jeder gezeigte Punkt.
-    expect(Math.max(...bestByEffort().map((c) => c.y))).toBeLessThan(astra.y);
+    expect(Math.max(...bestByScore().map((c) => c.y))).toBe(astra.y);
+    expect(paretoFront(CURRENT).front.map((p) => p.label)).not.toContain(
+      "gpt-6-astra",
+    );
   });
 
   it("führt für astra vier nicht selbst-dominierte Stufen", () => {
