@@ -100,6 +100,29 @@ To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock fro
 
 Follow the guidelines in the **/slidev** skill for Playwright testing. Key rule: use the **Write tool** to create scripts in `playwright-tests/` and run them with `bun run` — never use heredocs, shell redirects, or `/tmp`.
 
+### Textmaße erst nach dem Laden der Schrift messen
+
+Der Code-Font 0xProto lädt asynchron und nur auf Anforderung. Wer direkt nach
+`networkidle` eine `getBoundingClientRect()` von SVG- oder Code-Text nimmt,
+misst mit einiger Wahrscheinlichkeit die Fallback-Monospace (Menlo/SF Mono:
+Zelle 1,15 em, Vorschub 0,60 em) statt 0xProto (Zelle 1,51 em, Vorschub
+0,62 em) — gemessen am 04.09.2026 in `agents-details`, wo die Labels bis
+Station 4 einer Folie in der einen und ab Station 5 in der anderen Schrift
+standen. Vor jeder Textmessung deshalb:
+
+```js
+await document.fonts.load('12px "0xProto"');
+await document.fonts.ready;
+// und prüfen: [...document.fonts].some(f => f.family.includes("0xProto") && f.status === "loaded")
+```
+
+Fehlt der Eintrag in `document.fonts` ganz, hat das Deck kein `@font-face`
+für die Schrift — dann hilft kein Warten. Decks ohne Monaco-Block brauchen
+die Regel in ihrer eigenen `style.css` (Muster: `20260711-sre-simulations`,
+`20260408-agents-details`). `playwright-tests/font-metrics.ts` misst Zelle
+und Tinte, `playwright-tests/label-box-check.ts` hält ein Layout-Modell
+gegen den Browser.
+
 ### Slide-Canvas-Skalierung und Overflow-Checks
 
 Slidev rendert jede Slide auf einem **logischen Canvas** (Default `980×552` CSS-Pixel) und skaliert diesen per CSS-Transform auf die Viewport-Größe. Bei einem 1280×720-Viewport beträgt der Skalierungsfaktor ≈ **1.3** — d.h. `max-height: 480px` in einer Komponente wird real als `~624px` gerendert.
