@@ -1171,24 +1171,52 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Ein Modell räumt die halbe Front.** Seit dem 01.09. steht **gemini-3.8-flash** auf dem Board: 74 % für 2,07 € — derselbe Score wie Opus 5 zu einem Fünftel des Preises. Von fünf Frontpunkten bleiben drei; terra, sol und Opus 5 fallen herunter, Opus 5 auch mit Kontingent-Rabatt. Ob das für Dich gilt, hängt am Werkzeug (Filter oben): Windsurf bietet Gemini 3.8 nicht an — dort führt weiter Opus 5 für 10,37 €. Anderer Harness, andere Zahlen (→ ⓘ) — teste Deinen Use-Case selbst.
+**Die Front hängt an einer Auswahlregel.** **gemini-3.8-flash** führt sie an: 74 % für 2,07 €, derselbe Score wie Opus 5 zu einem Fünftel des Preises. Der Neuzugang **gpt-6-astra** ändert nichts — 73 % für 10,84 €, sogar von Opus 5 dominiert. Aber nur, weil das Board die **höchste** Effort-Stufe zeigt: eine Stufe tiefer löst astra dieselben Aufgaben für 5,01 €. Ob das für Dich gilt, hängt am Werkzeug (Filter oben): Windsurf bietet Gemini 3.8 nicht an — dort führt weiter Opus 5 für 10,37 €. Anderer Harness, andere Zahlen (→ ⓘ).
 
 </div>
 
 <div class="text-xs opacity-70 mt-1">
 
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 02.09. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
+DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 03.09. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
 
 </div>
 
 <!--
-Der Neuzugang zuerst, und zwar vorsichtig formuliert: gemini-3.8-flash
-hat mit 73,8 % den höchsten Score des Boards, Opus 5 hat 73,7 %. Nach
-unserem eigenen Kriterium — weniger als 5 Punkte Abstand heißt
-gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt deshalb
-nicht „Gemini ist besser", sondern: derselbe Score kostet jetzt ein
-Fünftel. Was sich geändert hat, ist der Preis. Nebenbei hat der Punkt
-mit ±1,4 den engsten Fehlerbalken im Feld, Opus 5 hat ±3,9.
+Die Spitze zuerst, und zwar vorsichtig formuliert: gemini-3.8-flash
+hat mit 73,8 % den höchsten Score, den das Board AUSWEIST, Opus 5 hat
+73,7 %. Nach unserem eigenen Kriterium — weniger als 5 Punkte Abstand
+heißt gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt
+deshalb nicht „Gemini ist besser", sondern: derselbe Score kostet ein
+Fünftel. Was sich geändert hat, ist der Preis.
+
+Seit dem 03.09. steht gpt-6-astra daneben, und das ist das lehrreichste
+Beispiel des Kapitels. Das Board zeigt es bei 73 % für 10,84 € — also
+dominiert, und zwar sogar von Opus 5, das bei gleichem gerundeten Score
+47 Cent WENIGER kostet. Der Grund ist die Auswahlregel: Das Board nimmt
+je Modell die HÖCHSTE Effort-Stufe, nicht die beste. Bei astra sind das
+zum ersten Mal deutlich zwei verschiedene Dinge:
+
+  high    73,23 %   331/452    5,01 €
+  xhigh   74,12 %   335/452    5,71 €   <- höchster Rohwert des Boards
+  max     73,23 %   331/452   10,84 €   <- das Board zeigt DIESE Zeile
+
+high und max lösen dieselben 331 von 452 Aufgaben. Die höchste Stufe
+kostet also das Doppelte für keine einzige zusätzlich gelöste Aufgabe,
+und xhigh ist besser UND billiger als max. Wer nach „beste
+Konfiguration" plottet statt nach „höchste Stufe", bekommt astra auf
+die Front, bei 5,71 €. Die Front hängt hier an einer Auswahlregel, nicht
+an den Modellen — das ist die Pointe der Folie.
+
+Zwei Vorbehalte, beide gehören dazu. Erstens ist astras Preis der
+einzige auf dem Board, den Datacurve als „expected launch pricing"
+ausweist: angekündigt, nicht abgerechnet, mit einer Position „compute
+units", die es sonst nirgends gibt. Zweitens steht astra in keinem
+Werkzeug-Katalog — am 04.09. bei Cursor und Windsurf nachgesehen, null
+Treffer. Das teuerste Modell dieser Folie kann man noch gar nicht
+kaufen.
+
+Nebenbei zu den Fehlerbalken: den engsten hat jetzt astra mit ±0,83,
+davor gemini-3.8-flash mit ±1,4. Opus 5 hat ±3,9.
 
 Der Geisterring rechts davon ist der Listenpreis: Googles
 Einführungspreis läuft am 31.12.2026 aus, danach verdoppelt sich der
@@ -1219,9 +1247,10 @@ API-Listenpreis. Und das jeweils eigene Modell fehlt — DeepSWE misst
 weder Cursors Composer noch Windsurfs SWE-1.x.
 
 Wenn jemand fragt, warum das Deck so ein Datum betont: Diese Folie
-sagte vor sieben Tagen „Opus 5 führt mit 74 %". Ein einziger
-Board-Eintrag hat das widerlegt. Das ist nicht die Ausnahme, das ist
-das Thema des Kapitels.
+sagte Ende August „Opus 5 führt mit 74 %". Ein einziger Board-Eintrag
+hat das widerlegt — und eine Woche später hat der nächste Neuzugang
+gar nichts bewegt. Beides ist das Thema des Kapitels: Die Zahl ist ein
+Datum, kein Naturgesetz.
 
 Zum Harness-Halbsatz auf der Folie: Die 10–30 Punkte aus dem ⓘ sind
 nicht nur andere Werkzeuge und ein anderer Prompt. Der schärfste Hebel
@@ -1284,7 +1313,7 @@ Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
 ---
 hideInToc: true
-clicks: 8
+clicks: 9
 routeAlias: pareto-historie
 ---
 

@@ -39,7 +39,7 @@
 //                 "claude-sonnet-4-6","gemini-3-1-pro-preview","muse-spark-1-1"])
 //
 // Default = alle Modelle mit best >= 5 % außer diesen sieben. Seit
-// gemini-3.8-flash sind das 20 von 27; dieses Chart zeigt 21 (Default + terra).
+// gpt-6-astra sind das 21 von 28; dieses Chart zeigt 22 (Default + terra).
 //
 // Die Stände 1 (v1) stammen aus /artifacts/v1/leaderboard-live.json, die Stände
 // 3–5 aus der Git-Historie dieses Charts (75a256c, 099c187, 94e26a2).
@@ -462,6 +462,12 @@ const S_0826: Pt[] = [
   // dy so gewählt, dass das Label auch mit eingeschaltetem Abo-Overlay (Punkt
   // wandert auf 6,91 €, Geisterring auf 8,30 €) nicht in den Sol-Geisterring
   // läuft.
+  // dx bleibt 0, obwohl das Label seit gpt-6-astra (10,84 €/73 %) optisch eher
+  // unter dessen Marker sitzt als unter dem eigenen: `dx: -45` zentriert es
+  // zwar richtig, schiebt es mit eingeschaltetem Overlay aber auf den
+  // gpt-5.5-Marker — gemessen, nicht vermutet. Die Zuordnung übernimmt
+  // stattdessen die Führungslinie von astra, das weit nach oben rechts
+  // ausweicht.
   P("claude-opus-5", 10.37, 74, "right", 20, 0, {
     ci: 3.9,
     sub: 6.91,
@@ -583,6 +589,73 @@ const S_0902_HIST: Pt[] = [
   P("gemini-3.8-flash", 2.07, 74, "right", 14, 0, { ci: 1.4 }),
 ].sort((a, b) => a.x - b.x);
 
+// ---------------------------------------------------------------------------
+// Stand 9 — 03.09.2026 (Board-Default + gpt-5.6-terra, 22 Modelle)
+// ---------------------------------------------------------------------------
+// Board-Payload `generated_at` 2026-09-03T22:24:37.984682. Der Stand ist gegen
+// den archivierten Board-Zustand vom 02.09. (Stand 8, `generated_at`
+// 2026-09-02T15:18:19Z) gediffed, nicht abgeschrieben. Ergebnis des Diffs:
+//
+//   nur heute:     gpt-6-astra, fünf Effort-Zeilen
+//   verschwunden:  —
+//   geändert:      —
+//
+// Kein Score, kein Preis, keine Zeile sonst. Deshalb ist Stand 9 wieder aus
+// Stand 8 abgeleitet: was gleich bleibt, kann so nicht versehentlich abweichen.
+//
+// DIE FRONT BLEIBT: glm-5.3-flash, luna, gemini-3.8-flash. Der Neuzugang ist
+// dominiert — und das ist die Pointe der Station, nicht ihr Nebensatz.
+//
+// gpt-6-astra und die Auswahlregel
+// --------------------------------
+// Das Board zeigt je Modell die HÖCHSTE Effort-Stufe (siehe Kopf dieser Datei),
+// nicht die beste. Bei astra fallen die beiden zum ersten Mal weit auseinander:
+//
+//   low     67,04 %  303/452  ±1,30   1,92 €
+//   medium  72,79 %  329/452  ±2,59   3,84 €
+//   high    73,23 %  331/452  ±3,42   5,01 €
+//   xhigh   74,12 %  335/452  ±2,87   5,71 €   höchster Rohwert des Boards
+//   max     73,23 %  331/452  ±0,83  10,84 €   ← das Board zeigt DIESE Zeile
+//
+// `high` und `max` lösen dieselben 331 Aufgaben. Die höchste Stufe kostet also
+// das Doppelte für keine einzige zusätzliche gelöste Aufgabe, und `xhigh` ist
+// besser UND billiger als `max`. Der gezeigte Punkt ist damit von einer eigenen
+// Konfiguration dominiert.
+//
+// Folge für die Front: Nach der Board-Regel liegt astra bei 73 % / 10,84 € und
+// ist von gemini-3.8-flash (74 % / 2,07 €) wie von Opus 5 (74 % / 10,37 €,
+// billiger UND besser) dominiert. Nach der Regel „beste Konfiguration je
+// Modell" läge astra mit xhigh bei 74,12 % / 5,71 € auf der Front. Welche der
+// beiden Fronten man sieht, hängt an der Auswahlregel — nicht an den Modellen.
+// `EFFORTS` weiter unten trägt die Zahlen, `selfDominated()` und
+// `configFront()` rechnen es aus.
+//
+// Preisvorbehalt: astra ist das EINZIGE Modell des Boards mit einem
+// `cost_basis`-Feld, und dort steht „Expected launch pricing at all context
+// lengths: $12/M uncached input, $15/M cache writes, $1.20/M cache reads,
+// $50/M output, $2/M compute units." Das sind angekündigte, nicht abgerechnete
+// Preise — die Position „compute units" gibt es bei keinem anderen Modell.
+// Deshalb KEIN Geisterring: ein Ring behauptet einen zweiten, bekannten Preis.
+// Hier ist der eine bekannte Preis selbst vorläufig, und das gehört in den
+// Text, nicht in die Geometrie.
+//
+// Platzierung: astra (10,84 €/73 %) liegt 16 px rechts und 3 px unter Opus 5
+// (10,37 €/74 %). Das Label geht deshalb nach oben in die leere Fläche über
+// 74 % — dort steht nichts, und `leader()` zieht ab ~24 px die Linie dahin.
+const S_0903: Pt[] = [
+  ...S_0902,
+  P("gpt-6-astra", 10.84, 73, "right", -20, 58, { ci: 0.83 }),
+].sort((a, b) => a.x - b.x);
+
+// `lbl: true` wie bei kimi-k3 in Stand 5: Das Historien-Chart beschriftet sonst
+// nur Front und Wanderung, und astra ist beides nicht — es ist dominiert und
+// bewegt sich nicht. Genau das IST aber die Aussage der Station, und ohne
+// Beschriftung sieht niemand, welcher der 28 Punkte der Neuzugang ist.
+const S_0903_HIST: Pt[] = [
+  ...S_0902_HIST,
+  P("gpt-6-astra", 10.84, 73, "right", -12, 22, { ci: 0.83, lbl: true }),
+].sort((a, b) => a.x - b.x);
+
 export const SNAPSHOTS: Snapshot[] = [
   {
     id: "v1",
@@ -642,10 +715,17 @@ export const SNAPSHOTS: Snapshot[] = [
     note: "Ein einziger Neuzugang räumt drei der fünf Frontpunkte ab. gemini-3.8-flash kommt am 01.09. auf 74 % für 2,07 € — derselbe Score wie Opus 5 zu einem Fünftel des Preises, und mit ±1,4 der engste Fehlerbalken im Feld. terra, sol und Opus 5 sind damit dominiert; übrig bleiben glm-5.3-flash, luna und der Neuzugang. Gleichauf heißt dabei wirklich gleichauf: Nach dem eigenen 5-Punkte-Kriterium liegen gemini-3.8-flash, Opus 5 und sol auf einem Niveau — was sich geändert hat, ist der Preis, nicht die Qualität. Kein anderes Modell hat sich bewegt, kein Preis wurde korrigiert.",
     pts: S_0902_HIST,
   },
+  {
+    id: "0903",
+    date: "03.09.",
+    title: "Die Front hält",
+    note: "Ein Neuzugang, und diesmal passiert nichts. gpt-6-astra kommt auf 73 % für 10,84 € und ist damit gleich doppelt dominiert: von gemini-3.8-flash (74 % für 2,07 €) und von Opus 5, das bei gleichem Score 47 Cent WENIGER kostet. Die Front bleibt Zeichen für Zeichen dieselbe — glm-5.3-flash, luna, gemini-3.8-flash. Interessant ist, warum der Punkt so weit rechts liegt: Das Board zeigt je Modell die höchste Effort-Stufe, und astras höchste ist seine schlechteste. Auf `high` löst es dieselben 331 von 452 Aufgaben für 5,01 € statt 10,84 €, auf `xhigh` sogar 335 — der höchste Rohwert des ganzen Boards — für 5,71 €. Nach dieser Regel läge astra auf der Front. Die Front hängt hier also an einer Auswahlregel, nicht an den Modellen. Und der Preis ist ohnehin vorläufig: astra ist der einzige Eintrag, den das Board mit „expected launch pricing“ ausweist.",
+    pts: S_0903_HIST,
+  },
 ];
 
 /** Der Stand, den die Hauptfolie zeigt. */
-export const CURRENT: Pt[] = S_0902;
+export const CURRENT: Pt[] = S_0903;
 
 // ---------------------------------------------------------------------------
 // Labs

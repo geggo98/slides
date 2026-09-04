@@ -75,11 +75,21 @@ describe("Presets schreiben Modellmengen, keine Lab-Häkchen", () => {
     expect(front(nurLabs(...labsVonWindsurf))).toContain("gemini-3.8-flash");
   });
 
-  it("deckt drei Labs bei Windsurf nur teilweise ab", () => {
+  // Seit gpt-6-astra (03.09.) ist auch OpenAI nur noch teilweise abgedeckt:
+  // Windsurfs Katalog führt es nicht — am 04.09.2026 an
+  // docs.devin.ai/desktop/models nachgesehen, null Treffer für „gpt-6"/„astra"
+  // bei 222 Treffern für „gpt-5.6" auf derselben Seite. Der Filter kann also
+  // finden; das Modell steht dort wirklich nicht. Für Cursor gilt dasselbe.
+  it("deckt vier Labs bei Windsurf nur teilweise ab", () => {
     const teil = labRows(windsurf, CURRENT)
       .filter((r) => r.zustand === "teilweise")
       .map((r) => `${r.lab} ${r.drin}/${r.gesamt}`);
-    expect(teil).toStrictEqual(["Google 2/4", "Zhipu 1/3", "DeepSeek 1/2"]);
+    expect(teil).toStrictEqual([
+      "OpenAI 4/5",
+      "Google 2/4",
+      "Zhipu 1/3",
+      "DeepSeek 1/2",
+    ]);
   });
 });
 
@@ -177,9 +187,9 @@ describe("Menü-Einträge", () => {
   it("sortiert Labs nach Modellzahl, dann alphabetisch", () => {
     const alle = vonPreset("all");
     expect(labRows(alle, CURRENT).map((r) => [r.lab, r.gesamt])).toStrictEqual([
+      ["OpenAI", 5],
       ["Anthropic", 4],
       ["Google", 4],
-      ["OpenAI", 4],
       ["Zhipu", 3],
       ["DeepSeek", 2],
       ["Alibaba", 1],

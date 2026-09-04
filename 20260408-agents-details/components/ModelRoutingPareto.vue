@@ -125,7 +125,7 @@ const chartLabel = computed(
   () =>
     "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
     "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
-    "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 02.09.2026" +
+    "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 03.09.2026" +
     (sel.value.size === CURRENT.length
       ? ""
       : `, gefiltert auf ${preset.value?.label ?? "eine eigene Auswahl"} mit ${pts.value.length} von ${CURRENT.length} Modellen`) +
@@ -133,9 +133,11 @@ const chartLabel = computed(
     front.value
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
       .join(", ") +
-    ". Seit dem 01.09. hält gemini-3.8-flash den höchsten Score des Boards und kostet ein " +
-    "Fünftel von Claude Opus 5, das denselben Score erreicht; terra, sol und Opus 5 sind " +
-    "dadurch dominiert." +
+    ". Seit dem 01.09. führt gemini-3.8-flash die Front an und kostet ein Fünftel von " +
+    "Claude Opus 5, das denselben Score erreicht; terra, sol und Opus 5 sind dadurch " +
+    "dominiert. Der Neuzugang gpt-6-astra vom 03.09. ändert die Front nicht: Das Board " +
+    "zeigt je Modell die höchste Effort-Stufe, und astras höchste löst dieselben Aufgaben " +
+    "wie die Stufe darunter, kostet aber mit 10,84 Euro mehr als das Doppelte." +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
         "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +

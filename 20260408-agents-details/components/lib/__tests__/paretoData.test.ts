@@ -10,7 +10,7 @@ import { CURRENT, SNAPSHOTS, paretoFront, tip } from "../../paretoData";
 // die Erwartung „fünf Punkte bis 10,37 €" brach. Die Zahlen unten sind der
 // Nachfolgestand, nicht eine gelockerte Erwartung.
 
-describe("Pareto-Front, Stand 02.09.2026", () => {
+describe("Pareto-Front, Stand 03.09.2026", () => {
   const { front, dom } = paretoFront(CURRENT);
 
   it("besteht aus drei Punkten von 0,21 € bis 2,07 €", () => {
@@ -48,9 +48,25 @@ describe("Pareto-Front, Stand 02.09.2026", () => {
     expect([glm.x, glm.y]).toStrictEqual([vorher.x, vorher.y]);
   });
 
-  it("zeigt 21 Modelle: Board-Default plus gpt-5.6-terra", () => {
-    expect(CURRENT).toHaveLength(21);
+  it("zeigt 22 Modelle: Board-Default plus gpt-5.6-terra", () => {
+    expect(CURRENT).toHaveLength(22);
     expect(CURRENT.map((p) => p.label)).toContain("gpt-5.6-terra");
+  });
+
+  // Stand 9 ist die Gegenprobe zu Stand 8: dort riss EIN Neuzugang drei Punkte
+  // von der Front, hier bewegt einer gar nichts. gpt-6-astra trägt mit 74,12 %
+  // auf `xhigh` den höchsten Rohwert des ganzen Boards — gezeigt wird nach der
+  // Board-Regel aber `max` mit 73,23 % für 10,84 €, und das ist doppelt
+  // dominiert: von gemini-3.8-flash (besser und ein Fünftel des Preises) und
+  // von Opus 5 (gleicher gerundeter Score, 47 Cent billiger).
+  it("nimmt gpt-6-astra auf, ohne dass die Front sich bewegt", () => {
+    const astra = CURRENT.find((p) => p.label === "gpt-6-astra")!;
+    expect([astra.eur, astra.y]).toStrictEqual(["10,84", 73]);
+    expect(dom.map((p) => p.label)).toContain("gpt-6-astra");
+
+    const opus = CURRENT.find((p) => p.label === "claude-opus-5")!;
+    expect(opus.x).toBeLessThan(astra.x);
+    expect(opus.y).toBeGreaterThan(astra.y);
   });
 
   // Der Board-Preis von gemini-3.8-flash ist ein Einführungspreis: Google
@@ -142,6 +158,7 @@ describe("kimi-k2.7-code, korrigiert am 04.09.2026", () => {
       ["0814", "1,92"],
       ["0826", "1,92"],
       ["0902", "1,92"],
+      ["0903", "1,92"],
     ]);
   });
 
@@ -157,11 +174,37 @@ describe("kimi-k2.7-code, korrigiert am 04.09.2026", () => {
   });
 
   it("bleibt sonst dominiert — die übrigen Stände ändern sich nicht", () => {
-    for (const id of ["v11", "0730", "0814", "0826", "0902"]) {
+    for (const id of ["v11", "0730", "0814", "0826", "0902", "0903"]) {
       const s = SNAPSHOTS.find((x) => x.id === id)!;
       const { front } = paretoFront(s.pts);
       const drin = front.some((p) => p.label === "kimi-k2.7-code");
       expect(drin).toBe(id === "v11");
     }
+  });
+});
+
+// Der ⓘ-Dialog nennt eine Zahl: „in acht Übergängen siebenmal verschoben".
+// Solche Zahlen veralten still — vorher stand dort „achtmal", was die STÄNDE
+// zählte statt der Verschiebungen. Hier wird sie ausgerechnet.
+describe("Wie oft sich die Front verschoben hat", () => {
+  const front = (i: number) =>
+    paretoFront(SNAPSHOTS[i]!.pts)
+      .front.map((p) => p.label)
+      .join("|");
+
+  it("verschiebt sich in acht Übergängen siebenmal", () => {
+    const uebergaenge = SNAPSHOTS.length - 1;
+    let verschoben = 0;
+    for (let i = 1; i < SNAPSHOTS.length; i++)
+      if (front(i) !== front(i - 1)) verschoben++;
+    expect([uebergaenge, verschoben]).toStrictEqual([8, 7]);
+  });
+
+  // Das ist die Aussage von Stand 9: ein Neuzugang, der nichts bewegt.
+  it("lässt den letzten Übergang die Front unberührt", () => {
+    const n = SNAPSHOTS.length - 1;
+    expect(SNAPSHOTS[n]!.id).toBe("0903");
+    expect(front(n)).toBe(front(n - 1));
+    expect(front(n)).toBe("glm-5.3-flash|gpt-5.6-luna|gemini-3.8-flash");
   });
 });
