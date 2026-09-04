@@ -116,3 +116,52 @@ describe("tip()", () => {
     expect(tip(ghost)).toContain("(ab 14.09. 7,35 €)");
   });
 });
+
+// kimi-k2.7-code stand bis zum 04.09.2026 in jedem Stand auf 2,47 € — ein Wert
+// aus der veralteten CDN-Kopie, den sechs Archivstände des Boards (21.07. bis
+// 02.09.) widerlegen. Das Modell ist vom Board ausgeblendet und taucht nur
+// unbeschriftet auf der Historien-Folie auf; genau deshalb ist der Fehler zwei
+// Monate lang niemandem aufgefallen. Dieser Test macht das Zurückdriften laut.
+describe("kimi-k2.7-code, korrigiert am 04.09.2026", () => {
+  const staende = SNAPSHOTS.filter((s) =>
+    s.pts.some((p) => p.label === "kimi-k2.7-code"),
+  );
+
+  it("steht in jedem Stand auf dem Board-Wert 1,92 €", () => {
+    expect(staende.length).toBeGreaterThan(0);
+    expect(
+      staende.map((s) => [
+        s.id,
+        s.pts.find((p) => p.label === "kimi-k2.7-code")!.eur,
+      ]),
+    ).toStrictEqual([
+      ["v11", "1,92"],
+      ["0722", "1,92"],
+      ["0725", "1,92"],
+      ["0730", "1,92"],
+      ["0814", "1,92"],
+      ["0826", "1,92"],
+      ["0902", "1,92"],
+    ]);
+  });
+
+  // Der billigste gemessene Punkt ist per Definition pareto-optimal. In diesen
+  // beiden Ständen unterbietet ihn nichts, also gehört er auf die Front — das
+  // ist die einzige inhaltliche Folge der Korrektur.
+  it("liegt am 22.07. und 25.07. als billigster Punkt auf der Front", () => {
+    for (const id of ["0722", "0725"]) {
+      const s = SNAPSHOTS.find((x) => x.id === id)!;
+      const { front } = paretoFront(s.pts);
+      expect(front[0].label).toBe("kimi-k2.7-code");
+    }
+  });
+
+  it("bleibt sonst dominiert — die übrigen Stände ändern sich nicht", () => {
+    for (const id of ["v11", "0730", "0814", "0826", "0902"]) {
+      const s = SNAPSHOTS.find((x) => x.id === id)!;
+      const { front } = paretoFront(s.pts);
+      const drin = front.some((p) => p.label === "kimi-k2.7-code");
+      expect(drin).toBe(id === "v11");
+    }
+  });
+});

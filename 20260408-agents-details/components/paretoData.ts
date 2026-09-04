@@ -13,6 +13,15 @@
 // Korrektur) und terra zu $4,95 gegen $3,96 in der SSR-Payload. Der Fehler wäre
 // in jede Richtung gegangen — also curl auf die Seite und die
 // `$R[n]={model:…}`-Objektliterale parsen, nicht die JSON ziehen.
+//
+// Die CDN-Kopie hat am 04.09.2026 DENSELBEN `generated_at` wie die SSR-Payload
+// (2026-09-03T22:24:37.984682) und ist trotzdem bei 8 von 28 Modellen veraltet.
+// `generated_at` taugt dort also NICHT als Frische-Signal — wer die Datei zieht,
+// bekommt alte Zahlen mit frischem Datumsstempel. Das ist die gefährlichere
+// Fassung der Warnung oben: die Datei sieht aktuell aus.
+// (Nebenbei bestätigt dieselbe Datei die 0,42-€-Rechnung für glm-5.3-flash
+// weiter unten — sie führt dessen Listenpreis statt des Aktionspreises.)
+//
 // Auswahlregel „Best" wie auf dem Board: höchste verfügbare Effort-Stufe je
 // Modell (nicht der höchste Score — grok-4.6 liegt auf medium höher als auf
 // xhigh). Mit dieser Regel reproduziert die Extraktion die Board-Tabelle exakt.
@@ -82,6 +91,29 @@
 // $0,07/$0,25 (Z.ai, 50 % befristet). Läuft die Aktion aus, verdoppelt sich der
 // Punkt auf rund 0,42 € — er bliebe auf der Front, aber knapp hinter
 // deepseek-v4-flash. Vor dem nächsten Vortrag nachsehen.
+//
+// kimi-k2.7-code: 2,47 € war von Anfang an falsch (korrigiert am 04.09.2026)
+// --------------------------------------------------------------------------
+// Stand hier seit dem ersten Commit (de9d200) in JEDEM Stand auf 2,47 €. Das
+// Board sagt 1,92 € (`low`, 30,51 %) — und zwar durchgehend, geprüft an sechs
+// Archivständen von web.archive.org: 21.07., 25.07., 06.08., 13.08., 26.08. und
+// 02.09.2026. Es gab also keine Preisänderung, die man verpasst hätte; der Wert
+// war nie richtig.
+//
+// Herkunft des Fehlers: die veraltete CDN-Kopie führt kimi zu $2,8155 ohne
+// Effort-Label — × 0,876 = 2,4664, gerundet 2,47. Es ist das einzige Modell,
+// dessen CDN-Zeile keine Effort-Stufe trägt, und damit genau die Falle, vor der
+// der Kopf dieser Datei warnt. Die Warnung nannte vier betroffene Modelle;
+// kimi war ein unbemerktes fünftes.
+//
+// Gegenprobe, damit die Korrektur nicht ihrerseits geraten ist: Stand 7 gegen
+// das Archiv-Board vom 26.08. — die übrigen 25 Modelle stimmen auf den Cent und
+// den Prozentpunkt. Es ist der eine Ausreißer.
+//
+// Folge für die Historie: In den Ständen 22.07. und 25.07. ist kimi-k2.7-code
+// bei 1,92 € der billigste gemessene Punkt und liegt damit auf der Front — mit
+// 31 % schwach, aber unterboten wird es dort von nichts. Die übrigen Stände
+// ändern sich nicht.
 
 export type Ax = "left" | "right" | "center";
 
@@ -224,7 +256,7 @@ const S_V1: Pt[] = [
 // Chart-Stand (22.07.). Rekonstruiert: die Startwerte selbst sind nicht
 // archiviert, die acht Konfigurationen wurden bis dahin aber nicht neu gefahren.
 const S_V11: Pt[] = [
-  P("kimi-k2.7-code", 2.47, 31, "right", -8),
+  P("kimi-k2.7-code", 1.92, 31, "right", -8),
   P("claude-sonnet-4.6", 4.84, 30, "right", 14),
   P("gpt-5.4", 4.95, 52, "right", -8),
   P("gpt-5.5", 6.33, 67, "right", -8),
@@ -242,7 +274,7 @@ const S_V11: Pt[] = [
 const S_0722: Pt[] = [
   P("muse-spark-1.1", 2.07, 53, "right", -6),
   P("grok-4.5", 2.12, 54, "right", -18),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
+  P("kimi-k2.7-code", 1.92, 31, "right", -10),
   P("gpt-5.6-luna", 2.65, 67, "left", -8),
   P("glm-5.2", 3.43, 44, "right", 4),
   P("kimi-k3", 4.08, 69, "right", 12),
@@ -265,7 +297,7 @@ const S_0722: Pt[] = [
 const S_0725: Pt[] = [
   P("muse-spark-1.1", 2.07, 53, "right", -6),
   P("grok-4.5", 2.12, 54, "right", -18),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
+  P("kimi-k2.7-code", 1.92, 31, "right", -10),
   P("gpt-5.6-luna", 2.65, 67, "left", -8),
   P("gemini-3.6-flash", 3.09, 49, "left", 16),
   P("glm-5.2", 3.43, 44, "right", 4),
@@ -295,7 +327,7 @@ const S_0730: Pt[] = [
   }),
   P("muse-spark-1.1", 2.07, 53, "right", 8),
   P("grok-4.5", 2.12, 54, "right", -6),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
+  P("kimi-k2.7-code", 1.92, 31, "right", -10),
   P("gemini-3.6-flash", 3.09, 49, "left", 16),
   P("glm-5.2", 3.43, 44, "right", 4),
   P("gpt-5.6-terra", 3.47, 70, "right", -14, 0, {
@@ -342,7 +374,7 @@ const S_0814: Pt[] = [
   }),
   P("muse-spark-1.1", 2.07, 53, "right", -8),
   P("grok-4.5", 2.12, 54, "right", -20),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
+  P("kimi-k2.7-code", 1.92, 31, "right", -10),
   P("gemini-3.5-flash", 3.02, 36, "right", 32, 0, {
     old: { x: 6.43, y: 37, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
@@ -473,7 +505,7 @@ const S_0826_HIST: Pt[] = [
   P("gemini-3.1-pro", 1.88, 12, "right", 4),
   P("muse-spark-1.1", 2.07, 53, "right", -8),
   P("grok-4.5", 2.12, 54, "right", -20),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
+  P("kimi-k2.7-code", 1.92, 31, "right", -10),
   P("claude-sonnet-4.6", 4.84, 30, "right", 12),
   P("gpt-5.4", 4.95, 52, "right", -8),
 ]
@@ -571,7 +603,7 @@ export const SNAPSHOTS: Snapshot[] = [
     id: "0722",
     date: "22.07.",
     title: "Die gpt-5.6-Familie kommt",
-    note: "luna, terra und sol besetzen die Front zwischen 2,65 € und 7,35 €. Dazu kimi-k3, grok-4.5 und muse-spark-1.1. Anthropic ist auf der Front nicht vertreten.",
+    note: "luna, terra und sol besetzen die Front zwischen 2,65 € und 7,35 €. Dazu kimi-k3, grok-4.5 und muse-spark-1.1, und am billigen Ende kimi-k2.7-code — mit 31 % schwach, aber es gibt nichts Billigeres. Anthropic ist auf der Front nicht vertreten.",
     pts: S_0722,
   },
   {
