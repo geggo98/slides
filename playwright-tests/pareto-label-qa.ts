@@ -7,6 +7,7 @@
 // Aufruf: bun run playwright-tests/pareto-label-qa.ts [port] [--shot]
 
 import { chromium } from "playwright";
+import { TEXT } from "../20260408-agents-details/components/labelLayout";
 
 const PORT = process.argv.find((a) => /^\d+$/.test(a)) ?? "3031";
 const SHOT = process.argv.includes("--shot");
@@ -55,9 +56,16 @@ const collect = (sel: string) =>
     const svg = document.querySelector("${sel}");
     if (!svg) return null;
     const out = [];
+    // Gemessen wird die Glyphzelle; verglichen wird die Tinte — dieselbe
+    // Umrechnung wie inkFromCell() in labelLayout.ts, mit denselben Konstanten.
+    // Die Zelle von 0xProto ist 1,5 em hoch, zwei Zeilen mit 4 px Luft zwischen
+    // den Tinten überlappen sich als Zellen — das wäre ein falscher Befund.
+    const CA = ${TEXT.cellAscentEm}, CD = ${TEXT.cellDescentEm}, IA = ${TEXT.ascentEm}, ID = ${TEXT.descentEm};
     for (const t of svg.querySelectorAll("text.mp-label, text.mh-label, text.mp-ci-badge")) {
       const r = t.getBoundingClientRect();
-      out.push({ label: t.textContent.trim(), kind: "label", x: r.x, y: r.y, w: r.width, h: r.height });
+      const font = r.height / (CA + CD);
+      const baseline = r.y + CA * font;
+      out.push({ label: t.textContent.trim(), kind: "label", x: r.x, y: baseline - IA * font, w: r.width, h: (IA + ID) * font });
     }
     for (const m of svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt'], circle[class*='old-pt']")) {
       const r = m.getBoundingClientRect();
@@ -92,6 +100,18 @@ const goto = async (page: any, n: number) => {
     `window.__slidev__ && window.__slidev__.nav.currentPage === ${n}`,
     { timeout: 15000 },
   );
+  // 0xProto lädt asynchron. Gemessen am 04.09.2026: Ein Deep-Link maß bis zu
+  // 2 s lang die Fallback-Monospace (Zelle 1,15 em statt 1,51 em) — und
+  // meldete dann Überschneidungen, die es nur in der Fallback-Schrift gab,
+  // oder übersah welche. Ohne geladene Schrift ist die Messung wertlos.
+  const fonts: string = await page.evaluate(
+    `document.fonts.load('12px "0xProto"').then(() => document.fonts.ready).then(() => [...document.fonts].filter((f) => f.family.includes("0xProto")).map((f) => f.status).join(","))`,
+  );
+  if (!fonts.includes("loaded")) {
+    throw new Error(
+      `0xProto ist nicht geladen (${fonts || "kein @font-face"}) — die Messung träfe die Fallback-Schrift`,
+    );
+  }
   await page.waitForTimeout(600);
   // Auf die SICHTBARE Folie scopen — Nachbarfolien sind mitgemountet, ein
   // globales `.slidev-layout h1` liefert die Überschrift der falschen.

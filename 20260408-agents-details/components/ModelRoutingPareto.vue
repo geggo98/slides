@@ -5,46 +5,54 @@ import ProviderPicker from "./ProviderPicker.vue";
 import { matchingPreset, presetModels } from "./providerFilter";
 import {
   CURRENT,
-  anchor,
   fmt,
-  leader,
-  lx,
-  ly,
-  makeScale,
   movedSegments,
   paretoFront,
   tip,
   type Pt,
 } from "./paretoData";
+import {
+  labelBox,
+  layoutLabels,
+  type Obstacle,
+  type Placed,
+} from "./labelLayout";
+import {
+  arrowCluster,
+  HIT_R,
+  LABEL_FONT,
+  PARETO_SCALE,
+  plotBounds,
+  QUADRANTS,
+  quadrantBoxes,
+  tickLabel,
+  toLayoutPoints,
+  visiblePoints,
+  X_TICKS_LOG,
+  Y_TICKS,
+} from "./paretoChrome";
 import { useCrosshairs } from "./useCrosshairs";
 
 // DeepSWE-Score vs. €/Task als statisches Inline-SVG — kein Chart.js/echarts
 // nötig. Farben über die Deck-Tokens. Bewusst ohne <defs>: keine IDs, die
 // zwischen Nachbar-Slides kollidieren könnten.
 //
-// Daten, Umrechnung und die Herleitung der Sol-Preissenkung stehen in
-// `paretoData.ts`; hier liegt nur die Darstellung.
+// Daten und die Herleitung der Preisänderungen stehen in `paretoData.ts`, die
+// Geometrie (Skala, Ticks, Quadranten, Pfeile) in `paretoChrome.ts`, und wo
+// eine Beschriftung steht, rechnet `labelLayout.ts`. Hier liegt nur die
+// Darstellung.
 
 const sourcesOpen = ref(false);
 
-// Geometrie (logische Pixel im 932er-viewBox). Vorher 316/38: B um 5 gesenkt
-// (schmaleres Band unter der X-Achse, Tick-Baseline H - B + 15 und Achsentitel
-// H - 4 behalten 14 px Abstand), H um 10 — die Plotfläche H - T - B schrumpft
-// dadurch von 268 auf 263. Beides zusammen schafft den Platz, den die um eine
-// Zeile gewachsene Pointe unter dem Chart braucht.
-const S = makeScale({
-  W: 932,
-  H: 306,
-  L: 46,
-  R: 10,
-  T: 10,
-  B: 33,
-  xMax: 25,
-  yMax: 80,
-});
+// Skala geteilt mit der Historien-Folie und den Tests: x logarithmisch von
+// 0,08 € bis 30 €. Linear lagen 17 von 22 Markern auf einem Viertel der
+// Breite, und die Sprossen 1 und 2 der Leiter waren 11 px auseinander.
+const S = PARETO_SCALE;
 const { W, H, L, R, T, B, px, py } = S;
 const QX = px(8); // Quadranten-Trennung: 8 € …
 const QY = py(50); // … / 50 % (redaktionell, wie im Original)
+const xTicks = X_TICKS_LOG;
+const yTicks = Y_TICKS;
 
 // Optionales Overlay auf das Claude-Code-Wochenkontingent. Kein API-Preis,
 // sondern eine Kontingentrechnung (Abo-Preis fix, Wochenlimit bindend ⇒
@@ -64,39 +72,8 @@ const subOn = ref(false);
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const sel = ref<ReadonlySet<string>>(new Set(presetModels("all", CURRENT)));
 const preset = computed(() => matchingPreset(sel.value, CURRENT));
-const shown = computed<Pt[]>(() => {
-  if (sel.value.size === CURRENT.length) return CURRENT;
-  // Unterdrückte Beschriftungen kommen zurück, sobald der Platz da ist. `lbl:
-  // false` steht an den beiden DeepSeek-Punkten, weil sie in der Gesamtansicht
-  // im Gedränge liegen; ohne das zeigte die Auswahl „DeepSeek" zwei namenlose
-  // Quadrate. Maßgeblich ist dabei NICHT, wie viele Punkte übrig sind, sondern
-  // ob die konkreten Nachbarn noch da sind, an denen es scheitert — siehe
-  // `blockers` in `paretoData.ts`.
-  return CURRENT.filter((p) => sel.value.has(p.label)).map((p) =>
-    p.lbl === false && !p.blockers?.some((b) => sel.value.has(b))
-      ? { ...p, lbl: undefined }
-      : p,
-  );
-});
-
 const pts = computed<Pt[]>(() =>
-  subOn.value
-    ? shown.value.map((p) =>
-        p.sub
-          ? {
-              ...p,
-              x: p.sub,
-              eur: fmt(p.sub),
-              old: {
-                x: p.sub25 ?? p.x,
-                eur: fmt(p.sub25 ?? p.x),
-                pre: "ab 14.09.",
-                why: "dauerhaft +25 % statt +50 % — Stand ab 14.09.2026",
-              },
-            }
-          : p,
-      )
-    : shown.value,
+  visiblePoints(CURRENT, sel.value, subOn.value),
 );
 
 const front = computed(() => paretoFront(pts.value).front);
@@ -106,24 +83,102 @@ const frontPath = computed(() =>
   front.value.map((p) => `${px(p.x)},${py(p.y)}`).join(" "),
 );
 
-// Wanderungen: die Sol-Preissenkung vom 21.08. immer, die Kontingent-Rechnung
-// nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
+// Wanderungen: die gemini-Preiserhöhung zum 01.01. immer, die Kontingent-
+// Rechnung nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
 const moved = computed(() => movedSegments(pts.value, S));
 
-// Führungslinien für die weit abgesetzten Beschriftungen im 2–5-€-Gedränge.
-const leaders = computed(() =>
-  pts.value.flatMap((p) => {
-    if (p.lbl === false) return [];
-    const l = leader(p, S);
-    return l ? [{ label: p.label, ...l }] : [];
+// Beschriftung. Gerechnet aus dem VOLLEN Datensatz, nicht aus `pts`: Der
+// Filter blendet Labels nur aus, das Overlay bewegt nur die Claude-Labels mit
+// ihren Markern — alles andere bleibt stehen, wo es war. Was das im Detail
+// heißt, steht in `labelLayout.ts`; Hindernisse sind hier die Quadranten-
+// Überschriften und der Pfeilcluster.
+const cluster = arrowCluster(S);
+const obstacles: Obstacle[] = [...quadrantBoxes(S), ...cluster.boxes];
+const layoutOpts = {
+  font: LABEL_FONT.pareto,
+  bounds: plotBounds(S),
+  hitR: HIT_R,
+  obstacles,
+};
+const layoutPts = computed(() =>
+  toLayoutPoints(CURRENT, S, {
+    overlay: true,
+    subOn: subOn.value,
+    story: (p) => p.story === true,
+    presets: true,
   }),
 );
-const LX = (p: Pt) => lx(p, S);
-const LY = (p: Pt) => ly(p, S);
+const layout = computed(() => layoutLabels(layoutPts.value, layoutOpts));
+const placed = computed(() => layout.value.core);
+
+interface LabelView {
+  p: Pt;
+  pl: Placed;
+  front: boolean;
+  /** Vorhergesagte Box (x y w h) — die Browser-QA hält sie gegen die gemessene. */
+  box: string;
+}
+const boxAttr = (p: Pt, pl: Placed) => {
+  const b = labelBox(p.label, pl.x, pl.y, pl.ax, LABEL_FONT.pareto);
+  return [b.x, b.y, b.w, b.h].map((v) => v.toFixed(1)).join(" ");
+};
+const frontSet = computed(() => new Set(front.value.map((p) => p.label)));
+const labels = computed<LabelView[]>(() =>
+  pts.value.flatMap((p) => {
+    const pl = placed.value.get(p.label);
+    return pl
+      ? [{ p, pl, front: frontSet.value.has(p.label), box: boxAttr(p, pl) }]
+      : [];
+  }),
+);
+const leaders = computed(() =>
+  labels.value.flatMap(({ p, pl }) =>
+    pl.leader ? [{ label: p.label, ...pl.leader }] : [],
+  ),
+);
+// Sichtbare Punkte ohne Namen — für die QA (`data-dropped`) und den Hover-Namen.
+const unnamed = computed(() =>
+  pts.value.filter((p) => !placed.value.has(p.label)).map((p) => p.label),
+);
+
+// Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
+// (erneuter Klick löst). Mechanik im Composable, weil die Historien-Folie
+// dasselbe kann; `ciBadge` schaltet die zweizeilige Badge-Entzerrung ein, die
+// nur hier gebraucht wird (Fehlerbalken sind Sache dieser Folie).
+const { byLabel, hovered, pinned, togglePin, activeCls, crosshairs, movedCls } =
+  useCrosshairs(pts, S, { ciBadge: true });
+
+// Hover-Name: Ein namenloser Punkt zeigt seinen Namen, solange er gehovt oder
+// gepinnt ist — mit demselben Platzierer gegen die gesetzten Labels gerechnet,
+// damit er keines verdeckt. Gerendert nach allem anderen, vor den Klickzielen.
+const hoverLabels = computed<LabelView[]>(() => {
+  const want = new Set([
+    ...pinned.value,
+    ...(hovered.value ? [hovered.value] : []),
+  ]);
+  const taken: Obstacle[] = [...placed.value.values()].map((v) => ({
+    ...v.box,
+    name: v.id,
+  }));
+  const out: LabelView[] = [];
+  for (const id of want) {
+    if (placed.value.has(id)) continue;
+    const p = byLabel.value.get(id);
+    const lp = layoutPts.value.find((q) => q.id === id);
+    if (!p || !lp) continue;
+    const pl = layoutLabels([lp], {
+      ...layoutOpts,
+      obstacles: [...obstacles, ...taken],
+    }).all.get(id);
+    if (pl) out.push({ p, pl, front: false, box: boxAttr(p, pl) });
+  }
+  return out;
+});
 
 const chartLabel = computed(
   () =>
-    "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, unterteilt in vier Quadranten: " +
+    "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, x-Achse logarithmisch " +
+    "von 0,1 bis 30 Euro, unterteilt in vier Quadranten: " +
     "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
     "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 03.09.2026" +
     (sel.value.size === CURRENT.length
@@ -139,9 +194,12 @@ const chartLabel = computed(
       .join(". ") +
     `. Zusammen kosten alle Sprossen ${fmt(front.value.reduce((s, p) => s + p.x, 0))} Euro. ` +
     "Alles rechts der Front ist dominiert: Es gibt dort einen Punkt, der mindestens " +
-    "so gut und billiger ist. Der teuerste Punkt, gpt-6-astra mit 5,71 Euro, hat mit " +
+    "so gut und billiger ist. gpt-6-astra mit 5,71 Euro hat mit " +
     "74,12 Prozent den höchsten Rohwert des Boards und liegt trotzdem nicht auf der " +
     "Front — gemini-3.8-flash erreicht denselben gerundeten Wert für 2,07 Euro." +
+    (unnamed.value.length
+      ? ` ${unnamed.value.length} Punkte tragen keinen Namen, weil dort kein Platz ist; Hover oder Pin zeigt ihn.`
+      : "") +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
         "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
@@ -151,56 +209,6 @@ const chartLabel = computed(
     "1. Januar 2027, wenn Googles Einführungspreis ausläuft." +
     ".",
 );
-
-const xTicks = [0, 5, 10, 15, 20, 25];
-const yTicks = [0, 20, 40, 60, 80];
-
-// Pfeil „Besseres Preis-Leistungs-Verhältnis" von (20,5 € / 20 %) nach
-// (12 € / 44 %) — Polygon in Pfeil-Koordinaten, per Gruppe rotiert.
-const ax1 = px(20.5);
-const ay1 = py(20);
-const ax2 = px(12);
-const ay2 = py(44);
-const aAng = (Math.atan2(ay2 - ay1, ax2 - ax1) * 180) / Math.PI;
-const aLen = Math.hypot(ax2 - ax1, ay2 - ay1);
-const aW = 12; // halbe Schaftbreite
-const aHW = 24; // halbe Spitzenbreite
-const aHL = 34; // Spitzenlänge
-const arrowPoly = (len: number, w: number, hw: number, hl: number) =>
-  [
-    [0, -w],
-    [len - hl, -w],
-    [len - hl, -hw],
-    [len, 0],
-    [len - hl, hw],
-    [len - hl, w],
-    [0, w],
-  ]
-    .map((p) => p.join(","))
-    .join(" ");
-const aBody = arrowPoly(aLen, aW, aHW, aHL);
-const aMid = (aLen - aHL) / 2;
-
-// Zwei Komponenten-Pfeile vom selben Ursprung (ax1,ay1): waagerecht nach links
-// („Billiger" = niedrigere Kosten) und senkrecht nach oben („Leistungsfähiger"
-// = höherer Pass@1). Bewusst dünner/heller als der Resultierende — sie zerlegen
-// den Diagonalpfeil in seine zwei Achsen-Komponenten.
-const cW = 9; // halbe Schaftbreite (Komponenten)
-const cHW = 17; // halbe Spitzenbreite
-const cHL = 24; // Spitzenlänge
-const bLen = 250; // „Billiger" nach links
-const cLen = 150; // „Leistungsfähiger" nach oben
-const bBody = arrowPoly(bLen, cW, cHW, cHL);
-const cBody = arrowPoly(cLen, cW, cHW, cHL);
-const bMid = (bLen - cHL) / 2;
-const cMid = (cLen - cHL) / 2;
-
-// Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
-// (erneuter Klick löst). Mechanik im Composable, weil die Historien-Folie
-// dasselbe kann; `ciBadge` schaltet die zweizeilige Badge-Entzerrung ein, die
-// nur hier gebraucht wird (Fehlerbalken sind Sache dieser Folie).
-const { byLabel, hovered, pinned, togglePin, activeCls, crosshairs, movedCls } =
-  useCrosshairs(pts, S, { ciBadge: true });
 
 // Fehlerbalken nur an gepinnten Punkten — beim bloßen Hover wäre das Flackern.
 // Kernaussage der Folie: opus-5 74 ± 3,9 und sol 73 ± 2,8 überlappen deutlich,
@@ -260,6 +268,7 @@ const whiskers = computed(() =>
       :viewBox="`0 0 ${W} ${H}`"
       role="img"
       :aria-label="chartLabel"
+      :data-dropped="unnamed.join(' ')"
     >
       <!-- Quadranten-Tints -->
       <rect
@@ -322,7 +331,7 @@ const whiskers = computed(() =>
           :y="H - B + 15"
           text-anchor="middle"
         >
-          {{ t }} €
+          {{ tickLabel(t) }}
         </text>
         <text
           v-for="t in yTicks"
@@ -339,24 +348,22 @@ const whiskers = computed(() =>
           text-anchor="middle"
           class="mp-axis-title"
         >
-          Ø Kosten pro Task (EUR) — DeepSWE Pass@1 (%)
+          Ø Kosten pro Task (EUR, log. Skala) — DeepSWE Pass@1 (%)
         </text>
       </g>
 
-      <!-- Quadranten-Labels -->
+      <!-- Quadranten-Überschriften — Texte und Lage aus `paretoChrome.ts`, weil
+           der Platzierer sie als Hindernis kennt. -->
       <g class="mp-qlabel">
-        <text :x="L + 10" :y="T + 16" class="mp-ql-sweet">Sweet Spot</text>
-        <text :x="W - R - 10" :y="T + 16" text-anchor="end" class="mp-ql-price">
-          Leistung um jeden Preis
-        </text>
-        <text :x="L + 10" :y="H - B - 8" class="mp-ql-budget">Budget-Ecke</text>
         <text
-          :x="W - R - 10"
-          :y="H - B - 8"
-          text-anchor="end"
-          class="mp-ql-burn"
+          v-for="q in QUADRANTS"
+          :key="q.key"
+          :x="q.x(S)"
+          :y="q.y(S)"
+          :text-anchor="q.ax"
+          :class="`mp-ql-${q.key}`"
         >
-          Geldverbrennung
+          {{ q.text }}
         </text>
       </g>
 
@@ -367,41 +374,32 @@ const whiskers = computed(() =>
            Halbbreite aW) schluckt die überstehenden Schaftecken → runder Knoten.
            Z-Order innerhalb egal (vereinte Silhouette). -->
       <g class="mp-arrow-cluster">
-        <circle :cx="ax1" :cy="ay1" :r="aW + 2" />
-        <g :transform="`translate(${ax1},${ay1}) rotate(180)`">
-          <polygon :points="bBody" />
-        </g>
-        <g :transform="`translate(${ax1},${ay1}) rotate(-90)`">
-          <polygon :points="cBody" />
-        </g>
-        <g :transform="`translate(${ax1},${ay1}) rotate(${aAng})`">
-          <polygon :points="aBody" />
+        <circle :cx="cluster.hub.x" :cy="cluster.hub.y" :r="cluster.hub.r" />
+        <g
+          v-for="a in cluster.arrows"
+          :key="a.key"
+          :transform="`translate(${cluster.hub.x},${cluster.hub.y}) rotate(${a.rot})`"
+        >
+          <polygon :points="a.poly" />
         </g>
       </g>
 
       <!-- Labels separat gerendert: erben NICHT die Cluster-Opacity, bleiben
-           crisp. Jedes Label behält den Transform seines Pfeils. -->
+           crisp. Jedes Label behält den Transform seines Pfeils; `flip` dreht
+           den Text zurück, wo er sonst kopfstünde. -->
       <g class="mp-arrow-labels">
-        <g :transform="`translate(${ax1},${ay1}) rotate(180)`">
-          <g :transform="`translate(${bMid},0) rotate(180)`">
-            <text text-anchor="middle" dominant-baseline="middle">
-              Billiger
-            </text>
-          </g>
-        </g>
-        <g :transform="`translate(${ax1},${ay1}) rotate(-90)`">
-          <text :x="cMid" y="0" text-anchor="middle" dominant-baseline="middle">
-            Leistungsfähiger
-          </text>
-        </g>
-        <g :transform="`translate(${ax1},${ay1}) rotate(${aAng})`">
-          <g :transform="`translate(${aMid},0) rotate(180)`">
+        <g
+          v-for="a in cluster.arrows"
+          :key="`t-${a.key}`"
+          :transform="`translate(${cluster.hub.x},${cluster.hub.y}) rotate(${a.rot})`"
+        >
+          <g :transform="`translate(${a.mid},0) rotate(${a.flip ? 180 : 0})`">
             <text
-              class="mp-label-lead"
               text-anchor="middle"
               dominant-baseline="middle"
+              :class="{ 'mp-label-lead': a.key === 'better' }"
             >
-              Besseres Preis-Leistungs-Verhältnis
+              {{ a.text }}
             </text>
           </g>
         </g>
@@ -419,7 +417,7 @@ const whiskers = computed(() =>
       >
         <line :x1="m.x1" :y1="m.y1" :x2="m.x2" :y2="m.y2" />
         <polygon :points="m.head" />
-        <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
+        <circle :cx="m.gx" :cy="m.gy" r="5" class="mp-old-pt">
           <title>
             {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
           </title>
@@ -447,65 +445,53 @@ const whiskers = computed(() =>
 
       <!-- Pareto-Front -->
       <polyline :points="frontPath" class="mp-front-line" />
-      <!-- Sprossennummer IM Marker, nicht vor der Beschriftung. Die Folie
-           empfiehlt, unten anzufangen und bei einem Fehlschlag eine Sprosse
-           höher zu gehen; ohne Nummern muss man die Reihenfolge aus der
-           x-Achse ablesen. Als Präfix am Label gemessen: „① " macht das Label
-           12 px breiter, und glm-5.3-flash läuft damit in den Marker von
-           qwen3.8-max — ausgerechnet in der dichtesten Zone des Charts. Im
-           Marker kostet die Nummer keine Breite — und der Radius bleibt bei
-           5,5: Auf 7 vergrößert lief der Marker von gemini-3.8-flash in die
-           Beschriftung von gpt-5.6-luna, also ein Pixel gewonnen und ein
-           anderes verloren. Die Ziffer passt bei 8 px in die 11 px, und das
-           ist die Größe der Achsenbeschriftung.
-           Die Zählung folgt dem Anbieter-Filter: bei Windsurf vier Sprossen. -->
+      <!-- Sprossennummer IM Marker: Die Folie empfiehlt, unten anzufangen und
+           bei einem Fehlschlag eine Sprosse höher zu gehen. Als Präfix am Label
+           kostete die Nummer 12 px Breite in der dichtesten Zone; im Marker
+           kostet sie nichts. Die Zählung folgt dem Anbieter-Filter. -->
       <g v-for="(p, i) in front" :key="p.label">
-        <circle :cx="px(p.x)" :cy="py(p.y)" r="5.5" class="mp-front-pt">
+        <circle :cx="px(p.x)" :cy="py(p.y)" r="7" class="mp-front-pt">
           <title>{{ tip(p) }}</title>
         </circle>
         <text :x="px(p.x)" :y="py(p.y)" class="mp-front-num" aria-hidden="true">
           {{ i + 1 }}
-        </text>
-        <text
-          v-if="p.lbl !== false"
-          :x="LX(p)"
-          :y="LY(p)"
-          :text-anchor="anchor(p)"
-          class="mp-label mp-label-front"
-          :data-model="p.label"
-          @mouseenter="hovered = p.label"
-          @mouseleave="hovered = null"
-          @click.stop="togglePin(p.label)"
-        >
-          {{ p.label }}
         </text>
       </g>
 
       <!-- Dominierte Modelle -->
       <g v-for="p in dom" :key="p.label">
         <rect
-          :x="px(p.x) - 4.5"
-          :y="py(p.y) - 4.5"
-          width="9"
-          height="9"
+          :x="px(p.x) - 5"
+          :y="py(p.y) - 5"
+          width="10"
+          height="10"
           class="mp-dom-pt"
         >
           <title>{{ tip(p) }}</title>
         </rect>
-        <text
-          v-if="p.lbl !== false"
-          :x="LX(p)"
-          :y="LY(p)"
-          :text-anchor="anchor(p)"
-          class="mp-label mp-label-dom"
-          :data-model="p.label"
-          @mouseenter="hovered = p.label"
-          @mouseleave="hovered = null"
-          @click.stop="togglePin(p.label)"
-        >
-          {{ p.label }}
-        </text>
       </g>
+
+      <!-- Beschriftungen als eigene Schicht nach allen Markern, damit ihr Halo
+           über den Punkten liegt. Wo sie stehen, sagt `labelLayout.ts`; die
+           Beschriftung ist zugleich der zweite Griff an einem Punkt — und für
+           Zwillinge wie gpt-5.6-sol unter gpt-6-astra der einzige, weil das
+           später gerenderte Klickziel das frühere vollständig überdeckt. -->
+      <text
+        v-for="l in labels"
+        :key="`lbl-${l.p.label}`"
+        :x="l.pl.x"
+        :y="l.pl.y"
+        :text-anchor="l.pl.ax"
+        class="mp-label"
+        :class="l.front ? 'mp-label-front' : 'mp-label-dom'"
+        :data-model="l.p.label"
+        :data-box="l.box"
+        @mouseenter="hovered = l.p.label"
+        @mouseleave="hovered = null"
+        @click.stop="togglePin(l.p.label)"
+      >
+        {{ l.p.label }}
+      </text>
 
       <!-- Fehlerbalken der gepinnten Punkte: senkrechter Whisker am Punkt plus
            zwei waagerechte Grenzlinien quer durch den Plot. Erst die Grenzlinien
@@ -572,7 +558,7 @@ const whiskers = computed(() =>
       >
         <line :x1="px(c.p.x)" :y1="T" :x2="px(c.p.x)" :y2="H - B" />
         <line :x1="L" :y1="py(c.p.y)" :x2="W - R" :y2="py(c.p.y)" />
-        <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="8" class="mp-ch-ring" />
+        <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="9.5" class="mp-ch-ring" />
         <text
           :x="px(c.p.x)"
           :y="H - B + 15"
@@ -597,13 +583,29 @@ const whiskers = computed(() =>
         </text>
       </g>
 
-      <!-- Unsichtbare Hit-Targets — zuletzt gerendert, fangen also die Events -->
+      <!-- Hover-Name für Punkte ohne Beschriftung: transient, zuoberst. -->
+      <text
+        v-for="l in hoverLabels"
+        :key="`hover-${l.p.label}`"
+        :x="l.pl.x"
+        :y="l.pl.y"
+        :text-anchor="l.pl.ax"
+        class="mp-label mp-label-hover"
+        :data-model="l.p.label"
+        :data-box="l.box"
+      >
+        {{ l.p.label }}
+      </text>
+
+      <!-- Unsichtbare Hit-Targets — zuletzt gerendert, fangen also die Events.
+           Ihr Radius ist zugleich das Hindernis des Platzierers: kein Label
+           liegt unter einem fremden Klickziel. -->
       <circle
         v-for="p in allPts"
         :key="`hit-${p.label}`"
         :cx="px(p.x)"
         :cy="py(p.y)"
-        r="11"
+        :r="HIT_R"
         class="mp-hit"
         role="button"
         tabindex="0"
@@ -731,16 +733,18 @@ const whiskers = computed(() =>
   stroke-dasharray: 4 4;
 }
 .mp-ticks text {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--color-text-tertiary);
 }
 .mp-axis-title {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--color-text-tertiary);
 }
 
+/* Schriftgröße auch in `paretoChrome.ts` (QUADRANT_FONT): der Platzierer kennt
+   die Überschriften als Hindernis und rechnet ihre Box daraus. */
 .mp-qlabel text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 .mp-ql-sweet {
@@ -833,7 +837,7 @@ const whiskers = computed(() =>
 }
 .mp-front-num {
   font-family: var(--slidev-code-font-family, monospace);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   fill: var(--deck-surface, var(--color-background-primary));
   text-anchor: middle;
@@ -851,15 +855,14 @@ const whiskers = computed(() =>
   stroke-width: 0.6;
   opacity: 0.7;
 }
-/* Die Beschriftung ist der zweite Griff an einem Punkt — und für gpt-5.6-terra
-   der einzige: sein Marker liegt einen Pixel neben dem von glm-5.3, dessen
-   Hit-Target ihn vollständig überdeckt. */
+/* Schriftgröße auch in `paretoChrome.ts` (LABEL_FONT.pareto): daraus rechnet
+   der Platzierer die Box, und die Browser-QA misst nach, ob sie stimmt. */
 .mp-label {
   font-family: var(--slidev-code-font-family, monospace);
-  font-size: 10px;
+  font-size: 12px;
   paint-order: stroke;
   stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 2.5px;
+  stroke-width: 3px;
   cursor: pointer;
 }
 .mp-label-front {
@@ -867,6 +870,11 @@ const whiskers = computed(() =>
 }
 .mp-label-dom {
   fill: var(--color-text-tertiary);
+}
+.mp-label-hover {
+  fill: var(--color-text-primary);
+  font-weight: 700;
+  pointer-events: none;
 }
 
 /* Fehlerbalken: Whisker kräftig am Punkt, Grenzlinien quer durch den Plot nur
@@ -906,7 +914,7 @@ const whiskers = computed(() =>
 }
 .mp-ch-badge {
   font-family: var(--slidev-code-font-family, monospace);
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
   fill: var(--ch);
   paint-order: stroke;

@@ -3,23 +3,27 @@ import { computed, ref, watch } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import {
   SNAPSHOTS,
-  anchor,
-  leader,
-  leaderLine,
-  lx,
-  ly,
-  makeScale,
   movedSegments,
   paretoFront,
   tip,
-  type Ax,
   type Pt,
 } from "./paretoData";
+import { labelBox, layoutLabels, type Placed } from "./labelLayout";
+import {
+  HISTORY_SCALE,
+  HIT_R_HISTORY,
+  LABEL_FONT,
+  plotBounds,
+  tickLabel,
+  toLayoutPoints,
+  X_TICKS_LOG,
+  Y_TICKS,
+} from "./paretoChrome";
 import { useCrosshairs } from "./useCrosshairs";
 
-// Dieselbe Achsenlage wie `ModelRoutingPareto.vue`, nur flacher und ohne
-// Pfeil-Cluster/Quadranten-Labels — darunter brauchen Timeline und Erklärtext
-// Platz. Wurzelklasse bewusst `.mh-chart` statt `.mp-chart`: `verify-deploy.ts`
+// Dieselbe Achse wie `ModelRoutingPareto.vue` (geteilt über `paretoChrome.ts`,
+// x logarithmisch), nur flacher und ohne Pfeil-Cluster/Quadranten-Labels —
+// darunter brauchen Timeline und Erklärtext Platz. Wurzelklasse bewusst `.mh-chart` statt `.mp-chart`: `verify-deploy.ts`
 // findet die Pareto-Folie per `querySelector("svg.mp-chart")` und würde sonst
 // hier hängenbleiben.
 //
@@ -61,22 +65,13 @@ const detail = computed(
 
 const sourcesOpen = ref(false);
 
-const S = makeScale({
-  W: 932,
-  H: 250,
-  L: 46,
-  R: 10,
-  T: 10,
-  B: 30,
-  xMax: 25,
-  yMax: 80,
-});
+const S = HISTORY_SCALE;
 const { W, H, L, R, T, B, px, py } = S;
 const QX = px(8);
 const QY = py(50);
 
-const xTicks = [0, 5, 10, 15, 20, 25];
-const yTicks = [0, 20, 40, 60, 80];
+const xTicks = X_TICKS_LOG;
+const yTicks = Y_TICKS;
 
 const split = computed(() => paretoFront(snap.value.pts));
 const frontPath = computed(() =>
@@ -84,138 +79,65 @@ const frontPath = computed(() =>
 );
 const moved = computed(() => movedSegments(snap.value.pts, S));
 
-// Beschriftet werden die Front, alles gerade Gewanderte und was `lbl: true`
-// ausdrücklich verlangt (die im Erklärtext genannten Modelle) — bei bis zu 25
-// Punkten wäre eine Vollbeschriftung auf dieser Höhe unlesbar. Der Rest bleibt
-// graues Quadrat mit Tooltip. `lbl: false` unterdrückt auch auf der Front, dort
-// wo Punkte so dicht liegen, dass keine Zuordnung mehr möglich wäre.
-//
-// Im Detailmodus fällt beides weg: dann steht ausdrücklich jeder Name da, auch
-// die per `lbl: false` unterdrückten.
-const named = computed(() => {
-  const s = new Set<string>();
-  if (detail.value) {
-    for (const p of snap.value.pts) s.add(p.label);
-    return s;
-  }
-  for (const p of split.value.front) s.add(p.label);
-  for (const p of snap.value.pts) {
-    if (p.old || p.lbl === true) s.add(p.label);
-    if (p.lbl === false) s.delete(p.label);
-  }
-  return s;
-});
-const isNamed = (p: Pt) => named.value.has(p.label);
+// Beschriftung je Station aus `labelLayout.ts`: Front, Gewandertes und
+// `story: true` immer, der Rest nur, wo direkt am Marker Platz ist. Der
+// Detailmodus ist der Durchgang „alle Namen“ — er legt nach, ohne die
+// vorhandenen Labels zu verschieben. Keine Hindernisse: dieses Chart hat weder
+// Quadranten-Überschriften noch Pfeile.
+const layout = computed(() =>
+  layoutLabels(
+    toLayoutPoints(snap.value.pts, S, {
+      overlay: false,
+      story: (p) => p.story === true,
+    }),
+    {
+      font: LABEL_FONT.history,
+      allFont: LABEL_FONT.historyAll,
+      bounds: plotBounds(S),
+      hitR: HIT_R_HISTORY,
+      obstacles: [],
+    },
+  ),
+);
+const placed = computed(() =>
+  detail.value ? layout.value.all : layout.value.core,
+);
+const font = computed(() =>
+  detail.value ? LABEL_FONT.historyAll : LABEL_FONT.history,
+);
 
-// Im Detailmodus platziert die Komponente selbst: die von Hand gesetzten dx/dy
-// in `paretoData.ts` sind für die Handvoll Labels des Normalmodus austariert,
-// alle 25 auf einmal würden damit übereinanderfallen. Greedy-Layout — Front
-// zuerst (sie trägt die Aussage), dann von oben nach unten; jedes Label nimmt
-// die erste Kandidatenposition, die weder ein schon gesetztes Label noch einen
-// Marker schneidet. Findet sich keine, gilt die Position aus den Daten.
-const LBL_PX = 9; // Schriftgröße im Detailmodus, siehe `.mh-all .mh-label`
-// Vorschub plus das 2,5-px-Halo links und rechts (`paint-order: stroke`) — lieber
-// großzügig schätzen, sonst rutschen zwei Kästen ineinander, die real kollidieren.
-const CHAR_W = LBL_PX * 0.63;
-const PAD_X = 6;
-const PAD_Y = 3;
-// Kandidaten von nah nach fern: erst dicht am Marker (Ring 0), dann in Stufen
-// nach außen. Weit abgesetzte Labels bekommen über `leaderLine()` automatisch
-// eine Führungslinie — im Gedränge zwischen 2 € und 5 € ist das der einzige Weg,
-// überhaupt alle 25 Namen unterzubringen.
-const RINGS = [0, 28, 58, 92, 130, 170, 220, 280];
-const DYS = [3, -8, 13, -18, 23, -28, 33];
-
-interface Box {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+interface LabelView {
+  p: Pt;
+  pl: Placed;
+  front: boolean;
+  /** Vorhergesagte Box (x y w h) — die Browser-QA hält sie gegen die gemessene. */
+  box: string;
 }
-const hits = (a: Box, b: Box) =>
-  a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-
-const placed = computed(() => {
-  const out = new Map<string, { x: number; y: number; ax: Ax }>();
-  if (!detail.value) return out;
-
-  // Marker und Geisterringe sind tabu, die Front-Linie bewusst nicht: sie ist
-  // gestrichelt und liegt unter dem Halo der Beschriftung.
-  const marks: Box[] = snap.value.pts.map((p) => ({
-    x: px(p.x) - 6,
-    y: py(p.y) - 6,
-    w: 12,
-    h: 12,
-  }));
-  for (const m of moved.value) {
-    marks.push({ x: m.gx - 6, y: m.gy - 6, w: 12, h: 12 });
-  }
-
-  const taken: Box[] = [];
-  const order = [
-    ...split.value.front,
-    ...[...split.value.dom].sort((a, b) => b.y - a.y),
-  ];
-
-  for (const p of order) {
-    const w = p.label.length * CHAR_W + PAD_X;
-    const ox = px(p.x);
-    const oy = py(p.y);
-    let best: { x: number; y: number; ax: Ax; box: Box } | null = null;
-    for (const r of RINGS) {
-      for (const dy of DYS) {
-        for (const ax of ["right", "left"] as const) {
-          const x = ox + (ax === "right" ? 9 + r : -9 - r);
-          const y = oy + dy;
-          const box = {
-            x: ax === "right" ? x - PAD_X / 2 : x - w + PAD_X / 2,
-            y: y - 7 - PAD_Y / 2,
-            w,
-            h: LBL_PX + PAD_Y,
-          };
-          const fits =
-            box.x >= L + 1 &&
-            box.x + box.w <= W - R - 1 &&
-            box.y >= T &&
-            box.y + box.h <= H - B &&
-            !taken.some((t) => hits(box, t)) &&
-            !marks.some((m) => hits(box, m));
-          if (fits) {
-            best = { x, y, ax, box };
-            break;
-          }
-        }
-        if (best) break;
-      }
-      if (best) break;
-    }
-    if (best) {
-      taken.push(best.box);
-      out.set(p.label, { x: best.x, y: best.y, ax: best.ax });
-    }
-  }
-  return out;
-});
-
-const LX = (p: Pt) => placed.value.get(p.label)?.x ?? lx(p, S);
-const LY = (p: Pt) => placed.value.get(p.label)?.y ?? ly(p, S);
-const AX = (p: Pt) => {
-  const pl = placed.value.get(p.label);
-  return pl ? anchor({ ...p, ax: pl.ax }) : anchor(p);
+const boxAttr = (p: Pt, pl: Placed) => {
+  const b = labelBox(p.label, pl.x, pl.y, pl.ax, font.value);
+  return [b.x, b.y, b.w, b.h].map((v) => v.toFixed(1)).join(" ");
 };
-
-const leaders = computed(() =>
+const frontSet = computed(() => new Set(split.value.front.map((p) => p.label)));
+const labels = computed<LabelView[]>(() =>
   snap.value.pts.flatMap((p) => {
-    if (!isNamed(p)) return [];
     const pl = placed.value.get(p.label);
-    const l = pl ? leaderLine(px(p.x), py(p.y), pl.x, pl.y) : leader(p, S);
-    return l ? [{ label: p.label, ...l }] : [];
+    return pl
+      ? [{ p, pl, front: frontSet.value.has(p.label), box: boxAttr(p, pl) }]
+      : [];
   }),
+);
+const leaders = computed(() =>
+  labels.value.flatMap(({ p, pl }) =>
+    pl.leader ? [{ label: p.label, ...pl.leader }] : [],
+  ),
+);
+const unnamed = computed(() =>
+  snap.value.pts.filter((p) => !placed.value.has(p.label)).map((p) => p.label),
 );
 
 const chartLabel = computed(
   () =>
-    `Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, Datenstand ${snap.value.date}. ` +
+    `Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, x-Achse logarithmisch von 0,1 bis 30 Euro, Datenstand ${snap.value.date}. ` +
     `${snap.value.title}. ${snap.value.note} Auf der Pareto-Front: ` +
     split.value.front
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
@@ -224,7 +146,9 @@ const chartLabel = computed(
     (detail.value
       ? " Detailmodus: alle Modellnamen sind eingeblendet, Punkte lassen sich " +
         "für ein Fadenkreuz mit Kosten- und Score-Badge anklicken."
-      : ""),
+      : unnamed.value.length
+        ? ` ${unnamed.value.length} Punkte tragen keinen Namen, weil dort kein Platz ist; der Detailmodus zeigt alle.`
+        : ""),
 );
 
 function pick(i: number) {
@@ -287,8 +211,9 @@ const noteParts = computed(() =>
       <span><i class="mh-sw mh-sw-dom" />dominiert</span>
       <span><i class="mh-sw mh-sw-old" />vor der Preisanpassung</span>
       <!-- Opt-in, weil die Vollbeschriftung auf dieser Höhe dicht wird. Der
-           achte Klick-Schritt schaltet dasselbe, der Schalter geht zusätzlich
-           auf jeder Station. -->
+           letzte Klick-Schritt schaltet dasselbe, der Schalter geht zusätzlich
+           auf jeder Station. Er legt Namen nach, ohne die vorhandenen zu
+           verschieben (siehe `labelLayout.ts`). -->
       <button
         class="mh-tg"
         :class="{ on: detail }"
@@ -314,6 +239,7 @@ const noteParts = computed(() =>
       :viewBox="`0 0 ${W} ${H}`"
       role="img"
       :aria-label="chartLabel"
+      :data-dropped="unnamed.join(' ')"
     >
       <rect
         :x="L"
@@ -374,7 +300,7 @@ const noteParts = computed(() =>
           :y="H - B + 14"
           text-anchor="middle"
         >
-          {{ t }} €
+          {{ tickLabel(t) }}
         </text>
         <text
           v-for="t in yTicks"
@@ -398,7 +324,7 @@ const noteParts = computed(() =>
         >
           <line :x1="m.x1" :y1="m.y1" :x2="m.x2" :y2="m.y2" />
           <polygon :points="m.head" />
-          <circle :cx="m.gx" :cy="m.gy" r="4" class="mp-old-pt">
+          <circle :cx="m.gx" :cy="m.gy" r="4.5" class="mp-old-pt">
             <title>
               {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
             </title>
@@ -417,48 +343,41 @@ const noteParts = computed(() =>
 
         <polyline :points="frontPath" class="mh-front-line" />
         <g v-for="p in split.front" :key="`f-${p.label}`">
-          <circle :cx="px(p.x)" :cy="py(p.y)" r="5" class="mh-front-pt">
+          <circle :cx="px(p.x)" :cy="py(p.y)" r="6" class="mh-front-pt">
             <title>{{ tip(p) }}</title>
           </circle>
-          <text
-            v-if="isNamed(p)"
-            :x="LX(p)"
-            :y="LY(p)"
-            :text-anchor="AX(p)"
-            class="mh-label mh-label-front"
-            :data-model="p.label"
-            @mouseenter="hovered = p.label"
-            @mouseleave="hovered = null"
-            @click.stop="togglePin(p.label)"
-          >
-            {{ p.label }}
-          </text>
         </g>
 
         <g v-for="p in split.dom" :key="`d-${p.label}`">
           <rect
-            :x="px(p.x) - 4"
-            :y="py(p.y) - 4"
-            width="8"
-            height="8"
+            :x="px(p.x) - 4.5"
+            :y="py(p.y) - 4.5"
+            width="9"
+            height="9"
             class="mh-dom-pt"
           >
             <title>{{ tip(p) }}</title>
           </rect>
-          <text
-            v-if="isNamed(p)"
-            :x="LX(p)"
-            :y="LY(p)"
-            :text-anchor="AX(p)"
-            class="mh-label mh-label-dom"
-            :data-model="p.label"
-            @mouseenter="hovered = p.label"
-            @mouseleave="hovered = null"
-            @click.stop="togglePin(p.label)"
-          >
-            {{ p.label }}
-          </text>
         </g>
+
+        <!-- Beschriftungen als eigene Schicht nach allen Markern; Lage aus
+             `labelLayout.ts`, `data-box` ist die vorhergesagte Box für die QA. -->
+        <text
+          v-for="l in labels"
+          :key="`lbl-${l.p.label}`"
+          :x="l.pl.x"
+          :y="l.pl.y"
+          :text-anchor="l.pl.ax"
+          class="mh-label"
+          :class="l.front ? 'mh-label-front' : 'mh-label-dom'"
+          :data-model="l.p.label"
+          :data-box="l.box"
+          @mouseenter="hovered = l.p.label"
+          @mouseleave="hovered = null"
+          @click.stop="togglePin(l.p.label)"
+        >
+          {{ l.p.label }}
+        </text>
 
         <!-- Fadenkreuze: Hover temporär, Klick fixiert (Vergleichsmodus). Die
              €-Badge sitzt auf der Tick-Grundlinie und überschreibt die Tick-
@@ -473,7 +392,7 @@ const noteParts = computed(() =>
         >
           <line :x1="px(c.p.x)" :y1="T" :x2="px(c.p.x)" :y2="H - B" />
           <line :x1="L" :y1="py(c.p.y)" :x2="W - R" :y2="py(c.p.y)" />
-          <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="8" class="mp-ch-ring" />
+          <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="8.5" class="mp-ch-ring" />
           <text
             :x="px(c.p.x)"
             :y="H - B + 14"
@@ -497,7 +416,7 @@ const noteParts = computed(() =>
             :key="`hit-${p.label}`"
             :cx="px(p.x)"
             :cy="py(p.y)"
-            r="10"
+            :r="HIT_R_HISTORY"
             class="mp-hit"
             role="button"
             tabindex="0"
@@ -723,7 +642,7 @@ const noteParts = computed(() =>
   stroke-dasharray: 4 4;
 }
 .mh-ticks text {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--color-text-tertiary);
 }
 
@@ -782,17 +701,19 @@ const noteParts = computed(() =>
   opacity: 0.7;
 }
 /* Klickbar erst im Detailmodus: sonst soll ein Klick auf die Beschriftung die
-   Folie weiterschalten wie jeder andere Klick ins Chart. */
+   Folie weiterschalten wie jeder andere Klick ins Chart. Schriftgrößen auch
+   in `paretoChrome.ts` (LABEL_FONT.history / historyAll): daraus rechnet der
+   Platzierer die Box, die Browser-QA misst nach. */
 .mh-label {
   font-family: var(--slidev-code-font-family, monospace);
-  font-size: 10px;
+  font-size: 11px;
   paint-order: stroke;
   stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 2.5px;
+  stroke-width: 3px;
   pointer-events: none;
 }
 .mh-all .mh-label {
-  font-size: 9px;
+  font-size: 10px;
   pointer-events: auto;
   cursor: pointer;
 }
@@ -822,7 +743,7 @@ const noteParts = computed(() =>
 }
 .mp-ch-badge {
   font-family: var(--slidev-code-font-family, monospace);
-  font-size: 9.5px;
+  font-size: 10.5px;
   font-weight: 700;
   fill: var(--ch);
   paint-order: stroke;

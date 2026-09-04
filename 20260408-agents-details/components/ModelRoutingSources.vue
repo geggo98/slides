@@ -127,6 +127,10 @@ const caveats = [
     text: "Die Trennlinien in den Charts bei 8 €/Task und 50 % Pass@1 haben wir selbst gewählt. Sie stecken nicht in den Daten.",
   },
   {
+    lead: "Logarithmische Kostenachse:",
+    text: "Die x-Achse beider Charts ist logarithmisch, 0,1–30 €. Gleiche Abstände sind gleiche Faktoren, nicht gleiche Euro: von 0,21 € auf 0,53 € ist optisch so weit wie von 2 € auf 5 €. Linear lagen 17 der 22 Modelle auf einem Viertel der Breite, die Sprossen 1 und 2 der Leiter 11 px auseinander. Euro-Differenzen stehen im Tooltip und im Fadenkreuz. Beschriftet ist im Default, was ohne Überschneidung Platz hat — Front und die genannten Modelle immer; den Rest zeigt der Hover oder „alle Namen“.",
+  },
+  {
     lead: "Board-Default:",
     text: "Das Board zeigt per Default 21 von 28 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
   },

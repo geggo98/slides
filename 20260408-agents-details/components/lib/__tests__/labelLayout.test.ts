@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   collisions,
   hits,
+  inkFromCell,
   labelBox,
   layoutLabels,
   markerBoxes,
   segHitsBox,
   type Layout,
   type LayoutPoint,
+  type Obstacle,
   type Placed,
 } from "../../labelLayout";
 import {
@@ -18,7 +20,6 @@ import {
   LABEL_FONT,
   PARETO_SCALE,
   plotBounds,
-  QUADRANT_FONT_HISTORY,
   quadrantBoxes,
   toLayoutPoints,
   visiblePoints,
@@ -34,7 +35,7 @@ import { PRESETS, presetModels } from "../../providerFilter";
 // (`playwright-tests/pareto-label-qa.ts`) noch einmal an echten Boxen nach —
 // samt dem Textmaß, auf dem alles hier aufbaut.
 
-const story = (p: Pt) => p.lbl === true;
+const story = (p: Pt) => p.story === true;
 
 const pos = (p: Placed) => [p.x, p.y, p.ax] as const;
 
@@ -60,7 +61,8 @@ function pareto(subOn: boolean) {
 
 function history(pts: Pt[]) {
   const lp = toLayoutPoints(pts, HISTORY_SCALE, { overlay: false, story });
-  const obstacles = quadrantBoxes(HISTORY_SCALE, QUADRANT_FONT_HISTORY);
+  // Die Historie hat weder Quadranten-Überschriften noch Pfeilcluster.
+  const obstacles: Obstacle[] = [];
   const layout = layoutLabels(lp, {
     font: LABEL_FONT.history,
     allFont: LABEL_FONT.historyAll,
@@ -75,7 +77,7 @@ function expectClean(
   name: string,
   pts: LayoutPoint[],
   layout: Layout,
-  obstacles: ReturnType<typeof quadrantBoxes>,
+  obstacles: Obstacle[],
   bounds: ReturnType<typeof plotBounds>,
   hitR: number,
 ) {
@@ -91,14 +93,25 @@ function expectClean(
 }
 
 describe("Textmaß", () => {
-  it("rechnet 0xProto bei 10 px auf 6,0 px je Zeichen und 11,5 px Höhe", () => {
-    // Gemessen mit pareto-boxes.ts am 04.09.2026: claude-opus-5, 13 Zeichen,
-    // Box 78 × 11,5 px, Oberkante 9,1 px über der Grundlinie.
+  it("rechnet 0xProto bei 10 px auf 6,2 px je Zeichen und 9,9 px Tintenhöhe", () => {
+    // Gemessen mit font-metrics.ts am 04.09.2026, nach dem Laden der Schrift:
+    // Vorschub 0,62 em, Tinte 0,77 em über und 0,22 em unter der Grundlinie.
     const b = labelBox("claude-opus-5", 100, 50, "start", 10);
-    expect(b.w - 4).toBeCloseTo(78, 5);
-    expect(b.h - 4).toBeCloseTo(11.5, 5);
-    expect(50 - (b.y + 2)).toBeCloseTo(9.1, 5);
+    expect(b.w - 4).toBeCloseTo(13 * 6.2, 5);
+    expect(b.h - 4).toBeCloseTo(9.9, 5);
+    expect(50 - (b.y + 2)).toBeCloseTo(7.7, 5);
     expect(b.x + 2).toBe(100);
+  });
+
+  it("rechnet eine gemessene Glyphzelle in die Tintenbox zurück", () => {
+    // Zelle einer 12-px-Zeile: 1,51 em hoch, Oberkante 1,10 em über der
+    // Grundlinie. Die Tinte davon: 0,77 em darüber, 0,22 em darunter.
+    const cell = { x: 10, y: 100 - 13.2, w: 80, h: 18.12 };
+    const ink = inkFromCell(cell);
+    expect(ink.y).toBeCloseTo(100 - 9.24, 5);
+    expect(ink.h).toBeCloseTo(11.88, 5);
+    expect(ink.x).toBe(10);
+    expect(ink.w).toBe(80);
   });
 
   it("legt den Anker rechts bzw. mittig an", () => {
@@ -234,14 +247,14 @@ describe("Folie 43 — jede Station", () => {
     );
     expect(n).toMatchInlineSnapshot(`
       {
-        "0722": 1,
+        "0722": 0,
         "0725": 0,
         "0730": 0,
-        "0814": 3,
+        "0814": 4,
         "0826": 6,
         "0902": 7,
-        "0903": 8,
-        "v1": 5,
+        "0903": 7,
+        "v1": 4,
         "v11": 0,
       }
     `);

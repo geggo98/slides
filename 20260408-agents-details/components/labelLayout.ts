@@ -33,11 +33,20 @@
 //
 // Textmaß
 // -------
-// Die Labels sind 0xProto, Monospace. Gemessen mit `pareto-boxes.ts` bei 10 px:
-// 6,0 px je Zeichen (claude-opus-5, 13 Zeichen, 78 px), Box 11,5 px hoch,
-// Oberkante 9,1 px über der Grundlinie. Die QA vergleicht diese Vorhersage je
-// Label mit `getBoundingClientRect()` — liegt das Modell daneben, sind auch die
-// Unit-Tests wertlos, deshalb wird es im Browser nachgemessen.
+// Die Labels sind 0xProto, Monospace. Gemessen am 04.09.2026 mit
+// `playwright-tests/font-metrics.ts` NACH dem Laden der Schrift: Vorschub
+// 0,62 em je Zeichen; Glyphzelle 1,10 em über und 0,41 em unter der Grundlinie
+// (das ist, was `getBoundingClientRect()` liefert); Tinte der Modellnamen
+// höchstens 0,77 em über und 0,22 em unter der Grundlinie. Die Box des
+// Platzierers ist die TINTE plus Rand — das Halo liegt um die Tinte, und die
+// 1,5 em hohe Zelle würde in jeder Zeile ein Drittel Luft verschenken.
+//
+// Falle, in die jede frühere Messung gelaufen ist: 0xProto lädt erst, wenn
+// ein Text es anfordert, und in diesem Deck registrierte lange kein globales
+// @font-face die Schrift. Ein Deep-Link auf die Folie maß deshalb die
+// Fallback-Monospace (Menlo/SF Mono: 0,60 em, Zelle 1,15 em). Die QA wartet
+// jetzt auf `document.fonts`, und `style.css` des Decks lädt die Schrift von
+// der ersten Folie an; die Konstanten unten gelten für 0xProto.
 
 export type Anchor = "start" | "middle" | "end";
 
@@ -67,14 +76,34 @@ export interface XY {
 
 export const TEXT = {
   /** Vorschub je Zeichen in em. */
-  charEm: 0.6,
-  /** Oberlänge über der Grundlinie in em. */
-  ascentEm: 0.91,
-  /** Unterlänge unter der Grundlinie in em. */
-  descentEm: 0.24,
-  /** Rand um den Text: Halo (`paint-order: stroke`) plus Luft. */
+  charEm: 0.62,
+  /** Tinte über der Grundlinie in em (Oberlängen von f, l, h). */
+  ascentEm: 0.77,
+  /** Tinte unter der Grundlinie in em (Unterlängen von p, g, q). */
+  descentEm: 0.22,
+  /** Glyphzelle über der Grundlinie — so misst der Browser eine Textbox. */
+  cellAscentEm: 1.1,
+  /** Glyphzelle unter der Grundlinie. */
+  cellDescentEm: 0.41,
+  /** Rand um die Tinte: Halo (`paint-order: stroke`, 3 px) plus Luft. */
   pad: 2,
 } as const;
+
+/**
+ * Gemessene Textbox (Glyphzelle, wie `getBoundingClientRect()` sie liefert)
+ * in die Tintenbox des Modells umrechnen — ohne Rand. Für die Browser-QA, die
+ * dieselben Konstanten benutzen muss wie der Platzierer.
+ */
+export function inkFromCell(cell: Box): Box {
+  const font = cell.h / (TEXT.cellAscentEm + TEXT.cellDescentEm);
+  const baseline = cell.y + TEXT.cellAscentEm * font;
+  return {
+    x: cell.x,
+    y: baseline - TEXT.ascentEm * font,
+    w: cell.w,
+    h: (TEXT.ascentEm + TEXT.descentEm) * font,
+  };
+}
 
 /** Sichtbarer Radius des Geisterrings plus Luft. */
 export const GHOST_R = 7;
@@ -367,11 +396,13 @@ export function layoutLabels(
     if (taken.some((t) => hits(c.box, t))) return false;
     if (blocks.some((b) => hits(c.box, b))) return false;
     if (c.leader) {
-      // Die Linie darf keine Beschriftung und keinen sichtbaren Marker kreuzen
-      // (`LEADER_CLEAR`, nicht `hitR`); sie beginnt im eigenen Klickziel.
+      // Die Linie darf keine Beschriftung und keinen fremden sichtbaren Marker
+      // kreuzen (`LEADER_CLEAR`, nicht `hitR`); sie beginnt im eigenen
+      // Klickziel. Den eigenen Geisterring darf sie kreuzen: Er liegt auf dem
+      // Wanderungspfeil dieses Punkts, und im Overlay steht er 27 px neben dem
+      // Marker — mit ihm als Sperre fände claude-fable-5 dort keinen Platz.
       const l = c.leader;
       const crossed = [...o.obstacles, ...foreignNarrow.get(p.id)!, ...taken];
-      if (p.ghost) crossed.push(squareAt(p.ghost, GHOST_R, "Geist"));
       if (crossed.some((b) => segHitsBox(l, b))) return false;
     }
     return true;

@@ -162,8 +162,6 @@
 // und 25.07. NICHT auf der Front — dort ist muse-spark-1.1 mit 2,07 € billiger.
 // Im Stand v1.1 bleibt es der billigste Punkt, nur eben teurer.
 
-export type Ax = "left" | "right" | "center";
-
 /** Herkunft eines Punkts, wenn ihn eine Preisanpassung verschoben hat. */
 export interface Origin {
   x: number; // €/Task vorher
@@ -180,21 +178,13 @@ export interface Pt {
   label: string;
   eur: string; // deutsches Zahlenformat für Tooltip und Fadenkreuz-Badge
   ci?: number; // halbes 95-%-Konfidenzintervall in Prozentpunkten
-  ax: Ax;
-  dy: number;
-  /** Zusätzlicher Versatz in x. Ab ~24 px Abstand zieht `leader()` eine Linie. */
-  dx: number;
-  /** Beschriftung erzwingen (true) oder unterdrücken (false); sonst Chart-Default. */
-  lbl?: boolean;
   /**
-   * Wer die Beschriftung blockiert. Gilt nur zusammen mit `lbl: false`: Sobald
-   * der Anbieter-Filter KEINEN dieser Nachbarn mehr zeigt, ist Platz und die
-   * Beschriftung kommt zurück. Gemessen, nicht geschätzt — die Alternative wäre
-   * eine Schwelle „ab N Punkten unterdrücken", und die trennt nicht: bei 17
-   * sichtbaren Punkten kollidieren dieselben Paare wie bei 20, während Cursor
-   * mit 15 sauber bleibt. Es hängt an den Nachbarn, nicht an der Anzahl.
+   * Story-Punkt: wird immer beschriftet, notfalls mit Führungslinie — wie die
+   * Front und alles Gewanderte. Alle anderen Punkte bekommen nur dann einen
+   * Namen, wenn direkt am Marker Platz ist; den Rest holt „alle Namen“ nach.
+   * Wo ein Label steht, entscheidet `labelLayout.ts`, nicht diese Datei.
    */
-  blockers?: readonly string[];
+  story?: boolean;
   old?: Origin;
   sub?: number; // €/Task unter dem Wochenkontingent, +50 % (bis 13.09., nur Stand 7)
   sub25?: number; // dasselbe mit den dauerhaften +25 % ab 14.09.
@@ -220,13 +210,9 @@ function P(
   label: string,
   x: number,
   y: number,
-  ax: Ax = "right",
-  dy = 4,
-  dx = 0,
   extra: {
     ci?: number;
-    lbl?: boolean;
-    blockers?: readonly string[];
+    story?: boolean;
     old?: Omit<Origin, "eur">;
     sub?: number;
     sub25?: number;
@@ -237,27 +223,13 @@ function P(
     x,
     y,
     eur: fmt(x),
-    ax,
-    dy,
-    dx,
     ci: extra.ci,
-    lbl: extra.lbl,
-    blockers: extra.blockers,
+    story: extra.story,
     sub: extra.sub,
     sub25: extra.sub25,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
   };
 }
-
-/** Denselben Messwert mit anderer Beschriftungs-Platzierung — die beiden Charts
- *  haben unterschiedliche Höhen, dieselbe Position passt nicht in beiden. */
-const at = (p: Pt, ax: Ax, dy: number, dx = 0, lbl?: boolean): Pt => ({
-  ...p,
-  ax,
-  dy,
-  dx,
-  lbl,
-});
 
 // ---------------------------------------------------------------------------
 // Stand 1 — DeepSWE v1, Board-Stand 20.06.2026 (21 Modelle)
@@ -267,33 +239,29 @@ const at = (p: Pt, ax: Ax, dy: number, dx = 0, lbl?: boolean): Pt => ({
 // las statt sie zu erarbeiten, bekam davon beide Achsen geschenkt — Score zu
 // hoch und, weil Lesen kaum Tokens kostet, €/Task zu niedrig. Weder Scores noch
 // Kosten sind deshalb mit v1.1 vergleichbar.
-// Die fünf billigsten Front-Punkte liegen in einem 40-px-Nest an der Achse —
-// dort passt keine Beschriftung, die noch eindeutig zuzuordnen wäre. Sie bleiben
-// unbeschriftet (Tooltip); die Aussage der Station steckt in den fünf Modellen
-// darüber.
 const S_V1: Pt[] = [
-  P("minimax-m2.7", 0.62, 0, "right", 14, 0, { lbl: false }),
-  P("claude-haiku-4.5", 0.73, 0, "right", -8),
-  P("gemini-3-flash", 1.34, 5, "right", 14, 0, { lbl: false }),
-  P("gemini-3.1-pro", 1.61, 10, "right", -8, 0, { lbl: false }),
-  P("mimo-v2.5-pro", 1.74, 19, "right", 14, 0, { lbl: false }),
-  P("qwen3.7-max", 1.86, 18, "right", 26),
-  P("gpt-5.4-mini", 1.83, 24, "right", -8, 0, { lbl: false }),
-  P("kimi-k2.6", 2.77, 24, "right", 4),
-  P("glm-5.2", 3.46, 42, "right", 14),
-  P("deepseek-v4-pro", 3.7, 8, "right", 4),
-  P("qwen3.6-plus", 3.73, 3, "right", -8),
-  P("gpt-5.4", 3.83, 56, "right", -8),
-  P("claude-opus-4.6", 4.73, 28, "right", -8),
-  P("claude-sonnet-4.6", 4.83, 32, "right", 14),
-  P("minimax-m3", 4.88, 20, "right", 4),
-  P("grok-build-0.1", 5.78, 13, "right", 4),
-  P("gpt-5.5", 5.79, 70, "right", -8),
-  P("gemini-3.5-flash", 6.5, 28, "right", -8),
-  P("glm-5.1", 6.54, 18, "right", 4),
-  // Beide Anthropic-Punkte tragen die Pointe der Station, deshalb erzwungen.
-  P("claude-opus-4.8", 11.02, 58, "right", 4, 0, { lbl: true }),
-  P("claude-opus-4.7", 15.93, 54, "right", 4, 0, { lbl: true }),
+  P("minimax-m2.7", 0.62, 0),
+  P("claude-haiku-4.5", 0.73, 0),
+  P("gemini-3-flash", 1.34, 5),
+  P("gemini-3.1-pro", 1.61, 10),
+  P("mimo-v2.5-pro", 1.74, 19),
+  P("qwen3.7-max", 1.86, 18),
+  P("gpt-5.4-mini", 1.83, 24),
+  P("kimi-k2.6", 2.77, 24),
+  P("glm-5.2", 3.46, 42),
+  P("deepseek-v4-pro", 3.7, 8),
+  P("qwen3.6-plus", 3.73, 3),
+  P("gpt-5.4", 3.83, 56),
+  P("claude-opus-4.6", 4.73, 28),
+  P("claude-sonnet-4.6", 4.83, 32),
+  P("minimax-m3", 4.88, 20),
+  P("grok-build-0.1", 5.78, 13),
+  P("gpt-5.5", 5.79, 70),
+  P("gemini-3.5-flash", 6.5, 28),
+  P("glm-5.1", 6.54, 18),
+  // Beide Anthropic-Punkte tragen die Pointe der Station.
+  P("claude-opus-4.8", 11.02, 58, { story: true }),
+  P("claude-opus-4.7", 15.93, 54, { story: true }),
 ];
 
 // ---------------------------------------------------------------------------
@@ -303,14 +271,14 @@ const S_V1: Pt[] = [
 // Chart-Stand (22.07.). Rekonstruiert: die Startwerte selbst sind nicht
 // archiviert, die acht Konfigurationen wurden bis dahin aber nicht neu gefahren.
 const S_V11: Pt[] = [
-  P("kimi-k2.7-code", 2.47, 31, "right", -8),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 14),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-  P("gpt-5.5", 6.33, 67, "right", -8),
-  P("gemini-3.5-flash", 6.43, 37, "right", 14),
-  P("gemini-3.1-pro", 8.31, 12, "right", 4),
-  P("claude-opus-4.8", 11.58, 59, "right", 4, 0, { lbl: true }),
-  P("claude-fable-5", 11.75, 70, "left", 4),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+  P("gpt-5.5", 6.33, 67),
+  P("gemini-3.5-flash", 6.43, 37),
+  P("gemini-3.1-pro", 8.31, 12),
+  P("claude-opus-4.8", 11.58, 59, { story: true }),
+  P("claude-fable-5", 11.75, 70),
 ];
 
 // ---------------------------------------------------------------------------
@@ -319,22 +287,22 @@ const S_V11: Pt[] = [
 // Die gpt-5.6-Familie (10.07.), kimi-k3 (18.07.), grok-4.5 (16.07.) und
 // muse-spark-1.1 (14.07.) sind dazugekommen.
 const S_0722: Pt[] = [
-  P("muse-spark-1.1", 2.07, 53, "right", -6),
-  P("grok-4.5", 2.12, 54, "right", -18),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
-  P("gpt-5.6-luna", 2.65, 67, "left", -8),
-  P("glm-5.2", 3.43, 44, "right", 4),
-  P("kimi-k3", 4.08, 69, "right", 12),
-  P("gpt-5.6-terra", 4.33, 70, "center", -11),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 12),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-  P("gpt-5.5", 6.33, 67, "right", 4),
-  P("gemini-3.5-flash", 6.43, 37, "right", 4),
-  P("gpt-5.6-sol", 7.35, 73, "right", 4),
-  P("gemini-3.1-pro", 8.31, 12, "right", 4),
-  P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 11.75, 70, "left", 4),
-  P("claude-sonnet-5", 23.13, 54, "left", 4),
+  P("muse-spark-1.1", 2.07, 53),
+  P("grok-4.5", 2.12, 54),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("gpt-5.6-luna", 2.65, 67),
+  P("glm-5.2", 3.43, 44),
+  P("kimi-k3", 4.08, 69),
+  P("gpt-5.6-terra", 4.33, 70),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+  P("gpt-5.5", 6.33, 67),
+  P("gemini-3.5-flash", 6.43, 37),
+  P("gpt-5.6-sol", 7.35, 73),
+  P("gemini-3.1-pro", 8.31, 12),
+  P("claude-opus-4.8", 11.58, 59),
+  P("claude-fable-5", 11.75, 70),
+  P("claude-sonnet-5", 23.13, 54),
 ];
 
 // ---------------------------------------------------------------------------
@@ -342,24 +310,24 @@ const S_0722: Pt[] = [
 // ---------------------------------------------------------------------------
 // Claude Opus 5 (25.07.) und Gemini 3.6 Flash (22.07.) neu.
 const S_0725: Pt[] = [
-  P("muse-spark-1.1", 2.07, 53, "right", -6),
-  P("grok-4.5", 2.12, 54, "right", -18),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
-  P("gpt-5.6-luna", 2.65, 67, "left", -8),
-  P("gemini-3.6-flash", 3.09, 49, "left", 16),
-  P("glm-5.2", 3.43, 44, "right", 4),
-  P("kimi-k3", 4.08, 69, "right", 12),
-  P("gpt-5.6-terra", 4.33, 70, "center", -11),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 12),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-  P("gpt-5.5", 6.33, 67, "right", 4),
-  P("gemini-3.5-flash", 6.43, 37, "right", 4),
-  P("gpt-5.6-sol", 7.35, 73, "right", -8),
-  P("gemini-3.1-pro", 8.31, 12, "right", 4),
-  P("claude-opus-5", 10.37, 74, "right", 4),
-  P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 11.75, 70, "left", 4),
-  P("claude-sonnet-5", 23.13, 54, "left", 4),
+  P("muse-spark-1.1", 2.07, 53),
+  P("grok-4.5", 2.12, 54),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("gpt-5.6-luna", 2.65, 67),
+  P("gemini-3.6-flash", 3.09, 49),
+  P("glm-5.2", 3.43, 44),
+  P("kimi-k3", 4.08, 69),
+  P("gpt-5.6-terra", 4.33, 70),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+  P("gpt-5.5", 6.33, 67),
+  P("gemini-3.5-flash", 6.43, 37),
+  P("gpt-5.6-sol", 7.35, 73),
+  P("gemini-3.1-pro", 8.31, 12),
+  P("claude-opus-5", 10.37, 74),
+  P("claude-opus-4.8", 11.58, 59),
+  P("claude-fable-5", 11.75, 70),
+  P("claude-sonnet-5", 23.13, 54),
 ];
 
 // ---------------------------------------------------------------------------
@@ -369,29 +337,29 @@ const S_0725: Pt[] = [
 // Beide wandern waagerecht nach links und verdrängen dabei muse-spark-1.1,
 // grok-4.5 und kimi-k3 von der Front.
 const S_0730: Pt[] = [
-  P("gpt-5.6-luna", 0.53, 67, "right", 16, 0, {
+  P("gpt-5.6-luna", 0.53, 67, {
     old: { x: 2.65, why: "OpenAI-Preissenkung 30.07.: −80 %" },
   }),
-  P("muse-spark-1.1", 2.07, 53, "right", 8),
-  P("grok-4.5", 2.12, 54, "right", -6),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
-  P("gemini-3.6-flash", 3.09, 49, "left", 16),
-  P("glm-5.2", 3.43, 44, "right", 4),
-  P("gpt-5.6-terra", 3.47, 70, "right", -14, 0, {
+  P("muse-spark-1.1", 2.07, 53),
+  P("grok-4.5", 2.12, 54),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("gemini-3.6-flash", 3.09, 49),
+  P("glm-5.2", 3.43, 44),
+  P("gpt-5.6-terra", 3.47, 70, {
     old: { x: 4.33, why: "OpenAI-Preissenkung 30.07.: −20 %" },
   }),
   // Der prominenteste der drei verdrängten Punkte — die Station erzählt genau das.
-  P("kimi-k3", 4.08, 69, "right", 14, 0, { lbl: true }),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 12),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-  P("gpt-5.5", 6.33, 67, "right", 4),
-  P("gemini-3.5-flash", 6.43, 37, "right", 4),
-  P("gpt-5.6-sol", 7.35, 73, "right", -8),
-  P("gemini-3.1-pro", 8.31, 12, "right", 4),
-  P("claude-opus-5", 10.37, 74, "right", 4),
-  P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 11.75, 70, "left", 4),
-  P("claude-sonnet-5", 23.13, 54, "left", 4),
+  P("kimi-k3", 4.08, 69, { story: true }),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+  P("gpt-5.5", 6.33, 67),
+  P("gemini-3.5-flash", 6.43, 37),
+  P("gpt-5.6-sol", 7.35, 73),
+  P("gemini-3.1-pro", 8.31, 12),
+  P("claude-opus-5", 10.37, 74),
+  P("claude-opus-4.8", 11.58, 59),
+  P("claude-fable-5", 11.75, 70),
+  P("claude-sonnet-5", 23.13, 54),
 ];
 
 // ---------------------------------------------------------------------------
@@ -406,39 +374,36 @@ const S_0730: Pt[] = [
 // Rekonstruiert: identisch zum heutigen Board, aber ohne glm-5.3 und mit sol
 // zum alten Preis.
 const S_0814: Pt[] = [
-  // Der Punkt bei 9 Cent liegt so dicht an der Achse, dass jede Beschriftung in
-  // einen Nachbarmarker läuft — der Erklärtext nennt beide DeepSeek-Preise,
-  // hier reicht der Tooltip.
-  P("deepseek-v4-flash", 0.09, 53, "right", 24, 0, { lbl: false }),
-  P("deepseek-v4-pro", 0.21, 63, "right", 14),
-  P("gpt-5.6-luna", 0.53, 67, "right", -8),
-  P("gemini-3.1-pro", 1.88, 12, "right", 14, 0, {
+  P("deepseek-v4-flash", 0.09, 53),
+  P("deepseek-v4-pro", 0.21, 63),
+  P("gpt-5.6-luna", 0.53, 67),
+  P("gemini-3.1-pro", 1.88, 12, {
     old: { x: 8.3, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
-  P("gemini-3.7-flash", 1.77, 65, "right", 14),
-  P("gemini-3.6-flash", 1.94, 47, "right", 6, 60, {
+  P("gemini-3.7-flash", 1.77, 65),
+  P("gemini-3.6-flash", 1.94, 47, {
     old: { x: 3.09, y: 49, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
-  P("muse-spark-1.1", 2.07, 53, "right", -8),
-  P("grok-4.5", 2.12, 54, "right", -20),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
-  P("gemini-3.5-flash", 3.02, 36, "right", 32, 0, {
+  P("muse-spark-1.1", 2.07, 53),
+  P("grok-4.5", 2.12, 54),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("gemini-3.5-flash", 3.02, 36, {
     old: { x: 6.43, y: 37, why: "Token-Zählfehler korrigiert, Re-Run 13.08." },
   }),
-  P("muse-spark-1.2", 3.24, 55, "right", 14),
-  P("qwen3.8-max", 3.27, 57, "right", -6),
-  P("glm-5.2", 3.43, 44, "right", 4),
-  P("gpt-5.6-terra", 3.47, 70, "left", -16, -20),
-  P("kimi-k3", 4.08, 69, "right", 16),
-  P("grok-4.6", 3.02, 67, "right", -8),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 12),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-  P("gpt-5.5", 6.33, 67, "right", 12),
-  P("gpt-5.6-sol", 7.35, 73, "right", -10, 10),
-  P("claude-opus-5", 10.37, 74, "right", 4),
-  P("claude-opus-4.8", 11.58, 59, "right", 4),
-  P("claude-fable-5", 11.75, 70, "left", 4),
-  P("claude-sonnet-5", 23.13, 54, "left", 4),
+  P("muse-spark-1.2", 3.24, 55),
+  P("qwen3.8-max", 3.27, 57),
+  P("glm-5.2", 3.43, 44),
+  P("gpt-5.6-terra", 3.47, 70),
+  P("kimi-k3", 4.08, 69),
+  P("grok-4.6", 3.02, 67),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+  P("gpt-5.5", 6.33, 67),
+  P("gpt-5.6-sol", 7.35, 73),
+  P("claude-opus-5", 10.37, 74),
+  P("claude-opus-4.8", 11.58, 59),
+  P("claude-fable-5", 11.75, 70),
+  P("claude-sonnet-5", 23.13, 54),
 ];
 
 // ---------------------------------------------------------------------------
@@ -464,84 +429,48 @@ const S_0814: Pt[] = [
 // Bis 13.09.2026 läuft die +50-%-Aktion (`sub`, ×2/3), ab 14.09. ersetzt
 // Anthropic sie durch dauerhafte +25 % (`sub25`, ×0,8). Kein API-Preis, deshalb
 // per Toggle abschaltbar.
-// Sieben Modelle drängen sich zwischen 1,9 € und 4,9 € — terra und glm-5.3
-// liegen 3 Cent und einen Punkt auseinander, auf dem Canvas rund ein Pixel.
-// Deren Beschriftungen sitzen deshalb versetzt und bekommen eine Führungslinie
-// (`leader()` ab ~24 px Versatz), sonst wäre nicht zu erkennen, welches Label zu
-// welchem Marker gehört. Dasselbe gilt jetzt am billigen Ende: glm-5.3-flash,
-// deepseek-v4-flash und luna liegen innerhalb von 12 px nebeneinander.
+//
+// `story: true` an Opus 5, Fable 5, Sonnet 5 und sol: Die vier tragen die
+// Erzählung der Folie (Opus 5 als Vergleichspreis der Leiter, sol als
+// Fehlerbalken-Zwilling, Fable und Sonnet als „Leistung um jeden Preis“) und
+// werden deshalb immer beschriftet.
 const S_0826: Pt[] = [
-  P("glm-5.3-flash", 0.21, 63, "right", 14, 0, { ci: 4.4 }),
-  // Beide DeepSeek-Punkte bleiben unbeschriftet — wie schon der 9-Cent-Punkt in
-  // Stand 6. Sie sind nach der Preiserhöhung zwischen glm-5.3-flash, luna und
-  // das 3-€-Gedränge gerutscht; jede Platzierung ihrer 15 bzw. 17 Zeichen läuft
-  // dort in einen Nachbarmarker oder ein Nachbarlabel. Sie sind dominiert, die
-  // Wanderung steht im Folientext, und der Tooltip nennt sie weiterhin.
-  P("deepseek-v4-flash", 0.41, 53, "right", 8, 0, {
-    ci: 3.6,
-    lbl: false,
-    blockers: ["muse-spark-1.2"],
-  }),
-  P("gpt-5.6-luna", 0.53, 67, "right", -8, 0, { ci: 4.0 }),
-  P("deepseek-v4-pro", 1.46, 63, "right", 14, 0, {
-    ci: 6.3,
-    lbl: false,
-    blockers: ["glm-5.3-flash", "qwen3.8-max"],
-  }),
-  P("gemini-3.7-flash", 1.77, 65, "right", 8, 0, { ci: 1.8 }),
-  P("gemini-3.6-flash", 1.94, 47, "right", 0, 0, { ci: 3.7 }),
-  P("gemini-3.5-flash", 3.02, 36, "right", 12, 0, { ci: 4.0 }),
-  P("muse-spark-1.2", 3.24, 55, "right", 14, 0, { ci: 2.1 }),
-  P("qwen3.8-max", 3.27, 57, "right", -6, 0, { ci: 2.7 }),
-  P("glm-5.2", 3.43, 44, "right", 12, 0, { ci: 1.7 }),
-  P("gpt-5.6-terra", 3.47, 70, "right", -14, 120, { ci: 2.6 }),
-  P("glm-5.3", 3.5, 69, "right", 46, 34, { ci: 3.0 }),
-  P("kimi-k3", 4.08, 69, "right", -14, -4, { ci: 4.5 }),
-  // Zwischen Sol-Marker (oben), qwen3.8-max-Label (links) und gpt-5.5-Marker
-  // (rechts) bleibt keine freie Zeile — das Label geht mit Führungslinie in die
-  // leere Fläche rechts unterhalb.
-  P("grok-4.6", 3.02, 67, "right", 13, 59, { ci: 2.2 }),
-  P("gpt-5.6-sol", 5.66, 73, "right", -14, 20, {
+  P("glm-5.3-flash", 0.21, 63, { ci: 4.4 }),
+  P("deepseek-v4-flash", 0.41, 53, { ci: 3.6 }),
+  P("gpt-5.6-luna", 0.53, 67, { ci: 4.0 }),
+  P("deepseek-v4-pro", 1.46, 63, { ci: 6.3 }),
+  P("gemini-3.7-flash", 1.77, 65, { ci: 1.8 }),
+  P("gemini-3.6-flash", 1.94, 47, { ci: 3.7 }),
+  P("gemini-3.5-flash", 3.02, 36, { ci: 4.0 }),
+  P("muse-spark-1.2", 3.24, 55, { ci: 2.1 }),
+  P("qwen3.8-max", 3.27, 57, { ci: 2.7 }),
+  P("glm-5.2", 3.43, 44, { ci: 1.7 }),
+  P("gpt-5.6-terra", 3.47, 70, { ci: 2.6 }),
+  P("glm-5.3", 3.5, 69, { ci: 3.0 }),
+  P("kimi-k3", 4.08, 69, { ci: 4.5 }),
+  P("grok-4.6", 3.02, 67, { ci: 2.2 }),
+  P("gpt-5.6-sol", 5.66, 73, {
     ci: 2.8,
+    story: true,
     old: { x: 7.35, why: "OpenAI-Preissenkung 21.08.: −20 % / −33 %" },
   }),
-  P("gpt-5.5", 6.33, 67, "right", 14, 0, { ci: 6.5 }),
-  // dy so gewählt, dass das Label auch mit eingeschaltetem Abo-Overlay (Punkt
-  // wandert auf 6,91 €, Geisterring auf 8,30 €) nicht in den Sol-Geisterring
-  // läuft.
-  // Das Label geht NACH OBEN (dy negativ — Achtung, `P()` nimmt dy VOR dx).
-  // Unter dem Marker lief es früher waagerecht nach rechts; seit
-  // claude-fable-5 auf seiner besten Stufe bei 11,75 € statt 18,95 € steht,
-  // liegt dessen Marker (SVG-x 458) mitten in dieser Spur — er überdeckte das
-  // Label so weit, dass nicht einmal mehr der Klick darauf ankam. Über dem
-  // Marker ist der Streifen x 418–497 frei.
-  //
-  // Das ist auf die Ansicht OHNE Kontingent-Overlay optimiert, bewusst: Mit
-  // Overlay rücken alle vier Claude-Punkte auf zwei Drittel, Opus 5 also auf
-  // 6,91 € — mitten in den dichtesten Bereich der Folie, zwischen astra
-  // (5,71 €), sol (5,66 €) und gpt-5.5 (6,33 €). Dort ist für ein 78 px
-  // breites Label kein Platz mehr, in keiner Richtung; durchgerechnet mit
-  // playwright-tests/pareto-boxes.ts. Die Overlay-Ansicht hat deshalb neun
-  // statt drei Überschneidungen, die Default-Ansicht vier statt zwei. Wer das
-  // aufräumen will, muss die Platzierung vom Overlay-Zustand abhängig machen —
-  // heute ist sie es nicht.
-  P("claude-opus-5", 10.37, 74, "right", -6, 0, {
+  P("gpt-5.5", 6.33, 67, { ci: 6.5 }),
+  P("claude-opus-5", 10.37, 74, {
     ci: 3.9,
+    story: true,
     sub: 6.91,
     sub25: 8.3,
   }),
-  P("claude-opus-4.8", 11.58, 59, "right", 4, 0, {
-    ci: 1.8,
-    sub: 7.72,
-    sub25: 9.26,
-  }),
-  P("claude-fable-5", 11.75, 70, "left", 4, 0, {
+  P("claude-opus-4.8", 11.58, 59, { ci: 1.8, sub: 7.72, sub25: 9.26 }),
+  P("claude-fable-5", 11.75, 70, {
     ci: 4.0,
+    story: true,
     sub: 7.83,
     sub25: 9.4,
   }),
-  P("claude-sonnet-5", 23.13, 54, "left", 4, 0, {
+  P("claude-sonnet-5", 23.13, 54, {
     ci: 4.2,
+    story: true,
     sub: 15.42,
     sub25: 18.5,
   }),
@@ -550,33 +479,16 @@ const S_0826: Pt[] = [
 // Stand 7 der Historie: dieselben Messwerte, plus die sechs vom Board
 // ausgeblendeten Modelle — auf der Historien-Folie soll kein einmal gemessenes
 // Modell verschwinden, sonst liest sich die Ausblendung wie ein Rückzug.
-// Die Platzierungen sind eigene: das Historien-Chart ist flacher, und es
-// beschriftet nur Front, Wanderung und ausdrücklich markierte Punkte.
-const HIST_PLACE: Record<string, [Ax, number, number?, boolean?]> = {
-  "glm-5.3-flash": ["right", 14],
-  "deepseek-v4-flash": ["right", 24, 0, false], // siehe Kommentar bei Stand 6
-  "deepseek-v4-pro": ["right", 14, 0, false],
-  "gpt-5.6-luna": ["right", -8],
-  "gpt-5.6-terra": ["left", -16, -20],
-  "glm-5.3": ["right", 22, 30, true],
-  "gpt-5.6-sol": ["right", -10, 10],
-  "claude-opus-5": ["right", 4],
-};
-
+// glm-5.3 ist dort Story-Punkt: die Station erzählt den Zwilling terra/glm-5.3.
 const S_0826_HIST: Pt[] = [
-  ...S_0826,
-  P("gemini-3.1-pro", 1.88, 12, "right", 4),
-  P("muse-spark-1.1", 2.07, 53, "right", -8),
-  P("grok-4.5", 2.12, 54, "right", -20),
-  P("kimi-k2.7-code", 2.47, 31, "right", -10),
-  P("claude-sonnet-4.6", 4.84, 30, "right", 12),
-  P("gpt-5.4", 4.95, 52, "right", -8),
-]
-  .map((p) => {
-    const pl = HIST_PLACE[p.label];
-    return pl ? at(p, pl[0], pl[1], pl[2] ?? 0, pl[3]) : p;
-  })
-  .sort((a, b) => a.x - b.x);
+  ...S_0826.map((p) => (p.label === "glm-5.3" ? { ...p, story: true } : p)),
+  P("gemini-3.1-pro", 1.88, 12),
+  P("muse-spark-1.1", 2.07, 53),
+  P("grok-4.5", 2.12, 54),
+  P("kimi-k2.7-code", 2.47, 31),
+  P("claude-sonnet-4.6", 4.84, 30),
+  P("gpt-5.4", 4.95, 52),
+].sort((a, b) => a.x - b.x);
 
 // ---------------------------------------------------------------------------
 // Stand 8 — 02.09.2026 (Board-Default + gpt-5.6-terra, 21 Modelle)
@@ -627,7 +539,7 @@ const withoutSolGhost = (p: Pt): Pt =>
 
 const S_0902: Pt[] = [
   ...S_0826.map(withoutSolGhost),
-  P("gemini-3.8-flash", 2.07, 74, "right", -10, 0, {
+  P("gemini-3.8-flash", 2.07, 74, {
     ci: 1.4,
     old: {
       x: 4.14,
@@ -637,13 +549,12 @@ const S_0902: Pt[] = [
   }),
 ].sort((a, b) => a.x - b.x);
 
-// Historien-Variante: eigene Platzierung (flacheres Chart) und OHNE den
-// Zukunfts-Ring. Die Historie zeigt, was war — ein Ring, der auf 2027 zeigt,
-// läse sich dort als vergangene Wanderung. Gleiche Entscheidung wie bei
-// glm-5.3-flash in Stand 7.
+// Historien-Variante OHNE den Zukunfts-Ring. Die Historie zeigt, was war — ein
+// Ring, der auf 2027 zeigt, läse sich dort als vergangene Wanderung. Gleiche
+// Entscheidung wie bei glm-5.3-flash in Stand 7.
 const S_0902_HIST: Pt[] = [
   ...S_0826_HIST.map(withoutSolGhost),
-  P("gemini-3.8-flash", 2.07, 74, "right", 14, 0, { ci: 1.4 }),
+  P("gemini-3.8-flash", 2.07, 74, { ci: 1.4 }),
 ].sort((a, b) => a.x - b.x);
 
 // ---------------------------------------------------------------------------
@@ -697,29 +608,25 @@ const S_0902_HIST: Pt[] = [
 // Hier ist der eine bekannte Preis selbst vorläufig, und das gehört in den
 // Text, nicht in die Geometrie.
 //
-// Platzierung: astra (5,71 €/74 %) liegt fast auf gpt-5.6-sol (5,66 €/73 %) —
-// 2 px daneben und 3 px darüber, die Marker überlappen. Dieselbe Lage wie bei
-// gpt-5.6-terra/glm-5.3 (3,47 € und 3,50 €), und dieselbe Folge: Der Klick auf
-// den Marker landet beim Nachbarn, die Beschriftung ist der Griff (siehe CSS
-// von ModelRoutingPareto.vue).
+// astra (5,71 €/74 %) liegt fast auf gpt-5.6-sol (5,66 €/73 %): auf der
+// log-Achse 1 px daneben, 3 px darüber, die Marker überlappen. Der Klick auf
+// den Marker landet beim Nachbarn, die Beschriftung ist der Griff.
 //
-// Das Label geht deshalb nach UNTEN, leicht nach rechts. Über dem Marker wäre
-// es hübscher, dort liegen aber zwei fremde Labels (gemini-3.8-flash und
-// kimi-k3) — Text über Text ist unlesbar, Text über einem Marker nicht. Unten
-// bleibt nur die Überdeckung von sols Marker, und die ist bei 2 px Abstand
-// nicht vermeidbar. Gemessen mit pareto-label-qa.ts.
-const S_0903: Pt[] = [
-  ...S_0902,
-  P("gpt-6-astra", 5.71, 74, "center", 15, 0, { ci: 0.83 }),
-].sort((a, b) => a.x - b.x);
+// Auf DIESER Folie ist astra kein Story-Punkt. Der Platzierer findet für sein
+// Label dort keinen freien Platz — zwischen dem Zwilling sol, gpt-5.5, kimi-k3,
+// dem Geisterring von gemini-3.8-flash und dem Klickziel von Opus 5 fehlen in
+// jeder Richtung 1–15 px, nachgerechnet am 04.09.2026. Der Name kommt per
+// Hover, Pin und „alle Namen“; die Pointe steht im Folientext, im ⓘ und im
+// Vorlesetext. In der Historie (Station 9) IST astra der Story-Punkt und wird
+// beschriftet — dort ist mehr Platz, weil das Chart keine Quadranten-
+// Überschriften trägt und kein Kontingent-Overlay kennt.
+const S_0903: Pt[] = [...S_0902, P("gpt-6-astra", 5.71, 74, { ci: 0.83 })].sort(
+  (a, b) => a.x - b.x,
+);
 
-// `lbl: true` wie bei kimi-k3 in Stand 5: Das Historien-Chart beschriftet sonst
-// nur Front und Wanderung, und astra ist beides nicht — es ist dominiert und
-// bewegt sich nicht. Genau das IST aber die Aussage der Station, und ohne
-// Beschriftung sieht niemand, welcher der 28 Punkte der Neuzugang ist.
 const S_0903_HIST: Pt[] = [
   ...S_0902_HIST,
-  P("gpt-6-astra", 5.71, 74, "center", 0, 40, { ci: 0.83, lbl: true }),
+  P("gpt-6-astra", 5.71, 74, { ci: 0.83, story: true }),
 ].sort((a, b) => a.x - b.x);
 
 export const SNAPSHOTS: Snapshot[] = [
@@ -1141,44 +1048,6 @@ export function paretoFront(pts: Pt[]): { front: Pt[]; dom: Pt[] } {
     }
   }
   return { front, dom };
-}
-
-export const anchor = (p: Pt) =>
-  p.ax === "center" ? "middle" : p.ax === "left" ? "end" : "start";
-
-export const ldx = (p: Pt) =>
-  p.ax === "center" ? 0 : p.ax === "left" ? -9 : 9;
-
-/** Ankerpunkt der Beschriftung in Chart-Koordinaten. */
-export const lx = (p: Pt, s: Scale) => s.px(p.x) + ldx(p) + p.dx;
-export const ly = (p: Pt, s: Scale) => s.py(p.y) + p.dy;
-
-/**
- * Führungslinie Marker → Beschriftung, sobald das Label so weit abgesetzt ist,
- * dass die Zuordnung sonst raten wäre. Nötig im Gedränge zwischen 2 € und 5 €,
- * wo Marker teils einen Pixel auseinanderliegen. Die Linie setzt 7 px hinter dem
- * Marker an und endet 3 px vor dem Text.
- */
-export function leader(p: Pt, s: Scale) {
-  return leaderLine(s.px(p.x), s.py(p.y), lx(p, s), ly(p, s));
-}
-
-/**
- * Dieselbe Linie für frei berechnete Label-Positionen (Detailmodus der
- * Historien-Folie, der die Beschriftungen selbst platziert).
- */
-export function leaderLine(ox: number, oy: number, tx: number, ly_: number) {
-  const ty = ly_ - 3; // grob auf die Mittelhöhe der Zeile
-  const len = Math.hypot(tx - ox, ty - oy);
-  if (len < 24) return null;
-  const ux = (tx - ox) / len;
-  const uy = (ty - oy) / len;
-  return {
-    x1: ox + ux * 7,
-    y1: oy + uy * 7,
-    x2: tx - ux * 3,
-    y2: ty - uy * 3,
-  };
 }
 
 export const tip = (p: Pt) =>

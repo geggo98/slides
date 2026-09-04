@@ -26,6 +26,11 @@ await page.goto(`http://localhost:${port}/${url}`, {
   waitUntil: "networkidle",
 });
 await page.waitForSelector(`svg.${sel}-chart text.${sel}-label`);
+// Vor dem Laden von 0xProto misst man die Fallback-Monospace (siehe
+// labelLayout.ts, „Textmaß“).
+await page.evaluate(
+  `document.fonts.load('12px "0xProto"').then(() => document.fonts.ready)`,
+);
 if (klick) {
   await page.click(klick);
   await page.waitForTimeout(400);

@@ -98,6 +98,7 @@ const chart = await page.evaluate(() => {
   return {
     titles: q("title"),
     frontLabels: q("text.mp-label-front"),
+    frontPts: svg?.querySelectorAll("circle.mp-front-pt").length ?? 0,
     ghosts: svg?.querySelectorAll("circle.mp-old-pt").length ?? 0,
     legend:
       document.querySelector(".mp-legend")?.textContent?.replace(/\s+/g, " ") ??
@@ -126,13 +127,13 @@ for (const [model, now] of [
   check(`${model} steht bei ${now}`, tip !== undefined, tip ?? "kein Treffer");
 }
 
+// Die Front ändert sich mit jedem Board-Stand; fest verdrahtet war hier „6“,
+// und das war seit Stand 8 falsch. Verlangt wird, was stabil gilt: jede
+// Sprosse trägt einen Namen.
 check(
-  "Front = 2× deepseek, luna, terra, sol, opus-5 (glm-5.3 dominiert)",
-  chart.frontLabels.length === 6 &&
-    chart.frontLabels.includes("claude-opus-5") &&
-    chart.frontLabels.includes("deepseek-v4-flash") &&
-    !chart.frontLabels.includes("glm-5.3"),
-  chart.frontLabels.join(", "),
+  "jede Front-Sprosse trägt einen Namen",
+  chart.frontPts > 0 && chart.frontLabels.length === chart.frontPts,
+  `${chart.frontLabels.length} Labels / ${chart.frontPts} Sprossen: ${chart.frontLabels.join(", ")}`,
 );
 check(
   "ein Geisterpunkt (sol vor der Senkung vom 21.08.)",

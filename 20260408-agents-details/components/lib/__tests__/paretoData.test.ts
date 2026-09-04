@@ -6,6 +6,7 @@ import {
   CURRENT,
   EFFORTS,
   fmt,
+  makeScale,
   ownFront,
   paretoFront,
   type Pt,
@@ -371,5 +372,35 @@ describe("Front über alle Konfigurationen", () => {
       "high",
       "xhigh",
     ]);
+  });
+});
+
+describe("makeScale mit logarithmischer x-Achse", () => {
+  const s = makeScale({
+    W: 932,
+    H: 306,
+    L: 46,
+    R: 10,
+    T: 10,
+    B: 33,
+    xMax: 30,
+    yMax: 88,
+    xLog: { min: 0.08 },
+  });
+
+  it("bildet min auf den linken und xMax auf den rechten Rand ab", () => {
+    expect(s.px(0.08)).toBeCloseTo(46, 9);
+    expect(s.px(30)).toBeCloseTo(922, 9);
+  });
+
+  it("ist monoton und klemmt Werte unter min auf den Rand", () => {
+    expect(s.px(0)).toBeCloseTo(46, 9);
+    expect(s.px(0.21)).toBeLessThan(s.px(0.53));
+    expect(s.px(10.37)).toBeLessThan(s.px(23.13));
+  });
+
+  it("legt gleiche Faktoren gleich weit auseinander", () => {
+    expect(s.px(2) - s.px(1)).toBeCloseTo(s.px(20) - s.px(10), 9);
+    expect(s.px(0.53) - s.px(0.21)).toBeGreaterThan(100);
   });
 });

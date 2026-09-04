@@ -1,0 +1,18 @@
+/* 0xProto lokal laden (public/fonts-Symlink auf shared/fonts). Slidevs
+ * Google-Provider kennt 0xProto nicht, und in diesem Deck registriert kein
+ * Monaco-Block das @font-face — ohne diese Regel fiel
+ * --slidev-code-font-family ("0xProto", ui-monospace, …) stumm auf die
+ * System-Monospace zurück, je nachdem, welche Folien schon gemountet waren.
+ *
+ * Gemessen am 04.09.2026 auf der Historien-Folie: bis Station 4 rendern die
+ * Labels in Menlo/SF Mono (Zelle 12,3 px bei 11 px), ab Station 5 in 0xProto
+ * (17,3 px). Der Label-Platzierer (`components/labelLayout.ts`) rechnet mit
+ * den Maßen von 0xProto; die Schrift muss deshalb von der ersten Folie an
+ * geladen sein, nicht erst, wenn zufällig eine Komponente sie anfordert. */
+@font-face {
+  font-family: "0xProto";
+  src: url("/fonts/0xProto-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

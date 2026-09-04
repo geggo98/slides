@@ -57,7 +57,6 @@ export const HIT_R = 10;
  */
 export const HIT_R_HISTORY = 7;
 export const QUADRANT_FONT = 13;
-export const QUADRANT_FONT_HISTORY = 12;
 /** Quadranten sind Sans-Serif, halbfett — grob 0,62 em je Zeichen. */
 export const SANS_EM = 0.62;
 
