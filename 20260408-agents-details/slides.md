@@ -1171,7 +1171,7 @@ hideInToc: true
 
 <div v-click class="text-sm mt-1">
 
-**Die Front hängt an einer Auswahlregel.** **gemini-3.8-flash** führt sie an: 74 % für 2,07 €, derselbe Score wie Opus 5 zu einem Fünftel des Preises. Der Neuzugang **gpt-6-astra** ändert nichts — 73 % für 10,84 €, sogar von Opus 5 dominiert. Aber nur, weil das Board die **höchste** Effort-Stufe zeigt: eine Stufe tiefer löst astra dieselben Aufgaben für 5,01 €. Ob das für Dich gilt, hängt am Werkzeug (Filter oben): Windsurf bietet Gemini 3.8 nicht an — dort führt weiter Opus 5 für 10,37 €. Anderer Harness, andere Zahlen (→ ⓘ).
+**Nimm den billigsten Punkt der Front, der Deine Aufgaben löst** — im Zweifel unten anfangen, bei Fehlschlag eine Sprosse höher. **glm-5.3-flash** 0,21 € (63 %) → **gpt-5.6-luna** 0,53 € (67 %) → **gemini-3.8-flash** 2,07 € (74 %). Alle drei zusammen: 2,81 €, gut ein Viertel eines Laufs mit Opus 5 (10,37 €) — der nicht mehr löst als Sprosse 3. Was Du wählen kannst, hängt am Werkzeug (Filter oben): bei Windsurf sind es vier Sprossen bis 10,37 €.
 
 </div>
 
@@ -1182,30 +1182,50 @@ DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 03.09. · 1 U
 </div>
 
 <!--
-Die Spitze zuerst, und zwar vorsichtig formuliert: gemini-3.8-flash
-hat mit 73,8 % den höchsten Score, den das Board AUSWEIST, Opus 5 hat
-73,7 %. Nach unserem eigenen Kriterium — weniger als 5 Punkte Abstand
-heißt gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt
-deshalb nicht „Gemini ist besser", sondern: derselbe Score kostet ein
-Fünftel. Was sich geändert hat, ist der Preis.
+Diese Folie hat eine Handlungsanweisung, keinen Befund. Sie zuerst
+aussprechen, alles andere ist Begründung: Nimm den billigsten Punkt der
+Front, von dem Du glaubst, dass er Deine Aufgaben löst. Weißt Du es
+nicht — und das ist der Normalfall —, fang unten an und geh bei einem
+Fehlschlag eine Sprosse höher.
 
-Seit dem 03.09. steht gpt-6-astra daneben, und das ist das lehrreichste
-Beispiel des Kapitels. Das Board zeigt es bei 73 % für 10,84 € — also
-dominiert, und zwar sogar von Opus 5, das bei gleichem gerundeten Score
-47 Cent WENIGER kostet. Der Grund ist die Auswahlregel: Das Board nimmt
-je Modell die HÖCHSTE Effort-Stufe, nicht die beste. Bei astra sind das
-zum ersten Mal deutlich zwei verschiedene Dinge:
+Die Leiter hat heute drei Sprossen, und die Zahl darunter ist das
+Argument: 0,21 + 0,53 + 2,07 = 2,81 €. Wer die ganze Leiter hochsteigt,
+also zweimal scheitert und beim dritten Versuch durchkommt, zahlt gut
+ein Viertel dessen, was ein einziger Lauf mit Opus 5 kostet (10,37 €) —
+und Opus 5 löst nach diesem Board nicht mehr als Sprosse 3. Deshalb ist
+Eskalieren nicht die vorsichtige Variante, sondern die billige.
+
+Die Einschränkung ehrlich dazusagen: Das gilt für Aufgaben vom Zuschnitt
+dieses Benchmarks. Wo ein Fehlschlag teuer ist — Produktionsdaten, ein
+Review, das jemand lesen muss —, zahlst Du für den Fehlversuch mehr als
+die 21 Cent. Dann steigt man weiter oben ein.
+
+Die Spitze der Leiter vorsichtig formulieren: gemini-3.8-flash hat mit
+73,8 % den höchsten Score, den das Board ausweist, Opus 5 hat 73,7 %.
+Nach unserem eigenen Kriterium — weniger als 5 Punkte Abstand heißt
+gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt deshalb
+nicht „Gemini ist besser", sondern: derselbe Score kostet ein Fünftel.
+Was sich geändert hat, ist der Preis.
+
+Seit dem 03.09. steht gpt-6-astra daneben — der teuerste Punkt der
+Folie, und trotzdem nicht auf der Front. Wenn jemand fragt, warum das
+beste Modell des Boards nicht empfohlen wird: Weil „bestes" hier 74,12 %
+gegen 73,83 % heißt, bei Fehlerbalken von ±2,9 und ±1,4. Auf ganze
+Prozent gerundet — so zeichnet dieses Chart — sind beide 74 %. Und der
+eine kostet 5,71 €, der andere 2,07 €.
+
+Das Chart nimmt je Modell die BESTE gemessene Konfiguration, das Board
+die höchste Effort-Stufe. Bei astra fallen die beiden weit auseinander:
 
   high    73,23 %   331/452    5,01 €
-  xhigh   74,12 %   335/452    5,71 €   <- höchster Rohwert des Boards
+  xhigh   74,12 %   335/452    5,71 €   <- hier geplottet
   max     73,23 %   331/452   10,84 €   <- das Board zeigt DIESE Zeile
 
-high und max lösen dieselben 331 von 452 Aufgaben. Die höchste Stufe
-kostet also das Doppelte für keine einzige zusätzlich gelöste Aufgabe,
-und xhigh ist besser UND billiger als max. Wer nach „beste
-Konfiguration" plottet statt nach „höchste Stufe", bekommt astra auf
-die Front, bei 5,71 €. Die Front hängt hier an einer Auswahlregel, nicht
-an den Modellen — das ist die Pointe der Folie.
+high und max lösen dieselben 331 von 452 Aufgaben; die höchste Stufe
+kostet das Doppelte für keine einzige zusätzlich gelöste Aufgabe. Diese
+Frage kommt selten von selbst — wenn doch, ist die kurze Antwort: Die
+alte Regel unterstellte, dass mehr Aufwand mehr Ergebnis heißt. Das
+stimmt bei vier von 22 Modellen nicht mehr. Details im ⓘ.
 
 Zwei Vorbehalte, beide gehören dazu. Erstens ist astras Preis der
 einzige auf dem Board, den Datacurve als „expected launch pricing"
@@ -1236,8 +1256,12 @@ Drei Klicks im Anbieter-Filter, die sich lohnen:
 
 Wenn aus dem Publikum „bei uns ist nur X freigegeben" kommt: Die Labs
 darunter sind Checkboxen, mehrere gehen gleichzeitig. Anthropic allein
-ist ein einziger Punkt, OpenAI allein sind drei — zusammen sind es
-vier, und Opus 5 steht wieder an der Spitze. Ein Werkzeug-Preset setzt
+ist ein einziger Punkt, OpenAI allein sind vier — und zusammen sind es
+immer noch dieselben vier: Opus 5 fällt heraus, weil astra denselben
+gerundeten Score für 5,71 € statt 10,37 € liefert. Das ist im ganzen
+Filter der einzige Fall, in dem ein zusätzliches Lab die Front NICHT
+verbessert, und ein gutes Beispiel dafür, dass „mehr Auswahl" und
+„bessere Auswahl" verschiedene Dinge sind. Ein Werkzeug-Preset setzt
 dabei Modelle, keine Lab-Häkchen: Deshalb steht Google nach „Windsurf"
 auf 2/4 und nicht auf 4/4.
 

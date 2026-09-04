@@ -128,11 +128,37 @@ for (const theme of ["light", "dark"] as const) {
   if (SHOT)
     await page.screenshot({ path: `${OUT}/pareto-${PARETO}-${theme}.png` });
 
-  // Pin auf claude-opus-5 und gpt-5.6-sol → Fehlerbalken müssen überlappen
+  // Pin auf claude-opus-5 und gpt-5.6-sol → Fehlerbalken müssen überlappen.
+  //
+  // Über das LABEL geklickt, nicht über das Hit-Target: Wo zwei Marker fast
+  // aufeinanderliegen, verdeckt das später gerenderte Hit-Target (r=11) das
+  // frühere vollständig, und der Klick landet beim Nachbarn. Das trifft
+  // gpt-5.6-sol (5,66 €/73 %) unter gpt-6-astra (5,71 €/74 %) genauso wie
+  // gpt-5.6-terra unter glm-5.3. Die Beschriftung ist für diese Punkte der
+  // vorgesehene Griff — so steht es auch im CSS von ModelRoutingPareto.vue —,
+  // und genau den prüft dieser Klick.
+  //
+  // Ein blockierter Klick ist ein BEFUND, kein Abbruchgrund: Genau so sieht es
+  // aus, wenn ein Marker über einer fremden Beschriftung liegt. Deshalb kurzer
+  // Timeout, Fehler zählen und weitermachen — sonst verdeckt der erste Treffer
+  // alle übrigen Messungen dieses Laufs.
   for (const label of ["claude-opus-5", "gpt-5.6-sol"]) {
-    await page.click(
-      `svg.mp-chart circle.mp-hit[aria-label="Fadenkreuz für ${label}"]`,
-    );
+    try {
+      await page.click(`svg.mp-chart text.mp-label[data-model="${label}"]`, {
+        timeout: 4000,
+      });
+    } catch {
+      const drueber = await page.evaluate(`(() => {
+        const t = document.querySelector('svg.mp-chart text.mp-label[data-model="${label}"]');
+        const b = t.getBoundingClientRect();
+        const el = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+        return el?.getAttribute("aria-label") ?? el?.tagName ?? "?";
+      })()`);
+      console.log(
+        `  ✗ Label ${label} nicht klickbar — verdeckt von: ${drueber}`,
+      );
+      problems++;
+    }
   }
   await page.waitForTimeout(250);
   const bars = await page.evaluate(`(() => {

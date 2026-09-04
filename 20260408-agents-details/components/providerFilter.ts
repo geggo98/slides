@@ -49,7 +49,7 @@ export type PresetId = "all" | ToolId;
  * ab: Windsurf führt von Google nur 3.5 und 3.6 Flash. Schriebe ein Preset auf
  * Lab-Häkchen, bekäme Windsurf das ganze Google-Lab und damit gemini-3.8-flash,
  * das es gar nicht anbietet — seine Front wäre dann Zeichen für Zeichen die von
- * „Alle" (19 statt 14 Modelle), und die Aussage, für die es diesen Filter gibt,
+ * „Alle" (20 statt 14 Modelle), und die Aussage, für die es diesen Filter gibt,
  * wäre weg. Cursor bekäme auf demselben Weg glm-5.3-flash dazu.
  *
  * Deshalb: Presets schreiben Modellmengen, die Lab-Checkboxen arbeiten auf

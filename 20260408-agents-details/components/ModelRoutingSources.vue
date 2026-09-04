@@ -120,7 +120,7 @@ const caveats = [
   },
   {
     lead: "Höchste Effort-Stufe:",
-    text: "Jedes Modell zählt mit seiner höchsten Effort-Stufe, nicht mit seinem besten Score — je nach Modell max, xhigh, high oder medium. Niedrigere Stufen sind billiger und meist schwächer, aber nicht immer: Bei vier der 22 gezeigten Modelle schlägt eine billigere Stufe die gezeigte. gpt-6-astra löst auf high dieselben 331 von 452 Aufgaben wie auf max, für 5,01 € statt 10,84 €, und auf xhigh sogar 335 — den höchsten Rohwert des Boards — für 5,71 €. claude-fable-5 kostet auf max 18,95 € gegenüber 11,75 € auf xhigh, bei gleichem Score. grok-4.6 liegt auf medium höher als auf xhigh und kostet dort 3,02 € statt 4,82 €, gemini-3.7-flash entsprechend. Nach der Regel „beste Konfiguration“ hätte die Front einen vierten Punkt: astra bei 5,71 €. Welche Front man sieht, hängt also an der Auswahlregel.",
+    text: "Jedes Modell zählt hier mit seiner BESTEN gemessenen Konfiguration: höchster pass@1, bei Gleichstand die billigere Stufe. Das Board macht es anders — es nimmt je Modell die höchste Effort-Stufe. Das war dieselbe Sache, solange mehr Aufwand mehr Ergebnis hieß; bei vier der 22 Modelle stimmt das nicht mehr. gpt-6-astra löst auf high dieselben 331 von 452 Aufgaben wie auf max, für 5,01 € statt 10,84 €, und auf xhigh sogar 335 — den höchsten Rohwert des Boards — für 5,71 €. claude-fable-5 kostet auf max 18,95 € gegenüber 11,75 € auf xhigh, bei gleichem Score; grok-4.6 liegt auf medium höher als auf xhigh und kostet dort 3,02 € statt 4,82 €; gemini-3.7-flash entsprechend 1,77 € statt 1,91 €. Die Front ändert das in keinem der neun Stände — alle vier Punkte rücken nach links, keiner erreicht dabei eine Front. Nachgerechnet wird beides bei jedem Testlauf gegen die archivierten Board-Rohdaten unter data/deepswe.",
   },
   {
     lead: "Quadranten:",
@@ -164,7 +164,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, dreimal allein durch Preisanpassungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra wieder ein Eintrag, und diesmal bewegte sich nichts — weil das Board je Modell die höchste Effort-Stufe zeigt und astras höchste seine schlechteste ist. Nimm die Board-Zahlen als Startpunkt, nicht als Antwort. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen nur eigene Evals.",
+    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, dreimal allein durch Preisanpassungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra der höchste Rohwert des ganzen Boards dazu — und die Front blieb, weil derselbe gerundete Score woanders ein Drittel kostet. Nicht die Modellnamen sind die Empfehlung dieser Folie, sondern die Regel: der billigste Frontpunkt, der Deine Aufgaben löst. Die überlebt den nächsten Board-Eintrag, die Namen nicht. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen ohnehin nur eigene Evals.",
   },
 ];
 </script>

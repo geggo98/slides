@@ -500,7 +500,7 @@ const S_0826: Pt[] = [
   // Zwischen Sol-Marker (oben), qwen3.8-max-Label (links) und gpt-5.5-Marker
   // (rechts) bleibt keine freie Zeile — das Label geht mit Führungslinie in die
   // leere Fläche rechts unterhalb.
-  P("grok-4.6", 3.02, 67, "right", 32, 34, { ci: 2.2 }),
+  P("grok-4.6", 3.02, 67, "right", 13, 59, { ci: 2.2 }),
   P("gpt-5.6-sol", 5.66, 73, "right", -14, 20, {
     ci: 2.8,
     old: { x: 7.35, why: "OpenAI-Preissenkung 21.08.: −20 % / −33 %" },
@@ -509,13 +509,23 @@ const S_0826: Pt[] = [
   // dy so gewählt, dass das Label auch mit eingeschaltetem Abo-Overlay (Punkt
   // wandert auf 6,91 €, Geisterring auf 8,30 €) nicht in den Sol-Geisterring
   // läuft.
-  // dx bleibt 0, obwohl das Label seit gpt-6-astra (10,84 €/73 %) optisch eher
-  // unter dessen Marker sitzt als unter dem eigenen: `dx: -45` zentriert es
-  // zwar richtig, schiebt es mit eingeschaltetem Overlay aber auf den
-  // gpt-5.5-Marker — gemessen, nicht vermutet. Die Zuordnung übernimmt
-  // stattdessen die Führungslinie von astra, das weit nach oben rechts
-  // ausweicht.
-  P("claude-opus-5", 10.37, 74, "right", 20, 0, {
+  // Das Label geht NACH OBEN (dy negativ — Achtung, `P()` nimmt dy VOR dx).
+  // Unter dem Marker lief es früher waagerecht nach rechts; seit
+  // claude-fable-5 auf seiner besten Stufe bei 11,75 € statt 18,95 € steht,
+  // liegt dessen Marker (SVG-x 458) mitten in dieser Spur — er überdeckte das
+  // Label so weit, dass nicht einmal mehr der Klick darauf ankam. Über dem
+  // Marker ist der Streifen x 418–497 frei.
+  //
+  // Das ist auf die Ansicht OHNE Kontingent-Overlay optimiert, bewusst: Mit
+  // Overlay rücken alle vier Claude-Punkte auf zwei Drittel, Opus 5 also auf
+  // 6,91 € — mitten in den dichtesten Bereich der Folie, zwischen astra
+  // (5,71 €), sol (5,66 €) und gpt-5.5 (6,33 €). Dort ist für ein 78 px
+  // breites Label kein Platz mehr, in keiner Richtung; durchgerechnet mit
+  // playwright-tests/pareto-boxes.ts. Die Overlay-Ansicht hat deshalb neun
+  // statt drei Überschneidungen, die Default-Ansicht vier statt zwei. Wer das
+  // aufräumen will, muss die Platzierung vom Overlay-Zustand abhängig machen —
+  // heute ist sie es nicht.
+  P("claude-opus-5", 10.37, 74, "right", -6, 0, {
     ci: 3.9,
     sub: 6.91,
     sub25: 8.3,
@@ -689,12 +699,18 @@ const S_0902_HIST: Pt[] = [
 //
 // Platzierung: astra (5,71 €/74 %) liegt fast auf gpt-5.6-sol (5,66 €/73 %) —
 // 2 px daneben und 3 px darüber, die Marker überlappen. Dieselbe Lage wie bei
-// gpt-5.6-terra/glm-5.3 (3,47 € und 3,50 €), und dieselbe Lösung: Das Label
-// weicht in die leere Fläche über 74 % aus, `leader()` zieht ab ~24 px die
-// Linie dahin. Nach jeder Änderung hier: pareto-label-qa.ts.
+// gpt-5.6-terra/glm-5.3 (3,47 € und 3,50 €), und dieselbe Folge: Der Klick auf
+// den Marker landet beim Nachbarn, die Beschriftung ist der Griff (siehe CSS
+// von ModelRoutingPareto.vue).
+//
+// Das Label geht deshalb nach UNTEN, leicht nach rechts. Über dem Marker wäre
+// es hübscher, dort liegen aber zwei fremde Labels (gemini-3.8-flash und
+// kimi-k3) — Text über Text ist unlesbar, Text über einem Marker nicht. Unten
+// bleibt nur die Überdeckung von sols Marker, und die ist bei 2 px Abstand
+// nicht vermeidbar. Gemessen mit pareto-label-qa.ts.
 const S_0903: Pt[] = [
   ...S_0902,
-  P("gpt-6-astra", 5.71, 74, "center", 0, -16, { ci: 0.83 }),
+  P("gpt-6-astra", 5.71, 74, "center", 15, 0, { ci: 0.83 }),
 ].sort((a, b) => a.x - b.x);
 
 // `lbl: true` wie bei kimi-k3 in Stand 5: Das Historien-Chart beschriftet sonst
@@ -703,7 +719,7 @@ const S_0903: Pt[] = [
 // Beschriftung sieht niemand, welcher der 28 Punkte der Neuzugang ist.
 const S_0903_HIST: Pt[] = [
   ...S_0902_HIST,
-  P("gpt-6-astra", 5.71, 74, "center", 0, -14, { ci: 0.83, lbl: true }),
+  P("gpt-6-astra", 5.71, 74, "center", 0, 40, { ci: 0.83, lbl: true }),
 ].sort((a, b) => a.x - b.x);
 
 export const SNAPSHOTS: Snapshot[] = [
@@ -769,7 +785,7 @@ export const SNAPSHOTS: Snapshot[] = [
     id: "0903",
     date: "03.09.",
     title: "Die Front hält",
-    note: "Ein Neuzugang, und diesmal passiert nichts. gpt-6-astra kommt auf 73 % für 10,84 € und ist damit gleich doppelt dominiert: von gemini-3.8-flash (74 % für 2,07 €) und von Opus 5, das bei gleichem Score 47 Cent WENIGER kostet. Die Front bleibt Zeichen für Zeichen dieselbe — glm-5.3-flash, luna, gemini-3.8-flash. Interessant ist, warum der Punkt so weit rechts liegt: Das Board zeigt je Modell die höchste Effort-Stufe, und astras höchste ist seine schlechteste. Auf `high` löst es dieselben 331 von 452 Aufgaben für 5,01 € statt 10,84 €, auf `xhigh` sogar 335 — der höchste Rohwert des ganzen Boards — für 5,71 €. Nach dieser Regel läge astra auf der Front. Die Front hängt hier also an einer Auswahlregel, nicht an den Modellen. Und der Preis ist ohnehin vorläufig: astra ist der einzige Eintrag, den das Board mit „expected launch pricing“ ausweist.",
+    note: "Ein Neuzugang mit dem höchsten Rohwert, den dieses Board je ausgewiesen hat — und die Front bleibt Zeichen für Zeichen dieselbe. gpt-6-astra erreicht auf `xhigh` 74,12 % für 5,71 €; gemini-3.8-flash steht bei 73,83 % für 2,07 €. Auf ganze Prozent gerundet sind das beide 74 %, und die 0,29 Punkte dazwischen liegen tief in den Fehlerbalken (±2,9 gegen ±1,4). Das teurere Modell kauft hier also nichts, was man messen könnte. Genau dafür ist die Front da: Sie beantwortet nicht „welches Modell ist das beste“, sondern „was ist das billigste, das reicht“ — und diese Antwort hat sich seit dem 02.09. nicht geändert. Nebenbei zeigt astra, warum dieses Chart je Modell die beste gemessene Stufe nimmt und nicht die höchste: Seine höchste (`max`, 10,84 €) löst dieselben 331 von 452 Aufgaben wie `high` für 5,01 € — das Doppelte für nichts. Und der Preis ist ohnehin vorläufig, astra ist der einzige Eintrag mit „expected launch pricing“.",
     pts: S_0903_HIST,
   },
 ];
