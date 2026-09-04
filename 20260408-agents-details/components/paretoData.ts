@@ -1092,6 +1092,14 @@ export interface ScaleOpts {
   B: number;
   xMax: number;
   yMax: number;
+  /**
+   * Logarithmische x-Achse von `min` bis `xMax`. Die Kosten reichen von 0,09 €
+   * bis 23 € — linear lagen 17 von 22 Markern auf einem Viertel der Breite,
+   * und die Sprossen 1 und 2 der Leiter (0,21 € und 0,53 €) 11 px auseinander.
+   * Werte unter `min` werden auf `min` geklemmt; einen Punkt bei 0 € gibt es
+   * in keinem Stand.
+   */
+  xLog?: { min: number };
 }
 
 export interface Scale extends ScaleOpts {
@@ -1100,9 +1108,17 @@ export interface Scale extends ScaleOpts {
 }
 
 export function makeScale(o: ScaleOpts): Scale {
+  const span = o.W - o.L - o.R;
+  const px = o.xLog
+    ? (v: number) =>
+        o.L +
+        (Math.log10(Math.max(v, o.xLog!.min) / o.xLog!.min) /
+          Math.log10(o.xMax / o.xLog!.min)) *
+          span
+    : (v: number) => o.L + (v / o.xMax) * span;
   return {
     ...o,
-    px: (v) => o.L + (v / o.xMax) * (o.W - o.L - o.R),
+    px,
     py: (v) => o.H - o.B - (v / o.yMax) * (o.H - o.T - o.B),
   };
 }
