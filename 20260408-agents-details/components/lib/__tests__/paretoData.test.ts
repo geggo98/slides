@@ -4,6 +4,7 @@ import {
   configFront,
   CURRENT,
   EFFORTS,
+  fmt,
   ownFront,
   paretoFront,
   selfDominated,
@@ -143,52 +144,58 @@ describe("tip()", () => {
   });
 });
 
-// kimi-k2.7-code stand bis zum 04.09.2026 in jedem Stand auf 2,47 € — ein Wert
-// aus der veralteten CDN-Kopie, den sechs Archivstände des Boards (21.07. bis
-// 02.09.) widerlegen. Das Modell ist vom Board ausgeblendet und taucht nur
-// unbeschriftet auf der Historien-Folie auf; genau deshalb ist der Fehler zwei
-// Monate lang niemandem aufgefallen. Dieser Test macht das Zurückdriften laut.
-describe("kimi-k2.7-code, korrigiert am 04.09.2026", () => {
+// kimi-k2.7-code kostet 2,47 € — `mean_cost_usd` wie jeder andere Punkt.
+//
+// Am 04.09.2026 stand hier kurz 1,92 €, mit sechs Archivständen belegt. Die
+// Stände waren echt, die Spalte war falsch: 1,92 € ist kimis `median_cost_usd`.
+// Weil das Modell vom Board ausgeblendet ist und nur unbeschriftet auf der
+// Historien-Folie auftaucht, fällt so etwas beim Ansehen nicht auf — dieser
+// Test muss es tun. Er prüft deshalb nicht nur den Wert, sondern die Folge, an
+// der die falsche Spalte sichtbar geworden wäre: die Front zweier Stände.
+describe("kimi-k2.7-code steht auf dem Mittelwert, nicht dem Median", () => {
   const staende = SNAPSHOTS.filter((s) =>
     s.pts.some((p) => p.label === "kimi-k2.7-code"),
   );
 
-  it("steht in jedem Stand auf dem Board-Wert 1,92 €", () => {
+  it("steht in jedem Stand auf 2,47 € = $2,8155 × 0,876", () => {
     expect(staende.length).toBeGreaterThan(0);
+    expect(fmt(2.8155 * 0.876)).toBe("2,47");
     expect(
       staende.map((s) => [
         s.id,
         s.pts.find((p) => p.label === "kimi-k2.7-code")!.eur,
       ]),
     ).toStrictEqual([
-      ["v11", "1,92"],
-      ["0722", "1,92"],
-      ["0725", "1,92"],
-      ["0730", "1,92"],
-      ["0814", "1,92"],
-      ["0826", "1,92"],
-      ["0902", "1,92"],
-      ["0903", "1,92"],
+      ["v11", "2,47"],
+      ["0722", "2,47"],
+      ["0725", "2,47"],
+      ["0730", "2,47"],
+      ["0814", "2,47"],
+      ["0826", "2,47"],
+      ["0902", "2,47"],
+      ["0903", "2,47"],
     ]);
   });
 
-  // Der billigste gemessene Punkt ist per Definition pareto-optimal. In diesen
-  // beiden Ständen unterbietet ihn nichts, also gehört er auf die Front — das
-  // ist die einzige inhaltliche Folge der Korrektur.
-  it("liegt am 22.07. und 25.07. als billigster Punkt auf der Front", () => {
+  // Der Median hätte kimi auf 1,92 € gezogen und damit unter muse-spark-1.1
+  // (2,07 €) — es wäre in diesen beiden Ständen der billigste Punkt und damit
+  // per Definition auf der Front gelandet. Genau das darf nicht passieren.
+  it("liegt am 22.07. und 25.07. NICHT auf der Front", () => {
     for (const id of ["0722", "0725"]) {
       const s = SNAPSHOTS.find((x) => x.id === id)!;
       const { front } = paretoFront(s.pts);
-      expect(front[0].label).toBe("kimi-k2.7-code");
+      expect(front.map((p) => p.label)).not.toContain("kimi-k2.7-code");
+      expect(front[0].label).toBe("muse-spark-1.1");
     }
   });
 
-  it("bleibt sonst dominiert — die übrigen Stände ändern sich nicht", () => {
-    for (const id of ["v11", "0730", "0814", "0826", "0902", "0903"]) {
-      const s = SNAPSHOTS.find((x) => x.id === id)!;
-      const { front } = paretoFront(s.pts);
-      const drin = front.some((p) => p.label === "kimi-k2.7-code");
-      expect(drin).toBe(id === "v11");
+  // v1.1 ist die Ausnahme: dort ist kimi auch bei 2,47 € der billigste Punkt.
+  it("bleibt nur im Stand v1.1 auf der Front", () => {
+    for (const s of staende) {
+      const drin = paretoFront(s.pts).front.some(
+        (p) => p.label === "kimi-k2.7-code",
+      );
+      expect([s.id, drin]).toStrictEqual([s.id, s.id === "v11"]);
     }
   });
 });
