@@ -157,7 +157,7 @@ hideInToc: true
 | --- | -------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
 | 1   | Singleton ← Companion Object (Kotlin)        | **begrifflich falsch**, Intention korrekt | Kotlin-Singleton = `object`; `companion object` ≈ statische Member   |
 | 2   | Singleton ← `enum` (Java)                    | **korrekt**                               | Bloch, _Effective Java_ Item 3: bestes Singleton-Idiom               |
-| 3   | Singleton ↔ Spring DI-Scope                 | **korrekt mit Einschränkung**             | per Container/Bean, nicht per ClassLoader wie GoF                    |
+| 3   | Singleton ↔ Spring DI-Scope                  | **korrekt mit Einschränkung**             | per Container/Bean, nicht per ClassLoader wie GoF                    |
 | 4   | Visitor ← Lambda                             | **größtenteils falsch**                   | Lambda nur im Single-Method-Fall; korrekt: sealed + pattern matching |
 | 5   | Builder-Pflichtfelder ← geplante null-Safety | **erzwingt NICHT**                        | kein Typestate; greift erst zur Laufzeit bei `build()`               |
 | 6   | Proxies / Spring ersetzen Muster             | **Begriff zu grob**                       | Proxies _implementieren_ Proxy, AOP _industrialisiert_               |

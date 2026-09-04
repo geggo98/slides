@@ -972,8 +972,8 @@ onUnmounted(() => {
               </template>
             </span>
             <span v-else class="ms-readouts">
-              ▶ Live starten: die Formel parkt im Tal — die Realität zittert
-              und entkommt.
+              ▶ Live starten: die Formel parkt im Tal — die Realität zittert und
+              entkommt.
             </span>
           </div>
         </div>
