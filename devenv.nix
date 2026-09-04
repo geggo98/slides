@@ -128,8 +128,23 @@
   };
 
   git-hooks.hooks = {
-    # Formatter — built-in Nix package, works for Vue/JS/TS/CSS/HTML/JSON/YAML
-    prettier.enable = true;
+    # Formatter — custom binary so the repo's own prettier (package.json +
+    # bun.lock) formats, together with prettier-plugin-slidev from the same
+    # tree. The nixpkgs prettier drifts against it: at the last lock it was
+    # 3.6.2 against 3.8.1 in node_modules, and the two disagree on the column
+    # width of characters such as ↔ and ▶ — so `bunx prettier --write` produced
+    # exactly the edits this hook then reverted, and the commit failed with no
+    # visible reason.
+    #
+    # `bun run` rather than ./node_modules/.bin/prettier: that script's shebang
+    # is `#!/usr/bin/env node`, and devenv ships bun, not node.
+    #
+    # The price: this hook needs node_modules. On a fresh clone, every commit
+    # fails until `devenv tasks run slides:install` has run.
+    prettier = {
+      enable = true;
+      settings.binPath = "bun run prettier";
+    };
 
     # Linter — custom hook so eslint-plugin-vue from node_modules is used
     eslint = {

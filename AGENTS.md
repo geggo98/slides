@@ -160,3 +160,37 @@ The cooldown exemption in `bunfig.toml` covers step 2 even for a same-week
 Playwright release. Should a bump still be refused with
 `blocked by minimum-release-age`, re-run that one command with
 `--minimum-release-age=0` rather than weakening the policy file.
+
+### Formatting (`prettier`)
+
+**The prettier that counts is the repo's own** — `package.json` + `bun.lock`.
+`devenv.nix` points the pre-commit hook at it with
+`git-hooks.hooks.prettier.settings.binPath = "bun run prettier"`, so the hook,
+`bun run prettier` and any editor integration are the same binary by
+construction, and `prettier-plugin-slidev` resolves from the same tree.
+
+That is a deliberate departure from the built-in hook, which formats with
+`pkgs.prettier` from `devenv.lock`. Those two drift: measured on 03.09.2026 the
+hook was 3.6.2 while `node_modules` held 3.8.1, and the two disagree on the
+column width of characters such as `↔` (U+2194) and `▶` (U+25B6). A
+`bunx prettier --write` therefore produced exactly the edits the hook reverted
+on commit, and the commit failed with nothing on screen to explain it — both
+sides considered the file correctly formatted.
+
+**The hook now needs `node_modules`.** On a fresh clone every commit fails until
+`devenv tasks run slides:install` has run — not only `.vue` commits as with the
+eslint hook, because prettier runs on `types: ["text"]`, i.e. everything.
+
+To see what the hook will do before committing:
+
+```sh
+git ls-files -z | xargs -0 bun run prettier --ignore-unknown --list-different
+prek run prettier --all-files      # the hook itself, across the repo
+```
+
+The first prints nothing when the tree is clean — count the files it actually
+sees before accepting that as a result. Never reach for `git commit --no-verify`:
+if the hook rewrites something, that rewrite _is_ the finding.
+
+Bumping prettier is an ordinary `bun add`; `bun.lock` is the pin. Expect a minor
+bump to reformat files, and commit that reformat on its own.
