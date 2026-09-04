@@ -74,6 +74,18 @@ const collect = (sel: string) =>
     return out;
   })()`;
 
+// Foliennummern sind nicht stabil: eine eingeschobene Folie verschiebt alles
+// dahinter. Dieses Skript stand auf 40/41, während die Charts längst auf 42/43
+// lagen — es brach dann mit „null is not an object" ab, weil `svg.mp-chart` auf
+// der falschen Folie fehlt. Laut, aber die Meldung nennt die Ursache nicht.
+// Deshalb steht die erwartete Überschrift daneben und wird geprüft.
+const PARETO = Number(process.env.PARETO_SLIDE ?? 42);
+const HISTORIE = Number(process.env.HISTORIE_SLIDE ?? 43);
+const TITEL: Record<number, string> = {
+  [PARETO]: "Welches Modell wofür? Die Datenlage",
+  [HISTORIE]: "Zwei Monate Pareto-Front",
+};
+
 const goto = async (page: any, n: number) => {
   await page.goto(`${BASE}/${n}`, { waitUntil: "networkidle" });
   await page.waitForFunction(
@@ -81,6 +93,20 @@ const goto = async (page: any, n: number) => {
     { timeout: 15000 },
   );
   await page.waitForTimeout(600);
+  // Auf die SICHTBARE Folie scopen — Nachbarfolien sind mitgemountet, ein
+  // globales `.slidev-layout h1` liefert die Überschrift der falschen.
+  const h = await page.evaluate(`(() => {
+    const el = [...document.querySelectorAll(".slidev-layout")]
+      .find((e) => e.offsetParent !== null);
+    return el ? (el.querySelector("h1")?.textContent ?? "").trim() : null;
+  })()`);
+  const erwartet = TITEL[n];
+  if (erwartet && h !== erwartet) {
+    throw new Error(
+      `Folie ${n} zeigt „${h}", erwartet „${erwartet}" — die Nummerierung hat sich verschoben. ` +
+        `Mit PARETO_SLIDE=… HISTORIE_SLIDE=… überschreiben oder die Konstanten anpassen.`,
+    );
+  }
 };
 
 const browser = await chromium.launch();
@@ -93,13 +119,14 @@ for (const theme of ["light", "dark"] as const) {
   });
   const page = await ctx.newPage();
 
-  // --- Folie 40: Pareto, aktueller Stand -----------------------------------
-  await goto(page, 40);
+  // --- Pareto-Folie (PARETO), aktueller Stand ---------------------------
+  await goto(page, PARETO);
   problems += report(
-    `[${theme}] Folie 40`,
+    `[${theme}] Folie ${PARETO}`,
     await page.evaluate(collect("svg.mp-chart")),
   );
-  if (SHOT) await page.screenshot({ path: `${OUT}/pareto-40-${theme}.png` });
+  if (SHOT)
+    await page.screenshot({ path: `${OUT}/pareto-${PARETO}-${theme}.png` });
 
   // Pin auf claude-opus-5 und gpt-5.6-sol → Fehlerbalken müssen überlappen
   for (const label of ["claude-opus-5", "gpt-5.6-sol"]) {
@@ -132,10 +159,11 @@ for (const theme of ["light", "dark"] as const) {
     if (!ok) problems++;
   }
   problems += report(
-    `[${theme}] Folie 40 + Fehlerbalken`,
+    `[${theme}] Folie ${PARETO} + Fehlerbalken`,
     await page.evaluate(collect("svg.mp-chart")),
   );
-  if (SHOT) await page.screenshot({ path: `${OUT}/pareto-40-ci-${theme}.png` });
+  if (SHOT)
+    await page.screenshot({ path: `${OUT}/pareto-${PARETO}-ci-${theme}.png` });
 
   // Abo-Overlay
   await page.click("button.mp-tg");
@@ -146,11 +174,11 @@ for (const theme of ["light", "dark"] as const) {
   console.log(`  Geisterringe mit Abo-Overlay: ${ghosts} (erwartet 5)`);
   if (ghosts !== 5) problems++;
   problems += report(
-    `[${theme}] Folie 40 + Abo-Overlay`,
+    `[${theme}] Folie ${PARETO} + Abo-Overlay`,
     await page.evaluate(collect("svg.mp-chart")),
   );
   if (SHOT)
-    await page.screenshot({ path: `${OUT}/pareto-40-sub-${theme}.png` });
+    await page.screenshot({ path: `${OUT}/pareto-${PARETO}-sub-${theme}.png` });
 
   // Quellen-Popover: scrollt bei Bedarf, darf aber nicht leer bleiben.
   await page.click("button.mp-tg"); // Overlay wieder aus
@@ -169,12 +197,23 @@ for (const theme of ["light", "dark"] as const) {
     if (!hit) problems++;
   }
   if (SHOT)
-    await page.screenshot({ path: `${OUT}/pareto-40-sources-${theme}.png` });
+    await page.screenshot({
+      path: `${OUT}/pareto-${PARETO}-sources-${theme}.png`,
+    });
   await page.keyboard.press("Escape");
 
-  // --- Folie 41: Historie, sieben Stationen --------------------------------
-  await goto(page, 41);
-  for (let step = 0; step <= 6; step++) {
+  // --- Historien-Folie (HISTORIE), alle Stationen -----------------------
+  await goto(page, HISTORIE);
+  // Die Stationszahl stand hier fest auf 7 und war seit Stand 8 falsch: der
+  // Detailmodus-Teil unten lief dann auf der letzten STATION statt im
+  // Detailmodus und meldete „nicht jeder Punkt ist beschriftet". Die Folie
+  // weiß es selbst — `clicks:` im Frontmatter ist die Stationszahl, der letzte
+  // Klick schaltet den Detailmodus.
+  const stationen: number = await page.evaluate(
+    `window.__slidev__.nav.clicksTotal?.value ?? window.__slidev__.nav.clicksTotal`,
+  );
+  console.log(`\n[${theme}] Historie: ${stationen} Stationen + Detailmodus`);
+  for (let step = 0; step < stationen; step++) {
     if (step > 0) {
       await page.keyboard.press("ArrowRight");
       await page.waitForTimeout(450);
@@ -187,11 +226,13 @@ for (const theme of ["light", "dark"] as const) {
       `document.querySelectorAll("svg.mh-chart circle.mp-old-pt").length`,
     );
     problems += report(
-      `[${theme}] Folie 41 · Station ${step} (${date}, ${ghost} Geister)`,
+      `[${theme}] Folie ${HISTORIE} · Station ${step} (${date}, ${ghost} Geister)`,
       boxes,
     );
     if (SHOT)
-      await page.screenshot({ path: `${OUT}/history-41-${theme}-${step}.png` });
+      await page.screenshot({
+        path: `${OUT}/history-${HISTORIE}-${theme}-${step}.png`,
+      });
   }
 
   // Achter Klick: Detailmodus — alle Namen plus Fadenkreuz. Die Beschriftung
@@ -210,7 +251,7 @@ for (const theme of ["light", "dark"] as const) {
     };
   })()`);
   console.log(
-    `\n[${theme}] Folie 41 · Detailmodus: ${detail.labels} Labels / ${detail.pts} Punkte, ` +
+    `\n[${theme}] Folie ${HISTORIE} · Detailmodus: ${detail.labels} Labels / ${detail.pts} Punkte, ` +
       `${detail.hits} Hit-Targets, Schalter ${detail.toggleOn ? "an" : "AUS"}`,
   );
   if (detail.labels !== detail.pts || detail.hits !== detail.pts) {
@@ -234,12 +275,14 @@ for (const theme of ["light", "dark"] as const) {
   console.log(`  Fadenkreuze nach zwei Pins: ${chs} (erwartet 2)`);
   if (chs !== 2) problems++;
   problems += report(
-    `[${theme}] Folie 41 · Detailmodus + 2 Pins`,
+    `[${theme}] Folie ${HISTORIE} · Detailmodus + 2 Pins`,
     await page.evaluate(collect("svg.mh-chart")),
     true,
   );
   if (SHOT)
-    await page.screenshot({ path: `${OUT}/history-41-${theme}-detail.png` });
+    await page.screenshot({
+      path: `${OUT}/history-${HISTORIE}-${theme}-detail.png`,
+    });
 
   // Zurück: der Detailmodus muss wieder aus sein, die Pins weg.
   await page.keyboard.press("ArrowLeft");
@@ -281,12 +324,14 @@ for (const theme of ["light", "dark"] as const) {
     problems++;
   }
   problems += report(
-    `[${theme}] Folie 41 · Detailmodus Station 1`,
+    `[${theme}] Folie ${HISTORIE} · Detailmodus Station 1`,
     await page.evaluate(collect("svg.mh-chart")),
     true,
   );
   if (SHOT)
-    await page.screenshot({ path: `${OUT}/history-41-${theme}-detail-v1.png` });
+    await page.screenshot({
+      path: `${OUT}/history-${HISTORIE}-${theme}-detail-v1.png`,
+    });
 
   await ctx.close();
 }
