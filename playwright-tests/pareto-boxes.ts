@@ -1,13 +1,11 @@
 // Dumpt Label-Boxen und Marker-Positionen eines Modell-Routing-Charts in
-// SVG-Koordinaten — damit Label-Offsets gerechnet statt geraten werden.
+// SVG-Koordinaten — als Diagnose, wenn `pareto-label-qa.ts` etwas meldet oder
+// ein Bild anders aussieht als erwartet.
 //
-// `pareto-label-qa.ts` sagt, DASS zwei Dinge kollidieren; dieses Skript sagt,
-// wohin das Label statt dessen soll. Zusammen sind es zwei Werkzeuge für einen
-// Arbeitsgang: erst messen, dann die Zahl in `P(...)` schreiben, dann prüfen.
-//
-// Achtung beim Übertragen: `P()` nimmt **dy vor dx**. Ein vertauschtes Paar
-// verschiebt das Label sauber in die falsche Richtung und sieht nach einem
-// Rechenfehler aus.
+// Wo ein Label steht, entscheidet seit dem 04.09.2026 `labelLayout.ts`, nicht
+// mehr eine Zahl in `P(...)`. Wer eine Position ändern will, ändert den
+// Platzierer oder seine Eingaben (Rang, Hindernisse, Textmaß) — und prüft mit
+// `label-box-check.ts`, ob Modell und Browser noch übereinstimmen.
 //
 //   bun run playwright-tests/pareto-boxes.ts [port] [pfad] [praefix] [klick]
 //   bun run playwright-tests/pareto-boxes.ts 3031                      # Folie 42

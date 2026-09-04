@@ -60,6 +60,13 @@ export interface Box {
 /** Hindernis mit Namen — die Namen machen Kollisionsmeldungen lesbar. */
 export interface Obstacle extends Box {
   name: string;
+  /**
+   * Weich: gilt nur im Default, nicht im Durchgang „alle Namen“. Für
+   * Dekoration wie den halbtransparenten Pfeilcluster — ein Label mit Halo
+   * bleibt darauf lesbar, und ohne diese Fläche fände der zweite Durchgang
+   * für den 3–6-€-Knoten oft keinen Platz mehr.
+   */
+  soft?: boolean;
 }
 
 export interface Seg {
@@ -326,18 +333,27 @@ function* nearCands(
 }
 
 // Kandidaten „fern": Ringe nach außen, je 16 Richtungen, waagerecht bevorzugt.
-// Winkel in Grad, y wächst nach unten — 270 ist also „oben".
+// Winkel in Grad, y wächst nach unten — 270 ist also „oben". Der Durchgang
+// „alle Namen“ sucht weiter draußen und in 32 Richtungen: Vollständigkeit
+// geht dort vor Nähe.
 const FAR_RINGS = [28, 44, 58, 75, 92, 110, 130, 150, 170, 195, 220, 250, 280];
+const FAR_RINGS_ALL = [...FAR_RINGS, 320, 360, 400, 450];
 const FAR_DIRS = [
   0, 180, 337.5, 22.5, 202.5, 157.5, 315, 45, 225, 135, 292.5, 67.5, 247.5,
   112.5, 270, 90,
 ];
+const FAR_DIRS_ALL = FAR_DIRS.flatMap((d) => [d, d + 11.25]);
 const FAR_FAN = [0, -8, 8];
 
-function* farCands(p: LayoutPoint, font: number): Generator<Cand> {
+function* farCands(
+  p: LayoutPoint,
+  font: number,
+  rings: readonly number[] = FAR_RINGS,
+  dirs: readonly number[] = FAR_DIRS,
+): Generator<Cand> {
   const mid = midOf(font);
-  for (const r of FAR_RINGS) {
-    for (const deg of FAR_DIRS) {
+  for (const r of rings) {
+    for (const deg of dirs) {
       const rad = (deg * Math.PI) / 180;
       const cos = Math.cos(rad);
       const ax: Anchor = cos > 0.38 ? "start" : cos < -0.38 ? "end" : "middle";
@@ -390,9 +406,16 @@ export function layoutLabels(
     own.set(p.id, mine);
   }
 
-  const fits = (p: LayoutPoint, c: Cand, taken: readonly Box[]): boolean => {
+  const hardChrome = o.obstacles.filter((b) => !b.soft);
+  const fits = (
+    p: LayoutPoint,
+    c: Cand,
+    taken: readonly Box[],
+    pass: "core" | "all",
+  ): boolean => {
     if (!inside(c.box, o.bounds)) return false;
-    const blocks = [...o.obstacles, ...foreign.get(p.id)!, ...own.get(p.id)!];
+    const chrome = pass === "core" ? o.obstacles : hardChrome;
+    const blocks = [...chrome, ...foreign.get(p.id)!, ...own.get(p.id)!];
     if (taken.some((t) => hits(c.box, t))) return false;
     if (blocks.some((b) => hits(c.box, b))) return false;
     if (c.leader) {
@@ -402,7 +425,7 @@ export function layoutLabels(
       // Wanderungspfeil dieses Punkts, und im Overlay steht er 27 px neben dem
       // Marker — mit ihm als Sperre fände claude-fable-5 dort keinen Platz.
       const l = c.leader;
-      const crossed = [...o.obstacles, ...foreignNarrow.get(p.id)!, ...taken];
+      const crossed = [...chrome, ...foreignNarrow.get(p.id)!, ...taken];
       if (crossed.some((b) => segHitsBox(l, b))) return false;
     }
     return true;
@@ -412,8 +435,9 @@ export function layoutLabels(
     p: LayoutPoint,
     gen: Iterable<Cand>,
     taken: readonly Box[],
+    pass: "core" | "all" = "core",
   ): Cand | null => {
-    for (const c of gen) if (fits(p, c, taken)) return c;
+    for (const c of gen) if (fits(p, c, taken, pass)) return c;
     return null;
   };
 
@@ -457,8 +481,14 @@ export function layoutLabels(
   const takenAll = [...taken];
   for (const p of order) {
     if (all.has(p.id)) continue;
-    let c = first(p, nearCands(p, allFont, o.hitR), takenAll);
-    if (!c) c = first(p, farCands(p, allFont), takenAll);
+    let c = first(p, nearCands(p, allFont, o.hitR), takenAll, "all");
+    if (!c)
+      c = first(
+        p,
+        farCands(p, allFont, FAR_RINGS_ALL, FAR_DIRS_ALL),
+        takenAll,
+        "all",
+      );
     let forced = false;
     if (!c) {
       c = nearCands(p, allFont, o.hitR).next().value as Cand;

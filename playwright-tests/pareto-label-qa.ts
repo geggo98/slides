@@ -248,6 +248,126 @@ for (const theme of ["light", "dark"] as const) {
     });
   await page.keyboard.press("Escape");
 
+  // --- Kein Schalter verschiebt ein Label ----------------------------------
+  //
+  // Das Layout ist eine Funktion des vollen Datensatzes (labelLayout.ts):
+  // Kontingent-Overlay, Anbieter-Filter und „alle Namen“ dürfen Labels
+  // hinzufügen oder ausblenden, aber keines bewegen. Ausnahme: die vier
+  // Claude-Labels wandern mit ihren Markern, wenn das Overlay sie verschiebt.
+  // Verglichen werden die x/y/text-anchor-Attribute — exakt, unabhängig von
+  // Schrift und Skalierung. Frischer Aufruf, damit keine Pins hineinspielen.
+  await goto(page, PARETO);
+  type Pos = Record<string, string>;
+  const positions = async (): Promise<Pos> =>
+    page.evaluate(`(() => {
+      const svg = document.querySelector("svg.mp-chart");
+      const out = {};
+      for (const t of svg.querySelectorAll("text.mp-label:not(.mp-label-hover)"))
+        out[t.getAttribute("data-model")] = [t.getAttribute("x"), t.getAttribute("y"), t.getAttribute("text-anchor")].join("|");
+      return out;
+    })()`);
+  const compare = (
+    what: string,
+    before: Pos,
+    after: Pos,
+    mayMove: readonly string[] = [],
+    mayVanish = false,
+  ) => {
+    const moved: string[] = [];
+    const gone: string[] = [];
+    for (const [id, pos] of Object.entries(before)) {
+      if (!(id in after)) {
+        if (!mayVanish && !mayMove.includes(id)) gone.push(id);
+        continue;
+      }
+      if (after[id] !== pos && !mayMove.includes(id)) moved.push(id);
+    }
+    const ok = moved.length === 0 && gone.length === 0;
+    console.log(
+      `  ${what}: ${ok ? "kein Label verschoben" : "✗ verschoben: " + moved.join(", ") + (gone.length ? " · verschwunden: " + gone.join(", ") : "")}` +
+        ` (${Object.keys(before).length} → ${Object.keys(after).length} Labels)`,
+    );
+    if (!ok) problems++;
+  };
+  const CLAUDE_MOVABLE = [
+    "claude-opus-5",
+    "claude-opus-4.8",
+    "claude-fable-5",
+    "claude-sonnet-5",
+  ];
+  const p0 = await positions();
+  console.log(`\n[${theme}] Folie ${PARETO} · Schalter`);
+  await page.click("button.mp-tg:not(.mp-tg-all)");
+  await page.waitForTimeout(300);
+  compare("Kontingent an", p0, await positions(), CLAUDE_MOVABLE);
+  await page.click("button.mp-tg:not(.mp-tg-all)");
+  await page.waitForTimeout(300);
+  compare("Kontingent wieder aus", p0, await positions());
+
+  await page.click("button.mp-tg-all");
+  await page.waitForTimeout(300);
+  const pAll = await positions();
+  compare("alle Namen an", p0, pAll);
+  const sichtbar: number = await page.evaluate(
+    `document.querySelectorAll("svg.mp-chart circle.mp-hit").length`,
+  );
+  console.log(
+    `  alle Namen: ${Object.keys(pAll).length} Labels für ${sichtbar} Punkte${Object.keys(pAll).length === sichtbar ? "" : " ✗ unvollständig"}`,
+  );
+  if (Object.keys(pAll).length !== sichtbar) problems++;
+  problems += report(
+    `[${theme}] Folie ${PARETO} + alle Namen`,
+    await page.evaluate(collect("svg.mp-chart")),
+    true,
+  );
+  if (SHOT)
+    await page.screenshot({ path: `${OUT}/pareto-${PARETO}-all-${theme}.png` });
+  await page.click("button.mp-tg-all");
+  await page.waitForTimeout(300);
+  compare("alle Namen wieder aus", p0, await positions());
+
+  // Anbieter-Preset: blendet aus, verschiebt nicht.
+  await page.click(".pp-trigger");
+  await page.click('.pp-list [role="menuitem"]:has-text("Windsurf")');
+  await page.waitForTimeout(300);
+  compare("Preset Windsurf", p0, await positions(), [], true);
+  await page.click(".pp-trigger");
+  await page.click('.pp-list [role="menuitem"]:has-text("Alle")');
+  await page.waitForTimeout(300);
+  compare("Preset Alle", p0, await positions());
+
+  // Hover-Name: ein namenloser Punkt zeigt beim Hover seinen Namen, ohne ein
+  // vorhandenes Label zu überdecken.
+  const dropped: string[] = await page.evaluate(
+    `(document.querySelector("svg.mp-chart").getAttribute("data-dropped") || "").split(" ").filter(Boolean)`,
+  );
+  if (dropped.length) {
+    const ziel = dropped[0];
+    await page.hover(
+      `svg.mp-chart circle.mp-hit[aria-label="Fadenkreuz für ${ziel}"]`,
+    );
+    await page.waitForTimeout(250);
+    const hover = await page.evaluate(
+      `document.querySelectorAll('svg.mp-chart text.mp-label-hover[data-model="${ziel}"]').length`,
+    );
+    console.log(
+      `  Hover auf ${ziel}: ${hover ? "Name erscheint" : "✗ kein Name"}`,
+    );
+    if (!hover) problems++;
+    const hb = (await page.evaluate(collect("svg.mp-chart"))) as Box[];
+    const mine = hb.find((x) => x.kind === "label" && x.label === ziel);
+    const treffer = hb.filter(
+      (x) => x.kind === "label" && x.label !== ziel && mine && overlap(mine, x),
+    );
+    console.log(
+      `  Hover-Name überdeckt: ${treffer.length ? "✗ " + treffer.map((x) => x.label).join(", ") : "nichts"}`,
+    );
+    problems += treffer.length;
+    await page.mouse.move(5, 5);
+  } else {
+    console.log("  kein namenloser Punkt — Hover-Name nicht prüfbar");
+  }
+
   // --- Historien-Folie (HISTORIE), alle Stationen -----------------------
   await goto(page, HISTORIE);
   // Die Stationszahl stand hier fest auf 7 und war seit Stand 8 falsch: der
@@ -301,11 +421,30 @@ for (const theme of ["light", "dark"] as const) {
       });
   }
 
-  // Achter Klick: Detailmodus — alle Namen plus Fadenkreuz. Die Beschriftung
-  // muss dann jeden Punkt der Station treffen, und zwei Pins müssen zwei
-  // Fadenkreuze ergeben.
+  // Letzter Klick: Detailmodus — alle Namen plus Fadenkreuz. Die Beschriftung
+  // muss dann jeden Punkt der Station treffen, zwei Pins müssen zwei
+  // Fadenkreuze ergeben — und kein Label der Station darf sich bewegen.
+  const vorDetail: Record<string, string> = await page.evaluate(`(() => {
+    const out = {};
+    for (const t of document.querySelectorAll("svg.mh-chart text.mh-label"))
+      out[t.getAttribute("data-model")] = [t.getAttribute("x"), t.getAttribute("y"), t.getAttribute("text-anchor")].join("|");
+    return out;
+  })()`);
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(450);
+  const imDetail: Record<string, string> = await page.evaluate(`(() => {
+    const out = {};
+    for (const t of document.querySelectorAll("svg.mh-chart text.mh-label"))
+      out[t.getAttribute("data-model")] = [t.getAttribute("x"), t.getAttribute("y"), t.getAttribute("text-anchor")].join("|");
+    return out;
+  })()`);
+  const bewegt = Object.entries(vorDetail)
+    .filter(([id, pos]) => imDetail[id] !== pos)
+    .map(([id]) => id);
+  console.log(
+    `  Detailmodus: ${bewegt.length ? "✗ verschoben: " + bewegt.join(", ") : "kein Label der Station verschoben"} (${Object.keys(vorDetail).length} → ${Object.keys(imDetail).length})`,
+  );
+  problems += bewegt.length;
   const detail = await page.evaluate(`(() => {
     const svg = document.querySelector("svg.mh-chart");
     const pts = svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt']").length;

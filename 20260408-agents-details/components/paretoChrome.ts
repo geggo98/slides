@@ -231,7 +231,8 @@ export function arrowCluster(s: Scale): ArrowCluster {
         mid: (len - hl) / 2,
         flip: Math.abs(rot) > 90,
       },
-      box: polyBox(pts, hx, hy, rot, `Pfeil „${text}"`),
+      // Weich: im Durchgang „alle Namen“ darf ein Label auf dem Cluster liegen.
+      box: { ...polyBox(pts, hx, hy, rot, `Pfeil „${text}"`), soft: true },
     };
   };
   const parts = [

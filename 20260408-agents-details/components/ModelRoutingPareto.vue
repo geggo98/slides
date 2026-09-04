@@ -109,7 +109,16 @@ const layoutPts = computed(() =>
   }),
 );
 const layout = computed(() => layoutLabels(layoutPts.value, layoutOpts));
-const placed = computed(() => layout.value.core);
+
+// „Alle Namen“: der zweite Durchgang des Platzierers. Er legt die im Default
+// weggelassenen Namen mit Führungslinie nach und lässt jedes vorhandene Label,
+// wo es ist — der Schalter fügt hinzu, er sortiert nicht um. Wo auch mit
+// Linie kein Platz ist, überlappt das Label (`forced`); das ist der Preis der
+// Vollständigkeit, und die QA zählt es dort als „weich“.
+const allOn = ref(false);
+const placed = computed(() =>
+  allOn.value ? layout.value.all : layout.value.core,
+);
 
 interface LabelView {
   p: Pt;
@@ -197,9 +206,11 @@ const chartLabel = computed(
     "so gut und billiger ist. gpt-6-astra mit 5,71 Euro hat mit " +
     "74,12 Prozent den höchsten Rohwert des Boards und liegt trotzdem nicht auf der " +
     "Front — gemini-3.8-flash erreicht denselben gerundeten Wert für 2,07 Euro." +
-    (unnamed.value.length
-      ? ` ${unnamed.value.length} Punkte tragen keinen Namen, weil dort kein Platz ist; Hover oder Pin zeigt ihn.`
-      : "") +
+    (allOn.value
+      ? " Alle Namen sind eingeblendet, die nachgeholten mit Führungslinie."
+      : unnamed.value.length
+        ? ` ${unnamed.value.length} Punkte tragen keinen Namen, weil dort kein Platz ist; Hover oder Pin zeigt ihn, der Schalter „alle Namen“ alle.`
+        : "") +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
         "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
@@ -242,14 +253,25 @@ const whiskers = computed(() =>
         class="mp-tg"
         :class="{ on: subOn }"
         :aria-pressed="subOn"
+        title="Kontingentrechnung, kein API-Preis: ×2/3 bis 13.09., ab 14.09. ×0,8"
         @click="subOn = !subOn"
       >
         Claude-Code-Kontingent
-        <span class="mp-tg-note">kein API-Preis · ab 14.09. +25 %</span>
+        <span class="mp-tg-note">kein API-Preis</span>
       </button>
-      <!-- Die Legendenzeile ist nowrap. Mit einem dritten Schalter war sie
-           exakt voll (gemessen scrollWidth == clientWidth == 868 px); seit der
-           Effort-Schalter weg ist, hat sie wieder Luft. Der gebündelte
+      <button
+        class="mp-tg mp-tg-all"
+        :class="{ on: allOn }"
+        :aria-pressed="allOn"
+        title="Auch die Namen zeigen, für die direkt am Marker kein Platz war — mit Führungslinie"
+        @click="allOn = !allOn"
+      >
+        alle Namen
+      </button>
+      <!-- Die Legendenzeile ist nowrap und war mit zwei Schaltern und der
+           langen Kontingent-Notiz exakt voll (scrollWidth == clientWidth ==
+           868 px). Für „alle Namen“ ist die Notiz auf „kein API-Preis“
+           gekürzt, der Rest steht im title und im ⓘ. Der gebündelte
            Overflow-Checker sieht diese Richtung NICHT — er misst nur nach
            unten. Wer hier Text ergänzt, prüft mit
            playwright-tests/legend-width-check.ts. -->
@@ -269,6 +291,7 @@ const whiskers = computed(() =>
       role="img"
       :aria-label="chartLabel"
       :data-dropped="unnamed.join(' ')"
+      :data-all="allOn ? 'on' : 'off'"
     >
       <!-- Quadranten-Tints -->
       <rect
