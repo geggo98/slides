@@ -255,6 +255,26 @@ for (const theme of ["light", "dark"] as const) {
       `[${theme}] Folie ${HISTORIE} · Station ${step} (${date}, ${ghost} Geister)`,
       boxes,
     );
+
+    // Der Erklaertext waechst mit der Stationsnotiz und hat weder max-height
+    // noch Scroll — eine zu lange Notiz laeuft unter die Folienkante und wird
+    // im Praesentationsmodus wortlos abgeschnitten.
+    //
+    // Der gebuendelte Overflow-Checker findet das NICHT: Er rendert die Folie,
+    // cycelt Tabs und misst — aber er klickt sich nicht durch die Stationen,
+    // und die lange Notiz haengt an der letzten. Gemessen am 04.09.2026: Die
+    // Notiz zu Station 9 reichte bis 746 px, der Checker meldete „clean".
+    const noteBottom = (await page.evaluate(`(() => {
+      const n = [...document.querySelectorAll(".mh-note")]
+        .find((x) => x.getBoundingClientRect().height > 0);
+      return n ? Math.round(n.getBoundingClientRect().bottom) : null;
+    })()`)) as number | null;
+    if (noteBottom !== null && noteBottom > 720) {
+      console.log(
+        `  ✗ Erklaertext reicht bis ${noteBottom} px — ${noteBottom - 720} px unter der Folienkante`,
+      );
+      problems++;
+    }
     if (SHOT)
       await page.screenshot({
         path: `${OUT}/history-${HISTORIE}-${theme}-${step}.png`,
