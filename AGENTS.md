@@ -1,6 +1,15 @@
-# CLAUDE.md
+# Repository Guide for Coding Agents
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**This is the repo-wide source.** `CLAUDE.md` is a one-line `@AGENTS.md`
+include, so Claude Code, the Codex CLI and anything else that looks for one of
+the two conventional names reads the same text. Put new guidance **here**, never
+into `CLAUDE.md`.
+
+One subtree carries its own, in the same shape: `shared/quiz/AGENTS.md` holds
+the quiz-authoring conventions (option schema, difficulty pyramid, section
+naming) and `shared/quiz/CLAUDE.md` includes it. Read it before touching a
+deck's `components/quiz-questions.json`. Any further nested guidance follows the
+same pattern — content in `AGENTS.md`, a one-line `CLAUDE.md` beside it.
 
 ## Project Overview
 
@@ -8,7 +17,13 @@ Multi-presentation Slidev setup. Each talk lives in its own top-level directory 
 
 ## Development Environment
 
-Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell` or use direnv.
+Uses **devenv** (Nix-based) to provide Bun. Enter the shell with `devenv shell`
+or use direnv.
+
+**Then run `devenv tasks run slides:install` once.** Both git hooks execute out
+of `node_modules` (`bun run prettier`, `bun run eslint`), so on a fresh clone
+every commit fails until it exists. That is the first thing to check when a
+commit fails right after cloning.
 
 ### The `devenv` Input Is Pinned
 
@@ -33,15 +48,26 @@ naming the input keeps the bump to that one node.
 Run **`devenv update` without an argument only deliberately**: it also moves
 `nixpkgs`, which changes `pkgs.playwright-driver` and silently breaks its
 pairing with the pinned `playwright` npm version (see the Playwright section
-below).
+below). It does **not** move the formatter — the prettier hook runs the repo's
+own binary, so a `nixpkgs` bump can no longer reformat the tree behind your
+back (see Formatting).
 
 ## Common Commands
 
-Prefer **devenv tasks** over direct `bun run` commands — they handle dependencies automatically and simplify the Claude Code allow-list.
+**For anything the build pipeline does, prefer devenv tasks** over direct
+`bun run` — they resolve their own dependencies and keep the Claude Code
+allow-list small. Tests, linting and formatting have no task; call those
+through `bun run`, which is what the git hooks do too.
 
 ```sh
 devenv tasks run slides:deploy       # full build pipeline: install → build all talks → landing page
+bun run test                         # vitest: shared/, deploy/ and the decks' components/lib/
+bun run eslint --fix <files>         # same linter the pre-commit hook runs on *.vue
 ```
+
+Run `bun run test` before committing anything under `shared/`, `deploy/` or a
+deck's `components/lib/`. It takes seconds; the slide overflow check is the one
+that needs a running dev server, these do not.
 
 ### Starting the Dev Server
 
@@ -99,19 +125,64 @@ zsh "$CHECK" 1-59 3037 --browsers chromium              # schnelle Iteration, nu
 
 Bei komplexeren Szenarien (eigene Tab-/Scroll-Logik) ein Ad-hoc-Playwright-Script in `playwright-tests/` schreiben (via **Write tool**, mit `bun run`), das die Slide auf `http://localhost:<port>/<n>` öffnet, in beiden Themes screenshottet und Panel-Bottoms gegen `720px` prüft.
 
-### Hook: Stop-Reminder
+### Claude-Code-Stop-Hook: Overflow-Reminder
 
 `.claude/hooks/slide-overflow-reminder.sh` (konfiguriert in `.claude/settings.json` als `Stop`-Hook) erinnert am Turn-Ende daran, den Overflow-Check zu fahren, sobald unstaged Änderungen an `<talk>/slides.md`, `<talk>/components/*.vue` oder `<talk>/layouts/*.vue` existieren. Der Hook läuft Playwright **nicht** selbst (zu langsam, braucht laufenden Server) — er zeigt nur den konkreten `bun run`-Aufruf pro betroffenem Talk an.
 
 ## Commit Conventions
 
+### What Runs on Every Commit
+
+Three hooks, declared in `devenv.nix` under `git-hooks.hooks` and executed by
+`prek`: `check-merge-conflicts`, then `eslint --fix` on `*.vue`, then
+`prettier --write` on text files. Two of them **rewrite** rather than complain,
+so a failing commit usually arrives with the fix already applied in the working
+tree — inspect it, stage it, commit again.
+
+**They only ever see the files you staged** (`pass_filenames: true`,
+`always_run: false`). A tracked file that nobody has staged since the hooks went
+in is unchecked, however long it has been in the repo — that is what produced
+the two catch-up commits `e02a545` and `3c584e9`. To judge the whole tree you
+have to sweep it yourself; see Formatting.
+
+**Never `git commit --no-verify`.** If a hook rewrote something, that rewrite
+_is_ the finding.
+
+`.pre-commit-config.yaml` is generated and git-ignored — a symlink into the Nix
+store. **After changing `git-hooks.hooks` in `devenv.nix`, re-enter the shell**
+(`devenv shell true`; a direnv setup does it on `direnv reload`) before you test
+anything: the symlink is rewritten on shell entry, not on commit, so until then
+you are still running the old hook.
+
+### Message Format
+
 Commits follow **Conventional Commits** (roughly): `type(scope): subject`.
 
 - **Type**: one of `feat`, `fix`, `refactor`, `docs`, `style`, `ci`, `build`, `chore`.
-- **Scope** (almost always present): the talk directory short-name — `ai-agents`, `monitoring`, `open-rewrite`, `gradle`, `java-null`, `agents-details` — or a cross-cutting area — `shared`, `playwright`, `deploy`, `repo`, `claude`, `devenv`, `deps`. Combine multiple scopes comma-separated with no space (`shared,java-null`).
+- **Scope** (almost always present): the talk short-name from the table below,
+  or a cross-cutting area — `shared`, `playwright`, `deploy`, `repo`, `claude`,
+  `devenv`, `deps`. Combine multiple scopes comma-separated with no space
+  (`shared,java-null`).
 - **Subject**: English, imperative mood, lowercase first word (the verb). Proper nouns and product/tech names keep their case (Claude Code, OpenRewrite, JSpecify, MCP). No trailing period. Aim for ≤ 72 chars.
 - **Body** (optional — add it for the what-and-why, omit it for trivial changes): one blank line after the subject, then **hard-wrap every line at ≤ 72 chars**. Body language may be English or German — match the talk's slide-content language (German talks such as `ai-agents` and `open-rewrite` routinely have German bodies). Use `-` bullets for multi-part changes and backtick inline identifiers.
 - **Trailer** on Claude-assisted commits, after a blank line: `🤖 edited with the help of an LLM agent`
+
+The talk short-names are not derivable from the dated directory names:
+
+| scope            | directory                                                    |
+| ---------------- | ------------------------------------------------------------ |
+| `ai-agents`      | `20260327-ai-agents`                                         |
+| `gradle`         | `20260327-gradle-dependency-resolution`                      |
+| `monitoring`     | `20260329-grafana-lgtm-monitoring-in-k8s-distributed-system` |
+| `agents-details` | `20260408-agents-details`                                    |
+| `java-null`      | `20260428-java-null-pointer`                                 |
+| `open-rewrite`   | `20260522-open-rewrite`                                      |
+| `design-pattern` | `20260606-design-pattern`                                    |
+| `rnext`          | `20260703-rnext-proposal`                                    |
+| `anatomy`        | `20260707-anatomy-of-autonomous-agents`                      |
+| `sre-sim`        | `20260711-sre-simulations`                                   |
+
+A new deck picks its own short-name and gets a row here in the same commit.
 
 Example:
 
@@ -126,6 +197,16 @@ für die JSpecify-Migration.
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
+
+**Where a tool exists on both sides — nixpkgs and `package.json` — the repo's
+copy wins, and the Nix side is wired to it.** That is why both git hooks call
+`bun run prettier` and `bun run eslint` instead of the nixpkgs binaries: one
+version, pinned by `bun.lock`, for the hook and for you alike.
+
+**Playwright is the deliberate exception, and it runs the other way.** There Nix
+owns the browser binaries, so the npm `playwright` and `playwright-chromium`
+versions are pinned to follow `pkgs.playwright-driver`. Do not "harmonise" the
+three — flipping Playwright to a caret range breaks the PDF export (see below).
 
 ### Install Policy (`bunfig.toml`)
 
@@ -163,11 +244,23 @@ Playwright release. Should a bump still be refused with
 
 ### Formatting (`prettier`)
 
-**The prettier that counts is the repo's own** — `package.json` + `bun.lock`.
-`devenv.nix` points the pre-commit hook at it with
-`git-hooks.hooks.prettier.settings.binPath = "bun run prettier"`, so the hook,
-`bun run prettier` and any editor integration are the same binary by
-construction, and `prettier-plugin-slidev` resolves from the same tree.
+**Format only with `bun run prettier`.** Not `npx prettier`, not a bare
+`prettier`, not whatever an editor bundles. A bare `prettier` is not
+hypothetical here — enabling the hook still pulls `pkgs.prettier` into the
+devenv shell, so inside it the two disagree (measured 04.09.2026):
+
+```console
+$ command -v prettier && prettier --version
+/nix/store/…-prettier-3.6.2/bin/prettier
+3.6.2
+$ bun run prettier --version
+3.8.1
+```
+
+`devenv.nix` points the hook at the second one with
+`git-hooks.hooks.prettier.settings.binPath = "bun run prettier"`, so hook,
+command line and `prettier-plugin-slidev` all come from `package.json` +
+`bun.lock`.
 
 That is a deliberate departure from the built-in hook, which formats with
 `pkgs.prettier` from `devenv.lock`. Those two drift: measured on 03.09.2026 the
@@ -177,20 +270,49 @@ column width of characters such as `↔` (U+2194) and `▶` (U+25B6). A
 on commit, and the commit failed with nothing on screen to explain it — both
 sides considered the file correctly formatted.
 
-**The hook now needs `node_modules`.** On a fresh clone every commit fails until
-`devenv tasks run slides:install` has run — not only `.vue` commits as with the
-eslint hook, because prettier runs on `types: ["text"]`, i.e. everything.
+**The hook needs `node_modules`.** On a fresh clone, every commit touching a
+text file fails until `devenv tasks run slides:install` has run — not only
+`.vue` commits as with the eslint hook, because prettier runs on
+`types: ["text"]`. The symptom is
+`[error] Cannot find package 'prettier-plugin-slidev'`, which `.prettierrc`
+requires; it means "run `bun install`", not "the plugin is broken".
 
-To see what the hook will do before committing:
+Since the hook only sees staged files, sweeping the whole tree is a separate
+job. Do it before you commit:
 
 ```sh
-git ls-files -z | xargs -0 bun run prettier --ignore-unknown --list-different
-prek run prettier --all-files      # the hook itself, across the repo
+git ls-files -s | perl -lane 'print $F[3] unless $F[0] eq "120000"' \
+  | xargs bun run prettier --ignore-unknown --list-different
 ```
 
-The first prints nothing when the tree is clean — count the files it actually
-sees before accepting that as a result. Never reach for `git commit --no-verify`:
-if the hook rewrites something, that rewrite _is_ the finding.
+**The symlink filter is not decoration.** 15 of the tracked files are
+symlinks (each deck's `layouts/end.vue` and `public/fonts/0xProto-Regular.woff2`).
+Without the filter prettier prints `… is a symbolic link` fifteen times and the
+pipeline exits **123 even on a clean tree** — the file names on stdout stay
+correct, but the exit code stops meaning anything. With the filter a clean tree
+is exit 0 and silence, and a dirty one names its files. The hook never trips
+over this: a symlink is not `text`.
 
-Bumping prettier is an ordinary `bun add`; `bun.lock` is the pin. Expect a minor
-bump to reformat files, and commit that reformat on its own.
+**Count what the sweep saw before believing "no hits"** — append `| wc -l` and
+expect `git ls-files | wc -l` minus those 15, on the order of 430. A sweep that
+structurally cannot find anything reports exactly what a clean tree does.
+
+`prek run prettier --all-files` is **not** a preview: the generated entry ends
+in `--write`, so it reformats the whole tree in place. Run it when you mean to
+fix, then read `git status`.
+
+**Never mix a reformat into a feature commit.** Bumping prettier is an ordinary
+`bun add` and `bun.lock` is the pin; a minor bump reformatting files is normal,
+and it goes in its own `style(...)` commit. If the reformat touches rendered
+files, show that it is render-neutral rather than asserting it:
+
+```sh
+bun run playwright-tests/prettier-render-neutral.ts <file> [...]
+```
+
+It renders each file from `HEAD` and from the working tree through the same
+stage — `@vue/compiler-sfc` for `.vue`, `markdown-it` for `.md` — and diffs the
+result, after validating both comparisons against a real content change. That
+control matters: Vue condenses whitespace, so a rewrapped template line is
+invisible by design, and a comparison that cannot see anything reports the same
+thing as a clean one.
