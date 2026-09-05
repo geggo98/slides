@@ -1,6 +1,7 @@
 // Verifiziert den GitHub-Pages-Deploy der Modell-Routing-Folien im echten
 // Browser: rendert das Xref-Ziel, stimmen die Preise, steht die Pareto-Front,
-// und klickt sich die Historien-Folie durch ihre sieben Datenstände?
+// klickt sich die Historien-Folie durch ihre neun Datenstände, und rendert die
+// Bonusfolie v1 gegen v1.1?
 //
 //   bun run playwright-tests/verify-deploy.ts
 //   BASE=https://geggo98.github.io/slides bun run playwright-tests/verify-deploy.ts
@@ -156,7 +157,7 @@ check(
 await page.screenshot({ path: "playwright-tests/qa/deployed-pareto.png" });
 
 // (4) Die Historien-Folie: eigener Alias, eigene Chart-Klasse (`.mh-chart`,
-// damit der `querySelector` oben nicht hier landet), sieben Stationen.
+// damit der `querySelector` oben nicht hier landet), neun Stationen ab v1.1.
 await page.goto(`${DECK}/pareto-historie`, { waitUntil: "networkidle" });
 await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
 await page.waitForTimeout(500);
@@ -173,16 +174,60 @@ const hist = await page.evaluate(() => ({
       .trim() ?? "",
 }));
 check(
-  "Historien-Folie hat sieben Stationen",
-  hist.stations === 7,
+  "Historien-Folie hat neun Stationen",
+  hist.stations === 9,
   `${hist.stations}`,
 );
 check(
-  "startet auf dem v1-Stand",
-  hist.active.startsWith("v1") && hist.note.includes("1/7"),
+  "startet auf dem v1.1-Stand vom 15.06.",
+  hist.active.startsWith("15.06.") && hist.note.includes("1/9"),
   `${hist.active} · ${hist.note.slice(0, 60)}`,
 );
 await page.screenshot({ path: "playwright-tests/qa/deployed-history.png" });
+
+// (4b) Zehnter Klick: die Lupe „Die Effort-Falle" mit astras fünf Stufen.
+await page.goto(`${DECK}/pareto-historie?clicks=9`, {
+  waitUntil: "networkidle",
+});
+await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+await page.waitForTimeout(500);
+const lens = await page.evaluate(() => ({
+  panel: !!document.querySelector("svg.mh-chart .mh-lens"),
+  steps: document.querySelectorAll("svg.mh-chart .mh-lens-dot").length,
+  note:
+    document
+      .querySelector(".mh-note")
+      ?.textContent?.replace(/\s+/g, " ")
+      .trim() ?? "",
+}));
+check(
+  "Lupe zeigt fünf Effort-Stufen und die eigene Notiz",
+  lens.panel && lens.steps === 5 && lens.note.includes("Effort-Falle"),
+  `panel=${lens.panel} · ${lens.steps} Stufen · ${lens.note.slice(0, 50)}`,
+);
+await page.screenshot({
+  path: "playwright-tests/qa/deployed-history-lens.png",
+});
+
+// (5) Die Bonusfolie v1 gegen v1.1: dieselbe Komponente, zwei Stationen, der
+// v1-Stand trägt den Warnhinweis im Chart.
+await page.goto(`${DECK}/pareto-v1-bonus`, { waitUntil: "networkidle" });
+await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+await page.waitForTimeout(500);
+const bonus = await page.evaluate(() => ({
+  stations: document.querySelectorAll(".mh-tl-item").length,
+  active:
+    document
+      .querySelector(".mh-tl-item.active .mh-tl-date")
+      ?.textContent?.trim() ?? "",
+  warn: !!document.querySelector("svg.mh-chart .mh-warn"),
+}));
+check(
+  "Bonusfolie hat zwei Stationen und startet auf v1 mit Warnhinweis",
+  bonus.stations === 2 && bonus.active.startsWith("v1") && bonus.warn,
+  `${bonus.stations} · ${bonus.active} · warn=${bonus.warn}`,
+);
+await page.screenshot({ path: "playwright-tests/qa/deployed-v1-bonus.png" });
 
 await browser.close();
 console.log(failures === 0 ? "\nDEPLOY OK" : `\n${failures} FEHLGESCHLAGEN`);

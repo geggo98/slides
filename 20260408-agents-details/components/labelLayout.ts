@@ -21,15 +21,17 @@
 //    zuletzt platziert — gegen eine Grundmenge, die von ihnen nichts weiß. Der
 //    Durchgang „alle Namen" (`all`) legt nur nach, er rechnet nichts neu.
 // 3. Rang 0 (Front) und Rang 1 (Story, Wanderung) werden immer platziert,
-//    notfalls mit Führungslinie. Rang 2 nur, wenn ein Platz direkt am Marker
-//    frei ist — sonst bleibt der Punkt im Default namenlos; Hover zeigt ihn,
-//    „alle Namen" holt ihn mit Linie nach.
+//    notfalls mit Führungslinie. Rang 2 bekommt einen Platz direkt am Marker
+//    oder, nachdem alle Nahplätze vergeben sind, eine kurze Linie (Ringe 28
+//    und 44 px) — sonst bleibt der Punkt im Default namenlos; Hover zeigt
+//    ihn, „alle Namen" holt ihn mit längerer Linie nach.
 //
 // Hindernis eines Markers ist sein KLICKZIEL (`hitR`), nicht der sichtbare
 // Punkt: So liegt kein Label unter einem fremden Hit-Target, und jedes Label
-// bleibt der Griff für seinen Punkt — nötig, wo Marker 1–2 px auseinander
-// liegen (astra/sol, terra/glm-5.3) und das später gerenderte Klickziel das
-// frühere vollständig überdeckt.
+// bleibt der Griff für seinen Punkt. Marker, die einander verdeckten
+// (astra/sol, terra/glm-5.3), rückt `dodgeMarkers` in `paretoChrome.ts`
+// vorher auseinander; der Platzierer rechnet mit der ANGEZEIGTEN Lage
+// (`LayoutSource.pos`), Geisterringe und Overlay-Lagen bleiben wahr.
 //
 // Textmaß
 // -------
@@ -190,6 +192,11 @@ export interface LayoutOpts {
   hitR: number;
   /** Feste Hindernisse: Quadrantenbeschriftung, Pfeilcluster. */
   obstacles: readonly Obstacle[];
+  /**
+   * Ringe für Rang 2 im Default (Durchgang 1b). Default `RANK2_RINGS`;
+   * `[]` schaltet den Durchgang ab — die Tests vergleichen beide Layouts.
+   */
+  rank2Rings?: readonly number[];
 }
 
 export interface Placed {
@@ -338,6 +345,8 @@ function* nearCands(
 // geht dort vor Nähe.
 const FAR_RINGS = [28, 44, 58, 75, 92, 110, 130, 150, 170, 195, 220, 250, 280];
 const FAR_RINGS_ALL = [...FAR_RINGS, 320, 360, 400, 450];
+/** Rang 2 im Default: nur die zwei innersten Ringe, siehe Durchgang 1b. */
+export const RANK2_RINGS: readonly number[] = [28, 44];
 const FAR_DIRS = [
   0, 180, 337.5, 22.5, 202.5, 157.5, 315, 45, 225, 135, 292.5, 67.5, 247.5,
   112.5, 270, 90,
@@ -463,14 +472,35 @@ export function layoutLabels(
   const taken: Box[] = [];
   const missing: string[] = [];
   const dropped: string[] = [];
+  const later: LayoutPoint[] = [];
   for (const p of order) {
     let c = first(p, nearCands(p, o.font, o.hitR), taken);
     if (!c && p.rank < 2) c = first(p, farCands(p, o.font), taken);
     if (c) {
       taken.push(c.box);
       core.set(p.id, place(p, c, "core"));
+    } else if (p.rank < 2) {
+      missing.push(p.id);
     } else {
-      (p.rank < 2 ? missing : dropped).push(p.id);
+      later.push(p);
+    }
+  }
+
+  // Durchgang 1b: Rang 2 ohne Nahplatz bekommt eine KURZE Linie (Ringe 28
+  // und 44 px), wo dort Platz ist. Erst nach allen Nahplätzen, damit die
+  // Linie niemandem einen Platz wegnimmt — sie bewegt kein Label aus
+  // Durchgang 1 (Test). Gemessen am 05.09.2026: +9 Namen über alle Zustände,
+  // +2 an Station 9 der Historie, 0 auf der Hauptfolie.
+  const rank2Rings = o.rank2Rings ?? RANK2_RINGS;
+  for (const p of later) {
+    const c = rank2Rings.length
+      ? first(p, farCands(p, o.font, rank2Rings), taken)
+      : null;
+    if (c) {
+      taken.push(c.box);
+      core.set(p.id, place(p, c, "core"));
+    } else {
+      dropped.push(p.id);
     }
   }
 

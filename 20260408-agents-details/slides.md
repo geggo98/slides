@@ -1333,11 +1333,20 @@ https://x.com/thsottiaux/status/2094254532020818191 (31.08.2026)
 Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
 Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
 Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
+
+Entzerrte Marker: bis 5,9 px verschoben, höchstens 1,2 Prozentpunkte
+senkrecht oder 4,0 % im Preis waagerecht. Betroffen: sol und astra sowie
+terra und glm-5.3 (waagerecht auseinander), muse-spark-1.2 und qwen3.8-max
+(senkrecht); mit Kontingent-Overlay zusätzlich claude-fable-5 um 1,7 px.
+Frontpunkte rücken in jeder Ansicht nur waagerecht, auch im Windsurf-Preset,
+wo terra Sprosse 2 ist; kein dominierter Punkt rückt über die Front.
+Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen rechnet
+markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
 
 ---
 hideInToc: true
-clicks: 9
+clicks: 10
 routeAlias: pareto-historie
 ---
 
@@ -1345,28 +1354,58 @@ routeAlias: pareto-historie
 
 <ModelRoutingHistory :step="$clicks" />
 
-<div class="text-xs opacity-70 mt-1">
-
-Quellen: **DeepSWE v1.1** (Datacurve) — Board, Changelog und Git-Historie dieses Charts · Wechselkurs konstant (1 USD = 0,876 €) · Kosten je Station: der **damals veröffentlichte** Stand
-
-</div>
-
 <!--
-Station 1 (v1), zur Kontamination:
-- „Task-Container" = der Container, in dem der Agent die Benchmark-Aufgabe
-  bearbeitet. In v1 lief die Verifikation im selben Container, und das Repo
-  kam mit voller Git-Historie — `git log --all` zeigt die Musterlösung.
-- Folge 1: Opus hat Tasks „gelöst", die es ohne Musterlösung womöglich nicht
-  gelöst hätte → Score geschönt.
-- Folge 2: Lesen kostet viel weniger Tokens als Lösen → gemessene €/Task zu
-  niedrig, der Punkt liegt zu weit links.
-- Station 2 (v1.1) schließt genau diese Lücke. Deshalb sind v1- und
-  v1.1-Zahlen nicht vergleichbar — die Zeitreihe beginnt faktisch erst dort.
+Keine Quellen-Fußzeile unter dem Chart: Die Stationsnotizen 6 bis 9 sind
+vier bis fünf Zeilen lang und schoben sie unter die Folienkante (gemessen
+05.09.2026, 731 bis 780 px bei 720). Quellen, Wechselkurs und "damals
+veröffentlichter Stand" stehen im ⓘ-Modal.
 
-Achter Klick (nach Station 7): blendet alle Modellnamen ein und schaltet das
-Fadenkreuz frei — Punkt oder Label anklicken pinnt, mehrere gleichzeitig
-möglich. Derselbe Schalter sitzt in der Legende, geht also auch auf jeder
-anderen Station. Zurück (←) schaltet ihn wieder aus.
+Warum die Serie am 15.06. beginnt (Station 1 = Start von v1.1):
+- DeepSWE v1 (bis 14.06.) ließ die Tests im Container des Agenten laufen, das
+  Repo stand im Detached-HEAD-Modus. Datacurves Sorge: Eine ähnliche, upstream
+  gemergte Lösung wäre per `git log` zu finden gewesen. Dazu instabile Tests
+  und veraltete Abhängigkeiten bei einigen Tasks.
+- v1.1 (Blog vom 14.06.2026) bewertet nur noch den committeten Patch in einem
+  eigenen Container, setzt `main` auf den Startcommit ohne spätere Commits
+  und liefert CTRF-Testreports. Dieselben 113 Tasks.
+- Datacurve selbst: "Scores stay close: the ordering at the top is unchanged,
+  and most configurations land within a few points." Neun Konfigurationen
+  liefen unter beiden Methoden, −3,8 bis +6,0 Punkte.
+- Nur acht Modelle wurden neu gefahren. 13 v1-Modelle kamen nie zurück,
+  glm-5.2 (21.06.) und deepseek-v4-pro (12.08.) wurden später neu gemessen.
+  Ein v1-Stand in dieser Serie hätte 15 Punkte verschwinden lassen, die
+  nicht dominiert, sondern nicht gemessen waren.
+- Den Vergleich v1 gegen v1.1 zeigt die Bonusfolie am Ende. Nicht hierher
+  gehört die Zahl "18 % der Opus-4.7-Treffer per git log --all": Sie stammt
+  aus Datacurves SWE-Bench-Pro-Auswertung, nicht aus DeepSWE v1.
+
+Station 2 (10.07.): Die gpt-5.6-Familie kommt an einem Tag. terra hat den
+Score von fable-5 für gut ein Drittel des Preises, Anthropic verschwindet
+von der Front. Station 3 (22.07.) füllt dann nur noch das billige Ende auf.
+
+Zehnter Klick (nach Station 9): die Lupe „Die Effort-Falle". Das Chart
+dimmt, ein Panel zeigt die Region 1,5 bis 13 € × 62 bis 78 % vergrößert und
+darin alle fünf gemessenen Effort-Stufen von gpt-6-astra als Leiter: low
+1,92 €/67,0 %, medium 3,84 €/72,8 %, high 5,01 €/73,2 %, xhigh 5,71 €/74,1 %
+(die geplottete Stufe), max 10,84 €/73,2 %. Die Klammer zwischen high und
+max sagt es in einem Satz: 2,2-facher Preis, gleicher Score. Trugschluss:
+„höherer Effort ist besser". Er kann auch einfach nur teurer sein, und das
+deutlich. Vor dem Buchen die Stufen vergleichen; bei vier von 22 Modellen ist
+die billigere Stufe auch die bessere (Details im ⓘ unter „Höchste
+Effort-Stufe").
+
+Elfter Klick: blendet alle Modellnamen ein und schaltet das Fadenkreuz frei.
+Punkt oder Label anklicken pinnt, mehrere gleichzeitig möglich. Derselbe
+Schalter sitzt in der Legende, geht also auch auf jeder anderen Station.
+Zurück (←) schaltet ihn wieder aus.
+
+Entzerrte Marker: bis 6,8 px verschoben, höchstens 2,0 Prozentpunkte
+senkrecht oder 4,7 % im Preis waagerecht. Betroffen ab Station 3
+muse-spark-1.1/grok-4.5 und kimi-k3/terra (waagerecht), ab Station 6
+muse-spark-1.2/qwen3.8-max, ab Station 7 terra/glm-5.3, an Station 9
+sol/astra (waagerecht). Frontpunkte rücken nur waagerecht, kein dominierter
+Punkt rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert.
+Die Zahlen rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
 
 ---
@@ -1642,17 +1681,17 @@ RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert; die Harne
 layout: section
 ---
 
-# Bonus: Engineering-Schichten
+# Bonus
 
 <div class="text-lg opacity-70 mt-4">
 
-Prompt, Context, Harness — **und vielleicht Evolution.**
+Engineering-Schichten: Prompt, Context, Harness — **und vielleicht Evolution.**
 
 </div>
 
 <div class="text-sm opacity-50 mt-8">
 
-Ein Überblick über die Engineering-Disziplinen, die sich um LLM-Agenten gebildet haben.
+Dazu DeepSWE v1 gegen v1.1: was eine geänderte Messung mit einer Pareto-Front macht.
 
 </div>
 
@@ -1663,6 +1702,56 @@ hideInToc: true
 # Vier Schichten. Ein Spektrum.
 
 <EngineeringSchichten />
+
+---
+hideInToc: true
+clicks: 2
+routeAlias: pareto-v1-bonus
+---
+
+# Bonus: DeepSWE v1 gegen v1.1
+
+<ModelRoutingHistory
+  series="v1"
+  old-legend="v1-Wert"
+  gone-legend="in v1.1 nicht gemessen"
+  :step="$clicks"
+/>
+
+<div class="text-xs opacity-70 mt-1">
+
+**1** Andere Messung, andere Werte · **2** Andere Modellliste, andere Front · **3** Benchmark-Design: v1 ließ Git-Historie sehen, v1.1 schließt den Cheat-Pfad
+
+</div>
+
+<!--
+Bonus hinter dem "Danke", nicht Teil des Vortrags. Drei Lehren aus einem
+Chart:
+1. Messmethode: v1.1 bewertet den committeten Patch in einem eigenen
+   Container, setzt main auf den Startcommit und entfernt instabile Tests.
+   Dieselben 113 Tasks, sechs doppelt gemessene Modelle, Sprünge von −4
+   (gpt-5.4) bis +9 Punkten (gemini-3.5-flash); gemini-3.1-pro kostet
+   fünfmal so viel. Datacurve: "Scores stay close."
+2. Modellliste: Die Front von v1 hatte acht Punkte ab 0,62 €, die von v1.1
+   vier ab 2,47 €. Der Unterschied ist die Liste, nicht die Modelle: 13 der
+   15 Kreuze wurden nie wieder gemessen. Wer einen Benchmark liest, fragt
+   zuerst, wer fehlt.
+3. Benchmark-Design: In v1 stand das Repo im Detached-HEAD-Modus mit
+   sichtbarer Historie. Datacurves Sorge: Ein Agent findet eine ähnliche,
+   upstream gemergte Lösung per git log. Gemessen hat Datacurve das Cheaten
+   auf SWE-Bench Pro, im selben Blog: 18 % der Opus-4.7-Treffer und 25 % der
+   Opus-4.6-Treffer per git log --all oder git show auf den Gold-Commit. Für
+   DeepSWE v1 ist es ein dokumentierter Risikopfad, den v1.1 schließt.
+
+Klick 1: v1.1 mit Pfeilen (v1-Wert zu v1.1-Wert) und Kreuzen. Klick 2: alle
+Namen plus Fadenkreuz.
+
+Entzerrte Marker: bis 4,8 px verschoben, höchstens 0,5 Prozentpunkte
+senkrecht oder 3,3 % im Preis waagerecht (nur v1: gpt-5.4-mini und
+mimo-v2.5-pro waagerecht, claude-opus-4.6 und claude-sonnet-4.6 senkrecht).
+Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen rechnet
+markerDodge.test.ts nach und hält sie gegen diese Notiz.
+-->
 
 ---
 hideInToc: true

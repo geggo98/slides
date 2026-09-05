@@ -3,19 +3,27 @@ import { computed, ref, watch } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import {
   SNAPSHOTS,
+  V1_COMPARE,
+  fmt,
   movedSegments,
   paretoFront,
   tip,
   type Pt,
+  type Snapshot,
 } from "./paretoData";
-import { labelBox, layoutLabels, type Placed } from "./labelLayout";
+import { labelBox, layoutLabels, type Placed, type XY } from "./labelLayout";
 import {
+  dodgeDetailed,
   HISTORY_SCALE,
   HIT_R_HISTORY,
+  historyObstacles,
   LABEL_FONT,
+  LENS,
+  lensView,
   plotBounds,
   tickLabel,
   toLayoutPoints,
+  WARN,
   X_TICKS_LOG,
   Y_TICKS,
 } from "./paretoChrome";
@@ -27,18 +35,36 @@ import { useCrosshairs } from "./useCrosshairs";
 // findet die Pareto-Folie per `querySelector("svg.mp-chart")` und würde sonst
 // hier hängenbleiben.
 //
-// Klick-Vertrag: `step` kommt aus `$clicks` (Frontmatter `clicks: 8`).
+// Klick-Vertrag: `step` kommt aus `$clicks`, das Frontmatter setzt `clicks`
+// auf die Stationszahl n plus 1, wenn der letzte Stand eine Lupe trägt
+// (Historie: 9 Stationen + Lupe = 10, Bonusfolie 2).
 //
-//   Schritt 0…7 → Station 1…8, Detailmodus aus
-//   Schritt 8   → Station bleibt 8, Detailmodus an (← schaltet ihn wieder aus)
+//   Schritt 0…n−1 → Station 1…n, Detailmodus aus
+//   Schritt n     → Lupe (nur wenn Stand n eine hat), Station bleibt n
+//   danach        → Station bleibt n, Detailmodus an (← schaltet zurück)
 //
-// Die Zahl steht nur hier im Text — die Logik liest `SNAPSHOTS.length`, die
-// Timeline `--n`. Beim Anlegen einer Station also nur das Frontmatter nachziehen.
+// Die Logik liest `list.length` und `hasLens`, die Timeline `--n`. Beim
+// Anlegen einer Station also nur das Frontmatter nachziehen.
+//
+// `series` wählt die Stationsliste: die Historie (`SNAPSHOTS`) oder der
+// Vergleich v1 gegen v1.1 auf der Bonusfolie (`V1_COMPARE`). `oldLegend` und
+// `goneLegend` beschriften dort Geisterring und Kreuze, die auf der Bonusfolie
+// keinen alten Preis zeigen, sondern den v1-Wert und die nie neu gemessenen
+// v1-Modelle.
 //
 // Ein Klick auf einen Timeline-Punkt bzw. auf den Legenden-Schalter übersteuert;
 // der nächste Pfeiltastendruck holt die Kontrolle zurück (Muster aus
 // ModelRoutingRoles.vue).
-const props = defineProps<{ step?: number }>();
+const props = defineProps<{
+  step?: number;
+  series?: "history" | "v1";
+  oldLegend?: string;
+  goneLegend?: string;
+}>();
+
+const list = computed<Snapshot[]>(() =>
+  props.series === "v1" ? V1_COMPARE : SNAPSHOTS,
+);
 
 const override = ref<number | null>(null);
 const detailOverride = ref<boolean | null>(null);
@@ -52,15 +78,28 @@ watch(
 
 const idx = computed(() => {
   const raw = override.value ?? props.step ?? 0;
-  return Math.max(0, Math.min(SNAPSHOTS.length - 1, raw));
+  return Math.max(0, Math.min(list.value.length - 1, raw));
 });
-const snap = computed(() => SNAPSHOTS[idx.value]);
+const snap = computed(() => list.value[idx.value]);
 
 // Detailmodus: alle Modellnamen plus Fadenkreuz-Vergleich. Default aus — bei bis
 // zu 25 Punkten auf dieser Höhe ist die Vollbeschriftung dicht, sie beantwortet
 // aber die Zwischenfrage „welches graue Quadrat ist wer".
+const hasLens = computed(() => !!list.value[list.value.length - 1]?.lens);
 const detail = computed(
-  () => detailOverride.value ?? (props.step ?? 0) >= SNAPSHOTS.length,
+  () =>
+    detailOverride.value ??
+    (props.step ?? 0) >= list.value.length + (hasLens.value ? 1 : 0),
+);
+// Lupe: genau der Schritt nach der letzten Station, solange kein Klick auf die
+// Timeline oder den Legenden-Schalter übersteuert hat.
+const lensOn = computed(
+  () =>
+    hasLens.value &&
+    override.value === null &&
+    detailOverride.value === null &&
+    (props.step ?? 0) === list.value.length &&
+    !!snap.value.lens,
 );
 
 const sourcesOpen = ref(false);
@@ -74,28 +113,46 @@ const xTicks = X_TICKS_LOG;
 const yTicks = Y_TICKS;
 
 const split = computed(() => paretoFront(snap.value.pts));
-const frontPath = computed(() =>
-  split.value.front.map((p) => `${px(p.x)},${py(p.y)}`).join(" "),
+
+// Entzerrung: Marker, die einander verdecken, rücken bis 8 px auseinander
+// (`dodgeMarkers` in paretoChrome.ts). `at()` ist die angezeigte Lage — für
+// Marker, Front-Polyline, Klickziele, Fadenkreuz-Ring und Pfeilende.
+// Fadenkreuz-Linien, Badges, Geisterringe und Kreuze bleiben am wahren Wert.
+const dodge = computed(() => dodgeDetailed(snap.value.pts, S, "history"));
+const at = (p: Pt): XY =>
+  dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
+const dodgedMax = computed(() =>
+  Math.max(0, ...dodge.value.moved.map((m) => Math.hypot(m.dx, m.dy))),
 );
-const moved = computed(() => movedSegments(snap.value.pts, S));
+
+const frontPath = computed(() =>
+  split.value.front.map((p) => `${at(p).px},${at(p).py}`).join(" "),
+);
+const moved = computed(() => movedSegments(snap.value.pts, S, undefined, at));
+
+// Kreuze: Modelle des Vorstands ohne Wert in diesem Stand (nur Bonusfolie).
+const gone = computed(() => snap.value.gone ?? []);
+// Warnhinweis oben links, nur für Stände mit `warn` (Bonusfolie, v1).
+const warnAt = WARN.at(S);
 
 // Beschriftung je Station aus `labelLayout.ts`: Front, Gewandertes und
 // `story: true` immer, der Rest nur, wo direkt am Marker Platz ist. Der
 // Detailmodus ist der Durchgang „alle Namen“ — er legt nach, ohne die
-// vorhandenen Labels zu verschieben. Keine Hindernisse: dieses Chart hat weder
-// Quadranten-Überschriften noch Pfeile.
+// vorhandenen Labels zu verschieben. Hindernisse sind nur Kreuze und
+// Warnhinweis (`historyObstacles`, dieselbe Rechnung wie im Test).
 const layout = computed(() =>
   layoutLabels(
     toLayoutPoints(snap.value.pts, S, {
       overlay: false,
       story: (p) => p.story === true,
+      pos: dodge.value.pos,
     }),
     {
       font: LABEL_FONT.history,
       allFont: LABEL_FONT.historyAll,
       bounds: plotBounds(S),
       hitR: HIT_R_HISTORY,
-      obstacles: [],
+      obstacles: historyObstacles(snap.value, S),
     },
   ),
 );
@@ -143,6 +200,16 @@ const chartLabel = computed(
       .map((p) => `${p.label} mit ${p.y} Prozent für ${p.eur} Euro`)
       .join(", ") +
     "." +
+    (snap.value.warn ? ` Warnung: ${snap.value.warn}` : "") +
+    (gone.value.length
+      ? ` ${gone.value.length} Kreuze markieren Modelle des vorigen Stands, die hier keinen Wert haben.`
+      : "") +
+    (dodge.value.moved.length
+      ? ` ${dodge.value.moved.length} Marker sind bis ${dodgedMax.value.toFixed(1).replace(".", ",")} Pixel auseinandergerückt, damit sie sich nicht verdecken; Fadenkreuz und Tooltip zeigen den wahren Wert.`
+      : "") +
+    (lensOn.value && snap.value.lens
+      ? ` Lupe: ${snap.value.lens.title}. ${snap.value.lens.note}`
+      : "") +
     (detail.value
       ? " Detailmodus: alle Modellnamen sind eingeblendet, Punkte lassen sich " +
         "für ein Fadenkreuz mit Kosten- und Score-Badge anklicken."
@@ -177,19 +244,41 @@ watch(detail, (on) => {
 // Die Erklärtexte enthalten Bezeichner in Backticks. Vue rendert den String
 // roh, also hier von Hand in Text- und Code-Stücke zerlegen statt Markdown
 // mitzuschleppen.
-const noteParts = computed(() =>
-  snap.value.note.split("`").map((text, i) => ({ text, code: i % 2 === 1 })),
+const noteTitle = computed(() =>
+  lensOn.value && snap.value.lens ? snap.value.lens.title : snap.value.title,
 );
+const noteParts = computed(() =>
+  (lensOn.value && snap.value.lens ? snap.value.lens.note : snap.value.note)
+    .split("`")
+    .map((text, i) => ({ text, code: i % 2 === 1 })),
+);
+
+// Lupe: Panel-Geometrie aus `lensView` (paretoChrome.ts), dieselbe Rechnung
+// wie im Test. Labels der Stufen stammen aus dem Platzierer.
+const lens = computed(() =>
+  lensOn.value && snap.value.lens
+    ? lensView(snap.value.lens, snap.value.pts, S)
+    : null,
+);
+const lensLabels = computed(() =>
+  lens.value
+    ? lens.value.ladder.flatMap((l) => {
+        const pl = lens.value!.labels.get(l.c.effort);
+        return pl ? [{ l, pl }] : [];
+      })
+    : [],
+);
+const fmtPct = (v: number) => v.toFixed(2).replace(".", ",");
 </script>
 
 <template>
   <div class="mh-wrap">
-    <!-- Timeline: sieben Stationen auf einer Schiene, aktive hervorgehoben.
+    <!-- Timeline: eine Station je Stand auf einer Schiene, aktive hervorgehoben.
          Zurückliegende Stationen bleiben kräftiger als kommende, damit die
          Leserichtung ohne Pfeil klar ist. -->
-    <ol class="mh-tl" :style="{ '--n': SNAPSHOTS.length }">
+    <ol class="mh-tl" :style="{ '--n': list.length }">
       <li
-        v-for="(s, i) in SNAPSHOTS"
+        v-for="(s, i) in list"
         :key="s.id"
         class="mh-tl-item"
         :class="{ active: i === idx, past: i < idx }"
@@ -209,7 +298,14 @@ const noteParts = computed(() =>
     <div class="mh-legend">
       <span><i class="mh-sw mh-sw-front" />Pareto-Front</span>
       <span><i class="mh-sw mh-sw-dom" />dominiert</span>
-      <span><i class="mh-sw mh-sw-old" />vor der Preisanpassung</span>
+      <span
+        ><i class="mh-sw mh-sw-old" />{{
+          oldLegend ?? "vor der Preisanpassung"
+        }}</span
+      >
+      <span v-if="gone.length"
+        ><b class="mh-sw-x">×</b>{{ goneLegend ?? "nicht neu gemessen" }}</span
+      >
       <!-- Opt-in, weil die Vollbeschriftung auf dieser Höhe dicht wird. Der
            letzte Klick-Schritt schaltet dasselbe, der Schalter geht zusätzlich
            auf jeder Station. Er legt Namen nach, ohne die vorhandenen zu
@@ -223,7 +319,11 @@ const noteParts = computed(() =>
         alle Namen + Fadenkreuz
       </button>
       <span class="mh-note-hint">{{
-        detail ? "Punkt/Label klicken: Fadenkreuz" : "Station anklicken oder →"
+        detail
+          ? "Punkt/Label klicken: Fadenkreuz"
+          : lensOn
+            ? "→ alle Namen + Fadenkreuz"
+            : "Station anklicken oder →"
       }}</span>
       <button
         class="mh-ib"
@@ -315,7 +415,41 @@ const noteParts = computed(() =>
 
       <!-- Datenschicht: eigener key pro Station, damit der Wechsel als kurzer
            Fade liest statt als harter Sprung. -->
-      <g :key="snap.id" class="mh-data" :class="{ 'mh-all': detail }">
+      <g
+        :key="snap.id"
+        class="mh-data"
+        :class="{ 'mh-all': detail, 'mh-dim': lensOn }"
+      >
+        <!-- Warnhinweis: nur, wenn der Stand einen trägt (Bonusfolie, v1). -->
+        <g v-if="snap.warn" class="mh-warn">
+          <title>{{ snap.warn }}</title>
+          <text :x="warnAt.x" :y="warnAt.y" class="mh-warn-icon">⚠️</text>
+          <text :x="warnAt.x + WARN.iconW" :y="warnAt.y">{{ WARN.text }}</text>
+        </g>
+
+        <!-- Kreuze: Modelle des vorigen Stands ohne Wert hier. Kein Label,
+             kein Klickziel, nur der Tooltip. Der unsichtbare Kreis macht die
+             dünnen Linien hoverbar. -->
+        <g v-for="p in gone" :key="`gone-${p.label}`" class="mh-gone-pt">
+          <title>
+            {{ p.label }}: {{ p.y }} % · {{ p.eur }} €/Task im vorigen Stand,
+            hier nicht gemessen
+          </title>
+          <line
+            :x1="px(p.x) - 4"
+            :y1="py(p.y) - 4"
+            :x2="px(p.x) + 4"
+            :y2="py(p.y) + 4"
+          />
+          <line
+            :x1="px(p.x) - 4"
+            :y1="py(p.y) + 4"
+            :x2="px(p.x) + 4"
+            :y2="py(p.y) - 4"
+          />
+          <circle :cx="px(p.x)" :cy="py(p.y)" r="6" />
+        </g>
+
         <g
           v-for="m in moved"
           :key="`old-${m.label}`"
@@ -326,7 +460,9 @@ const noteParts = computed(() =>
           <polygon :points="m.head" />
           <circle :cx="m.gx" :cy="m.gy" r="4.5" class="mp-old-pt">
             <title>
-              {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
+              {{ m.label }}: {{ m.pre }}
+              {{ m.y !== undefined ? `${m.y} % · ` : "" }}{{ m.eur }} €/Task —
+              {{ m.why }}
             </title>
           </circle>
         </g>
@@ -343,18 +479,19 @@ const noteParts = computed(() =>
 
         <polyline :points="frontPath" class="mh-front-line" />
         <g v-for="p in split.front" :key="`f-${p.label}`">
-          <circle :cx="px(p.x)" :cy="py(p.y)" r="6" class="mh-front-pt">
+          <circle :cx="at(p).px" :cy="at(p).py" r="6" class="mh-front-pt">
             <title>{{ tip(p) }}</title>
           </circle>
         </g>
 
         <g v-for="p in split.dom" :key="`d-${p.label}`">
           <rect
-            :x="px(p.x) - 4.5"
-            :y="py(p.y) - 4.5"
+            :x="at(p).px - 4.5"
+            :y="at(p).py - 4.5"
             width="9"
             height="9"
             class="mh-dom-pt"
+            :class="{ 'mh-focus': lensOn && p.label === snap.lens?.focus }"
           >
             <title>{{ tip(p) }}</title>
           </rect>
@@ -392,7 +529,12 @@ const noteParts = computed(() =>
         >
           <line :x1="px(c.p.x)" :y1="T" :x2="px(c.p.x)" :y2="H - B" />
           <line :x1="L" :y1="py(c.p.y)" :x2="W - R" :y2="py(c.p.y)" />
-          <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="8.5" class="mp-ch-ring" />
+          <circle
+            :cx="at(c.p).px"
+            :cy="at(c.p).py"
+            r="8.5"
+            class="mp-ch-ring"
+          />
           <text
             :x="px(c.p.x)"
             :y="H - B + 14"
@@ -408,14 +550,15 @@ const noteParts = computed(() =>
 
         <!-- Unsichtbare Hit-Targets, zuletzt gerendert: sie fangen die Events.
              Nur im Detailmodus — sonst bliebe ein Klick ins Chart hängen, statt
-             die Folie weiterzuschalten. Im Cent-Cluster überdecken sie einander;
-             dort ist die Beschriftung der zweite Griff. -->
+             die Folie weiterzuschalten. Sie sitzen auf der ANGEZEIGTEN Lage,
+             damit ein Klick auf einen entzerrten Marker diesen trifft; wo sie
+             sich noch überdecken, ist die Beschriftung der zweite Griff. -->
         <template v-if="detail">
           <circle
             v-for="p in snap.pts"
             :key="`hit-${p.label}`"
-            :cx="px(p.x)"
-            :cy="py(p.y)"
+            :cx="at(p).px"
+            :cy="at(p).py"
             :r="HIT_R_HISTORY"
             class="mp-hit"
             role="button"
@@ -431,20 +574,190 @@ const noteParts = computed(() =>
           </circle>
         </template>
       </g>
+      <!-- Lupe: eigener Klickschritt nach der letzten Station. Das Hauptchart
+           dimmt (`mh-dim`), der Fokus-Marker bleibt voll, und das Panel zeigt
+           die Region vergrößert mit allen Effort-Stufen des Modells. Ohne
+           <defs> und clipPath — die Punktmenge ist per Region gefiltert. -->
+      <g v-if="lens && snap.lens" class="mh-lens">
+        <rect
+          :x="lens.src.x"
+          :y="lens.src.y"
+          :width="lens.src.w"
+          :height="lens.src.h"
+          class="mh-lens-src"
+        />
+        <line
+          :x1="lens.src.x"
+          :y1="lens.src.y + lens.src.h"
+          :x2="lens.box.x"
+          :y2="lens.box.y"
+          class="mh-lens-link"
+        />
+        <line
+          :x1="lens.src.x + lens.src.w"
+          :y1="lens.src.y + lens.src.h"
+          :x2="lens.box.x + lens.box.w"
+          :y2="lens.box.y"
+          class="mh-lens-link"
+        />
+        <template v-for="p in snap.pts" :key="`focus-${p.label}`">
+          <circle
+            v-if="p.label === snap.lens.focus"
+            :cx="at(p).px"
+            :cy="at(p).py"
+            r="8"
+            class="mh-focus-ring"
+          />
+        </template>
+        <g :transform="`translate(${lens.box.x} ${lens.box.y})`">
+          <rect
+            x="0"
+            y="0"
+            :width="lens.box.w"
+            :height="lens.box.h"
+            rx="6"
+            class="mh-lens-bg"
+          />
+          <text :x="LENS.L" y="11" class="mh-lens-title">
+            Lupe: {{ snap.lens.focus }}, alle gemessenen Effort-Stufen
+          </text>
+          <g class="mh-lens-ticks">
+            <line
+              v-for="t in LENS.yTicks"
+              :key="`lgy${t}`"
+              :x1="LENS.L"
+              :y1="lens.scale.py(t)"
+              :x2="lens.box.w - LENS.R"
+              :y2="lens.scale.py(t)"
+            />
+            <text
+              v-for="t in LENS.xTicks"
+              :key="`lx${t}`"
+              :x="lens.scale.px(t)"
+              :y="lens.box.h - 6"
+              text-anchor="middle"
+            >
+              {{ tickLabel(t) }}
+            </text>
+            <text
+              v-for="t in LENS.yTicks"
+              :key="`ly${t}`"
+              :x="LENS.L - 5"
+              :y="lens.scale.py(t) + 3"
+              text-anchor="end"
+            >
+              {{ t }} %
+            </text>
+          </g>
+          <g class="mh-lens-ctx">
+            <template v-for="c in lens.ctx" :key="`ctx-${c.p.label}`">
+              <circle
+                v-if="c.front"
+                :cx="c.px"
+                :cy="c.py"
+                :r="LENS.ctxR"
+                class="mh-front-pt"
+              >
+                <title>{{ tip(c.p) }}</title>
+              </circle>
+              <rect
+                v-else
+                :x="c.px - LENS.ctxR"
+                :y="c.py - LENS.ctxR"
+                :width="2 * LENS.ctxR"
+                :height="2 * LENS.ctxR"
+                class="mh-dom-pt"
+              >
+                <title>{{ tip(c.p) }}</title>
+              </rect>
+            </template>
+          </g>
+          <polyline :points="lens.path" class="mh-lens-path" />
+          <g
+            v-for="l in lens.ladder"
+            :key="`step-${l.c.effort}`"
+            :class="{
+              'mh-lens-shown': l.shown,
+              'mh-lens-max': l.c.effort === 'max',
+            }"
+          >
+            <line
+              :x1="l.px"
+              :y1="lens.scale.py(l.c.y - l.c.ci)"
+              :x2="l.px"
+              :y2="lens.scale.py(l.c.y + l.c.ci)"
+              class="mh-lens-ci"
+            />
+            <circle :cx="l.px" :cy="l.py" :r="LENS.dotR" class="mh-lens-dot">
+              <title>
+                {{ snap.lens.focus }} {{ l.c.effort }}: {{ fmtPct(l.c.y) }} % ±
+                {{ fmtPct(l.c.ci) }} · {{ fmt(l.c.x) }} €/Task
+              </title>
+            </circle>
+          </g>
+          <template v-if="lens.bracket">
+            <line
+              :x1="lens.bracket.x1"
+              :y1="lens.bracket.y"
+              :x2="lens.bracket.x2"
+              :y2="lens.bracket.y"
+              class="mh-lens-bracket"
+            />
+            <line
+              :x1="lens.bracket.x1"
+              :y1="lens.bracket.y - 4"
+              :x2="lens.bracket.x1"
+              :y2="lens.bracket.y"
+              class="mh-lens-bracket"
+            />
+            <line
+              :x1="lens.bracket.x2"
+              :y1="lens.bracket.y - 4"
+              :x2="lens.bracket.x2"
+              :y2="lens.bracket.y"
+              class="mh-lens-bracket"
+            />
+            <text
+              :x="(lens.bracket.x1 + lens.bracket.x2) / 2"
+              :y="lens.bracket.y + 11"
+              text-anchor="middle"
+              class="mh-lens-bracket-text"
+            >
+              {{ lens.bracket.text }}
+            </text>
+          </template>
+          <template v-for="{ l, pl } in lensLabels" :key="`ll-${l.c.effort}`">
+            <line
+              v-if="pl.leader"
+              :x1="pl.leader.x1"
+              :y1="pl.leader.y1"
+              :x2="pl.leader.x2"
+              :y2="pl.leader.y2"
+              class="mh-lens-leader"
+            />
+            <text
+              :x="pl.x"
+              :y="pl.y"
+              :text-anchor="pl.ax"
+              class="mh-lens-label"
+              :class="{
+                'mh-lens-shown': l.shown,
+                'mh-lens-max': l.c.effort === 'max',
+              }"
+            >
+              {{ l.text }}
+            </text>
+          </template>
+        </g>
+      </g>
     </svg>
 
     <!-- Feste Mindesthöhe: der Text ist je Station unterschiedlich lang, das
          Layout darf beim Durchklicken nicht springen. -->
     <div class="mh-note">
-      <span class="mh-note-step">{{ idx + 1 }}/{{ SNAPSHOTS.length }}</span>
+      <span class="mh-note-step">{{ idx + 1 }}/{{ list.length }}</span>
       <p>
-        <strong>{{ snap.title }}</strong>
-        <span
-          v-if="snap.reconstructed"
-          class="mh-recon"
-          title="Aus Changelog und Nachbarständen rekonstruiert, nicht 1:1 archiviert"
-          >rekonstruiert</span
-        >
+        <strong>{{ noteTitle }}</strong>
         —
         <template v-for="(part, i) in noteParts" :key="i">
           <code v-if="part.code">{{ part.text }}</code>
@@ -564,6 +877,14 @@ const noteParts = computed(() =>
   background: none;
   opacity: 0.75;
 }
+.mh-sw-x {
+  display: inline-block;
+  width: 9px;
+  margin-right: 5px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-tertiary);
+}
 /* Opt-in-Schalter, Optik wie der Kontingent-Schalter auf der Pareto-Folie —
    derselbe Griff soll überall gleich aussehen. */
 .mh-tg {
@@ -680,6 +1001,31 @@ const noteParts = computed(() =>
   stroke-width: 2;
 }
 
+/* Kreuze: nicht gemessen, weder Front noch dominiert. Der Kreis ist nur das
+   Hover-Ziel für den Tooltip. */
+.mh-gone-pt line {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1.4;
+  opacity: 0.6;
+}
+.mh-gone-pt circle {
+  fill: transparent;
+}
+
+/* Warnhinweis in der Warnfarbe der Quadranten, mit Halo wie die Labels. */
+.mh-warn text {
+  font-family: var(--slidev-code-font-family, monospace);
+  font-size: 10.5px;
+  fill: var(--color-text-warning);
+  paint-order: stroke;
+  stroke: var(--deck-surface, var(--color-background-primary));
+  stroke-width: 3px;
+}
+.mh-warn .mh-warn-icon {
+  font-size: 12px;
+  stroke: none;
+}
+
 .mh-front-line {
   fill: none;
   stroke: var(--slidev-theme-primary);
@@ -697,7 +1043,7 @@ const noteParts = computed(() =>
 }
 .mh-leader {
   stroke: var(--color-text-tertiary);
-  stroke-width: 0.6;
+  stroke-width: 0.9;
   opacity: 0.7;
 }
 /* Klickbar erst im Detailmodus: sonst soll ein Klick auf die Beschriftung die
@@ -776,6 +1122,115 @@ const noteParts = computed(() =>
   stroke-width: 1.5;
 }
 
+/* --- Lupe --------------------------------------------------------------- */
+/* Das Hauptchart tritt zurück, der Fokus-Marker bleibt; alles andere im
+   Panel. Warnfarbe für die Leiter, Gefahrfarbe für die höchste Stufe. */
+.mh-dim
+  :is(
+    .mh-front-line,
+    .mh-front-pt,
+    .mh-dom-pt,
+    .mh-label,
+    .mh-leader,
+    .mp-moved
+  ) {
+  opacity: 0.22;
+}
+.mh-dim .mh-focus {
+  opacity: 1;
+}
+.mh-focus-ring {
+  fill: none;
+  stroke: var(--color-text-warning);
+  stroke-width: 2;
+}
+.mh-lens-src {
+  fill: none;
+  stroke: var(--color-text-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.mh-lens-link {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 0.8;
+  stroke-dasharray: 3 3;
+}
+.mh-lens-bg {
+  fill: var(--deck-surface, var(--color-background-primary));
+  stroke: var(--color-border-secondary);
+  stroke-width: 1;
+  opacity: 0.97;
+}
+.mh-lens-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--color-text-secondary);
+}
+.mh-lens-ticks text {
+  font-size: 9px;
+  fill: var(--color-text-tertiary);
+}
+.mh-lens-ticks line {
+  stroke: var(--color-border-tertiary);
+  stroke-width: 0.5;
+}
+.mh-lens-ctx {
+  opacity: 0.45;
+}
+.mh-lens-path {
+  fill: none;
+  stroke: var(--color-text-warning);
+  stroke-width: 1.2;
+  stroke-dasharray: 2 3;
+}
+.mh-lens-ci {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+.mh-lens-dot {
+  fill: var(--deck-surface, var(--color-background-primary));
+  stroke: var(--color-text-warning);
+  stroke-width: 1.6;
+}
+.mh-lens-shown .mh-lens-dot {
+  fill: var(--color-text-warning);
+}
+.mh-lens-max .mh-lens-dot {
+  stroke: var(--color-text-danger);
+  stroke-width: 2;
+}
+.mh-lens-bracket {
+  stroke: var(--color-text-danger);
+  stroke-width: 1.2;
+}
+.mh-lens-bracket-text,
+.mh-lens-label {
+  font-family: var(--slidev-code-font-family, monospace);
+  font-size: 10px;
+  paint-order: stroke;
+  stroke: var(--deck-surface, var(--color-background-primary));
+  stroke-width: 3px;
+}
+.mh-lens-bracket-text {
+  font-weight: 700;
+  fill: var(--color-text-danger);
+}
+.mh-lens-label {
+  fill: var(--color-text-secondary);
+}
+.mh-lens-label.mh-lens-shown {
+  fill: var(--color-text-primary);
+  font-weight: 700;
+}
+.mh-lens-label.mh-lens-max {
+  fill: var(--color-text-danger);
+}
+.mh-lens-leader {
+  stroke: var(--color-text-tertiary);
+  stroke-width: 0.9;
+}
+
 /* --- Erklärtext --------------------------------------------------------- */
 .mh-note {
   display: flex;
@@ -808,14 +1263,5 @@ const noteParts = computed(() =>
   font-size: 11px;
   font-weight: 700;
   color: var(--slidev-theme-primary);
-}
-.mh-recon {
-  margin-left: 6px;
-  padding: 0 5px;
-  border: 0.5px solid var(--color-border-tertiary);
-  border-radius: 999px;
-  font-size: 10px;
-  color: var(--color-text-tertiary);
-  white-space: nowrap;
 }
 </style>

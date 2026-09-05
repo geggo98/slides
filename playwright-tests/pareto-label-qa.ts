@@ -61,13 +61,17 @@ const collect = (sel: string) =>
     // Die Zelle von 0xProto ist 1,5 em hoch, zwei Zeilen mit 4 px Luft zwischen
     // den Tinten überlappen sich als Zellen — das wäre ein falscher Befund.
     const CA = ${TEXT.cellAscentEm}, CD = ${TEXT.cellDescentEm}, IA = ${TEXT.ascentEm}, ID = ${TEXT.descentEm};
+    // Das Lupen-Panel hat eigene Klassen und wird separat gemessen; seine
+    // Kontextmarker liegen ÜBER dem gedimmten Hauptchart, nicht darin.
     for (const t of svg.querySelectorAll("text.mp-label, text.mh-label, text.mp-ci-badge")) {
+      if (t.closest(".mh-lens")) continue;
       const r = t.getBoundingClientRect();
       const font = r.height / (CA + CD);
       const baseline = r.y + CA * font;
       out.push({ label: t.textContent.trim(), kind: "label", x: r.x, y: baseline - IA * font, w: r.width, h: (IA + ID) * font });
     }
     for (const m of svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt'], circle[class*='old-pt']")) {
+      if (m.closest(".mh-lens")) continue;
       const r = m.getBoundingClientRect();
       const title = m.querySelector("title");
       const name = (title ? title.textContent : "").split(":")[0].trim() || "marker";
@@ -210,6 +214,35 @@ for (const theme of ["light", "dark"] as const) {
   );
   if (SHOT)
     await page.screenshot({ path: `${OUT}/pareto-${PARETO}-ci-${theme}.png` });
+
+  // Seit der Entzerrung trifft auch das KLICKZIEL von gpt-5.6-sol den eigenen
+  // Punkt: Vorher lag astras später gerendertes Klickziel vollständig darüber,
+  // und Playwright meldete „intercepts pointer events". sol ist hier gepinnt;
+  // der Klick löst den Pin, ein zweiter setzt ihn wieder.
+  {
+    const hit = (label: string) =>
+      `svg.mp-chart circle.mp-hit[aria-label="Fadenkreuz für ${label}"]`;
+    const pressed = async (label: string) =>
+      page.getAttribute(hit(label), "aria-pressed");
+    try {
+      await page.click(hit("gpt-5.6-sol"), { timeout: 4000 });
+      await page.waitForTimeout(150);
+      const sol = await pressed("gpt-5.6-sol");
+      const astra = await pressed("gpt-6-astra");
+      const ok = sol === "false" && astra === "false";
+      console.log(
+        `  Klickziel gpt-5.6-sol: ${ok ? "trifft sol" : `FEHLER — sol=${sol}, astra=${astra}`}`,
+      );
+      if (!ok) problems++;
+      await page.click(hit("gpt-5.6-sol"), { timeout: 4000 });
+      await page.waitForTimeout(150);
+    } catch (e) {
+      console.log(
+        `  ✗ Klickziel gpt-5.6-sol nicht klickbar: ${String(e).split("\n")[0]}`,
+      );
+      problems++;
+    }
+  }
 
   // Abo-Overlay
   await page.click("button.mp-tg");
@@ -373,12 +406,19 @@ for (const theme of ["light", "dark"] as const) {
   // Die Stationszahl stand hier fest auf 7 und war seit Stand 8 falsch: der
   // Detailmodus-Teil unten lief dann auf der letzten STATION statt im
   // Detailmodus und meldete „nicht jeder Punkt ist beschriftet". Die Folie
-  // weiß es selbst — `clicks:` im Frontmatter ist die Stationszahl, der letzte
-  // Klick schaltet den Detailmodus.
-  const stationen: number = await page.evaluate(
+  // weiß es selbst: Stationen sind die Timeline-Punkte; liegt `clicks:` im
+  // Frontmatter darüber, ist der Klick nach der letzten Station die Lupe, und
+  // erst der danach schaltet den Detailmodus.
+  const clicksTotal: number = await page.evaluate(
     `window.__slidev__.nav.clicksTotal?.value ?? window.__slidev__.nav.clicksTotal`,
   );
-  console.log(`\n[${theme}] Historie: ${stationen} Stationen + Detailmodus`);
+  const stationen: number = await page.evaluate(
+    `document.querySelectorAll(".mh-tl-item").length`,
+  );
+  const hasLens = clicksTotal > stationen;
+  console.log(
+    `\n[${theme}] Historie: ${stationen} Stationen${hasLens ? " + Lupe" : ""} + Detailmodus`,
+  );
   for (let step = 0; step < stationen; step++) {
     if (step > 0) {
       await page.keyboard.press("ArrowRight");
@@ -418,6 +458,57 @@ for (const theme of ["light", "dark"] as const) {
     if (SHOT)
       await page.screenshot({
         path: `${OUT}/history-${HISTORIE}-${theme}-${step}.png`,
+      });
+  }
+
+  // Lupe (Klick nach der letzten Station): Panel da, fünf Stufen, und die
+  // Panel-Beschriftung überschneidet weder Stufenpunkte noch Klammer — mit
+  // echten Boxen gemessen wie oben.
+  if (hasLens) {
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(450);
+    const lens = (await page.evaluate(`(() => {
+      const g = document.querySelector("svg.mh-chart .mh-lens");
+      if (!g) return null;
+      const CA = ${TEXT.cellAscentEm}, CD = ${TEXT.cellDescentEm}, IA = ${TEXT.ascentEm}, ID = ${TEXT.descentEm};
+      const out = [];
+      for (const t of g.querySelectorAll("text.mh-lens-label, text.mh-lens-bracket-text")) {
+        const r = t.getBoundingClientRect();
+        const font = r.height / (CA + CD);
+        const baseline = r.y + CA * font;
+        out.push({ label: t.textContent.trim(), kind: "label", x: r.x, y: baseline - IA * font, w: r.width, h: (IA + ID) * font });
+      }
+      for (const m of g.querySelectorAll("circle.mh-lens-dot")) {
+        const r = m.getBoundingClientRect();
+        const title = m.querySelector("title");
+        out.push({ label: (title ? title.textContent : "").split(":")[0].trim(), kind: "marker", x: r.x, y: r.y, w: r.width, h: r.height });
+      }
+      const note = document.querySelector(".mh-note");
+      return {
+        boxes: out,
+        dots: g.querySelectorAll("circle.mh-lens-dot").length,
+        note: (note ? note.textContent : "").replace(/\\s+/g, " ").trim().slice(0, 44),
+      };
+    })()`)) as { boxes: Box[]; dots: number; note: string } | null;
+    if (!lens) {
+      console.log(`\n[${theme}] Folie ${HISTORIE} · Lupe: FEHLT`);
+      problems++;
+    } else {
+      console.log(
+        `\n[${theme}] Folie ${HISTORIE} · Lupe: ${lens.dots} Stufen, Notiz „${lens.note}…"`,
+      );
+      if (lens.dots !== 5) {
+        console.log("  FEHLER: fünf Stufen erwartet");
+        problems++;
+      }
+      problems += report(
+        `[${theme}] Folie ${HISTORIE} · Lupe (Panel)`,
+        lens.boxes,
+      );
+    }
+    if (SHOT)
+      await page.screenshot({
+        path: `${OUT}/history-${HISTORIE}-${theme}-lens.png`,
       });
   }
 

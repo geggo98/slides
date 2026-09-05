@@ -13,6 +13,7 @@ import {
   selfDominated,
   SNAPSHOTS,
   tip,
+  V1_COMPARE,
 } from "../../paretoData";
 
 // Die Folie „Welches Modell wofür?" behauptet eine Zahl („drei Punkte auf der
@@ -151,6 +152,41 @@ describe("tip()", () => {
   });
 });
 
+// Geisterringe zeigen vergangene Wanderungen nur an der Station, an der sie
+// passiert sind. Stand 7 trägt zwei (sol billiger, deepseek-v4-flash teurer),
+// die abgeleiteten Stände 8 und 9 keinen davon, und die Hauptfolie genau einen:
+// den künftigen Preis von gemini-3.8-flash.
+describe("Geisterringe je Stand", () => {
+  const ringe = (id: string) =>
+    SNAPSHOTS.find((s) => s.id === id)!
+      .pts.filter((p) => p.old)
+      .map((p) => [p.label, p.old!.eur, p.eur])
+      .sort();
+
+  it("zeigt am 26.08. Sol billiger und deepseek-v4-flash teurer", () => {
+    expect(ringe("0826")).toStrictEqual([
+      ["deepseek-v4-flash", "0,09", "0,41"],
+      ["gpt-5.6-sol", "7,35", "5,66"],
+    ]);
+    // Ohne Ring fiel deepseek-v4-flash überraschend von der Front: am 14.08.
+    // war es für 9 Cent der billigste Frontpunkt. deepseek-v4-pro bekommt
+    // keinen Ring, weil der unter dem neuen glm-5.3-flash-Marker läge.
+    const vorher = SNAPSHOTS.find((s) => s.id === "0814")!;
+    expect(paretoFront(vorher.pts).front[0]!.label).toBe("deepseek-v4-flash");
+  });
+
+  it("lässt beide Ringe in den abgeleiteten Ständen weg", () => {
+    expect(ringe("0902")).toStrictEqual([]);
+    expect(ringe("0903")).toStrictEqual([]);
+  });
+
+  it("zeigt auf der Hauptfolie nur den künftigen Preis von gemini-3.8-flash", () => {
+    expect(CURRENT.filter((p) => p.old).map((p) => p.label)).toStrictEqual([
+      "gemini-3.8-flash",
+    ]);
+  });
+});
+
 // kimi-k2.7-code kostet 2,47 € — `mean_cost_usd` wie jeder andere Punkt.
 //
 // Am 04.09.2026 stand hier kurz 1,92 €, mit sechs Archivständen belegt. Die
@@ -174,6 +210,7 @@ describe("kimi-k2.7-code steht auf dem Mittelwert, nicht dem Median", () => {
       ]),
     ).toStrictEqual([
       ["v11", "2,47"],
+      ["0710", "2,47"],
       ["0722", "2,47"],
       ["0725", "2,47"],
       ["0730", "2,47"],
@@ -196,14 +233,168 @@ describe("kimi-k2.7-code steht auf dem Mittelwert, nicht dem Median", () => {
     }
   });
 
-  // v1.1 ist die Ausnahme: dort ist kimi auch bei 2,47 € der billigste Punkt.
-  it("bleibt nur im Stand v1.1 auf der Front", () => {
+  // v1.1 und der 10.07. sind die Ausnahme: dort ist kimi auch bei 2,47 € der
+  // billigste Punkt, muse-spark-1.1 kommt erst am 14.07.
+  it("liegt nur in den Ständen v1.1 und 10.07. auf der Front", () => {
     for (const s of staende) {
       const drin = paretoFront(s.pts).front.some(
         (p) => p.label === "kimi-k2.7-code",
       );
-      expect([s.id, drin]).toStrictEqual([s.id, s.id === "v11"]);
+      expect([s.id, drin]).toStrictEqual([
+        s.id,
+        s.id === "v11" || s.id === "0710",
+      ]);
     }
+  });
+});
+
+// Die Historie beginnt mit v1.1. DeepSWE v1 war eine andere Messung (Tests im
+// Container des Agenten, Detached HEAD), und nur acht Modelle liefen unter
+// beiden. Ein v1-Stand in der Serie hätte 15 Punkte verschwinden lassen, die
+// nicht dominiert, sondern nicht gemessen waren — die Frage, mit der diese
+// Tests am 05.09.2026 begannen.
+describe("Die Serie beginnt mit v1.1", () => {
+  it("führt neun Stände von v1.1 bis zum 03.09.", () => {
+    expect(SNAPSHOTS.map((s) => s.id)).toStrictEqual([
+      "v11",
+      "0710",
+      "0722",
+      "0725",
+      "0730",
+      "0814",
+      "0826",
+      "0902",
+      "0903",
+    ]);
+  });
+
+  it("lässt kein Modell zwischen zwei Ständen verschwinden", () => {
+    for (let i = 1; i < SNAPSHOTS.length; i++) {
+      const vorher = SNAPSHOTS[i - 1]!.pts.map((p) => p.label);
+      const jetzt = new Set(SNAPSHOTS[i]!.pts.map((p) => p.label));
+      expect(vorher.filter((l) => !jetzt.has(l))).toStrictEqual([]);
+    }
+  });
+
+  // Die Stationsnotizen erzählen, wann Anthropic auf der Front steht: fable-5
+  // an Station 1, von terra verdrängt am 10.07., Opus 5 zurück am 25.07. bis
+  // gemini-3.8-flash es am 02.09. verdrängt. „Erstmals" wäre am 25.07. falsch —
+  // das stand dort bis 05.09.2026.
+  it("führt Claude in genau diesen Ständen auf der Front", () => {
+    expect(
+      SNAPSHOTS.map((s) => [
+        s.id,
+        paretoFront(s.pts)
+          .front.filter((p) => p.label.startsWith("claude-"))
+          .map((p) => p.label)
+          .join(","),
+      ]),
+    ).toStrictEqual([
+      ["v11", "claude-fable-5"],
+      ["0710", ""],
+      ["0722", ""],
+      ["0725", "claude-opus-5"],
+      ["0730", "claude-opus-5"],
+      ["0814", "claude-opus-5"],
+      ["0826", "claude-opus-5"],
+      ["0902", ""],
+      ["0903", ""],
+    ]);
+    const note = SNAPSHOTS.find((s) => s.id === "0725")!.note;
+    expect(note).not.toContain("erstmals");
+    expect(note).toContain("zurück auf der Front");
+  });
+
+  // Stand 2: die gpt-5.6-Familie nimmt an einem Tag die Front. fable-5 hat
+  // terras Score und kostet fast das Dreifache — die Pointe der Station.
+  it("zeigt am 10.07. die gpt-5.6-Familie auf der Front", () => {
+    const s = SNAPSHOTS.find((x) => x.id === "0710")!;
+    expect(s.pts).toHaveLength(13);
+    expect(paretoFront(s.pts).front.map((p) => p.label)).toStrictEqual([
+      "kimi-k2.7-code",
+      "gpt-5.6-luna",
+      "gpt-5.6-terra",
+      "gpt-5.6-sol",
+    ]);
+    const fable = s.pts.find((p) => p.label === "claude-fable-5")!;
+    const terra = s.pts.find((p) => p.label === "gpt-5.6-terra")!;
+    expect(fable.y).toBe(terra.y);
+    expect(fable.x / terra.x).toBeGreaterThan(2.5);
+    expect(fable.story).toBe(true);
+  });
+});
+
+// Die Bonusfolie zeigt v1 gegen v1.1. Geisterringe und Kreuze sind aus den
+// beiden Punktlisten abgeleitet; hier steht, was daraus folgen muss.
+describe("Bonus: v1 gegen v1.1", () => {
+  const v1 = V1_COMPARE[0]!;
+  const v11 = V1_COMPARE[1]!;
+
+  it("hat zwei Stationen und die Warnung nur an v1", () => {
+    expect(V1_COMPARE.map((s) => [s.id, s.warn !== undefined])).toStrictEqual([
+      ["v1", true],
+      ["v11-vs-v1", false],
+    ]);
+  });
+
+  it("trägt für die sechs doppelt gemessenen Modelle den v1-Wert als Ring", () => {
+    expect(
+      v11.pts
+        .filter((p) => p.old)
+        .map((p) => [p.label, p.old!.y, p.y, p.old!.eur, p.eur]),
+    ).toStrictEqual([
+      ["claude-sonnet-4.6", 32, 30, "4,83", "4,84"],
+      ["gpt-5.4", 56, 52, "3,83", "4,95"],
+      ["gpt-5.5", 70, 67, "5,79", "6,33"],
+      ["gemini-3.5-flash", 28, 37, "6,50", "6,43"],
+      ["gemini-3.1-pro", 10, 12, "1,61", "8,31"],
+      ["claude-opus-4.8", 58, 59, "11,02", "11,58"],
+    ]);
+  });
+
+  it("markiert die 15 v1-Modelle ohne v1.1-Wert als Kreuze", () => {
+    const kreuze = v11.gone!.map((p) => p.label);
+    expect(kreuze).toHaveLength(15);
+    const inV11 = new Set(v11.pts.map((p) => p.label));
+    expect(
+      v1.pts.filter((p) => !inV11.has(p.label)).map((p) => p.label),
+    ).toStrictEqual(kreuze);
+    // 13 kehren nie zurück, zwei werden später neu gemessen.
+    const spaeter = new Set(
+      SNAPSHOTS.flatMap((s) => s.pts.map((p) => p.label)),
+    );
+    expect(kreuze.filter((l) => spaeter.has(l))).toStrictEqual([
+      "glm-5.2",
+      "deepseek-v4-pro",
+    ]);
+    const erst = (l: string) =>
+      SNAPSHOTS.find((s) => s.pts.some((p) => p.label === l))!.id;
+    expect([erst("glm-5.2"), erst("deepseek-v4-pro")]).toStrictEqual([
+      "0710",
+      "0814",
+    ]);
+  });
+
+  it("zeigt acht Frontpunkte ab 0,62 € gegen vier ab 2,47 €", () => {
+    const f1 = paretoFront(v1.pts).front;
+    expect([f1.length, f1[0]!.eur, f1[f1.length - 1]!.eur]).toStrictEqual([
+      8,
+      "0,62",
+      "5,79",
+    ]);
+    expect(paretoFront(v11.pts).front.map((p) => p.label)).toStrictEqual([
+      "kimi-k2.7-code",
+      "gpt-5.4",
+      "gpt-5.5",
+      "claude-fable-5",
+    ]);
+  });
+
+  it("nennt im Tooltip Score und Preis des v1-Werts", () => {
+    const g = v11.pts.find((p) => p.label === "gemini-3.1-pro")!;
+    expect(tip(g)).toBe(
+      "gemini-3.1-pro: 12 % · 8,31 €/Task (v1 10 % · 1,61 €)",
+    );
   });
 });
 

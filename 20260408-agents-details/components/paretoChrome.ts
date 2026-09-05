@@ -9,12 +9,25 @@
 
 import {
   labelBox,
+  layoutLabels,
+  squareAt,
   type Anchor,
+  type Box,
   type LayoutPoint,
   type Obstacle,
+  type Placed,
   type XY,
 } from "./labelLayout";
-import { fmt, makeScale, paretoFront, type Pt, type Scale } from "./paretoData";
+import {
+  fmt,
+  makeScale,
+  paretoFront,
+  type Cfg,
+  type Lens,
+  type Pt,
+  type Scale,
+  type Snapshot,
+} from "./paretoData";
 import { PRESETS, presetModels } from "./providerFilter";
 
 export const X_TICKS_LINEAR = [0, 5, 10, 15, 20, 25];
@@ -56,6 +69,39 @@ export const HIT_R = 10;
  * Radius, damit kein Label unter einem fremden liegt.
  */
 export const HIT_R_HISTORY = 7;
+
+/**
+ * Warnhinweis oben links im Historien-Chart (⚠️ plus Kurztext), nur für
+ * Stände mit `warn` — auf der Bonusfolie der v1-Stand. Lage und Schrift stehen
+ * hier, weil der Platzierer die Box als Hindernis kennen muss.
+ */
+export const WARN = {
+  font: 10.5,
+  iconW: 16,
+  text: "v1: nur mit Vorbehalt vergleichbar",
+  at: (s: Scale) => ({ x: s.L + 8, y: s.T + 14 }),
+} as const;
+
+/**
+ * Hindernisse des Historien-Charts für den Platzierer: die Kreuze (`gone`)
+ * weich — ein Label mit Halo bleibt darauf lesbar —, der Warnhinweis hart.
+ * Quadranten-Überschriften und Pfeile hat dieses Chart nicht.
+ */
+export function historyObstacles(
+  snap: Pick<Snapshot, "gone" | "warn">,
+  s: Scale,
+): Obstacle[] {
+  const o: Obstacle[] = (snap.gone ?? []).map((p) => ({
+    ...squareAt({ px: s.px(p.x), py: s.py(p.y) }, 5, `gone:${p.label}`),
+    soft: true,
+  }));
+  if (snap.warn) {
+    const a = WARN.at(s);
+    const b = labelBox(WARN.text, a.x + WARN.iconW, a.y, "start", WARN.font);
+    o.push({ ...b, x: a.x - 2, w: b.w + WARN.iconW + 2, name: "warn" });
+  }
+  return o;
+}
 export const QUADRANT_FONT = 13;
 /** Quadranten sind Sans-Serif, halbfett — grob 0,62 em je Zeichen. */
 export const SANS_EM = 0.62;
@@ -288,6 +334,331 @@ export function visiblePoints(
   );
 }
 
+// --- Marker-Entzerrung -------------------------------------------------------
+//
+// Marker, die einander verdecken (sol/astra 2,7 px, terra/glm-5.3 2,7 px,
+// muse-spark-1.1/grok-4.5 4,3 px, muse-spark-1.2/qwen3.8-max 5 px), werden
+// um höchstens `cap` px auseinandergerückt. Das ist eine bewusste Abweichung
+// vom Wert — die Folie soll auf einen Blick lesbar sein —, und sie ist
+// dokumentiert: Speaker Notes und ⓘ nennen das gemessene Maximum,
+// `markerDodge.test.ts` rechnet es nach und hält die Notiz dagegen.
+//
+// Regeln, gemessen am 05.09.2026 über alle 13 Zustände:
+//   * Kriterium: zwei Marker sind getrennt, wenn |dx| ≥ S oder |dy| ≥ S mit
+//     S = h(a) + h(b) + gap (achsenweise Kästen, nicht Kreise).
+//   * Je Paar die Achse mit dem kleineren Schub, hälftig auf beide. Stößt ein
+//     Partner an ein festes Hindernis (Geisterring, Kappe, Wächter), bekommt
+//     der andere den vollen Schub; sind beide blockiert, die andere Achse.
+//   * Front-Wächter: ein dominierter Punkt darf nicht über das wahre Niveau
+//     der billigeren Frontpunkte rücken — sonst sähe astra an Station 9
+//     besser aus als gemini-3.8-flash. Dann weicht er waagerecht aus.
+//   * Zwei Stufen, damit kein Schalter einen festen Marker bewegt: erst die
+//     festen Punkte gegeneinander und gegen ihre Geisterringe, dann die
+//     verschiebbaren (Kontingent-Overlay) gegen das fertige Bild.
+//   * Deterministisch: Reihenfolge nach Label, nie nach Array.
+// Wahre Lagen behalten Fadenkreuz-Linien, Badges, Fehlerbalken und
+// Geisterringe; die angezeigte Lage bekommen Marker, Front-Polyline,
+// Klickziele und der Platzierer (`LayoutSource.pos`).
+
+/** Halbmaße der sichtbaren Marker je Chart, inklusive halbem Surface-Strich. */
+export const MARKER = {
+  history: { front: 7, dom: 4.5, ghost: 5.2 },
+  pareto: { front: 8, dom: 5, ghost: 5.7 },
+  /** Lupe: Stufenpunkte r 4, Kontextmarker r 3, keine Geisterringe. */
+  lens: { front: 4.5, dom: 3.5, ghost: 3.5 },
+} as const;
+
+export const DODGE = {
+  gap: 3,
+  cap: 8,
+  /** Rechenschwelle für Wächter und Kappe. */
+  eps: 1e-6,
+  /** Unter dieser Restüberlappung gilt ein Paar als getrennt — 0,02 px sieht niemand, und die hälftige Auflösung konvergiert nur geometrisch. */
+  tol: 0.02,
+  maxSweeps: 12,
+} as const;
+
+export interface DodgeResult {
+  /** Angezeigte Lage je Label — für unbewegte Marker die wahre. */
+  pos: Map<string, XY>;
+  sweeps: number;
+  /** Größte verbleibende Verletzung in px; 0 heißt: alle Paare getrennt. */
+  residual: number;
+  /** Bewegte Marker mit Versatz in px. */
+  moved: { label: string; dx: number; dy: number }[];
+}
+
+interface Ob {
+  px: number;
+  py: number;
+  h: number;
+  owner?: string;
+}
+
+export interface DodgeOpts {
+  /**
+   * Punkte, die in irgendeiner Ansicht auf der Front stehen (Anbieter-Presets
+   * der Hauptfolie, siehe `frontUnion`): Sie rücken nur waagerecht, auch wenn
+   * sie im vollen Satz dominiert sind — sonst stünde terra im Windsurf-Preset
+   * als Sprosse 2 um 1,7 Punkte zu hoch (Befund vom 05.09.2026).
+   */
+  horizontalOnly?: ReadonlySet<string>;
+}
+
+export function dodgeDetailed(
+  pts: readonly Pt[],
+  s: Scale,
+  kind: keyof typeof MARKER,
+  movable: (p: Pt) => boolean = () => false,
+  opts: DodgeOpts = {},
+): DodgeResult {
+  const M = MARKER[kind];
+  const fixedY = (label: string) =>
+    front.has(label) || (opts.horizontalOnly?.has(label) ?? false);
+  const { gap, cap, eps, tol, maxSweeps } = DODGE;
+  const front = new Set(paretoFront([...pts]).front.map((p) => p.label));
+  const order = [...pts].sort((a, b) => a.label.localeCompare(b.label));
+  const half = (p: Pt) => (front.has(p.label) ? M.front : M.dom);
+  const truth = new Map(
+    order.map((p) => [p.label, { px: s.px(p.x), py: s.py(p.y) } as XY]),
+  );
+  const cur = new Map(order.map((p) => [p.label, { ...truth.get(p.label)! }]));
+
+  // Wächter-Niveau je dominiertem Punkt: kleinstes wahres py (= höchster
+  // Punkt) der Frontpunkte, die nicht teurer sind. Frontpunkte selbst rücken
+  // nur waagerecht — die Front darf in der Höhe nicht lügen, und ihr
+  // Paarpartner ist meist ein Nachbar auf der Front, wo ohnehin x gewinnt.
+  const level = new Map<string, number>();
+  for (const p of order) {
+    if (front.has(p.label)) continue;
+    const t = truth.get(p.label)!;
+    let lvl = Infinity;
+    for (const f of order) {
+      if (!front.has(f.label)) continue;
+      const tf = truth.get(f.label)!;
+      if (tf.px <= t.px + eps) lvl = Math.min(lvl, tf.py);
+    }
+    level.set(p.label, lvl === Infinity ? -Infinity : lvl);
+  }
+
+  const ghostOf = (p: Pt): Ob | null =>
+    p.old
+      ? {
+          px: s.px(p.old.x),
+          py: s.py(p.old.y ?? p.y),
+          h: M.ghost,
+          owner: p.label,
+        }
+      : null;
+
+  const violates = (p: Pt, at: XY, obs: readonly Ob[]) =>
+    obs.some((o) => {
+      if (o.owner === p.label) return false;
+      const S = half(p) + o.h + gap;
+      return (
+        Math.abs(at.px - o.px) < S - tol && Math.abs(at.py - o.py) < S - tol
+      );
+    });
+
+  const clamp = (p: Pt, at: XY): XY => {
+    const t = truth.get(p.label)!;
+    const dx = at.px - t.px;
+    const dy = at.py - t.py;
+    const d = Math.hypot(dx, dy);
+    if (d <= cap) return at;
+    return { px: t.px + (dx / d) * cap, py: t.py + (dy / d) * cap };
+  };
+
+  /** Darf `p` nach `at`? Kappe, Wächter, Front-Höhe und feste Hindernisse. */
+  const canMove = (p: Pt, at: XY, obs: readonly Ob[]) => {
+    const t = truth.get(p.label)!;
+    if (Math.hypot(at.px - t.px, at.py - t.py) > cap + eps) return false;
+    if (fixedY(p.label) && Math.abs(at.py - t.py) > eps) return false;
+    const lvl = level.get(p.label);
+    if (lvl !== undefined && at.py < lvl - eps) return false;
+    return !violates(p, at, obs);
+  };
+
+  const shift = (p: Pt, dx: number, dy: number) => {
+    const c = cur.get(p.label)!;
+    cur.set(p.label, clamp(p, { px: c.px + dx, py: c.py + dy }));
+  };
+
+  let sweeps = 0;
+  const relax = (group: readonly Pt[], obs: readonly Ob[]) => {
+    for (let sweep = 1; sweep <= maxSweeps; sweep++) {
+      let hit = false;
+      // Punkt gegen feste Hindernisse: voller Schub auf den Punkt.
+      for (const p of group) {
+        for (const o of obs) {
+          if (o.owner === p.label) continue;
+          const c = cur.get(p.label)!;
+          const S = half(p) + o.h + gap;
+          const dx = c.px - o.px;
+          const dy = c.py - o.py;
+          if (Math.abs(dx) >= S - tol || Math.abs(dy) >= S - tol) continue;
+          hit = true;
+          const nx = S - Math.abs(dx);
+          const ny = S - Math.abs(dy);
+          const sx = dx >= 0 ? 1 : -1;
+          const sy = dy >= 0 ? 1 : -1;
+          const up = { px: c.px, py: c.py + sy * ny };
+          if (ny < nx && canMove(p, up, obs)) shift(p, 0, sy * ny);
+          else shift(p, sx * nx, 0);
+        }
+      }
+      // Paare innerhalb der Gruppe.
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const p = group[i]!;
+          const q = group[j]!;
+          const a = cur.get(p.label)!;
+          const b = cur.get(q.label)!;
+          const S = half(p) + half(q) + gap;
+          const dx = b.px - a.px;
+          const dy = b.py - a.py;
+          if (Math.abs(dx) >= S - tol || Math.abs(dy) >= S - tol) continue;
+          hit = true;
+          const need = { x: S - Math.abs(dx), y: S - Math.abs(dy) };
+          // Gleichstand: der lexikografisch spätere (q) geht nach rechts/unten.
+          const sign = { x: dx >= 0 ? 1 : -1, y: dy >= 0 ? 1 : -1 };
+          const axes: ("x" | "y")[] = need.y < need.x ? ["y", "x"] : ["x", "y"];
+          const vec = (ax: "x" | "y", k: number, sgn: number): XY =>
+            ax === "x" ? { px: sgn * k, py: 0 } : { px: 0, py: sgn * k };
+          const to = (c: XY, v: XY): XY => ({
+            px: c.px + v.px,
+            py: c.py + v.py,
+          });
+          // Erst hälftig auf beiden Achsen (bevorzugte zuerst), dann volle
+          // Schübe: ein Partner, der frei ist, übernimmt für den blockierten.
+          let done = false;
+          for (const ax of axes) {
+            const pHalf = vec(ax, need[ax] / 2, -sign[ax]);
+            const qHalf = vec(ax, need[ax] / 2, sign[ax]);
+            if (
+              canMove(p, to(a, pHalf), obs) &&
+              canMove(q, to(b, qHalf), obs)
+            ) {
+              shift(p, pHalf.px, pHalf.py);
+              shift(q, qHalf.px, qHalf.py);
+              done = true;
+              break;
+            }
+          }
+          for (const ax of axes) {
+            if (done) break;
+            const pFull = vec(ax, need[ax], -sign[ax]);
+            const qFull = vec(ax, need[ax], sign[ax]);
+            if (canMove(q, to(b, qFull), obs)) {
+              shift(q, qFull.px, qFull.py);
+              done = true;
+            } else if (canMove(p, to(a, pFull), obs)) {
+              shift(p, pFull.px, pFull.py);
+              done = true;
+            }
+          }
+          if (!done) {
+            // Beide auf beiden Achsen blockiert: hälftig auf der ersten Achse,
+            // die Kappe schneidet ab. Bleibt als `residual` messbar.
+            const ax = axes[0]!;
+            const n = need[ax];
+            if (ax === "x") {
+              shift(p, (-sign.x * n) / 2, 0);
+              shift(q, (sign.x * n) / 2, 0);
+            } else {
+              shift(p, 0, (-sign.y * n) / 2);
+              shift(q, 0, (sign.y * n) / 2);
+            }
+          }
+        }
+      }
+      sweeps++;
+      if (!hit) break;
+    }
+  };
+
+  const fixed = order.filter((p) => !movable(p));
+  const mov = order.filter(movable);
+  const fixedGhosts = fixed.flatMap((p) => {
+    const g = ghostOf(p);
+    return g ? [g] : [];
+  });
+  relax(fixed, fixedGhosts);
+  if (mov.length) {
+    const allGhosts = order.flatMap((p) => {
+      const g = ghostOf(p);
+      return g ? [g] : [];
+    });
+    const fixedObs: Ob[] = fixed.map((p) => ({
+      ...cur.get(p.label)!,
+      h: half(p),
+      owner: p.label,
+    }));
+    relax(mov, [...allGhosts, ...fixedObs]);
+  }
+
+  // Restverletzung über alle Paare und Ringe.
+  let residual = 0;
+  const allObs = order.flatMap((p) => {
+    const g = ghostOf(p);
+    return g ? [g] : [];
+  });
+  for (let i = 0; i < order.length; i++) {
+    const p = order[i]!;
+    const a = cur.get(p.label)!;
+    for (const o of allObs) {
+      if (o.owner === p.label) continue;
+      const S = half(p) + o.h + gap;
+      const v = Math.min(S - Math.abs(a.px - o.px), S - Math.abs(a.py - o.py));
+      residual = Math.max(residual, v);
+    }
+    for (let j = i + 1; j < order.length; j++) {
+      const q = order[j]!;
+      const b = cur.get(q.label)!;
+      const S = half(p) + half(q) + gap;
+      const v = Math.min(S - Math.abs(b.px - a.px), S - Math.abs(b.py - a.py));
+      residual = Math.max(residual, v);
+    }
+  }
+
+  const moved = order.flatMap((p) => {
+    const t = truth.get(p.label)!;
+    const c = cur.get(p.label)!;
+    const dx = c.px - t.px;
+    const dy = c.py - t.py;
+    return Math.hypot(dx, dy) > eps ? [{ label: p.label, dx, dy }] : [];
+  });
+  return { pos: cur, sweeps, residual: Math.max(0, residual), moved };
+}
+
+/** Angezeigte Lage je Label, siehe `dodgeDetailed`. */
+export function dodgeMarkers(
+  pts: readonly Pt[],
+  s: Scale,
+  kind: keyof typeof MARKER,
+  movable: (p: Pt) => boolean = () => false,
+  opts: DodgeOpts = {},
+): Map<string, XY> {
+  return dodgeDetailed(pts, s, kind, movable, opts).pos;
+}
+
+/**
+ * Vereinigung der Fronten über alle Anbieter-Presets und beide
+ * Overlay-Zustände der Hauptfolie. Der Platzierer beschriftet diese Punkte
+ * immer (Rang 0), die Entzerrung rückt sie nur waagerecht — beides, damit kein
+ * Schalter das Bild umbaut.
+ */
+export function frontUnion(all: readonly Pt[]): Set<string> {
+  const front = new Set<string>();
+  for (const pr of PRESETS) {
+    const sel = new Set(presetModels(pr.id, [...all]));
+    for (const on of [false, true])
+      for (const f of paretoFront(visiblePoints(all, sel, on)).front)
+        front.add(f.label);
+  }
+  return front;
+}
+
 export interface LayoutSource {
   /**
    * Hat das Chart das Kontingent-Overlay? Nur dann sind die Claude-Punkte
@@ -295,6 +666,12 @@ export interface LayoutSource {
    * dort wären die `sub`-Lagen Phantom-Hindernisse.
    */
   overlay: boolean;
+  /**
+   * Angezeigte Lagen aus `dodgeMarkers`. Der Marker steht dann dort, sein
+   * Klickziel auch — also rechnet der Platzierer damit. `alt` und `ghost`
+   * bleiben wahre Lagen.
+   */
+  pos?: ReadonlyMap<string, XY>;
   /** Kontingent-Overlay an? Bestimmt die aktuelle Lage der Claude-Punkte. */
   subOn?: boolean;
   /** Wer Rang 1 bekommt, obwohl weder Front noch Wanderung. */
@@ -316,20 +693,14 @@ export function toLayoutPoints(
   const subOn = o.subOn ?? false;
   const at = (x: number, y: number): XY => ({ px: s.px(x), py: s.py(y) });
 
-  const front = new Set<string>();
-  const views: Pt[][] = o.presets
-    ? PRESETS.flatMap((pr) => {
-        const sel = new Set(presetModels(pr.id, [...all]));
-        return [false, true].map((on) => visiblePoints(all, sel, on));
-      })
-    : [[...all]];
-  for (const v of views)
-    for (const f of paretoFront(v).front) front.add(f.label);
+  const front = o.presets
+    ? frontUnion(all)
+    : new Set(paretoFront([...all]).front.map((f) => f.label));
 
   return all.map((p) => {
     const movable = o.overlay && p.sub !== undefined;
     const moved = subOn && movable;
-    const cur = moved ? at(p.sub!, p.y) : at(p.x, p.y);
+    const cur = o.pos?.get(p.label) ?? (moved ? at(p.sub!, p.y) : at(p.x, p.y));
     const alt: XY[] = [];
     if (movable) {
       if (moved) alt.push(at(p.x, p.y));
@@ -354,4 +725,202 @@ export function toLayoutPoints(
       ghost,
     };
   });
+}
+
+// --- Lupe ---------------------------------------------------------------------
+//
+// Ein eigener Klickschritt der Historie: Das Hauptchart dimmt, ein Panel im
+// unteren Band zeigt die Region vergrößert (x 1,36×, y 2,3×) und darin alle
+// gemessenen Effort-Stufen des Fokus-Modells als Leiter. Die Geometrie steht
+// hier, damit die Tests dasselbe Panel rechnen wie die Komponente.
+
+/** Panel der Lupe in viewBox-px des Historien-Charts. */
+export const LENS = {
+  x: 420,
+  y: 96,
+  w: 485,
+  h: 120,
+  L: 44,
+  R: 8,
+  T: 16,
+  B: 18,
+  font: 10,
+  dotR: 4,
+  ctxR: 3,
+  /** Hindernis eines Stufenpunkts für den Platzierer. */
+  hitR: 6,
+  xTicks: [2, 3, 5, 10],
+  yTicks: [65, 70, 75],
+} as const;
+
+export interface LensStep {
+  c: Cfg;
+  px: number;
+  py: number;
+  /** Die Stufe, die das Chart selbst plottet. */
+  shown: boolean;
+  text: string;
+}
+
+export interface LensView {
+  /** Panel-Rahmen in Chart-Koordinaten. */
+  box: Box;
+  /** Quellrechteck der Region in Chart-Koordinaten. */
+  src: Box;
+  /** Panel-lokale Skala (0/0 = Panel-Ecke). */
+  scale: Scale;
+  ladder: LensStep[];
+  /** Polyline der Leiter in Effort-Reihenfolge. */
+  path: string;
+  /** Nachbarpunkte der Region, um die Leiter herum entzerrt. */
+  ctx: { p: Pt; px: number; py: number; front: boolean }[];
+  labels: Map<string, Placed>;
+  /** Klammer zwischen zwei Stufen mit gleichem Score. */
+  bracket: { x1: number; x2: number; y: number; text: string } | null;
+  obstacles: Obstacle[];
+}
+
+export function lensView(
+  lens: Lens,
+  pts: readonly Pt[],
+  main: Scale,
+): LensView {
+  const { region } = lens;
+  const scale = makeScale({
+    W: LENS.w,
+    H: LENS.h,
+    L: LENS.L,
+    R: LENS.R,
+    T: LENS.T,
+    B: LENS.B,
+    xMax: region.x[1],
+    xLog: { min: region.x[0] },
+    yMax: region.y[1],
+    yMin: region.y[0],
+  });
+  const box: Box = { x: LENS.x, y: LENS.y, w: LENS.w, h: LENS.h };
+  const src: Box = {
+    x: main.px(region.x[0]),
+    y: main.py(region.y[1]),
+    w: main.px(region.x[1]) - main.px(region.x[0]),
+    h: main.py(region.y[0]) - main.py(region.y[1]),
+  };
+  const inRegion = (x: number, y: number) =>
+    x >= region.x[0] &&
+    x <= region.x[1] &&
+    y >= region.y[0] &&
+    y <= region.y[1];
+  const front = new Set(paretoFront([...pts]).front.map((p) => p.label));
+  const focus = pts.find((p) => p.label === lens.focus);
+  const ctxPts = pts.filter(
+    (p) => p.label !== lens.focus && inRegion(p.x, p.y),
+  );
+
+  // Die Leiter steht fest, die Nachbarn weichen ihr aus — dieselbe
+  // Entzerrung wie im Hauptchart, nur auf der Panel-Skala.
+  const stepId = (c: Cfg) => `${lens.focus} ${c.effort}`;
+  const ladderPts: Pt[] = lens.ladder.map((c) => ({
+    label: stepId(c),
+    x: c.x,
+    y: c.y,
+    eur: fmt(c.x),
+  }));
+  const ladderIds = new Set(ladderPts.map((p) => p.label));
+  const pos = dodgeMarkers(
+    [...ladderPts, ...ctxPts],
+    scale,
+    "lens",
+    (p) => !ladderIds.has(p.label),
+  );
+  const at = (p: Pt): XY => pos.get(p.label)!;
+
+  const ladder: LensStep[] = lens.ladder.map((c, i) => {
+    const q = at(ladderPts[i]!);
+    const shown =
+      !!focus && Math.abs(c.x - focus.x) < 1e-9 && Math.round(c.y) === focus.y;
+    return {
+      c,
+      px: q.px,
+      py: q.py,
+      shown,
+      text: `${c.effort} · ${fmt(c.x)} €${shown ? " · gezeigt" : ""}`,
+    };
+  });
+  const path = ladder.map((l) => `${l.px},${l.py}`).join(" ");
+  const ctx = ctxPts.map((p) => ({ p, ...at(p), front: front.has(p.label) }));
+
+  // Klammer: das teuerste Paar mit gleichem Score — bei astra high und max.
+  let bracket: LensView["bracket"] = null;
+  for (let i = 0; i < ladder.length; i++) {
+    for (let j = i + 1; j < ladder.length; j++) {
+      const a = ladder[i]!;
+      const b = ladder[j]!;
+      if (Math.abs(a.c.y - b.c.y) > 1e-9 || b.c.x <= a.c.x) continue;
+      const ratio = b.c.x / a.c.x;
+      if (
+        bracket &&
+        ratio <= Number(bracket.text.slice(1, 4).replace(",", "."))
+      )
+        continue;
+      bracket = {
+        x1: a.px,
+        x2: b.px,
+        y: Math.max(a.py, b.py) + 12,
+        text: `×${ratio.toFixed(1).replace(".", ",")} Preis, gleicher Score`,
+      };
+    }
+  }
+
+  // Hindernisse der Beschriftung: Kontextmarker, Klammer samt Text.
+  const obstacles: Obstacle[] = ctx.map((c) =>
+    squareAt(c, LENS.ctxR + 1, c.p.label),
+  );
+  if (bracket) {
+    obstacles.push(
+      {
+        x: bracket.x1,
+        y: bracket.y - 4,
+        w: bracket.x2 - bracket.x1,
+        h: 8,
+        name: "Klammer",
+      },
+      {
+        ...labelBox(
+          bracket.text,
+          (bracket.x1 + bracket.x2) / 2,
+          bracket.y + 11,
+          "middle",
+          LENS.font,
+        ),
+        name: "Klammer-Text",
+      },
+    );
+  }
+  const lp: LayoutPoint[] = ladder.map((l) => ({
+    id: l.c.effort,
+    text: l.text,
+    px: l.px,
+    py: l.py,
+    rank: 0,
+    movable: false,
+    alt: [],
+    ghost: undefined,
+  }));
+  const layout = layoutLabels(lp, {
+    font: LENS.font,
+    bounds: plotBounds(scale),
+    hitR: LENS.hitR,
+    obstacles,
+  });
+  return {
+    box,
+    src,
+    scale,
+    ladder,
+    path,
+    ctx,
+    labels: layout.core,
+    bracket,
+    obstacles,
+  };
 }

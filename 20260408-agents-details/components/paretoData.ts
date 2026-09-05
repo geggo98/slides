@@ -1,10 +1,11 @@
-// Datenbasis der beiden Modell-Routing-Charts: DeepSWE-Pass@1 gegen Ø-Kosten
-// pro Task. `ModelRoutingPareto.vue` zeigt den letzten Stand, `ModelRoutingHistory.vue`
-// klickt durch alle acht.
+// Datenbasis der Modell-Routing-Charts: DeepSWE-Pass@1 gegen Ø-Kosten pro
+// Task. `ModelRoutingPareto.vue` zeigt den letzten Stand, `ModelRoutingHistory.vue`
+// klickt durch die neun Stände von `SNAPSHOTS` und, auf der Bonusfolie, durch
+// die zwei von `V1_COMPARE`.
 //
 // Herkunft der Zahlen
 // -------------------
-// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 02.09.2026 laut dem
+// Board: https://deepswe.datacurve.ai/ (v1.1, Stand 03.09.2026 laut dem
 // `generated_at` der Payload). Maßgeblich ist die in die Seite eingebettete
 // SSR-Payload — die Datei unter
 // /artifacts/v1.1/leaderboard-live.json ist eine veraltete CDN-Kopie. Am
@@ -73,8 +74,10 @@
 // Default = alle Modelle mit best >= 5 % außer diesen sieben. Seit
 // gpt-6-astra sind das 21 von 28; dieses Chart zeigt 22 (Default + terra).
 //
-// Die Stände 1 (v1) stammen aus /artifacts/v1/leaderboard-live.json, die Stände
-// 3–5 aus der Git-Historie dieses Charts (75a256c, 099c187, 94e26a2).
+// Stand 1 (v1.1, 15.06.) und Stand 2 (10.07.) stammen aus dem Archiv unter
+// `data/deepswe/` (`aa99357b`, `2bc8cfe6`), die Stände 3–5 aus der
+// Git-Historie dieses Charts (75a256c, 099c187, 94e26a2). Der v1-Stand der
+// Bonusfolie kommt aus /artifacts/v1/leaderboard-live.json.
 //
 // Umrechnung durchgehend 1 USD = 0,876 € (Stand 21.07.2026), bewusst über alle
 // Stände konstant: die Zeitreihe soll Modell- und Preisbewegungen zeigen, nicht
@@ -160,7 +163,7 @@
 //
 // Folge für die Historie: kimi-k2.7-code liegt bei 2,47 € in den Ständen 22.07.
 // und 25.07. NICHT auf der Front — dort ist muse-spark-1.1 mit 2,07 € billiger.
-// Im Stand v1.1 bleibt es der billigste Punkt, nur eben teurer.
+// In den Ständen v1.1 und 10.07. bleibt es der billigste Punkt, nur eben teurer.
 
 /** Herkunft eines Punkts, wenn ihn eine Preisanpassung verschoben hat. */
 export interface Origin {
@@ -198,9 +201,34 @@ export interface Snapshot {
   title: string;
   /** Was sich an dieser Station geändert hat. */
   note: string;
-  /** true = aus Changelog und Nachbarständen rekonstruiert, nicht 1:1 belegt. */
-  reconstructed?: boolean;
+  /**
+   * Modelle des Vorstands, die in diesem Stand keinen Wert haben. Das Chart
+   * zeichnet sie als Kreuze an ihrer alten Lage: nicht dominiert, sondern
+   * nicht gemessen. Nur die Bonusfolie v1 gegen v1.1 braucht das.
+   */
+  gone?: Pt[];
+  /** Warnhinweis im Chart (⚠️ oben links) samt Tooltip-Text. */
+  warn?: string;
+  /** Lupe als eigener Klickschritt nach dieser Station, siehe `Lens`. */
+  lens?: Lens;
   pts: Pt[];
+}
+
+/**
+ * Lupe: ein Klickschritt, der einen Ausschnitt vergrößert und für EIN Modell
+ * alle gemessenen Effort-Stufen zeigt. Zweck ist nicht die Entzerrung der
+ * Punkte, sondern die Warnung vor einer teuren Fehlkonfiguration: „höherer
+ * Effort ist besser" kann auch heißen „nur teurer, und das deutlich".
+ */
+export interface Lens {
+  title: string;
+  note: string;
+  /** Ausschnitt in Datenkoordinaten, [von, bis] je Achse. */
+  region: { x: [number, number]; y: [number, number] };
+  /** Das Modell, dessen Stufen die Lupe zeigt. */
+  focus: string;
+  /** Alle gemessenen Stufen des Modells, aus `EFFORTS` abgeleitet. */
+  ladder: readonly Cfg[];
 }
 
 export const fmt = (v: number) => v.toFixed(2).replace(".", ",");
@@ -232,13 +260,25 @@ function P(
 }
 
 // ---------------------------------------------------------------------------
-// Stand 1 — DeepSWE v1, Board-Stand 20.06.2026 (21 Modelle)
+// DeepSWE v1, Board-Stand 11.06.2026 (21 Modelle) — nur auf der Bonusfolie
 // ---------------------------------------------------------------------------
-// Andere Methodik als alles Folgende: Verifikation lief im selben Container wie
-// der Agent, das Repo enthielt die vollständige Git-Historie. Wer die Lösung
-// las statt sie zu erarbeiten, bekam davon beide Achsen geschenkt — Score zu
-// hoch und, weil Lesen kaum Tokens kostet, €/Task zu niedrig. Weder Scores noch
-// Kosten sind deshalb mit v1.1 vergleichbar.
+// Andere Messung als alles Folgende, deshalb nicht in `SNAPSHOTS`: In v1 liefen
+// die Tests im Container des Agenten, das Repo stand im Detached-HEAD-Modus,
+// einige Tasks hatten instabile Tests und veraltete Abhängigkeiten. Datacurve
+// nennt als Sorge, ein Agent könne eine ähnliche, upstream gemergte Lösung per
+// `git log` finden (Blog „DeepSWE v1.1", 14.06.2026). v1.1 bewertet nur noch
+// den committeten Patch in einem eigenen Container und zeigt keine späteren
+// Commits mehr.
+//
+// Wie groß der Effekt ist, sagt Datacurve selbst: „Scores stay close: the
+// ordering at the top is unchanged, and most configurations land within a few
+// points of their v1 result." Neun Konfigurationen liefen unter beiden
+// Methoden, −3,8 bis +6,0 Punkte. Die sechs Modelle, die auch in `S_V11`
+// stehen, tragen auf der Bonusfolie ihren v1-Wert als Geisterring.
+//
+// NICHT hierher gehört die Zahl „18 % der Opus-4.7-Treffer per git log --all":
+// Sie stammt aus Datacurves SWE-Bench-Pro-Auswertung im DeepSWE-Blog, nicht aus
+// DeepSWE v1. Bis 05.09.2026 stand sie trotzdem in der Stationsnotiz.
 const S_V1: Pt[] = [
   P("minimax-m2.7", 0.62, 0),
   P("claude-haiku-4.5", 0.73, 0),
@@ -259,17 +299,20 @@ const S_V1: Pt[] = [
   P("gpt-5.5", 5.79, 70),
   P("gemini-3.5-flash", 6.5, 28),
   P("glm-5.1", 6.54, 18),
-  // Beide Anthropic-Punkte tragen die Pointe der Station.
+  // Opus 4.8 ist „Anthropics bestes Modell" der Stationsnotiz.
   P("claude-opus-4.8", 11.02, 58, { story: true }),
-  P("claude-opus-4.7", 15.93, 54, { story: true }),
+  P("claude-opus-4.7", 15.93, 54),
 ];
 
 // ---------------------------------------------------------------------------
-// Stand 2 — DeepSWE v1.1, Start am 15.06.2026 (8 Modelle)
+// Stand 1 — DeepSWE v1.1, Start am 15.06.2026 (8 Modelle), Archiv aa99357b
 // ---------------------------------------------------------------------------
-// Modellliste aus dem Datacurve-Changelog, Werte aus dem frühesten belegten
-// Chart-Stand (22.07.). Rekonstruiert: die Startwerte selbst sind nicht
-// archiviert, die acht Konfigurationen wurden bis dahin aber nicht neu gefahren.
+// Changelog 15.06.: „DeepSWE v1.1 released: 113 tasks with isolated
+// verification and structured test reports." Die acht Modelle sind die
+// „Initial leaderboard"-Liste dieses Eintrags, die Werte stammen aus dem
+// archivierten Board-Zustand vom 14.06. 23:05 UTC. Von den 21 v1-Modellen
+// laufen sechs weiter, 13 werden nie wieder gemessen, glm-5.2 (21.06.) und
+// deepseek-v4-pro (12.08.) kommen später neu gemessen zurück.
 const S_V11: Pt[] = [
   P("kimi-k2.7-code", 2.47, 31),
   P("claude-sonnet-4.6", 4.84, 30),
@@ -284,8 +327,8 @@ const S_V11: Pt[] = [
 // ---------------------------------------------------------------------------
 // Stand 3 — 22.07.2026 (16 Modelle), Git 75a256c
 // ---------------------------------------------------------------------------
-// Die gpt-5.6-Familie (10.07.), kimi-k3 (18.07.), grok-4.5 (16.07.) und
-// muse-spark-1.1 (14.07.) sind dazugekommen.
+// Seit dem 10.07. dazugekommen: muse-spark-1.1 (14.07.), grok-4.5 (16.07.) und
+// kimi-k3 (18.07.), alle drei auf der Front. kimi-k2.7-code fällt herunter.
 const S_0722: Pt[] = [
   P("muse-spark-1.1", 2.07, 53),
   P("grok-4.5", 2.12, 54),
@@ -304,6 +347,19 @@ const S_0722: Pt[] = [
   P("claude-fable-5", 11.75, 70),
   P("claude-sonnet-5", 23.13, 54),
 ];
+
+// ---------------------------------------------------------------------------
+// Stand 2 — 10.07.2026 (13 Modelle), Archiv 2bc8cfe6
+// ---------------------------------------------------------------------------
+// Die gpt-5.6-Familie (luna, terra, sol) kommt an einem Tag und nimmt die
+// Front. Dazu seit v1.1: glm-5.2 (21.06.) und claude-sonnet-5 (02.07.). Die
+// Werte sind Punkt für Punkt die des 22.07., das Board hat dazwischen nichts
+// nachgerechnet. Deshalb abgeleitet statt abgeschrieben, und deshalb NACH
+// `S_0722` definiert, obwohl es in `SNAPSHOTS` davor steht.
+// fable-5 ist hier Story-Punkt: gleicher Score wie terra, fast dreimal so teuer.
+const S_0710: Pt[] = S_0722.filter(
+  (p) => !["muse-spark-1.1", "grok-4.5", "kimi-k3"].includes(p.label),
+).map((p) => (p.label === "claude-fable-5" ? { ...p, story: true } : p));
 
 // ---------------------------------------------------------------------------
 // Stand 4 — 25.07.2026 (18 Modelle), Git 099c187
@@ -371,8 +427,7 @@ const S_0730: Pt[] = [
 // Gemini-Tokens doppelt gezählt, DeepSeek V4 Pro war doppelt rabattiert
 // abgerechnet. Die drei Gemini-Modelle wurden dabei neu gefahren, ihre Scores
 // verschieben sich deshalb um bis zu zwei Punkte mit.
-// Rekonstruiert: identisch zum heutigen Board, aber ohne glm-5.3 und mit sol
-// zum alten Preis.
+// Archiviert als `3d468f23` (13.08. 16:11 UTC, der zweite Zustand des Tages).
 const S_0814: Pt[] = [
   P("deepseek-v4-flash", 0.09, 53),
   P("deepseek-v4-pro", 0.21, 63),
@@ -415,14 +470,17 @@ const S_0814: Pt[] = [
 // claude-sonnet-4.6, gemini-3.1-pro) bleiben nur auf der Historien-Folie
 // stehen — dort geht es um Bewegung, hier um den aktuellen Stand.
 //
-// Zwei Bewegungen gegenüber dem 14.08., beide vom Board übernommen: die beiden
+// Drei Bewegungen gegenüber dem 14.08., alle vom Board übernommen: die beiden
 // DeepSeek-Punkte sind durch die Preiserhöhung vom 16.08. nach rechts gewandert
 // und von der Front gefallen, glm-5.3-flash ist am 26.08. neu dazugekommen —
 // auf 0,21 € und 63 %, also Pixel für Pixel dem Platz, den deepseek-v4-pro
-// geräumt hat. Bewusst OHNE `old`-Geisterringe: der Ring von deepseek-v4-pro
-// läge exakt unter dem neuen glm-5.3-flash-Marker, und der Pfeil sähe dann so
-// aus, als sei glm-5.3-flash teurer geworden. Die Wanderung steht im Stationstext
-// und im ⓘ-Dialog, nicht im Chart.
+// geräumt hat —, und sol ist um 23 % billiger geworden (Ring unten). Von den
+// beiden DeepSeek-Punkten trägt nur deepseek-v4-flash einen `old`-Geisterring
+// (9 → 41 Cent): Ohne ihn fiel das Modell beim Durchklicken überraschend von
+// der Front, gesehen am 05.09.2026. deepseek-v4-pro bewusst OHNE Ring: der läge exakt
+// unter dem neuen glm-5.3-flash-Marker, und der Pfeil sähe dann so aus, als
+// sei glm-5.3-flash teurer geworden. Seine Wanderung steht im Stationstext und
+// im ⓘ-Dialog, nicht im Chart.
 //
 // `sub`/`sub25` = Kosten unter dem Claude-Code-Wochenkontingent. Modell:
 // Abo-Preis fix, Wochenlimit bindend ⇒ €/Task ∝ 1/Kontingent. Basis = 100 %.
@@ -436,7 +494,13 @@ const S_0814: Pt[] = [
 // werden deshalb immer beschriftet.
 const S_0826: Pt[] = [
   P("glm-5.3-flash", 0.21, 63, { ci: 4.4 }),
-  P("deepseek-v4-flash", 0.41, 53, { ci: 3.6 }),
+  P("deepseek-v4-flash", 0.41, 53, {
+    ci: 3.6,
+    old: {
+      x: 0.09,
+      why: "DeepSeek-Preiserhöhung 16.08. (Peak/Off-Peak), vom Board am 21.08. nachgerechnet",
+    },
+  }),
   P("gpt-5.6-luna", 0.53, 67, { ci: 4.0 }),
   P("deepseek-v4-pro", 1.46, 63, { ci: 6.3 }),
   P("gemini-3.7-flash", 1.77, 65, { ci: 1.8 }),
@@ -528,17 +592,19 @@ const S_0826_HIST: Pt[] = [
 // zurückkäme. Deshalb der Ring: er zeigt, dass der Befund die Verdopplung
 // überlebt.
 //
-// Sol verliert hier sein `old`. Die Senkung vom 21.08. ist die Pointe von
-// Stand 7 und steht dort weiter; auf der aktuellen Folie lägen beide Pfeile auf
-// derselben Höhe (py(74) = 29,7 gegen py(73) = 32,9, also 3 px auseinander) und
-// zeigten beide nach links — zwei gestrichelte Waagerechte, die wie eine
-// aussehen. So bedeutet der eine verbliebene Ring eindeutig einen KÜNFTIGEN
-// Stand, nicht eine vergangene Wanderung.
-const withoutSolGhost = (p: Pt): Pt =>
-  p.label === "gpt-5.6-sol" ? { ...p, old: undefined } : p;
+// Sol und deepseek-v4-flash verlieren hier ihr `old`. Beide Wanderungen sind
+// die Pointe von Stand 7 und stehen dort weiter; auf der aktuellen Folie lägen
+// Sols Pfeil und der von gemini-3.8-flash auf derselben Höhe (py(74) = 29,7
+// gegen py(73) = 32,9, also 3 px auseinander) und zeigten beide nach links —
+// zwei gestrichelte Waagerechte, die wie eine aussehen. So bedeutet der eine
+// verbliebene Ring eindeutig einen KÜNFTIGEN Stand, nicht eine vergangene
+// Wanderung.
+const PAST_GHOSTS = new Set(["gpt-5.6-sol", "deepseek-v4-flash"]);
+const withoutPastGhosts = (p: Pt): Pt =>
+  PAST_GHOSTS.has(p.label) ? { ...p, old: undefined } : p;
 
 const S_0902: Pt[] = [
-  ...S_0826.map(withoutSolGhost),
+  ...S_0826.map(withoutPastGhosts),
   P("gemini-3.8-flash", 2.07, 74, {
     ci: 1.4,
     old: {
@@ -553,7 +619,7 @@ const S_0902: Pt[] = [
 // Ring, der auf 2027 zeigt, läse sich dort als vergangene Wanderung. Gleiche
 // Entscheidung wie bei glm-5.3-flash in Stand 7.
 const S_0902_HIST: Pt[] = [
-  ...S_0826_HIST.map(withoutSolGhost),
+  ...S_0826_HIST.map(withoutPastGhosts),
   P("gemini-3.8-flash", 2.07, 74, { ci: 1.4 }),
 ].sort((a, b) => a.x - b.x);
 
@@ -609,8 +675,11 @@ const S_0902_HIST: Pt[] = [
 // Text, nicht in die Geometrie.
 //
 // astra (5,71 €/74 %) liegt fast auf gpt-5.6-sol (5,66 €/73 %): auf der
-// log-Achse 1 px daneben, 3 px darüber, die Marker überlappen. Der Klick auf
-// den Marker landet beim Nachbarn, die Beschriftung ist der Griff.
+// log-Achse 1 px daneben, 3 px darüber. Seit dem 05.09.2026 rückt
+// `dodgeMarkers` (paretoChrome.ts) die beiden waagerecht auseinander — sol
+// nach links, astra nach rechts, je rund 6 px — damit beide Marker und beide
+// Klickziele sichtbar sind. Der Wächter hält astra dabei auf 74 %: über
+// gemini-3.8-flash darf es nicht rutschen.
 //
 // Auf DIESER Folie ist astra kein Story-Punkt. Der Platzierer findet für sein
 // Label dort keinen freien Platz — zwischen dem Zwilling sol, gpt-5.5, kimi-k3,
@@ -631,32 +700,31 @@ const S_0903_HIST: Pt[] = [
 
 export const SNAPSHOTS: Snapshot[] = [
   {
-    id: "v1",
-    date: "v1 · Juni",
-    title: "Erste Runde",
-    note: "gpt-5.5 führt mit 70 %, alles andere bleibt unter 60 %. Anthropics bestes Modell kommt auf 58 % für 11 €. Opus 4.7 holte rund 18 % seiner Treffer per `git log --all`: Im Task-Container des Benchmarks lag die Musterlösung — abgeschrieben statt gelöst. Score zu hoch, Tokens und damit gemessene Kosten zu niedrig.",
-    pts: S_V1,
-  },
-  {
     id: "v11",
     date: "15.06.",
-    title: "v1.1: strengere Verifikation",
-    note: "Die Verifikation zieht aus dem Task-Container aus, das Repo kommt nur noch als Shallow Clone ohne die Lösungs-Commits. Acht Modelle, dieselben 113 Tasks, an der Spitze dieselbe Reihenfolge.",
-    reconstructed: true,
+    title: "Start: v1.1 mit acht Modellen",
+    note: "Datacurve misst seit dem 15.06. neu: eigener Container für die Tests, keine späteren Commits im Repo, instabile Tests raus. Acht Modelle auf denselben 113 Tasks, 13 ältere v1-Modelle nicht neu gefahren. Deshalb beginnt die Serie hier, den Vergleich zeigt die Bonusfolie. claude-fable-5 führt mit 70 % für 11,75 €, kimi-k2.7-code ist mit 2,47 € der billigste Punkt.",
     pts: S_V11,
+  },
+  {
+    id: "0710",
+    date: "10.07.",
+    title: "Die gpt-5.6-Familie nimmt die Front",
+    note: "OpenAI bringt luna, terra und sol an einem Tag: 67 % für 2,65 €, 70 % für 4,33 €, 73 % für 7,35 €. claude-fable-5 hat denselben Score wie terra und kostet fast das Dreifache, es ist damit dominiert. Anthropic ist auf der Front nicht mehr vertreten. Nur kimi-k2.7-code bleibt als billigster Punkt.",
+    pts: S_0710,
   },
   {
     id: "0722",
     date: "22.07.",
-    title: "Die gpt-5.6-Familie kommt",
-    note: "luna, terra und sol besetzen die Front zwischen 2,65 € und 7,35 €. Dazu kimi-k3, grok-4.5 und muse-spark-1.1. Anthropic ist auf der Front nicht vertreten.",
+    title: "Das billige Ende füllt sich",
+    note: "muse-spark-1.1 (53 % für 2,07 €), grok-4.5 (54 % für 2,12 €) und kimi-k3 (69 % für 4,08 €) kommen dazu und besetzen drei neue Frontpunkte. kimi-k2.7-code fällt von der Front. Die gpt-5.6-Familie bleibt.",
     pts: S_0722,
   },
   {
     id: "0725",
     date: "25.07.",
     title: "Opus 5 steigt ein",
-    note: "74 % für 10,37 € — erstmals liegt ein Claude-Modell auf der Front. Der Vorsprung auf sol beträgt einen Punkt bei ±3 bis ±4 Punkten Konfidenzintervall.",
+    note: "74 % für 10,37 €: Ein Claude-Modell ist zurück auf der Front, nachdem terra am 10.07. claude-fable-5 verdrängt hatte. Der Vorsprung auf sol beträgt einen Punkt bei ±3 bis ±4 Punkten Konfidenzintervall.",
     pts: S_0725,
   },
   {
@@ -671,29 +739,64 @@ export const SNAPSHOTS: Snapshot[] = [
     date: "14.08.",
     title: "Sechs Neuzugänge, zwei Korrekturen",
     note: "In zwei Wochen kommen sechs Modelle dazu, darunter zwei von DeepSeek für 9 und 21 Cent — die Front bekommt ein billiges Ende. Parallel korrigiert Datacurve zwei Abrechnungsfehler im DeepSWE-Benchmark: Gemini-Tokens doppelt gezählt, DeepSeek V4 Pro doppelt rabattiert. Die drei Gemini-Punkte wandern dadurch nach links, ohne die Front zu berühren — geändert hatte sich nicht das Modell, sondern die Rechnung des Benchmarks.",
-    reconstructed: true,
     pts: S_0814,
   },
   {
     id: "0826",
     date: "26.08.",
     title: "Der billige Boden wechselt den Besitzer",
-    note: "Am billigen Ende passieren zwei Dinge, die einander fast aufheben. DeepSeek stellt am 16.08. auf Peak/Off-Peak um und hebt die Preise an; das Board rechnet am 21.08. nach, und beide DeepSeek-Punkte wandern von 9 und 21 Cent auf 41 Cent und 1,46 € — von der Front gefallen, ohne dass sich ein Score geändert hätte. Fünf Tage später kommt glm-5.3-flash und landet auf 63 % für 21 Cent: exakt der Platz, den deepseek-v4-pro geräumt hat. Dazu wird sol um 23 % billiger und rückt von Opus 5 weg — für dessen einen Punkt Vorsprung zahlst Du jetzt rund 80 % Aufpreis statt rund 40 %. Fünf Punkte auf der Front, von 21 Cent bis 10,37 €.",
+    note: "Am billigen Ende passieren zwei Dinge, die einander fast aufheben. DeepSeek stellt am 16.08. auf Peak/Off-Peak um und hebt die Preise an. Das Board rechnet am 21.08. nach: Beide DeepSeek-Punkte wandern von 9 und 21 Cent auf 41 Cent und 1,46 € und fallen von der Front, ohne dass sich ein Score geändert hätte. Fünf Tage später kommt glm-5.3-flash und landet auf 63 % für 21 Cent: exakt der Platz, den deepseek-v4-pro geräumt hat. Dazu wird sol um 23 % billiger und rückt von Opus 5 weg. Für dessen einen Punkt Vorsprung zahlst Du jetzt rund 80 % Aufpreis statt rund 40 %. Fünf Punkte auf der Front, von 21 Cent bis 10,37 €.",
     pts: S_0826_HIST,
   },
   {
     id: "0902",
     date: "02.09.",
     title: "Die halbe Front verschwindet",
-    note: "Ein einziger Neuzugang räumt drei der fünf Frontpunkte ab. gemini-3.8-flash kommt am 01.09. auf 74 % für 2,07 € — derselbe Score wie Opus 5 zu einem Fünftel des Preises, und mit ±1,4 der engste Fehlerbalken im Feld. terra, sol und Opus 5 sind damit dominiert; übrig bleiben glm-5.3-flash, luna und der Neuzugang. Gleichauf heißt dabei wirklich gleichauf: Nach dem eigenen 5-Punkte-Kriterium liegen gemini-3.8-flash, Opus 5 und sol auf einem Niveau — was sich geändert hat, ist der Preis, nicht die Qualität. Kein anderes Modell hat sich bewegt, kein Preis wurde korrigiert.",
+    note: "Ein einziger Neuzugang räumt drei der fünf Frontpunkte ab. gemini-3.8-flash kommt am 01.09. auf 74 % für 2,07 €: derselbe Score wie Opus 5 zu einem Fünftel des Preises, und mit ±1,4 der engste Fehlerbalken im Feld. terra, sol und Opus 5 sind damit dominiert. Übrig bleiben glm-5.3-flash, luna und der Neuzugang. Gleichauf heißt dabei wirklich gleichauf: Nach dem eigenen 5-Punkte-Kriterium liegen gemini-3.8-flash, Opus 5 und sol auf einem Niveau. Geändert hat sich der Preis, nicht die Qualität. Kein anderes Modell hat sich bewegt, kein Preis wurde korrigiert.",
     pts: S_0902_HIST,
   },
   {
     id: "0903",
     date: "03.09.",
     title: "Die Front hält",
-    note: "Ein Neuzugang mit dem höchsten Rohwert, den dieses Board je ausgewiesen hat — und die Front bleibt Zeichen für Zeichen dieselbe. gpt-6-astra erreicht auf `xhigh` 74,12 % für 5,71 €, gemini-3.8-flash 73,83 % für 2,07 €. Gerundet sind das beide 74 %, und die 0,29 Punkte dazwischen liegen tief in den Fehlerbalken (±2,9 gegen ±1,4): Das teurere Modell kauft nichts, was man messen könnte. Genau dafür ist die Front da: Sie beantwortet nicht „welches ist das beste“, sondern „was ist das billigste, das reicht“. Nebenbei zeigt astra, warum dieses Chart die beste Stufe nimmt statt der höchsten: Seine höchste (`max`, 10,84 €) löst dieselben 331 Aufgaben wie `high` für 5,01 €. Der Preis ist ohnehin vorläufig — „expected launch pricing“.",
+    note: "Ein Neuzugang mit dem höchsten Rohwert, den dieses Board je ausgewiesen hat — und die Front bleibt Zeichen für Zeichen dieselbe. gpt-6-astra erreicht auf `xhigh` 74,12 % für 5,71 €, gemini-3.8-flash 73,83 % für 2,07 €. Gerundet sind das beide 74 %. Die 0,29 Punkte dazwischen liegen tief in den Fehlerbalken (±2,9 gegen ±1,4): Das teurere Modell kauft nichts, was man messen könnte. Genau dafür ist die Front da: Sie beantwortet nicht „welches ist das beste“, sondern „was ist das billigste, das reicht“. Nebenbei zeigt astra, warum dieses Chart die beste Stufe nimmt statt der höchsten: Seine höchste (`max`, 10,84 €) löst dieselben 331 Aufgaben wie `high` für 5,01 €. Der Preis ist ohnehin vorläufig — „expected launch pricing“.",
     pts: S_0903_HIST,
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Bonusfolie: v1 gegen v1.1
+// ---------------------------------------------------------------------------
+// Zwei Stationen, dieselbe Komponente wie die Historie. Stand 2 trägt für die
+// sechs doppelt gemessenen Modelle den v1-Wert als Geisterring (`old`) und
+// die 15 v1-Modelle ohne v1.1-Wert als Kreuze (`gone`). Beides ist aus `S_V1`
+// und `S_V11` abgeleitet, damit die Bonusfolie nicht driftet, wenn oben ein
+// Wert korrigiert wird.
+const V11_VS_V1: Pt[] = S_V11.map((p) => {
+  const v1 = S_V1.find((q) => q.label === p.label);
+  return v1
+    ? P(p.label, p.x, p.y, {
+        old: { x: v1.x, y: v1.y, pre: "v1", why: "v1-Wert, andere Messung" },
+      })
+    : p;
+});
+
+export const V1_COMPARE: Snapshot[] = [
+  {
+    id: "v1",
+    date: "v1 · 11.06.",
+    title: "v1: 21 Modelle, Tests im Agenten-Container",
+    note: "gpt-5.5 führt mit 70 %, Anthropics bestes Modell kommt auf 58 % für 11 €. Acht Frontpunkte von 0,62 € bis 5,79 €. Die Tests laufen im Container des Agenten, das Repo steht im Detached-HEAD-Modus mit sichtbarer Historie. Datacurve sah darin einen Cheat-Pfad: Eine ähnliche, upstream gemergte Lösung wäre per `git log` zu finden.",
+    warn: "DeepSWE v1: Tests im Container des Agenten, Repo im Detached-HEAD-Modus, instabile Tests und veraltete Abhängigkeiten bei einigen Tasks. Nur mit Vorbehalt mit v1.1 vergleichbar.",
+    pts: S_V1,
+  },
+  {
+    id: "v11-vs-v1",
+    date: "v1.1 · 15.06.",
+    title: "v1.1: acht Modelle, sechs davon neu gemessen",
+    note: "Sechs Modelle liefen unter beiden Methoden, die Pfeile zeigen den Sprung: Scores um −4 bis +9 Punkte, gpt-5.4 wird 29 % teurer, gemini-3.1-pro fünfmal so teuer. Die Front verliert ihr billiges Ende, weil die 15 Kreuze nie neu gefahren wurden, nicht weil sie schlechter wären. Neu dabei: claude-fable-5 und kimi-k2.7-code.",
+    gone: S_V1.filter((p) => !S_V11.some((q) => q.label === p.label)),
+    pts: V11_VS_V1,
   },
 ];
 
@@ -814,6 +917,32 @@ export const EFFORTS: readonly Cfg[] = [
 ];
 
 /** Effort-Rang wie im Board-Bundle (`/assets/live-leaderboard-*.js`). */
+export const EFFORT_ORDER: readonly Effort[] = [
+  "low",
+  "medium",
+  "high",
+  "xhigh",
+  "max",
+];
+
+// ---------------------------------------------------------------------------
+// Lupe „Die Effort-Falle" — zehnter Klick der Historie
+// ---------------------------------------------------------------------------
+// Hängt am letzten Stand und wird erst hier zugewiesen, weil sie aus `EFFORTS`
+// abgeleitet ist und die Tabelle erst hier steht. Die Leiter ist nicht
+// abgetippt: Ändert sich astras Zeile, ändert sich die Lupe mit. Die Region
+// fasst astras fünf Stufen (1,92 bis 10,84 €, 67 bis 74 %) und die Nachbarn.
+export const ASTRA_LENS: Lens = {
+  title: "Die Effort-Falle: mehr ist nicht besser, nur teurer",
+  note: "gpt-6-astra auf max kostet 10,84 € und löst 331 von 452 Aufgaben. high löst dieselben 331 für 5,01 €, xhigh 335 für 5,71 €. Das Board zeigt max, weil seine Regel die höchste Stufe nimmt. Wer die höchste Stufe bucht, zahlt das Doppelte für nichts. Vor dem Buchen die Stufen vergleichen: Bei vier von 22 Modellen ist die billigere Stufe auch die bessere.",
+  region: { x: [1.5, 13], y: [62, 78] },
+  focus: "gpt-6-astra",
+  ladder: EFFORT_ORDER.flatMap((e) =>
+    EFFORTS.filter((c) => c.label === "gpt-6-astra" && c.effort === e),
+  ),
+};
+SNAPSHOTS[SNAPSHOTS.length - 1]!.lens = ASTRA_LENS;
+
 const RANG: Record<Effort, number> = {
   low: 2,
   medium: 3,
@@ -999,6 +1128,8 @@ export interface ScaleOpts {
   B: number;
   xMax: number;
   yMax: number;
+  /** Untere Grenze der y-Achse, Default 0 — die Lupe zeigt einen Ausschnitt. */
+  yMin?: number;
   /**
    * Logarithmische x-Achse von `min` bis `xMax`. Die Kosten reichen von 0,09 €
    * bis 23 € — linear lagen 17 von 22 Markern auf einem Viertel der Breite,
@@ -1023,10 +1154,11 @@ export function makeScale(o: ScaleOpts): Scale {
           Math.log10(o.xMax / o.xLog!.min)) *
           span
     : (v: number) => o.L + (v / o.xMax) * span;
+  const yMin = o.yMin ?? 0;
   return {
     ...o,
     px,
-    py: (v) => o.H - o.B - (v / o.yMax) * (o.H - o.T - o.B),
+    py: (v) => o.H - o.B - ((v - yMin) / (o.yMax - yMin)) * (o.H - o.T - o.B),
   };
 }
 
@@ -1052,13 +1184,17 @@ export function paretoFront(pts: Pt[]): { front: Pt[]; dom: Pt[] } {
 
 export const tip = (p: Pt) =>
   `${p.label}: ${p.y} %${p.ci ? ` ± ${fmt(p.ci).replace(",00", "")}` : ""} · ${p.eur} €/Task` +
-  (p.old ? ` (${p.old.pre ?? "vorher"} ${p.old.eur} €)` : "");
+  (p.old
+    ? ` (${p.old.pre ?? "vorher"} ${p.old.y !== undefined ? `${p.old.y} % · ` : ""}${p.old.eur} €)`
+    : "");
 
 export interface MovedSeg {
   label: string;
   eur: string;
   /** Tooltip-Präfix, siehe `Origin.pre` — „vorher“, wenn nichts gesetzt ist. */
   pre: string;
+  /** Pass@1 am Geisterring, nur wenn er sich vom Punkt unterscheidet. */
+  y?: number;
   why: string;
   gx: number;
   gy: number;
@@ -1075,23 +1211,27 @@ export interface MovedSeg {
  * hinter dem Geisterring an und endet 9 px vor dem Marker, damit weder Ring
  * noch Punkt überzeichnet werden.
  *
- * `to` erlaubt eine abweichende Zielposition (Abo-Overlay: der Punkt wandert,
- * der Geisterring bleibt am API-Preis stehen).
+ * `at` liefert das Pfeilende in Chart-Pixeln — die ANGEZEIGTE Lage des
+ * Markers, die nach der Entzerrung (`dodgeMarkers`) von der wahren abweichen
+ * kann. Der Geisterring bleibt an der wahren alten Lage.
  */
 export function movedSegments(
   pts: Pt[],
   s: Scale,
   pick: (p: Pt) => Origin | undefined = (p) => p.old,
-  to: (p: Pt) => { x: number; y: number } = (p) => ({ x: p.x, y: p.y }),
+  at: (p: Pt) => { px: number; py: number } = (p) => ({
+    px: s.px(p.x),
+    py: s.py(p.y),
+  }),
 ): MovedSeg[] {
   return pts.flatMap((p) => {
     const o = pick(p);
     if (!o) return [];
-    const t = to(p);
+    const t = at(p);
     const gx = s.px(o.x);
     const gy = s.py(o.y ?? p.y);
-    const tx = s.px(t.x);
-    const ty = s.py(t.y);
+    const tx = t.px;
+    const ty = t.py;
     const len = Math.hypot(tx - gx, ty - gy) || 1;
     const ux = (tx - gx) / len;
     const uy = (ty - gy) / len;
@@ -1104,6 +1244,7 @@ export function movedSegments(
         label: p.label,
         eur: o.eur,
         pre: o.pre ?? "vorher",
+        y: o.y,
         why: o.why,
         gx,
         gy,

@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { paretoFront, SNAPSHOTS, type Pt } from "../../paretoData";
+import {
+  paretoFront,
+  SNAPSHOTS,
+  V1_COMPARE,
+  type Pt,
+  type Snapshot,
+} from "../../paretoData";
 
-// Rechnet die neun Stände von `paretoData.ts` aus den archivierten Rohdaten
-// unter `data/deepswe/` nach.
+// Rechnet die neun Stände der Historie und die zwei der Bonusfolie aus
+// `paretoData.ts` aus den archivierten Rohdaten unter `data/deepswe/` nach.
 //
 // Warum das kein Luxus ist: Die Punkte sind von Hand aus dem Board
 // abgeschrieben, und zweimal ist dabei ein falscher Wert hängengeblieben —
@@ -26,7 +32,17 @@ interface Zeile {
 const index = readFileSync(join(DIR, "index.ndjson"), "utf8")
   .trim()
   .split("\n")
-  .map((l) => JSON.parse(l) as { sha256: string; file: string });
+  .map(
+    (l) =>
+      JSON.parse(l) as {
+        sha256: string;
+        file: string;
+        generated_at: string | null;
+      },
+  );
+
+/** Historie plus Bonusfolie; die Stand-IDs sind über beide Listen eindeutig. */
+const STAENDE: Snapshot[] = [...SNAPSHOTS, ...V1_COMPARE];
 
 const zustand = (sha: string): Zeile[] => {
   const e = index.find((x) => x.sha256.startsWith(sha));
@@ -80,8 +96,10 @@ function besteJeModell(zeilen: Zeile[]): Map<string, { x: number; y: number }> {
  * gehört zum zweiten (der erste kennt gemini-3.7-flash auf `medium` noch nicht).
  */
 const ZUSTAND: Record<string, string> = {
-  v1: "cf2c61f9", // 11.06., 20 Modelle
+  v1: "cf2c61f9", // 11.06., 20 Modelle — nur auf der Bonusfolie
   v11: "aa99357b", // 14.06., 8 Modelle — die v1.1-Runde
+  "v11-vs-v1": "aa99357b", // dieselben Werte, plus v1-Geisterringe
+  "0710": "2bc8cfe6", // 09.07. 20:23 UTC, Changelog-Eintrag vom 10.07.
   "0722": "f4153ab1", // 21.07.
   "0725": "978c7e4a", // 25.07.
   "0730": "d94cbb86", // Preissenkung, GLEICHER generated_at wie 0725
@@ -92,21 +110,22 @@ const ZUSTAND: Record<string, string> = {
 };
 
 /**
- * Die einzige Abweichung, die stehenbleibt — und sie hat einen Grund: Stand 1
- * stammt laut Kopf von `paretoData.ts` aus `/artifacts/v1/leaderboard-live.json`,
- * nicht aus der SSR-Payload. Die beiden Quellen desselben Tages unterscheiden
- * sich um genau dieses eine Modell. Die übrigen 20 Punkte stimmen.
+ * Die einzige Abweichung, die stehenbleibt — und sie hat einen Grund: Der
+ * v1-Stand der Bonusfolie stammt laut Kopf von `paretoData.ts` aus
+ * `/artifacts/v1/leaderboard-live.json`, nicht aus der SSR-Payload. Die
+ * beiden Quellen desselben Tages unterscheiden sich um genau dieses eine
+ * Modell. Die übrigen 20 Punkte stimmen.
  */
 const AUSNAHMEN: Record<string, string[]> = { v1: ["glm-5.2"] };
 
 describe("Stände gegen das Board-Archiv", () => {
   it("hat für jeden Stand einen archivierten Zustand", () => {
     expect(Object.keys(ZUSTAND).sort()).toStrictEqual(
-      SNAPSHOTS.map((s) => s.id).sort(),
+      STAENDE.map((s) => s.id).sort(),
     );
   });
 
-  it.each(SNAPSHOTS.map((s) => [s.id, s] as const))(
+  it.each(STAENDE.map((s) => [s.id, s] as const))(
     "leitet Stand %s Punkt für Punkt aus den Rohdaten her",
     (id, s) => {
       const best = besteJeModell(zustand(ZUSTAND[id]!));
@@ -194,7 +213,7 @@ describe("Der Regelwechsel bewegt keine Front", () => {
     max: 6,
   };
 
-  it.each(SNAPSHOTS.map((s) => [s.id, s] as const))(
+  it.each(STAENDE.map((s) => [s.id, s] as const))(
     "lässt die Front in Stand %s unverändert",
     (id, s) => {
       const zeilen = zustand(ZUSTAND[id]!).filter(
@@ -229,4 +248,50 @@ describe("Der Regelwechsel bewegt keine Front", () => {
       );
     },
   );
+});
+
+// Der Faktencheck vom 05.09.2026, gegen die Rohdaten festgehalten: Die
+// Historie beginnt mit v1.1, weil Datacurve am 15.06. nur acht Modelle neu
+// gefahren hat. Von den 15 v1-Modellen ohne v1.1-Wert (die Kreuze der
+// Bonusfolie) tauchen 13 in keinem späteren Board-Zustand mehr auf; glm-5.2
+// und deepseek-v4-pro kommen später neu gemessen zurück.
+describe("v1 gegen v1.1 in den Rohdaten", () => {
+  const modelle = (sha: string) =>
+    new Set(zustand(sha).map((r) => chartName(r.model)));
+
+  it("hatte am 11.06. 20 Modelle, am 14.06. genau die acht von v1.1", () => {
+    expect(modelle("cf2c61f9").size).toBe(20);
+    const v11 = SNAPSHOTS.find((s) => s.id === "v11")!;
+    expect([...modelle("aa99357b")].sort()).toStrictEqual(
+      v11.pts.map((p) => p.label).sort(),
+    );
+  });
+
+  it("hat 13 v1-Modelle nie wieder gemessen, zwei erst später", () => {
+    const spaeter = new Set<string>();
+    for (const e of index)
+      if (e.generated_at !== null && e.generated_at >= "2026-06-14")
+        for (const m of modelle(e.sha256)) spaeter.add(m);
+    const kreuze = V1_COMPARE[1]!.gone!.map((p) => p.label).sort();
+    expect(kreuze).toHaveLength(15);
+    expect(kreuze.filter((m) => !spaeter.has(m))).toStrictEqual([
+      "claude-haiku-4.5",
+      "claude-opus-4.6",
+      "claude-opus-4.7",
+      "gemini-3-flash",
+      "glm-5.1",
+      "gpt-5.4-mini",
+      "grok-build-0.1",
+      "kimi-k2.6",
+      "mimo-v2.5-pro",
+      "minimax-m2.7",
+      "minimax-m3",
+      "qwen3.6-plus",
+      "qwen3.7-max",
+    ]);
+    expect(kreuze.filter((m) => spaeter.has(m))).toStrictEqual([
+      "deepseek-v4-pro",
+      "glm-5.2",
+    ]);
+  });
 });

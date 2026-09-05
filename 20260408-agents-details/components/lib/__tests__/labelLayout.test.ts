@@ -14,7 +14,10 @@ import {
 } from "../../labelLayout";
 import {
   arrowCluster,
+  dodgeMarkers,
+  frontUnion,
   HISTORY_SCALE,
+  historyObstacles,
   HIT_R,
   HIT_R_HISTORY,
   LABEL_FONT,
@@ -24,7 +27,14 @@ import {
   toLayoutPoints,
   visiblePoints,
 } from "../../paretoChrome";
-import { CURRENT, paretoFront, SNAPSHOTS, type Pt } from "../../paretoData";
+import {
+  CURRENT,
+  paretoFront,
+  SNAPSHOTS,
+  V1_COMPARE,
+  type Pt,
+  type Snapshot,
+} from "../../paretoData";
 import { PRESETS, presetModels } from "../../providerFilter";
 
 // Der Platzierer ersetzt ~180 handgestimmte Versätze und einen zweiten
@@ -39,12 +49,23 @@ const story = (p: Pt) => p.story === true;
 
 const pos = (p: Placed) => [p.x, p.y, p.ax] as const;
 
-function pareto(subOn: boolean) {
+// Dieselbe Rechnung wie die Komponenten: erst die Entzerrung der Marker
+// (`dodgeMarkers`), dann der Platzierer auf den angezeigten Lagen.
+const ALL = new Set(presetModels("all", CURRENT));
+
+function pareto(subOn: boolean, rank2Rings?: readonly number[]) {
   const pts = toLayoutPoints(CURRENT, PARETO_SCALE, {
     overlay: true,
     subOn,
     story,
     presets: true,
+    pos: dodgeMarkers(
+      visiblePoints(CURRENT, ALL, subOn),
+      PARETO_SCALE,
+      "pareto",
+      (p) => p.sub !== undefined,
+      { horizontalOnly: frontUnion(CURRENT) },
+    ),
   });
   const obstacles = [
     ...quadrantBoxes(PARETO_SCALE),
@@ -55,23 +76,86 @@ function pareto(subOn: boolean) {
     bounds: plotBounds(PARETO_SCALE),
     hitR: HIT_R,
     obstacles,
+    rank2Rings,
   });
   return { pts, obstacles, layout };
 }
 
-function history(pts: Pt[]) {
-  const lp = toLayoutPoints(pts, HISTORY_SCALE, { overlay: false, story });
-  // Die Historie hat weder Quadranten-Überschriften noch Pfeilcluster.
-  const obstacles: Obstacle[] = [];
+function history(
+  snap: Pick<Snapshot, "pts" | "gone" | "warn">,
+  rank2Rings?: readonly number[],
+) {
+  const lp = toLayoutPoints(snap.pts, HISTORY_SCALE, {
+    overlay: false,
+    story,
+    pos: dodgeMarkers(snap.pts, HISTORY_SCALE, "history"),
+  });
+  // Weder Quadranten-Überschriften noch Pfeilcluster; nur die Bonusfolie
+  // bringt Kreuze und den Warnhinweis mit — dieselbe Rechnung wie im Chart.
+  const obstacles: Obstacle[] = historyObstacles(snap, HISTORY_SCALE);
   const layout = layoutLabels(lp, {
     font: LABEL_FONT.history,
     allFont: LABEL_FONT.historyAll,
     bounds: plotBounds(HISTORY_SCALE),
     hitR: HIT_R_HISTORY,
     obstacles,
+    rank2Rings,
   });
   return { pts: lp, obstacles, layout };
 }
+
+// Durchgang 1b (kurze Linien für Rang 2) darf nur hinzufügen: Jedes Label,
+// das ohne ihn steht, steht mit ihm an derselben Stelle. Die Zugänge tragen
+// eine Linie von höchstens 44 px plus Boxbreite.
+describe("Durchgang 1b — kurze Linien nur als Zugang", () => {
+  const faelle = [
+    ...SNAPSHOTS.map((s) => ({
+      name: `Historie ${s.id}`,
+      mit: history(s),
+      ohne: history(s, []),
+    })),
+    ...V1_COMPARE.map((s) => ({
+      name: `Bonus ${s.id}`,
+      mit: history(s),
+      ohne: history(s, []),
+    })),
+    { name: "Hauptfolie", mit: pareto(false), ohne: pareto(false, []) },
+    {
+      name: "Hauptfolie mit Kontingent",
+      mit: pareto(true),
+      ohne: pareto(true, []),
+    },
+  ];
+
+  it.each(faelle.map((f) => [f.name, f] as const))(
+    "%s: bewegt kein Label aus Durchgang 1",
+    (_name, f) => {
+      for (const [id, p] of f.ohne.layout.core) {
+        expect(pos(f.mit.layout.core.get(id)!), id).toStrictEqual(pos(p));
+      }
+      expect(f.mit.layout.core.size).toBeGreaterThanOrEqual(
+        f.ohne.layout.core.size,
+      );
+      for (const [id, p] of f.mit.layout.core) {
+        if (f.ohne.layout.core.has(id)) continue;
+        expect(p.rank, id).toBe(2);
+        if (p.leader) {
+          const len = Math.hypot(
+            p.leader.x2 - p.leader.x1,
+            p.leader.y2 - p.leader.y1,
+          );
+          expect(len, id).toBeLessThanOrEqual(44 + p.box.w);
+        }
+      }
+    },
+  );
+
+  it("benennt über alle Zustände mehr Punkte", () => {
+    const mit = faelle.reduce((n, f) => n + f.mit.layout.core.size, 0);
+    const ohne = faelle.reduce((n, f) => n + f.ohne.layout.core.size, 0);
+    expect(mit - ohne).toBeGreaterThanOrEqual(5);
+  });
+});
 
 function expectClean(
   name: string,
@@ -167,6 +251,9 @@ describe("Folie 42 — Default ohne Überschneidung", () => {
     }
   });
 
+  // Die Entzerrung rückt terra und glm-5.3 waagerecht auseinander (terra ist
+  // im Windsurf-Preset Frontpunkt, darf also nicht in der Höhe wandern);
+  // glm-5.3 behält seinen Nahplatz, kimi-k3 bleibt namenlos.
   it("lässt im Default nur diese Punkte namenlos", () => {
     const { layout } = pareto(false);
     expect(layout.dropped).toMatchInlineSnapshot(`
@@ -220,42 +307,79 @@ describe("Folie 42 — kein Schalter verschiebt ein Label", () => {
   });
 });
 
+// Historie und Bonusfolie laufen durch dieselbe Komponente; die Zusagen gelten
+// für jede Station beider Listen.
+function expectStation(snap: Snapshot) {
+  const { pts, obstacles, layout } = history(snap);
+  expectClean(
+    snap.id,
+    pts,
+    layout,
+    obstacles,
+    plotBounds(HISTORY_SCALE),
+    HIT_R_HISTORY,
+  );
+  expect(layout.all.size).toBe(snap.pts.length);
+  for (const [id, p] of layout.core) {
+    expect(pos(layout.all.get(id)!), `${snap.id}: ${id}`).toStrictEqual(pos(p));
+  }
+}
+
 describe("Folie 43 — jede Station", () => {
   for (const snap of SNAPSHOTS) {
     it(`${snap.date}: Default sauber, Detailmodus vollständig und positionsgleich`, () => {
-      const { pts, obstacles, layout } = history(snap.pts);
-      expectClean(
-        snap.id,
-        pts,
-        layout,
-        obstacles,
-        plotBounds(HISTORY_SCALE),
-        HIT_R_HISTORY,
-      );
-      expect(layout.all.size).toBe(snap.pts.length);
-      for (const [id, p] of layout.core) {
-        expect(pos(layout.all.get(id)!), `${snap.id}: ${id}`).toStrictEqual(
-          pos(p),
-        );
-      }
+      expectStation(snap);
     });
   }
 
   it("lässt je Station nur so viele Punkte namenlos", () => {
     const n = Object.fromEntries(
-      SNAPSHOTS.map((s) => [s.id, history(s.pts).layout.dropped.length]),
+      SNAPSHOTS.map((s) => [s.id, history(s).layout.dropped.length]),
     );
     expect(n).toMatchInlineSnapshot(`
       {
+        "0710": 0,
         "0722": 0,
         "0725": 0,
         "0730": 0,
         "0814": 4,
-        "0826": 6,
-        "0902": 7,
-        "0903": 7,
-        "v1": 4,
+        "0826": 3,
+        "0902": 5,
+        "0903": 6,
         "v11": 0,
+      }
+    `);
+  });
+});
+
+describe("Bonusfolie — v1 gegen v1.1", () => {
+  for (const snap of V1_COMPARE) {
+    it(`${snap.date}: Default sauber, Detailmodus vollständig und positionsgleich`, () => {
+      expectStation(snap);
+    });
+  }
+
+  // Der Warnhinweis steht oben links, wo kein v1-Punkt liegt; die Kreuze sind
+  // weiche Hindernisse. Beides darf im Default kein Label verdrängen, das die
+  // Historie an derselben Stelle setzen würde.
+  it("kennt Warnhinweis und Kreuze als Hindernisse", () => {
+    const [v1, v11] = V1_COMPARE;
+    expect(history(v1!).obstacles.map((o) => o.name)).toStrictEqual(["warn"]);
+    const kreuze = history(v11!).obstacles;
+    expect(kreuze).toHaveLength(15);
+    expect(kreuze.every((o) => o.soft && o.name.startsWith("gone:"))).toBe(
+      true,
+    );
+  });
+
+  it("lässt je Station nur so viele Punkte namenlos", () => {
+    const n = Object.fromEntries(
+      V1_COMPARE.map((s) => [s.id, history(s).layout.dropped.length]),
+    );
+    expect(n).toMatchInlineSnapshot(`
+      {
+        "v1": 3,
+        "v11-vs-v1": 0,
       }
     `);
   });

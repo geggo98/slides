@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import BunPopover from "./BunPopover.vue";
 
-// Gemeinsames ⓘ-Modal von DREI Folien: ModelRoutingRoles (Rollen),
-// ModelRoutingPareto (Datenlage), ModelRoutingHistory (Historie).
+// Gemeinsames ⓘ-Modal von VIER Folien: ModelRoutingRoles (Rollen),
+// ModelRoutingPareto (Datenlage), ModelRoutingHistory (Historie und die
+// Bonusfolie v1 gegen v1.1).
 //
-// Regel für jeden Eintrag: er muss auf allen drei Folien stimmen. Kein „hier",
+// Regel für jeden Eintrag: er muss auf allen vier Folien stimmen. Kein „hier",
 // kein „diese Folie". Fehlerbalken und der Kontingent-Schalter existieren nur im
 // Pareto-Chart, das Fadenkreuz zusätzlich im Historien-Chart (dort opt-in über
 // „alle Namen + Fadenkreuz") — wer sie erwähnt, benennt die Folie dazu.
 // Folienspezifisches gehört in die jeweilige Host-Komponente, nicht hierher.
 //
 // Falls das je zu eng wird: ein `chart?: boolean` je Eintrag (Chart-Folien vs.
-// Rollen-Folie), keine Drei-Wege-Fallunterscheidung — die würde 11 Einträge ×
-// 3 Folien zu pflegen geben und bei jeder Folienverschiebung verrotten.
+// Rollen-Folie), keine Fallunterscheidung je Folie — die würde 11 Einträge ×
+// 4 Folien zu pflegen geben und bei jeder Folienverschiebung verrotten.
 defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: "close"): void }>();
 
@@ -31,6 +32,11 @@ const sources = [
     href: "https://deepswe.datacurve.ai/changelog",
     label: "DeepSWE-Changelog",
     note: "Neuzugänge und Preiskorrekturen je Datum",
+  },
+  {
+    href: "https://deepswe.datacurve.ai/blog/deepswe-v1-1",
+    label: "DeepSWE v1.1 (Blog, 14.06.2026)",
+    note: "isolierte Verifikation, neun Konfigurationen doppelt gemessen",
   },
   {
     href: "https://ai.google.dev/gemini-api/docs/pricing",
@@ -120,7 +126,7 @@ const caveats = [
   },
   {
     lead: "Höchste Effort-Stufe:",
-    text: "Jedes Modell zählt hier mit seiner BESTEN gemessenen Konfiguration: höchster pass@1, bei Gleichstand die billigere Stufe. Das Board macht es anders — es nimmt je Modell die höchste Effort-Stufe. Das war dieselbe Sache, solange mehr Aufwand mehr Ergebnis hieß; bei vier der 22 Modelle stimmt das nicht mehr. gpt-6-astra löst auf high dieselben 331 von 452 Aufgaben wie auf max, für 5,01 € statt 10,84 €, und auf xhigh sogar 335 — den höchsten Rohwert des Boards — für 5,71 €. claude-fable-5 kostet auf max 18,95 € gegenüber 11,75 € auf xhigh, bei gleichem Score; grok-4.6 liegt auf medium höher als auf xhigh und kostet dort 3,02 € statt 4,82 €; gemini-3.7-flash entsprechend 1,77 € statt 1,91 €. Die Front ändert das in keinem der neun Stände — alle vier Punkte rücken nach links, keiner erreicht dabei eine Front. Nachgerechnet wird beides bei jedem Testlauf gegen die archivierten Board-Rohdaten unter data/deepswe.",
+    text: "Jedes Modell zählt hier mit seiner BESTEN gemessenen Konfiguration: höchster pass@1, bei Gleichstand die billigere Stufe. Das Board macht es anders — es nimmt je Modell die höchste Effort-Stufe. Das war dieselbe Sache, solange mehr Aufwand mehr Ergebnis hieß; bei vier der 22 Modelle stimmt das nicht mehr. gpt-6-astra löst auf high dieselben 331 von 452 Aufgaben wie auf max, für 5,01 € statt 10,84 €, und auf xhigh sogar 335 — den höchsten Rohwert des Boards — für 5,71 €. claude-fable-5 kostet auf max 18,95 € gegenüber 11,75 € auf xhigh, bei gleichem Score; grok-4.6 liegt auf medium höher als auf xhigh und kostet dort 3,02 € statt 4,82 €; gemini-3.7-flash entsprechend 1,77 € statt 1,91 €. Die Front ändert das in keinem der neun Stände — alle vier Punkte rücken nach links, keiner erreicht dabei eine Front. Nachgerechnet wird beides bei jedem Testlauf gegen die archivierten Board-Rohdaten unter data/deepswe. Die Lupe an Station 9 der Historien-Folie zeigt astras fünf Stufen als Leiter.",
   },
   {
     lead: "Quadranten:",
@@ -131,8 +137,14 @@ const caveats = [
     text: "Die x-Achse beider Charts ist logarithmisch, 0,1–30 €. Gleiche Abstände sind gleiche Faktoren, nicht gleiche Euro: von 0,21 € auf 0,53 € ist optisch so weit wie von 2 € auf 5 €. Linear lagen 17 der 22 Modelle auf einem Viertel der Breite, die Sprossen 1 und 2 der Leiter 11 px auseinander. Euro-Differenzen stehen im Tooltip und im Fadenkreuz. Beschriftet ist im Default, was ohne Überschneidung Platz hat — Front und die genannten Modelle immer; den Rest zeigt der Hover oder „alle Namen“.",
   },
   {
+    // Die Zahlen rechnet `markerDodge.test.ts` nach und hält sie gegen die
+    // Speaker Notes der drei Chart-Folien; hier steht das Maximum über alle.
+    lead: "Entzerrte Marker:",
+    text: "Marker, die einander verdeckten (sol/astra, terra/glm-5.3, muse-spark/grok-4.5, muse-spark-1.2/qwen3.8-max), stehen bis 8 px auseinandergerückt: höchstens 2,0 Prozentpunkte senkrecht oder 4,7 % im Preis waagerecht, immer unter dem Fehlerbalken des Punkts. Frontpunkte rücken nur waagerecht, kein dominierter Punkt rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert; die Speaker Notes jeder Chart-Folie nennen ihr Maximum.",
+  },
+  {
     lead: "Board-Default:",
-    text: "Das Board zeigt per Default 21 von 28 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes je gemessene Modell stehen.",
+    text: "Das Board zeigt per Default 21 von 28 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes unter v1.1 gemessene Modell stehen.",
   },
   {
     lead: "Anbieter-Filter:",
@@ -140,11 +152,11 @@ const caveats = [
   },
   {
     lead: "Kosten sind kein Messwert:",
-    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08., DeepSeek-Preiserhöhung 21.08.). Die Sol-Senkung vom 21.08. hatten wir zuerst selbst eingerechnet; das Board rechnet sie inzwischen auch — auf den Cent gleich. Ältere Datenstände zeigen den damals veröffentlichten Wert; zwei davon sind rekonstruiert und im Chart markiert.",
+    text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08., DeepSeek-Preiserhöhung 21.08.). Die Sol-Senkung vom 21.08. hatten wir zuerst selbst eingerechnet; das Board rechnet sie inzwischen auch — auf den Cent gleich. Ältere Datenstände zeigen den damals veröffentlichten Wert, jeder ist gegen einen archivierten Board-Zustand nachgerechnet. Umgerechnet wird konstant mit 1 USD = 0,876 € über alle Stände, damit die Zeitreihe Preisbewegungen zeigt und kein Wechselkurs-Rauschen.",
   },
   {
-    lead: "DeepSWE v1 war kontaminiert:",
-    text: "In der ersten Runde lief die Verifikation im selben Container wie der Agent, und das Repo kam mit voller Git-Historie. Wer die Lösung las statt sie zu erarbeiten, holte sich Punkte, die er ohne sie vielleicht nicht bekommen hätte — und brauchte dafür kaum Tokens. Scores zu hoch, Kosten zu niedrig, beides nicht mit v1.1 vergleichbar. Im Historien-Chart ist das die erste Station.",
+    lead: "Warum die Serie am 15.06. beginnt:",
+    text: "DeepSWE v1 war eine andere Messung: Die Tests liefen im Container des Agenten, das Repo stand im Detached-HEAD-Modus mit sichtbarer Historie, einige Tasks hatten instabile Tests und veraltete Abhängigkeiten. v1.1 bewertet seit dem 15.06. nur noch den committeten Patch in einem eigenen Container und zeigt keine späteren Commits mehr. Datacurve nennt die Scores „close“: Neun doppelt gemessene Konfigurationen liegen −3,8 bis +6,0 Punkte auseinander. Nur acht Modelle wurden neu gefahren, 13 ältere nie wieder. Die Historie beginnt deshalb mit v1.1. Die Bonusfolie am Ende zeigt v1 gegen v1.1.",
   },
   {
     lead: "Abo ist kein API-Preis:",
@@ -168,7 +180,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, dreimal allein durch Preisanpassungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra der höchste Rohwert des ganzen Boards dazu — und die Front blieb, weil derselbe gerundete Score woanders ein Drittel kostet. Nicht die Modellnamen sind die Empfehlung dieser Folie, sondern die Regel: der billigste Frontpunkt, der Deine Aufgaben löst. Die überlebt den nächsten Board-Eintrag, die Namen nicht. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen ohnehin nur eigene Evals.",
+    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, zweimal davon allein durch Preisänderungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra der höchste Rohwert des ganzen Boards dazu — und die Front blieb, weil derselbe gerundete Score woanders ein Drittel kostet. Nicht die Modellnamen sind die Empfehlung dieser Folie, sondern die Regel: der billigste Frontpunkt, der Deine Aufgaben löst. Die überlebt den nächsten Board-Eintrag, die Namen nicht. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen ohnehin nur eigene Evals.",
   },
 ];
 </script>
@@ -176,10 +188,11 @@ const caveats = [
 <template>
   <BunPopover :open="open" wide @close="emit('close')">
     <div class="bun-pop-h">Quellen &amp; Einschränkungen</div>
-    <!-- Der Geltungsbereich muss dastehen: dasselbe Modal hängt an drei Folien,
+    <!-- Der Geltungsbereich muss dastehen: dasselbe Modal hängt an vier Folien,
          und einzelne Einträge benennen die Folie, für die sie gelten. -->
     <div class="mrs-scope">
-      Gilt für alle drei Modell-Routing-Folien: Rollen, Datenlage, Historie.
+      Gilt für alle vier Modell-Routing-Folien: Rollen, Datenlage, Historie und
+      die Bonusfolie v1 gegen v1.1.
     </div>
     <div class="mrs-grid">
       <div>

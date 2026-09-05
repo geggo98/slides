@@ -16,9 +16,12 @@ import {
   layoutLabels,
   type Obstacle,
   type Placed,
+  type XY,
 } from "./labelLayout";
 import {
   arrowCluster,
+  dodgeDetailed,
+  frontUnion,
   HIT_R,
   LABEL_FONT,
   PARETO_SCALE,
@@ -79,13 +82,41 @@ const pts = computed<Pt[]>(() =>
 const front = computed(() => paretoFront(pts.value).front);
 const dom = computed(() => paretoFront(pts.value).dom);
 const allPts = computed(() => pts.value);
+
+// Entzerrung: Marker, die einander verdecken (sol/astra, terra/glm-5.3,
+// muse-spark-1.2/qwen3.8-max), rücken bis 8 px auseinander — gerechnet auf
+// dem VOLLEN Satz, damit der Anbieter-Filter nur ausblendet und nichts
+// verschiebt; das Overlay bewegt nur die Claude-Punkte (`dodgeMarkers`).
+// `at()` ist die angezeigte Lage für Marker, Sprossennummer, Front-Polyline,
+// Klickziele, Fadenkreuz-Ring und Pfeilende. Fadenkreuz-Linien, Badges,
+// Fehlerbalken und Geisterringe bleiben am wahren Wert.
+const ALL = new Set(presetModels("all", CURRENT));
+// Punkte, die in irgendeinem Preset auf der Front stehen, rücken nur
+// waagerecht: Die Front darf in keiner Ansicht in der Höhe lügen.
+const FRONT_UNION = frontUnion(CURRENT);
+const dodge = computed(() =>
+  dodgeDetailed(
+    visiblePoints(CURRENT, ALL, subOn.value),
+    S,
+    "pareto",
+    (p) => p.sub !== undefined,
+    { horizontalOnly: FRONT_UNION },
+  ),
+);
+const at = (p: Pt): XY =>
+  dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
+const dodgedMax = computed(() =>
+  Math.max(0, ...dodge.value.moved.map((m) => Math.hypot(m.dx, m.dy))),
+);
+
 const frontPath = computed(() =>
-  front.value.map((p) => `${px(p.x)},${py(p.y)}`).join(" "),
+  front.value.map((p) => `${at(p).px},${at(p).py}`).join(" "),
 );
 
 // Wanderungen: die gemini-Preiserhöhung zum 01.01. immer, die Kontingent-
 // Rechnung nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
-const moved = computed(() => movedSegments(pts.value, S));
+// Der Pfeil endet an der angezeigten Lage, der Ring bleibt an der wahren.
+const moved = computed(() => movedSegments(pts.value, S, undefined, at));
 
 // Beschriftung. Gerechnet aus dem VOLLEN Datensatz, nicht aus `pts`: Der
 // Filter blendet Labels nur aus, das Overlay bewegt nur die Claude-Labels mit
@@ -106,6 +137,7 @@ const layoutPts = computed(() =>
     subOn: subOn.value,
     story: (p) => p.story === true,
     presets: true,
+    pos: dodge.value.pos,
   }),
 );
 const layout = computed(() => layoutLabels(layoutPts.value, layoutOpts));
@@ -211,6 +243,9 @@ const chartLabel = computed(
       : unnamed.value.length
         ? ` ${unnamed.value.length} Punkte tragen keinen Namen, weil dort kein Platz ist; Hover oder Pin zeigt ihn, der Schalter „alle Namen“ alle.`
         : "") +
+    (dodge.value.moved.length
+      ? ` ${dodge.value.moved.length} Marker sind bis ${dodgedMax.value.toFixed(1).replace(".", ",")} Pixel auseinandergerückt, damit sie sich nicht verdecken; Fadenkreuz und Tooltip zeigen den wahren Wert.`
+      : "") +
     (subOn.value
       ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
         "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
@@ -473,10 +508,15 @@ const whiskers = computed(() =>
            kostete die Nummer 12 px Breite in der dichtesten Zone; im Marker
            kostet sie nichts. Die Zählung folgt dem Anbieter-Filter. -->
       <g v-for="(p, i) in front" :key="p.label">
-        <circle :cx="px(p.x)" :cy="py(p.y)" r="7" class="mp-front-pt">
+        <circle :cx="at(p).px" :cy="at(p).py" r="7" class="mp-front-pt">
           <title>{{ tip(p) }}</title>
         </circle>
-        <text :x="px(p.x)" :y="py(p.y)" class="mp-front-num" aria-hidden="true">
+        <text
+          :x="at(p).px"
+          :y="at(p).py"
+          class="mp-front-num"
+          aria-hidden="true"
+        >
           {{ i + 1 }}
         </text>
       </g>
@@ -484,8 +524,8 @@ const whiskers = computed(() =>
       <!-- Dominierte Modelle -->
       <g v-for="p in dom" :key="p.label">
         <rect
-          :x="px(p.x) - 5"
-          :y="py(p.y) - 5"
+          :x="at(p).px - 5"
+          :y="at(p).py - 5"
           width="10"
           height="10"
           class="mp-dom-pt"
@@ -496,9 +536,9 @@ const whiskers = computed(() =>
 
       <!-- Beschriftungen als eigene Schicht nach allen Markern, damit ihr Halo
            über den Punkten liegt. Wo sie stehen, sagt `labelLayout.ts`; die
-           Beschriftung ist zugleich der zweite Griff an einem Punkt — und für
-           Zwillinge wie gpt-5.6-sol unter gpt-6-astra der einzige, weil das
-           später gerenderte Klickziel das frühere vollständig überdeckt. -->
+           Beschriftung ist zugleich der zweite Griff an einem Punkt. Zwillinge
+           wie gpt-5.6-sol und gpt-6-astra rückt die Entzerrung auseinander,
+           seither trifft auch das Klickziel den richtigen Punkt. -->
       <text
         v-for="l in labels"
         :key="`lbl-${l.p.label}`"
@@ -581,7 +621,7 @@ const whiskers = computed(() =>
       >
         <line :x1="px(c.p.x)" :y1="T" :x2="px(c.p.x)" :y2="H - B" />
         <line :x1="L" :y1="py(c.p.y)" :x2="W - R" :y2="py(c.p.y)" />
-        <circle :cx="px(c.p.x)" :cy="py(c.p.y)" r="9.5" class="mp-ch-ring" />
+        <circle :cx="at(c.p).px" :cy="at(c.p).py" r="9.5" class="mp-ch-ring" />
         <text
           :x="px(c.p.x)"
           :y="H - B + 15"
@@ -622,12 +662,13 @@ const whiskers = computed(() =>
 
       <!-- Unsichtbare Hit-Targets — zuletzt gerendert, fangen also die Events.
            Ihr Radius ist zugleich das Hindernis des Platzierers: kein Label
-           liegt unter einem fremden Klickziel. -->
+           liegt unter einem fremden Klickziel. Sie sitzen auf der angezeigten
+           Lage, damit ein Klick auf einen entzerrten Marker diesen trifft. -->
       <circle
         v-for="p in allPts"
         :key="`hit-${p.label}`"
-        :cx="px(p.x)"
-        :cy="py(p.y)"
+        :cx="at(p).px"
+        :cy="at(p).py"
         :r="HIT_R"
         class="mp-hit"
         role="button"
@@ -875,7 +916,7 @@ const whiskers = computed(() =>
    das Gitter, sie soll führen und nicht auffallen. */
 .mp-leader {
   stroke: var(--color-text-tertiary);
-  stroke-width: 0.6;
+  stroke-width: 0.9;
   opacity: 0.7;
 }
 /* Schriftgröße auch in `paretoChrome.ts` (LABEL_FONT.pareto): daraus rechnet
