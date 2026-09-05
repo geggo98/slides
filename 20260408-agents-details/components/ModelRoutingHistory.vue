@@ -118,7 +118,17 @@ const split = computed(() => paretoFront(snap.value.pts));
 // (`dodgeMarkers` in paretoChrome.ts). `at()` ist die angezeigte Lage — für
 // Marker, Front-Polyline, Klickziele, Fadenkreuz-Ring und Pfeilende.
 // Fadenkreuz-Linien, Badges, Geisterringe und Kreuze bleiben am wahren Wert.
-const dodge = computed(() => dodgeDetailed(snap.value.pts, S, "history"));
+// Die Kreuze der Bonusfolie sind feste Hindernisse: Ein Marker soll nicht
+// unter einem Kreuz verschwinden (claude-sonnet-4.6 unter claude-opus-4.6).
+const dodge = computed(() =>
+  dodgeDetailed(snap.value.pts, S, "history", () => false, {
+    fixed: (snap.value.gone ?? []).map((p) => ({
+      px: px(p.x),
+      py: py(p.y),
+      h: 4.5,
+    })),
+  }),
+);
 const at = (p: Pt): XY =>
   dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
 const dodgedMax = computed(() =>
@@ -479,7 +489,13 @@ const fmtPct = (v: number) => v.toFixed(2).replace(".", ",");
 
         <polyline :points="frontPath" class="mh-front-line" />
         <g v-for="p in split.front" :key="`f-${p.label}`">
-          <circle :cx="at(p).px" :cy="at(p).py" r="6" class="mh-front-pt">
+          <circle
+            :cx="at(p).px"
+            :cy="at(p).py"
+            r="6"
+            class="mh-front-pt"
+            :class="{ 'mh-focus': lensOn && p.label === snap.lens?.focus }"
+          >
             <title>{{ tip(p) }}</title>
           </circle>
         </g>

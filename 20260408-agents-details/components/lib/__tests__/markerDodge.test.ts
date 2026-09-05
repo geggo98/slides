@@ -257,14 +257,32 @@ describe("Marker-Entzerrung", () => {
       expect(xs[i]).toBeGreaterThan(xs[i - 1]!);
   });
 
-  it("nutzt je Chart die Halbmaße der gezeichneten Marker", () => {
-    // Historie: Frontkreis r 6 + halber Strich, Quadrat 9 px, Ring r 4,5.
-    // Hauptfolie: Frontkreis r 7, Quadrat 10 px, Ring r 5.
-    expect(MARKER.history).toStrictEqual({ front: 7, dom: 4.5, ghost: 5.2 });
-    expect(MARKER.pareto).toStrictEqual({ front: 8, dom: 5, ghost: 5.7 });
-    expect(
-      half(SNAPSHOTS[0]!.pts, "history")(SNAPSHOTS[0]!.pts[0]!),
-    ).toBeGreaterThan(0);
+  // Die Halbmaße müssen zu dem passen, was die Komponenten zeichnen: Front-
+  // kreis r plus 1 px Surface-Strich, halbe Quadratkante, Ring r plus 0,7.
+  // Gelesen aus den Templates, damit eine geänderte Markergröße hier auffällt.
+  it.each([
+    ["history", "ModelRoutingHistory.vue", "mh"],
+    ["pareto", "ModelRoutingPareto.vue", "mp"],
+  ] as const)("nutzt die Halbmaße der Marker aus %s", (kind, file, cls) => {
+    const src = readFileSync(join(import.meta.dirname, "../..", file), "utf8");
+    const num = (re: RegExp) => {
+      const m = src.match(re);
+      expect(m, String(re)).not.toBeNull();
+      return Number(m![1]);
+    };
+    const frontR = num(new RegExp(`r="([\\d.]+)"\\s+class="${cls}-front-pt"`));
+    const domW = num(
+      new RegExp(
+        `width="([\\d.]+)"\\s+height="[\\d.]+"\\s+class="${cls}-dom-pt"`,
+      ),
+    );
+    const ghostR = num(/r="([\d.]+)"\s+class="mp-old-pt"/);
+    expect(MARKER[kind].front).toBe(frontR + 1);
+    expect(MARKER[kind].dom).toBe(domW / 2);
+    expect(MARKER[kind].ghost).toBeCloseTo(ghostR + 0.7, 6);
+    expect(half(SNAPSHOTS[0]!.pts, kind)(SNAPSHOTS[0]!.pts[0]!)).toBe(
+      MARKER[kind].front,
+    );
   });
 
   // Welche Marker sich bewegen, ist eine redaktionelle Aussage der Folien
@@ -414,5 +432,19 @@ describe("Abweichung in den Speaker Notes", () => {
       `${fmt1(m.pp)} Prozentpunkte senkrecht oder ${fmt1(m.pct)} % im Preis waagerecht`;
     expect(notesAfter(anchor)).toContain(satz);
     expect(m.px).toBeLessThanOrEqual(DODGE.cap);
+  });
+
+  // Der ⓘ-Caveat gilt für alle Chart-Folien und nennt das Maximum über alle
+  // Zustände plus die Kappe.
+  it("ⓘ-Caveat nennt Kappe und Maximum über alle Folien", () => {
+    const src = readFileSync(
+      join(import.meta.dirname, "../../ModelRoutingSources.vue"),
+      "utf8",
+    );
+    const m = maximum(ZUSTAENDE);
+    expect(src).toContain(`stehen bis ${DODGE.cap} px auseinandergerückt`);
+    expect(src).toContain(
+      `höchstens ${fmt1(m.pp)} Prozentpunkte senkrecht oder ${fmt1(m.pct)} % im Preis waagerecht`,
+    );
   });
 });

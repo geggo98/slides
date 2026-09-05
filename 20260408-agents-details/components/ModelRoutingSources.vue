@@ -156,7 +156,7 @@ const caveats = [
   },
   {
     lead: "Warum die Serie am 15.06. beginnt:",
-    text: "DeepSWE v1 war eine andere Messung: Die Tests liefen im Container des Agenten, das Repo stand im Detached-HEAD-Modus mit sichtbarer Historie, einige Tasks hatten instabile Tests und veraltete Abhängigkeiten. v1.1 bewertet seit dem 15.06. nur noch den committeten Patch in einem eigenen Container und zeigt keine späteren Commits mehr. Datacurve nennt die Scores „close“: Neun doppelt gemessene Konfigurationen liegen −3,8 bis +6,0 Punkte auseinander. Nur acht Modelle wurden neu gefahren, 13 ältere nie wieder. Die Historie beginnt deshalb mit v1.1. Die Bonusfolie am Ende zeigt v1 gegen v1.1.",
+    text: "DeepSWE v1 war eine andere Messung: Die Tests liefen im Container des Agenten, das Repo stand im Detached-HEAD-Modus mit sichtbarer Historie, einige Tasks hatten instabile Tests und veraltete Abhängigkeiten. v1.1 bewertet seit dem 15.06. nur noch den committeten Patch in einem eigenen Container und zeigt keine späteren Commits mehr. Datacurve nennt die Scores „close“: Neun doppelt gemessene Konfigurationen liegen −3,8 bis +6,0 Punkte auseinander. Nur acht Modelle liefen unter v1.1, sechs davon schon in v1, 13 ältere nie wieder. Die Historie beginnt deshalb mit v1.1. Die Bonusfolie am Ende zeigt v1 gegen v1.1.",
   },
   {
     lead: "Abo ist kein API-Preis:",
@@ -180,7 +180,7 @@ const caveats = [
   },
   {
     lead: "Verfallsdatum:",
-    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, zweimal davon allein durch Preisänderungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra der höchste Rohwert des ganzen Boards dazu — und die Front blieb, weil derselbe gerundete Score woanders ein Drittel kostet. Nicht die Modellnamen sind die Empfehlung dieser Folie, sondern die Regel: der billigste Frontpunkt, der Deine Aufgaben löst. Die überlebt den nächsten Board-Eintrag, die Namen nicht. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen ohnehin nur eigene Evals.",
+    text: "Stand 03.09.2026 — und schon in sich veraltet: die Front hat sich seit Juni in acht Übergängen siebenmal verschoben, zwei davon durch Preisänderungen. Wie schnell das geht, zeigt der Stand davor: Ende August sagte diese Folie noch „Opus 5 führt mit 74 %“, dann kam ein einziger Board-Eintrag dazu und die Aussage war hinfällig. Die Gegenprobe steht daneben: Am 03.09. kam mit gpt-6-astra der höchste Rohwert des ganzen Boards dazu — und die Front blieb, weil derselbe gerundete Score woanders ein Drittel kostet. Nicht die Modellnamen sind die Empfehlung dieser Folie, sondern die Regel: der billigste Frontpunkt, der Deine Aufgaben löst. Die überlebt den nächsten Board-Eintrag, die Namen nicht. Wie die Modelle auf Deinen Aufgaben abschneiden, zeigen ohnehin nur eigene Evals.",
   },
 ];
 </script>

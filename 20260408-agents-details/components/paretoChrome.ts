@@ -364,8 +364,11 @@ export function visiblePoints(
 export const MARKER = {
   history: { front: 7, dom: 4.5, ghost: 5.2 },
   pareto: { front: 8, dom: 5, ghost: 5.7 },
-  /** Lupe: Stufenpunkte r 4, Kontextmarker r 3, keine Geisterringe. */
-  lens: { front: 4.5, dom: 3.5, ghost: 3.5 },
+  /**
+   * Lupe: Stufenpunkte r 4, Kontextmarker r 3. Ein Halbmaß für alle, weil
+   * Front/dominiert in der Panel-Menge nichts über den Zeichenradius sagt.
+   */
+  lens: { front: 4.5, dom: 4.5, ghost: 4.5 },
 } as const;
 
 export const DODGE = {
@@ -375,7 +378,7 @@ export const DODGE = {
   eps: 1e-6,
   /** Unter dieser Restüberlappung gilt ein Paar als getrennt — 0,02 px sieht niemand, und die hälftige Auflösung konvergiert nur geometrisch. */
   tol: 0.02,
-  maxSweeps: 12,
+  maxSweeps: 20,
 } as const;
 
 export interface DodgeResult {
@@ -403,6 +406,11 @@ export interface DodgeOpts {
    * als Sprosse 2 um 1,7 Punkte zu hoch (Befund vom 05.09.2026).
    */
   horizontalOnly?: ReadonlySet<string>;
+  /**
+   * Feste Hindernisse ohne eigenen Punkt — die Kreuze der Bonusfolie. Marker
+   * weichen ihnen aus wie Geisterringen.
+   */
+  fixed?: readonly { px: number; py: number; h: number }[];
 }
 
 export function dodgeDetailed(
@@ -417,7 +425,10 @@ export function dodgeDetailed(
     front.has(label) || (opts.horizontalOnly?.has(label) ?? false);
   const { gap, cap, eps, tol, maxSweeps } = DODGE;
   const front = new Set(paretoFront([...pts]).front.map((p) => p.label));
-  const order = [...pts].sort((a, b) => a.label.localeCompare(b.label));
+  // Reihenfolge nach Label, bewusst ohne Locale — bitgleich auf jeder Maschine.
+  const order = [...pts].sort((a, b) =>
+    a.label < b.label ? -1 : a.label > b.label ? 1 : 0,
+  );
   const half = (p: Pt) => (front.has(p.label) ? M.front : M.dom);
   const truth = new Map(
     order.map((p) => [p.label, { px: s.px(p.x), py: s.py(p.y) } as XY]),
@@ -440,6 +451,16 @@ export function dodgeDetailed(
     }
     level.set(p.label, lvl === Infinity ? -Infinity : lvl);
   }
+  // Waagerechter Wächter: ein dominierter Punkt bleibt sichtbar dominiert —
+  // nach dem Schub steht weiterhin ein Frontpunkt links über ihm. Sonst
+  // stünde er billiger und schlechter neben seinem Dominator und läse sich
+  // als Frontpunkt.
+  const stillDominated = (at: XY) =>
+    order.some((f) => {
+      if (!front.has(f.label)) return false;
+      const tf = truth.get(f.label)!;
+      return tf.px <= at.px + eps && tf.py <= at.py + eps;
+    });
 
   const ghostOf = (p: Pt): Ob | null =>
     p.old
@@ -460,13 +481,20 @@ export function dodgeDetailed(
       );
     });
 
+  // Kappe um die wahre Lage, dann der Plot-Rand: kein Marker rückt aus dem
+  // Achsenkreuz.
   const clamp = (p: Pt, at: XY): XY => {
     const t = truth.get(p.label)!;
     const dx = at.px - t.px;
     const dy = at.py - t.py;
     const d = Math.hypot(dx, dy);
-    if (d <= cap) return at;
-    return { px: t.px + (dx / d) * cap, py: t.py + (dy / d) * cap };
+    const c =
+      d <= cap ? at : { px: t.px + (dx / d) * cap, py: t.py + (dy / d) * cap };
+    const h = half(p);
+    return {
+      px: Math.min(Math.max(c.px, s.L + h), s.W - s.R - h),
+      py: Math.min(Math.max(c.py, s.T + h), s.H - s.B - h),
+    };
   };
 
   /** Darf `p` nach `at`? Kappe, Wächter, Front-Höhe und feste Hindernisse. */
@@ -476,6 +504,7 @@ export function dodgeDetailed(
     if (fixedY(p.label) && Math.abs(at.py - t.py) > eps) return false;
     const lvl = level.get(p.label);
     if (lvl !== undefined && at.py < lvl - eps) return false;
+    if (!front.has(p.label) && !stillDominated(at)) return false;
     return !violates(p, at, obs);
   };
 
@@ -558,17 +587,11 @@ export function dodgeDetailed(
             }
           }
           if (!done) {
-            // Beide auf beiden Achsen blockiert: hälftig auf der ersten Achse,
-            // die Kappe schneidet ab. Bleibt als `residual` messbar.
-            const ax = axes[0]!;
-            const n = need[ax];
-            if (ax === "x") {
-              shift(p, (-sign.x * n) / 2, 0);
-              shift(q, (sign.x * n) / 2, 0);
-            } else {
-              shift(p, 0, (-sign.y * n) / 2);
-              shift(q, 0, (sign.y * n) / 2);
-            }
+            // Beide auf beiden Achsen blockiert: hälftig waagerecht — nie
+            // senkrecht, damit weder Front-Höhe noch Wächter fallen. Kappe und
+            // Rand schneiden ab; was bleibt, ist als `residual` messbar.
+            shift(p, (-sign.x * need.x) / 2, 0);
+            shift(q, (sign.x * need.x) / 2, 0);
           }
         }
       }
@@ -579,11 +602,12 @@ export function dodgeDetailed(
 
   const fixed = order.filter((p) => !movable(p));
   const mov = order.filter(movable);
+  const extra: Ob[] = (opts.fixed ?? []).map((o) => ({ ...o }));
   const fixedGhosts = fixed.flatMap((p) => {
     const g = ghostOf(p);
     return g ? [g] : [];
   });
-  relax(fixed, fixedGhosts);
+  relax(fixed, [...fixedGhosts, ...extra]);
   if (mov.length) {
     const allGhosts = order.flatMap((p) => {
       const g = ghostOf(p);
@@ -594,15 +618,18 @@ export function dodgeDetailed(
       h: half(p),
       owner: p.label,
     }));
-    relax(mov, [...allGhosts, ...fixedObs]);
+    relax(mov, [...allGhosts, ...fixedObs, ...extra]);
   }
 
-  // Restverletzung über alle Paare und Ringe.
+  // Restverletzung über alle Paare, Ringe und festen Hindernisse.
   let residual = 0;
-  const allObs = order.flatMap((p) => {
-    const g = ghostOf(p);
-    return g ? [g] : [];
-  });
+  const allObs: Ob[] = [
+    ...order.flatMap((p) => {
+      const g = ghostOf(p);
+      return g ? [g] : [];
+    }),
+    ...extra,
+  ];
   for (let i = 0; i < order.length; i++) {
     const p = order[i]!;
     const a = cur.get(p.label)!;
@@ -626,7 +653,9 @@ export function dodgeDetailed(
     const c = cur.get(p.label)!;
     const dx = c.px - t.px;
     const dy = c.py - t.py;
-    return Math.hypot(dx, dy) > eps ? [{ label: p.label, dx, dy }] : [];
+    // Sichtbar bewegt heißt mehr als ein halbes Pixel — Bruchteile aus der
+    // Kastenkante zählen weder für Notizen noch für den Vorlesetext.
+    return Math.hypot(dx, dy) > 0.5 ? [{ label: p.label, dx, dy }] : [];
   });
   return { pos: cur, sweeps, residual: Math.max(0, residual), moved };
 }
@@ -851,17 +880,15 @@ export function lensView(
 
   // Klammer: das teuerste Paar mit gleichem Score — bei astra high und max.
   let bracket: LensView["bracket"] = null;
+  let best = 0;
   for (let i = 0; i < ladder.length; i++) {
     for (let j = i + 1; j < ladder.length; j++) {
       const a = ladder[i]!;
       const b = ladder[j]!;
       if (Math.abs(a.c.y - b.c.y) > 1e-9 || b.c.x <= a.c.x) continue;
       const ratio = b.c.x / a.c.x;
-      if (
-        bracket &&
-        ratio <= Number(bracket.text.slice(1, 4).replace(",", "."))
-      )
-        continue;
+      if (ratio <= best) continue;
+      best = ratio;
       bracket = {
         x1: a.px,
         x2: b.px,

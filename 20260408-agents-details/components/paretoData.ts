@@ -260,7 +260,8 @@ function P(
 }
 
 // ---------------------------------------------------------------------------
-// DeepSWE v1, Board-Stand 11.06.2026 (21 Modelle) — nur auf der Bonusfolie
+// DeepSWE v1, Board-Stand 11.06.2026 (21 Modelle: 20 aus der SSR-Payload plus
+// glm-5.2 aus dem JSON-Artefakt) — nur auf der Bonusfolie
 // ---------------------------------------------------------------------------
 // Andere Messung als alles Folgende, deshalb nicht in `SNAPSHOTS`: In v1 liefen
 // die Tests im Container des Agenten, das Repo stand im Detached-HEAD-Modus,
@@ -794,7 +795,7 @@ export const V1_COMPARE: Snapshot[] = [
     id: "v11-vs-v1",
     date: "v1.1 · 15.06.",
     title: "v1.1: acht Modelle, sechs davon neu gemessen",
-    note: "Sechs Modelle liefen unter beiden Methoden, die Pfeile zeigen den Sprung: Scores um −4 bis +9 Punkte, gpt-5.4 wird 29 % teurer, gemini-3.1-pro fünfmal so teuer. Die Front verliert ihr billiges Ende, weil die 15 Kreuze nie neu gefahren wurden, nicht weil sie schlechter wären. Neu dabei: claude-fable-5 und kimi-k2.7-code.",
+    note: "Sechs Modelle liefen unter beiden Methoden, die Pfeile zeigen den Sprung: Scores um −4 bis +9 Punkte (gerundete Board-Werte, Datacurve nennt für neun Konfigurationen −3,8 bis +6,0), gpt-5.4 wird 29 % teurer, gemini-3.1-pro fünfmal so teuer. Die Front verliert ihr billiges Ende, weil die 15 Kreuze nie neu gefahren wurden, nicht weil sie schlechter wären. Neu dabei: claude-fable-5 und kimi-k2.7-code.",
     gone: S_V1.filter((p) => !S_V11.some((q) => q.label === p.label)),
     pts: V11_VS_V1,
   },
@@ -934,7 +935,7 @@ export const EFFORT_ORDER: readonly Effort[] = [
 // fasst astras fünf Stufen (1,92 bis 10,84 €, 67 bis 74 %) und die Nachbarn.
 export const ASTRA_LENS: Lens = {
   title: "Die Effort-Falle: mehr ist nicht besser, nur teurer",
-  note: "gpt-6-astra auf max kostet 10,84 € und löst 331 von 452 Aufgaben. high löst dieselben 331 für 5,01 €, xhigh 335 für 5,71 €. Das Board zeigt max, weil seine Regel die höchste Stufe nimmt. Wer die höchste Stufe bucht, zahlt das Doppelte für nichts. Vor dem Buchen die Stufen vergleichen: Bei vier von 22 Modellen ist die billigere Stufe auch die bessere.",
+  note: "gpt-6-astra auf max kostet 10,84 € und löst 331 von 452 Aufgaben. high löst dieselben 331 für 5,01 €, xhigh 335 für 5,71 €. Das Board zeigt max, weil seine Regel die höchste Stufe nimmt. Wer die höchste Stufe bucht, zahlt mehr als das Doppelte für nichts. Vor dem Buchen die Stufen vergleichen: Bei vier von 22 Modellen ist die billigere Stufe auch die bessere.",
   region: { x: [1.5, 13], y: [62, 78] },
   focus: "gpt-6-astra",
   ladder: EFFORT_ORDER.flatMap((e) =>

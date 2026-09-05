@@ -1337,11 +1337,12 @@ Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 Entzerrte Marker: bis 5,9 px verschoben, höchstens 1,2 Prozentpunkte
 senkrecht oder 4,0 % im Preis waagerecht. Betroffen: sol und astra sowie
 terra und glm-5.3 (waagerecht auseinander), muse-spark-1.2 und qwen3.8-max
-(senkrecht); mit Kontingent-Overlay zusätzlich claude-fable-5 um 1,7 px.
-Frontpunkte rücken in jeder Ansicht nur waagerecht, auch im Windsurf-Preset,
-wo terra Sprosse 2 ist; kein dominierter Punkt rückt über die Front.
-Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen rechnet
-markerDodge.test.ts nach und hält sie gegen diese Notiz.
+(senkrecht). Mit Kontingent-Overlay rückt zusätzlich claude-fable-5 um
+1,7 px. Frontpunkte rücken in jeder Ansicht nur waagerecht, auch im
+Windsurf-Preset, wo terra Sprosse 2 ist. Kein dominierter Punkt rückt über
+die Front oder links an seinen Dominator vorbei. Fadenkreuz und Tooltip
+zeigen den wahren Wert. Die Zahlen rechnet markerDodge.test.ts nach und hält
+sie gegen diese Notiz.
 -->
 
 ---
@@ -1383,7 +1384,7 @@ Station 2 (10.07.): Die gpt-5.6-Familie kommt an einem Tag. terra hat den
 Score von fable-5 für gut ein Drittel des Preises, Anthropic verschwindet
 von der Front. Station 3 (22.07.) füllt dann nur noch das billige Ende auf.
 
-Zehnter Klick (nach Station 9): die Lupe „Die Effort-Falle". Das Chart
+Neunter Klick (nach Station 9): die Lupe „Die Effort-Falle". Das Chart
 dimmt, ein Panel zeigt die Region 1,5 bis 13 € × 62 bis 78 % vergrößert und
 darin alle fünf gemessenen Effort-Stufen von gpt-6-astra als Leiter: low
 1,92 €/67,0 %, medium 3,84 €/72,8 %, high 5,01 €/73,2 %, xhigh 5,71 €/74,1 %
@@ -1394,18 +1395,19 @@ deutlich. Vor dem Buchen die Stufen vergleichen; bei vier von 22 Modellen ist
 die billigere Stufe auch die bessere (Details im ⓘ unter „Höchste
 Effort-Stufe").
 
-Elfter Klick: blendet alle Modellnamen ein und schaltet das Fadenkreuz frei.
+Zehnter Klick: blendet alle Modellnamen ein und schaltet das Fadenkreuz frei.
 Punkt oder Label anklicken pinnt, mehrere gleichzeitig möglich. Derselbe
 Schalter sitzt in der Legende, geht also auch auf jeder anderen Station.
 Zurück (←) schaltet ihn wieder aus.
 
 Entzerrte Marker: bis 6,8 px verschoben, höchstens 2,0 Prozentpunkte
-senkrecht oder 4,7 % im Preis waagerecht. Betroffen ab Station 3
-muse-spark-1.1/grok-4.5 und kimi-k3/terra (waagerecht), ab Station 6
-muse-spark-1.2/qwen3.8-max, ab Station 7 terra/glm-5.3, an Station 9
-sol/astra (waagerecht). Frontpunkte rücken nur waagerecht, kein dominierter
-Punkt rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert.
-Die Zahlen rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
+senkrecht oder 4,7 % im Preis waagerecht. Betroffen: ab Station 3
+muse-spark-1.1/grok-4.5, an den Stationen 3 bis 5 kimi-k3/terra
+(waagerecht), ab Station 6 muse-spark-1.2/qwen3.8-max, ab Station 7
+terra/glm-5.3, an Station 9 sol/astra (waagerecht). Frontpunkte rücken nur
+waagerecht. Kein dominierter Punkt rückt über die Front oder links an seinen
+Dominator vorbei. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
+rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
 
 ---

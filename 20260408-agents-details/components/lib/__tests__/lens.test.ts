@@ -53,15 +53,26 @@ describe("Lupe: die Effort-Falle", () => {
     ).toStrictEqual([]);
   });
 
-  it("hält die Nachbarn von der Leiter fern", () => {
-    // Mindestabstand, wenn beide als dominiert zählen — die Leiter selbst
-    // hat in der Panel-Menge meist nur xhigh auf der Front.
+  it("lässt die Leiter an der wahren Lage und hält die Nachbarn fern", () => {
+    // Die Leiter steht fest: jede Stufe exakt auf ihrem Wert der Panel-Skala.
+    for (const l of view.ladder) {
+      expect(l.px, l.c.effort).toBeCloseTo(view.scale.px(l.c.x), 9);
+      expect(l.py, l.c.effort).toBeCloseTo(view.scale.py(l.c.y), 9);
+    }
+    // Alle Paare im Panel — Stufe/Kontext und Kontext/Kontext — sind nach dem
+    // Kastenkriterium getrennt; im Panel gilt ein Halbmaß für alle.
     const S = 2 * MARKER.lens.dom + DODGE.gap;
+    const all = [
+      ...view.ladder.map((l) => ({ id: l.c.effort, px: l.px, py: l.py })),
+      ...view.ctx.map((c) => ({ id: c.p.label, px: c.px, py: c.py })),
+    ];
     expect(view.ctx.length).toBeGreaterThan(3);
-    for (const c of view.ctx)
-      for (const l of view.ladder) {
-        const apart = Math.max(Math.abs(c.px - l.px), Math.abs(c.py - l.py));
-        expect(apart, `${c.p.label} ~ ${l.c.effort}`).toBeGreaterThanOrEqual(
+    for (let i = 0; i < all.length; i++)
+      for (let j = i + 1; j < all.length; j++) {
+        const a = all[i]!;
+        const b = all[j]!;
+        const apart = Math.max(Math.abs(a.px - b.px), Math.abs(a.py - b.py));
+        expect(apart, `${a.id} ~ ${b.id}`).toBeGreaterThanOrEqual(
           S - DODGE.tol,
         );
       }

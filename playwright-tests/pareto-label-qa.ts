@@ -44,6 +44,16 @@ function report(where: string, boxes: Box[], soft = false) {
         hits.push(`  label/marker ${labels[i].label}  ×  ${m.label}`);
     }
   }
+  // Seit der Entzerrung dürfen sich auch Marker nicht mehr verdecken. Der
+  // eigene Geisterring trägt denselben Namen und zählt nicht.
+  for (let i = 0; i < marks.length; i++) {
+    for (let j = i + 1; j < marks.length; j++) {
+      if (marks[i].kind !== "marker" || marks[j].kind !== "marker") continue;
+      if (marks[i].label === marks[j].label) continue;
+      if (overlap(marks[i], marks[j]))
+        hits.push(`  marker/marker ${marks[i].label}  ×  ${marks[j].label}`);
+    }
+  }
   console.log(`\n${where}: ${labels.length} Labels, ${marks.length} Marker`);
   if (hits.length === 0) console.log("  OK — keine Überschneidung");
   else if (soft) console.log(`  ${hits.length} Überschneidungen (erwartet)`);
@@ -478,7 +488,7 @@ for (const theme of ["light", "dark"] as const) {
         const baseline = r.y + CA * font;
         out.push({ label: t.textContent.trim(), kind: "label", x: r.x, y: baseline - IA * font, w: r.width, h: (IA + ID) * font });
       }
-      for (const m of g.querySelectorAll("circle.mh-lens-dot")) {
+      for (const m of g.querySelectorAll("circle.mh-lens-dot, .mh-lens-ctx circle, .mh-lens-ctx rect")) {
         const r = m.getBoundingClientRect();
         const title = m.querySelector("title");
         out.push({ label: (title ? title.textContent : "").split(":")[0].trim(), kind: "marker", x: r.x, y: r.y, w: r.width, h: r.height });

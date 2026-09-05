@@ -489,8 +489,8 @@ export function layoutLabels(
   // Durchgang 1b: Rang 2 ohne Nahplatz bekommt eine KURZE Linie (Ringe 28
   // und 44 px), wo dort Platz ist. Erst nach allen Nahplätzen, damit die
   // Linie niemandem einen Platz wegnimmt — sie bewegt kein Label aus
-  // Durchgang 1 (Test). Gemessen am 05.09.2026: +9 Namen über alle Zustände,
-  // +2 an Station 9 der Historie, 0 auf der Hauptfolie.
+  // Durchgang 1 (Test). Gemessen am 05.09.2026 nach der Entzerrung: +7 Namen
+  // über alle 13 Zustände, +1 an Station 9 der Historie, 0 auf der Hauptfolie.
   const rank2Rings = o.rank2Rings ?? RANK2_RINGS;
   for (const p of later) {
     const c = rank2Rings.length
