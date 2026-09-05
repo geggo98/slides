@@ -36,6 +36,7 @@
 // Objekt NICHT (dev-only) — hier wird deshalb direkt auf den gesuchten
 // Selektor gewartet, was ohnehin die präzisere Bedingung ist.
 import { chromium } from "playwright";
+import { CURRENT, tip } from "../20260408-agents-details/components/paretoData";
 
 const BASE = process.env.BASE ?? "https://geggo98.github.io/slides";
 const DECK = `${BASE}/20260408-agents-details`;
@@ -114,19 +115,22 @@ const chart = await page.evaluate(() => {
   };
 });
 
-// Die Punkt-Tooltips tragen den aktuellen Preis, die Geister-Tooltips den
-// alten — hier ist bewusst der Punkt gemeint (enthält BEIDE Beträge).
-const pointTip = (model: string, now: string) =>
-  chart.titles.find((t) => t.startsWith(`${model}:`) && t.includes(now));
-
-for (const [model, now] of [
-  ["gpt-5.6-sol", "5,67 €"],
-  ["gpt-5.6-terra", "3,47 €"],
-  ["deepseek-v4-flash", "0,09 €"],
-] as const) {
-  const tip = pointTip(model, now);
-  check(`${model} steht bei ${now}`, tip !== undefined, tip ?? "kein Treffer");
-}
+// Preise abzuschreiben ging hier zweimal daneben: sol stand bei 5,67 € und ist
+// seit dem 26.08. bei 5,66 €, deepseek-v4-flash bei 0,09 € und seit dem 21.08.
+// bei 0,41 €. Beide Checks meldeten danach eine Abweichung, die es nicht gab.
+// Maßgeblich ist deshalb `paretoData.ts` selbst: Der Tooltip jedes Punkts muss
+// zeichengleich das sein, was `tip()` aus dem Datensatz baut — die Komponente
+// rendert genau diese Funktion. Geprüft wird damit, ob der Deploy den Stand
+// des Repos zeigt, und das bleibt über jeden künftigen Board-Stand richtig.
+const rendered = new Set(chart.titles.map((t) => t.replace(/\s+/g, " ")));
+const missing = CURRENT.filter(
+  (p) => !rendered.has(tip(p).replace(/\s+/g, " ")),
+);
+check(
+  `alle ${CURRENT.length} Punkte tragen Preis und Score aus paretoData.ts`,
+  missing.length === 0,
+  missing.map((p) => tip(p)).join(" · "),
+);
 
 // Die Front ändert sich mit jedem Board-Stand; fest verdrahtet war hier „6“,
 // und das war seit Stand 8 falsch. Verlangt wird, was stabil gilt: jede
@@ -136,21 +140,38 @@ check(
   chart.frontPts > 0 && chart.frontLabels.length === chart.frontPts,
   `${chart.frontLabels.length} Labels / ${chart.frontPts} Sprossen: ${chart.frontLabels.join(", ")}`,
 );
+// Seit Stand 8 zeigt der Ring ausschließlich KÜNFTIGE Preise — ohne Overlay
+// den Listenpreis von gemini-3.8-flash ab 01.01.2027. Sols alter Ring ist mit
+// dem Stand vom 02.09. weggefallen und lebt nur noch auf der Historien-Folie.
+// Wie viele Ringe zu erwarten sind, sagt deshalb der Datensatz.
+const ghosts = CURRENT.filter((p) => p.old);
 check(
-  "ein Geisterpunkt (sol vor der Senkung vom 21.08.)",
-  chart.ghosts === 1,
-  `${chart.ghosts}`,
+  `${ghosts.length} Geisterring(e): ${ghosts
+    .map((p) => `${p.label} ${p.old?.pre ?? "vorher"} ${p.old?.eur} €`)
+    .join(", ")}`,
+  chart.ghosts === ghosts.length,
+  `${chart.ghosts} gerendert`,
 );
+// Der Text des Ring-Eintrags wandert mit der Erzählung („vor der
+// Preisanpassung“ → „Preis ab 01.01.2027“), das Datum mit dem Preis. Verlangt
+// wird deshalb nur, was strukturell gilt: ein Ring-Eintrag mit Datum und die
+// beiden Schalter der Legendenzeile.
 check(
-  "Legende nennt Preisanpassung und Kontingent-Schalter",
-  chart.legend.includes("vor der Preisanpassung") &&
-    chart.legend.includes("Claude-Code-Kontingent"),
+  "Legende: Ring-Eintrag mit Datum, Kontingent- und Namen-Schalter",
+  /Preis ab \d{2}\.\d{2}\.\d{4}/.test(chart.legend) &&
+    chart.legend.includes("Claude-Code-Kontingent") &&
+    chart.legend.includes("alle Namen"),
   chart.legend,
 );
+// Benchmark- und Preis-Stand fielen bis zum 21.08. auseinander und trugen zwei
+// Daten; seit dem 26.08. ist es wieder eines. Stabil ist, dass die Fußzeile
+// einen Datacurve-Stand nennt und den festen Umrechnungskurs — der ist über
+// alle Stände konstant, damit die Zeitreihe Preise zeigt und kein
+// Wechselkurs-Rauschen (siehe Kopf von `paretoData.ts`).
 check(
-  "Fußzeile trennt Benchmark- und Preis-Stand",
-  chart.footer.includes("Datacurve 20.08.") &&
-    chart.footer.includes("Preise 21.08."),
+  "Fußzeile nennt Datenstand und festen Umrechnungskurs",
+  /Datacurve \d{2}\.\d{2}\./.test(chart.footer) &&
+    chart.footer.includes("1 USD = 0,876 €"),
   chart.footer || "keine Fußzeile gefunden",
 );
 
@@ -185,7 +206,7 @@ check(
 );
 await page.screenshot({ path: "playwright-tests/qa/deployed-history.png" });
 
-// (4b) Neunter Klick: die Lupe „Die Effort-Falle" mit astras fünf Stufen.
+// (4b) Neunter Klick: die Lupe „Die Effort-Falle“ mit astras fünf Stufen.
 await page.goto(`${DECK}/pareto-historie?clicks=9`, {
   waitUntil: "networkidle",
 });
@@ -209,7 +230,7 @@ await page.screenshot({
   path: "playwright-tests/qa/deployed-history-lens.png",
 });
 
-// (4c) Zehnter Klick: Detailmodus mit dem Schlusstext „Aktueller Stand", der
+// (4c) Zehnter Klick: Detailmodus mit dem Schlusstext „Aktueller Stand“, der
 // die Klammer zur Hauptfolie schließt — Lupe aus, Namen-Schalter an.
 await page.goto(`${DECK}/pareto-historie?clicks=10`, {
   waitUntil: "networkidle",
