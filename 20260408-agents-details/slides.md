@@ -1395,10 +1395,14 @@ deutlich. Vor dem Buchen die Stufen vergleichen; bei vier von 22 Modellen ist
 die billigere Stufe auch die bessere (Details im ⓘ unter „Höchste
 Effort-Stufe").
 
-Zehnter Klick: blendet alle Modellnamen ein und schaltet das Fadenkreuz frei.
-Punkt oder Label anklicken pinnt, mehrere gleichzeitig möglich. Derselbe
-Schalter sitzt in der Legende, geht also auch auf jeder anderen Station.
-Zurück (←) schaltet ihn wieder aus.
+Zehnter Klick: „Aktueller Stand" schließt die Klammer zur Folie davor —
+dasselbe Bild wie dort, jetzt mit allen Namen und Fadenkreuz. Die Notiz
+wiederholt die drei Sprossen und die Regel statt der Namen: der billigste
+Frontpunkt, der Deine Aufgaben löst. Punkt oder Label anklicken pinnt,
+mehrere gleichzeitig möglich; die Beschriftung nimmt die Farbe ihres
+Fadenkreuzes an. Der Legenden-Schalter zeigt die Namen auf
+jeder Station, den Schlusstext gibt es nur an diesem Schritt. Zurück (←)
+schaltet beides aus.
 
 Entzerrte Marker: bis 6,8 px verschoben, höchstens 2,0 Prozentpunkte
 senkrecht oder 4,7 % im Preis waagerecht. Betroffen: ab Station 3

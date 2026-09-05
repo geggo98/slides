@@ -422,6 +422,56 @@ describe("Wie oft sich die Front verschoben hat", () => {
     expect(front(n)).toBe(front(n - 1));
     expect(front(n)).toBe("glm-5.3-flash|gpt-5.6-luna|gemini-3.8-flash");
   });
+
+  // Der Schlusstext der Historie wiederholt die Zahl aus dem ⓘ.
+  it("steht als „siebenmal“ im Schlusstext", () => {
+    expect(SNAPSHOTS[SNAPSHOTS.length - 1]!.closing?.note).toContain(
+      "siebenmal",
+    );
+  });
+});
+
+// Der letzte Klick der Historie zeigt denselben Stand wie die Hauptfolie
+// davor. Sein Schlusstext schließt die Klammer dorthin und nennt die Leiter —
+// abgeleitet muss sie sein, sonst veraltet sie mit dem nächsten Board-Eintrag
+// so still wie „Opus 5 führt mit 74 %" am 01.09.2026.
+describe("Schlusstext der Historie", () => {
+  const last = SNAPSHOTS[SNAPSHOTS.length - 1]!;
+  const closing = last.closing!;
+
+  it("hängt nur am letzten Stand, nicht an der Bonusfolie", () => {
+    expect(closing).toBeDefined();
+    expect(SNAPSHOTS.filter((s) => s.closing)).toHaveLength(1);
+    expect(V1_COMPARE.some((s) => s.closing)).toBe(false);
+  });
+
+  it("heißt „Aktueller Stand“ und schließt die Klammer zur Folie davor", () => {
+    expect(closing.title).toMatch(/^Aktueller Stand/);
+    expect(closing.note).toContain("Folie davor");
+  });
+
+  it("nennt jede Sprosse der Front mit Preis, vom billigsten aufwärts", () => {
+    const front = paretoFront(last.pts).front;
+    expect(front.length).toBeGreaterThanOrEqual(2);
+    const at = front.map((p) => {
+      const i = closing.note.indexOf(`${p.label} ${p.eur} €`);
+      expect(i, `${p.label} ${p.eur} € fehlt`).toBeGreaterThanOrEqual(0);
+      return i;
+    });
+    for (let i = 1; i < at.length; i++)
+      expect(at[i], front[i]!.label).toBeGreaterThan(at[i - 1]!);
+  });
+
+  // Der Notizkasten hat weder max-height noch Scroll (siehe pareto-label-qa.ts);
+  // die längste Stationsnotiz liegt bei rund 590 Zeichen und reicht bis knapp
+  // über die Kante. 480 ist der Kanarienvogel — die Kante selbst misst
+  // v1-bonus-qa.ts je Klickschritt.
+  it("bleibt kürzer als die längste Stationsnotiz", () => {
+    expect(closing.note.length).toBeLessThanOrEqual(480);
+    expect(closing.note.length).toBeLessThan(
+      Math.max(...SNAPSHOTS.map((s) => s.note.length)),
+    );
+  });
 });
 
 // Die Effort-Tabelle ist eine ZWEITE Datenquelle neben den Punkten oben. Zwei

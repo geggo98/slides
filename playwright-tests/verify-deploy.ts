@@ -185,7 +185,7 @@ check(
 );
 await page.screenshot({ path: "playwright-tests/qa/deployed-history.png" });
 
-// (4b) Zehnter Klick: die Lupe „Die Effort-Falle" mit astras fünf Stufen.
+// (4b) Neunter Klick: die Lupe „Die Effort-Falle" mit astras fünf Stufen.
 await page.goto(`${DECK}/pareto-historie?clicks=9`, {
   waitUntil: "networkidle",
 });
@@ -207,6 +207,33 @@ check(
 );
 await page.screenshot({
   path: "playwright-tests/qa/deployed-history-lens.png",
+});
+
+// (4c) Zehnter Klick: Detailmodus mit dem Schlusstext „Aktueller Stand", der
+// die Klammer zur Hauptfolie schließt — Lupe aus, Namen-Schalter an.
+await page.goto(`${DECK}/pareto-historie?clicks=10`, {
+  waitUntil: "networkidle",
+});
+await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+await page.waitForTimeout(500);
+const closing = await page.evaluate(() => ({
+  panel: !!document.querySelector("svg.mh-chart .mh-lens"),
+  toggleOn: !!document.querySelector("button.mh-tg.on"),
+  note:
+    document
+      .querySelector(".mh-note")
+      ?.textContent?.replace(/\s+/g, " ")
+      .trim() ?? "",
+}));
+check(
+  "Schlusstext „Aktueller Stand“ im Detailmodus, Lupe aus",
+  !closing.panel &&
+    closing.toggleOn &&
+    closing.note.includes("Aktueller Stand"),
+  `panel=${closing.panel} · Schalter ${closing.toggleOn ? "an" : "aus"} · ${closing.note.slice(0, 50)}`,
+);
+await page.screenshot({
+  path: "playwright-tests/qa/deployed-history-closing.png",
 });
 
 // (5) Die Bonusfolie v1 gegen v1.1: dieselbe Komponente, zwei Stationen, der

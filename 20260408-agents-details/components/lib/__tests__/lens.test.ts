@@ -10,7 +10,7 @@ import {
 } from "../../paretoChrome";
 import { ASTRA_LENS, EFFORT_ORDER, EFFORTS, SNAPSHOTS } from "../../paretoData";
 
-// Die Lupe ist der zehnte Klick der Historie: Sie soll das Publikum vor einer
+// Die Lupe ist der neunte Klick der Historie: Sie soll das Publikum vor einer
 // teuren Fehlkonfiguration bewahren. Was sie behauptet, muss aus der
 // Effort-Tabelle folgen, und ihr Panel muss lesbar sein.
 

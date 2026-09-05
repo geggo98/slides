@@ -211,7 +211,24 @@ export interface Snapshot {
   warn?: string;
   /** Lupe als eigener Klickschritt nach dieser Station, siehe `Lens`. */
   lens?: Lens;
+  /**
+   * Schlusstext für den Detailschritt nach dieser Station, siehe `Closing`.
+   * Nur der letzte Stand der Historie trägt einen.
+   */
+  closing?: Closing;
   pts: Pt[];
+}
+
+/**
+ * Schlusstext: Der letzte Klickschritt der Historie (alle Namen + Fadenkreuz)
+ * zeigt denselben Stand wie die Hauptfolie davor. Statt die Stationsnotiz zu
+ * wiederholen, schließt er die Klammer dorthin: dieselbe Leiter, dieselbe
+ * Regel — und die eine Lehre der zwei Monate, dass Namen verfallen, die Regel
+ * nicht.
+ */
+export interface Closing {
+  title: string;
+  note: string;
 }
 
 /**
@@ -762,6 +779,13 @@ export const SNAPSHOTS: Snapshot[] = [
     title: "Die Front hält",
     note: "Ein Neuzugang mit dem höchsten Rohwert, den dieses Board je ausgewiesen hat — und die Front bleibt Zeichen für Zeichen dieselbe. gpt-6-astra erreicht auf `xhigh` 74,12 % für 5,71 €, gemini-3.8-flash 73,83 % für 2,07 €. Gerundet sind das beide 74 %. Die 0,29 Punkte dazwischen liegen tief in den Fehlerbalken (±2,9 gegen ±1,4): Das teurere Modell kauft nichts, was man messen könnte. Genau dafür ist die Front da: Sie beantwortet nicht „welches ist das beste“, sondern „was ist das billigste, das reicht“. Nebenbei zeigt astra, warum dieses Chart die beste Stufe nimmt statt der höchsten: Seine höchste (`max`, 10,84 €) löst dieselben 331 Aufgaben wie `high` für 5,01 €. Der Preis ist ohnehin vorläufig — „expected launch pricing“.",
     pts: S_0903_HIST,
+    // Zehnter Klick: dasselbe Bild wie die Hauptfolie davor, jetzt mit allen
+    // Namen. Nur eine Zahl („siebenmal"), und die rechnet paretoData.test.ts
+    // nach; die drei Sprossen hält derselbe Test gegen die Front des Stands.
+    closing: {
+      title: "Aktueller Stand: dieselbe Leiter wie auf der Folie davor",
+      note: "Das ist der Stand vom 03.09., den die Folie davor zeigt, jetzt mit allen Namen. Drei Sprossen: glm-5.3-flash 0,21 €, gpt-5.6-luna 0,53 €, gemini-3.8-flash 2,07 €. In zwei Monaten hat sich die Front siebenmal verschoben, auch durch bloße Preisänderungen. Die Namen haben ein Verfallsdatum, die Regel nicht: der billigste Frontpunkt, der Deine Aufgaben löst. Suche Dein Modell im Chart — das Fadenkreuz zeigt, was die nächste Sprosse kostet.",
+    },
   },
 ];
 
@@ -927,7 +951,7 @@ export const EFFORT_ORDER: readonly Effort[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Lupe „Die Effort-Falle" — zehnter Klick der Historie
+// Lupe „Die Effort-Falle" — neunter Klick der Historie
 // ---------------------------------------------------------------------------
 // Hängt am letzten Stand und wird erst hier zugewiesen, weil sie aus `EFFORTS`
 // abgeleitet ist und die Tabelle erst hier steht. Die Leiter ist nicht

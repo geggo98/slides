@@ -41,7 +41,9 @@ import { useCrosshairs } from "./useCrosshairs";
 //
 //   Schritt 0…n−1 → Station 1…n, Detailmodus aus
 //   Schritt n     → Lupe (nur wenn Stand n eine hat), Station bleibt n
-//   danach        → Station bleibt n, Detailmodus an (← schaltet zurück)
+//   danach        → Station bleibt n, Detailmodus an (← schaltet zurück);
+//                   trägt Stand n einen Schlusstext (`closing`), steht der
+//                   im Notizkasten statt der Stationsnotiz
 //
 // Die Logik liest `list.length` und `hasLens`, die Timeline `--n`. Beim
 // Anlegen einer Station also nur das Frontmatter nachziehen.
@@ -100,6 +102,19 @@ const lensOn = computed(
     detailOverride.value === null &&
     (props.step ?? 0) === list.value.length &&
     !!snap.value.lens,
+);
+// Schlusstext: der Detailschritt nach der letzten Station, solange kein
+// Timeline-Klick übersteuert. Hängt an `detail`, nicht an `step` allein:
+// Schaltet der Legenden-Schalter die Namen aus, sagt „jetzt mit allen Namen"
+// nichts mehr — dann steht wieder die Stationsnotiz da.
+const hasClosing = computed(() => !!list.value[list.value.length - 1]?.closing);
+const closingOn = computed(
+  () =>
+    hasClosing.value &&
+    override.value === null &&
+    detail.value &&
+    (props.step ?? 0) >= list.value.length + (hasLens.value ? 1 : 0) &&
+    !!snap.value.closing,
 );
 
 const sourcesOpen = ref(false);
@@ -220,6 +235,9 @@ const chartLabel = computed(
     (lensOn.value && snap.value.lens
       ? ` Lupe: ${snap.value.lens.title}. ${snap.value.lens.note}`
       : "") +
+    (closingOn.value && snap.value.closing
+      ? ` Schluss: ${snap.value.closing.title}. ${snap.value.closing.note}`
+      : "") +
     (detail.value
       ? " Detailmodus: alle Modellnamen sind eingeblendet, Punkte lassen sich " +
         "für ein Fadenkreuz mit Kosten- und Score-Badge anklicken."
@@ -243,6 +261,7 @@ const {
   crosshairs,
   clear: clearPins,
   movedCls,
+  pinCls,
 } = useCrosshairs(
   computed(() => snap.value.pts),
   S,
@@ -254,11 +273,19 @@ watch(detail, (on) => {
 // Die Erklärtexte enthalten Bezeichner in Backticks. Vue rendert den String
 // roh, also hier von Hand in Text- und Code-Stücke zerlegen statt Markdown
 // mitzuschleppen.
-const noteTitle = computed(() =>
-  lensOn.value && snap.value.lens ? snap.value.lens.title : snap.value.title,
+//
+// Welcher Text im Kasten steht: Lupe vor Schlusstext vor Stationsnotiz —
+// eine Stelle für Titel und Absatz, damit die beiden nie auseinanderlaufen.
+const activeText = computed<{ title: string; note: string }>(() =>
+  lensOn.value && snap.value.lens
+    ? snap.value.lens
+    : closingOn.value && snap.value.closing
+      ? snap.value.closing
+      : snap.value,
 );
+const noteTitle = computed(() => activeText.value.title);
 const noteParts = computed(() =>
-  (lensOn.value && snap.value.lens ? snap.value.lens.note : snap.value.note)
+  activeText.value.note
     .split("`")
     .map((text, i) => ({ text, code: i % 2 === 1 })),
 );
@@ -522,7 +549,10 @@ const fmtPct = (v: number) => v.toFixed(2).replace(".", ",");
           :y="l.pl.y"
           :text-anchor="l.pl.ax"
           class="mh-label"
-          :class="l.front ? 'mh-label-front' : 'mh-label-dom'"
+          :class="[
+            l.front ? 'mh-label-front' : 'mh-label-dom',
+            pinCls(l.p.label),
+          ]"
           :data-model="l.p.label"
           :data-box="l.box"
           @mouseenter="hovered = l.p.label"
@@ -1084,6 +1114,15 @@ const fmtPct = (v: number) => v.toFixed(2).replace(".", ",");
 }
 .mh-label-dom {
   fill: var(--color-text-tertiary);
+}
+/* Gepinnt: die Beschriftung trägt die Pin-Farbe ihres Fadenkreuzes (`--ch`
+   kommt aus `.mp-ch-0…3` unten), nur die Farbe — Gewicht und Größe bleiben,
+   damit die vorhergesagte Box (`data-box`) weiter stimmt. */
+.mh-label.mp-ch-0,
+.mh-label.mp-ch-1,
+.mh-label.mp-ch-2,
+.mh-label.mp-ch-3 {
+  fill: var(--ch);
 }
 
 /* --- Fadenkreuz (nur Detailmodus) --------------------------------------- */

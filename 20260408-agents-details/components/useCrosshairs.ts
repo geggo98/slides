@@ -86,6 +86,14 @@ export function useCrosshairs(
     return cls ? `mp-moved-on ${cls}` : "";
   };
 
+  /**
+   * Nur die Pin-Farbe, kein Hover-Ton: Die Beschriftung eines gepinnten Punkts
+   * färbt sich wie sein Ring, sonst sind zwei Pins im dichten Feld schwer
+   * auseinanderzuhalten. Leer, solange der Punkt nicht gepinnt ist.
+   */
+  const pinCls = (label: string) =>
+    pinned.value.includes(label) ? (activeCls.value.get(label) ?? "") : "";
+
   return {
     byLabel,
     hovered,
@@ -95,5 +103,6 @@ export function useCrosshairs(
     activeCls,
     crosshairs,
     movedCls,
+    pinCls,
   };
 }

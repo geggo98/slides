@@ -524,15 +524,28 @@ for (const theme of ["light", "dark"] as const) {
 
   // Letzter Klick: Detailmodus — alle Namen plus Fadenkreuz. Die Beschriftung
   // muss dann jeden Punkt der Station treffen, zwei Pins müssen zwei
-  // Fadenkreuze ergeben — und kein Label der Station darf sich bewegen.
+  // Fadenkreuze ergeben — und kein Label der Station darf sich bewegen. Der
+  // Notizkasten zeigt den Schlusstext („Aktueller Stand"), nicht noch einmal
+  // die Notiz des Schritts davor.
+  const noteText = `(document.querySelector(".mh-note")?.textContent ?? "").replace(/\\s+/g, " ").trim()`;
   const vorDetail: Record<string, string> = await page.evaluate(`(() => {
     const out = {};
     for (const t of document.querySelectorAll("svg.mh-chart text.mh-label"))
       out[t.getAttribute("data-model")] = [t.getAttribute("x"), t.getAttribute("y"), t.getAttribute("text-anchor")].join("|");
     return out;
   })()`);
+  const noteVor: string = await page.evaluate(noteText);
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(450);
+  const noteNach: string = await page.evaluate(noteText);
+  if (noteNach === noteVor) {
+    console.log(
+      "  FEHLER: Detailmodus zeigt die Notiz des Schritts davor statt des Schlusstexts",
+    );
+    problems++;
+  } else {
+    console.log(`  Schlusstext: „${noteNach.slice(0, 60)}…"`);
+  }
   const imDetail: Record<string, string> = await page.evaluate(`(() => {
     const out = {};
     for (const t of document.querySelectorAll("svg.mh-chart text.mh-label"))
@@ -580,6 +593,37 @@ for (const theme of ["light", "dark"] as const) {
   );
   console.log(`  Fadenkreuze nach zwei Pins: ${chs} (erwartet 2)`);
   if (chs !== 2) problems++;
+  // Die Beschriftung eines gepinnten Punkts trägt dieselbe Farbe wie sein
+  // Fadenkreuz-Ring (Stefan, 05.09.2026: zwei Pins waren sonst schwer
+  // auseinanderzuhalten) — und zwei Pins tragen zwei verschiedene Farben.
+  const pinFarben = (await page.evaluate(`(() => {
+    const out = [];
+    for (const t of document.querySelectorAll("svg.mh-chart text.mh-label")) {
+      const cls = [...t.classList].find((c) => /^mp-ch-\\d$/.test(c));
+      if (!cls) continue;
+      const ring = document.querySelector("svg.mh-chart g.mp-ch." + cls + " circle.mp-ch-ring");
+      out.push({
+        label: t.getAttribute("data-model"),
+        cls,
+        fill: getComputedStyle(t).fill,
+        ring: ring ? getComputedStyle(ring).stroke : null,
+      });
+    }
+    return out;
+  })()`)) as {
+    label: string;
+    cls: string;
+    fill: string;
+    ring: string | null;
+  }[];
+  const farbenOk =
+    pinFarben.length === 2 &&
+    pinFarben.every((f) => f.ring && f.fill === f.ring) &&
+    pinFarben[0]!.fill !== pinFarben[1]!.fill;
+  console.log(
+    `  Pin-Farben: ${farbenOk ? "Label = Ring, zwei Töne" : "FEHLER"} — ${pinFarben.map((f) => `${f.label} ${f.fill}${f.fill === f.ring ? "" : " ≠ Ring " + f.ring}`).join("; ") || "kein Label mit Pin-Klasse"}`,
+  );
+  if (!farbenOk) problems++;
   problems += report(
     `[${theme}] Folie ${HISTORIE} · Detailmodus + 2 Pins`,
     await page.evaluate(collect("svg.mh-chart")),

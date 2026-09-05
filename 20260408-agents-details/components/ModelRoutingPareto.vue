@@ -186,8 +186,16 @@ const unnamed = computed(() =>
 // (erneuter Klick löst). Mechanik im Composable, weil die Historien-Folie
 // dasselbe kann; `ciBadge` schaltet die zweizeilige Badge-Entzerrung ein, die
 // nur hier gebraucht wird (Fehlerbalken sind Sache dieser Folie).
-const { byLabel, hovered, pinned, togglePin, activeCls, crosshairs, movedCls } =
-  useCrosshairs(pts, S, { ciBadge: true });
+const {
+  byLabel,
+  hovered,
+  pinned,
+  togglePin,
+  activeCls,
+  crosshairs,
+  movedCls,
+  pinCls,
+} = useCrosshairs(pts, S, { ciBadge: true });
 
 // Hover-Name: Ein namenloser Punkt zeigt seinen Namen, solange er gehovt oder
 // gepinnt ist — mit demselben Platzierer gegen die gesetzten Labels gerechnet,
@@ -546,7 +554,10 @@ const whiskers = computed(() =>
         :y="l.pl.y"
         :text-anchor="l.pl.ax"
         class="mp-label"
-        :class="l.front ? 'mp-label-front' : 'mp-label-dom'"
+        :class="[
+          l.front ? 'mp-label-front' : 'mp-label-dom',
+          pinCls(l.p.label),
+        ]"
         :data-model="l.p.label"
         :data-box="l.box"
         @mouseenter="hovered = l.p.label"
@@ -654,6 +665,7 @@ const whiskers = computed(() =>
         :y="l.pl.y"
         :text-anchor="l.pl.ax"
         class="mp-label mp-label-hover"
+        :class="pinCls(l.p.label)"
         :data-model="l.p.label"
         :data-box="l.box"
       >
@@ -939,6 +951,15 @@ const whiskers = computed(() =>
   fill: var(--color-text-primary);
   font-weight: 700;
   pointer-events: none;
+}
+/* Gepinnt: die Beschriftung trägt die Pin-Farbe ihres Fadenkreuzes (`--ch`
+   kommt aus `.mp-ch-0…3` unten), nur die Farbe — Gewicht und Größe bleiben,
+   damit die vorhergesagte Box (`data-box`) weiter stimmt. */
+.mp-label.mp-ch-0,
+.mp-label.mp-ch-1,
+.mp-label.mp-ch-2,
+.mp-label.mp-ch-3 {
+  fill: var(--ch);
 }
 
 /* Fehlerbalken: Whisker kräftig am Punkt, Grenzlinien quer durch den Plot nur
