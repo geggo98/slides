@@ -1,7 +1,7 @@
 // Verifiziert den GitHub-Pages-Deploy der Modell-Routing-Folien im echten
 // Browser: rendert das Xref-Ziel, stimmen die Preise, steht die Pareto-Front,
-// klickt sich die Historien-Folie durch ihre neun Datenstände, und rendert die
-// Bonusfolie v1 gegen v1.1?
+// klickt sich die Historien-Folie durch alle Datenstände aus `SNAPSHOTS`, und
+// rendert die Bonusfolie v1 gegen v1.1?
 //
 //   bun run playwright-tests/verify-deploy.ts
 //   BASE=https://geggo98.github.io/slides bun run playwright-tests/verify-deploy.ts
@@ -36,7 +36,12 @@
 // Objekt NICHT (dev-only) — hier wird deshalb direkt auf den gesuchten
 // Selektor gewartet, was ohnehin die präzisere Bedingung ist.
 import { chromium } from "playwright";
-import { CURRENT, tip } from "../20260408-agents-details/components/paretoData";
+import {
+  CURRENT,
+  SNAPSHOTS,
+  tip,
+  V1_COMPARE,
+} from "../20260408-agents-details/components/paretoData";
 
 const BASE = process.env.BASE ?? "https://geggo98.github.io/slides";
 const DECK = `${BASE}/20260408-agents-details`;
@@ -178,12 +183,20 @@ check(
 await page.screenshot({ path: "playwright-tests/qa/deployed-pareto.png" });
 
 // (4) Die Historien-Folie: eigener Alias, eigene Chart-Klasse (`.mh-chart`,
-// damit der `querySelector` oben nicht hier landet), neun Stationen ab v1.1.
+// damit der `querySelector` oben nicht hier landet). Wie viele Stationen es
+// sind und wo sie beginnt, sagt `SNAPSHOTS` — „sieben“ und „neun“ standen hier
+// je einmal als Zahl und waren beim nächsten Stand falsch. Die Timeline muss
+// die Stationen in derselben Reihenfolge führen wie der Datensatz.
+const histDates = SNAPSHOTS.map((s) => s.date);
+const last = SNAPSHOTS[SNAPSHOTS.length - 1];
+if (!last) throw new Error("SNAPSHOTS ist leer");
 await page.goto(`${DECK}/pareto-historie`, { waitUntil: "networkidle" });
 await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
 await page.waitForTimeout(500);
 const hist = await page.evaluate(() => ({
-  stations: document.querySelectorAll(".mh-tl-item").length,
+  dates: Array.from(document.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
+    (e) => e.textContent?.trim() ?? "",
+  ),
   active:
     document
       .querySelector(".mh-tl-item.active .mh-tl-date")
@@ -195,75 +208,92 @@ const hist = await page.evaluate(() => ({
       .trim() ?? "",
 }));
 check(
-  "Historien-Folie hat neun Stationen",
-  hist.stations === 9,
-  `${hist.stations}`,
+  `Historien-Folie führt alle ${SNAPSHOTS.length} Stationen in Reihenfolge`,
+  hist.dates.join("|") === histDates.join("|"),
+  hist.dates.join(" · "),
 );
 check(
-  "startet auf dem v1.1-Stand vom 15.06.",
-  hist.active.startsWith("15.06.") && hist.note.includes("1/9"),
+  `startet auf „${histDates[0]}“ mit Schritt 1/${SNAPSHOTS.length}`,
+  hist.active === histDates[0] && hist.note.includes(`1/${SNAPSHOTS.length}`),
   `${hist.active} · ${hist.note.slice(0, 60)}`,
 );
 await page.screenshot({ path: "playwright-tests/qa/deployed-history.png" });
 
-// (4b) Neunter Klick: die Lupe „Die Effort-Falle“ mit astras fünf Stufen.
-await page.goto(`${DECK}/pareto-historie?clicks=9`, {
-  waitUntil: "networkidle",
-});
-await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
-await page.waitForTimeout(500);
-const lens = await page.evaluate(() => ({
-  panel: !!document.querySelector("svg.mh-chart .mh-lens"),
-  steps: document.querySelectorAll("svg.mh-chart .mh-lens-dot").length,
-  note:
-    document
-      .querySelector(".mh-note")
-      ?.textContent?.replace(/\s+/g, " ")
-      .trim() ?? "",
-}));
-check(
-  "Lupe zeigt fünf Effort-Stufen und die eigene Notiz",
-  lens.panel && lens.steps === 5 && lens.note.includes("Effort-Falle"),
-  `panel=${lens.panel} · ${lens.steps} Stufen · ${lens.note.slice(0, 50)}`,
-);
-await page.screenshot({
-  path: "playwright-tests/qa/deployed-history-lens.png",
-});
+// (4b) Der Klick nach der letzten Station ist die Lupe, sofern der letzte
+// Stand eine trägt (`ModelRoutingHistory.vue`: Schritt `list.length`). Sie
+// zeigt einen Punkt je Stufe der Leiter und ihren eigenen Titel im Kasten.
+const lensData = last.lens;
+const lensClick = SNAPSHOTS.length;
+if (lensData) {
+  await page.goto(`${DECK}/pareto-historie?clicks=${lensClick}`, {
+    waitUntil: "networkidle",
+  });
+  await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+  await page.waitForTimeout(500);
+  const lens = await page.evaluate(() => ({
+    panel: !!document.querySelector("svg.mh-chart .mh-lens"),
+    steps: document.querySelectorAll("svg.mh-chart .mh-lens-dot").length,
+    note:
+      document
+        .querySelector(".mh-note")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim() ?? "",
+  }));
+  check(
+    `Lupe (Klick ${lensClick}) zeigt ${lensData.ladder.length} Stufen von ${lensData.focus} und ihren Titel`,
+    lens.panel &&
+      lens.steps === lensData.ladder.length &&
+      lens.note.includes(lensData.title),
+    `panel=${lens.panel} · ${lens.steps} Stufen · ${lens.note.slice(0, 50)}`,
+  );
+  await page.screenshot({
+    path: "playwright-tests/qa/deployed-history-lens.png",
+  });
+}
 
-// (4c) Zehnter Klick: Detailmodus mit dem Schlusstext „Aktueller Stand“, der
-// die Klammer zur Hauptfolie schließt — Lupe aus, Namen-Schalter an.
-await page.goto(`${DECK}/pareto-historie?clicks=10`, {
-  waitUntil: "networkidle",
-});
-await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
-await page.waitForTimeout(500);
-const closing = await page.evaluate(() => ({
-  panel: !!document.querySelector("svg.mh-chart .mh-lens"),
-  toggleOn: !!document.querySelector("button.mh-tg.on"),
-  note:
-    document
-      .querySelector(".mh-note")
-      ?.textContent?.replace(/\s+/g, " ")
-      .trim() ?? "",
-}));
-check(
-  "Schlusstext „Aktueller Stand“ im Detailmodus, Lupe aus",
-  !closing.panel &&
-    closing.toggleOn &&
-    closing.note.includes("Aktueller Stand"),
-  `panel=${closing.panel} · Schalter ${closing.toggleOn ? "an" : "aus"} · ${closing.note.slice(0, 50)}`,
-);
-await page.screenshot({
-  path: "playwright-tests/qa/deployed-history-closing.png",
-});
+// (4c) Der Klick danach ist der Detailmodus mit dem Schlusstext, der die
+// Klammer zur Hauptfolie schließt — Lupe aus, Namen-Schalter an.
+const closingData = last.closing;
+const closingClick = SNAPSHOTS.length + (lensData ? 1 : 0);
+if (closingData) {
+  await page.goto(`${DECK}/pareto-historie?clicks=${closingClick}`, {
+    waitUntil: "networkidle",
+  });
+  await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
+  await page.waitForTimeout(500);
+  const closing = await page.evaluate(() => ({
+    panel: !!document.querySelector("svg.mh-chart .mh-lens"),
+    toggleOn: !!document.querySelector("button.mh-tg.on"),
+    note:
+      document
+        .querySelector(".mh-note")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim() ?? "",
+  }));
+  check(
+    `Schlusstext „${closingData.title}“ (Klick ${closingClick}) im Detailmodus, Lupe aus`,
+    !closing.panel &&
+      closing.toggleOn &&
+      closing.note.includes(closingData.title),
+    `panel=${closing.panel} · Schalter ${closing.toggleOn ? "an" : "aus"} · ${closing.note.slice(0, 50)}`,
+  );
+  await page.screenshot({
+    path: "playwright-tests/qa/deployed-history-closing.png",
+  });
+}
 
-// (5) Die Bonusfolie v1 gegen v1.1: dieselbe Komponente, zwei Stationen, der
-// v1-Stand trägt den Warnhinweis im Chart.
+// (5) Die Bonusfolie v1 gegen v1.1: dieselbe Komponente über `V1_COMPARE`;
+// Stationen, Startstand und Warnhinweis kommen von dort.
+const bonusDates = V1_COMPARE.map((s) => s.date);
+const bonusFirst = V1_COMPARE[0];
+if (!bonusFirst) throw new Error("V1_COMPARE ist leer");
 await page.goto(`${DECK}/pareto-v1-bonus`, { waitUntil: "networkidle" });
 await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
 await page.waitForTimeout(500);
 const bonus = await page.evaluate(() => ({
-  stations: document.querySelectorAll(".mh-tl-item").length,
+  dates: Array.from(document.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
+    (e) => e.textContent?.trim() ?? "",
+  ),
   active:
     document
       .querySelector(".mh-tl-item.active .mh-tl-date")
@@ -271,9 +301,11 @@ const bonus = await page.evaluate(() => ({
   warn: !!document.querySelector("svg.mh-chart .mh-warn"),
 }));
 check(
-  "Bonusfolie hat zwei Stationen und startet auf v1 mit Warnhinweis",
-  bonus.stations === 2 && bonus.active.startsWith("v1") && bonus.warn,
-  `${bonus.stations} · ${bonus.active} · warn=${bonus.warn}`,
+  `Bonusfolie führt ${V1_COMPARE.length} Stationen, startet auf „${bonusFirst.date}“${bonusFirst.warn ? " mit Warnhinweis" : ""}`,
+  bonus.dates.join("|") === bonusDates.join("|") &&
+    bonus.active === bonusFirst.date &&
+    bonus.warn === !!bonusFirst.warn,
+  `${bonus.dates.join(" · ")} · aktiv ${bonus.active} · warn=${bonus.warn}`,
 );
 await page.screenshot({ path: "playwright-tests/qa/deployed-v1-bonus.png" });
 
