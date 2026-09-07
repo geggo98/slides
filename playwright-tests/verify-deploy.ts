@@ -98,6 +98,14 @@ await page.waitForTimeout(800);
 
 const chart = await page.evaluate(() => {
   const svg = document.querySelector("svg.mp-chart");
+  // Slidev hält Nachbarfolien gemountet — die nächste sofort, nach 3 s alle
+  // 63, per v-show versteckt. Dokumentweit sah die Fußzeilensuche dann neun
+  // Kandidaten, drei davon Container des ganzen Decks (gemessen 07.09.2026
+  // gegen die veröffentlichte Seite); nur die Kürzeste-gewinnt-Regel traf
+  // noch das Richtige. Legende und Fußzeile deshalb in der eigenen Folie
+  // suchen: `data-slidev-no` sitzt auf jedem Wrapper, in /print wie im
+  // Vortragsmodus.
+  const slide = svg?.closest("[data-slidev-no]") ?? document;
   const q = (sel: string) =>
     Array.from(svg?.querySelectorAll(sel) ?? []).map(
       (e) => e.textContent?.trim() ?? "",
@@ -108,12 +116,12 @@ const chart = await page.evaluate(() => {
     frontPts: svg?.querySelectorAll("circle.mp-front-pt").length ?? 0,
     ghosts: svg?.querySelectorAll("circle.mp-old-pt").length ?? 0,
     legend:
-      document.querySelector(".mp-legend")?.textContent?.replace(/\s+/g, " ") ??
+      slide.querySelector(".mp-legend")?.textContent?.replace(/\s+/g, " ") ??
       "",
     // Kürzester Treffer: `textContent` matcht sonst auch jeden Eltern-
     // Container, und die Meldung spuckt die halbe Folie aus.
     footer:
-      Array.from(document.querySelectorAll("p, div"))
+      Array.from(slide.querySelectorAll("p, div"))
         .map((e) => e.textContent?.replace(/\s+/g, " ").trim() ?? "")
         .filter((t) => t.includes("DeepSWE v1.1") && t.includes("Datacurve"))
         .sort((a, b) => a.length - b.length)[0] ?? "",
