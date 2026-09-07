@@ -115,6 +115,7 @@ const chart = await page.evaluate(() => {
     frontLabels: q("text.mp-label-front"),
     frontPts: svg?.querySelectorAll("circle.mp-front-pt").length ?? 0,
     ghosts: svg?.querySelectorAll("circle.mp-old-pt").length ?? 0,
+    hits: svg?.querySelectorAll("circle.mp-hit").length ?? 0,
     legend:
       slide.querySelector(".mp-legend")?.textContent?.replace(/\s+/g, " ") ??
       "",
@@ -139,10 +140,18 @@ const rendered = new Set(chart.titles.map((t) => t.replace(/\s+/g, " ")));
 const missing = CURRENT.filter(
   (p) => !rendered.has(tip(p).replace(/\s+/g, " ")),
 );
+// Und in beide Richtungen: Ein Deploy, der einen Punkt zeigt, den das Repo
+// nicht mehr führt, hätte alle Tooltips des Repos und käme trotzdem durch.
+// Jeder gezeichnete Punkt trägt genau ein Klickziel (`circle.mp-hit`).
 check(
-  `alle ${CURRENT.length} Punkte tragen Preis und Score aus paretoData.ts`,
-  missing.length === 0,
-  missing.map((p) => tip(p)).join(" · "),
+  `genau die ${CURRENT.length} Punkte aus paretoData.ts, mit Preis und Score`,
+  missing.length === 0 && chart.hits === CURRENT.length,
+  [
+    missing.length ? `fehlt: ${missing.map((p) => tip(p)).join(" · ")}` : "",
+    `${chart.hits} Klickziele gerendert`,
+  ]
+    .filter(Boolean)
+    .join(" · "),
 );
 
 // Die Front ändert sich mit jedem Board-Stand; fest verdrahtet war hier „6“,
