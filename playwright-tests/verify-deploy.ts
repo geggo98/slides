@@ -55,6 +55,38 @@ const check = (name: string, ok: boolean, extra = "") => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
+// `ModelRoutingHistory` steht auf ZWEI Folien — `pareto-historie` (SNAPSHOTS,
+// Folie 43) und `pareto-v1-bonus` (V1_COMPARE, Folie 60). Beide rendern
+// `.mh-tl-item`, `.mh-note`, `button.mh-tg` und `svg.mh-chart`; die
+// Historien-Folie liegt in DOM-Reihenfolge davor. Solange nur die Nachbarn
+// gemountet sind, geht eine dokumentweite Suche gut — bis Slidev nachlädt.
+// Gemessen am 10.09.2026 gegen die veröffentlichte Seite (6f534c1): bis 2 s
+// liegen 3 Folien im DOM, ab 4 s alle 63, und dann liest die Bonusfolie
+//
+//   Stationen  dokumentweit 11 statt 2
+//   aktiv      „03.09.“ aus der Historien-Folie statt „v1 · 11.06.“
+//   mh-tg.on   true, obwohl der Schalter DIESER Folie aus ist
+//
+// — zweimal falsch rot, einmal falsch grün. Deshalb vor jedem `evaluate` die
+// sichtbare Folie bestimmen und alles darüber suchen. Ein Klassenmarker für
+// „aktiv“ existiert nicht: Slidev versteckt per `v-show`, die verborgenen
+// Wrapper tragen also ein inline `display: none`, die sichtbare nicht.
+const visibleSlideNo = async (): Promise<string> => {
+  const handle = await page.waitForFunction(
+    () => {
+      const vis = Array.from(
+        document.querySelectorAll("[data-slidev-no]"),
+      ).filter((el) => getComputedStyle(el).display !== "none");
+      // Während eines Folienübergangs sind kurz zwei sichtbar; erst bei genau
+      // einer steht die Antwort fest.
+      return vis.length === 1 ? vis[0]!.getAttribute("data-slidev-no") : null;
+    },
+    null,
+    { timeout: 30_000 },
+  );
+  return (await handle.jsonValue()) as string;
+};
+
 // (1) Das Xref-Ziel aus dem Anatomie-Deck muss auf der Rollen-Folie landen.
 await page.goto(`${DECK}/modell-routing`, { waitUntil: "networkidle" });
 await page.waitForSelector("h1:visible", { timeout: 30_000 });
@@ -210,20 +242,24 @@ if (!last) throw new Error("SNAPSHOTS ist leer");
 await page.goto(`${DECK}/pareto-historie`, { waitUntil: "networkidle" });
 await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
 await page.waitForTimeout(500);
-const hist = await page.evaluate(() => ({
-  dates: Array.from(document.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
-    (e) => e.textContent?.trim() ?? "",
-  ),
-  active:
-    document
-      .querySelector(".mh-tl-item.active .mh-tl-date")
-      ?.textContent?.trim() ?? "",
-  note:
-    document
-      .querySelector(".mh-note")
-      ?.textContent?.replace(/\s+/g, " ")
-      .trim() ?? "",
-}));
+const histNo = await visibleSlideNo();
+const hist = await page.evaluate((no) => {
+  const slide = document.querySelector(`[data-slidev-no="${no}"]`) ?? document;
+  return {
+    dates: Array.from(slide.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
+      (e) => e.textContent?.trim() ?? "",
+    ),
+    active:
+      slide
+        .querySelector(".mh-tl-item.active .mh-tl-date")
+        ?.textContent?.trim() ?? "",
+    note:
+      slide
+        .querySelector(".mh-note")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim() ?? "",
+  };
+}, histNo);
 check(
   `Historien-Folie führt alle ${SNAPSHOTS.length} Stationen in Reihenfolge`,
   hist.dates.join("|") === histDates.join("|"),
@@ -247,15 +283,20 @@ if (lensData) {
   });
   await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
   await page.waitForTimeout(500);
-  const lens = await page.evaluate(() => ({
-    panel: !!document.querySelector("svg.mh-chart .mh-lens"),
-    steps: document.querySelectorAll("svg.mh-chart .mh-lens-dot").length,
-    note:
-      document
-        .querySelector(".mh-note")
-        ?.textContent?.replace(/\s+/g, " ")
-        .trim() ?? "",
-  }));
+  const lensNo = await visibleSlideNo();
+  const lens = await page.evaluate((no) => {
+    const slide =
+      document.querySelector(`[data-slidev-no="${no}"]`) ?? document;
+    return {
+      panel: !!slide.querySelector("svg.mh-chart .mh-lens"),
+      steps: slide.querySelectorAll("svg.mh-chart .mh-lens-dot").length,
+      note:
+        slide
+          .querySelector(".mh-note")
+          ?.textContent?.replace(/\s+/g, " ")
+          .trim() ?? "",
+    };
+  }, lensNo);
   check(
     `Lupe (Klick ${lensClick}) zeigt ${lensData.ladder.length} Stufen von ${lensData.focus} und ihren Titel`,
     lens.panel &&
@@ -278,15 +319,20 @@ if (closingData) {
   });
   await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
   await page.waitForTimeout(500);
-  const closing = await page.evaluate(() => ({
-    panel: !!document.querySelector("svg.mh-chart .mh-lens"),
-    toggleOn: !!document.querySelector("button.mh-tg.on"),
-    note:
-      document
-        .querySelector(".mh-note")
-        ?.textContent?.replace(/\s+/g, " ")
-        .trim() ?? "",
-  }));
+  const closingNo = await visibleSlideNo();
+  const closing = await page.evaluate((no) => {
+    const slide =
+      document.querySelector(`[data-slidev-no="${no}"]`) ?? document;
+    return {
+      panel: !!slide.querySelector("svg.mh-chart .mh-lens"),
+      toggleOn: !!slide.querySelector("button.mh-tg.on"),
+      note:
+        slide
+          .querySelector(".mh-note")
+          ?.textContent?.replace(/\s+/g, " ")
+          .trim() ?? "",
+    };
+  }, closingNo);
   check(
     `Schlusstext „${closingData.title}“ (Klick ${closingClick}) im Detailmodus, Lupe aus`,
     !closing.panel &&
@@ -307,16 +353,28 @@ if (!bonusFirst) throw new Error("V1_COMPARE ist leer");
 await page.goto(`${DECK}/pareto-v1-bonus`, { waitUntil: "networkidle" });
 await page.waitForSelector("svg.mh-chart", { timeout: 30_000 });
 await page.waitForTimeout(500);
-const bonus = await page.evaluate(() => ({
-  dates: Array.from(document.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
-    (e) => e.textContent?.trim() ?? "",
-  ),
-  active:
-    document
-      .querySelector(".mh-tl-item.active .mh-tl-date")
-      ?.textContent?.trim() ?? "",
-  warn: !!document.querySelector("svg.mh-chart .mh-warn"),
-}));
+const bonusNo = await visibleSlideNo();
+// Die Wache, die diese Fehlerklasse überhaupt erst gefangen hätte: Sobald
+// beide Aliase auf derselben Folie landen, wäre das Scoping oben still
+// wirkungslos — und alle Checks blieben grün.
+check(
+  "Historien- und Bonusfolie sind verschiedene Folien",
+  histNo !== bonusNo,
+  `pareto-historie = ${histNo}, pareto-v1-bonus = ${bonusNo}`,
+);
+const bonus = await page.evaluate((no) => {
+  const slide = document.querySelector(`[data-slidev-no="${no}"]`) ?? document;
+  return {
+    dates: Array.from(slide.querySelectorAll(".mh-tl-item .mh-tl-date")).map(
+      (e) => e.textContent?.trim() ?? "",
+    ),
+    active:
+      slide
+        .querySelector(".mh-tl-item.active .mh-tl-date")
+        ?.textContent?.trim() ?? "",
+    warn: !!slide.querySelector("svg.mh-chart .mh-warn"),
+  };
+}, bonusNo);
 check(
   `Bonusfolie führt ${V1_COMPARE.length} Stationen, startet auf „${bonusFirst.date}“${bonusFirst.warn ? " mit Warnhinweis" : ""}`,
   bonus.dates.join("|") === bonusDates.join("|") &&
