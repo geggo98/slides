@@ -204,6 +204,7 @@ The talk short-names are not derivable from the dated directory names:
 | `rnext`          | `20260703-rnext-proposal`                                    |
 | `anatomy`        | `20260707-anatomy-of-autonomous-agents`                      |
 | `sre-sim`        | `20260711-sre-simulations`                                   |
+| `zstd-delta`     | `20260910-lightning-zstd-patch-from` (⚡ Lightning Talk)     |
 
 A new deck picks its own short-name and gets a row here in the same commit.
 
