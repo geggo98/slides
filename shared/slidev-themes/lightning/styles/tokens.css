@@ -1,0 +1,99 @@
+/*
+  Token-Set des Lightning-Themes — dasselbe 21er-Vokabular wie
+  shared/theme/tokens.ts (--color-background-*, --color-text-*,
+  --color-border-*), dazu Theme-eigene --lt-*-Variablen und die
+  Slidev-Code-Variablen.
+
+  Selektoren mit Absicht: Light auf html ohne dark-Klasse (Spezifität 0,1,1),
+  Dark auf html mit doppelter dark-Klasse (0,2,1), modusfreie Werte auf
+  html mit root-Pseudoklasse (0,1,1). Das schlägt sowohl Slidevs vars.css als
+  auch shared/components/SlidevTokens.vue (bis 0,2,0), falls ein Deck es
+  doch importiert — unabhängig von der Ladereihenfolge.
+
+  Kontraste sind in __tests__/tokens.test.ts festgezurrt. Der helle Akzent
+  --lt-accent erreicht auf Papier nur rund 3:1 und ist deshalb Grafikfarbe
+  (Balken, Fortschritt, Blitz); als Textfarbe dient --lt-accent-ink.
+  Die Warning-Familie liegt auf Orange/Rost, damit sie sich vom Amber-Akzent
+  unterscheidet.
+*/
+html:not(.dark) {
+  --color-background-primary: #fffdf7;
+  --color-background-secondary: #f6f2e8;
+  --color-background-tertiary: #ebe6d9;
+  --color-background-info: #e3eef9;
+  --color-background-success: #e6f1d9;
+  --color-background-warning: #fbe9d8;
+  --color-background-danger: #fbe5e3;
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-tertiary: #78716c;
+  --color-text-info: #1e4f86;
+  --color-text-success: #2f5a12;
+  --color-text-warning: #7c2d12;
+  --color-text-danger: #8a1f1f;
+  --color-border-tertiary: rgba(28, 25, 23, 0.12);
+  --color-border-secondary: rgba(28, 25, 23, 0.22);
+  --color-border-primary: rgba(28, 25, 23, 0.38);
+  --color-border-info: #2f74c9;
+  --color-border-success: #3f8a22;
+  --color-border-warning: #ea580c;
+  --color-border-danger: #cf3b34;
+
+  --lt-accent: #d97706;
+  --lt-accent-ink: #b45309;
+  --lt-accent-soft: #fcf2e4;
+  --lt-bolt-opacity: 0.08;
+  --lt-code-inline-bg: #efe9db;
+
+  --slidev-code-background: #f4efe4;
+  --slidev-code-foreground: #292524;
+  --slidev-theme-primary: #b45309;
+}
+
+html.dark.dark {
+  --color-background-primary: #0f1115;
+  --color-background-secondary: #171a20;
+  --color-background-tertiary: #22262e;
+  --color-background-info: #0f2740;
+  --color-background-success: #142a12;
+  --color-background-warning: #33200c;
+  --color-background-danger: #3a1414;
+  --color-text-primary: #e7e5e4;
+  --color-text-secondary: #a8a29e;
+  --color-text-tertiary: #8a847e;
+  --color-text-info: #8cc4f4;
+  --color-text-success: #9fd36a;
+  --color-text-warning: #fb923c;
+  --color-text-danger: #f49b95;
+  --color-border-tertiary: rgba(231, 229, 228, 0.1);
+  --color-border-secondary: rgba(231, 229, 228, 0.18);
+  --color-border-primary: rgba(231, 229, 228, 0.32);
+  --color-border-info: #3d8ae0;
+  --color-border-success: #4f9a2a;
+  --color-border-warning: #d9661a;
+  --color-border-danger: #d24a44;
+
+  --lt-accent: #fbbf24;
+  --lt-accent-ink: #fbbf24;
+  --lt-accent-soft: #302917;
+  --lt-bolt-opacity: 0.1;
+  --lt-code-inline-bg: #22262e;
+
+  --slidev-code-background: #1a1e25;
+  --slidev-code-foreground: #e7e5e4;
+  --slidev-theme-primary: #fbbf24;
+}
+
+html:root {
+  --sk-rad: 6px;
+  --sk-radm: 8px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-mono: "0xProto", ui-monospace, "Cascadia Code", "Fira Code", monospace;
+
+  /* Slidev-Default ist 12/18 px; ein Lightning Talk zeigt wenig Code, der darf groß sein. */
+  --slidev-code-font-size: 14px;
+  --slidev-code-line-height: 21px;
+  --slidev-code-padding: 10px 12px;
+  --slidev-code-radius: 8px;
+}

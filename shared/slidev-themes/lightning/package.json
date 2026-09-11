@@ -1,0 +1,27 @@
+{
+  "name": "slidev-theme-lightning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lightning-Talk-Theme für die Decks in diesem Repo: ein Akzent, Zeitbudget-Balken, Countdown.",
+  "engines": {
+    "slidev": ">=52.0.0"
+  },
+  "slidev": {
+    "defaults": {
+      "fonts": {
+        "sans": "Inter",
+        "mono": "0xProto",
+        "local": "0xProto",
+        "weights": "400,500,600,700"
+      },
+      "transition": "slide-left",
+      "mdc": true,
+      "duration": "8min",
+      "timer": "countdown",
+      "themeConfig": {
+        "badge": "Lightning Talk"
+      }
+    }
+  }
+}

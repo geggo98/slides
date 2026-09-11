@@ -8,6 +8,9 @@ Multi-Präsentations-Setup mit [Slidev](https://sli.dev/).
 
 Neues Verzeichnis mit einer `slides.md` erstellen – wird automatisch beim Build erkannt.
 
+Lightning Talks: Verzeichnis `YYYYMMDD-lightning-talk-<thema>` und im Headmatter
+`theme: ../shared/slidev-themes/lightning` — Details in `AGENTS.md`.
+
 ## Entwicklung
 
 ```sh

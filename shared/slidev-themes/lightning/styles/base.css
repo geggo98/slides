@@ -1,0 +1,181 @@
+/*
+  Grundgestaltung aller Folien. Die Basisschrift bleibt bei Slidevs 1.1rem —
+  die dichteste Folie des ersten Lightning-Decks hat drei Pixel Luft. Größer
+  werden nur Überschriften und Code; Zeilenabstände werden dafür enger.
+
+  Der Akzentbalken an h1/h2 sitzt als absolut positioniertes ::before links
+  neben der Überschrift, in der 56-px-Padding-Zone der Folie. Er kostet keine
+  Höhe — ein Unterstrich-Balken hätte die dichte Folie gesprengt.
+*/
+
+/* Fläche und Text — #slide-content schlägt Slidevs scoped bg-main (ID > Klasse). */
+.slidev-layout,
+#slide-content {
+  background-color: var(--color-background-primary);
+  color: var(--color-text-primary);
+}
+
+/* Fließtext und Listen */
+.slidev-layout p {
+  line-height: 1.5;
+}
+.slidev-layout li {
+  line-height: 1.6em;
+}
+.slidev-layout ul {
+  list-style: square;
+}
+.slidev-layout li::marker {
+  color: var(--lt-accent);
+}
+.slidev-layout b,
+.slidev-layout strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Überschriften */
+.slidev-layout h1 {
+  position: relative;
+  font-size: 2.5rem;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+}
+.slidev-layout h2 {
+  position: relative;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 1.5rem 0 0.5rem;
+}
+.slidev-layout h1::before,
+.slidev-layout h2::before {
+  content: "";
+  position: absolute;
+  left: -0.55em;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 0.16em;
+  border-radius: 2px;
+  background: var(--lt-accent);
+  transform: skewX(-12deg);
+}
+.slidev-layout h2::before {
+  left: -0.6em;
+  width: 0.18em;
+}
+.slidev-layout h3 {
+  font-size: 1.35rem;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 1.25rem 0 0.5rem;
+}
+.slidev-layout h6 {
+  color: var(--lt-accent-ink);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.slidev-layout h6:not(.opacity-100) {
+  opacity: 1;
+}
+.slidev-layout h1 + p {
+  margin-top: -0.25rem;
+  margin-bottom: 1rem;
+  font-size: 1.15em;
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+.slidev-layout p + h2,
+.slidev-layout ul + h2,
+.slidev-layout table + h2 {
+  margin-top: 1.75rem;
+}
+
+/* Eine Überschrift, die nur aus Inline-Code besteht, bekommt keinen grauen Chip. */
+.slidev-layout :not(pre) > code:is(h1 > *, h2 > *) {
+  background: transparent;
+  padding: 0;
+  font-size: 0.92em;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Tabellen */
+.slidev-layout table {
+  font-variant-numeric: tabular-nums;
+}
+.slidev-layout tr {
+  border-bottom: 1px solid var(--color-border-tertiary);
+}
+.slidev-layout thead tr {
+  border-bottom: 2px solid var(--color-border-secondary);
+}
+.slidev-layout th {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Code */
+.slidev-layout pre,
+.slidev-layout code {
+  font-synthesis: none;
+}
+.slidev-layout :not(pre) > code {
+  background: var(--lt-code-inline-bg);
+  font-weight: 400;
+  font-size: 0.88em;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+.slidev-layout .sk-callout code {
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+.slidev-code-line-numbers .slidev-code code .line::before {
+  color: var(--color-text-tertiary);
+}
+.slidev-layout blockquote {
+  border-left: 3px solid var(--lt-accent);
+  color: var(--color-text-secondary);
+}
+
+/* Links */
+.slidev-layout a {
+  color: var(--lt-accent-ink);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+}
+.slidev-layout a:hover {
+  color: var(--lt-accent-ink);
+  border-color: currentColor;
+}
+
+/*
+  Callouts: shared/components/Callout.vue trägt hartkodierte Tailwind-Farben.
+  (0,3,0) schlägt das scoped .tone-x[data-v] (0,2,0); Linie und Fläche folgen
+  der Palette, Größe und Padding bleiben — die dichte Folie hängt daran.
+*/
+.slidev-layout .sk-callout.tone-info {
+  border-left-color: var(--color-text-info);
+  background: var(--color-background-info);
+}
+.slidev-layout .sk-callout.tone-success {
+  border-left-color: var(--color-text-success);
+  background: var(--color-background-success);
+}
+.slidev-layout .sk-callout.tone-warning {
+  border-left-color: var(--color-text-warning);
+  background: var(--color-background-warning);
+}
+.slidev-layout .sk-callout.tone-danger {
+  border-left-color: var(--color-text-danger);
+  background: var(--color-background-danger);
+}
+
+/* v-mark ohne Farbmodifier zeichnet in der Akzent-Tinte: rough-notation hängt das SVG
+   als Geschwister des markierten Elements ein und zeichnet mit currentColor;
+   ein Farbmodifier wie .orange gibt dem SVG stattdessen eine text-*-Klasse. */
+.slidev-layout .rough-annotation:not([class*="text-"]) {
+  color: var(--lt-accent-ink);
+}
