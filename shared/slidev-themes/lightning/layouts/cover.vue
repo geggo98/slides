@@ -9,7 +9,7 @@
 -->
 <script setup lang="ts">
 import { computed } from "vue";
-import { handleBackground } from "@slidev/client";
+import { configs, handleBackground } from "@slidev/client";
 import LightningBadge from "../components/LightningBadge.vue";
 import LtBolt from "../components/LtBolt.vue";
 
@@ -25,7 +25,14 @@ const props = withDefaults(
 );
 
 const style = computed(() => handleBackground(props.background, true));
-const showBadge = computed(() => props.badge !== false);
+// `badge: false` im Frontmatter oder `themeConfig.badge: false` blendet aus —
+// Letzteres schaltet auch das Footer-Label in global-top.vue ab.
+const showBadge = computed(
+  () =>
+    props.badge !== false &&
+    (configs.themeConfig as Record<string, unknown> | undefined)?.badge !==
+      false,
+);
 const badgeLabel = computed(() =>
   typeof props.badge === "string" ? props.badge : undefined,
 );

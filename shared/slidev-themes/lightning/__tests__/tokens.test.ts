@@ -18,11 +18,18 @@ import {
 // Muster übernommen aus shared/theme/__tests__/tokens.test.ts.
 
 const here = dirname(fileURLToPath(import.meta.url));
-const css = readFileSync(resolve(here, "../styles/tokens.css"), "utf8");
+// Kommentare vorher entfernen: eine auskommentierte Variable darf nicht als
+// vorhanden zählen, und ein Kommentar mit „}" darf den Block nicht verkürzen.
+const css = readFileSync(resolve(here, "../styles/tokens.css"), "utf8").replace(
+  /\/\*[\s\S]*?\*\//g,
+  "",
+);
 
 function block(selector: string): string {
-  const start = css.indexOf(`${selector} {`);
-  expect(start, `Block „${selector} {" fehlt`).toBeGreaterThanOrEqual(0);
+  const marker = `${selector} {`;
+  const count = css.split(marker).length - 1;
+  expect(count, `Block „${marker}" muss genau einmal vorkommen`).toBe(1);
+  const start = css.indexOf(marker);
   const end = css.indexOf("}", start);
   return css.slice(start, end);
 }
@@ -40,12 +47,35 @@ const dark = parseVars(block("html.dark.dark"));
 const shared = parseVars(block("html:root"));
 
 const SEMANTIC = Object.values(CSS_VAR_NAME);
+// Slidev-Variablen, die das Theme je Modus setzt; fehlt eine, fällt Slidevs
+// vars.css still auf Grau ein.
+const SLIDEV_PER_MODE = [
+  "--slidev-code-background",
+  "--slidev-code-foreground",
+  "--slidev-theme-primary",
+];
 
 describe("tokens.css: Vollständigkeit", () => {
   it("liefert jede semantische Variable in Light und Dark", () => {
     for (const name of SEMANTIC) {
       expect(light[name], `${name} (light)`).toBeTruthy();
       expect(dark[name], `${name} (dark)`).toBeTruthy();
+    }
+  });
+
+  it("liefert die Slidev-Variablen in beiden Modi", () => {
+    for (const name of SLIDEV_PER_MODE) {
+      expect(light[name], `${name} (light)`).toBeTruthy();
+      expect(dark[name], `${name} (dark)`).toBeTruthy();
+    }
+  });
+
+  it("schreibt jede Hex-Farbe sechsstellig", () => {
+    for (const vars of [light, dark, shared]) {
+      for (const [name, value] of Object.entries(vars)) {
+        if (value.startsWith("#"))
+          expect(value, name).toMatch(/^#[0-9a-f]{6}$/i);
+      }
     }
   });
 
@@ -118,6 +148,14 @@ for (const [mode, vars] of [
       ).toBeGreaterThanOrEqual(4.5);
       expect(
         ratio(vars, "--lt-accent-ink", "--lt-accent-soft"),
+      ).toBeGreaterThanOrEqual(4.5);
+    });
+    it("Code-Vordergrund und Zeilennummern ≥ 4,5 auf dem Codegrund", () => {
+      expect(
+        ratio(vars, "--slidev-code-foreground", "--slidev-code-background"),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        ratio(vars, "--color-text-secondary", "--slidev-code-background"),
       ).toBeGreaterThanOrEqual(4.5);
     });
     it("--lt-accent als Grafik ≥ 3 auf der Fläche", () => {

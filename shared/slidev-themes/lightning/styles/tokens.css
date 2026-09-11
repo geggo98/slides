@@ -99,6 +99,7 @@ html:root {
   /* Slidev-Default ist 12/18 px; ein Lightning Talk zeigt wenig Code, der darf groß sein. */
   --slidev-code-font-size: 14px;
   --slidev-code-line-height: 21px;
-  --slidev-code-padding: 10px 12px;
+  /* Einwertig: code.css nutzt den Wert auch als padding-left/right-Longhand. */
+  --slidev-code-padding: 12px;
   --slidev-code-radius: 8px;
 }

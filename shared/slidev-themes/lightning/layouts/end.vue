@@ -1,6 +1,7 @@
 <!--
-  Schlussfolie in Hell und Dunkel. Slidevs Builtin ist hart schwarz mit
-  weißem Text und `select-none`; hier bleibt die Quellenzeile markierbar.
+  Schlussfolie in Hell und Dunkel — Slidevs Builtin ist hart schwarz mit
+  weißem Text. (Markierbar ist Text hier so wenig wie sonst: SlideWrapper
+  setzt `user-select: none`, solange das Deck nicht `selectable: true` setzt.)
 -->
 <script setup lang="ts">
 import LtBolt from "../components/LtBolt.vue";

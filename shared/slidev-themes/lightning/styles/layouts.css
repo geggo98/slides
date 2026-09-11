@@ -1,5 +1,11 @@
 /* Cover, Section und End — die Layouts mit Platz für den großen Akzent. */
 
+/* Zentrierte Builtin-Layouts bekommen keinen linken Balken. */
+.slidev-layout.statement h1::before,
+.slidev-layout.fact h1::before {
+  display: none;
+}
+
 .slidev-layout.cover {
   position: relative;
   display: grid;
@@ -10,7 +16,8 @@
 .slidev-layout.cover .lt-cover-body {
   max-width: 44rem;
 }
-.slidev-layout.cover h1 {
+.slidev-layout.cover h1,
+.slidev-layout.intro h1 {
   font-size: 3.75rem;
   line-height: 1.05;
   font-weight: 700;
@@ -18,10 +25,12 @@
   margin: 0;
   text-wrap: balance;
 }
-.slidev-layout.cover h1::before {
+.slidev-layout.cover h1::before,
+.slidev-layout.intro h1::before {
   display: none;
 }
-.slidev-layout.cover h1::after {
+.slidev-layout.cover h1::after,
+.slidev-layout.intro h1::after {
   content: "";
   display: block;
   width: 4.5rem;
@@ -30,11 +39,14 @@
   border-radius: 2px;
   background: var(--lt-accent);
 }
-.slidev-layout.cover h1 + p {
+.slidev-layout.cover h1 + p,
+.slidev-layout.intro h1 + p {
   font-size: 1.5rem;
   line-height: 1.3;
-  color: var(--color-text-secondary);
   margin: 1.25rem 0 0;
+}
+.slidev-layout.cover:not([style*="background-image"]) h1 + p {
+  color: var(--color-text-secondary);
 }
 .slidev-layout.cover .lt-badge {
   margin-top: 2rem;

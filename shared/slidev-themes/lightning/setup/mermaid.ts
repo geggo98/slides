@@ -11,8 +11,13 @@
 // mit dunkler Schrift und Amber-Rand — auf Papier Karten, auf Graphit helle
 // Kacheln — statt Mermaids Lavendel, dem einzigen kühlen Element im Deck.
 //
-// Die Schrift folgt dem Fließtext; 16 px liegen nach der Skalierung eines
-// {scale: 0.62}-Diagramms noch über der kleinsten Folienschrift.
+// Die Schrift folgt dem Fließtext. Slidev skaliert ein `{scale: 0.62}`-Diagramm
+// samt Text: 20 px werden dort 12,4 px logisch — knapp über `text-xs` (12 px)
+// und damit nicht mehr die kleinste Schrift der Folie; 16 px wären 9,9 px.
+//
+// Kein `textColor`/`titleColor`: die schreibt Mermaid an die SVG-Wurzel und
+// an Diagrammtitel, also direkt auf den Folienhintergrund — dort muss die
+// Farbe modusabhängig bleiben und kommt vom jeweiligen Mermaid-Theme.
 import { defineMermaidSetup } from "@slidev/types";
 
 const INK = "#1c1917";
@@ -25,7 +30,7 @@ export default defineMermaidSetup(() => ({
   theme: "base",
   themeVariables: {
     fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-    fontSize: "16px",
+    fontSize: "20px",
     primaryColor: CARD,
     primaryTextColor: INK,
     primaryBorderColor: ACCENT,
@@ -36,7 +41,6 @@ export default defineMermaidSetup(() => ({
     tertiaryTextColor: INK,
     tertiaryBorderColor: LINE,
     lineColor: LINE,
-    textColor: INK,
     // Flowchart liest diese direkt — auch im dark-Theme.
     mainBkg: CARD,
     nodeBorder: ACCENT,
@@ -44,7 +48,6 @@ export default defineMermaidSetup(() => ({
     edgeLabelBackground: CARD_ALT,
     clusterBkg: CARD_ALT,
     clusterBorder: ACCENT,
-    titleColor: INK,
   },
   flowchart: { useMaxWidth: true, htmlLabels: true },
 }));

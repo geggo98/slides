@@ -73,7 +73,13 @@
   font-weight: 600;
   margin: 1.25rem 0 0.5rem;
 }
-.slidev-layout h6 {
+/*
+  Textfarben, die die Vererbung brechen, gelten nicht auf Bildhintergründen:
+  Slidevs handleBackground() setzt dort inline `color: white` auf die Layout-
+  Wurzel, und ein Nachfahren-Selektor würde das wieder überschreiben. Das
+  Attribut `background-image` im style ist der Marker dafür.
+*/
+.slidev-layout:not([style*="background-image"]) h6 {
   color: var(--lt-accent-ink);
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -85,8 +91,10 @@
   margin-top: -0.25rem;
   margin-bottom: 1rem;
   font-size: 1.15em;
-  color: var(--color-text-secondary);
   opacity: 1;
+}
+.slidev-layout:not([style*="background-image"]) h1 + p {
+  color: var(--color-text-secondary);
 }
 .slidev-layout p + h2,
 .slidev-layout ul + h2,
@@ -115,6 +123,8 @@
 }
 .slidev-layout th {
   font-weight: 600;
+}
+.slidev-layout:not([style*="background-image"]) th {
   color: var(--color-text-secondary);
 }
 
@@ -134,20 +144,26 @@
   background: color-mix(in srgb, currentColor 9%, transparent);
 }
 .slidev-code-line-numbers .slidev-code code .line::before {
-  color: var(--color-text-tertiary);
+  color: var(
+    --color-text-secondary
+  ); /* tertiary läge auf dem Codegrund unter 4,5:1 */
 }
 .slidev-layout blockquote {
   border-left: 3px solid var(--lt-accent);
+}
+.slidev-layout:not([style*="background-image"]) blockquote {
   color: var(--color-text-secondary);
 }
 
 /* Links */
 .slidev-layout a {
-  color: var(--lt-accent-ink);
   border-bottom: 1px solid color-mix(in srgb, currentColor 45%, transparent);
 }
-.slidev-layout a:hover {
+.slidev-layout:not([style*="background-image"]) a,
+.slidev-layout:not([style*="background-image"]) a:hover {
   color: var(--lt-accent-ink);
+}
+.slidev-layout a:hover {
   border-color: currentColor;
 }
 
