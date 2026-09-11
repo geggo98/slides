@@ -192,19 +192,19 @@ Commits follow **Conventional Commits** (roughly): `type(scope): subject`.
 
 The talk short-names are not derivable from the dated directory names:
 
-| scope            | directory                                                    |
-| ---------------- | ------------------------------------------------------------ |
-| `ai-agents`      | `20260327-ai-agents`                                         |
-| `gradle`         | `20260327-gradle-dependency-resolution`                      |
-| `monitoring`     | `20260329-grafana-lgtm-monitoring-in-k8s-distributed-system` |
-| `agents-details` | `20260408-agents-details`                                    |
-| `java-null`      | `20260428-java-null-pointer`                                 |
-| `open-rewrite`   | `20260522-open-rewrite`                                      |
-| `design-pattern` | `20260606-design-pattern`                                    |
-| `rnext`          | `20260703-rnext-proposal`                                    |
-| `anatomy`        | `20260707-anatomy-of-autonomous-agents`                      |
-| `sre-sim`        | `20260711-sre-simulations`                                   |
-| `zstd-delta`     | `20260910-lightning-zstd-patch-from` (⚡ Lightning Talk)     |
+| scope            | directory                                                     |
+| ---------------- | ------------------------------------------------------------- |
+| `ai-agents`      | `20260327-ai-agents`                                          |
+| `gradle`         | `20260327-gradle-dependency-resolution`                       |
+| `monitoring`     | `20260329-grafana-lgtm-monitoring-in-k8s-distributed-system`  |
+| `agents-details` | `20260408-agents-details`                                     |
+| `java-null`      | `20260428-java-null-pointer`                                  |
+| `open-rewrite`   | `20260522-open-rewrite`                                       |
+| `design-pattern` | `20260606-design-pattern`                                     |
+| `rnext`          | `20260703-rnext-proposal`                                     |
+| `anatomy`        | `20260707-anatomy-of-autonomous-agents`                       |
+| `sre-sim`        | `20260711-sre-simulations`                                    |
+| `zstd-delta`     | `20260910-lightning-talk-zstd-patch-from` (⚡ Lightning Talk) |
 
 A new deck picks its own short-name and gets a row here in the same commit.
 

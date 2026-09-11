@@ -18,7 +18,7 @@ export const TALKS = {
   "20260703-rnext-proposal": "BiPRO RNext — OpenAPI für LLM-Agents",
   "20260707-anatomy-of-autonomous-agents": "Anatomie Autonomer Agenten",
   "20260711-sre-simulations": "SRE-Simulationen: Komplexe Systeme interaktiv",
-  "20260910-lightning-zstd-patch-from":
+  "20260910-lightning-talk-zstd-patch-from":
     "Snapshots ohne Dateisystem-Magie (Lightning Talk)",
 } as const;
 
