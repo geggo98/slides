@@ -8,7 +8,9 @@ import { dirname, resolve } from "node:path";
 // alias in tsconfig.json so `import … from "@shared/components/…"` works at
 // build/dev time instead of brittle "../../../shared/…" paths. The shared dir
 // is one level up from this deck. Array form matches Slidev's own alias config
-// so vite's mergeConfig concatenates rather than clobbers.
+// so vite's mergeConfig concatenates rather than clobbers. Das Lightning-
+// Theme bringt denselben Alias mit; der doppelte Eintrag ist harmlos, und die
+// Datei bleibt wegen optimizeDeps unten trotzdem nötig.
 const shared = resolve(dirname(fileURLToPath(import.meta.url)), "../shared");
 
 export default defineConfig({

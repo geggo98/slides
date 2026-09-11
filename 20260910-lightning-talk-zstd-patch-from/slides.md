@@ -1,18 +1,12 @@
 ---
-theme: default
+theme: ../shared/slidev-themes/lightning
 title: "⚡ Snapshots ohne Dateisystem-Magie"
 info: |
   Lightning Talk, 8 Minuten. Eine Datenbankdatei von einem Gigabyte ändert
   sich alle 15 Minuten. Dateisystem-Snapshots wären die Antwort — wenn einem
   das Dateisystem gehörte. Der Weg von btrfs und ZFS über rdiff, bsdiff und
   xdelta zu zstd --patch-from, mit Messwerten und einer Live-Demo im Browser.
-mdc: true
-transition: slide-left
-colorSchema: auto
-fonts:
-  sans: Inter
-  mono: 0xProto
-  weights: "400,500,600,700"
+badgeNote: DuckDB als Beispiel
 hideInToc: true
 lang: de
 ---
@@ -20,12 +14,6 @@ lang: de
 # Snapshots ohne Dateisystem-Magie
 
 Von btrfs und ZFS zu `zstd --patch-from`
-
-<div class="text-sm opacity-75 mt-6">
-
-⚡ Lightning Talk · 8 Minuten · DuckDB als Beispiel
-
-</div>
 
 <!--
 0:00–0:20 · Aufhänger, während nur der Titel steht:
@@ -256,12 +244,12 @@ hideInToc: true
 
 <div class="text-sm">
 
-| Kandidat         | Delta    | Zeit  | Speicher                                      | Gescheitert am Budget                                           |
-| ---------------- | -------- | ----- | --------------------------------------------- | --------------------------------------------------------------- |
-| rdiff / librsync | 3,23 MiB | —     | —                                             | **Größe** — Literale gehen roh hinaus                           |
-| bsdiff           | 47,5 KB  | 150 s | <span v-mark.circle.orange="1">9,16 GB</span> | **Speicher** — das Neunzehnfache der Datei                      |
-| xdelta3          | 41–47 KB | 2,6 s | ok                                            | **Format** — als Kette 97 Objekte je Tag, ein Loch bricht alles |
-| Zeilen-Export    | 11,8 KB  | —     | —                                             | **Format** — nicht byteidentisch, Löschungen fehlen             |
+| Kandidat         | Delta    | Zeit  | Speicher                               | Gescheitert am Budget                                           |
+| ---------------- | -------- | ----- | -------------------------------------- | --------------------------------------------------------------- |
+| rdiff / librsync | 3,23 MiB | —     | —                                      | **Größe** — Literale gehen roh hinaus                           |
+| bsdiff           | 47,5 KB  | 150 s | <span v-mark.circle="1">9,16 GB</span> | **Speicher** — das Neunzehnfache der Datei                      |
+| xdelta3          | 41–47 KB | 2,6 s | ok                                     | **Format** — als Kette 97 Objekte je Tag, ein Loch bricht alles |
+| Zeilen-Export    | 11,8 KB  | —     | —                                      | **Format** — nicht byteidentisch, Löschungen fehlen             |
 
 </div>
 

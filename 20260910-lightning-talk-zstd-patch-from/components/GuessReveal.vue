@@ -98,13 +98,20 @@ function runCounter() {
   frame = requestAnimationFrame(step);
 }
 
-watch(revealed, (open) => {
-  if (open) runCounter();
-  else {
-    stopCounter();
-    shown.value = 0;
-  }
-});
+// `immediate`, weil die Folie schon aufgedeckt gemountet werden kann: beim
+// PDF-Export stehen alle Klicks von Anfang an auf Maximum, und ohne den
+// ersten Lauf bliebe im Export „0 MiB" stehen.
+watch(
+  revealed,
+  (open) => {
+    if (open) runCounter();
+    else {
+      stopCounter();
+      shown.value = 0;
+    }
+  },
+  { immediate: true },
+);
 
 watch(isActive, (active) => {
   if (!active) stopCounter();

@@ -102,6 +102,7 @@ await shot(11, "demo-falle", async (p) => {
   await p.waitForTimeout(1300);
 });
 await shot(12, "lessons", revealAll);
+await shot(13, "danke");
 await shot(14, "anhang");
 
 await browser.close();

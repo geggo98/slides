@@ -67,15 +67,27 @@ async function measure(
       if (!root) return [{ tag: "fehlt", cls: "", bottom: 0, right: 0 }];
       const out: { tag: string; cls: string; bottom: number; right: number }[] =
         [];
+      const clippedByAncestor = (el: Element, top: Element): boolean => {
+        for (let p = el.parentElement; p && p !== top; p = p.parentElement) {
+          if (getComputedStyle(p).overflow === "hidden") return true;
+        }
+        return false;
+      };
       for (const el of Array.from(root.querySelectorAll<HTMLElement>("*"))) {
         const style = getComputedStyle(el);
         if (style.display === "none" || style.visibility === "hidden") continue;
         const box = el.getBoundingClientRect();
         if (box.width === 0 && box.height === 0) continue;
+        // Dekoration (aria-hidden), die ein Vorfahr mit overflow:hidden
+        // beschneidet, kann nicht über die Kante ragen — der Blitz des
+        // Lightning-Themes auf Cover und Ende-Folie läuft absichtlich aus dem
+        // Bild. Inhalt bleibt geprüft, auch in solchen Layouts.
+        if (el.closest('[aria-hidden="true"]') && clippedByAncestor(el, root))
+          continue;
         if (box.bottom > limit + 1 || box.right > width + 1) {
           out.push({
             tag: el.tagName.toLowerCase(),
-            cls: String(el.className ?? "").slice(0, 60),
+            cls: String(el.getAttribute("class") ?? "").slice(0, 60),
             bottom: Math.round(box.bottom),
             right: Math.round(box.right),
           });
