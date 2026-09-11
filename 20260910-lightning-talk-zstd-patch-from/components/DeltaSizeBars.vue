@@ -69,7 +69,7 @@ const PAIRS: Pair[] = [
     key: "browser",
     label: "Im Browser",
     caption:
-      "Dieselbe Falle, dieselbe Größenordnung — und auf der nächsten Folie live vorführbar.",
+      "Dieselbe Falle, dieselbe Größenordnung – und auf der nächsten Folie live vorführbar.",
     provenance:
       "gemessen 10.09.2026 · libzstd 1.5.6 als WebAssembly · 2,5 MiB Basis, 12 geänderte Seiten",
     bars: [

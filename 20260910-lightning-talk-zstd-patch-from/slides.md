@@ -3,7 +3,7 @@ theme: ../shared/slidev-themes/lightning
 title: "⚡ Snapshots ohne Dateisystem-Magie"
 info: |
   Lightning Talk, 8 Minuten. Eine Datenbankdatei von einem Gigabyte ändert
-  sich alle 15 Minuten. Dateisystem-Snapshots wären die Antwort — wenn einem
+  sich alle 15 Minuten. Dateisystem-Snapshots wären die Antwort – wenn einem
   das Dateisystem gehörte. Der Weg von btrfs und ZFS über rdiff, bsdiff und
   xdelta zu zstd --patch-from, mit Messwerten und einer Live-Demo im Browser.
 badgeNote: DuckDB als Beispiel
@@ -19,12 +19,12 @@ Von btrfs und ZFS zu `zstd --patch-from`
 0:00–0:20 · Aufhänger, während nur der Titel steht:
 
 „Eine Datei. Ein Gigabyte. Sie ändert sich alle fünfzehn Minuten, mittendrin.
-Gesichert wird sie einmal am Tag — sechsundneunzig Stände entstehen, einer
+Gesichert wird sie einmal am Tag – sechsundneunzig Stände entstehen, einer
 wird aufgehoben, fünfundneunzig existieren nirgends mehr. Wenn Sie jetzt
-‚Snapshot' denken, denken Sie genau das Richtige. Ich zeige Ihnen in acht
-Minuten, warum es hier trotzdem nicht geht — und was stattdessen
+‚Snapshot‘ denken, denken Sie genau das Richtige. Ich zeige Ihnen in acht
+Minuten, warum es hier trotzdem nicht geht – und was stattdessen
 funktioniert. Es ist ein Kommandozeilenwerkzeug, das die meisten von Ihnen
-schon installiert haben."
+schon installiert haben.“
 
 Farbschema: hell. Falls der Saal dunkel ist, im Präsentationsmodus umstellen.
 -->
@@ -37,7 +37,7 @@ hideInToc: true
 
 <div class="text-lg mb-4">
 
-Ein Automat schreibt die Datei, Menschen an ihren Rechnern lesen sie — und
+Ein Automat schreibt die Datei, Menschen an ihren Rechnern lesen sie – und
 dazwischen liegt ein Speicher, der keinem von beiden gehört.
 
 </div>
@@ -53,17 +53,17 @@ dazwischen liegt ein Speicher, der keinem von beiden gehört.
 
 **96 Stände am Tag, einer wird aufgehoben.**
 Die anderen 95 existieren nirgends mehr. Wer einen davon
-braucht, rechnet ihn neu — jedes Mal.
+braucht, rechnet ihn neu – jedes Mal.
 
 </div>
 <div v-click>
 
 **Vier Budgets, die die Lösung einengen**
 
-- **Zeit** — ein Lauf hat Minuten, kein Gigabyte-Fenster
-- **Größe** — der Speicher räumt nach 30 Tagen auf
-- **Speicher** — der Rechner, der es baut, ist klein
-- **Format** — ein Restore muss **ohne unseren Code** gelingen
+- **Zeit** – ein Lauf hat Minuten, kein Gigabyte-Fenster
+- **Größe** – der Speicher räumt nach 30 Tagen auf
+- **Speicher** – der Rechner, der es baut, ist klein
+- **Format** – ein Restore muss **ohne unseren Code** gelingen
 
 </div>
 </div>
@@ -80,7 +80,7 @@ Auf der übernächsten Folie stirbt jeder Kandidat an genau einem davon.
 <!--
 0:20–1:00 · Der Rollensatz oben trägt alles Weitere: Automat schreibt,
 Menschen lesen, Speicher gehört keinem. Die vier Budgets sind die Achsen,
-an denen später jeder Kandidat scheitert. Keine Geldbeträge nennen — die
+an denen später jeder Kandidat scheitert. Keine Geldbeträge nennen – die
 Größenordnung genügt: eine Neuberechnung kostet je Anfrage im Cent-Bereich,
 und davon fallen viele an.
 -->
@@ -96,30 +96,30 @@ Copy-on-Write kann das doch längst.
 <div class="grid grid-cols-2 gap-x-8 gap-y-3 mt-4 text-sm">
 <div v-click>
 
-**btrfs** — `btrfs send -p alt neu`
+**btrfs** – `btrfs send -p alt neu`
 
 Blockgenauer Strom gegen einen Vorgänger-Snapshot.
 
 </div>
 <div v-click>
 
-**ZFS** — `zfs send -i alt@snap neu@snap`
+**ZFS** – `zfs send -i alt@snap neu@snap`
 
 Dasselbe Prinzip, ausgereifter, mit Pool dahinter.
 
 </div>
 <div v-click>
 
-**LVM-Thin** — `thin_delta`
+**LVM-Thin** – `thin_delta`
 
 Vergleicht zwei Thin-Volumes auf Blockebene.
 
 </div>
 <div v-click>
 
-**APFS** — `fs_snapshot`, `mount_apfs -s`
+**APFS** – `fs_snapshot`, `mount_apfs -s`
 
-Anlegen, auflisten, einhängen, zurückrollen — sechs Verben.
+Anlegen, auflisten, einhängen, zurückrollen – sechs Verben.
 
 </div>
 </div>
@@ -131,14 +131,14 @@ Das ist die richtige Antwort. Wer sie gegeben hätte: Hand hoch.
 </div>
 
 <!--
-1:00–1:40 · Hier soll das Publikum nicken, und zwar zu Recht — der Bruch
+1:00–1:40 · Hier soll das Publikum nicken, und zwar zu Recht – der Bruch
 kommt erst auf der nächsten Folie. Handzeichen einholen, das ist der einzige
 Schnitt, der spontan mitten im Vortrag geht.
 
 Belegt: btrfs-send(8) und zfs-send(8) für die Inkrement-Flags; thin_delta(8);
 sys/snapshot.h im macOS-SDK 26.5 listet genau sechs Verben (create, list,
 delete, rename, mount, revert), mount_apfs(8) hängt einen Snapshot ein.
-Nicht behaupten, APFS könne „kein send" — belegbar ist nur, dass es kein
+Nicht behaupten, APFS könne „kein send“ – belegbar ist nur, dass es kein
 Stream-Format gibt.
 -->
 
@@ -166,7 +166,7 @@ Eine Datei ist das schon. Nur macht sie **ausschließlich dasselbe Dateisystem**
 
 <Callout tone="warning">
 Der Automat läuft in einem Container: <code>btrfs send</code> verlangt <code>CAP_SYS_ADMIN</code> im
-<strong>initialen</strong> User-Namespace — Root im Container ist dort kein Root. Die Lesenden sitzen auf macOS:
+<strong>initialen</strong> User-Namespace – Root im Container ist dort kein Root. Die Lesenden sitzen auf macOS:
 ZFS gibt es dort als Port, aber niemand installiert für ein Backup eine Kernel-Erweiterung und legt einen Pool an.
 Und das Ziel ist ein Object Store: der nimmt Dateien, keine Ströme.
 </Callout>
@@ -181,16 +181,16 @@ Gesucht ist dieselbe Idee **eine Ebene höher**: Copy-on-Write auf Dateiebene.
 
 <!--
 1:40–2:15 · Der Bruch. Wichtig: nicht behaupten, ZFS gäbe es auf macOS
-nicht — es gibt einen gepflegten Port mit Paketen bis macOS 26. Das
+nicht – es gibt einen gepflegten Port mit Paketen bis macOS 26. Das
 Argument ist die Zumutung, nicht die Verfügbarkeit.
 
 Das Container-Argument trägt überall: Linux fs/btrfs/send.c prüft
 CAP_SYS_ADMIN, und capable() prüft gegen den initialen User-Namespace.
-Der btrfs-Treiber in Docker und Podman existiert sehr wohl — deshalb nicht
-mit „overlayfs" argumentieren.
+Der btrfs-Treiber in Docker und Podman existiert sehr wohl – deshalb nicht
+mit „overlayfs“ argumentieren.
 
 Log-Shipping, falls jemand fragt: DuckDBs WAL ist Absturzwiederherstellung,
-kein Transportformat — sie wird beim sauberen Beenden gelöscht.
+kein Transportformat – sie wird beim sauberen Beenden gelöscht.
 -->
 
 ---
@@ -210,7 +210,7 @@ Wie groß wird das Delta, das <code>rdiff</code> daraus baut?
 
 <GuessReveal
   :clicks="$clicks"
-  question="rdiff, also librsync — die Technik hinter rsync"
+  question="rdiff, also librsync – die Technik hinter rsync"
   :options="[{ label: '12 KB' }, { label: '300 KB' }, { label: '3 MiB' }, { label: '30 MiB' }]"
   :answer-index="2"
   :reveal="{
@@ -225,14 +225,14 @@ Wie groß wird das Delta, das <code>rdiff</code> daraus baut?
 Weiter-Taste.
 
 Genau formuliert: Ein rdiff-Delta kann nicht kleiner werden als die Bytes,
-die in der Basis keinen ganzen Block wiederfinden — die gehen als LITERAL
+die in der Basis keinen ganzen Block wiederfinden – die gehen als LITERAL
 roh hinaus (librsync doc/formats.md; src/rdiff.c sagt „compression is not
-implemented yet"). Eine Untergrenze „gleich dem Wachstum" gibt es NICHT:
+implemented yet“). Eine Untergrenze „gleich dem Wachstum“ gibt es NICHT:
 COPY darf an jeder Stelle der Basis abschreiben. Die Messung hier lag nur
 zufällig fast genau auf dem Wachstum.
 
 Falls jemand `rsync --only-write-batch` ruft: Ja, das schreibt ein Delta in
-eine Datei — zwingt aber auf zlib und verlangt drüben einen identischen
+eine Datei – zwingt aber auf zlib und verlangt drüben einen identischen
 Zielbaum.
 -->
 
@@ -246,17 +246,17 @@ hideInToc: true
 
 | Kandidat         | Delta    | Zeit  | Speicher                               | Gescheitert am Budget                                           |
 | ---------------- | -------- | ----- | -------------------------------------- | --------------------------------------------------------------- |
-| rdiff / librsync | 3,23 MiB | —     | —                                      | **Größe** — Literale gehen roh hinaus                           |
-| bsdiff           | 47,5 KB  | 150 s | <span v-mark.circle="1">9,16 GB</span> | **Speicher** — das Neunzehnfache der Datei                      |
-| xdelta3          | 41–47 KB | 2,6 s | ok                                     | **Format** — als Kette 97 Objekte je Tag, ein Loch bricht alles |
-| Zeilen-Export    | 11,8 KB  | —     | —                                      | **Format** — nicht byteidentisch, Löschungen fehlen             |
+| rdiff / librsync | 3,23 MiB | –     | –                                      | **Größe** – Literale gehen roh hinaus                           |
+| bsdiff           | 47,5 KB  | 150 s | <span v-mark.circle="1">9,16 GB</span> | **Speicher** – das Neunzehnfache der Datei                      |
+| xdelta3          | 41–47 KB | 2,6 s | ok                                     | **Format** – als Kette 97 Objekte je Tag, ein Loch bricht alles |
+| Zeilen-Export    | 11,8 KB  | –     | –                                      | **Format** – nicht byteidentisch, Löschungen fehlen             |
 
 </div>
 
 <div v-click class="mt-5">
 
 <Callout tone="danger">
-<strong>par2 löst ein anderes Problem.</strong> Es ist Fehlerkorrektur, kein Delta — es spart kein einziges
+<strong>par2 löst ein anderes Problem.</strong> Es ist Fehlerkorrektur, kein Delta – es spart kein einziges
 Byte Übertragung, sondern legte bei dieser Datei 24,9 MiB obendrauf.
 </Callout>
 
@@ -273,12 +273,12 @@ Und der beste von ihnen braucht auf jedem Rechner, der wiederherstellen will, ei
 nicht zum Vorlesen. Der v-mark auf 9,16 GB ist der Ersatz für die gestrichene
 Schätzfrage.
 
-Nicht sagen „keiner kommt als fertiges Wheel": bsdiff4 1.2.6 hat sehr wohl
+Nicht sagen „keiner kommt als fertiges Wheel“: bsdiff4 1.2.6 hat sehr wohl
 cp313-Räder (PyPI, 19.02.2025). Für xdelta3 stimmt es (0.0.5 von 2017).
 Das tragfähige Argument gegen bsdiff ist allein die Speicherlast.
 
 par2: die 24,9 MiB sind eine eigene Messung an dieser Datei. Die oft
-genannten „fünf Prozent" sind eine Einstellung, keine Eigenschaft.
+genannten „fünf Prozent“ sind eine Einstellung, keine Eigenschaft.
 
 Falls jemand nach casync, restic oder borg fragt: nicht untersucht, ehrlich
 sagen. Ebenso brotli mit rohem Wörterbuch.
@@ -297,17 +297,17 @@ routeAlias: restore-punkte
 <div class="mt-3 text-sm opacity-75">
 
 Inkrementell heißt: gegen das letzte Backup, egal welcher Art. Differenziell heißt: gegen das letzte
-Vollbackup — deshalb reichen zum Zurückholen zwei Objekte.
+Vollbackup – deshalb reichen zum Zurückholen zwei Objekte.
 
 </div>
 
 <!--
 3:35–4:15 · Erst Kette, einen späten Punkt wählen: viele Objekte. Dann ein
-Objekt löschen — alles danach ist rot und trägt ein Kreuz. Dann auf Differenz
+Objekt löschen – alles danach ist rot und trägt ein Kreuz. Dann auf Differenz
 umschalten und dasselbe Löschen wiederholen: genau ein Punkt fällt aus.
 
 Begriffe nach NIST SP 800-34 Rev. 1, §5.1.2. Die 96 Zyklen am Tag und die
-Objektzahl in der Kette nie in einem Satz mischen — das verwirrt.
+Objektzahl in der Kette nie in einem Satz mischen – das verwirrt.
 
 Überleitung: Und wer rechnet mir alle 15 Minuten ein Delta gegen ein
 Gigabyte, ohne den Rechner umzubringen?
@@ -359,7 +359,7 @@ flowchart TB
 <div v-click class="mt-3">
 
 <Callout tone="success">
-Ein geänderter Block landet in DuckDB nicht am alten Offset — die Copy-on-Write-Idee steckt schon im
+Ein geänderter Block landet in DuckDB nicht am alten Offset – die Copy-on-Write-Idee steckt schon im
 Dateiformat. Deshalb funktioniert ein Byte-Delta überhaupt.
 </Callout>
 
@@ -373,7 +373,7 @@ Zwei Flags, die man nicht weglassen darf, beide gemessen:
   CLI-Default, und ein MT-Delta war in drei Messungen bis zu 5,4-mal so groß.
   `-T1` genügt nicht.
 - `--long=30` beim Entpacken: ohne das bricht zstd mit „Frame requires too
-  much memory for decoding" ab. Beim Bauen setzt `--patch-from` das Fenster
+  much memory for decoding“ ab. Beim Bauen setzt `--patch-from` das Fenster
   selbst, beim Entpacken hebt es das Limit nur auf die Basisgröße.
 
 `--patch-from` gibt es seit zstd 1.4.5 (2020); 1.5.7 ist der aktuelle Stand.
@@ -390,7 +390,7 @@ routeAlias: frage-bibliothek
 
 <div class="text-sm opacity-75 mb-3">
 
-Gleiche libzstd, gleiche Dateien, gleiche Einstellungen, beide Male aus Python — nur das Paket ist ein
+Gleiche libzstd, gleiche Dateien, gleiche Einstellungen, beide Male aus Python – nur das Paket ist ein
 anderes, und damit der Weg, auf dem die Basis hineinkommt. Statt 1,8 MiB kam heraus:
 
 </div>
@@ -404,7 +404,7 @@ anderes, und damit der Weg, auf dem die Basis hineinkommt. Statt 1,8 MiB kam her
     number: 111,
     unit: 'MiB',
     decimals: 0,
-    note: 'Der Faktor 60 kam ohne Fehlermeldung. Die Basis war da — sie wurde nur über einen Weg geladen, auf dem der Long-Distance-Matcher sie nie zu sehen bekommt.',
+    note: 'Der Faktor 60 kam ohne Fehlermeldung. Die Basis war da – sie wurde nur über einen Weg geladen, auf dem der Long-Distance-Matcher sie nie zu sehen bekommt.',
   }"
 />
 
@@ -427,9 +427,9 @@ Codeblöcke und die Header-Zeilen stehen auf der Anhangsfolie
 
 Genau formuliert: Nicht das Wörterbuch entscheidet, sondern der Ladeweg.
 `ZSTD_CCtx_loadDictionary` baut ein CDict ohne Kompressionsstufe, und das
-nimmt immer den Attach-Pfad — dort füllt niemand die LDM-Tabelle.
+nimmt immer den Attach-Pfad – dort füllt niemand die LDM-Tabelle.
 `ZSTD_CCtx_refPrefix` geht über den Pfad, der sie füllt.
-NICHT sagen „der LDM indiziert CDicts nie" — als allgemeines Gesetz ist das
+NICHT sagen „der LDM indiziert CDicts nie“ – als allgemeines Gesetz ist das
 falsch, zstd.h:1130 sagt ausdrücklich das Gegenteil für den anderen Weg.
 
 Schlusspointe hier schon andeuten: wir hatten die Bibliothek benutzt, statt
@@ -447,7 +447,7 @@ hideInToc: true
 
 <!--
 5:40–6:10 · Durch die Reiter klicken. Jeder trägt Datum und
-Werkzeugversion in der Fußzeile — das ist Absicht, die Zahlen stammen aus
+Werkzeugversion in der Fußzeile – das ist Absicht, die Zahlen stammen aus
 je einer Messung an je einer Datei.
 
 Beim letzten Reiter sagen: dieselbe Falle lässt sich hier auf der Bühne
@@ -465,16 +465,16 @@ routeAlias: notweg
 <PatchFromDemo />
 
 <!--
-6:10–6:50 · Schieberegler bewegen. Dann auf „Stufe 3" umschalten: das Delta
+6:10–6:50 · Schieberegler bewegen. Dann auf „Stufe 3“ umschalten: das Delta
 springt um mehr als das Zwanzigfache, ohne Fehler, ohne Warnung. Zurück auf
 Stufe 9 und die SHA-256-Prüfung laufen lassen.
 
 Warum zwei Deckel: Bei Stufe 3 begrenzt das Fenster (2 MiB) das Ziel, und
 ein zweiter Deckel begrenzt, wie viel vom Präfix überhaupt indiziert wird.
-Die Kommandozeile setzt beide selbst — deshalb hat sie das Problem nicht.
+Die Kommandozeile setzt beide selbst – deshalb hat sie das Problem nicht.
 
 Warum trotzdem SHA-256 im Manifest: Fehlt die Basis, bricht zstd ab. Eine
-FALSCHE Basis gleicher Länge fängt nur die Frame-Prüfsumme — und die ist in
+FALSCHE Basis gleicher Länge fängt nur die Frame-Prüfsumme – und die ist in
 libzstd voreingestellt AUS. Der SHA-256 ist nicht Gürtel und Hosenträger,
 er ist der Hosenträger.
 
@@ -490,13 +490,13 @@ hideInToc: true
 
 <div class="text-lg space-y-3 mt-4">
 
-<div v-click><strong>1 · Ein Standardformat schlägt das bessere Eigenbau-Delta.</strong> Der eigene Diff war fertig — und ohne unseren Code nicht lesbar.</div>
+<div v-click><strong>1 · Ein Standardformat schlägt das bessere Eigenbau-Delta.</strong> Der eigene Diff war fertig – und ohne unseren Code nicht lesbar.</div>
 
 <div v-click><strong>2 · Nicht der Algorithmus entscheidet, sondern die Anbindung.</strong> Faktor 60 zwischen zwei Wegen zu derselben C-Bibliothek.</div>
 
 <div v-click><strong>3 · Differenziell statt inkrementell</strong>, sobald der Speicher selbst aufräumt. Zwei Objekte je Punkt, keine Kette.</div>
 
-<div v-click><strong>4 · Ein Delta ist nicht selbsttragend.</strong> Es trägt keine Kennung seiner Basis — die Zuordnung ist unsere Aufgabe.</div>
+<div v-click><strong>4 · Ein Delta ist nicht selbsttragend.</strong> Es trägt keine Kennung seiner Basis – die Zuordnung ist unsere Aufgabe.</div>
 
 <div v-click><strong>5 · Ein zu großes Delta meldet sich nie von selbst.</strong> Nur die Messung sieht es.</div>
 
@@ -507,12 +507,12 @@ hideInToc: true
 
 Schlusssatz wörtlich:
 „Die Frage, die mich hierher gebracht hat, hieß am Ende nicht ‚welcher
-Algorithmus ist der beste?', sondern ‚wer stellt das in drei Jahren ohne
-meinen Code wieder her?'. Die ganze Antwort passt in eine Zeile:
+Algorithmus ist der beste?‘, sondern ‚wer stellt das in drei Jahren ohne
+meinen Code wieder her?‘. Die ganze Antwort passt in eine Zeile:
 zstd -d --long=30 --patch-from=basis delta.zst -o datenbank.duckdb.
 Und die Falle davor stand die ganze Zeit im Header, zwei Notizen
-voneinander entfernt — wir hatten die Bibliothek benutzt, statt sie zu
-lesen."
+voneinander entfernt – wir hatten die Bibliothek benutzt, statt sie zu
+lesen.“
 
 Danach 30 s Puffer. Wird verbraucht oder nicht.
 -->
@@ -565,7 +565,7 @@ routeAlias: anhang
 
 Warum ausgerechnet 25 %: DuckDB führt Row-Groups zusammen, sobald in benachbarten Gruppen etwa ein
 Viertel der Zeilen gelöscht ist, und räumt den Index auf, sobald ein Zehntel der Puffer frei ist.
-Beides schreibt große Teile der Datei neu — der Ausreißer ist eingeplant, nicht überraschend.
+Beides schreibt große Teile der Datei neu – der Ausreißer ist eingeplant, nicht überraschend.
 
 </div>
 
@@ -603,7 +603,7 @@ c = ZstdCompressor(
 ```
 
 → `ZSTD_CCtx_loadDictionary`: die Basis wird zum **CDict**.
-`zstd.h:1104`: „does not benefit from LDM"
+`zstd.h:1104`: „does not benefit from LDM“
 
 </div>
 <div>
@@ -620,7 +620,7 @@ c = ZstdCompressor(level=3, options=opts,
 ```
 
 → `ZSTD_CCtx_refPrefix`: die Basis wird zum **Präfix**, wie die CLI.
-`zstd.h:1130`: „compatible with LDM"
+`zstd.h:1130`: „compatible with LDM“
 
 </div>
 </div>
@@ -628,7 +628,7 @@ c = ZstdCompressor(level=3, options=opts,
 <div class="mt-3 text-xs opacity-60">
 
 Vor 3.14: `backports.zstd`, gleiche API; `as_prefix` steht im Quelltext, nicht in der Doku. Die
-Kommandozeile setzt Fenster und LDM bei `--patch-from` selbst, in Python setzt man beide von Hand —
+Kommandozeile setzt Fenster und LDM bei `--patch-from` selbst, in Python setzt man beide von Hand –
 und nur der Präfix-Weg macht daraus ein Delta.
 
 </div>
@@ -638,5 +638,5 @@ Nur für Rückfragen, nicht im Zeitbudget. Von Folie 9 aus per Link erreichbar.
 
 Beide Zitate aus zstd.h 1.5.7: Zeile 1104 ist Note 5 zu
 `ZSTD_CCtx_loadDictionary`, Zeile 1130 steht im Block zu
-`ZSTD_CCtx_refPrefix` — 26 Zeilen auseinander.
+`ZSTD_CCtx_refPrefix` – 26 Zeilen auseinander.
 -->
