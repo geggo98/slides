@@ -37,8 +37,8 @@ hideInToc: true
 
 <div class="text-lg mb-4">
 
-Ein Automat schreibt die Datei, Menschen an ihren Rechnern lesen sie – und
-dazwischen liegt ein Speicher, der keinem von beiden gehört.
+Ein Automat schreibt die Datei, Menschen an ihren Rechnern lesen sie. Dazwischen
+liegt ein Object Store, der keinem von beiden gehört.
 
 </div>
 
@@ -61,7 +61,7 @@ braucht, rechnet ihn neu – jedes Mal.
 **Vier Budgets, die die Lösung einengen**
 
 - **Zeit** – ein Lauf hat Minuten, kein Gigabyte-Fenster
-- **Größe** – der Speicher räumt nach 30 Tagen auf
+- **Größe** – der Object Store räumt nach 30 Tagen auf
 - **Speicher** – der Rechner, der es baut, ist klein
 - **Format** – ein Restore muss **ohne unseren Code** gelingen
 
@@ -79,7 +79,7 @@ Auf der übernächsten Folie stirbt jeder Kandidat an genau einem davon.
 
 <!--
 0:20–1:00 · Der Rollensatz oben trägt alles Weitere: Automat schreibt,
-Menschen lesen, Speicher gehört keinem. Die vier Budgets sind die Achsen,
+Menschen lesen, der Object Store gehört keinem. Die vier Budgets sind die Achsen,
 an denen später jeder Kandidat scheitert. Keine Geldbeträge nennen – die
 Größenordnung genügt: eine Neuberechnung kostet je Anfrage im Cent-Bereich,
 und davon fallen viele an.
@@ -119,7 +119,7 @@ Vergleicht zwei Thin-Volumes auf Blockebene.
 
 **APFS** – `fs_snapshot`, `mount_apfs -s`
 
-Anlegen, auflisten, einhängen, zurückrollen – sechs Verben.
+Anlegen, auflisten, löschen, umbenennen, einhängen, zurückrollen: sechs Verben.
 
 </div>
 </div>
@@ -234,6 +234,12 @@ zufällig fast genau auf dem Wachstum.
 Falls jemand `rsync --only-write-batch` ruft: Ja, das schreibt ein Delta in
 eine Datei – zwingt aber auf zlib und verlangt drüben einen identischen
 Zielbaum.
+
+Falls jemand sagt „dann pack das rdiff-Delta hinterher mit zstd -19“: im
+Vergleichsbericht (delta-kodierung-vergleich.md, Messung 1) bleibt es
+Faktor 2,6 (Text) bis 19 (20 Ein-Byte-Änderungen) größer als
+`--patch-from`. Die Nachkompression packt die Symptome der
+Blockgranularität, nicht die Ursache.
 -->
 
 ---
@@ -276,6 +282,13 @@ Schätzfrage.
 Nicht sagen „keiner kommt als fertiges Wheel“: bsdiff4 1.2.6 hat sehr wohl
 cp313-Räder (PyPI, 19.02.2025). Für xdelta3 stimmt es (0.0.5 von 2017).
 Das tragfähige Argument gegen bsdiff ist allein die Speicherlast.
+bsdiff braucht laut Percival max(17n, 9n+m) Byte. Gemessen war es das
+Neunzehnfache, bzip2-Puffer obendrauf.
+
+xdelta3 3.2.0 (21.06.2026) hat einen Armor-Modus mit BLAKE3 über die
+ganze Datei. Das Format-Argument (Kette, Loch) bleibt davon unberührt.
+Sein Source-Window `-B` steht per Default auf 64 MiB, bei 1 GB Basis
+muss es auf die Basisgröße.
 
 par2: die 24,9 MiB sind eine eigene Messung an dieser Datei. Die oft
 genannten „fünf Prozent“ sind eine Einstellung, keine Eigenschaft.
@@ -359,7 +372,7 @@ flowchart TB
 <div v-click class="mt-3">
 
 <Callout tone="success">
-Ein geänderter Block landet in DuckDB nicht am alten Offset – die Copy-on-Write-Idee steckt schon im
+Ein geänderter Block landet in DuckDB nicht am alten Offset: Die Copy-on-Write-Idee steckt schon im
 Dateiformat. Deshalb funktioniert ein Byte-Delta überhaupt.
 </Callout>
 
@@ -378,6 +391,17 @@ Zwei Flags, die man nicht weglassen darf, beide gemessen:
 
 `--patch-from` gibt es seit zstd 1.4.5 (2020); 1.5.7 ist der aktuelle Stand.
 Warum nicht `-D`: das verweigert jede Wörterbuchdatei über 32 MiB.
+
+Falls jemand die Doku zitiert: die man page 1.5.7 verspricht für
+`--single-thread` bis Stufe 15 nur „marginal“ mehr Ratio und über Stufe 15
+weniger (Issue #4093, `--ultra -22`). Das Wiki verspricht für MT „very
+minimal loss“. Gemessen war es hier Faktor 5,4. Beide Aussagen gelten für
+ihre Stufen und Daten, nicht allgemein – je Stufe messen.
+
+Das Fenster richtet sich nach der Zieldatei, nicht nach der Basis
+(fileio.c, `FIO_adjustParamsForPatchFromMode`: nächste Zweierpotenz über
+der Zielgröße). Deshalb `--long=30` beim Entpacken für ein Ziel von 1 GB.
+Details im Vergleichsbericht, §3.4 und §9.
 -->
 
 ---
@@ -490,11 +514,11 @@ hideInToc: true
 
 <div class="text-lg space-y-3 mt-4">
 
-<div v-click><strong>1 · Ein Standardformat schlägt das bessere Eigenbau-Delta.</strong> Der eigene Diff war fertig – und ohne unseren Code nicht lesbar.</div>
+<div v-click><strong>1 · Ein Standardformat schlägt das bessere Eigenbau-Delta.</strong> Das eigene Delta war fertig – und ohne unseren Code nicht lesbar.</div>
 
 <div v-click><strong>2 · Nicht der Algorithmus entscheidet, sondern die Anbindung.</strong> Faktor 60 zwischen zwei Wegen zu derselben C-Bibliothek.</div>
 
-<div v-click><strong>3 · Differenziell statt inkrementell</strong>, sobald der Speicher selbst aufräumt. Zwei Objekte je Punkt, keine Kette.</div>
+<div v-click><strong>3 · Differenziell statt inkrementell</strong>, sobald der Object Store selbst aufräumt. Zwei Objekte je Punkt, keine Kette.</div>
 
 <div v-click><strong>4 · Ein Delta ist nicht selbsttragend.</strong> Es trägt keine Kennung seiner Basis – die Zuordnung ist unsere Aufgabe.</div>
 
@@ -504,6 +528,11 @@ hideInToc: true
 
 <!--
 6:50–7:30 · Fünf Zeilen, eine je Klick.
+
+Zu Lehre 4, falls jemand fragt: Ein trainiertes Wörterbuch (`-D`) trägt
+seine ID im Frame, und der Decoder weist ein falsches zurück. Ein Präfix
+hinterlässt nichts. xdelta3 3.2 prüft im Armor-Modus per BLAKE3, rdiff und
+bsdiff prüfen gar nicht (Vergleichsbericht, §9).
 
 Schlusssatz wörtlich:
 „Die Frage, die mich hierher gebracht hat, hieß am Ende nicht ‚welcher
@@ -527,6 +556,8 @@ hideInToc: true
 <div class="text-sm opacity-75 mt-4">
 
 zstd(1) zu `--patch-from` · RFC 8878 · btrfs-send(8) · NIST SP 800-34 Rev. 1
+
+Werkzeugvergleich: `delta-kodierung-vergleich.md` neben dem Foliensatz
 
 </div>
 
@@ -555,7 +586,7 @@ routeAlias: anhang
 
 - Delta größer als **25 %** des Vollbackups → neues Vollbackup
 - `--patch-from` bricht ab, sobald Basis oder Ziel über **2 GiB** liegen
-- der Publisher braucht **Basis plus Fenster** an Speicher
+- der Automat braucht **Basis plus Fenster** an Speicher
 - die Basis bleibt lokal liegen: **+1 GB** Platte
 
 </div>
@@ -565,7 +596,7 @@ routeAlias: anhang
 
 Warum ausgerechnet 25 %: DuckDB führt Row-Groups zusammen, sobald in benachbarten Gruppen etwa ein
 Viertel der Zeilen gelöscht ist, und räumt den Index auf, sobald ein Zehntel der Puffer frei ist.
-Beides schreibt große Teile der Datei neu – der Ausreißer ist eingeplant, nicht überraschend.
+Beides schreibt große Teile der Datei neu. Der Ausreißer ist eingeplant, nicht überraschend.
 
 </div>
 
@@ -627,8 +658,8 @@ c = ZstdCompressor(level=3, options=opts,
 
 <div class="mt-3 text-xs opacity-60">
 
-Vor 3.14: `backports.zstd`, gleiche API; `as_prefix` steht im Quelltext, nicht in der Doku. Die
-Kommandozeile setzt Fenster und LDM bei `--patch-from` selbst, in Python setzt man beide von Hand –
+Vor 3.14: `backports.zstd`, gleiche API. `as_prefix` steht im Quelltext, nicht in der Doku. Die
+Kommandozeile setzt Fenster und LDM bei `--patch-from` selbst, in Python setzt man beide von Hand,
 und nur der Präfix-Weg macht daraus ein Delta.
 
 </div>
