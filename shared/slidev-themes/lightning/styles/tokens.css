@@ -14,15 +14,20 @@
   --lt-accent erreicht auf Papier nur rund 3:1 und ist deshalb Grafikfarbe
   (Balken, Fortschritt, Blitz); als Textfarbe dient --lt-accent-ink.
   Die Warning-Familie liegt auf Orange/Rost, damit sie sich vom Amber-Akzent
-  unterscheidet.
+  unterscheidet; im Dunkeln bewusst Orange-500 statt -400, sonst liegt sie
+  dem Gelb zu nah. Die gedämpften hellen Flächen (tertiary, Code) sind eine
+  Stufe dunkler als zuerst entworfen, damit Balken-Tracks und Codeblöcke
+  auch auf einem blassen Beamer als Fläche lesbar bleiben.
+  Der Blitz auf Cover und Ende steht im Hellen bei 14 % Deckkraft — 8 % war
+  auf dem Monitor sichtbar und auf jedem Beamer weg.
 */
 html:not(.dark) {
   --color-background-primary: #fffdf7;
   --color-background-secondary: #f6f2e8;
-  --color-background-tertiary: #ebe6d9;
+  --color-background-tertiary: #e6e0d1;
   --color-background-info: #e3eef9;
   --color-background-success: #e6f1d9;
-  --color-background-warning: #fbe9d8;
+  --color-background-warning: #fde5d0;
   --color-background-danger: #fbe5e3;
   --color-text-primary: #1c1917;
   --color-text-secondary: #57534e;
@@ -42,10 +47,10 @@ html:not(.dark) {
   --lt-accent: #d97706;
   --lt-accent-ink: #b45309;
   --lt-accent-soft: #fcf2e4;
-  --lt-bolt-opacity: 0.08;
+  --lt-bolt-opacity: 0.14;
   --lt-code-inline-bg: #efe9db;
 
-  --slidev-code-background: #f4efe4;
+  --slidev-code-background: #f2ecde;
   --slidev-code-foreground: #292524;
   --slidev-theme-primary: #b45309;
 }
@@ -63,7 +68,7 @@ html.dark.dark {
   --color-text-tertiary: #8a847e;
   --color-text-info: #8cc4f4;
   --color-text-success: #9fd36a;
-  --color-text-warning: #fb923c;
+  --color-text-warning: #f97316;
   --color-text-danger: #f49b95;
   --color-border-tertiary: rgba(231, 229, 228, 0.1);
   --color-border-secondary: rgba(231, 229, 228, 0.18);

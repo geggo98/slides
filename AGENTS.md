@@ -94,7 +94,7 @@ The Slidev dev server requires a full TTY and **will not start as a sub-process 
 
 Create a new top-level directory with a `slides.md` file. It will be automatically discovered by the build pipeline. The frontmatter `title:` field is used for the landing page link text.
 
-To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock from "@shared/components/MonacoBlock.vue"`), **copy a `vite.config.ts` from an existing talk** into the new directory. Slidev only merges a `vite.config.ts` from each deck's own directory — never the repo root — so without it the alias won't resolve at build/dev time. The file is identical across talks (it points `@shared` one level up to `shared/`).
+To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock from "@shared/components/MonacoBlock.vue"`), **copy a `vite.config.ts` from an existing talk** into the new directory. Slidev merges a `vite.config.ts` from each root — theme, addons and the deck directory — never the repo root, so a plain deck needs its own copy for the alias to resolve at build/dev time. The alias-only file is identical across talks (it points `@shared` one level up to `shared/`); a lightning deck gets the alias from the theme and needs its own file only for extra settings such as `optimizeDeps.exclude` (see Lightning-Talk-Theme).
 
 ## Lightning-Talk-Theme
 
@@ -130,8 +130,10 @@ braucht:
 - Den `@shared`-Alias (`vite.config.ts` des Themes). Die `vite.config.ts` des
   Decks bleibt nur nötig, wenn sie mehr tut (etwa `optimizeDeps.exclude`).
 - Layouts `cover` (Abzeichen + Blitz; `badge: false` blendet aus, ein String
-  ersetzt das Label), `section`, `end` (hell/dunkel), dazu `intro`, `fact`,
-  `quote`, `statement` unverändert aus dem Default-Theme.
+  ersetzt das Label), `section`, `end` (hell/dunkel). `intro`, `fact`, `quote`
+  und `statement` bleiben verfügbar — Slidev bringt sie als Builtins mit, das
+  Theme importiert nur ihre Gestaltung aus dem Default-Theme (`intro.ts` hält
+  dessen zentrierende Variante fest).
 - Fortschrittsbalken (Zeitbudget bis zur ersten `layout: end`-Folie) und
   Footer aus `global-top.vue`; Presenter-Timer als Countdown über die
   Defaults `duration: 8min`, `timer: countdown` — ein Deck überschreibt
@@ -141,8 +143,8 @@ braucht:
 
 Der Kontrast-Wächter `shared/slidev-themes/lightning/__tests__/tokens.test.ts`
 läuft mit `bun run test`. Nach einer Theme-Änderung den Overflow-Check gegen
-**jedes** Deck fahren, das das Theme nutzt — der Stop-Hook listet sie
-(`grep -l 'slidev-themes/lightning' */slides.md`). Commit-Scope für das Theme
+**jedes** Deck fahren, das das Theme nutzt — der Stop-Hook listet sie auf,
+von Hand findet sie `grep -l 'slidev-themes/lightning' */slides.md`. Commit-Scope für das Theme
 ist `shared`, für das Deck sein Kurzname.
 
 ## Debugging with Playwright
@@ -168,7 +170,8 @@ await document.fonts.ready;
 Fehlt der Eintrag in `document.fonts` ganz, hat das Deck kein `@font-face`
 für die Schrift — dann hilft kein Warten. Decks ohne Monaco-Block brauchen
 die Regel in ihrer eigenen `style.css` (Muster: `20260711-sre-simulations`,
-`20260408-agents-details`). `playwright-tests/font-metrics.ts` misst Zelle
+`20260408-agents-details`) — außer Lightning-Decks, dort liefert das Theme das
+`@font-face` (`shared/slidev-themes/lightning/styles/fonts.css`). `playwright-tests/font-metrics.ts` misst Zelle
 und Tinte, `playwright-tests/label-box-check.ts` hält ein Layout-Modell
 gegen den Browser.
 
@@ -199,7 +202,7 @@ Bei komplexeren Szenarien (eigene Tab-/Scroll-Logik) ein Ad-hoc-Playwright-Scrip
 
 ### Claude-Code-Stop-Hook: Overflow-Reminder
 
-`.claude/hooks/slide-overflow-reminder.sh` (konfiguriert in `.claude/settings.json` als `Stop`-Hook) erinnert am Turn-Ende daran, den Overflow-Check zu fahren, sobald unstaged Änderungen an `<talk>/slides.md`, `<talk>/components/*.vue` oder `<talk>/layouts/*.vue` existieren. Änderungen unter `shared/slidev-themes/<theme>/` zählen ebenfalls; der Hook nennt dann jedes Deck, dessen Headmatter auf dieses Theme zeigt. Der Hook läuft Playwright **nicht** selbst (zu langsam, braucht laufenden Server) — er zeigt nur den konkreten `bun run`-Aufruf pro betroffenem Talk an.
+`.claude/hooks/slide-overflow-reminder.sh` (konfiguriert in `.claude/settings.json` als `Stop`-Hook) erinnert am Turn-Ende daran, den Overflow-Check zu fahren, sobald uncommittete Änderungen (staged oder nicht) an `<talk>/slides.md`, `<talk>/components/*.vue` oder `<talk>/layouts/*.vue` existieren. Änderungen unter `shared/slidev-themes/<theme>/` zählen ebenfalls; der Hook nennt dann jedes Deck, dessen `slides.md` eine Zeile `theme: ../shared/slidev-themes/<theme>` enthält (auch quotiert oder mit Kommentar dahinter). Der Hook läuft Playwright **nicht** selbst (zu langsam, braucht laufenden Server) — er zeigt nur den konkreten `check-slide-overflow.sh`-Aufruf pro betroffenem Talk an.
 
 ## Commit Conventions
 
