@@ -104,6 +104,7 @@ await shot(11, "demo-falle", async (p) => {
 await shot(12, "lessons", revealAll);
 await shot(13, "danke");
 await shot(14, "anhang");
+await shot(15, "anhang-anbindung");
 
 await browser.close();
 console.log(`\nScreenshots in ${out}`);

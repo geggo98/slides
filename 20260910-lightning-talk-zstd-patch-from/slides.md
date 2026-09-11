@@ -390,8 +390,8 @@ routeAlias: frage-bibliothek
 
 <div class="text-sm opacity-75 mb-3">
 
-Gleiche libzstd, gleiche Dateien, gleiche Einstellungen — nur der Weg, auf dem die Basis hineinkommt,
-ist ein anderer. Statt 1,8 MiB kam heraus:
+Gleiche libzstd, gleiche Dateien, gleiche Einstellungen, beide Male aus Python — nur das Paket ist ein
+anderes, und damit der Weg, auf dem die Basis hineinkommt. Statt 1,8 MiB kam heraus:
 
 </div>
 
@@ -410,8 +410,8 @@ ist ein anderer. Statt 1,8 MiB kam heraus:
 
 <div class="mt-4 text-xs opacity-60">
 
-Beides steht im selben Header, 26 Zeilen auseinander: `zstd.h:1104` rät von dem einen Weg ab,
-`zstd.h:1128` beschreibt den anderen als LDM-tauglich.
+Das eine Paket lädt die Basis als **Wörterbuch**, das andere übergibt sie als **Präfix**. Welche
+Pakete, welche C-Funktionen, welche Header-Zeilen: <Link to="anhang-anbindung" title="Anhang" />
 
 </div>
 
@@ -419,12 +419,18 @@ Beides steht im selben Header, 26 Zeilen auseinander: `zstd.h:1104` rät von dem
 5:00–5:40 · Die Lehre des Vortrags. Ein zu großes Delta meldet sich nicht.
 Es sieht aus wie ein Delta.
 
+Pakete: `zstandard` (python-zstandard) lädt die Basis als CDict;
+`compression.zstd` (3.14) bzw. `backports.zstd` mit
+`ZstdDict(is_raw=True).as_prefix` übergibt sie als Präfix. Die zwei
+Codeblöcke und die Header-Zeilen stehen auf der Anhangsfolie
+`anhang-anbindung`, der Link unten führt hin.
+
 Genau formuliert: Nicht das Wörterbuch entscheidet, sondern der Ladeweg.
 `ZSTD_CCtx_loadDictionary` baut ein CDict ohne Kompressionsstufe, und das
 nimmt immer den Attach-Pfad — dort füllt niemand die LDM-Tabelle.
 `ZSTD_CCtx_refPrefix` geht über den Pfad, der sie füllt.
 NICHT sagen „der LDM indiziert CDicts nie" — als allgemeines Gesetz ist das
-falsch, zstd.h:1128 sagt ausdrücklich das Gegenteil für den anderen Weg.
+falsch, zstd.h:1130 sagt ausdrücklich das Gegenteil für den anderen Weg.
 
 Schlusspointe hier schon andeuten: wir hatten die Bibliothek benutzt, statt
 sie zu lesen.
@@ -565,4 +571,72 @@ Beides schreibt große Teile der Datei neu — der Ausreißer ist eingeplant, ni
 
 <!--
 Nur für Rückfragen. Nicht im Zeitbudget. Anspringbar über den routeAlias.
+-->
+
+---
+hideInToc: true
+routeAlias: anhang-anbindung
+---
+
+# Anhang: zwei Wege in dieselbe libzstd
+
+<div class="text-sm opacity-75 mb-3">
+
+Beide Pakete bündeln libzstd 1.5.7, beide bekommen dieselbe Basis (`basis`, als Bytes), dasselbe
+Fenster, denselben Long-Distance-Matcher. Der Unterschied ist die C-Funktion, die die Basis
+entgegennimmt. Importe weggelassen.
+
+</div>
+
+<div class="grid grid-cols-2 gap-6 text-sm">
+<div>
+
+**`zstandard` (python-zstandard) → 111 MiB**
+
+```python
+d = ZstdCompressionDict(
+    basis, DICT_TYPE_RAWCONTENT)
+p = ZstdCompressionParameters.from_level(
+    3, window_log=30, enable_ldm=True)
+c = ZstdCompressor(
+    dict_data=d, compression_params=p)
+```
+
+→ `ZSTD_CCtx_loadDictionary`: die Basis wird zum **CDict**.
+`zstd.h:1104`: „does not benefit from LDM"
+
+</div>
+<div>
+
+**`compression.zstd` (Python 3.14, PEP 784) → 1,8 MiB**
+
+```python
+P = CompressionParameter
+opts = {P.window_log: 30,
+        P.enable_long_distance_matching: 1}
+d = ZstdDict(basis, is_raw=True)
+c = ZstdCompressor(level=3, options=opts,
+                   zstd_dict=d.as_prefix)
+```
+
+→ `ZSTD_CCtx_refPrefix`: die Basis wird zum **Präfix**, wie die CLI.
+`zstd.h:1130`: „compatible with LDM"
+
+</div>
+</div>
+
+<div class="mt-3 text-xs opacity-60">
+
+Vor 3.14: `backports.zstd`, gleiche API; `as_prefix` steht im Quelltext, nicht in der Doku. Die
+Kommandozeile setzt Fenster und LDM bei `--patch-from` selbst, in Python setzt man beide von Hand —
+und nur der Präfix-Weg macht daraus ein Delta.
+
+</div>
+
+<!--
+Nur für Rückfragen, nicht im Zeitbudget. Von Folie 9 aus per Link erreichbar.
+
+Beide Zitate aus zstd.h 1.5.7: Zeile 1104 ist Note 5 zu
+`ZSTD_CCtx_loadDictionary`, Zeile 1130 steht im Block zu
+`ZSTD_CCtx_refPrefix` — 26 Zeilen auseinander.
 -->

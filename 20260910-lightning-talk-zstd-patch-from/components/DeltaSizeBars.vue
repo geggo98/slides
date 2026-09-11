@@ -58,8 +58,8 @@ const PAIRS: Pair[] = [
     key: "bibliothek",
     label: "Bibliothek",
     caption:
-      "Dieselbe C-Bibliothek, dieselben Dateien, dieselben Einstellungen. Nur der Ladeweg der Basis ist ein anderer.",
-    provenance: "gemessen 07.09.2026 · libzstd 1.5.7 · zwei Sprachanbindungen",
+      "Dieselbe C-Bibliothek, dieselben Dateien, dieselben Einstellungen, beide Male aus Python. Nur der Ladeweg der Basis ist ein anderer.",
+    provenance: "gemessen 07.09.2026 · libzstd 1.5.7 · zwei Python-Pakete",
     bars: [
       { label: "als Wörterbuch geladen", mib: 111, tone: "bad" },
       { label: "als Präfix übergeben", mib: 1.8, tone: "good" },
