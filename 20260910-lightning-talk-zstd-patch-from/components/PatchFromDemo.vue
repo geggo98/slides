@@ -216,7 +216,11 @@ onUnmounted(() => timer && clearTimeout(timer));
       Gerechnet wird hier nichts mehr, die Zahlen stammen aus der Messung vom
       10.09.2026: {{ failed }}
     </p>
-    <p v-else-if="!ready" class="demo-loading">libzstd wird geladen …</p>
+    <!-- Nur auf der aktiven Folie: im PDF-Export ist keine Folie aktiv, dort
+         stehen die Rückfallwerte, und ein „wird geladen" wäre eine Lüge. -->
+    <p v-else-if="!ready && isActive" class="demo-loading">
+      libzstd wird geladen …
+    </p>
 
     <div class="demo-bars">
       <div v-for="bar in bars" :key="bar.label" class="demo-row">
@@ -232,8 +236,10 @@ onUnmounted(() => timer && clearTimeout(timer));
 
     <p class="demo-status">
       <span>{{ changedKib }} geändert</span>
-      <span class="demo-sep">·</span>
-      <span>Delta in {{ number.format(deltaMs) }} ms</span>
+      <template v-if="ready">
+        <span class="demo-sep">·</span>
+        <span>Delta in {{ number.format(deltaMs) }} ms</span>
+      </template>
       <span class="demo-sep">·</span>
       <button
         type="button"
