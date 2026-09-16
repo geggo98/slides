@@ -840,16 +840,17 @@ clicks: 3
 ```toml
 model = "gpt-5.6-sol"  # oder gpt-6-astra, -terra, -luna
 model_reasoning_effort = "medium"
-plan_mode_reasoning_effort = "xhigh"
 # ⚠ Desktop-App ignoriert diesen Key (#18712)
+plan_mode_reasoning_effort = "xhigh"
 [features]
-reasoning_effort_override = true  # ⚠ experimentell
+# ⚠ experimentell, nur Astra
+reasoning_effort_override = true
 ```
 
 </div>
 <div class="text-sm leading-snug">
 <div><b>Von Hand (TUI)</b> <CodexReasoningScopeInfo :step="$clicks" />: Shift+Tab → Plan · <code>/model</code> → „Apply to Plan mode override“ · Alt+,/. = Effort ↓/↑.</div>
-<div class="text-xs opacity-60 mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch per <code>configuration_update</code> vermeiden — in 0.154 bricht er trotzdem (Pinning ab 0.155), laut API-Doku nur GPT-6 Astra. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
+<div class="text-xs opacity-60 mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch per <code>configuration_update</code> vermeiden — in 0.154 noch buggy, laut API-Doku nur GPT-6 Astra.<br>Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
 </div>
 </div>
 

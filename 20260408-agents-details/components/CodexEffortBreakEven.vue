@@ -225,7 +225,8 @@ const balkenLabel = computed(
       <div class="ce-headrow">
         <span class="ce-h">Gesamtkosten pro Session</span>
         <span class="ce-vorlaeufig"
-          >⚠ vorläufig — geliehene Volumina, geschätzter Effort-Faktor</span
+          >⚠ vorläufige Zahlen — Token-Verbrauch aus Claude übernommen,
+          geschätzter Effort-Faktor</span
         >
       </div>
       <div class="ce-bars" role="img" :aria-label="balkenLabel">
