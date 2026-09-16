@@ -713,7 +713,7 @@ Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige A
 
 <div class="mt-4 text-sm opacity-60">
 
-**Codex**: Plan-Mode ja, aber **kein** automatischer Modell-Split — Wechsel nur manuell. Offener Feature-Request: [openai/codex#20596](https://github.com/openai/codex/issues/20596).
+**Codex**: **kein** automatischer Modell-Split — Wechsel nur manuell, offener Feature-Request [openai/codex#20596](https://github.com/openai/codex/issues/20596). Seit 0.105.0 aber ein automatischer **Effort**-Split: <Link to="codex-effort-wechsel">übernächste Folie</Link>.
 
 </div>
 
@@ -821,6 +821,191 @@ Vereinfachungen (bewusst): input_tokens
 überall ähnlich an; Sonnet-Writes billiger → konservativ pro opusplan);
 Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
 (Median dort 174k ≈ 177k beim Erst-Wechsel).
+-->
+
+---
+hideInToc: true
+routeAlias: codex-effort-wechsel
+clicks: 1
+---
+
+# Codex: `xhigh` plant, `medium` führt aus
+
+<div class="text-sm opacity-70 leading-snug mb-2">Kein Modell-Split wie <code>opusplan</code>, aber ein automatischer <b>Effort</b>-Split seit Codex CLI <b>0.105.0</b> (25.02.2026) — dieselbe Rechnung.</div>
+
+<div class="grid gap-6 items-start mb-2" style="grid-template-columns: minmax(0, 400px) 1fr">
+<div style="--slidev-code-font-size: 11px; --slidev-code-line-height: 15px">
+
+```toml
+model = "gpt-5.6-sol"  # oder gpt-6-astra, -terra, -luna
+model_reasoning_effort = "medium"
+plan_mode_reasoning_effort = "xhigh"
+# ⚠ Desktop-App ignoriert diesen Key (#18712)
+[features]
+reasoning_effort_override = true  # ⚠ experimentell
+```
+
+</div>
+<div class="text-sm leading-snug">
+<div><b>Von Hand (TUI):</b> Shift+Tab → Plan · <code>/model</code> → „Apply to Plan mode override“ · Alt+,/. = Effort ↓/↑.</div>
+<div class="text-xs opacity-60 mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch per <code>configuration_update</code> vermeiden — in 0.154 bricht er trotzdem (Pinning ab 0.155), laut API-Doku nur GPT-6 Astra. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
+</div>
+</div>
+
+<CodexEffortBreakEven :step="$clicks" />
+
+<div class="text-xs opacity-70 leading-snug mt-1">⚠ <b>Vorläufig</b>: Volumina von der opusplan-Folie × Fähigkeitsfaktor 0,99–1,10 (pass@1 Opus 5 ÷ Modell), Kontext 180k — eigene Codex-Messung folgt.<br>Preise/MTok: Astra $10/$50 · Sol $4/$20 (Aktion) · Terra $2/$12 · Luna $0,20/$1,20 · Read 0,1× · Write 1,25× · TTL 30 min · 1 USD = 0,876 €</div>
+
+<!--
+Rechenmodell (components/lib/codexEffortMath.ts, per vitest gepinnt):
+Gleiches Modell in beiden Phasen, nur der Effort wechselt. Kosten je Phase
+= Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×1,25×In, alle Volumina
+von der opusplan-Folie (Plan: 100k Out, 7M Read, 360k Write; Kontext 180k;
+Exec: Regler, 150k Out je 30 MTok Read) × Fähigkeitsfaktor c = pass@1 Opus
+5 ÷ bestes pass@1 des Modells (Astra 0,99, Sol 1,01, Terra 1,06, Luna 1,10
+— alle unter den Fehlerbalken, bewusst trotzdem drin). xhigh = Faktor f ×
+medium für die GANZE Phase; f ist €/Task xhigh ÷ €/Task medium aus der
+DeepSWE-Leiter (paretoData.ts, Stand 03.09.): Astra 1,49, Sol 2,54, Terra
+3,63, Luna 6,75 — der Regler rundet auf eine Stelle. Cache-Bruch wie bei
+opusplan 0,93 × Kontext × Write, aber 1,25× statt 2× (Anthropic 1-h-TTL).
+Sol-Defaults (f 2,5, 30 MTok, 3 Re-Plans): Nur medium 19,18 € · Nur xhigh
+47,94 € · Effort-Wechsel 28,71 € · Ersparnis 19,23 € (−40 %) · Bruch 0,74 €
+· Break-even 1,1 MTok Exec-Read (Astra 3,3 — teuerster Bruch, 1,82 €) ·
+Balken über „Nur xhigh“ ab 6 Rückkehren, allein die Brüche ab 13.
+Ersparnis je Modell: Sol 19,23 € (−40 %), Terra 18,41 € (−49 %), Astra
+14,50 € (−21 %), Luna 4,30 € (−58 %) — opusplan bei SEINEN Defaults: 9,27 €
+(−37 %), aus opusplanMath abgeleitet (OPUSPLAN_REF), nicht abgetippt. Der
+Euro-Vergleich hinkt: die Codex-Basis „Nur xhigh“ (Sol 47,94 €) ist eine
+teurere Session als „Nur Opus“ (24,83 €), weil Sol über Sonnet 5 liegt und
+f die ganze Session multipliziert. Preisneutral ist der Prozentwert — und
+da liegt nur Astra unter opusplan; das sagt die Note-Box („opusplan schafft
+−37 %“). Die Regler-Fußnote trägt bewusst keine Zahl mehr: sie wäre nur bei
+den Defaults wahr, die Balken darüber bewegen sich.
+
+Annahme „Effekt kleiner als bei Claude, weil Codex-Modelle billiger sind
+und der Effort weniger ausmacht“ — geprüft, stimmt nur zum Teil: (a) pro
+Token billiger als Opus 5 sind Sol/Terra/Luna, Astra kostet das Doppelte;
+für die Exec-Phase zählt aber Sonnet 5 ($2/$10), und Sol ($4/$20) liegt
+darüber. (b) Der Effort-Faktor ist NICHT klein: 1,5× (Astra) bis 6,8×
+(Luna), Sol 2,5× — dasselbe Verhältnis wie die Opus/Sonnet-Preise.
+Zweiter, unabhängiger Datenpunkt: Artificial Analysis Index v4.3,
+gpt-5.6-terra, gleiche Aufgaben je Stufe — Output-Tokens medium 17 M →
+xhigh 52 M (3,1×), Laufkosten $447 → $1 187 (2,7×). OpenAI selbst bleibt
+qualitativ: „Higher reasoning effort can improve results for complex
+tasks, but it takes longer and uses more tokens.“ (learn.chatgpt.com/
+docs/models). (c) Kleiner ist allein der Write-Multiplikator (1,25× statt
+2×). Absolut liegt der einzelne Bruch bei Sol gut ein Viertel ÜBER opusplan
+(0,74 € gegen 0,59 €), weil Sol pro Input-Token das Doppelte von Sonnet
+kostet; das Rückkehr-Paar liegt darunter (1,49 € gegen 2,05 €), weil ohne
+Modellwechsel kein Opus-Write anfällt.
+f gilt für die ganze Phase, nicht nur den Output — das ist keine offene
+Frage, das Archiv beantwortet sie: Board-Stand c55e58f2 vom 03.09.
+(data/deepswe/, derselbe, aus dem EFFORTS stammt), xhigh/medium: Sol
+Kosten 2,54× · Cache-Reads 2,87× · Output 2,21× · Schritte 1,42× (Terra
+3,65/4,68/3,37/1,71 · Luna 7,10/14,2/5,5/3,0 · Astra 1,49/1,45/1,45/1,10 ·
+Opus 5 2,76/3,19/2,48/1,70). Die Reads wachsen mindestens so stark wie der
+Output, weil xhigh mehr Schritte macht und je Schritt mehr Kontext trägt
+(Sol 45k → 90k Cache je Schritt). f auf die Reads ist also eher
+konservativ; nur auf den Output angewandt gäbe es f_eq ≈ 1,3 und 3,25 €
+Ersparnis bei Sol — was dem 2,54× widerspräche, aus dem f stammt. Offen
+bleibt: ein Plan→Exec-Split auf einem Modell ist kein ganzer Benchmark-
+Lauf, und der Exec-Mix der Folie (80 % Read-Kosten, 20 % Out) ist nicht
+der von DeepSWE (Sol: 44 % Read, 33 % unkachiert, 23 % Out) — deshalb
+„vorläufig“. Und die Leiter ist eine Obergrenze: medium löst weniger
+Aufgaben und gibt früher auf, bei Terra (35 % pass@1 auf medium) und Luna
+(11 %) dominiert das, Sol (61 %) und Astra (73 %) sind belastbar. Deshalb
+ist f ein Regler.
+
+Versionsbeleg: PR openai/codex#12303 „Improve Plan mode reasoning
+selection flow“, gemerged 21.02.2026, erstes Release
+rust-v0.105.0 vom 25.02.2026 (Release-Notes nennen #12303/#12307);
+0.104.0 vom 18.02. hatte es noch nicht. Davor war der Plan-Effort auf
+medium hartkodiert (PR #9980, 27.01.2026: „It's overthinking so much on
+high“). Maintainer-Bestätigung: Issue #10033 am 20.03.2026 geschlossen mit
+„This is possible with plan_mode_reasoning_effort = "high"“. Diskussion
+#10628 („Using different models for Plan vs Execute“, 04.02.2026) ist ein
+Nutzer-Vorschlag ohne OpenAI-Beitrag; der Kommentar vom 27.02. beschreibt
+den TUI-Weg, der vom 21.08. hält fest: „This only affects the reasoning
+effort“. Ein MODELL-Split bleibt offen — #20596 (Fußnote der opusplan-
+Folie: Modellwahl vor der Umsetzung) und #19343 (plan_mode_model als
+Config-Key, seit 24.04.2026) — die Fußnote der opusplan-Folie stimmt also
+weiter, nur für den Effort nicht mehr.
+Doku: learn.chatgpt.com/docs/config-file/config-reference —
+„Plan-mode-specific reasoning override. When unset, Plan mode uses its
+built-in preset default“ (medium). Gültige Werte laut Doku none…xhigh,
+der Code nimmt auch max und ultra; Ungültiges reicht Codex durch, die API
+antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier: CLI
+0.153.4 und das App-Bundle 0.154.0-alpha.6.2 (≈ Stable 0.154.0 vom
+09.09.2026), beide kennen den Key.
+
+TUI-Beleg (rust-v0.154.0): die Konstanten PLAN_MODE_REASONING_SCOPE_* in
+tui/src/chatwidget.rs L184-186, der Dialog in
+tui/src/chatwidget/model_popups.rs (Beschreibung L349) — „Apply reasoning
+change“ → „Apply to Plan mode override“ („Always use {effort} in Plan
+mode.“) oder „Apply to global default and Plan mode override“; der Dialog
+entfällt, wenn die Wahl nichts ändert (daher die Berichte „fragt mal,
+mal nicht“). Alt+, / Alt+. seit PR #18866 (21.04.2026), im Plan-Mode nur
+für die Session. Beim Moduswechsel meldet die TUI „Model changed to
+{model} {effort} for Plan mode.“ Desktop-App: #18712 (offen, reproduziert
+20.08.2026 mit genau dieser medium/xhigh-Config) — sie ignoriert den Key.
+
+Cache-Beleg: developers.openai.com/api/docs/guides/prompt-caching, Tabelle
+„Which settings affect the cached prefix?“, Zeile reasoning.effort: „Can
+change model-side reasoning instructions. On supported models, use a
+configuration update to change effort while preserving the earlier
+prefix.“ Und im Abschnitt zum configuration_update: „Keep the top-level
+reasoning.effort at its original value as changing that setting can
+rewrite instructions in the hidden system instructions.“ Codex schreibt den Effort
+nicht in die Instructions, nur als Request-Parameter (core/src/client.rs
+build_reasoning) — der Bruch kommt von OpenAIs verstecktem Prefix.
+Rohdaten #35416 (gpt-5.6-luna, ~15k Input): cached fällt bei jedem Wechsel
+auf eine NEUE Stufe von 14 080 bzw. 15 104 auf 9 984 — das ist der
+sitzungsunabhängige statische Prefix, für den Sitzungsanteil also ein
+voller Bruch; Rückkehr auf eine schon benutzte Stufe innerhalb der TTL
+bricht NICHT (der alte Eintrag lebt noch). Nicht modelliert, konservativ
+gegen den Wechsel. #42996 (Desktop 0.153.4): Hit-Rate 99 % → 12 % / 0 % /
+12 % je Wechsel. Bei 180k Kontext ist (180−10)/180 ≈ 0,94 — praktisch das
+BREAK_SHARE 0,93 von opusplan, deshalb dieselbe Konstante.
+
+Der Schalter: [features] reasoning_effort_override = true — im Quellcode
+Stage UnderDevelopment, default aus, weder im /experimental-Menü noch in
+der Doku; einschaltbar per config.toml, Codex warnt dann („Under-
+development features are incomplete and may behave unpredictably“,
+abschaltbar mit suppress_unstable_features_warning). Er hängt
+configuration_update-Items an die History, statt den Prefix zu ändern
+(core/src/session/reasoning_effort.rs). In 0.154.0 nur HALB verdrahtet:
+der Request-Effort wechselt weiter, der Test in
+core/tests/suite/reasoning_effort_override.rs erwartet dort noch
+medium,high,high,low — der Cache bricht also trotzdem. Das Pinning
+(PR #43795, 08.09.) liegt erst in 0.155.0-alpha. API-Doku
+(…/guides/reasoning#change-reasoning-mid-conversation): „supported only by
+GPT-6 Astra … in standard, single-agent mode“; Codex' Gate ist breiter
+(alle Responses-Lite-Modelle: astra, sol, terra, luna) — ob die API es auf
+5.6 honoriert, ist unbelegt. Der Schalter „Cache erhalten“ auf der Folie
+rechnet den Zielzustand (Bruch 0), nicht den heutigen.
+
+Preise: developers.openai.com/api/docs/pricing, geprüft 16.09.2026 —
+Astra $10/$1/$12,50/$50 (In/Cached/Write/Out), Sol $4/$0,40/$5/$20 (Aktion
+„at least through November 21, 2026“, regulär $5/$30), Terra
+$2/$0,20/$2,50/$12, Luna $0,20/$0,02/$0,25/$1,20. Read 0,1×, Write 1,25×,
+prompt_cache_options.ttl kennt nur "30m"; Codex fordert keine Retention
+an. Im ChatGPT-Abo zählt das Kontingent, nicht der Preis — die €-Werte
+sind wie bei opusplan das API-Äquivalent.
+
+Vereinfachungen (bewusst, wie opusplan): input_tokens ignoriert, laufende
+Exec-Writes weggelassen, Re-Plan-Reads nicht bepreist, Kontext beim
+Wiedereintritt konstant. Zusätzlich hier: EIN Faktor f für Reads und
+Output (im Archiv skalieren die Reads stärker — leicht konservativ); die
+geliehenen Volumina gelten als medium-Volumina, auch die der Plan-Phase
+(der xhigh-Plan liest also 2,5 × 7 = 17,5 MTok bei Sol) — liest man die
+Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in € gleich,
+der Prozentwert würde −49 % statt −40 %; Kontext beim Wechsel fest 180k,
+also unter der 272k-Schwelle (2× Input); Rückkehr auf eine bekannte Stufe
+innerhalb 30 min bräche nicht (nicht modelliert); Sol-Aktionspreis
+($4/$20, bis mindestens 21.11.2026, vorher $5/$30) statt Listenpreis.
+Nachtragen, sobald eigene Codex-Sessions vorliegen: Kontext, Plan-/Exec-
+Volumina, gemessener Faktor — dann Konstanten in codexEffortMath.ts
+ersetzen, Test-Referenzwerte nachziehen, „vorläufig“ streichen.
 -->
 
 ---
