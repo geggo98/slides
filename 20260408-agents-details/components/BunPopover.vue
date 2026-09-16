@@ -13,12 +13,15 @@ function onKey(ev: KeyboardEvent) {
   if (ev.key === "Escape") emit("close");
 }
 
+// `immediate`: ein Host kann schon offen mounten (Deep-Link auf einen
+// Klick-Schritt, Reload) — ohne den Erstlauf gäbe es dann keinen Escape.
 watch(
   () => props.open,
   (open) => {
     if (open) window.addEventListener("keydown", onKey);
     else window.removeEventListener("keydown", onKey);
   },
+  { immediate: true },
 );
 
 onBeforeUnmount(() => window.removeEventListener("keydown", onKey));

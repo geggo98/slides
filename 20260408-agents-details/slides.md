@@ -826,7 +826,7 @@ Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
 ---
 hideInToc: true
 routeAlias: codex-effort-wechsel
-clicks: 1
+clicks: 3
 ---
 
 # Codex: `xhigh` plant, `medium` führt aus
@@ -835,6 +835,7 @@ clicks: 1
 
 <div class="grid gap-6 items-start mb-2" style="grid-template-columns: minmax(0, 400px) 1fr">
 <div style="--slidev-code-font-size: 11px; --slidev-code-line-height: 15px">
+<div class="opacity-60 leading-none mb-1" style="font-family: var(--slidev-code-font-family); font-size: 10.5px">~/.codex/config.toml</div>
 
 ```toml
 model = "gpt-5.6-sol"  # oder gpt-6-astra, -terra, -luna
@@ -847,14 +848,14 @@ reasoning_effort_override = true  # ⚠ experimentell
 
 </div>
 <div class="text-sm leading-snug">
-<div><b>Von Hand (TUI):</b> Shift+Tab → Plan · <code>/model</code> → „Apply to Plan mode override“ · Alt+,/. = Effort ↓/↑.</div>
+<div><b>Von Hand (TUI)</b> <CodexReasoningScopeInfo :step="$clicks" />: Shift+Tab → Plan · <code>/model</code> → „Apply to Plan mode override“ · Alt+,/. = Effort ↓/↑.</div>
 <div class="text-xs opacity-60 mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch per <code>configuration_update</code> vermeiden — in 0.154 bricht er trotzdem (Pinning ab 0.155), laut API-Doku nur GPT-6 Astra. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
 </div>
 </div>
 
-<CodexEffortBreakEven :step="$clicks" />
+<CodexEffortBreakEven :step="$clicks >= 3 ? 1 : 0" />
 
-<div class="text-xs opacity-70 leading-snug mt-1">⚠ <b>Vorläufig</b>: Volumina von der opusplan-Folie × Fähigkeitsfaktor 0,99–1,10 (pass@1 Opus 5 ÷ Modell), Kontext 180k — eigene Codex-Messung folgt.<br>Preise/MTok: Astra $10/$50 · Sol $4/$20 (Aktion) · Terra $2/$12 · Luna $0,20/$1,20 · Read 0,1× · Write 1,25× · TTL 30 min · 1 USD = 0,876 €</div>
+<div class="text-xs opacity-70 leading-snug mt-1">Preise/MTok, vorläufig (Sol-Aktion): Astra $10/$50 · Sol $4/$20 · Terra $2/$12 · Luna $0,20/$1,20 · Read 0,1× · Write 1,25× · TTL 30 min · 1 USD = 0,876 €</div>
 
 <!--
 Rechenmodell (components/lib/codexEffortMath.ts, per vitest gepinnt):
@@ -872,6 +873,9 @@ Sol-Defaults (f 2,5, 30 MTok, 3 Re-Plans): Nur medium 19,18 € · Nur xhigh
 47,94 € · Effort-Wechsel 28,71 € · Ersparnis 19,23 € (−40 %) · Bruch 0,74 €
 · Break-even 1,1 MTok Exec-Read (Astra 3,3 — teuerster Bruch, 1,82 €) ·
 Balken über „Nur xhigh“ ab 6 Rückkehren, allein die Brüche ab 13.
+Die Folie selbst nennt die Vorläufigkeit nur im Badge des Rechners
+(geliehene Volumina, geschätzter Faktor) und in der Preiszeile (Sol-
+Aktionspreis); die Rechnung mit dem Fähigkeitsfaktor steht nur hier.
 Ersparnis je Modell: Sol 19,23 € (−40 %), Terra 18,41 € (−49 %), Astra
 14,50 € (−21 %), Luna 4,30 € (−58 %) — opusplan bei SEINEN Defaults: 9,27 €
 (−37 %), aus opusplanMath abgeleitet (OPUSPLAN_REF), nicht abgetippt. Der
@@ -941,13 +945,34 @@ antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier: CLI
 TUI-Beleg (rust-v0.154.0): die Konstanten PLAN_MODE_REASONING_SCOPE_* in
 tui/src/chatwidget.rs L184-186, der Dialog in
 tui/src/chatwidget/model_popups.rs (Beschreibung L349) — „Apply reasoning
-change“ → „Apply to Plan mode override“ („Always use {effort} in Plan
-mode.“) oder „Apply to global default and Plan mode override“; der Dialog
-entfällt, wenn die Wahl nichts ändert (daher die Berichte „fragt mal,
-mal nicht“). Alt+, / Alt+. seit PR #18866 (21.04.2026), im Plan-Mode nur
-für die Session. Beim Moduswechsel meldet die TUI „Model changed to
+change“ → „Apply to Plan mode override“ („Always use extra high reasoning
+in Plan mode.“ — Codex schreibt das Label „extra high“, nicht xhigh) oder
+„Apply to global default and Plan mode override“. Der Dialog kommt nur im
+Plan-Mode, nur für das aktuelle Modell und nur, wenn die Wahl den
+Plan-Effort oder die gespeicherten Defaults ändert
+(should_prompt_plan_mode_reasoning_scope, L313-331) — daher die Berichte
+„fragt mal, mal nicht“. Ein Modellwechsel im Plan-Mode fragt nicht und
+schreibt model und model_reasoning_effort global. Option 1 schreibt
+plan_mode_reasoning_effort dauerhaft in die config.toml
+(PersistPlanModeReasoningEffort, tui/src/app/event_dispatch.rs); nur
+Alt+, / Alt+. (seit PR #18866, 21.04.2026) bleibt im Plan-Mode
+Session-lokal. Beim Moduswechsel meldet die TUI „Model changed to
 {model} {effort} for Plan mode.“ Desktop-App: #18712 (offen, reproduziert
 20.08.2026 mit genau dieser medium/xhigh-Config) — sie ignoriert den Key.
+
+Klicks: 1 öffnet den nachgebauten Dialog, 2 schließt ihn, 3 zeigt den
+Anti-Pattern-Balken. Nur die Klicks laufen im Presenter- und im
+Publikumsfenster synchron. Das ⓘ, Escape und der Klick ins Overlay wirken
+nur im eigenen Fenster — fürs Publikum also mit dem Klicker öffnen und
+schließen. Nachbau mit dem brainless-Port (MIT, shared/components/
+brainless, CodexPermissions mit Prop columns); die Texte sind wörtlich aus
+den Quellen oben. Der Dialog zeigt den Moment VOR dem ersten Override, die
+TOML-Zeile der Folie ist sein Ergebnis. Die zweite Beschreibung endet auf
+„built-in Plan default (medium)“, weil kein plan_mode_reasoning_effort
+gesetzt ist: medium ist der fest eingebaute Plan-Preset-Wert
+(models-manager/src/collaboration_mode_presets.rs, per
+collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
+und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
 
 Cache-Beleg: developers.openai.com/api/docs/guides/prompt-caching, Tabelle
 „Which settings affect the cached prefix?“, Zeile reasoning.effort: „Can

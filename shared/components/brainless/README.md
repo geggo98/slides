@@ -38,6 +38,17 @@ a shadcn/ui registry that recreates the terminal UIs of coding agents
 - `CodexExec` wraps long results onto their own row (`flex-wrap`) instead of
   upstream's `shrink-0`, which assumes short results like "(3 files)" and would
   crush a long command to one character per line.
+- `CodexPermissions` gained two opt-in props, `subtitle` (dim line under the
+  title) and `columns` (marker | name | description in one row, name cell sized
+  to the widest row, selected row in cyan), plus a `--cxp-font-size` hook.
+  They reproduce Codex CLI's two-column list-selection popup
+  (`codex-rs/tui/src/bottom_pane/list_selection_view.rs` and
+  `selection_popup_common.rs`): strings and row grammar from the
+  `rust-v0.154.0` source, layout and colours checked against a screenshot of
+  the "Apply reasoning change" dialog in Plan mode (Codex CLI 0.113.0,
+  16.09.2026). Codex rendered columns already at v0.132, the version upstream
+  captured; the stacked layout is upstream's own simplification, and without
+  the props the rendering stays upstream's.
 
 ## Component index
 

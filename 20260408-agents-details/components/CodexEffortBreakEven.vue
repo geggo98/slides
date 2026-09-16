@@ -5,7 +5,8 @@
  * Break-even-Chart (die Folie trägt zusätzlich den Config-Block, der Platz
  * reicht nur für die Balken).
  *
- * Klick-Vertrag (`clicks: 1` im Frontmatter, `:step="$clicks"`):
+ * Klick-Vertrag (Folie: `clicks: 3`, `:step="$clicks >= 3 ? 1 : 0"` — die
+ * Klicks 1–2 gehören dem ⓘ-Popup in ./CodexReasoningScopeInfo.vue):
  *   Step 0 → Regler + Szenario-Balken (Nur medium / Nur xhigh / Effort-Wechsel)
  *   Step 1 → + Anti-Pattern-Balken und ⚠-Warnung (Re-Plans ohne /compact)
  * Die Regler sind orthogonal zu den Klick-Schritten; `@click.stop` auf der
