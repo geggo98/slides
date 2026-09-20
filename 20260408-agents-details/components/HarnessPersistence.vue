@@ -67,6 +67,22 @@ const rows = computed<Row[]>(() =>
   ),
 );
 
+// Data-Bars wie in Excel: ein Balken im Zellhintergrund, Länge = Wert ÷
+// Spaltenmaximum (bei „Erfolg" = der Prozentwert selbst), Farbe = Harness wie
+// der Marker im Chart der Nachbarfolie. Nur Orientierung („eher hoch, eher
+// niedrig"), die Zahl bleibt die Aussage — deshalb blass (26 % Deckung) und
+// ohne eigene Legende. Das Maximum läuft über die neun gezeigten Zeilen,
+// nicht über alle 21 Paare.
+const maxOf = computed(() => ({
+  steps: Math.max(...rows.value.map((r) => r.steps)),
+  tokens: Math.max(...rows.value.map((r) => r.tokens)),
+  eur: Math.max(...rows.value.map((r) => r.eur)),
+}));
+const bar = (r: Row, wert: number, max: number) => ({
+  "--bar": `${((100 * wert) / max).toFixed(1)}%`,
+  "--sw": colorFor(r.harness),
+});
+
 const fmtTokens = (n: number) =>
   n >= 1e6
     ? `${(n / 1e6).toFixed(2).replace(".", ",")} Mio.`
@@ -124,10 +140,21 @@ const HOLDS: Record<HModel, boolean> = Object.fromEntries(
                 ></span
                 >{{ harnessLabel[r.harness] }}
               </td>
-              <td class="num mono">{{ r.steps.toFixed(1) }}</td>
-              <td class="num mono">{{ fmtTokens(r.tokens) }}</td>
-              <td class="num mono">{{ r.eur.toFixed(2).replace(".", ",") }}</td>
-              <td class="num mono">{{ r.y.toFixed(1) }} %</td>
+              <td class="num mono hp-bar" :style="bar(r, r.steps, maxOf.steps)">
+                {{ r.steps.toFixed(1).replace(".", ",") }}
+              </td>
+              <td
+                class="num mono hp-bar"
+                :style="bar(r, r.tokens, maxOf.tokens)"
+              >
+                {{ fmtTokens(r.tokens) }}
+              </td>
+              <td class="num mono hp-bar" :style="bar(r, r.eur, maxOf.eur)">
+                {{ r.eur.toFixed(2).replace(".", ",") }}
+              </td>
+              <td class="num mono hp-bar" :style="bar(r, r.y, 100)">
+                {{ r.y.toFixed(1).replace(".", ",") }} %
+              </td>
             </tr>
           </template>
         </tbody>
@@ -200,6 +227,18 @@ td {
 td.mono {
   font-family: var(--slidev-code-font-family, monospace);
 }
+/* Data-Bar: Verlauf mit hartem Ende bei --bar, 3 px Luft zu den Zeilenlinien,
+   liegt über der Zeilenfarbe (background-color) der hervorgehobenen Zeilen. */
+td.hp-bar {
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--sw) 26%, transparent) 0 var(--bar),
+    transparent var(--bar) 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% calc(100% - 6px);
+  background-position: 0 3px;
+}
 .model {
   font-weight: 600;
   vertical-align: middle;
@@ -207,8 +246,10 @@ td.mono {
 tr:last-child td {
   border-bottom: none;
 }
+/* background-COLOR, nicht die Kurzform: die setzt background-image zurück
+   und löscht die Data-Bars der Claude-Code-Zeilen (gemessen 20.09.2026). */
 tr.highlight td {
-  background: v-bind("P.hoverBg");
+  background-color: v-bind("P.hoverBg");
   font-weight: 600;
 }
 .hp-sw {

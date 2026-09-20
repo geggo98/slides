@@ -1930,6 +1930,13 @@ Schritten FRÜHER ab als Pi (60,1) und Codex (62,7) — und löst mit
 52,2 % auch am wenigsten von den dreien. Das genaue Gegenteil von
 „gibt nicht auf".
 
+Die Balken in den Zellen sind Data-Bars wie in Excel: Länge = Wert geteilt
+durch das Spaltenmaximum der neun Zeilen (bei „Erfolg" der Prozentwert
+selbst), Farbe = Harness wie der Marker im Chart davor. Sie sollen nur die
+schnelle Orientierung geben — „eher hoch, eher niedrig" —, die Zahl bleibt
+die Aussage. Luna in Claude Code springt so ins Auge: Schritte und Tokens
+voll, Erfolg kaum länger als bei Pi.
+
 Fazit für die Folie davor: Die Abbruch-Option ist ein realer Hebel
 (Luna beweist es), aber weder notwendig (Fable 5) noch hinreichend
 für den Aufpreis — und bei Haiku zeigt sich sogar das Gegenteil.
