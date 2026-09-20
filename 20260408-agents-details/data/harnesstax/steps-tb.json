@@ -1,0 +1,219 @@
+{
+  "source_url": "https://harnesstax.github.io/data/charts/system-cumulative-accrual-tb.21f4b69825.json",
+  "generated": "2026-09-16 16:23 UTC",
+  "note": "Extrahiert aus table.rows (view=Steps/Tokens) — die vollen Kurvendaten (bands, curves) liegen NICHT archiviert, siehe Kopfkommentar dieses Skripts.",
+  "steps": [
+    {
+      "system": "Claude Fable 5 · Claude Code",
+      "value": "—",
+      "success": "75.6%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Claude Code",
+      "value": "—",
+      "success": "41.1%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Claude Code",
+      "value": "—",
+      "success": "68.9%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Claude Code",
+      "value": "—",
+      "success": "62.2%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Codex",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Codex",
+      "value": "—",
+      "success": "78.9%"
+    },
+    {
+      "system": "Claude Fable 5 · Pi",
+      "value": "—",
+      "success": "71.1%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Pi",
+      "value": "—",
+      "success": "47.8%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Pi",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Pi",
+      "value": "—",
+      "success": "65.6%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Pi",
+      "value": "—",
+      "success": "76.7%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Pi",
+      "value": "—",
+      "success": "83.3%"
+    },
+    {
+      "system": "Kimi K3 · Pi",
+      "value": "28.0",
+      "success": "73.3%"
+    },
+    {
+      "system": "Kimi K3 · Claude Code",
+      "value": "—",
+      "success": "66.7%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Claude Code",
+      "value": "—",
+      "success": "70.0%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Claude Code",
+      "value": "—",
+      "success": "71.1%"
+    },
+    {
+      "system": "Claude Fable 5 · Codex",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Codex",
+      "value": "—",
+      "success": "31.1%"
+    },
+    {
+      "system": "Kimi K3 · Codex",
+      "value": "—",
+      "success": "70.0%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Codex",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Codex",
+      "value": "—",
+      "success": "63.3%"
+    }
+  ],
+  "tokens": [
+    {
+      "system": "Claude Fable 5 · Claude Code",
+      "value": "540.8k tok",
+      "success": "75.6%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Claude Code",
+      "value": "1.490 Mtok",
+      "success": "41.1%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Claude Code",
+      "value": "684.4k tok",
+      "success": "68.9%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Claude Code",
+      "value": "753.4k tok",
+      "success": "62.2%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Codex",
+      "value": "1.840 Mtok",
+      "success": "72.2%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Codex",
+      "value": "1.028 Mtok",
+      "success": "78.9%"
+    },
+    {
+      "system": "Claude Fable 5 · Pi",
+      "value": "176.7k tok",
+      "success": "71.1%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Pi",
+      "value": "1.105 Mtok",
+      "success": "47.8%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Pi",
+      "value": "473.1k tok",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Pi",
+      "value": "514.6k tok",
+      "success": "65.6%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Pi",
+      "value": "1.106 Mtok",
+      "success": "76.7%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Pi",
+      "value": "382.6k tok",
+      "success": "83.3%"
+    },
+    {
+      "system": "Kimi K3 · Pi",
+      "value": "441.7k tok",
+      "success": "73.3%"
+    },
+    {
+      "system": "Kimi K3 · Claude Code",
+      "value": "—",
+      "success": "66.7%"
+    },
+    {
+      "system": "GPT-5.6 Luna · Claude Code",
+      "value": "—",
+      "success": "70.0%"
+    },
+    {
+      "system": "GPT-5.6 Sol · Claude Code",
+      "value": "—",
+      "success": "71.1%"
+    },
+    {
+      "system": "Claude Fable 5 · Codex",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Haiku 4.5 · Codex",
+      "value": "—",
+      "success": "31.1%"
+    },
+    {
+      "system": "Kimi K3 · Codex",
+      "value": "—",
+      "success": "70.0%"
+    },
+    {
+      "system": "Claude Opus 4.8 · Codex",
+      "value": "—",
+      "success": "72.2%"
+    },
+    {
+      "system": "Claude Sonnet 4.6 · Codex",
+      "value": "—",
+      "success": "63.3%"
+    }
+  ]
+}

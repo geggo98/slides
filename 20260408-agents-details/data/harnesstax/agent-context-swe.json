@@ -1,0 +1,96 @@
+{
+  "source_url": "https://harnesstax.github.io/data/charts/system-agent-context-swe.06f521bdb1.json",
+  "generated": "2026-09-16 16:23 UTC",
+  "title": "SWE-bench Lite — first-call context statistics per harness",
+  "note": "Bars: mean per harness. Whiskers: ±1 standard deviation across attempts.",
+  "context": {
+    "panels": 4,
+    "rows": [
+      {
+        "harness": "pi",
+        "label": "Pi",
+        "version": "0.85.1",
+        "n": 630,
+        "tool_count": {
+          "n": 630,
+          "mean": 4,
+          "sd": 0
+        },
+        "tool_schema_chars": {
+          "n": 630,
+          "mean": 2873,
+          "sd": 17.05453437819816
+        },
+        "instruction_chars": {
+          "n": 630,
+          "mean": 2547,
+          "sd": 0
+        },
+        "first_call_context_tokens": {
+          "n": 630,
+          "mean": 1972.1809523809525,
+          "sd": 552.7758054272633
+        }
+      },
+      {
+        "harness": "codex",
+        "label": "Codex",
+        "version": "0.146.0",
+        "n": 630,
+        "tool_count": {
+          "n": 630,
+          "mean": 7.428571428571429,
+          "sd": 2.498979383505129
+        },
+        "tool_schema_chars": {
+          "n": 630,
+          "mean": 18114.285714285714,
+          "sd": 1461.0020743395576
+        },
+        "instruction_chars": {
+          "n": 630,
+          "mean": 23502.428571428572,
+          "sd": 1042.5808440243522
+        },
+        "first_call_context_tokens": {
+          "n": 630,
+          "mean": 11308.304761904761,
+          "sd": 2683.432139998574
+        }
+      },
+      {
+        "harness": "claude-code",
+        "label": "Claude Code",
+        "version": "2.1.224",
+        "n": 630,
+        "tool_count": {
+          "n": 630,
+          "mean": 23,
+          "sd": 0
+        },
+        "tool_schema_chars": {
+          "n": 630,
+          "mean": 76995.42857142857,
+          "sd": 7249.56759020136
+        },
+        "instruction_chars": {
+          "n": 630,
+          "mean": 13464.638095238095,
+          "sd": 9444.061975779186
+        },
+        "first_call_context_tokens": {
+          "n": 630,
+          "mean": 27010.790476190476,
+          "sd": 6933.935312505052
+        }
+      }
+    ],
+    "definitions": {
+      "instruction_chars": "characters of the system/developer instructions of the first main request: the Messages `system` field, or the Responses `instructions` plus system/developer input messages, or Chat Completions system/developer messages",
+      "tool_count": "tool definitions declared on the first main request (`tools`, plus Responses `additional_tools` items)",
+      "tool_schema_chars": "characters of the compact JSON of those tool definitions",
+      "first_call_context_tokens": "provider-reported prompt of the first main call: uncached input + cache creation + cache read tokens, from the same terminal usage object the usage replay reads",
+      "main_request": "Claude Code: the request its sealed inference topology names as the coding-agent main request; Codex and Pi: the first request with a parseable body and a terminal usage"
+    }
+  }
+}

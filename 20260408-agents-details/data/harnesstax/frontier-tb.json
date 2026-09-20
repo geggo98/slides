@@ -1,0 +1,1117 @@
+{
+  "source_url": "https://harnesstax.github.io/data/charts/system-frontier-tb.3c661a24c5.json",
+  "generated": "2026-09-16 16:23 UTC",
+  "title": "Terminal-Bench 2 — performance-cost Pareto frontier",
+  "subtitle": null,
+  "frontier": {
+    "x_label": "cost per rollout (USD, log scale)",
+    "x_scale": "log",
+    "y_label": "success rate",
+    "marker_size": {
+      "frontier": 18,
+      "dominated": 12
+    },
+    "points": [
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-fable",
+        "label": "cc:fable",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 1.554103,
+        "y": 0.755556,
+        "x_ci": [0.992643, 2.235054],
+        "y_ci": [0.611111, 0.888889],
+        "frontier": false,
+        "color": "@model-fable",
+        "symbol": "diamond",
+        "bootstrap": 0.0095,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-haiku",
+        "label": "cc:haiku",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions · 4 Claude Code --max-turns 100 cap hits (4 unsolved)",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.262522,
+        "y": 0.411111,
+        "x_ci": [0.162475, 0.377011],
+        "y_ci": [0.277778, 0.555556],
+        "frontier": false,
+        "color": "@model-haiku",
+        "symbol": "diamond",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-opus",
+        "label": "cc:opus",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.899294,
+        "y": 0.688889,
+        "x_ci": [0.589994, 1.276792],
+        "y_ci": [0.522222, 0.844444],
+        "frontier": false,
+        "color": "@model-opus",
+        "symbol": "diamond",
+        "bootstrap": 0.0005,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-sonnet",
+        "label": "cc:sonnet",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.668745,
+        "y": 0.622222,
+        "x_ci": [0.446929, 0.917128],
+        "y_ci": [0.466667, 0.766667],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "diamond",
+        "bootstrap": 0.0005,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-luna",
+        "label": "codex:luna",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.06397,
+        "y": 0.722222,
+        "x_ci": [0.038652, 0.092664],
+        "y_ci": [0.577778, 0.855556],
+        "frontier": false,
+        "color": "@model-luna",
+        "symbol": "triangle-up",
+        "bootstrap": 0.1745,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-sol",
+        "label": "codex:sol",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.761134,
+        "y": 0.788889,
+        "x_ci": [0.46322, 1.130819],
+        "y_ci": [0.655556, 0.911111],
+        "frontier": false,
+        "color": "@model-sol",
+        "symbol": "triangle-up",
+        "bootstrap": 0.0645,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-fable",
+        "label": "pi:fable",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 1.078506,
+        "y": 0.711111,
+        "x_ci": [0.571387, 1.74867],
+        "y_ci": [0.544444, 0.855556],
+        "frontier": false,
+        "color": "@model-fable",
+        "symbol": "square",
+        "bootstrap": 0.001,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-haiku",
+        "label": "pi:haiku",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.249566,
+        "y": 0.477778,
+        "x_ci": [0.160236, 0.355113],
+        "y_ci": [0.322222, 0.633333],
+        "frontier": false,
+        "color": "@model-haiku",
+        "symbol": "square",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-opus",
+        "label": "pi:opus",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.757909,
+        "y": 0.722222,
+        "x_ci": [0.384428, 1.245274],
+        "y_ci": [0.588889, 0.844444],
+        "frontier": false,
+        "color": "@model-opus",
+        "symbol": "square",
+        "bootstrap": 0.0075,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-sonnet",
+        "label": "pi:sonnet",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.614356,
+        "y": 0.655556,
+        "x_ci": [0.390826, 0.8692],
+        "y_ci": [0.488889, 0.822222],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "square",
+        "bootstrap": 0.012,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-luna",
+        "label": "pi:luna",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.045341,
+        "y": 0.766667,
+        "x_ci": [0.025556, 0.06917],
+        "y_ci": [0.622222, 0.9],
+        "frontier": true,
+        "color": "@model-luna",
+        "symbol": "square",
+        "bootstrap": 0.9995,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-sol",
+        "label": "pi:sol",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.420517,
+        "y": 0.833333,
+        "x_ci": [0.272168, 0.61226],
+        "y_ci": [0.711111, 0.944444],
+        "frontier": true,
+        "color": "@model-sol",
+        "symbol": "square",
+        "bootstrap": 0.9365,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-kimi-k3",
+        "label": "pi:kimi",
+        "cohort": "terminal-bench-v2-common-n30-turncap100-20260906",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.38318,
+        "y": 0.733333,
+        "x_ci": [0.238695, 0.543259],
+        "y_ci": [0.6, 0.855556],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "square",
+        "bootstrap": 0.1325,
+        "single_replicate": false,
+        "publication_scope": null,
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:kimi:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "cc:kimi",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.521312,
+        "y": 0.666667,
+        "x_ci": [0.355968, 0.707199],
+        "y_ci": [0.522222, 0.8],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "diamond",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:luna:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "cc:luna",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.098445,
+        "y": 0.7,
+        "x_ci": [0.067636, 0.13316],
+        "y_ci": [0.555556, 0.833333],
+        "frontier": false,
+        "color": "@model-luna",
+        "symbol": "diamond",
+        "bootstrap": 0.0795,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:sol:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "cc:sol",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 1.354545,
+        "y": 0.711111,
+        "x_ci": [0.94836, 1.852551],
+        "y_ci": [0.555556, 0.855556],
+        "frontier": false,
+        "color": "@model-sol",
+        "symbol": "diamond",
+        "bootstrap": 0.007,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:fable:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "codex:fable",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.976038,
+        "y": 0.722222,
+        "x_ci": [0.631696, 1.406231],
+        "y_ci": [0.566667, 0.866667],
+        "frontier": false,
+        "color": "@model-fable",
+        "symbol": "triangle-up",
+        "bootstrap": 0.013,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:haiku:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "codex:haiku",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.213731,
+        "y": 0.311111,
+        "x_ci": [0.142742, 0.293352],
+        "y_ci": [0.155556, 0.477778],
+        "frontier": false,
+        "color": "@model-haiku",
+        "symbol": "triangle-up",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:kimi:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "codex:kimi",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.449972,
+        "y": 0.7,
+        "x_ci": [0.283386, 0.656948],
+        "y_ci": [0.555556, 0.833333],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "triangle-up",
+        "bootstrap": 0.002,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:opus:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "codex:opus",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.847954,
+        "y": 0.722222,
+        "x_ci": [0.507623, 1.269417],
+        "y_ci": [0.566667, 0.866667],
+        "frontier": false,
+        "color": "@model-opus",
+        "symbol": "triangle-up",
+        "bootstrap": 0.0125,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "tb:arena-cross-r1-r3:sonnet:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+        "label": "codex:sonnet",
+        "cohort": "Arena cross-family r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.552243,
+        "y": 0.633333,
+        "x_ci": [0.38034, 0.741388],
+        "y_ci": [0.466667, 0.788889],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "triangle-up",
+        "bootstrap": 0.002,
+        "single_replicate": false,
+        "publication_scope": "arena-cross-family-r1-r3",
+        "replicates": 3
+      }
+    ],
+    "path": [
+      "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-luna",
+      "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-sol"
+    ],
+    "models": [
+      {
+        "key": "fable",
+        "label": "Claude Fable 5",
+        "color": "@model-fable"
+      },
+      {
+        "key": "opus",
+        "label": "Claude Opus 4.8",
+        "color": "@model-opus"
+      },
+      {
+        "key": "sonnet",
+        "label": "Claude Sonnet 4.6",
+        "color": "@model-sonnet"
+      },
+      {
+        "key": "haiku",
+        "label": "Claude Haiku 4.5",
+        "color": "@model-haiku"
+      },
+      {
+        "key": "sol",
+        "label": "GPT-5.6 Sol",
+        "color": "@model-sol"
+      },
+      {
+        "key": "luna",
+        "label": "GPT-5.6 Luna",
+        "color": "@model-luna"
+      },
+      {
+        "key": "kimi",
+        "label": "Kimi K3",
+        "color": "@model-kimi"
+      }
+    ],
+    "harnesses": [
+      {
+        "key": "pi",
+        "label": "Pi",
+        "symbol": "square"
+      },
+      {
+        "key": "codex",
+        "label": "Codex",
+        "symbol": "triangle-up"
+      },
+      {
+        "key": "cc",
+        "label": "Claude Code",
+        "symbol": "diamond"
+      }
+    ],
+    "subsets": [
+      {
+        "model": null,
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-luna",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-sol"
+        ]
+      },
+      {
+        "model": null,
+        "harness": "codex",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-luna",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-sol"
+        ]
+      },
+      {
+        "model": null,
+        "harness": "cc",
+        "path": [
+          "tb:arena-cross-r1-r3:luna:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+          "tb:arena-cross-r1-r3:sol:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-fable"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": null,
+        "path": [
+          "tb:arena-cross-r1-r3:fable:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-fable"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-fable"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "codex",
+        "path": [
+          "tb:arena-cross-r1-r3:fable:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "cc",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-fable"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": null,
+        "path": [
+          "tb:arena-cross-r1-r3:haiku:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-haiku"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-haiku"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "codex",
+        "path": [
+          "tb:arena-cross-r1-r3:haiku:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "cc",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-haiku"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": null,
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-opus"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-opus"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "codex",
+        "path": [
+          "tb:arena-cross-r1-r3:opus:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "cc",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-opus"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": null,
+        "path": [
+          "tb:arena-cross-r1-r3:sonnet:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609",
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-sonnet"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-claude-sonnet"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "codex",
+        "path": [
+          "tb:arena-cross-r1-r3:sonnet:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "cc",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:claude-code-sonnet"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": null,
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-luna"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-luna"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "codex",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-luna"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "cc",
+        "path": [
+          "tb:arena-cross-r1-r3:luna:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": null,
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-sol"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-gpt-sol"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "codex",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:codex-sol"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "cc",
+        "path": [
+          "tb:arena-cross-r1-r3:sol:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": null,
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-kimi-k3"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "pi",
+        "path": [
+          "tb:terminal-bench-v2-common-n30-turncap100-20260906:pi-kimi-k3"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "codex",
+        "path": [
+          "tb:arena-cross-r1-r3:kimi:codex:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "cc",
+        "path": [
+          "tb:arena-cross-r1-r3:kimi:cc:sha256:0dd54cc5bfd048c3aa8edfc5af785146944b2ffffe540beb9258721caebde609"
+        ]
+      }
+    ],
+    "notes": "exact hybrid 21-cell profile; cross-family cells use Arena r1-r3 and reused cells retain their original validated route/epoch · 2/21 observations are nondominated on the empirical means · large filled/labeled = frontier · small open = dominated · icon = harness · Pareto membership is descriptive; intervals show uncertainty and can overlap · cost is token usage repriced under one frozen price schedule (agentbrane-research-2026-09-01-v3) so systems billed through different routes stay comparable; it need not equal what was actually paid · bootstrap frequency is not a posterior probability · The cost axis is logarithmic because the included systems span more than three orders of magnitude. The Arena cross-family cells (Claude Fable 5 · Codex, Claude Haiku 4.5 · Codex, Claude Opus 4.8 · Codex, Claude Sonnet 4.6 · Codex, GPT-5.6 Luna · Claude Code, GPT-5.6 Sol · Claude Code, Kimi K3 · Claude Code, Kimi K3 · Codex) contain 3 repetitions run through the Arena serving route in a later execution epoch than the existing cells. They are drawn, labelled and hovered exactly like every other system; their success-rate and cost intervals are the same task-cluster percentile bootstrap (10,000 draws, repetitions averaged within task) every other cell carries, computed by the dashboard from the published task outcomes. The hybrid publication plan makes no test or ranking claim for them, and route or execution epoch may confound comparisons with the existing cells."
+  },
+  "table": {
+    "columns": [
+      "system",
+      "resolved",
+      "resolved 95% CI",
+      "standardized cost/rollout",
+      "standardized cost 95% CI",
+      "standardized cost/solve",
+      "frontier bootstrap",
+      "caveats",
+      "Pareto",
+      "dominated by"
+    ],
+    "rows": [
+      [
+        "GPT-5.6 Luna · Pi",
+        "76.7%",
+        "62.2%–90.0%",
+        "$0.045",
+        "$0.026–$0.069",
+        "$0.059",
+        "100%",
+        "—",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "GPT-5.6 Sol · Pi",
+        "83.3%",
+        "71.1%–94.4%",
+        "$0.421",
+        "$0.272–$0.612",
+        "$0.505",
+        "94%",
+        "—",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "GPT-5.6 Luna · Codex",
+        "72.2%",
+        "57.8%–85.6%",
+        "$0.064",
+        "$0.039–$0.093",
+        "$0.089",
+        "17%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Pi"
+      ],
+      [
+        "GPT-5.6 Luna · Claude Code",
+        "70.0%",
+        "55.6%–83.3%",
+        "$0.098",
+        "$0.068–$0.133",
+        "$0.141",
+        "8%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Claude Haiku 4.5 · Codex",
+        "31.1%",
+        "15.6%–47.8%",
+        "$0.214",
+        "$0.143–$0.293",
+        "$0.687",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Claude Haiku 4.5 · Pi",
+        "47.8%",
+        "32.2%–63.3%",
+        "$0.250",
+        "$0.160–$0.355",
+        "$0.522",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Claude Haiku 4.5 · Claude Code",
+        "41.1%",
+        "27.8%–55.6%",
+        "$0.263",
+        "$0.162–$0.377",
+        "$0.639",
+        "0%",
+        "4 Claude Code --max-turns 100 cap hits (4 unsolved)",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, Claude Haiku 4.5 · Pi, GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Kimi K3 · Pi",
+        "73.3%",
+        "60.0%–85.6%",
+        "$0.383",
+        "$0.239–$0.543",
+        "$0.523",
+        "13%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Kimi K3 · Codex",
+        "70.0%",
+        "55.6%–83.3%",
+        "$0.450",
+        "$0.283–$0.657",
+        "$0.643",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Kimi K3 · Claude Code",
+        "66.7%",
+        "52.2%–80.0%",
+        "$0.521",
+        "$0.356–$0.707",
+        "$0.782",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Kimi K3 · Codex, GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Codex",
+        "63.3%",
+        "46.7%–78.9%",
+        "$0.552",
+        "$0.380–$0.741",
+        "$0.872",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Kimi K3 · Claude Code, Kimi K3 · Codex, GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Pi",
+        "65.6%",
+        "48.9%–82.2%",
+        "$0.614",
+        "$0.391–$0.869",
+        "$0.937",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Kimi K3 · Claude Code, Kimi K3 · Codex, GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Claude Code",
+        "62.2%",
+        "46.7%–76.7%",
+        "$0.669",
+        "$0.447–$0.917",
+        "$1.075",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Kimi K3 · Claude Code, Kimi K3 · Codex, GPT-5.6 Luna · Claude Code, Claude Sonnet 4.6 · Codex, GPT-5.6 Luna · Codex, Claude Sonnet 4.6 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Opus 4.8 · Pi",
+        "72.2%",
+        "58.9%–84.4%",
+        "$0.758",
+        "$0.384–$1.245",
+        "$1.049",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "GPT-5.6 Sol · Codex",
+        "78.9%",
+        "65.6%–91.1%",
+        "$0.761",
+        "$0.463–$1.131",
+        "$0.965",
+        "6%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Sol · Pi"
+      ],
+      [
+        "Claude Opus 4.8 · Codex",
+        "72.2%",
+        "56.7%–86.7%",
+        "$0.848",
+        "$0.508–$1.269",
+        "$1.174",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Codex, GPT-5.6 Sol · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Opus 4.8 · Claude Code",
+        "68.9%",
+        "52.2%–84.4%",
+        "$0.899",
+        "$0.590–$1.277",
+        "$1.305",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Kimi K3 · Codex, GPT-5.6 Luna · Claude Code, Claude Opus 4.8 · Codex, GPT-5.6 Luna · Codex, GPT-5.6 Sol · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Fable 5 · Codex",
+        "72.2%",
+        "56.7%–86.7%",
+        "$0.976",
+        "$0.632–$1.406",
+        "$1.351",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Opus 4.8 · Codex, GPT-5.6 Luna · Codex, GPT-5.6 Sol · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Fable 5 · Pi",
+        "71.1%",
+        "54.4%–85.6%",
+        "$1.079",
+        "$0.571–$1.749",
+        "$1.517",
+        "0%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Codex, Claude Opus 4.8 · Codex, GPT-5.6 Luna · Codex, GPT-5.6 Sol · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "GPT-5.6 Sol · Claude Code",
+        "71.1%",
+        "55.6%–85.6%",
+        "$1.355",
+        "$0.948–$1.853",
+        "$1.905",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Codex, Claude Opus 4.8 · Codex, GPT-5.6 Luna · Codex, GPT-5.6 Sol · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi, Kimi K3 · Pi"
+      ],
+      [
+        "Claude Fable 5 · Claude Code",
+        "75.6%",
+        "61.1%–88.9%",
+        "$1.554",
+        "$0.993–$2.235",
+        "$2.057",
+        "1%",
+        "—",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Sol · Codex, GPT-5.6 Luna · Pi, GPT-5.6 Sol · Pi"
+      ]
+    ],
+    "note": "every row: 30 unique tasks over 3 repetitions"
+  }
+}

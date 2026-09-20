@@ -1190,11 +1190,18 @@ export function makeScale(o: ScaleOpts): Scale {
 /**
  * Teilt die Punkte in Pareto-Front und dominierte auf. Die Front ist nach x
  * aufsteigend sortiert, damit die Polyline sie ohne Zickzack verbindet.
+ *
+ * Generisch über `{ x, y }` gehalten (statt fest auf `Pt`), damit
+ * `harnessTaxData.ts` dieselbe Funktion auf `HPt` anwenden kann, ohne ein
+ * `eur`-Feld vorzutäuschen, das dort semantisch falsch wäre. Rein strukturell,
+ * ändert an keinem bestehenden Aufrufer etwas.
  */
-export function paretoFront(pts: Pt[]): { front: Pt[]; dom: Pt[] } {
+export function paretoFront<T extends { x: number; y: number }>(
+  pts: T[],
+): { front: T[]; dom: T[] } {
   const sorted = [...pts].sort((a, b) => a.x - b.x);
-  const front: Pt[] = [];
-  const dom: Pt[] = [];
+  const front: T[] = [];
+  const dom: T[] = [];
   let bestY = -Infinity;
   for (const p of sorted) {
     if (p.y > bestY) {

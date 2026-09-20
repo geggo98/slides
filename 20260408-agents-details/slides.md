@@ -1487,30 +1487,36 @@ hat das widerlegt — und eine Woche später hat der nächste Neuzugang
 gar nichts bewegt. Beides ist das Thema des Kapitels: Die Zahl ist ein
 Datum, kein Naturgesetz.
 
-Zum Harness-Halbsatz auf der Folie: Die 10–30 Punkte aus dem ⓘ sind
-nicht nur andere Werkzeuge und ein anderer Prompt. Der schärfste Hebel
-ist die Abbruch-Option. Ein RLVR-Task-Designer beschreibt es auf HN so:
-Claude Code mit Fable 5 neigt dazu aufzugeben — Sackgasse, „geht nicht",
-Abbruch. Dasselbe Modell über die API, in einem eigenen Harness,
-probiert 200+ Varianten durch und scheitert sich zum Ziel. Sein
-Merksatz: Wer dem Agenten eine Abbruch-Option lässt, bekommt sie
-irgendwann benutzt; nimmt man sie weg, deckt allein die Nicht-
-Determiniertheit des Modells fast den ganzen verwandten Lösungsraum ab.
-Gilt besonders für Long-Horizon-Aufgaben.
-https://news.ycombinator.com/item?id=49528037 (01.09.2026)
-
-Ehrlich einordnen: ein Erfahrungsbericht, keine Messung — eine Person,
-kein Anthropic-Mitarbeiter, keine nachrechenbaren Zahlen. Trotzdem die
-beste Erklärung dafür, warum die Board-Zahl Modell UND Harness misst:
+Zum Harness-Vorbehalt im ⓘ („±2 bis ±5 Prozentpunkte im Mittel, Kosten
+bis 5×"): Das ist ein Mittelwert über Modelle, kein Maximum — einzelne
+Paare weichen stärker ab (HarnessTax, Kapitel 7). Der schärfste
+vermutete Hebel dahinter ist die Abbruch-Option — das Zitat dazu (RLVR-
+Task-Designer, HN, 01.09.2026) steht zwei Folien weiter auf „Harness +
+Modell: Wer trägt was?". Kurz vorweg, was das für DIESE Folie bedeutet:
 DeepSWE fährt mini-swe-agent, und dessen Abbruchverhalten steckt in
 jedem Punkt dieser Front mit drin. Der Score ist nie das Modell allein.
 
-Wer mag, sagt den Widerspruch im eigenen Deck dazu an: Kapitel 10
-schließt mit „die Community konvergiert auf dünne Harnesses", und
-Kernaussage 4 sagt „die Harness-Schicht wird austauschbar". Für
-Long-Horizon-Arbeit ist das hier die Gegenposition. Beides kann
-stimmen: Ein kurzer Coding-Task braucht wenig Harness, ein
-Wochen-Experiment braucht einen, der nicht aufgibt.
+Seit dem 16.09.2026 gibt es zu der Anekdote eine Messung: HarnessTax
+(UC Berkeley Sky Lab + Arena, Kapitel 7 „Der Harness als zweite
+Achse"), 21 Modell×Harness-Paare auf zwei Benchmarks. Ergebnis, kurz
+vorweggenommen: Die Ausdauer-These stimmt teilweise — Claude Code lässt
+ein schwaches Modell (GPT-5.6 Luna) tatsächlich 3,4× so viele Schritte
+laufen wie Pi. Aber das erklärt nicht den Aufpreis bei starken
+Modellen: Claude Fable 5 braucht in Claude Code und Pi praktisch
+dieselbe Schrittzahl (15,3 gegen 15,4), kostet aber doppelt so viel.
+Und läuft ein Anthropic-Modell im eigenen Harness am besten? Nur bei
+Fable 5 — bei Opus, Sonnet und Haiku gewinnt auf beiden Benchmarks ein
+fremder Harness. Details, Zahlen und Einschränkungen: auf der Folie
+„Der Harness als zweite Achse" selbst.
+
+Der Widerspruch zum eigenen Deck ist damit nicht mehr offen, sondern
+gemessen entschieden: Kapitel 10 schließt mit „die Community
+konvergiert auf dünne Harnesses", Kernaussage 4 mit „die
+Harness-Schicht wird austauschbar" — und HarnessTax stützt genau das,
+auch für die hier getesteten Aufgaben. Was bleibt, ist eine engere
+These: Persistenz kann helfen (Luna), ist aber weder notwendig (Fable
+5) noch hinreichend (Haiku bricht in Claude Code sogar FRÜHER ab als in
+Pi und Codex) für den Aufpreis.
 
 Kontingent-Toggle im Chart, die Limits im Detail:
 
@@ -1623,6 +1629,253 @@ terra/glm-5.3, an Station 9 sol/astra (waagerecht). Frontpunkte rücken nur
 waagerecht. Kein dominierter Punkt rückt über die Front oder links an seinen
 Dominator vorbei. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
 rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
+-->
+
+---
+hideInToc: true
+routeAlias: abbruch-hypothese
+clicks: 2
+---
+
+# Harness + Modell: Wer trägt was?
+
+<div class="grid grid-cols-2 gap-8 mt-2 text-sm">
+<div>
+
+### Ein Agent = Modell + Harness
+
+„A software system that manages a model's tools, context, and task execution" — wer einen Coding-Agent wählt, wählt **beides**, auch wenn nur vom Modell die Rede ist.
+
+Kap. 10 sagt es mit Browser Use: <Link to="bitter-lesson">„All the value is in the RL'd model"</Link> — bisher eine Erfahrung, **jetzt gemessen.** In der Praxis: <TalkXref slug="20260707-anatomy-of-autonomous-agents" anchor="duemmer-ist-besser">Standard-Harness + Markdown</TalkXref>.
+
+<div v-click="1">
+
+### Der Harness-Anteil am Erfolg ist klein
+
+Im Mittel **±2 Punkte** (SWE-bench Lite) bis **±5 Punkte** (Terminal-Bench 2.0) — dieselbe Zahl wie im ⓘ von „Welches Modell wofür?". HarnessTax, 21 Modell×Harness-Paare, 16.09.2026.
+
+</div>
+</div>
+<div v-click="2">
+
+### Eine verbreitete Vermutung
+
+Claude Codes Harness treibe das Modell zum Weitermachen — ein Beispiel von vielen:
+
+> _"If you give the AI a way to give up, eventually it will."_
+>
+> — fxtentacle, RLVR-Task-Designer, Hacker News, 01.09.2026
+
+Zwei prüfbare Vorhersagen stecken darin:
+
+1. **Der Harness entscheidet mit** — mehr gelöst oder billiger.
+2. **Der eigene Harness gibt nicht auf** — mehr Schritte → mehr gelöst.
+
+Die nächste Folie prüft die erste, die übernächste die zweite.
+
+</div>
+</div>
+
+<!--
+Diese Folie stellt die Frage und die Ausgangslage, bewertet noch nichts.
+Drei Klick-Blöcke: Definition (Zitat aus dem HarnessTax-Blogpost, Pan et
+al., UC Berkeley Sky Lab + Arena, 16.09.2026: „Coding agents put these
+capabilities to work through harness, a software system that manages a
+model's tools, context, and task execution. […] Choosing a coding agent
+therefore means selecting both a model and a harness, even when the
+explicit focus is only on the model."), dann der Befund als Zahl, dann
+die Vermutung, aus der die zwei Vorhersagen folgen.
+
+Zur Zahl: „±2 bis ±5 Punkte" ist der MITTLERE Harness-Effekt über die
+Modelle je Benchmark („the average harness effect on success rate stays
+within ±2% on SWE-bench Lite and within about ±5% on Terminal-Bench
+2.0"). Einzelne Paare weichen stärker ab — Haiku auf Terminal-Bench: Pi
+47,8 % gegen Codex 31,1 %, Sol: Pi 83,3 % gegen Claude Code 71,1 % — bei
+30 Tasks meist innerhalb der 95-%-CI. Deshalb nicht „bis zu 5 Punkte"
+sagen.
+
+Das HN-Zitat vollständig (Deckkonvention: Original, nicht übersetzt —
+wie Zechner, Cherny, Browser Use):
+„(I don't work at Anthropic, but I've designed RLVR tasks) My impression
+is that especially for long-horizon tasks like science, the harness is
+much more important than people give it credit for. Claude Code + Fable
+5 seems to have a tendency to "give up", get stuck in a dead end, or
+claim things to be impossible. But using the Fable 5 API together with a
+custom harness, it'll happily try 200+ variants and fail its way towards
+the goal. If you give the AI a way to give up, eventually it will. If you
+remove that option from the harness, then thanks to the non-determinism
+inherent to LLMs, you get to explore pretty much all related solution
+attempts." — news.ycombinator.com/item?id=49528037. Ehrlich einordnen:
+ein Erfahrungsbericht, keine Messung — eine Person, kein Anthropic-
+Mitarbeiter, keine nachrechenbaren Zahlen. Es ist EIN Beispiel für eine
+oft geäußerte Vermutung; die Studie misst genau diese beiden
+Vorhersagen.
+
+Kein ⓘ hier: die Quellen stehen in der Attribution und im ⓘ der beiden
+HarnessTax-Folien.
+-->
+
+---
+hideInToc: true
+routeAlias: harness-tax
+clicks: 4
+---
+
+# Der Harness als zweite Achse
+
+<HarnessTaxPareto :step="$clicks" />
+
+<div v-click="4" class="text-sm mt-1">
+
+**Vorhersage 1, geprüft: Der Harness wirkt — vor allem auf die Kosten.**
+Claude Code kostet auf SWE-bench Lite im Mittel 2,0× so viel wie **Pi**,
+bei Luna 5,1× — für im Mittel ±2 bis ±5 Punkte Erfolg. Unintuitiv: auf
+Terminal-Bench 2.0 holt das Vier-Werkzeuge-Harness Pi bei 6 von 7
+Modellen den höchsten Erfolg, auf SWE-bench Lite nur bei einem.
+
+</div>
+
+<div class="text-xs opacity-70 mt-1">
+
+HarnessTax (UC Berkeley Sky Lab + Arena) · 21 Modell×Harness-Paare ·
+30 Tasks × 3 Läufe · 95-%-CI · Preisliste eingefroren 01.09.2026 · 1
+USD = 0,876 € · **nicht vergleichbar mit der DeepSWE-Front aus
+„Welches Modell wofür?“**
+
+</div>
+
+<!--
+Die Anschlussfrage aus Kapitel 7 bisher: Läuft ein Modell im eigenen
+Harness besser? Die Folie davor stellte die Vermutung vor (Abbruch-
+Option als Hebel) — eine Anekdote, keine Messung. HarnessTax misst
+die erste der beiden Vorhersagen: 21 Paare, sieben Modelle, drei
+Harnesse (Pi, Codex CLI, Claude Code), zwei Benchmarks, je 30 Tasks
+dreifach wiederholt. Vergleichbarkeit: Zwischen den beiden Benchmarks
+ist die Methode gleich (Harness-Vergleiche je Benchmark konsistent),
+die absoluten Raten nicht mischbar (Fable 97,8 % auf Lite ist nahe der
+Sättigung; die Autoren nennen mögliche Kontamination). Mit der DeepSWE-
+Front aus „Welches Modell wofür?" ist NICHTS davon vergleichbar: anderer
+Benchmark, anderes Harness (mini-swe-agent), andere Metrik (pass@1 je
+Task dort, Mittel über drei Versuche hier), 113 gegen 30 Tasks.
+
+Was diese Folie zeigt: Farbe UND Form sind der Harness (violettes
+Quadrat Pi, grünes Dreieck Codex, orange Raute Claude Code — Farben wie
+in Kapitel 10s Harness-Vergleich, Formen wie in der Studie; die Form ist
+die Zweitkodierung für Farbenblinde, im Dark-Theme liegen Orange und Grün
+nur ΔE 7,7 auseinander), Beschriftung das Modell. Vier Klicks:
+1 die gestrichelte Pareto-Front über alle 21 Punkte — sie bleibt.
+2 der Claude-Code-Aufpreis: je Modell ein Pfeil vom Pi-Punkt zum
+Claude-Code-Punkt mit dem Kostenfaktor; Codex gedimmt. Die Pfeile
+laufen fast waagerecht — das IST der Befund: gleicher Erfolg, anderer
+Preis. SWE-bench Lite: Luna 5,1× (+2,2 Punkte), Sol 3,5× (+3,3), Opus
+2,1× (+4,4), Fable 2,0× (+1,1), Kimi 1,7× (+4,4), Haiku 1,1× (−7,8),
+Sonnet 1,0× (+2,2); geometrisches Mittel 2,0×. Terminal-Bench 2.0: Sol
+3,2× (−12,2), Luna 2,2× (−6,7), Fable 1,4× (+4,4), Kimi 1,4× (−6,7),
+Opus 1,2× (−3,3), Sonnet 1,1× (−3,3), Haiku 1,0× (−6,7); Mittel 1,5×
+(Faktoren und Deltas aus den ungerundeten Archivwerten, eine Stelle;
+harnessTaxData.test.ts hält sie fest).
+3 natives gegen bestes Harness: Geisterring am nativen Punkt, Pfeil zum
+Harness mit dem höchsten Erfolg — nur wo sie sich unterscheiden, ohne
+Beschriftung (das Erfolgs-Delta steht im Tooltip). SWE: Opus und Sonnet
+→ Codex, Haiku → Pi, Sol → Claude Code (Fable bleibt, Luna steht mit
+Codex gleichauf). Terminal-Bench: Opus, Sonnet, Haiku, Sol, Luna → Pi
+(Opus liegt dort mit Pi und Codex gleichauf, der Pfeil zeigt auf Pi).
+Zusammen: ein fremder Harness gewinnt 9 von 12.
+4 der Schlusstext.
+Der Benchmark-Umschalter wechselt zwischen SWE-bench Lite und
+Terminal-Bench 2.0 — beide zeigen, sonst wäre es Rosinenpickerei: auf SWE
+holt Claude Code bei vier Modellen den höchsten Erfolg (Fable, Sol, Luna
+gleichauf mit Codex, Kimi), Codex bei zwei, Pi nur bei Haiku; auf
+Terminal-Bench holt Pi bei sechs von sieben den höchsten Erfolg, Claude
+Code nur bei Fable. Der Blogpost selbst sagt nur „Pi reaches the Pareto
+frontier on both benchmarks" — die Zählung ist unsere, aus dem Archiv.
+Klick auf ein Harness-Swatch in der Legende dimmt die anderen und zeigt
+die Front dieses Harness allein; „alle Namen" beschriftet alle 21
+Punkte mit dem Modell-Kurznamen (der Harness steht in Form und Farbe des
+Markers — „Modell · Harness" als Text zwang fünf Labels in Überlappungen). Pis Vorteil ist vermutlich nicht nur der schmalere
+Werkzeugkatalog: Pi läuft per Default auch ganz ohne Permission-Gating
+(voller YOLO-Modus, kein Klassifikator) — Detail dazu im Companion-Talk
+<TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+
+Die Kernzahl aus dem Blogpost: über die sechs Anthropic- und
+OpenAI-Modelle und beide Benchmarks gewinnt ein FREMDER Harness in 9
+von 12 Vergleichen. Eingeschränkt auf die vier Anthropic-Modelle
+(natives Harness Claude Code): Claude Code gewinnt nur 2 von 8, und
+beide Male ist es Claude Fable 5. Bei Opus 4.8, Sonnet 4.6 und Haiku
+4.5 ist auf BEIDEN Benchmarks ein anderer Harness vorn.
+
+Kostenseite, geometrisches Mittel der Verhältnisse über alle sieben
+Modelle: Claude Code kostet auf SWE-bench Lite 2,0× so viel wie Pi und
+1,6× so viel wie Codex; auf Terminal-Bench 2.0 1,5× so viel wie Pi. Der
+Erfolgs-Unterschied bleibt im selben Zeitraum klein (SWE: cc−pi
++1,4 Punkte, codex−pi +1,7 Punkte; Terminal-Bench 2.0: BEIDE liegen im
+Mittel unter Pi, −4,9 bzw. −4,3 Punkte). Schlimmster Einzelfall:
+GPT-5.6 Luna kostet in Claude Code das 5,1-Fache von Pi, für ganze
++2,3 Prozentpunkte Erfolg.
+
+Woher der Aufpreis kommt, zeigt die nächste Folie über die Ausdauer —
+und bestätigt nebenbei unabhängig, was Kapitel 10 („Gemessen an der
+API-Grenze") schon an einem einzelnen Logging-Proxy zeigte: Claude
+Codes Erstkontext ist auf SWE-bench Lite 13,7× so groß wie Pis (27.011
+gegen 1.972 Token, gemittelt über je 630 Versuche) — 23 Werkzeuge und
+76.995 Zeichen Tool-Schema gegen 4 Werkzeuge und 2.873 Zeichen.
+
+Einschränkungen ausführlich im ⓘ: 30×3 pro Zelle (die meisten
+Harness-Unterschiede im Erfolg liegen in der CI), Kosten sind
+Token×eingefrorene Preisliste statt bezahltes Geld, ein 100-Turn-Cap
+(traf Claude Code×Haiku auf Terminal-Bench 2.0 viermal), Pi lief nicht
+im Auslieferungszustand, rohe Traces sind angekündigt, aber am
+18.09.2026 noch nicht veröffentlicht.
+-->
+
+---
+hideInToc: true
+routeAlias: abbruch-these
+---
+
+# Die Abbruch-These, gemessen
+
+<div class="text-sm mb-1">
+
+**Vorhersage 2, geprüft: Gibt der eigene Harness nicht auf?** Mehr
+Schritte → mehr gelöst? Drei Modelle, drei verschiedene Antworten.
+
+</div>
+
+<HarnessPersistence />
+
+<div class="text-xs opacity-70 mt-1">
+
+Ausdauer und Erfolg fallen auseinander — die These war nicht falsch,
+nur nicht die Erklärung für den Preis. SWE-bench Lite, HarnessTax.
+
+</div>
+
+<!--
+Die HN-These, noch einmal knapp: eigener Harness → Modell gibt nicht
+auf → mehr Schritte → mehr gelöst. Drei Modelle, drei verschiedene
+Antworten:
+
+GPT-5.6 Luna trägt die These: Claude Code lässt es 92,4 statt 27,1
+Schritte laufen (3,4×), 6,8× so viele Tokens — UND +2,3 Punkte Erfolg.
+Ausdauer hilft hier tatsächlich ein bisschen, kostet aber das 5,1-Fache.
+
+Claude Fable 5 widerlegt die Erklärung, nicht den Befund: 15,3 gegen
+15,4 Schritte sind praktisch gleich. Der Aufpreis (2,0×) steckt im
+GEWICHT pro Schritt — größerer Erstkontext, mehr Tokens je Anfrage —
+nicht in mehr Versuchen. Wer hier von „mehr Ausdauer" spricht, verwechselt
+Kosten mit Verhalten.
+
+Claude Haiku 4.5 dreht die These um: Claude Code bricht mit 50,9
+Schritten FRÜHER ab als Pi (60,1) und Codex (62,7) — und löst mit
+52,2 % auch am wenigsten von den dreien. Das genaue Gegenteil von
+„gibt nicht auf".
+
+Fazit für die Folie davor: Die Abbruch-Option ist ein realer Hebel
+(Luna beweist es), aber weder notwendig (Fable 5) noch hinreichend
+für den Aufpreis — und bei Haiku zeigt sich sogar das Gegenteil.
+Turn-Definitionen unterscheiden sich zwischen Harnessen (ⓘ), die
+Größenordnung der Unterschiede bleibt aber eindeutig.
 -->
 
 ---
@@ -1825,6 +2078,17 @@ OpenCode 1.17.18, claude-sonnet-4-5 gepinnt; reduzierte Matrix auf Fable 5.
   nicht an der API-Grenze loggt, weiß nicht, welches Modell antwortet."
 - Instruction-File-Mechanik: CC 2.1.207 ignorierte AGENTS.md still (nur
   CLAUDE.md); OpenCode liest beide. → Memory-Slide Kapitel 5.
+- HarnessTax (Kapitel 7, Folie "Der Harness als zweite Achse") bestätigt
+  den Erstkontext-Befund unabhängig, mit anderer Methode (Provider-API
+  statt Logging-Proxy) und anderem Modell-Fokus (sieben Modelle über
+  drei Harnesse statt Sonnet/Fable über zwei) — 13,7× Claude Code gegen
+  Pi (27.011 gegen 1.972 Token, gemittelt über je 630 Versuche), aus
+  23 Werkzeugen und 76.995 Zeichen Tool-Schema gegen 4 Werkzeuge und
+  2.873 Zeichen. Codex' eigener Aufschlag gegen Pi (2,4×) sitzt dagegen
+  in den Instruktionen (23.502 Zeichen), nicht im Werkzeug-Schema —
+  Claude Code und Codex zahlen den Aufpreis an verschiedenen Stellen.
+  Zwei Messungen, dieselbe Richtung, macht den Befund robuster als eine
+  allein.
 -->
 
 ---
@@ -1844,6 +2108,7 @@ hideInToc: true
 ---
 layout: center
 hideInToc: true
+routeAlias: bitter-lesson
 ---
 
 # Die Bitter Lesson
@@ -1852,7 +2117,7 @@ hideInToc: true
 
 > _"All the value is in the RL'd model, not your 10,000 lines of abstractions."_
 >
-> — Browser Use
+> — Gregor Zunic, Browser Use, 16.01.2026
 
 </div>
 
@@ -1893,6 +2158,21 @@ MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40
 RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert; die Harness-Schicht wird austauschbar. Der Hebel liegt in **Context-Engineering und Domain-Skills**, nicht in Framework-Abstraktionen.
 
 </div>
+
+<div class="text-sm opacity-70 mt-4">
+
+Die Zahlen dazu: <Link to="harness-tax">Der Harness als zweite Achse, Kap. 7</Link> — gleicher Erfolg, bis 5× Kosten.
+
+</div>
+
+<!--
+Quelle: browser-use.com/posts/bitter-lesson-agent-frameworks, Gregor
+Zunic (Mitgründer und CTO), 16.01.2026. Der Satz ist der Untertitel des
+Posts; im Text: „99% of the work is done within the model itself. We
+don't need some highly abstract framework around it." Die Begründung mit
+Zahlen liefert Kapitel 7 (HarnessTax): Der Harness verschiebt den Erfolg
+im Mittel nur um ±2 bis ±5 Punkte, die Kosten bis 5×.
+-->
 
 ---
 layout: section

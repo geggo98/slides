@@ -144,6 +144,7 @@ class: anatomie-poster
 
 ---
 hideInToc: true
+routeAlias: duemmer-ist-besser
 ---
 
 # Orchestrierung: Dümmer ist besser

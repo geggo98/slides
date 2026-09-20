@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BunPopover from "./BunPopover.vue";
+import SourcesPopover from "./SourcesPopover.vue";
 
 // Gemeinsames ⓘ-Modal von VIER Folien: ModelRoutingRoles (Rollen),
 // ModelRoutingPareto (Datenlage), ModelRoutingHistory (Historie und die
@@ -14,6 +14,9 @@ import BunPopover from "./BunPopover.vue";
 // Falls das je zu eng wird: ein `chart?: boolean` je Eintrag (Chart-Folien vs.
 // Rollen-Folie), keine Fallunterscheidung je Folie — die würde 11 Einträge ×
 // 4 Folien zu pflegen geben und bei jeder Folienverschiebung verrotten.
+//
+// Template und CSS liegen seit der HarnessTax-Ergänzung in `SourcesPopover.vue`
+// — dieselbe Optik trägt jetzt auch `HarnessTaxSources.vue` mit eigenen Daten.
 defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: "close"): void }>();
 
@@ -61,7 +64,7 @@ const sources = [
   {
     href: "https://news.ycombinator.com/item?id=49528037",
     label: "Erfahrungsbericht: Harness und Abbruch",
-    note: "HN, 01.09.2026 — eigener Harness statt Claude Code, 200+ Versuche",
+    note: "HN, 01.09.2026 — Hypothese, inzwischen gemessen: siehe HarnessTax, Kap. 7",
   },
   {
     href: "https://openai.com/index/advancing-the-price-performance-frontier-with-gpt-5-6/",
@@ -118,7 +121,7 @@ const sources = [
 const caveats = [
   {
     lead: "Anderer Harness, andere Zahlen:",
-    text: "Der Harness verschiebt Scores um 10–30 Punkte. Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI. Anthropic-Modelle laufen im eigenen Harness meist besser. Der Hebel ist dabei nicht nur Werkzeug und Prompt, sondern die Abbruch-Option: Wer dem Agenten erlaubt aufzugeben, bekommt irgendwann ein „geht nicht“; nimmt man sie ihm, probiert dasselbe Modell dreistellig viele Varianten durch — Erfahrungsbericht, keine Messung. Der Score misst also Modell und Harness gemeinsam, nie das Modell allein.",
+    text: "Zahlen aus mini-swe-agent gelten nicht für Claude Code oder Codex CLI — der Harness kann Scores um zweistellige Punkte verschieben. Gemessen (HarnessTax, 21 Modell×Harness-Paare, Kap. 7 „Der Harness als zweite Achse“): im Mittel bleibt der Effekt auf den Erfolg klein (±2 bis ±5 Prozentpunkte), aber die Kosten schwanken bis 5×. Läuft ein Anthropic-Modell deshalb im eigenen Harness am besten? Nur bei Claude Fable 5 — bei Opus, Sonnet und Haiku gewinnt auf beiden gemessenen Benchmarks ein fremder Harness. Der Score misst also Modell und Harness gemeinsam, nie das Modell allein.",
   },
   {
     lead: "113 Tasks, Streuung ±1,4–6,5 Punkte:",
@@ -186,76 +189,11 @@ const caveats = [
 </script>
 
 <template>
-  <BunPopover :open="open" wide @close="emit('close')">
-    <div class="bun-pop-h">Quellen &amp; Einschränkungen</div>
-    <!-- Der Geltungsbereich muss dastehen: dasselbe Modal hängt an vier Folien,
-         und einzelne Einträge benennen die Folie, für die sie gelten. -->
-    <div class="mrs-scope">
-      Gilt für alle vier Modell-Routing-Folien: Rollen, Datenlage, Historie und
-      die Bonusfolie v1 gegen v1.1.
-    </div>
-    <div class="mrs-grid">
-      <div>
-        <div class="mrs-col-h">Quellen</div>
-        <ul class="mrs-list">
-          <li v-for="s in sources" :key="s.href">
-            <a :href="s.href" target="_blank" rel="noopener">{{ s.label }}</a>
-            <span class="mrs-note"> — {{ s.note }}</span>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <div class="mrs-col-h">Einschränkungen</div>
-        <ul class="mrs-list">
-          <li v-for="c in caveats" :key="c.lead">
-            <strong>{{ c.lead }}</strong> {{ c.text }}
-          </li>
-        </ul>
-      </div>
-    </div>
-  </BunPopover>
+  <SourcesPopover
+    :open="open"
+    scope="Gilt für alle vier Modell-Routing-Folien: Rollen, Datenlage, Historie und die Bonusfolie v1 gegen v1.1."
+    :sources="sources"
+    :caveats="caveats"
+    @close="emit('close')"
+  />
 </template>
-
-<style scoped>
-.mrs-scope {
-  margin: -2px 0 10px;
-  font-size: 10.5px;
-  color: var(--color-text-tertiary);
-}
-.mrs-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.25fr;
-  gap: 22px;
-}
-.mrs-col-h {
-  margin-bottom: 6px;
-  padding-bottom: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  border-bottom: 0.5px solid var(--color-border-tertiary);
-}
-.mrs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0;
-  list-style: none;
-}
-.mrs-list li {
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--color-text-primary);
-}
-.mrs-list a {
-  color: var(--slidev-theme-primary);
-  text-decoration: none;
-}
-.mrs-list a:hover {
-  text-decoration: underline;
-}
-.mrs-note {
-  color: var(--color-text-tertiary);
-  font-size: 10.5px;
-}
-</style>

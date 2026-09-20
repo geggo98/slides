@@ -1,0 +1,1111 @@
+{
+  "source_url": "https://harnesstax.github.io/data/charts/system-frontier-swe.8fd44a1e0f.json",
+  "generated": "2026-09-16 16:23 UTC",
+  "title": "SWE-bench Lite — performance-cost Pareto frontier",
+  "subtitle": null,
+  "frontier": {
+    "x_label": "cost per rollout (USD, log scale)",
+    "x_scale": "log",
+    "y_label": "success rate",
+    "marker_size": {
+      "frontier": 18,
+      "dominated": 12
+    },
+    "points": [
+      {
+        "id": "swe:all-arena-v14:fable:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:fable",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 1.3293,
+        "y": 0.977778,
+        "x_ci": [1.101256, 1.601415],
+        "y_ci": [0.933333, 1],
+        "frontier": true,
+        "color": "@model-fable",
+        "symbol": "diamond",
+        "bootstrap": 0.337,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:opus:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:opus",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.975761,
+        "y": 0.866667,
+        "x_ci": [0.733246, 1.262789],
+        "y_ci": [0.755556, 0.955556],
+        "frontier": false,
+        "color": "@model-opus",
+        "symbol": "diamond",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sonnet:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:sonnet",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.669348,
+        "y": 0.666667,
+        "x_ci": [0.498678, 0.862522],
+        "y_ci": [0.511111, 0.811111],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "diamond",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:haiku:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:haiku",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.426164,
+        "y": 0.522222,
+        "x_ci": [0.345863, 0.507158],
+        "y_ci": [0.366667, 0.677778],
+        "frontier": false,
+        "color": "@model-haiku",
+        "symbol": "diamond",
+        "bootstrap": 0.0125,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sol:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:sol",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 1.540276,
+        "y": 0.777778,
+        "x_ci": [1.184199, 2.09472],
+        "y_ci": [0.633333, 0.9],
+        "frontier": false,
+        "color": "@model-sol",
+        "symbol": "diamond",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:luna:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:luna",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.15246,
+        "y": 0.555556,
+        "x_ci": [0.119702, 0.190419],
+        "y_ci": [0.388889, 0.722222],
+        "frontier": false,
+        "color": "@model-luna",
+        "symbol": "diamond",
+        "bootstrap": 0.3845,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:kimi:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "cc:kimi",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "cc",
+        "harness_label": "Claude Code",
+        "x": 0.784425,
+        "y": 0.766667,
+        "x_ci": [0.566712, 1.044778],
+        "y_ci": [0.622222, 0.888889],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "diamond",
+        "bootstrap": 0.007,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:fable:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:fable",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.890467,
+        "y": 0.966667,
+        "x_ci": [0.696656, 1.126628],
+        "y_ci": [0.911111, 1],
+        "frontier": false,
+        "color": "@model-fable",
+        "symbol": "triangle-up",
+        "bootstrap": 0.384,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:opus:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:opus",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.693734,
+        "y": 0.888889,
+        "x_ci": [0.491485, 0.946207],
+        "y_ci": [0.777778, 0.977778],
+        "frontier": false,
+        "color": "@model-opus",
+        "symbol": "triangle-up",
+        "bootstrap": 0.2775,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sonnet:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:sonnet",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.744673,
+        "y": 0.688889,
+        "x_ci": [0.485095, 1.0996],
+        "y_ci": [0.533333, 0.833333],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "triangle-up",
+        "bootstrap": 0.0015,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:haiku:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:haiku",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.391888,
+        "y": 0.577778,
+        "x_ci": [0.295968, 0.510313],
+        "y_ci": [0.411111, 0.744444],
+        "frontier": false,
+        "color": "@model-haiku",
+        "symbol": "triangle-up",
+        "bootstrap": 0.2645,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sol:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:sol",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.561265,
+        "y": 0.733333,
+        "x_ci": [0.442062, 0.702244],
+        "y_ci": [0.577778, 0.877778],
+        "frontier": false,
+        "color": "@model-sol",
+        "symbol": "triangle-up",
+        "bootstrap": 0.057,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:luna:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:luna",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.035486,
+        "y": 0.555556,
+        "x_ci": [0.028296, 0.043708],
+        "y_ci": [0.377778, 0.722222],
+        "frontier": true,
+        "color": "@model-luna",
+        "symbol": "triangle-up",
+        "bootstrap": 0.7885,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:kimi:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "codex:kimi",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "codex",
+        "harness_label": "Codex",
+        "x": 0.845004,
+        "y": 0.744444,
+        "x_ci": [0.665122, 1.042766],
+        "y_ci": [0.6, 0.877778],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "triangle-up",
+        "bootstrap": 0,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:fable:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:fable",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "fable",
+        "model_label": "Claude Fable 5",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.665695,
+        "y": 0.966667,
+        "x_ci": [0.493714, 0.875495],
+        "y_ci": [0.911111, 1],
+        "frontier": true,
+        "color": "@model-fable",
+        "symbol": "square",
+        "bootstrap": 0.989,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:opus:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:opus",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "opus",
+        "model_label": "Claude Opus 4.8",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.472603,
+        "y": 0.822222,
+        "x_ci": [0.271722, 0.725234],
+        "y_ci": [0.711111, 0.922222],
+        "frontier": true,
+        "color": "@model-opus",
+        "symbol": "square",
+        "bootstrap": 0.861,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sonnet:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:sonnet",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sonnet",
+        "model_label": "Claude Sonnet 4.6",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.679488,
+        "y": 0.644444,
+        "x_ci": [0.461425, 0.926388],
+        "y_ci": [0.477778, 0.8],
+        "frontier": false,
+        "color": "@model-sonnet",
+        "symbol": "square",
+        "bootstrap": 0.0005,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:haiku:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:haiku",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "haiku",
+        "model_label": "Claude Haiku 4.5",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.37357,
+        "y": 0.6,
+        "x_ci": [0.308035, 0.440719],
+        "y_ci": [0.433333, 0.755556],
+        "frontier": true,
+        "color": "@model-haiku",
+        "symbol": "square",
+        "bootstrap": 0.5115,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:sol:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:sol",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "sol",
+        "model_label": "GPT-5.6 Sol",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.440661,
+        "y": 0.744444,
+        "x_ci": [0.341663, 0.553393],
+        "y_ci": [0.588889, 0.888889],
+        "frontier": true,
+        "color": "@model-sol",
+        "symbol": "square",
+        "bootstrap": 0.587,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:luna:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:luna",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "luna",
+        "model_label": "GPT-5.6 Luna",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.029976,
+        "y": 0.533333,
+        "x_ci": [0.023563, 0.037023],
+        "y_ci": [0.355556, 0.7],
+        "frontier": true,
+        "color": "@model-luna",
+        "symbol": "square",
+        "bootstrap": 0.9985,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      },
+      {
+        "id": "swe:all-arena-v14:kimi:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+        "label": "pi:kimi",
+        "cohort": "All-Arena reprofile r1-r3",
+        "qualifier": null,
+        "sample": "30 unique tasks over 3 repetitions",
+        "model": "kimi",
+        "model_label": "Kimi K3",
+        "harness": "pi",
+        "harness_label": "Pi",
+        "x": 0.455158,
+        "y": 0.722222,
+        "x_ci": [0.322859, 0.607449],
+        "y_ci": [0.577778, 0.855556],
+        "frontier": false,
+        "color": "@model-kimi",
+        "symbol": "square",
+        "bootstrap": 0.3095,
+        "single_replicate": false,
+        "publication_scope": "swe-all-arena-v14-r1-r3",
+        "replicates": 3
+      }
+    ],
+    "path": [
+      "swe:all-arena-v14:luna:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:luna:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:haiku:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:sol:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:opus:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:fable:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+      "swe:all-arena-v14:fable:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+    ],
+    "models": [
+      {
+        "key": "fable",
+        "label": "Claude Fable 5",
+        "color": "@model-fable"
+      },
+      {
+        "key": "opus",
+        "label": "Claude Opus 4.8",
+        "color": "@model-opus"
+      },
+      {
+        "key": "sonnet",
+        "label": "Claude Sonnet 4.6",
+        "color": "@model-sonnet"
+      },
+      {
+        "key": "haiku",
+        "label": "Claude Haiku 4.5",
+        "color": "@model-haiku"
+      },
+      {
+        "key": "sol",
+        "label": "GPT-5.6 Sol",
+        "color": "@model-sol"
+      },
+      {
+        "key": "luna",
+        "label": "GPT-5.6 Luna",
+        "color": "@model-luna"
+      },
+      {
+        "key": "kimi",
+        "label": "Kimi K3",
+        "color": "@model-kimi"
+      }
+    ],
+    "harnesses": [
+      {
+        "key": "pi",
+        "label": "Pi",
+        "symbol": "square"
+      },
+      {
+        "key": "codex",
+        "label": "Codex",
+        "symbol": "triangle-up"
+      },
+      {
+        "key": "cc",
+        "label": "Claude Code",
+        "symbol": "diamond"
+      }
+    ],
+    "subsets": [
+      {
+        "model": null,
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:luna:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:haiku:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:sol:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:opus:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:fable:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": null,
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:luna:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:haiku:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:sol:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:opus:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:fable:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": null,
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:luna:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:sonnet:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:kimi:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:opus:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:fable:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:fable:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:fable:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:fable:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:fable:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "fable",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:fable:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:opus:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:opus:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:opus:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:opus:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "opus",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:opus:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:sonnet:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:sonnet:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:sonnet:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:sonnet:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sonnet",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:sonnet:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:haiku:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:haiku:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:haiku:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "haiku",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:haiku:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:sol:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:sol:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:sol:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:sol:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "sol",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:sol:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:luna:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:luna:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:luna:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:luna:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "luna",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:luna:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": null,
+        "path": [
+          "swe:all-arena-v14:kimi:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7",
+          "swe:all-arena-v14:kimi:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "pi",
+        "path": [
+          "swe:all-arena-v14:kimi:pi:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "codex",
+        "path": [
+          "swe:all-arena-v14:kimi:codex:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      },
+      {
+        "model": "kimi",
+        "harness": "cc",
+        "path": [
+          "swe:all-arena-v14:kimi:cc:sha256:f48cd74a7b628be67703bf1a6ad11bf3e59af79e91d6f92f69dd547f6246c7c7"
+        ]
+      }
+    ],
+    "notes": "the all-Arena reprofile: all 21 cells on identical tasks, replicates and route class; Codex × Kimi K3 ran as its own sealed campaign on the same protocol · 7/21 observations are nondominated on the empirical means · large filled/labeled = frontier · small open = dominated · icon = harness · Pareto membership is descriptive; intervals show uncertainty and can overlap · cost is token usage repriced under one frozen price schedule (agentbrane-research-2026-09-01-v3) so systems billed through different routes stay comparable; it need not equal what was actually paid · bootstrap frequency is not a posterior probability · The cost axis is logarithmic because the included systems span more than three orders of magnitude."
+  },
+  "table": {
+    "columns": [
+      "system",
+      "resolved",
+      "resolved 95% CI",
+      "standardized cost/rollout",
+      "standardized cost 95% CI",
+      "standardized cost/solve",
+      "frontier bootstrap",
+      "Pareto",
+      "dominated by"
+    ],
+    "rows": [
+      [
+        "GPT-5.6 Luna · Pi",
+        "53.3%",
+        "35.6%–70.0%",
+        "$0.030",
+        "$0.024–$0.037",
+        "$0.056",
+        "100%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "GPT-5.6 Luna · Codex",
+        "55.6%",
+        "37.8%–72.2%",
+        "$0.035",
+        "$0.028–$0.044",
+        "$0.064",
+        "79%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "Claude Haiku 4.5 · Pi",
+        "60.0%",
+        "43.3%–75.6%",
+        "$0.374",
+        "$0.308–$0.441",
+        "$0.623",
+        "51%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "GPT-5.6 Sol · Pi",
+        "74.4%",
+        "58.9%–88.9%",
+        "$0.441",
+        "$0.342–$0.553",
+        "$0.592",
+        "59%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "Claude Opus 4.8 · Pi",
+        "82.2%",
+        "71.1%–92.2%",
+        "$0.473",
+        "$0.272–$0.725",
+        "$0.575",
+        "86%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "Claude Fable 5 · Pi",
+        "96.7%",
+        "91.1%–100.0%",
+        "$0.666",
+        "$0.494–$0.875",
+        "$0.689",
+        "99%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "Claude Fable 5 · Claude Code",
+        "97.8%",
+        "93.3%–100.0%",
+        "$1.329",
+        "$1.101–$1.601",
+        "$1.360",
+        "34%",
+        {
+          "kind": "status",
+          "value": "frontier",
+          "tone": "good"
+        },
+        "—"
+      ],
+      [
+        "GPT-5.6 Luna · Claude Code",
+        "55.6%",
+        "38.9%–72.2%",
+        "$0.152",
+        "$0.120–$0.190",
+        "$0.274",
+        "38%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Luna · Codex"
+      ],
+      [
+        "Claude Haiku 4.5 · Codex",
+        "57.8%",
+        "41.1%–74.4%",
+        "$0.392",
+        "$0.296–$0.510",
+        "$0.678",
+        "26%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Haiku 4.5 · Pi"
+      ],
+      [
+        "Claude Haiku 4.5 · Claude Code",
+        "52.2%",
+        "36.7%–67.8%",
+        "$0.426",
+        "$0.346–$0.507",
+        "$0.816",
+        "1%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Haiku 4.5 · Codex, Claude Haiku 4.5 · Pi, GPT-5.6 Luna · Claude Code, GPT-5.6 Luna · Codex, GPT-5.6 Luna · Pi"
+      ],
+      [
+        "Kimi K3 · Pi",
+        "72.2%",
+        "57.8%–85.6%",
+        "$0.455",
+        "$0.323–$0.607",
+        "$0.630",
+        "31%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "GPT-5.6 Sol · Pi"
+      ],
+      [
+        "GPT-5.6 Sol · Codex",
+        "73.3%",
+        "57.8%–87.8%",
+        "$0.561",
+        "$0.442–$0.702",
+        "$0.765",
+        "6%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Opus 4.8 · Pi, GPT-5.6 Sol · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Claude Code",
+        "66.7%",
+        "51.1%–81.1%",
+        "$0.669",
+        "$0.499–$0.863",
+        "$1.004",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi, Kimi K3 · Pi, Claude Opus 4.8 · Pi, GPT-5.6 Sol · Codex, GPT-5.6 Sol · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Pi",
+        "64.4%",
+        "47.8%–80.0%",
+        "$0.679",
+        "$0.461–$0.926",
+        "$1.054",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi, Kimi K3 · Pi, Claude Opus 4.8 · Pi, GPT-5.6 Sol · Codex, GPT-5.6 Sol · Pi, Claude Sonnet 4.6 · Claude Code"
+      ],
+      [
+        "Claude Opus 4.8 · Codex",
+        "88.9%",
+        "77.8%–97.8%",
+        "$0.694",
+        "$0.491–$0.946",
+        "$0.780",
+        "28%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi"
+      ],
+      [
+        "Claude Sonnet 4.6 · Codex",
+        "68.9%",
+        "53.3%–83.3%",
+        "$0.745",
+        "$0.485–$1.100",
+        "$1.081",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi, Kimi K3 · Pi, Claude Opus 4.8 · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Sol · Codex, GPT-5.6 Sol · Pi"
+      ],
+      [
+        "Kimi K3 · Claude Code",
+        "76.7%",
+        "62.2%–88.9%",
+        "$0.784",
+        "$0.567–$1.045",
+        "$1.023",
+        "1%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi, Claude Opus 4.8 · Codex, Claude Opus 4.8 · Pi"
+      ],
+      [
+        "Kimi K3 · Codex",
+        "74.4%",
+        "60.0%–87.8%",
+        "$0.845",
+        "$0.665–$1.043",
+        "$1.135",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi, Kimi K3 · Claude Code, Claude Opus 4.8 · Codex, Claude Opus 4.8 · Pi, GPT-5.6 Sol · Pi"
+      ],
+      [
+        "Claude Fable 5 · Codex",
+        "96.7%",
+        "91.1%–100.0%",
+        "$0.890",
+        "$0.697–$1.127",
+        "$0.921",
+        "38%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Pi"
+      ],
+      [
+        "Claude Opus 4.8 · Claude Code",
+        "86.7%",
+        "75.6%–95.6%",
+        "$0.976",
+        "$0.733–$1.263",
+        "$1.126",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Codex, Claude Fable 5 · Pi, Claude Opus 4.8 · Codex"
+      ],
+      [
+        "GPT-5.6 Sol · Claude Code",
+        "77.8%",
+        "63.3%–90.0%",
+        "$1.540",
+        "$1.184–$2.095",
+        "$1.980",
+        "0%",
+        {
+          "kind": "status",
+          "value": "dominated",
+          "tone": "muted"
+        },
+        "Claude Fable 5 · Claude Code, Claude Fable 5 · Codex, Claude Fable 5 · Pi, Claude Opus 4.8 · Claude Code, Claude Opus 4.8 · Codex, Claude Opus 4.8 · Pi"
+      ]
+    ],
+    "note": "every row: 30 unique tasks over 3 repetitions"
+  }
+}
