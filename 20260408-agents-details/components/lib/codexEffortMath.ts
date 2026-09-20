@@ -32,8 +32,10 @@
  * - Die geliehenen Volumina gelten als medium-Volumina, auch die der
  *   Plan-Phase (der xhigh-Plan liest also 2,5 × 7 = 17,5 MTok bei Sol). Liest
  *   man die Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in
- *   € gleich, der Prozentwert würde −49 % statt −40 %. Der Kontext beim
- *   Wechsel bleibt fest 180k, also unter der 272k-Schwelle (2× Input).
+ *   € gleich, der Prozentwert würde −49 % statt −40 %. Kontext beim
+ *   Wechsel und Exec-Output kommen als Eingaben aus dem geteilten Szenario
+ *   (./scenarioState.ts, Defaults 180k / 150k je 30 MTok); der 180k-Default
+ *   liegt unter der 272k-Schwelle (2× Input).
  *
  * Mechanik gegenüber opusplan:
  * - opusplan wechselt das MODELL: anderer Preis pro Token, und der Cache
@@ -71,18 +73,28 @@ import {
   readPreis,
   szenarien as opusplanSzenarien,
   toEur,
+  type Ergebnis as OpusplanErgebnis,
   type Modell,
 } from "./opusplanMath";
+import { SZENARIO_DEFAULTS, type Szenario } from "./scenarioState";
 
 export { toEur };
 export type { Modell };
 
 /** Cache-Write für GPT-5.6 und neuer: 1,25× Input, unabhängig von der TTL. */
 export const WRITE_FAKTOR = 1.25;
-/** Kontext beim Moduswechsel, MTok — opusplan-Median (177k), fest, kein Regler. */
-export const CTX = 0.18;
-/** Exec-Output je MTok Exec-Cache-Read — 150k Out auf 30 MTok Read (opusplan-Defaults). */
-export const EXEC_OUT_RATIO = 0.005;
+/** Kontext beim Moduswechsel, MTok — Regler-Default (opusplan-Median 177k). */
+export const DEFAULT_CTX = SZENARIO_DEFAULTS.ctxK / 1000;
+/**
+ * Exec-Output je MTok Exec-Cache-Read bei den Regler-Defaults — 150k Out auf
+ * 30 MTok Read. Kein Modellparameter mehr, nur noch die Vorgabe für Tests und
+ * für `execOutAusRatio()`, falls jemand ohne eigenen Output-Regler rechnet.
+ */
+export const EXEC_OUT_RATIO =
+  SZENARIO_DEFAULTS.outK / 1000 / SZENARIO_DEFAULTS.readM;
+/** Exec-Output (MTok) im Default-Verhältnis zum Exec-Cache-Read. */
+export const execOutAusRatio = (execRead: number): number =>
+  execRead * EXEC_OUT_RATIO;
 
 export type ModellKey = "astra" | "sol" | "terra" | "luna";
 
@@ -153,21 +165,46 @@ export const MODELLE: readonly CodexModell[] = [
 export const DEFAULT_MODELL: ModellKey = "sol";
 
 /**
- * Vergleichsmaßstab der Folie: opusplan bei den Regler-Defaults SEINER Folie
- * (Kontext 180k, Exec 30 MTok / 150k Out, 3 Re-Plans, 1-h-TTL) — 9,27 €,
- * −37 %. Aus opusplanMath abgeleitet statt abgetippt, damit der Wert nicht
- * von der opusplan-Folie wegdriften kann. Nur der Prozentwert ist
- * preisneutral vergleichbar: die Codex-Basis „Nur xhigh“ ist eine teurere
- * Session als „Nur Opus“, weil Sol über Sonnet 5 liegt und f die ganze
- * Session multipliziert.
+ * Platzhalter für die Umrechnung Claude → Codex: heute die Identität, weil
+ * die Codex-Rechnung die Claude-Volumina unverändert leiht (Kopfkommentar).
+ * Sobald eigene Codex-Messungen vorliegen, landet hier die reine Funktion,
+ * die aus dem geteilten Szenario (Claude-Tokenizer, Claude-Schrittzahl) die
+ * Codex-Volumina macht — die Folien-Regler und die opusplan-Folie bleiben
+ * davon unberührt.
  */
-export const OPUSPLAN_REF = opusplanSzenarien({
-  ctx: 0.18,
-  execRead: 30,
-  execOut: 0.15,
-  replans: 3,
-  ttl: DEFAULT_TTL,
-});
+export function toCodexSzenario(s: Szenario): Szenario {
+  return { ...s };
+}
+
+/**
+ * opusplan über einem beliebigen Stand des geteilten Szenarios (1-h-TTL, der
+ * opusplan-Default — dessen TTL-Schalter ist folienlokal und hier unbekannt).
+ * Die Folien-Notiz vergleicht damit live statt gegen `OPUSPLAN_REF`: seit die
+ * Regler geteilt sind, zeigt die opusplan-Folie für dasselbe Szenario sonst
+ * −45 %, während die Codex-Notiz noch „−37 %“ behauptet. Bewusst das rohe
+ * Szenario, nicht `toCodexSzenario()`: verglichen wird, was opusplan mit
+ * denselben Claude-Volumina schafft.
+ */
+export function opusplanVergleich(s: Szenario): OpusplanErgebnis {
+  return opusplanSzenarien({
+    ctx: s.ctxK / 1000,
+    execRead: s.readM,
+    execOut: s.outK / 1000,
+    replans: s.n,
+    ttl: DEFAULT_TTL,
+  });
+}
+
+/**
+ * Vergleichsmaßstab der Folie: opusplan bei den Regler-Defaults des
+ * geteilten Szenarios (Kontext 180k, Exec 30 MTok / 150k Out, 3 Re-Plans,
+ * 1-h-TTL) — 9,27 €, −37 %. Aus opusplanMath und SZENARIO_DEFAULTS
+ * abgeleitet statt abgetippt, damit der Wert nicht von der opusplan-Folie
+ * wegdriften kann. Nur der Prozentwert ist preisneutral vergleichbar: die
+ * Codex-Basis „Nur xhigh“ ist eine teurere Session als „Nur Opus“, weil Sol
+ * über Sonnet 5 liegt und f die ganze Session multipliziert.
+ */
+export const OPUSPLAN_REF = opusplanVergleich(SZENARIO_DEFAULTS);
 
 export function modellByKey(key: ModellKey): CodexModell {
   const m = MODELLE.find((x) => x.key === key);
@@ -197,8 +234,12 @@ export interface Eingaben {
   modell: ModellKey;
   /** Wie viel teurer dieselbe Aufgabe auf xhigh ist als auf medium (Regler). */
   faktor: number;
+  /** Kontextgröße beim Effort-Wechsel, MTok (Regler, Default 0,18). */
+  ctx: number;
   /** Cache-Read-Volumen der Umsetzungs-Phase auf medium, MTok. */
   execRead: number;
+  /** Output der Umsetzungs-Phase auf medium, MTok (Regler, Default 0,15). */
+  execOut: number;
   /** Rückkehren in den Plan-Modus ohne vorheriges /compact. */
   replans: number;
   /** Experimenteller Schalter: `configuration_update` statt Prefix-Änderung, Bruch = 0. */
@@ -235,17 +276,42 @@ export interface Ergebnis {
   balkenUeberAb: number;
 }
 
+/** Exec-Output je MTok Exec-Cache-Read der Eingaben (das Verhältnis der Regler). */
+const outRatio = (e: Eingaben): number => e.execOut / e.execRead;
+
+/**
+ * Kostengeraden fürs Break-even-Chart: Gesamtkosten (USD) bei x MTok
+ * Exec-Cache-Read, Output skaliert mit dem Regler-Verhältnis execOut/execRead
+ * (Gegenstück zu `kostenGerade` in ./opusplanMath.ts). Beide Geraden tragen
+ * denselben xhigh-Plan; „Nur xhigh“ steigt f-mal so steil, der Effort-Wechsel
+ * startet um den Bruch höher. Schnittpunkt = `breakEvenRead`.
+ */
+export function kostenGeraden(e: Eingaben): {
+  nurXhigh: (x: number) => number;
+  effortWechsel: (x: number) => number;
+} {
+  const m = modellByKey(e.modell);
+  const c = m.capFaktor;
+  const f = e.faktor;
+  const planXhigh = f * c * phasenKosten(m, PLAN.out, PLAN.read, PLAN.write);
+  const bruch = e.cacheErhalten ? 0 : c * bruchKosten(m, e.ctx);
+  const proMtokMedium = c * (readPreis(m) + outRatio(e) * m.output);
+  return {
+    nurXhigh: (x) => planXhigh + f * x * proMtokMedium,
+    effortWechsel: (x) => planXhigh + bruch + x * proMtokMedium,
+  };
+}
+
 export function szenarien(e: Eingaben): Ergebnis {
   const m = modellByKey(e.modell);
   const c = m.capFaktor;
   const f = e.faktor;
-  const execOut = e.execRead * EXEC_OUT_RATIO;
 
   const planMedium = c * phasenKosten(m, PLAN.out, PLAN.read, PLAN.write);
-  const execMedium = c * (execOut * m.output + e.execRead * readPreis(m));
+  const execMedium = c * (e.execOut * m.output + e.execRead * readPreis(m));
   const planXhigh = f * planMedium;
   const execXhigh = f * execMedium;
-  const bruch = e.cacheErhalten ? 0 : c * bruchKosten(m, CTX);
+  const bruch = e.cacheErhalten ? 0 : c * bruchKosten(m, e.ctx);
 
   const nurMedium = planMedium + execMedium;
   const nurXhigh = planXhigh + execXhigh;
@@ -257,7 +323,7 @@ export function szenarien(e: Eingaben): Ergebnis {
 
   const ersparnis = nurXhigh - effortWechsel;
   const proMtokErsparnis =
-    (f - 1) * c * (readPreis(m) + EXEC_OUT_RATIO * m.output);
+    (f - 1) * c * (readPreis(m) + outRatio(e) * m.output);
   const breakEvenRead = f > 1 ? bruch / proMtokErsparnis : Infinity;
   const breakEvenFaktor = 1 + bruch / execMedium;
 

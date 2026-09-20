@@ -7,9 +7,20 @@
  *   Step 1 → + Break-even-Chart (rechte Hälfte, visibility-Toggle: kein Reflow)
  *   Step 2 → + Anti-Pattern-Balken und ⚠-Warnung (Re-Plans ohne /compact)
  * Die Regler sind orthogonal zu den Klick-Schritten (kein Override-Muster
- * nötig); `@click.stop` auf der Regler-Zeile verhindert Folienwechsel.
+ * nötig); `@click.stop` auf der Regler-Zeile verhindert Folienwechsel, und
+ * die Zeile gibt nach jeder Zeigerbedienung den Fokus ab (`blurLater`, Muster
+ * und Begründung in ./CodexEffortBreakEven.vue) — sonst frisst ein weiterhin
+ * fokussierter Regler oder TTL-Button den nächsten Pfeil des Presenter-
+ * Klickers und die Folie steht still.
+ *
+ * Die vier Szenario-Regler (Kontext, Exec-Read, Exec-Out, Re-Plans) sind
+ * modul-globaler Zustand aus ./lib/scenarioState.ts, geteilt mit der
+ * Codex-Folie: beide Rechner beschreiben dasselbe Szenario, sonst wären die
+ * Ersparnisse nicht vergleichbar. Nur die TTL ist Claude-spezifisch und
+ * bleibt lokal.
  *
  * Rechenmodell und Datenherkunft: ./lib/opusplanMath.ts (per vitest gepinnt).
+ * Chart: ./BreakEvenChart.vue (geteilt mit der Codex-Folie).
  */
 import { computed, ref } from "vue";
 import { fmt } from "./paretoData";
@@ -22,19 +33,26 @@ import {
   DEFAULT_TTL,
   type Ttl,
 } from "./lib/opusplanMath";
+import {
+  SZENARIO_BEREICHE as B,
+  ctxK,
+  n,
+  outK,
+  readM,
+} from "./lib/scenarioState";
+import BreakEvenChart, { type BreakEvenLinie } from "./BreakEvenChart.vue";
 
 const props = defineProps<{ step?: number }>();
 const step = computed(() => props.step ?? 0);
 
-// ── Regler (Anzeige-Einheiten: kTok bzw. MTok) ──────────────────────────────
-const ctxK = ref(180); // Kontext beim Wechsel, kTok (Median 177k)
-const readM = ref(30); // Exec-Cache-Read, MTok (Median lange Läufe ~31M)
-const outK = ref(150); // Exec-Output, kTok
-// Default 3: dort liegen Anti-Pattern und „Nur Opus“ praktisch gleichauf — der
-// Schnittpunkt der Balken liegt bei 3,05, die vierte Rückkehr schiebt den
-// Balken klar darüber. Beobachtetes Maximum der eigenen Historie: 13.
-const n = ref(3); // Re-Plans ohne /compact
+// ── Regler (Anzeige-Einheiten: kTok bzw. MTok; Defaults in scenarioState) ───
 const ttl = ref<Ttl>(DEFAULT_TTL); // 1 h — Begründung in opusplanMath.ts
+
+const blurActive = () => (document.activeElement as HTMLElement | null)?.blur();
+const blurLater = () => {
+  blurActive();
+  setTimeout(blurActive, 0);
+};
 
 const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
 
@@ -84,17 +102,16 @@ const prozent = computed(() =>
   Math.round(Math.abs(erg.value.ersparnisProzent)),
 );
 
-// ── Break-even-Chart (SVG, logische Einheiten 440×190) ──────────────────────
-const XL = 36;
-const XT = 10;
-const XW = 394;
-const XH = 156;
+// ── Break-even-Chart (Geraden in €, Darstellung in ./BreakEvenChart.vue) ────
 const ratio = computed(() => outK.value / 1000 / readM.value);
 const xStar = computed(() => erg.value.breakEvenRead);
 // x-Leiter {12, 20}: mit Sonnet 5 bleibt der Break-even überall unter
 // 8,4 MTok (per Test gepinnt), die 20er-Sprosse ist also Reserve für den
 // nächsten Preiswechsel — mit Sonnet 4.6 wurden es bis zu 18,9 MTok.
 const xMax = computed(() => (xStar.value > 12 ? 20 : 12));
+const xTicks = computed(() =>
+  xMax.value === 12 ? [0, 4, 8, 12] : [0, 5, 10, 15, 20],
+);
 const yOpus = (x: number) =>
   toEur(kostenGerade(OPUS, OPUS, ttl.value, ratio.value, 0, x));
 const yPlan = (x: number) =>
@@ -108,35 +125,14 @@ const yPlan = (x: number) =>
       x,
     ),
   );
-// 8 % Luft über der oberen Geraden: ohne sie darf sie die Decke berühren, und
-// das Label „Nur Opus" sitzt 5 px darüber — also außerhalb der viewBox. Trat
-// bei 288 durchgefahrenen Reglerstellungen 8× auf, mit 1-h-TTL schon bei den
-// Defaults (14,98 € gegen Sprosse 15). Die Sprosse 20 verhindert, dass die
-// Luft direkt auf 25 springt und die Geraden im unteren Drittel kleben.
-const Y_LEITER = [15, 20, 25, 40, 60];
-const Y_LUFT = 1.08;
-const yMax = computed(() =>
-  sprosse(Y_LEITER, Math.max(yOpus(xMax.value), yPlan(xMax.value)) * Y_LUFT),
-);
-const sx = (x: number) => XL + (x / xMax.value) * XW;
-const sy = (v: number) => XT + XH - (v / yMax.value) * XH;
-const xTicks = computed(() =>
-  xMax.value === 12 ? [0, 4, 8, 12] : [0, 5, 10, 15, 20],
-);
-const yTickMap: Record<number, number[]> = {
-  15: [5, 10, 15],
-  20: [10, 20],
-  25: [10, 20],
-  40: [20, 40],
-  60: [30, 60],
-};
-const yTicks = computed(() => yTickMap[yMax.value] ?? [yMax.value]);
-const schnittX = computed(() => sx(xStar.value));
-const schnittY = computed(() => sy(yOpus(xStar.value)));
-const badgeLinks = computed(() => xStar.value > xMax.value * 0.55);
-const reglerImBild = computed(() => readM.value <= xMax.value);
-// Label links vom Marker, sobald er in der rechten Plot-Hälfte steht
-const reglerRechts = computed(() => sx(readM.value) > XL + XW / 2);
+// Die y-Leiter {15, 20, 25, 40, 60} und die 8 % Luft sind die Defaults des
+// Charts; die Sprosse 20 verhindert, dass die Luft direkt auf 25 springt und
+// die Geraden im unteren Drittel kleben (mit 1-h-TTL schon bei den Defaults:
+// 14,98 € gegen Sprosse 15).
+const chartLines = computed<BreakEvenLinie[]>(() => [
+  { label: "Nur Opus", cls: "warning", at: yOpus },
+  { label: "opusplan", cls: "info", at: yPlan },
+]);
 
 // ── Texte ───────────────────────────────────────────────────────────────────
 const bruchEur = computed(() => fmt(toEur(erg.value.bruchEinmal)));
@@ -179,21 +175,27 @@ const chartLabel = computed(
 <template>
   <div class="ob">
     <!-- Regler -->
-    <div class="ob-controls" @click.stop>
+    <div class="ob-controls" @click.stop="blurLater" @change="blurLater">
       <label class="ob-slider">
         <span>Kontext</span>
         <input
           v-model.number="ctxK"
           type="range"
-          min="80"
-          max="700"
-          step="10"
+          :min="B.ctxK.min"
+          :max="B.ctxK.max"
+          :step="B.ctxK.step"
         />
         <span class="ob-val">{{ ctxK }}k</span>
       </label>
       <label class="ob-slider">
         <span>Exec-Read</span>
-        <input v-model.number="readM" type="range" min="5" max="120" step="1" />
+        <input
+          v-model.number="readM"
+          type="range"
+          :min="B.readM.min"
+          :max="B.readM.max"
+          :step="B.readM.step"
+        />
         <span class="ob-val">{{ readM }} M</span>
       </label>
       <label class="ob-slider">
@@ -201,15 +203,21 @@ const chartLabel = computed(
         <input
           v-model.number="outK"
           type="range"
-          min="80"
-          max="400"
-          step="10"
+          :min="B.outK.min"
+          :max="B.outK.max"
+          :step="B.outK.step"
         />
         <span class="ob-val">{{ outK }}k</span>
       </label>
       <label class="ob-slider">
         <span>Re-Plans</span>
-        <input v-model.number="n" type="range" min="0" max="13" step="1" />
+        <input
+          v-model.number="n"
+          type="range"
+          :min="B.n.min"
+          :max="B.n.max"
+          :step="B.n.step"
+        />
         <span class="ob-val">{{ n }}×</span>
       </label>
       <div class="ob-ttl-wrap">
@@ -290,138 +298,15 @@ const chartLabel = computed(
       <!-- Break-even-Chart -->
       <div :class="{ 'ob-versteckt': !showChart }">
         <div class="ob-h">Ab wann lohnt der Cache-Bruch?</div>
-        <svg
+        <BreakEvenChart
           class="ob-chart"
-          viewBox="0 0 440 190"
-          role="img"
+          :lines="chartLines"
+          :read-m="readM"
+          :break-even="xStar"
+          :x-max="xMax"
+          :x-ticks="xTicks"
           :aria-label="chartLabel"
-        >
-          <!-- Erfolgs-Tönung rechts vom Break-even -->
-          <rect
-            :x="schnittX"
-            :y="XT"
-            :width="sx(xMax) - schnittX"
-            :height="XH"
-            class="ob-ok"
-          />
-          <!-- Gitter + Achsen -->
-          <g class="ob-grid">
-            <line
-              v-for="t in yTicks"
-              :key="'y' + t"
-              :x1="XL"
-              :y1="sy(t)"
-              :x2="sx(xMax)"
-              :y2="sy(t)"
-            />
-            <line :x1="XL" :y1="XT" :x2="XL" :y2="XT + XH" class="ob-achse" />
-            <line
-              :x1="XL"
-              :y1="XT + XH"
-              :x2="sx(xMax)"
-              :y2="XT + XH"
-              class="ob-achse"
-            />
-          </g>
-          <g class="ob-ticktext">
-            <text
-              v-for="t in yTicks"
-              :key="'yt' + t"
-              :x="XL - 4"
-              :y="sy(t) + 3"
-              text-anchor="end"
-            >
-              {{ t }} €
-            </text>
-            <text
-              v-for="t in xTicks"
-              :key="'xt' + t"
-              :x="sx(t)"
-              :y="XT + XH + 12"
-              text-anchor="middle"
-            >
-              {{ t }}
-            </text>
-            <text
-              :x="sx(xMax)"
-              :y="XT + XH + 12"
-              text-anchor="end"
-              dy="10"
-              class="ob-achslabel"
-            >
-              MTok Exec-Cache-Read
-            </text>
-          </g>
-          <!-- eigener Regler-Wert -->
-          <g v-if="reglerImBild">
-            <line
-              :x1="sx(readM)"
-              :y1="XT"
-              :x2="sx(readM)"
-              :y2="XT + XH"
-              class="ob-regler"
-            />
-            <text
-              :x="reglerRechts ? sx(readM) - 4 : sx(readM) + 4"
-              :y="XT + 10"
-              :text-anchor="reglerRechts ? 'end' : 'start'"
-              class="ob-reglertext"
-            >
-              dein Regler: {{ readM }} MTok
-            </text>
-          </g>
-          <!-- Wert jenseits der Achse: Hinweis oben links (rechts sitzen die Linien-Labels) -->
-          <text
-            v-else
-            :x="XL + 6"
-            :y="XT + 10"
-            text-anchor="start"
-            class="ob-reglertext"
-          >
-            dein Regler: {{ readM }} MTok →
-          </text>
-          <!-- Kostengeraden -->
-          <line
-            :x1="sx(0)"
-            :y1="sy(yOpus(0))"
-            :x2="sx(xMax)"
-            :y2="sy(yOpus(xMax))"
-            class="ob-l-opus"
-          />
-          <line
-            :x1="sx(0)"
-            :y1="sy(yPlan(0))"
-            :x2="sx(xMax)"
-            :y2="sy(yPlan(xMax))"
-            class="ob-l-plan"
-          />
-          <text
-            :x="sx(xMax) - 4"
-            :y="sy(yOpus(xMax)) - 5"
-            text-anchor="end"
-            class="ob-lt-opus"
-          >
-            Nur Opus
-          </text>
-          <text
-            :x="sx(xMax) - 4"
-            :y="sy(yPlan(xMax)) + 12"
-            text-anchor="end"
-            class="ob-lt-plan"
-          >
-            opusplan
-          </text>
-          <!-- Break-even-Marker -->
-          <circle :cx="schnittX" :cy="schnittY" r="4" class="ob-punkt" />
-          <text
-            :x="badgeLinks ? schnittX - 8 : schnittX + 8"
-            :y="schnittY - 8"
-            :text-anchor="badgeLinks ? 'end' : 'start'"
-            class="ob-badge"
-          >
-            Break-even ≈ {{ fmt1(xStar) }} MTok
-          </text>
-        </svg>
+        />
       </div>
     </div>
 
@@ -590,78 +475,6 @@ const chartLabel = computed(
   font-size: 10px;
   line-height: 1.35;
   color: var(--color-text-tertiary);
-}
-
-/* Chart */
-.ob-chart {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-.ob-ok {
-  fill: color-mix(in srgb, var(--color-text-success) 7%, transparent);
-}
-.ob-grid line {
-  stroke: var(--color-border-tertiary);
-  stroke-width: 0.5;
-}
-.ob-grid .ob-achse {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-}
-.ob-ticktext text {
-  font-size: 9px;
-  fill: var(--color-text-tertiary);
-}
-.ob-achslabel {
-  font-size: 9px;
-}
-.ob-regler {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-}
-.ob-reglertext {
-  font-size: 9.5px;
-  fill: var(--color-text-secondary);
-  paint-order: stroke;
-  stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 3;
-}
-.ob-l-opus {
-  stroke: var(--color-text-warning);
-  stroke-width: 2;
-}
-.ob-l-plan {
-  stroke: var(--color-text-info);
-  stroke-width: 2;
-}
-.ob-lt-opus,
-.ob-lt-plan {
-  font-size: 10px;
-  font-weight: 600;
-  paint-order: stroke;
-  stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 3;
-}
-.ob-lt-opus {
-  fill: var(--color-text-warning);
-}
-.ob-lt-plan {
-  fill: var(--color-text-info);
-}
-.ob-punkt {
-  fill: var(--color-text-primary);
-  stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 1.5;
-}
-.ob-badge {
-  font-size: 10px;
-  font-weight: 600;
-  fill: var(--color-text-primary);
-  paint-order: stroke;
-  stroke: var(--deck-surface, var(--color-background-primary));
-  stroke-width: 3;
 }
 
 /* Erklärungs-/Warn-Box */

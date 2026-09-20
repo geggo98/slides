@@ -713,7 +713,7 @@ Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige A
 
 <div class="mt-4 text-sm opacity-60">
 
-**Codex**: **kein** automatischer Modell-Split — Wechsel nur manuell, offener Feature-Request [openai/codex#20596](https://github.com/openai/codex/issues/20596). Seit 0.105.0 aber ein automatischer **Effort**-Split: <Link to="codex-effort-wechsel">übernächste Folie</Link>.
+**Codex**: **kein** automatischer Modell-Split — Wechsel nur manuell, offener Feature-Request [openai/codex#20596](https://github.com/openai/codex/issues/20596). Seit 0.105.0 aber ein automatischer **Effort**-Split: <Link to="codex-effort">übernächste Folie</Link>.
 
 </div>
 
@@ -825,40 +825,160 @@ Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
 
 ---
 hideInToc: true
-routeAlias: codex-effort-wechsel
-clicks: 3
+routeAlias: codex-effort
+clicks: 6
 ---
 
 # Codex: `xhigh` plant, `medium` führt aus
 
-<div class="text-sm opacity-70 leading-snug mb-2">Kein Modell-Split wie <code>opusplan</code>, aber ein automatischer <b>Effort</b>-Split seit Codex CLI <b>0.105.0</b> (25.02.2026) — dieselbe Rechnung.</div>
+<div class="text-sm opacity-70 leading-snug mb-2">Kein Modell-Split wie <code>opusplan</code>, aber ein automatischer <b>Effort</b>-Split seit Codex CLI <b>0.105.0</b> (25.02.2026) — dieselbe Rechnung: <Link to="codex-effort-wechsel">nächste Folie</Link>.</div>
 
-<div class="grid gap-6 items-start mb-2" style="grid-template-columns: minmax(0, 400px) 1fr">
-<div style="--slidev-code-font-size: 11px; --slidev-code-line-height: 15px">
-<div class="opacity-60 leading-none mb-1" style="font-family: var(--slidev-code-font-family); font-size: 10.5px">~/.codex/config.toml</div>
+<div class="grid gap-6 items-start" style="grid-template-columns: minmax(0, 360px) 1fr">
+<div>
 
-```toml
-model = "gpt-5.6-sol"  # oder gpt-6-astra, -terra, -luna
-model_reasoning_effort = "medium"
-# ⚠ Desktop-App ignoriert diesen Key (#18712)
-plan_mode_reasoning_effort = "xhigh"
-[features]
-# ⚠ experimentell, nur Astra
-reasoning_effort_override = true
-```
+<CodexConfigToml :step="$clicks" />
+
+<div class="text-xs opacity-60 leading-snug mt-2"><b>Von Hand (TUI):</b> <code>/plan</code> · <code>/model</code> · Modell, Stufe, dann „Apply to Plan mode override“ — schreibt <code>plan_mode_reasoning_effort</code> dauerhaft. Nur für die Session: <kbd>Alt</kbd>+<kbd>,</kbd> / <kbd>Alt</kbd>+<kbd>.</kbd> = Effort ↓/↑.</div>
+
+<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch vermeiden — in 0.154 erst halb verdrahtet, laut API-Doku nur GPT-6 Astra. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
 
 </div>
-<div class="text-sm leading-snug">
-<div><b>Von Hand (TUI)</b> <CodexReasoningScopeInfo :step="$clicks" />: Shift+Tab → Plan · <code>/model</code> → „Apply to Plan mode override“ · Alt+,/. = Effort ↓/↑.</div>
-<div class="text-xs opacity-60 mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch per <code>configuration_update</code> vermeiden — in 0.154 noch buggy, laut API-Doku nur GPT-6 Astra.<br>Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
+<div>
+
+<CodexEffortTui :step="$clicks" />
+
 </div>
 </div>
 
-<CodexEffortBreakEven :step="$clicks >= 3 ? 1 : 0" />
+<!--
+Klicks (sechs, nur die Klicks laufen im Presenter- und im Publikumsfenster
+synchron; die Tipp-Animation läuft je Fenster): 1 tippt /plan — die
+Statuszeile zeigt „Plan mode“. 2 tippt /model, darunter erscheint die
+Slash-Zeile. 3 „Select Model and Effort“: sol ist Default, terra „current“
+— die Wahl schreibt model und model_reasoning_effort GLOBAL, deshalb
+leuchtet links die model-Zeile. 4 „Select Reasoning Level for gpt-5.6-sol“,
+der Cursor wandert von Medium auf Extra high; links sind BEIDE Effort-Zeilen
+schwach markiert, weil erst der nächste Dialog entscheidet, wohin der Wert
+geht. 5 „Apply reasoning change“ — Option 1 „Apply to Plan mode override“
+schreibt nur plan_mode_reasoning_effort, die Zeile leuchtet allein. 6 das
+Ergebnis: zwei Meldungen („Model changed to gpt-5.6-sol medium“ und
+„… xhigh for Plan mode.“), Statuszeile gpt-5.6-sol xhigh · Plan mode;
+links stehen die drei geschriebenen Zeilen grün. Zurück (←) nimmt jeden
+Schritt ohne Animation zurück. Nachbau mit dem brainless-Port (MIT,
+shared/components/brainless); die Texte sind wörtlich aus Codex CLI
+0.153.4 (Screenshots 19.09.2026) bzw. aus den Quellen unten. Der Dialog
+in Klick 5 zeigt den Moment VOR dem ersten Override, die TOML-Zeile ist
+sein Ergebnis. Die zweite Beschreibung endet auf „built-in Plan default
+(medium)“, weil kein plan_mode_reasoning_effort gesetzt ist: medium ist
+der fest eingebaute Plan-Preset-Wert
+(models-manager/src/collaboration_mode_presets.rs, per
+collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
+und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
+
+Versionsbeleg: PR openai/codex#12303 „Improve Plan mode reasoning
+selection flow“, gemerged 21.02.2026, erstes Release
+rust-v0.105.0 vom 25.02.2026 (Release-Notes nennen #12303/#12307);
+0.104.0 vom 18.02. hatte es noch nicht. Davor war der Plan-Effort auf
+medium hartkodiert (PR #9980, 27.01.2026: „It's overthinking so much on
+high“). Maintainer-Bestätigung: Issue #10033 am 20.03.2026 geschlossen mit
+„This is possible with plan_mode_reasoning_effort = "high"“. Diskussion
+#10628 („Using different models for Plan vs Execute“, 04.02.2026) ist ein
+Nutzer-Vorschlag ohne OpenAI-Beitrag; der Kommentar vom 27.02. beschreibt
+den TUI-Weg, der vom 21.08. hält fest: „This only affects the reasoning
+effort“. Ein MODELL-Split bleibt offen — #20596 (Fußnote der opusplan-
+Folie: Modellwahl vor der Umsetzung) und #19343 (plan_mode_model als
+Config-Key, seit 24.04.2026) — die Fußnote der opusplan-Folie stimmt also
+weiter, nur für den Effort nicht mehr.
+
+Doku: learn.chatgpt.com/docs/config-file/config-reference —
+„Plan-mode-specific reasoning override. When unset, Plan mode uses its
+built-in preset default“ (medium). Gültige Werte laut Doku none…xhigh,
+der Code nimmt auch max und ultra; Ungültiges reicht Codex durch, die API
+antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier: CLI
+0.153.4 und das App-Bundle 0.154.0-alpha.6.2 (≈ Stable 0.154.0 vom
+09.09.2026), beide kennen den Key.
+
+TUI-Beleg (rust-v0.154.0): die Konstanten PLAN_MODE_REASONING_SCOPE_* in
+tui/src/chatwidget.rs L184-186, der Dialog in
+tui/src/chatwidget/model_popups.rs (Beschreibung L349) — „Apply reasoning
+change“ → „Apply to Plan mode override“ („Always use extra high reasoning
+in Plan mode.“ — Codex schreibt das Label „extra high“, nicht xhigh) oder
+„Apply to global default and Plan mode override“. Der Dialog kommt nur im
+Plan-Mode, nur für das aktuelle Modell und nur, wenn die Wahl den
+Plan-Effort oder die gespeicherten Defaults ändert
+(should_prompt_plan_mode_reasoning_scope, L313-331) — daher die Berichte
+„fragt mal, mal nicht“. Ein Modellwechsel im Plan-Mode fragt nicht und
+schreibt model und model_reasoning_effort global. Option 1 schreibt
+plan_mode_reasoning_effort dauerhaft in die config.toml
+(PersistPlanModeReasoningEffort, tui/src/app/event_dispatch.rs); nur
+Alt+, / Alt+. (seit PR #18866, 21.04.2026) bleibt im Plan-Mode
+Session-lokal. Beim Moduswechsel meldet die TUI „Model changed to
+{model} {effort} for Plan mode.“ Desktop-App: #18712 (offen, reproduziert
+20.08.2026 mit genau dieser medium/xhigh-Config) — sie ignoriert den Key.
+
+Cache-Beleg: developers.openai.com/api/docs/guides/prompt-caching, Tabelle
+„Which settings affect the cached prefix?“, Zeile reasoning.effort: „Can
+change model-side reasoning instructions. On supported models, use a
+configuration update to change effort while preserving the earlier
+prefix.“ Und im Abschnitt zum configuration_update: „Keep the top-level
+reasoning.effort at its original value as changing that setting can
+rewrite instructions in the hidden system instructions.“ Codex schreibt den Effort
+nicht in die Instructions, nur als Request-Parameter (core/src/client.rs
+build_reasoning) — der Bruch kommt von OpenAIs verstecktem Prefix.
+Rohdaten #35416 (gpt-5.6-luna, ~15k Input): cached fällt bei jedem Wechsel
+auf eine NEUE Stufe von 14 080 bzw. 15 104 auf 9 984 — das ist der
+sitzungsunabhängige statische Prefix, für den Sitzungsanteil also ein
+voller Bruch; Rückkehr auf eine schon benutzte Stufe innerhalb der TTL
+bricht NICHT (der alte Eintrag lebt noch). Nicht modelliert, konservativ
+gegen den Wechsel. #42996 (Desktop 0.153.4): Hit-Rate 99 % → 12 % / 0 % /
+12 % je Wechsel. Bei 180k Kontext ist (180−10)/180 ≈ 0,94 — praktisch das
+BREAK_SHARE 0,93 von opusplan, deshalb dieselbe Konstante.
+
+Der Schalter: [features] reasoning_effort_override = true — im Quellcode
+Stage UnderDevelopment, default aus, weder im /experimental-Menü noch in
+der Doku; einschaltbar per config.toml, Codex warnt dann („Under-
+development features are incomplete and may behave unpredictably“,
+abschaltbar mit suppress_unstable_features_warning). Er hängt
+configuration_update-Items an die History, statt den Prefix zu ändern
+(core/src/session/reasoning_effort.rs). In 0.154.0 nur HALB verdrahtet:
+der Request-Effort wechselt weiter, der Test in
+core/tests/suite/reasoning_effort_override.rs erwartet dort noch
+medium,high,high,low — der Cache bricht also trotzdem. Das Pinning
+(PR #43795, 08.09.) liegt erst in 0.155.0-alpha. API-Doku
+(…/guides/reasoning#change-reasoning-mid-conversation): „supported only by
+GPT-6 Astra … in standard, single-agent mode“; Codex' Gate ist breiter
+(alle Responses-Lite-Modelle: astra, sol, terra, luna) — ob die API es auf
+5.6 honoriert, ist unbelegt. Der Schalter „Cache erhalten“ auf der Folie
+rechnet den Zielzustand (Bruch 0), nicht den heutigen.
+-->
+
+---
+hideInToc: true
+routeAlias: codex-effort-wechsel
+clicks: 2
+---
+
+# Codex: Ersparnis & Break-even in Euro
+
+<div class="text-sm opacity-70 mb-2">
+
+Dieselbe Rechnung wie bei `opusplan` — gleiches Szenario, gleiche Regler (sie sind gekoppelt), nur der Effort wechselt statt des Modells.
+
+</div>
+
+<CodexEffortBreakEven :step="$clicks" />
 
 <div class="text-xs opacity-70 leading-snug mt-1">Preise/MTok, vorläufig (Sol-Aktion): Astra $10/$50 · Sol $4/$20 · Terra $2/$12 · Luna $0,20/$1,20 · Read 0,1× · Write 1,25× · TTL 30 min · 1 USD = 0,876 €</div>
 
 <!--
+Klicks wie auf der opusplan-Folie: 1 blendet das Break-even-Chart ein, 2
+den Anti-Pattern-Balken. Die vier Szenario-Regler (Kontext, Exec-Read,
+Exec-Output, Re-Plans) sind mit der opusplan-Folie GEKOPPELT — wer dort
+dreht, sieht es hier, und umgekehrt; so decken beide Rechnungen dasselbe
+Szenario ab und die Ersparnisse bleiben vergleichbar. Eine Umrechnung der
+Claude-Volumina in Codex-Volumina ist noch nicht definiert (Platzhalter
+toCodexSzenario in codexEffortMath.ts).
+
 Rechenmodell (components/lib/codexEffortMath.ts, per vitest gepinnt):
 Gleiches Modell in beiden Phasen, nur der Effort wechselt. Kosten je Phase
 = Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×1,25×In, alle Volumina
@@ -903,6 +1023,7 @@ docs/models). (c) Kleiner ist allein der Write-Multiplikator (1,25× statt
 (0,74 € gegen 0,59 €), weil Sol pro Input-Token das Doppelte von Sonnet
 kostet; das Rückkehr-Paar liegt darunter (1,49 € gegen 2,05 €), weil ohne
 Modellwechsel kein Opus-Write anfällt.
+
 f gilt für die ganze Phase, nicht nur den Output — das ist keine offene
 Frage, das Archiv beantwortet sie: Board-Stand c55e58f2 vom 03.09.
 (data/deepswe/, derselbe, aus dem EFFORTS stammt), xhigh/medium: Sol
@@ -920,95 +1041,6 @@ der von DeepSWE (Sol: 44 % Read, 33 % unkachiert, 23 % Out) — deshalb
 Aufgaben und gibt früher auf, bei Terra (35 % pass@1 auf medium) und Luna
 (11 %) dominiert das, Sol (61 %) und Astra (73 %) sind belastbar. Deshalb
 ist f ein Regler.
-
-Versionsbeleg: PR openai/codex#12303 „Improve Plan mode reasoning
-selection flow“, gemerged 21.02.2026, erstes Release
-rust-v0.105.0 vom 25.02.2026 (Release-Notes nennen #12303/#12307);
-0.104.0 vom 18.02. hatte es noch nicht. Davor war der Plan-Effort auf
-medium hartkodiert (PR #9980, 27.01.2026: „It's overthinking so much on
-high“). Maintainer-Bestätigung: Issue #10033 am 20.03.2026 geschlossen mit
-„This is possible with plan_mode_reasoning_effort = "high"“. Diskussion
-#10628 („Using different models for Plan vs Execute“, 04.02.2026) ist ein
-Nutzer-Vorschlag ohne OpenAI-Beitrag; der Kommentar vom 27.02. beschreibt
-den TUI-Weg, der vom 21.08. hält fest: „This only affects the reasoning
-effort“. Ein MODELL-Split bleibt offen — #20596 (Fußnote der opusplan-
-Folie: Modellwahl vor der Umsetzung) und #19343 (plan_mode_model als
-Config-Key, seit 24.04.2026) — die Fußnote der opusplan-Folie stimmt also
-weiter, nur für den Effort nicht mehr.
-Doku: learn.chatgpt.com/docs/config-file/config-reference —
-„Plan-mode-specific reasoning override. When unset, Plan mode uses its
-built-in preset default“ (medium). Gültige Werte laut Doku none…xhigh,
-der Code nimmt auch max und ultra; Ungültiges reicht Codex durch, die API
-antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier: CLI
-0.153.4 und das App-Bundle 0.154.0-alpha.6.2 (≈ Stable 0.154.0 vom
-09.09.2026), beide kennen den Key.
-
-TUI-Beleg (rust-v0.154.0): die Konstanten PLAN_MODE_REASONING_SCOPE_* in
-tui/src/chatwidget.rs L184-186, der Dialog in
-tui/src/chatwidget/model_popups.rs (Beschreibung L349) — „Apply reasoning
-change“ → „Apply to Plan mode override“ („Always use extra high reasoning
-in Plan mode.“ — Codex schreibt das Label „extra high“, nicht xhigh) oder
-„Apply to global default and Plan mode override“. Der Dialog kommt nur im
-Plan-Mode, nur für das aktuelle Modell und nur, wenn die Wahl den
-Plan-Effort oder die gespeicherten Defaults ändert
-(should_prompt_plan_mode_reasoning_scope, L313-331) — daher die Berichte
-„fragt mal, mal nicht“. Ein Modellwechsel im Plan-Mode fragt nicht und
-schreibt model und model_reasoning_effort global. Option 1 schreibt
-plan_mode_reasoning_effort dauerhaft in die config.toml
-(PersistPlanModeReasoningEffort, tui/src/app/event_dispatch.rs); nur
-Alt+, / Alt+. (seit PR #18866, 21.04.2026) bleibt im Plan-Mode
-Session-lokal. Beim Moduswechsel meldet die TUI „Model changed to
-{model} {effort} for Plan mode.“ Desktop-App: #18712 (offen, reproduziert
-20.08.2026 mit genau dieser medium/xhigh-Config) — sie ignoriert den Key.
-
-Klicks: 1 öffnet den nachgebauten Dialog, 2 schließt ihn, 3 zeigt den
-Anti-Pattern-Balken. Nur die Klicks laufen im Presenter- und im
-Publikumsfenster synchron. Das ⓘ, Escape und der Klick ins Overlay wirken
-nur im eigenen Fenster — fürs Publikum also mit dem Klicker öffnen und
-schließen. Nachbau mit dem brainless-Port (MIT, shared/components/
-brainless, CodexPermissions mit Prop columns); die Texte sind wörtlich aus
-den Quellen oben. Der Dialog zeigt den Moment VOR dem ersten Override, die
-TOML-Zeile der Folie ist sein Ergebnis. Die zweite Beschreibung endet auf
-„built-in Plan default (medium)“, weil kein plan_mode_reasoning_effort
-gesetzt ist: medium ist der fest eingebaute Plan-Preset-Wert
-(models-manager/src/collaboration_mode_presets.rs, per
-collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
-und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
-
-Cache-Beleg: developers.openai.com/api/docs/guides/prompt-caching, Tabelle
-„Which settings affect the cached prefix?“, Zeile reasoning.effort: „Can
-change model-side reasoning instructions. On supported models, use a
-configuration update to change effort while preserving the earlier
-prefix.“ Und im Abschnitt zum configuration_update: „Keep the top-level
-reasoning.effort at its original value as changing that setting can
-rewrite instructions in the hidden system instructions.“ Codex schreibt den Effort
-nicht in die Instructions, nur als Request-Parameter (core/src/client.rs
-build_reasoning) — der Bruch kommt von OpenAIs verstecktem Prefix.
-Rohdaten #35416 (gpt-5.6-luna, ~15k Input): cached fällt bei jedem Wechsel
-auf eine NEUE Stufe von 14 080 bzw. 15 104 auf 9 984 — das ist der
-sitzungsunabhängige statische Prefix, für den Sitzungsanteil also ein
-voller Bruch; Rückkehr auf eine schon benutzte Stufe innerhalb der TTL
-bricht NICHT (der alte Eintrag lebt noch). Nicht modelliert, konservativ
-gegen den Wechsel. #42996 (Desktop 0.153.4): Hit-Rate 99 % → 12 % / 0 % /
-12 % je Wechsel. Bei 180k Kontext ist (180−10)/180 ≈ 0,94 — praktisch das
-BREAK_SHARE 0,93 von opusplan, deshalb dieselbe Konstante.
-
-Der Schalter: [features] reasoning_effort_override = true — im Quellcode
-Stage UnderDevelopment, default aus, weder im /experimental-Menü noch in
-der Doku; einschaltbar per config.toml, Codex warnt dann („Under-
-development features are incomplete and may behave unpredictably“,
-abschaltbar mit suppress_unstable_features_warning). Er hängt
-configuration_update-Items an die History, statt den Prefix zu ändern
-(core/src/session/reasoning_effort.rs). In 0.154.0 nur HALB verdrahtet:
-der Request-Effort wechselt weiter, der Test in
-core/tests/suite/reasoning_effort_override.rs erwartet dort noch
-medium,high,high,low — der Cache bricht also trotzdem. Das Pinning
-(PR #43795, 08.09.) liegt erst in 0.155.0-alpha. API-Doku
-(…/guides/reasoning#change-reasoning-mid-conversation): „supported only by
-GPT-6 Astra … in standard, single-agent mode“; Codex' Gate ist breiter
-(alle Responses-Lite-Modelle: astra, sol, terra, luna) — ob die API es auf
-5.6 honoriert, ist unbelegt. Der Schalter „Cache erhalten“ auf der Folie
-rechnet den Zielzustand (Bruch 0), nicht den heutigen.
 
 Preise: developers.openai.com/api/docs/pricing, geprüft 16.09.2026 —
 Astra $10/$1/$12,50/$50 (In/Cached/Write/Out), Sol $4/$0,40/$5/$20 (Aktion
@@ -2127,6 +2159,21 @@ Der klare Trend: Die Community konvergiert auf **dünne Harnesses**. Frameworks 
 
 </div>
 
+<div class="text-sm opacity-70 mt-4">
+
+Die Zahlen dazu: <Link to="harness-tax">Der Harness als zweite Achse, Kap. 7</Link> — gleicher Erfolg, bis 5× Kosten.
+
+</div>
+
+<!--
+Quelle: browser-use.com/posts/bitter-lesson-agent-frameworks, Gregor
+Zunic (Mitgründer und CTO), 16.01.2026. Der Satz ist der Untertitel des
+Posts; im Text: „99% of the work is done within the model itself. We
+don't need some highly abstract framework around it." Die Begründung mit
+Zahlen liefert Kapitel 7 (HarnessTax): Der Harness verschiebt den Erfolg
+im Mittel nur um ±2 bis ±5 Punkte, die Kosten bis 5×.
+-->
+
 ---
 layout: section
 ---
@@ -2158,21 +2205,6 @@ MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40
 RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert; die Harness-Schicht wird austauschbar. Der Hebel liegt in **Context-Engineering und Domain-Skills**, nicht in Framework-Abstraktionen.
 
 </div>
-
-<div class="text-sm opacity-70 mt-4">
-
-Die Zahlen dazu: <Link to="harness-tax">Der Harness als zweite Achse, Kap. 7</Link> — gleicher Erfolg, bis 5× Kosten.
-
-</div>
-
-<!--
-Quelle: browser-use.com/posts/bitter-lesson-agent-frameworks, Gregor
-Zunic (Mitgründer und CTO), 16.01.2026. Der Satz ist der Untertitel des
-Posts; im Text: „99% of the work is done within the model itself. We
-don't need some highly abstract framework around it." Die Begründung mit
-Zahlen liefert Kapitel 7 (HarnessTax): Der Harness verschiebt den Erfolg
-im Mittel nur um ±2 bis ±5 Punkte, die Kosten bis 5×.
--->
 
 ---
 layout: section

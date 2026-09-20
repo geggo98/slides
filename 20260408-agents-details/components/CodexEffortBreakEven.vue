@@ -1,14 +1,26 @@
 <script setup lang="ts">
 /**
- * CodexEffortBreakEven — interaktive Kostenrechnung zur Codex-Effort-Folie,
- * Schwester von ./OpusplanBreakEven.vue: Effort- statt Modellwechsel, ohne
- * Break-even-Chart (die Folie trägt zusätzlich den Config-Block, der Platz
- * reicht nur für die Balken).
+ * CodexEffortBreakEven — interaktive Kostenrechnung zur Codex-Rechnerfolie,
+ * Schwester von ./OpusplanBreakEven.vue: Effort- statt Modellwechsel,
+ * gleiches Layout (Regler, Balken links, Break-even-Chart rechts, Notiz).
  *
- * Klick-Vertrag (Folie: `clicks: 3`, `:step="$clicks >= 3 ? 1 : 0"` — die
- * Klicks 1–2 gehören dem ⓘ-Popup in ./CodexReasoningScopeInfo.vue):
+ * Klick-Vertrag wie opusplan (`clicks: 2` im Frontmatter, `:step="$clicks"`):
  *   Step 0 → Regler + Szenario-Balken (Nur medium / Nur xhigh / Effort-Wechsel)
- *   Step 1 → + Anti-Pattern-Balken und ⚠-Warnung (Re-Plans ohne /compact)
+ *   Step 1 → + Break-even-Chart (rechte Hälfte, visibility-Toggle: kein Reflow)
+ *   Step 2 → + Anti-Pattern-Balken und ⚠-Warnung (Re-Plans ohne /compact)
+ *
+ * Regler in zwei Zeilen (sieben Bedienelemente passen nicht in 848 px):
+ *   Zeile 1 — Codex-spezifisch: Modell-Pillen, Effort-Faktor, „Cache erhalten“
+ *   Zeile 2 — das Szenario: Kontext, Exec-Read, Exec-Out, Re-Plans. Diese
+ *   vier sind modul-globaler Zustand aus ./lib/scenarioState.ts, geteilt mit
+ *   der opusplan-Folie — beide Rechner beschreiben dasselbe Szenario, sonst
+ *   wären die Ersparnisse („opusplan −37 %“ gegen „Effort-Wechsel −40 %“)
+ *   nicht vergleichbar. Darum rechnet auch die Notiz den opusplan-Vergleich
+ *   live über den geteilten Reglern (`opusplanVergleich`, 1-h-TTL — der
+ *   TTL-Schalter der opusplan-Folie ist dort lokal) statt gegen die
+ *   Default-Konstante `OPUSPLAN_REF`. Eine TTL gibt es hier nicht (OpenAI
+ *   kennt nur 30 min).
+ *
  * Die Regler sind orthogonal zu den Klick-Schritten; `@click.stop` auf der
  * Regler-Zeile verhindert Folienwechsel. Ein fokussierter `<input type="range">`
  * fängt ArrowLeft/Right nativ ab (verändert den eigenen Wert statt die Folie
@@ -22,18 +34,30 @@
  * DeepSWE-Leiter (siehe ./lib/codexEffortMath.ts, Kopfkommentar).
  *
  * Rechenmodell und Datenherkunft: ./lib/codexEffortMath.ts (per vitest gepinnt).
+ * Chart: ./BreakEvenChart.vue (geteilt mit der opusplan-Folie).
  */
 import { computed, ref, watch } from "vue";
 import { fmt } from "./paretoData";
 import {
   DEFAULT_MODELL,
   MODELLE,
-  OPUSPLAN_REF,
   effortFaktorRegler,
+  kostenGeraden,
+  opusplanVergleich,
   szenarien,
+  toCodexSzenario,
   toEur,
+  type Eingaben,
   type ModellKey,
 } from "./lib/codexEffortMath";
+import {
+  SZENARIO_BEREICHE as B,
+  ctxK,
+  n,
+  outK,
+  readM,
+} from "./lib/scenarioState";
+import BreakEvenChart, { type BreakEvenLinie } from "./BreakEvenChart.vue";
 
 const props = defineProps<{ step?: number }>();
 const step = computed(() => props.step ?? 0);
@@ -46,9 +70,8 @@ const faktorManuell = ref(false);
 watch(modellKey, (key) => {
   if (!faktorManuell.value) faktor.value = effortFaktorRegler(key);
 });
-const readM = ref(30); // Exec-Cache-Read, MTok (opusplan-Median)
-// Default 3 wie auf der opusplan-Folie; der Balken kippt hier erst bei 6.
-const n = ref(3); // Re-Plans ohne /compact
+// Szenario-Regler (ctxK, readM, outK, n): siehe Kopfkommentar, geteilt.
+// Default n = 3 wie auf der opusplan-Folie; der Balken kippt hier erst bei 6.
 const cacheErhalten = ref(false); // configuration_update, experimentell
 
 // Fokus abgeben, sobald Maus/Touch fertig sind — sonst frisst ein weiterhin
@@ -74,15 +97,26 @@ const toggleCache = () => {
 
 const fmt1 = (v: number) => v.toFixed(1).replace(".", ",");
 
-const erg = computed(() =>
-  szenarien({
+// Das geteilte Szenario ist Claude-seitig gemessen; `toCodexSzenario` ist
+// heute die Identität und der Ort, an dem eine Codex-Umrechnung landet.
+const eingaben = computed<Eingaben>(() => {
+  const s = toCodexSzenario({
+    ctxK: ctxK.value,
+    readM: readM.value,
+    outK: outK.value,
+    n: n.value,
+  });
+  return {
     modell: modellKey.value,
     faktor: faktor.value,
-    execRead: readM.value,
-    replans: n.value,
+    ctx: s.ctxK / 1000,
+    execRead: s.readM,
+    execOut: s.outK / 1000,
+    replans: s.n,
     cacheErhalten: cacheErhalten.value,
-  }),
-);
+  };
+});
+const erg = computed(() => szenarien(eingaben.value));
 
 // ── Balken (Gesamtkosten in €) ──────────────────────────────────────────────
 const eur = computed(() => ({
@@ -110,7 +144,8 @@ const balkenMax = computed(() => {
 });
 const pct = (v: number) => (v / balkenMax.value) * 100;
 
-const showAnti = computed(() => step.value >= 1);
+const showChart = computed(() => step.value >= 1);
+const showAnti = computed(() => step.value >= 2);
 
 const spart = computed(() => erg.value.ersparnis > 0);
 const deltaWechsel = computed(() => {
@@ -140,7 +175,70 @@ const breakEvenText = computed(() =>
 const breakEvenFaktorText = computed(
   () => `${fmt(Math.ceil(erg.value.breakEvenFaktor * 100) / 100)}×`,
 );
-const opusplanProzent = Math.round(OPUSPLAN_REF.ersparnisProzent);
+// opusplan live über dem geteilten Szenario, nicht OPUSPLAN_REF (Kopfkommentar).
+// Vorzeichen von Hand: unter dem Break-even kostet opusplan mehr als Nur Opus,
+// dann steht „+3 %“ in der Notiz statt „−−3 %“ oder eines falschen „−3 %“.
+const opusplanLive = computed(() =>
+  opusplanVergleich({
+    ctxK: ctxK.value,
+    readM: readM.value,
+    outK: outK.value,
+    n: n.value,
+  }),
+);
+const opusplanProzent = computed(() =>
+  Math.round(Math.abs(opusplanLive.value.ersparnisProzent)),
+);
+const opusplanSchafft = computed(() =>
+  opusplanLive.value.ersparnis >= 0
+    ? `−${opusplanProzent.value} %`
+    : `+${opusplanProzent.value} %`,
+);
+const proMtokEur = computed(() => fmt(toEur(erg.value.proMtokErsparnis)));
+
+// ── Break-even-Chart (Geraden in €, Darstellung in ./BreakEvenChart.vue) ────
+const xStar = computed(() => erg.value.breakEvenRead);
+// x-Leiter {12, 20} wie opusplan: bei Regler-Faktor ≥ 1,5 liegt der Break-even
+// unter 5 MTok (per Test gepinnt); knapp über 1,0× wandert er nach rechts
+// hinaus, dann zeigt das Chart den Hinweis „→“ statt des Markers.
+const xMax = computed(() => (xStar.value > 12 ? 20 : 12));
+const xTicks = computed(() =>
+  xMax.value === 12 ? [0, 4, 8, 12] : [0, 5, 10, 15, 20],
+);
+// y-Leiter über die ganze Spannweite der Modelle: Luna ≈ 1 € bis Astra ×
+// Faktor 8 auf 20 MTok ≈ 200 € (bei 120 MTok wären es 1 160 €, die liegen
+// aber rechts außerhalb der x-Achse).
+const Y_LEITER = [5, 10, 15, 20, 25, 40, 60, 80, 120, 200, 300, 500];
+const Y_TICKS: Record<number, number[]> = {
+  5: [2.5, 5],
+  10: [5, 10],
+  15: [5, 10, 15],
+  20: [10, 20],
+  25: [10, 20],
+  40: [20, 40],
+  60: [30, 60],
+  80: [40, 80],
+  120: [60, 120],
+  200: [100, 200],
+  300: [150, 300],
+  500: [250, 500],
+};
+const chartLines = computed<BreakEvenLinie[]>(() => {
+  const g = kostenGeraden(eingaben.value);
+  return [
+    { label: "Nur xhigh", cls: "warning", at: (x) => toEur(g.nurXhigh(x)) },
+    {
+      label: "Effort-Wechsel",
+      cls: "info",
+      at: (x) => toEur(g.effortWechsel(x)),
+    },
+  ];
+});
+const chartLabel = computed(() =>
+  Number.isFinite(xStar.value)
+    ? `Kostengeraden über dem Exec-Volumen: Break-even bei etwa ${fmt1(xStar.value)} MTok Exec-Cache-Read, darüber ist der Effort-Wechsel billiger als durchgängig xhigh.`
+    : `Kostengeraden über dem Exec-Volumen: bei Faktor ${fmt1(faktor.value)}× gibt es keinen Break-even, der Effort-Wechsel bleibt teurer als durchgängig xhigh.`,
+);
 
 const warnung = computed(() => showAnti.value && n.value >= 1);
 const noteText = computed(() => {
@@ -160,10 +258,17 @@ const noteText = computed(() => {
       : `Ab ${e.balkenUeberAb}× liegt der Balken über „Nur xhigh“`;
     return `${n.value}× zurück in den Plan-Mode ohne /compact: ${brueche}. ${schluss}. Vor erneutem Planen: /compact.`;
   }
+  if (showChart.value) {
+    if (cacheErhalten.value)
+      return `Ohne Cache-Bruch (Zielzustand) gibt es keinen Break-even: jedes MTok Exec-Cache-Read spart ${proMtokEur.value} €, der Wechsel lohnt ab dem ersten Token. Dein Regler: ${eingaben.value.execRead} MTok.`;
+    if (!Number.isFinite(e.breakEvenRead))
+      return `Faktor ${fmt1(faktor.value)}×: xhigh kostet nicht mehr als medium, der Wechsel bringt nichts und zahlt den Bruch (${bruchEur.value} €) obendrauf — kein Break-even.`;
+    return `Break-even bei ${breakEvenText.value} Exec-Cache-Read: der eine Bruch kostet ${bruchEur.value} €, jedes weitere MTok spart ${proMtokEur.value} € (bei Faktor ${fmt1(faktor.value)}×). Dein Regler: ${eingaben.value.execRead} MTok.`;
+  }
   if (cacheErhalten.value)
     return `Ohne Cache-Bruch (configuration_update, Zielzustand): Effort-Wechsel spart ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh, jeder Faktor über 1,0× lohnt sich. Laut API-Doku nur GPT-6 Astra; Codex setzt es erst ab 0.155 vollständig um.`;
   if (spart.value)
-    return `Effort-Wechsel spart hier ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh — opusplan schafft −${opusplanProzent} %. Der eine Cache-Bruch kostet ${bruchEur.value} €, Break-even bei ${breakEvenText.value} Exec-Read.`;
+    return `Effort-Wechsel spart hier ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh — opusplan schafft hier ${opusplanSchafft.value} (1-h-TTL). Der eine Cache-Bruch kostet ${bruchEur.value} €, Break-even bei ${breakEvenText.value} Exec-Read.`;
   return `Effort-Wechsel kostet hier ${fmt(toEur(-e.ersparnis))} € mehr als „Nur xhigh“ — der Faktor ${fmt1(faktor.value)}× liegt unter dem Break-even ab ${breakEvenFaktorText.value}. Erst darüber zahlt sich der Cache-Bruch (${bruchEur.value} €) aus.`;
 });
 
@@ -177,98 +282,164 @@ const balkenLabel = computed(
   <div class="ce">
     <!-- Regler -->
     <div class="ce-controls" @click.stop="blurLater" @change="blurLater">
-      <div class="ce-modell" role="group" aria-label="Modell">
+      <div class="ce-zeile">
+        <div class="ce-modell" role="group" aria-label="Modell">
+          <button
+            v-for="m in MODELLE"
+            :key="m.key"
+            :class="{ on: modellKey === m.key }"
+            :aria-pressed="modellKey === m.key"
+            @click="waehleModell(m.key)"
+          >
+            {{ m.label }}
+          </button>
+        </div>
+        <label class="ce-slider">
+          <span>Effort-Faktor</span>
+          <input
+            v-model.number="faktor"
+            type="range"
+            min="1"
+            max="8"
+            step="0.1"
+            @input="faktorManuell = true"
+          />
+          <span class="ce-val">{{ fmt1(faktor) }}×</span>
+        </label>
         <button
-          v-for="m in MODELLE"
-          :key="m.key"
-          :class="{ on: modellKey === m.key }"
-          :aria-pressed="modellKey === m.key"
-          @click="waehleModell(m.key)"
+          class="ce-toggle"
+          :class="{ on: cacheErhalten }"
+          :aria-pressed="cacheErhalten"
+          title="[features] reasoning_effort_override = true — configuration_update statt Prefix-Änderung; experimentell"
+          @click="toggleCache"
         >
-          {{ m.label }}
+          Cache erhalten <span class="ce-exp">exp.</span>
         </button>
       </div>
-      <label class="ce-slider">
-        <span>Effort-Faktor</span>
-        <input
-          v-model.number="faktor"
-          type="range"
-          min="1"
-          max="8"
-          step="0.1"
-          @input="faktorManuell = true"
-        />
-        <span class="ce-val">{{ fmt1(faktor) }}×</span>
-      </label>
-      <label class="ce-slider">
-        <span>Exec-Read</span>
-        <input v-model.number="readM" type="range" min="5" max="120" step="1" />
-        <span class="ce-val">{{ readM }} M</span>
-      </label>
-      <label class="ce-slider">
-        <span>Re-Plans</span>
-        <input v-model.number="n" type="range" min="0" max="13" step="1" />
-        <span class="ce-val">{{ n }}×</span>
-      </label>
-      <button
-        class="ce-toggle"
-        :class="{ on: cacheErhalten }"
-        :aria-pressed="cacheErhalten"
-        title="[features] reasoning_effort_override = true — configuration_update statt Prefix-Änderung; experimentell"
-        @click="toggleCache"
-      >
-        Cache erhalten <span class="ce-exp">exp.</span>
-      </button>
+      <div class="ce-zeile ce-szenario">
+        <label class="ce-slider">
+          <span>Kontext</span>
+          <input
+            v-model.number="ctxK"
+            type="range"
+            :min="B.ctxK.min"
+            :max="B.ctxK.max"
+            :step="B.ctxK.step"
+          />
+          <span class="ce-val">{{ ctxK }}k</span>
+        </label>
+        <label class="ce-slider">
+          <span>Exec-Read</span>
+          <input
+            v-model.number="readM"
+            type="range"
+            :min="B.readM.min"
+            :max="B.readM.max"
+            :step="B.readM.step"
+          />
+          <span class="ce-val">{{ readM }} M</span>
+        </label>
+        <label class="ce-slider">
+          <span>Exec-Out</span>
+          <input
+            v-model.number="outK"
+            type="range"
+            :min="B.outK.min"
+            :max="B.outK.max"
+            :step="B.outK.step"
+          />
+          <span class="ce-val">{{ outK }}k</span>
+        </label>
+        <label class="ce-slider">
+          <span>Re-Plans</span>
+          <input
+            v-model.number="n"
+            type="range"
+            :min="B.n.min"
+            :max="B.n.max"
+            :step="B.n.step"
+          />
+          <span class="ce-val">{{ n }}×</span>
+        </label>
+        <span class="ce-geteilt">gekoppelt mit opusplan</span>
+      </div>
     </div>
 
     <div class="ce-main">
-      <div class="ce-headrow">
-        <span class="ce-h">Gesamtkosten pro Session</span>
-        <span class="ce-vorlaeufig"
-          >⚠ vorläufige Zahlen — Token-Verbrauch aus Claude übernommen,
-          geschätzter Effort-Faktor</span
-        >
+      <!-- Szenario-Balken -->
+      <div>
+        <div class="ce-h">Gesamtkosten pro Session</div>
+        <div class="ce-bars" role="img" :aria-label="balkenLabel">
+          <div class="ce-row">
+            <span class="ce-name">Nur medium ¹</span>
+            <span class="ce-track"
+              ><span
+                class="ce-fill ce-f1"
+                :style="{ width: pct(eur.s1) + '%' }"
+            /></span>
+            <span class="ce-eur">{{ fmt(eur.s1) }} €</span>
+            <span class="ce-delta" />
+          </div>
+          <div class="ce-row">
+            <span class="ce-name">Nur xhigh</span>
+            <span class="ce-track"
+              ><span
+                class="ce-fill ce-f2"
+                :style="{ width: pct(eur.s2) + '%' }"
+            /></span>
+            <span class="ce-eur">{{ fmt(eur.s2) }} €</span>
+            <span class="ce-delta" />
+          </div>
+          <div class="ce-row">
+            <span class="ce-name">Effort-Wechsel</span>
+            <span class="ce-track"
+              ><span
+                class="ce-fill ce-f3"
+                :style="{ width: pct(eur.s3) + '%' }"
+            /></span>
+            <span class="ce-eur">{{ fmt(eur.s3) }} €</span>
+            <span class="ce-delta" :class="spart ? 'gut' : 'schlecht'">{{
+              deltaWechsel
+            }}</span>
+          </div>
+          <div class="ce-row" :class="{ 'ce-versteckt': !showAnti }">
+            <span class="ce-name ce-warnname">⚠ Anti-Pattern</span>
+            <span class="ce-track"
+              ><span
+                class="ce-fill ce-f4"
+                :style="{ width: pct(eur.s4) + '%' }"
+            /></span>
+            <span class="ce-eur">{{ fmt(eur.s4) }} €</span>
+            <span class="ce-delta schlecht">{{ deltaAnti }}</span>
+          </div>
+        </div>
+        <p class="ce-fuss">
+          ¹ billiger, aber schwächerer Plan — Qualitäts-, kein Preisvergleich.
+          Badge: Δ vs. Nur xhigh bzw. durch Re-Plans.<br /><span
+            class="ce-vorlaeufig"
+            >⚠ vorläufige Zahlen — Token-Verbrauch aus Claude übernommen,
+            Effort-Faktor geschätzt.</span
+          >
+        </p>
       </div>
-      <div class="ce-bars" role="img" :aria-label="balkenLabel">
-        <div class="ce-row">
-          <span class="ce-name">Nur medium ¹</span>
-          <span class="ce-track"
-            ><span class="ce-fill ce-f1" :style="{ width: pct(eur.s1) + '%' }"
-          /></span>
-          <span class="ce-eur">{{ fmt(eur.s1) }} €</span>
-          <span class="ce-delta" />
-        </div>
-        <div class="ce-row">
-          <span class="ce-name">Nur xhigh</span>
-          <span class="ce-track"
-            ><span class="ce-fill ce-f2" :style="{ width: pct(eur.s2) + '%' }"
-          /></span>
-          <span class="ce-eur">{{ fmt(eur.s2) }} €</span>
-          <span class="ce-delta" />
-        </div>
-        <div class="ce-row">
-          <span class="ce-name">Effort-Wechsel</span>
-          <span class="ce-track"
-            ><span class="ce-fill ce-f3" :style="{ width: pct(eur.s3) + '%' }"
-          /></span>
-          <span class="ce-eur">{{ fmt(eur.s3) }} €</span>
-          <span class="ce-delta" :class="spart ? 'gut' : 'schlecht'">{{
-            deltaWechsel
-          }}</span>
-        </div>
-        <div class="ce-row" :class="{ 'ce-versteckt': !showAnti }">
-          <span class="ce-name ce-warnname">⚠ Anti-Pattern</span>
-          <span class="ce-track"
-            ><span class="ce-fill ce-f4" :style="{ width: pct(eur.s4) + '%' }"
-          /></span>
-          <span class="ce-eur">{{ fmt(eur.s4) }} €</span>
-          <span class="ce-delta schlecht">{{ deltaAnti }}</span>
-        </div>
+
+      <!-- Break-even-Chart -->
+      <div :class="{ 'ce-versteckt': !showChart }">
+        <div class="ce-h">Ab wann lohnt der Cache-Bruch?</div>
+        <BreakEvenChart
+          class="ce-chart"
+          :lines="chartLines"
+          :read-m="eingaben.execRead"
+          :break-even="xStar"
+          :x-max="xMax"
+          :x-ticks="xTicks"
+          :y-ladder="Y_LEITER"
+          :y-tick-map="Y_TICKS"
+          kein-break-even-text="kein Break-even (Faktor ≤ 1)"
+          null-break-even-text="lohnt ab dem ersten Token"
+          :aria-label="chartLabel"
+        />
       </div>
-      <p class="ce-fuss">
-        ¹ billiger, aber schwächerer Plan — Qualitäts-, kein Preisvergleich.
-        Badge: Δ vs. Nur xhigh bzw. durch Re-Plans.
-      </p>
     </div>
 
     <!-- Erklärungs- / Warn-Box -->
@@ -287,16 +458,31 @@ const balkenLabel = computed(
   color: var(--color-text-primary);
 }
 
-/* Regler-Zeile — fünf Bedienelemente auf einer Zeile (848 px nutzbar) */
+/* Regler — zwei Zeilen: Codex-spezifisch oben, das geteilte Szenario unten */
 .ce-controls {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 5px;
   padding: 6px 10px;
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: 8px;
   background: var(--color-background-secondary);
+}
+.ce-zeile {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px 12px;
+  align-items: center;
+}
+.ce-szenario {
+  padding-top: 5px;
+  border-top: 0.5px solid var(--color-border-tertiary);
+}
+.ce-geteilt {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
 }
 .ce-slider {
   display: flex;
@@ -307,7 +493,7 @@ const balkenLabel = computed(
   white-space: nowrap;
 }
 .ce-slider input[type="range"] {
-  width: 62px;
+  width: 66px;
   accent-color: var(--color-text-info);
 }
 .ce-val {
@@ -359,28 +545,23 @@ const balkenLabel = computed(
   color: var(--color-text-primary);
 }
 
+/* zweispaltiger Hauptbereich wie OpusplanBreakEven */
 .ce-main {
-  display: flex;
-  flex-direction: column;
-}
-.ce-headrow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
 }
 .ce-h {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--color-text-secondary);
+  margin-bottom: 4px;
 }
 .ce-vorlaeufig {
-  font-size: 10.5px;
   font-weight: 600;
   color: var(--color-text-warning);
-  white-space: nowrap;
 }
 .ce-versteckt {
   visibility: hidden;
@@ -394,7 +575,7 @@ const balkenLabel = computed(
 }
 .ce-row {
   display: grid;
-  grid-template-columns: 108px 1fr 72px 62px; /* 72: vierstellige €-Beträge (Astra × 8 × 120 MTok) brechen sonst um */
+  grid-template-columns: 96px 1fr 68px 58px; /* 68: vierstellige €-Beträge (Astra × 8 × 120 MTok) brechen sonst um */
   gap: 8px;
   align-items: center;
 }
