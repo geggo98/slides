@@ -18,6 +18,11 @@ const props = defineProps({
   defaultDetail: { type: [String, Number, null], default: null },
   showLanguageBadge: { type: Boolean, default: false },
   badgePosition: { type: String, default: "top-right" },
+  // Wird explizit an MonacoBlock durchgereicht (kein $attrs-Forwarding hier).
+  // Mit Dateiname wächst die Stage um Kopfzeile + Außenabstand (height: auto
+  // statt `height`), und positionDetail rechnet den Versatz des Editors in
+  // der Stage mit ein, damit Popup und Pfeil weiter auf der Zeile landen.
+  filename: { type: String, default: "" },
 });
 
 const emit = defineEmits(["activate"]);
@@ -168,12 +173,22 @@ function positionDetail() {
   const MARGIN = 6;
   const ARROW = 7;
 
-  // Stage-relative Position der Startzeile; null, wenn rausgescrollt.
+  // Editor-relative Position der Startzeile; null, wenn rausgescrollt.
   const pos = editor.getScrolledVisiblePosition({
     lineNumber: ann.startLine,
     column: 1,
   });
-  const annTop = pos ? Math.max(0, pos.top - VIEWZONE_H) : null;
+  // Versatz des Editors in der Stage (Frame-Margin, mit `filename` zusätzlich
+  // Kopfzeile + Wrapper-Margin), in logischen Pixeln: getBoundingClientRect
+  // liefert Viewport-Pixel, Slidev skaliert den Canvas per Transform, daher
+  // durch den Skalierungsfaktor der Stage teilen.
+  const stageRect = stage.getBoundingClientRect();
+  const scale = stage.offsetWidth ? stageRect.width / stage.offsetWidth : 1;
+  const editorDom = editor.getDomNode();
+  const editorTop = editorDom
+    ? (editorDom.getBoundingClientRect().top - stageRect.top) / scale
+    : 0;
+  const annTop = pos ? Math.max(0, editorTop + pos.top - VIEWZONE_H) : null;
   const annLeft = pos ? pos.left : MARGIN;
 
   const h = detailEl.value.offsetHeight;
@@ -265,7 +280,7 @@ onBeforeUnmount(() => {
       <span class="dot" />
       &#x1F4A1; Annotationen sind klickbar und zeigen Details
     </div>
-    <div class="mba-stage" :style="{ height }">
+    <div class="mba-stage" :style="{ height: filename ? 'auto' : height }">
       <MonacoBlock
         :code="code"
         :language="language"
@@ -273,6 +288,7 @@ onBeforeUnmount(() => {
         :editor-options="editorOptions"
         :show-language-badge="showLanguageBadge"
         :badge-position="badgePosition"
+        :filename="filename"
         @ready="onReady"
       />
       <div

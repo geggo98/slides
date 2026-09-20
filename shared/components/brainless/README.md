@@ -49,6 +49,13 @@ a shadcn/ui registry that recreates the terminal UIs of coding agents
   16.09.2026). Codex rendered columns already at v0.132, the version upstream
   captured; the stacked layout is upstream's own simplification, and without
   the props the rendering stays upstream's.
+- `CodexPermissions` also watches `defaultSelected` after mount, so a host can
+  move the cursor from outside (the agents-details deck walks it through the
+  reasoning levels in `CodexEffortTui.vue`). Upstream reads the prop once as
+  the initial state; with a constant prop the watch never fires, so the
+  default path is unchanged and the regression harness
+  `20260707-anatomy-of-autonomous-agents/playwright-tests/codex-permissions-regression.ts`
+  is expected to stay byte-identical (not re-run for this change).
 
 ## Component index
 

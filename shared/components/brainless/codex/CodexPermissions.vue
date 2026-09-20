@@ -12,7 +12,7 @@
   rendering stays upstream's stacked layout.
 -->
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 
 export interface CodexPermissionOption {
   label: string;
@@ -62,6 +62,16 @@ const props = withDefaults(
 const emit = defineEmits<{ choose: [index: number] }>();
 
 const sel = ref(props.defaultSelected);
+// Deviation: a host may move the cursor after mount by changing
+// `defaultSelected` (an animated walk through the options, say). Upstream
+// reads the prop once; with a constant prop this watch never fires, so the
+// default path is unchanged.
+watch(
+  () => props.defaultSelected,
+  (v) => {
+    sel.value = v;
+  },
+);
 
 // Width of the name cell in `ch`: the widest rendered "N. label (current)"
 // over all rows, as Codex's compute_desc_col measures prefix + name per row

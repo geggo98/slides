@@ -11,6 +11,12 @@ const props = defineProps({
   // nur in der Design-Pattern-Präsentation (über PatternTabs) eingeschaltet.
   showLanguageBadge: { type: Boolean, default: false },
   badgePosition: { type: String, default: "top-right" },
+  // Optionale Dateinamen-Kopfzeile ÜBER dem umrandeten Frame (z.B.
+  // "~/.codex/config.toml"). Sie liegt bewusst außerhalb von .monaco-block,
+  // damit `height` und dessen overflow:hidden unverändert bleiben. Ohne den
+  // Prop ist der Frame selbst die Wurzel — DOM, Attribut-Durchreichung und
+  // Layout sind dann exakt wie vor dem Prop (s. Kommentar im Template).
+  filename: { type: String, default: "" },
 });
 
 // Marken-Label + farbenblind-sichere Badge-Farbe je Sprache. Die Farben sind
@@ -185,7 +191,50 @@ defineExpose({
 </script>
 
 <template>
-  <div class="monaco-block" :style="{ height }">
+  <!-- Zwei Wurzeln statt eines Wrappers mit display:contents: Vue reicht
+       Nicht-Prop-Attribute (class, style, id) und die Scope-ID des Aufrufers
+       nur an das Wurzelelement durch. Ohne `filename` muss das der Frame
+       selbst sein, sonst landet ein `class="editor-container"` (ai-agents,
+       ExampleExplorer.vue) auf einer Box ohne Layout. Der Frame ist deshalb
+       in beiden Zweigen ausgeschrieben. -->
+  <div v-if="filename" class="mb-wrap">
+    <div class="mb-filename" :title="filename">
+      <svg
+        class="mb-file-glyph"
+        viewBox="0 0 12 12"
+        width="12"
+        height="12"
+        aria-hidden="true"
+      >
+        <path
+          d="M2.5 1h4.8L10 3.7V11H2.5z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M7.3 1v2.7H10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+        />
+      </svg>
+      <span class="mb-filename-text">{{ filename }}</span>
+    </div>
+    <div class="monaco-block" :style="{ height }">
+      <div ref="container" class="monaco-container" />
+      <div
+        v-if="showLanguageBadge"
+        class="mb-lang-badge"
+        :class="`mb-pos-${badgePosition}`"
+        :style="{ background: badge.bg, color: badge.fg }"
+      >
+        {{ badge.label }}
+      </div>
+    </div>
+  </div>
+  <div v-else class="monaco-block" :style="{ height }">
     <div ref="container" class="monaco-container" />
     <div
       v-if="showLanguageBadge"
@@ -205,6 +254,39 @@ defineExpose({
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+/* Mit `filename`: der Wrapper übernimmt den Außenabstand des Frames, der
+ * Frame verliert seinen oberen Margin, damit die Kopfzeile eng darüber sitzt. */
+.mb-wrap {
+  margin: 8px 0;
+  min-width: 0;
+}
+.mb-wrap > .monaco-block {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.mb-filename {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-family: var(
+    --slidev-code-font-family,
+    var(--font-mono, ui-monospace, monospace)
+  );
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--color-text-secondary, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+}
+.mb-file-glyph {
+  flex-shrink: 0;
+}
+.mb-filename-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .monaco-block {
   position: relative;
