@@ -1794,7 +1794,12 @@ Was diese Folie zeigt: Farbe UND Form sind der Harness (violettes
 Quadrat Pi, grünes Dreieck Codex, orange Raute Claude Code — Farben wie
 in Kapitel 10s Harness-Vergleich, Formen wie in der Studie; die Form ist
 die Zweitkodierung für Farbenblinde, im Dark-Theme liegen Orange und Grün
-nur ΔE 7,7 auseinander), Beschriftung das Modell. Vier Klicks:
+nur ΔE 7,7 auseinander), Beschriftung das Modell. Vor dem ersten Klick
+liegen Quadranten und der Pfeilcluster („Billiger", „Leistungsfähiger",
+„Besseres Preis-Leistungs-Verhältnis") von „Welches Modell wofür?"
+darüber — nur als Erinnerung, dass es dasselbe Koordinatensystem ist
+(Trennung redaktionell bei 0,5 € / 50 %); sie blenden mit dem ersten
+Klick aus. Vier Klicks:
 1 die gestrichelte Pareto-Front über alle 21 Punkte — sie bleibt.
 2 der Claude-Code-Aufpreis: je Modell ein Pfeil vom Pi-Punkt zum
 Claude-Code-Punkt mit dem Kostenfaktor; Codex gedimmt. Die Pfeile

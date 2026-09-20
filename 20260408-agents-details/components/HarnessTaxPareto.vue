@@ -23,11 +23,15 @@ import {
 } from "./harnessTaxData";
 import { fmt, makeScale, type Pt } from "./paretoData";
 import {
+  arrowCluster,
   dodgeDetailed,
   HIT_R,
   LABEL_FONT,
   MARKER,
   plotBounds,
+  QUADRANT_FONT,
+  QUADRANTS,
+  SANS_EM,
   tickLabel,
 } from "./paretoChrome";
 import {
@@ -119,6 +123,46 @@ const S = makeScale({
 const { W, H, L, R, T, B, px, py } = S;
 const X_TICKS = [0.02, 0.05, 0.1, 0.2, 0.5, 1];
 const Y_TICKS = [0, 20, 40, 60, 80, 100];
+
+// Erinnerung an das Koordinatensystem von „Welches Modell wofür?": Quadranten
+// und der Pfeilcluster „Billiger / Leistungsfähiger / Besseres Preis-
+// Leistungs-Verhältnis" aus paretoChrome.ts, NUR vor dem ersten Klick — ab
+// Schritt 1 blenden sie aus (CSS-Opacity, kein Layout-Sprung). Die Trennung
+// ist wie dort redaktionell: 0,5 € (Tick) / 50 %. Die Spitze der
+// Resultierenden ist eigens gesetzt (Default wäre px(4 €), also außerhalb):
+// 280 px links, 50 px über dem Hub — flacher und länger als im Modell-Chart,
+// weil der Schaft die 35 Zeichen „Besseres Preis-Leistungs-Verhältnis"
+// tragen muss (≈ 260 px) und die Spitze unter Haiku·Claude Code (SWE, 0,38 €
+// / 52 %) durchlaufen soll; auf Terminal-Bench 2.0 bleibt so links der
+// Resultierenden Platz für das „Claude Sonnet 4.6"-Label.
+const QX = px(0.5);
+const QY = py(50);
+const cluster = arrowCluster(S, {
+  hubY: (sc) => sc.py(14),
+  target: (sc) => ({ x: sc.W - sc.R - 26 - 280, y: sc.py(14) - 50 }),
+});
+// Der Hub liegt bei py(14) statt py(9): das Chart ist 26 px niedriger als das
+// Modell-Chart, mit py(9) liefe der „Billiger"-Schaft durch die Grundlinie
+// der Überschrift „Geldverbrennung" (H − B − 8). „Leistung um jeden Preis"
+// wechselt je Benchmark die Kante: auf SWE-bench Lite sitzt Claude Fable 5
+// mit 97,8 % genau in der Ecke, also an die Unterkante des Quadranten
+// (QY − 8); auf Terminal-Bench 2.0 ist die Ecke frei, die Unterkante aber
+// der Platz des „Claude Opus 4.8"-Labels (in Schritt 2 wurde es sonst
+// erzwungen) — also dort in die Ecke (T + 14). Die Kästen sind Hindernisse
+// des Platzierers, deshalb hängen sie wie die Labels am Benchmark.
+const remindQuads = computed(() =>
+  QUADRANTS.map((q) => {
+    if (q.key === "price")
+      return { ...q, x: q.x(S), y: bench.value === "tb" ? T + 14 : QY - 8 };
+    return { ...q, x: q.x(S), y: q.y(S) };
+  }),
+);
+const remindBoxes = computed<Obstacle[]>(() =>
+  remindQuads.value.map((q) => ({
+    ...labelBox(q.text, q.x, q.y, q.ax, QUADRANT_FONT, SANS_EM),
+    name: `«${q.text}»`,
+  })),
+);
 
 const HARNESS_COLOR: Record<Harness, ThemedColor> = {
   pi: AGENT_COLORS.pi,
@@ -504,7 +548,22 @@ const arrowHeads = computed<Obstacle[]>(() =>
     soft: true,
   })),
 );
+// Quadranten-Überschriften und Cluster sind IMMER Hindernisse, auch wenn sie
+// ab Schritt 1 unsichtbar sind — sonst sprängen die Modell-Labels beim ersten
+// Klick um. Der Cluster ist weich (wie im Modell-Chart), die Überschriften
+// hart — aber nur für die sieben Default-Labels: der Durchgang „alle Namen"
+// kennt sie gar nicht, sonst zwingt die Enge auf Terminal-Bench 2.0 drei bis
+// zehn Labels in Überlappungen (gemessen 20.09.2026, harness-chart-qa.ts
+// --all; auch als weiche Hindernisse noch 1–6), für eine Erinnerung, die ab
+// Schritt 1 unsichtbar ist. Wer „alle Namen" schon in Schritt 0 einschaltet,
+// sieht Labels über den Überschriften — hinnehmbar.
 const obstacles = computed<Obstacle[]>(() => [
+  ...remindBoxes.value,
+  ...cluster.boxes,
+  ...arrows.value.filter((a) => a.text).map((a) => a.box),
+  ...arrowHeads.value,
+]);
+const obstaclesAll = computed<Obstacle[]>(() => [
   ...arrows.value.filter((a) => a.text).map((a) => a.box),
   ...arrowHeads.value,
 ]);
@@ -562,7 +621,11 @@ const layoutAll = computed(() => {
     pts.value.map((p) =>
       dimmed(p) ? lp(p, "", 2) : lp(p, shortOf(p), isFront(p) ? 0 : 2),
     ),
-    { ...layoutOpts.value, font: LABEL_FONT.historyAll },
+    {
+      ...layoutOpts.value,
+      font: LABEL_FONT.historyAll,
+      obstacles: obstaclesAll.value,
+    },
   );
   const named = new Map<string, Placed>();
   for (const p of pts.value) {
@@ -683,7 +746,7 @@ const hoverLabels = computed<LabelView[]>(() => {
     if (!p || placed.value.has(key(p))) continue;
     const pl = layoutLabels([lp(p, nameOf(p), 0)], {
       ...layoutOpts.value,
-      obstacles: [...obstacles.value, ...taken],
+      obstacles: [...obstaclesAll.value, ...taken],
     }).all.get(key(p));
     if (pl) out.push(view(p, pl, nameOf(p)));
   }
@@ -814,6 +877,39 @@ const chartLabel = computed(() => {
       :data-all="allOn ? 'on' : 'off'"
       :data-dropped="unnamed.join(' | ')"
     >
+      <!-- Quadranten-Tönung wie auf „Welches Modell wofür?" — nur Schritt 0,
+           danach per Opacity ausgeblendet (keine Layout-Änderung). -->
+      <g class="ht-remind" :class="{ 'ht-remind-on': step === 0 }">
+        <rect
+          :x="L"
+          :y="T"
+          :width="QX - L"
+          :height="QY - T"
+          class="ht-q ht-q-sweet"
+        />
+        <rect
+          :x="QX"
+          :y="T"
+          :width="W - R - QX"
+          :height="QY - T"
+          class="ht-q ht-q-price"
+        />
+        <rect
+          :x="L"
+          :y="QY"
+          :width="QX - L"
+          :height="H - B - QY"
+          class="ht-q ht-q-budget"
+        />
+        <rect
+          :x="QX"
+          :y="QY"
+          :width="W - R - QX"
+          :height="H - B - QY"
+          class="ht-q ht-q-burn"
+        />
+      </g>
+
       <!-- Gitter + Achsen — identisch zu ModelRoutingPareto.vue -->
       <g class="ht-grid">
         <line
@@ -860,6 +956,55 @@ const chartLabel = computed(() => {
         >
           Ø Kosten pro Task (EUR, log. Skala) — Erfolg (%)
         </text>
+      </g>
+
+      <!-- Trennlinien, Überschriften und Pfeilcluster der Erinnerung — Texte,
+           Lage und Geometrie aus paretoChrome.ts, damit der Platzierer sie als
+           Hindernis kennt. Nur Schritt 0. -->
+      <g class="ht-remind" :class="{ 'ht-remind-on': step === 0 }">
+        <g class="ht-qline">
+          <line :x1="QX" :y1="T" :x2="QX" :y2="H - B" />
+          <line :x1="L" :y1="QY" :x2="W - R" :y2="QY" />
+        </g>
+        <g class="ht-qlabel">
+          <text
+            v-for="q in remindQuads"
+            :key="q.key"
+            :x="q.x"
+            :y="q.y"
+            :text-anchor="q.ax"
+            :class="`ht-ql-${q.key}`"
+          >
+            {{ q.text }}
+          </text>
+        </g>
+        <g class="ht-arrow-cluster">
+          <circle :cx="cluster.hub.x" :cy="cluster.hub.y" :r="cluster.hub.r" />
+          <g
+            v-for="a in cluster.arrows"
+            :key="a.key"
+            :transform="`translate(${cluster.hub.x},${cluster.hub.y}) rotate(${a.rot})`"
+          >
+            <polygon :points="a.poly" />
+          </g>
+        </g>
+        <g class="ht-arrow-labels">
+          <g
+            v-for="a in cluster.arrows"
+            :key="`t-${a.key}`"
+            :transform="`translate(${cluster.hub.x},${cluster.hub.y}) rotate(${a.rot})`"
+          >
+            <g :transform="`translate(${a.mid},0) rotate(${a.flip ? 180 : 0})`">
+              <text
+                text-anchor="middle"
+                dominant-baseline="middle"
+                :class="{ 'ht-label-lead': a.key === 'better' }"
+              >
+                {{ a.text }}
+              </text>
+            </g>
+          </g>
+        </g>
       </g>
 
       <!-- Teilfront des hervorgehobenen Harness (Legendenklick), in seiner
@@ -1196,6 +1341,64 @@ const chartLabel = computed(() => {
   display: block;
   width: 100%;
   height: auto;
+}
+/* Erinnerung an das Modell-Chart (Schritt 0): Werte 1:1 aus
+   ModelRoutingPareto.vue (.mp-q*, .mp-qline, .mp-qlabel, .mp-arrow-*), weil
+   scoped CSS die Nachbarkomponente nicht erreicht. */
+.ht-remind {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.ht-remind-on {
+  opacity: 1;
+}
+.ht-q-sweet {
+  fill: color-mix(in srgb, var(--color-text-success) 7%, transparent);
+}
+.ht-q-price {
+  fill: color-mix(in srgb, var(--color-text-warning) 6%, transparent);
+}
+.ht-q-budget {
+  fill: color-mix(in srgb, var(--color-text-tertiary) 6%, transparent);
+}
+.ht-q-burn {
+  fill: color-mix(in srgb, var(--color-text-danger) 7%, transparent);
+}
+.ht-qline line {
+  stroke: var(--color-border-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.ht-qlabel text {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ht-ql-sweet {
+  fill: color-mix(in srgb, var(--color-text-success) 65%, transparent);
+}
+.ht-ql-price {
+  fill: color-mix(in srgb, var(--color-text-warning) 65%, transparent);
+}
+.ht-ql-budget {
+  fill: color-mix(in srgb, var(--color-text-tertiary) 75%, transparent);
+}
+.ht-ql-burn {
+  fill: color-mix(in srgb, var(--color-text-danger) 65%, transparent);
+}
+.ht-arrow-cluster {
+  fill: var(--color-text-success);
+  opacity: 0.38;
+}
+.ht-arrow-labels text {
+  font-size: 11px;
+  fill: color-mix(in srgb, var(--color-text-success) 85%, transparent);
+  paint-order: stroke;
+  stroke: var(--ht-surface);
+  stroke-width: 3px;
+}
+.ht-label-lead {
+  font-size: 12px;
 }
 .ht-grid line {
   stroke: var(--color-border-tertiary);

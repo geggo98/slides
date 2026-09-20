@@ -235,16 +235,31 @@ export interface ArrowCluster {
   boxes: Obstacle[];
 }
 
-export function arrowCluster(s: Scale): ArrowCluster {
+export interface ArrowClusterOpts {
+  /**
+   * Spitze der Resultierenden in Pixeln. Default: (px(4 €), py(42 %)) — der
+   * freie Bereich der DeepSWE-Folie. Ein Chart mit anderer Skala (HarnessTax:
+   * 0,02–1,8 €) gibt seine eigene Spitze vor, sonst läge sie außerhalb.
+   */
+  target?: (s: Scale) => XY;
+  /** Hub-Höhe in Pixeln. Default: py(9 %). */
+  hubY?: (s: Scale) => number;
+}
+
+export function arrowCluster(
+  s: Scale,
+  opts: ArrowClusterOpts = {},
+): ArrowCluster {
   // Der Cluster ankert in Pixeln im leeren Bereich rechts unten, nicht mehr in
   // €-Koordinaten: Auf der log-Achse läge (20,5 € → 12 €) auf 80 px, und der
   // senkrechte Pfeil liefe in claude-sonnet-5 (23 €/54 %). Frei ist rechts von
   // 4 € unterhalb von 45 % in jedem Stand der Hauptfolie — der niedrigste Punkt
   // dort ist claude-sonnet-5 bei 54 %, auch mit Kontingent-Overlay.
   const hx = s.W - s.R - 26;
-  const hy = s.py(9);
-  const tx = s.px(4);
-  const ty = s.py(42);
+  const hy = opts.hubY ? opts.hubY(s) : s.py(9);
+  const target =
+    opts.target ?? ((sc: Scale) => ({ x: sc.px(4), y: sc.py(42) }));
+  const { x: tx, y: ty } = target(s);
   const aRot = (Math.atan2(ty - hy, tx - hx) * 180) / Math.PI;
   const aLen = Math.hypot(tx - hx, ty - hy);
   const aW = 12; // halbe Schaftbreite, Resultierende
