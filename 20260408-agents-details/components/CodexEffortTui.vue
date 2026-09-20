@@ -1,17 +1,28 @@
 <script setup lang="ts">
 /**
  * Codex-TUI-Nachbau für die Erklärfolie „xhigh plant, medium führt aus“:
- * zeigt in sieben Klick-Schritten (`step` = $clicks), wie man im Plan-Mode
- * per `/model` den Reasoning-Effort nur für Plan-Mode setzt. Gebaut aus dem
- * brainless-Port (shared/components/brainless/codex/); Composer, Slash-Zeile
- * und Statuszeile sind hier nachgezeichnet, weil CodexPrompt/CodexSlashMenu
- * ein echtes <input> mitbringen und der Nachbau nur Abbildung ist (`inert`).
+ * zeigt in acht Klick-Schritten (`step` = $clicks), wie man erst das Modell
+ * (global) und dann im Plan-Mode per `/model` den Reasoning-Effort nur für
+ * Plan-Mode setzt. Gebaut aus dem brainless-Port
+ * (shared/components/brainless/codex/); Composer, Slash-Zeile und
+ * Statuszeile sind hier nachgezeichnet, weil CodexPrompt/CodexSlashMenu ein
+ * echtes <input> mitbringen und der Nachbau nur Abbildung ist (`inert`).
  *
  * Schritte (Texte wörtlich aus Codex CLI 0.153/0.154):
- *   0 leerer Composer · 1 „/plan“ wird getippt, danach „Plan mode“ ·
- *   2 „/model“ wird getippt, Slash-Zeile erscheint · 3 Modellwahl ·
- *   4 Reasoning Level, Cursor wandert Medium → Extra high · 5 „Apply
- *   reasoning change“ · 6 Ergebniszeilen, Status „gpt-5.6-sol xhigh“.
+ *   0 leerer Composer, terra medium · 1 „/model“ wird getippt, dann die
+ *   Modellwahl (sol default, terra current) · 2 Reasoning Level für sol,
+ *   Cursor bleibt auf Medium · 3 „Model changed to gpt-5.6-sol medium“ —
+ *   das schreibt model und model_reasoning_effort GLOBAL · 4 „/plan“ wird
+ *   getippt, danach „Plan mode“ · 5 „/model“ erneut, sol ist jetzt current
+ *   und bleibt es · 6 Reasoning Level, Cursor wandert Medium → Extra high ·
+ *   7 „Apply reasoning change“ · 8 „… xhigh for Plan mode.“
+ *
+ * Warum zweimal /model: Die TUI fragt nach dem Plan-Override nur, wenn im
+ * Plan-Mode das AKTUELLE Modell gewählt wird und sich nur der Effort ändert
+ * (should_prompt_plan_mode_reasoning_scope, tui/src/chatwidget/
+ * model_popups.rs, rust-v0.155.1: `selected_model != self.current_model()`
+ * → kein Dialog). Ein Modellwechsel im Plan-Mode schreibt stattdessen
+ * model und model_reasoning_effort global (Issue openai/codex#38236).
  *
  * Animation nur bei Vorwärtsklick um genau einen Schritt; Rückwärts, Sprung
  * (onSlideEnter) und prefers-reduced-motion zeigen den Endzustand sofort.
@@ -30,8 +41,10 @@ import { usePrefersReducedMotion } from "@shared/components/brainless/lib/usePre
 const props = withDefaults(defineProps<{ step?: number }>(), { step: 0 });
 
 const VERSION = "v0.153.4";
-const DIRECTORY = "~/tmp";
+// Easter Egg fürs Publikum: das Verzeichnis dieses Decks.
+const DIRECTORY = "~/slides";
 const MODEL_VORHER = "gpt-5.6-terra medium";
+const MODEL_GLOBAL = "gpt-5.6-sol medium";
 const MODEL_NACHHER = "gpt-5.6-sol xhigh";
 const PLACEHOLDER = "Ask Codex to do anything";
 
@@ -47,14 +60,20 @@ const SLASH = {
 // PLAN_MODE_REASONING_SCOPE_*). Das „(medium)“ der zweiten Beschreibung ist
 // der eingebaute Plan-Preset-Wert (collaboration_mode_presets.rs), den die
 // TUI unabhängig vom globalen model_reasoning_effort meldet.
-const MODEL_OPTIONS = [
+// `current` wandert nach der ersten Wahl von terra zu sol. Die TUI zeigt je
+// Zeile nur EINEN Marker, „(current)“ schlägt „(default)“
+// (tui/src/bottom_pane/list_selection_view.rs, rust-v0.155.1: `if
+// item.is_current { " (current)" } else if item.is_default { " (default)" }`)
+// — in der zweiten Modellwahl heißt sol also „gpt-5.6-sol (current)“.
+const modelOptions = (current: "terra" | "sol") => [
   {
-    label: "gpt-5.6-sol (default)",
+    label: current === "sol" ? "gpt-5.6-sol" : "gpt-5.6-sol (default)",
+    current: current === "sol",
     description: "Reliable agentic workhorse for everyday tasks.",
   },
   {
     label: "gpt-5.6-terra",
-    current: true,
+    current: current === "terra",
     description: "Balanced agentic coding model for everyday work.",
   },
   {
@@ -71,6 +90,8 @@ const MODEL_OPTIONS = [
       "Proven previous-generation model for coding and general work.",
   },
 ];
+const MODEL_OPTIONS = modelOptions("terra");
+const MODEL_OPTIONS_2 = modelOptions("sol");
 const REASONING_OPTIONS = [
   { label: "Low", description: "Fast responses with lighter reasoning" },
   {
@@ -109,29 +130,34 @@ const REASONING_HOP_MS = 260;
 // Schritt 0 (leerer Composer) hat keinen eigenen Eintrag: er ist der
 // Endzustand ohne Dialog, Eingabe und Plan-Mode (s. zeigeEndzustand).
 const STEP = {
-  planTippen: 1,
-  modelTippen: 2,
-  modellwahl: 3,
-  reasoning: 4,
-  scope: 5,
-  ergebnis: 6,
+  modelTippen1: 1,
+  reasoning1: 2,
+  ergebnis1: 3,
+  planTippen: 4,
+  modelTippen2: 5,
+  reasoning2: 6,
+  scope: 7,
+  ergebnis2: 8,
 } as const;
 
+const MODELLWAHL = {
+  title: "Select Model and Effort",
+  subtitle:
+    "Access legacy models by running codex -m <model_name> or in your config.toml",
+};
+const REASONING = {
+  title: "Select Reasoning Level for gpt-5.6-sol",
+  subtitle: "",
+  options: REASONING_OPTIONS,
+};
 const DIALOGE: Record<
   number,
   { title: string; subtitle: string; options: typeof MODEL_OPTIONS }
 > = {
-  [STEP.modellwahl]: {
-    title: "Select Model and Effort",
-    subtitle:
-      "Access legacy models by running codex -m <model_name> or in your config.toml",
-    options: MODEL_OPTIONS,
-  },
-  [STEP.reasoning]: {
-    title: "Select Reasoning Level for gpt-5.6-sol",
-    subtitle: "",
-    options: REASONING_OPTIONS,
-  },
+  [STEP.modelTippen1]: { ...MODELLWAHL, options: MODEL_OPTIONS },
+  [STEP.reasoning1]: REASONING,
+  [STEP.modelTippen2]: { ...MODELLWAHL, options: MODEL_OPTIONS_2 },
+  [STEP.reasoning2]: REASONING,
   [STEP.scope]: {
     title: "Apply reasoning change",
     subtitle: "Choose where to apply extra high reasoning.",
@@ -148,27 +174,48 @@ const ERGEBNIS = [
 const typed = ref("");
 const planMode = ref(false);
 const reasoningSel = ref(REASONING_ZIEL);
+// In den beiden /model-Schritten erscheint der Dialog erst, wenn das Tippen
+// fertig ist (die TUI öffnet ihn mit Enter); bis dahin Composer + Slash-Zeile.
+const dialogOffen = ref(false);
 const reduced = usePrefersReducedMotion();
 
-const dialog = computed(() => DIALOGE[props.step] ?? null);
+const tippSchritt = (s: number) =>
+  s === STEP.modelTippen1 || s === STEP.modelTippen2;
+const dialog = computed(() => {
+  const d = DIALOGE[props.step] ?? null;
+  if (d && tippSchritt(props.step) && !dialogOffen.value) return null;
+  return d;
+});
 const dialogSel = computed(() =>
-  props.step === STEP.reasoning ? reasoningSel.value : 0,
+  props.step === STEP.reasoning1 || props.step === STEP.reasoning2
+    ? reasoningSel.value
+    : 0,
 );
 const slashSichtbar = computed(
-  () => props.step === STEP.modelTippen && typed.value.startsWith("/"),
+  () => tippSchritt(props.step) && typed.value.startsWith("/"),
 );
 const statusModel = computed(() =>
-  props.step >= STEP.ergebnis ? MODEL_NACHHER : MODEL_VORHER,
+  props.step >= STEP.ergebnis2
+    ? MODEL_NACHHER
+    : props.step >= STEP.ergebnis1
+      ? MODEL_GLOBAL
+      : MODEL_VORHER,
 );
-const messages = computed(() => (props.step >= STEP.ergebnis ? ERGEBNIS : []));
+const messages = computed(() =>
+  props.step >= STEP.ergebnis2
+    ? ERGEBNIS
+    : props.step >= STEP.ergebnis1
+      ? ERGEBNIS.slice(0, 1)
+      : [],
+);
 
 const ariaLabel = computed(() => {
   const d = dialog.value;
   if (d)
     return `Codex-TUI, Dialog „${d.title}“, Cursor auf Option ${dialogSel.value + 1}`;
-  if (props.step >= STEP.ergebnis) return `Codex-TUI: ${ERGEBNIS.join(" ")}`;
   const eingabe = typed.value ? `Eingabe „${typed.value}“` : "leerer Composer";
-  return `Codex-TUI, ${eingabe}, ${statusModel.value}${planMode.value ? ", Plan mode" : ""}`;
+  const meldungen = messages.value.length ? ` ${messages.value.join(" ")}` : "";
+  return `Codex-TUI, ${eingabe}, ${statusModel.value}${planMode.value ? ", Plan mode" : ""}.${meldungen}`;
 });
 
 // ---- Timer / Typewriter --------------------------------------------------
@@ -214,9 +261,10 @@ function tippe(text: string, danach?: () => void) {
 // Endzustand eines Schritts ohne Animation.
 function zeigeEndzustand(s: number) {
   clearTimer();
-  typed.value = s === STEP.modelTippen ? SLASH.name : "";
+  typed.value = "";
+  dialogOffen.value = tippSchritt(s);
   planMode.value = s >= STEP.planTippen;
-  reasoningSel.value = REASONING_ZIEL;
+  reasoningSel.value = s >= STEP.reasoning2 ? REASONING_ZIEL : REASONING_START;
 }
 
 function wandereCursor(von: number, bis: number) {
@@ -233,21 +281,28 @@ function wechsle(s: number, vorher: number | undefined) {
   const animiert = !reduced.value && vorher !== undefined && s === vorher + 1;
   if (!animiert) return zeigeEndzustand(s);
   switch (s) {
+    case STEP.modelTippen1:
+    case STEP.modelTippen2:
+      clearTimer();
+      dialogOffen.value = false;
+      tippe(SLASH.name, () => {
+        typed.value = "";
+        dialogOffen.value = true;
+      });
+      break;
     case STEP.planTippen:
       clearTimer();
+      dialogOffen.value = false;
       planMode.value = false;
       tippe("/plan", () => {
         typed.value = "";
         planMode.value = true;
       });
       break;
-    case STEP.modelTippen:
-      planMode.value = true;
-      tippe(SLASH.name);
-      break;
-    case STEP.reasoning:
+    case STEP.reasoning2:
       clearTimer();
       typed.value = "";
+      dialogOffen.value = false;
       wandereCursor(REASONING_START, REASONING_ZIEL);
       break;
     default:

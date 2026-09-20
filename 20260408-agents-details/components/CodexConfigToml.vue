@@ -38,22 +38,29 @@ interface Markierung {
   glyph?: boolean;
 }
 
-// step 0–2: nichts. 3 = Modellwahl → model kräftig. 4 = Reasoning Level →
-// beide Effort-Keys schwach (wohin der Wert geht, entscheidet erst der
-// nächste Dialog). 5 = „Apply reasoning change“, Cursor auf Option 1 →
-// plan_mode_reasoning_effort kräftig. 6 = Ergebnis: Codex hat Modell,
-// Default-Effort und Plan-Override geschrieben; der Plan-Override bekommt
-// zusätzlich den Rand-Marker.
+// Schritte wie in CodexEffortTui.vue. 1 = Modellwahl (Default-Mode) → model
+// kräftig. 2 = Reasoning Level → model_reasoning_effort kräftig. 3 = „Model
+// changed to gpt-5.6-sol medium“: beide Zeilen sind geschrieben (grün) und
+// bleiben es. 4 = /plan: nichts Neues. 5 = Modellwahl im Plan-Mode, gleiches
+// Modell — nichts wird geschrieben. 6 = Reasoning Level im Plan-Mode →
+// plan_mode_reasoning_effort schwach (ob der Wert dorthin geht, entscheidet
+// erst der nächste Dialog). 7 = „Apply reasoning change“, Cursor auf
+// Option 1 → plan_mode_reasoning_effort kräftig. 8 = Ergebnis: auch der
+// Plan-Override ist geschrieben, mit Rand-Marker.
+const GESCHRIEBEN_GLOBAL: Markierung[] = [
+  { line: ZEILE.model, tone: "changed" },
+  { line: ZEILE.effort, tone: "changed" },
+];
 const HIGHLIGHTS: Record<number, Markierung[]> = {
-  3: [{ line: ZEILE.model, tone: "strong" }],
-  4: [
-    { line: ZEILE.effort, tone: "weak" },
-    { line: ZEILE.planEffort, tone: "weak" },
-  ],
-  5: [{ line: ZEILE.planEffort, tone: "strong" }],
-  6: [
-    { line: ZEILE.model, tone: "changed" },
-    { line: ZEILE.effort, tone: "changed" },
+  1: [{ line: ZEILE.model, tone: "strong" }],
+  2: [{ line: ZEILE.effort, tone: "strong" }],
+  3: GESCHRIEBEN_GLOBAL,
+  4: GESCHRIEBEN_GLOBAL,
+  5: GESCHRIEBEN_GLOBAL,
+  6: [...GESCHRIEBEN_GLOBAL, { line: ZEILE.planEffort, tone: "weak" }],
+  7: [...GESCHRIEBEN_GLOBAL, { line: ZEILE.planEffort, tone: "strong" }],
+  8: [
+    ...GESCHRIEBEN_GLOBAL,
     { line: ZEILE.planEffort, tone: "changed", glyph: true },
   ],
 };

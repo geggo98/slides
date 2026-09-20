@@ -826,7 +826,7 @@ Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
 ---
 hideInToc: true
 routeAlias: codex-effort
-clicks: 6
+clicks: 8
 ---
 
 # Codex: `xhigh` plant, `medium` führt aus
@@ -838,33 +838,55 @@ clicks: 6
 
 <CodexConfigToml :step="$clicks" />
 
-<div class="text-xs opacity-60 leading-snug mt-2"><b>Von Hand (TUI):</b> <code>/plan</code> · <code>/model</code> · Modell, Stufe, dann „Apply to Plan mode override“ — schreibt <code>plan_mode_reasoning_effort</code> dauerhaft. Nur für die Session: <kbd>Alt</kbd>+<kbd>,</kbd> / <kbd>Alt</kbd>+<kbd>.</kbd> = Effort ↓/↑.</div>
+<div class="text-xs opacity-60 leading-snug mt-2"><b>Von Hand (TUI):</b> erst <code>/model</code> (Modell + Stufe, schreibt <code>model</code> und <code>model_reasoning_effort</code>), dann <code>/plan</code>, dann <code>/model</code> erneut — <b>gleiches Modell</b>, andere Stufe: nur dann fragt Codex „Apply to Plan mode override“ und schreibt <code>plan_mode_reasoning_effort</code>. Nur für die Session: <kbd>Alt</kbd>+<kbd>,</kbd> / <kbd>Alt</kbd>+<kbd>.</kbd>.</div>
 
-<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll den Bruch vermeiden — in 0.154 erst halb verdrahtet, laut API-Doku nur GPT-6 Astra. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
+<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll das vermeiden — <b>⚠ in 0.154/0.155 scheitert damit auf Sol, Terra und Luna jeder Turn</b> (HTTP 400, <a href="https://github.com/openai/codex/issues/44751">#44751</a>); nur Astra läuft, Fix erst ab 0.156. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
 
 </div>
 <div>
 
-<CodexEffortTui :step="$clicks" />
+<CodexEffortTui :step="$clicks" style="--ctui-height: 372px" />
 
 </div>
 </div>
 
 <!--
-Klicks (sechs, nur die Klicks laufen im Presenter- und im Publikumsfenster
-synchron; die Tipp-Animation läuft je Fenster): 1 tippt /plan — die
-Statuszeile zeigt „Plan mode“. 2 tippt /model, darunter erscheint die
-Slash-Zeile. 3 „Select Model and Effort“: sol ist Default, terra „current“
-— die Wahl schreibt model und model_reasoning_effort GLOBAL, deshalb
-leuchtet links die model-Zeile. 4 „Select Reasoning Level for gpt-5.6-sol“,
-der Cursor wandert von Medium auf Extra high; links sind BEIDE Effort-Zeilen
-schwach markiert, weil erst der nächste Dialog entscheidet, wohin der Wert
-geht. 5 „Apply reasoning change“ — Option 1 „Apply to Plan mode override“
-schreibt nur plan_mode_reasoning_effort, die Zeile leuchtet allein. 6 das
-Ergebnis: zwei Meldungen („Model changed to gpt-5.6-sol medium“ und
-„… xhigh for Plan mode.“), Statuszeile gpt-5.6-sol xhigh · Plan mode;
-links stehen die drei geschriebenen Zeilen grün. Zurück (←) nimmt jeden
-Schritt ohne Animation zurück. Nachbau mit dem brainless-Port (MIT,
+Klicks (acht, nur die Klicks laufen im Presenter- und im Publikumsfenster
+synchron; die Tipp-Animation läuft je Fenster). Erst der globale Teil, im
+Default-Mode: 1 tippt /model, die Slash-Zeile erscheint, dann öffnet sich
+„Select Model and Effort“ — sol ist Default, terra „current“. 2 „Select
+Reasoning Level for gpt-5.6-sol“, der Cursor bleibt auf Medium. 3 „Model
+changed to gpt-5.6-sol medium“ — das schreibt model UND
+model_reasoning_effort GLOBAL, links werden beide Zeilen grün. Dann der
+Plan-Teil: 4 tippt /plan, die Statuszeile zeigt „Plan mode“. 5 tippt
+/model erneut — sol ist jetzt „current“ und BLEIBT gewählt. Das ist der
+Punkt, an dem Leute scheitern: Wer hier ein anderes Modell wählt, bekommt
+KEINEN Dialog, Codex schreibt model und model_reasoning_effort still
+global (should_prompt_plan_mode_reasoning_scope in
+tui/src/chatwidget/model_popups.rs, rust-v0.155.1: selected_model !=
+current_model → false; Issue #38236 beschreibt genau diese Falle). 6 der
+Cursor wandert von Medium auf Extra high; links ist
+plan_mode_reasoning_effort schwach markiert, weil erst der nächste Dialog
+entscheidet, ob der Wert dorthin geht. 7 „Apply reasoning change“ — Option
+1 „Apply to Plan mode override“ schreibt nur plan_mode_reasoning_effort,
+die Zeile leuchtet allein. 8 „Model changed to gpt-5.6-sol xhigh for Plan
+mode.“, Statuszeile gpt-5.6-sol xhigh · Plan mode; links stehen alle drei
+geschriebenen Zeilen grün. Zurück (←) nimmt jeden Schritt ohne Animation
+zurück. Das Verzeichnis ~/slides ist das dieses Decks — Easter Egg.
+
+Zur Warnung bei reasoning_effort_override (Faktencheck 20.09.2026): Issue
+openai/codex#44751 (11.09.2026, offen) — mit dem Flag scheitert in 0.154.0
+auf gpt-5.6-luna, -terra und -sol JEDER Turn mit HTTP 400, schon der erste
+bei unverändertem Effort; `codex exec` endet mit turn.failed und Exit 1,
+nur gpt-6-astra läuft. Ursache: effort_for_configuration_update prüft
+use_responses_lite statt einer eigenen Fähigkeit, und die API lehnt das
+configuration_update-Item bei den 5.6ern ab. Fix: PR #46530 („Gate
+reasoning effort updates on explicit model support“, gemerged 19.09.2026,
+neue Modell-Metadaten supports_reasoning_effort_updates) — NACH 0.155.1
+(18.09.), also erst in 0.156. „Experimentell“ heißt hier also nicht nur
+„bringt vielleicht nichts“ (der Cache bricht trotzdem, s. u.), sondern
+„der Harness ist mit den 5.6er-Modellen nicht benutzbar“. Kein Panic, aber
+jede Session tot; Workaround laut Issue: Flag aus, neue Session. Nachbau mit dem brainless-Port (MIT,
 shared/components/brainless); die Texte sind wörtlich aus Codex CLI
 0.153.4 (Screenshots 19.09.2026) bzw. aus den Quellen unten. Der Dialog
 in Klick 5 zeigt den Moment VOR dem ersten Override, die TOML-Zeile ist
