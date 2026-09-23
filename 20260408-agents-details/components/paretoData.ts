@@ -951,12 +951,16 @@ export const EFFORT_ORDER: readonly Effort[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Lupe „Die Effort-Falle" — neunter Klick der Historie
+// Lupe „Die Effort-Falle" — Stand 03.09.2026, nur noch für die Konsistenz-
+// Prüfungen (`lens.test.ts`)
 // ---------------------------------------------------------------------------
-// Hängt am letzten Stand und wird erst hier zugewiesen, weil sie aus `EFFORTS`
-// abgeleitet ist und die Tabelle erst hier steht. Die Leiter ist nicht
-// abgetippt: Ändert sich astras Zeile, ändert sich die Lupe mit. Die Region
-// fasst astras fünf Stufen (1,92 bis 10,84 €, 67 bis 74 %) und die Nachbarn.
+// Bis 22.09.2026 der neunte Klick der Historien-Folie; seit der eigenen
+// „Effort-Falle"-Folie (routeAlias `effort-falle`, zeigt `ASTRA_LENS_TODAY`
+// weiter unten) hängt sie an KEINEM Snapshot mehr und wird nirgends mehr
+// angezeigt. Bleibt trotzdem stehen — dieselbe Herleitung aus `EFFORTS`, an
+// der `lens.test.ts` die Lupen-Geometrie (`lensView`) isoliert prüft, ohne
+// dafür den heutigen Preis zu brauchen. Die Leiter ist nicht abgetippt:
+// Ändert sich astras Zeile in `EFFORTS`, ändert sich die Lupe mit.
 export const ASTRA_LENS: Lens = {
   title: "Die Effort-Falle: mehr ist nicht besser, nur teurer",
   note: "gpt-6-astra auf max kostet 10,84 € und löst 331 von 452 Aufgaben. high löst dieselben 331 für 5,01 €, xhigh 335 für 5,71 €. Das Board zeigt max, weil seine Regel die höchste Stufe nimmt. Wer die höchste Stufe bucht, zahlt mehr als das Doppelte für nichts. Vor dem Buchen die Stufen vergleichen: Bei vier von 22 Modellen ist die billigere Stufe auch die bessere.",
@@ -966,7 +970,74 @@ export const ASTRA_LENS: Lens = {
     EFFORTS.filter((c) => c.label === "gpt-6-astra" && c.effort === e),
   ),
 };
-SNAPSHOTS[SNAPSHOTS.length - 1]!.lens = ASTRA_LENS;
+
+// ---------------------------------------------------------------------------
+// astra heute — dieselbe Messung, korrigierter Preis (Grundlage der eigenen
+// „Effort-Falle"-Folie)
+// ---------------------------------------------------------------------------
+// Kein Rerun, keine neuen Modelle: Live-Fetch 23.09.2026 gegen den Stand vom
+// 03.09. verglichen (70 Datensätze, 28 Modelle, IDENTISCH bis auf diese fünf
+// Zeilen) — Score und Konfidenzintervall jeder astra-Stufe sind unverändert
+// zu `EFFORTS`, nur `cost_basis` und `mean_cost_usd` haben sich bewegt.
+// Zwischen dem Wayback-Crawl vom 17.09. (noch alt) und dem vom 22.09. 08:52
+// UTC (schon neu) hat das Board `cost_basis` umgestellt:
+//
+//   vorher: „Expected launch pricing at all context lengths: $12/M uncached
+//            input, $15/M cache writes, $1.20/M cache reads, $50/M output,
+//            $2/M compute units."
+//   jetzt:  „Current pricing at all context lengths: $10/M uncached input,
+//            $12.50/M cache writes, $1/M cache reads, $50/M output; no
+//            separate compute-unit fee."
+//
+// Damit ist die einzige-Sonderfall-Eigenschaft, die die Historien-Folie astra
+// noch am 03.09. zuschrieb (einziger Punkt mit „expected launch pricing" und
+// einer compute-units-Position), nicht mehr aktuell — astra rechnet jetzt wie
+// jedes andere Modell. Kosten fallen um 27 % (low) bis 39 % (max) — nicht
+// gleichmäßig, die teuerste Stufe profitiert am meisten (× 0,876 €,
+// `mean_cost_usd` wie überall in dieser Datei). Nachgerechnet gegen
+// `data/deepswe/board-20260922T062715Z-e9886184.ndjson` in
+// `boardArchive.test.ts`.
+export const ASTRA_TODAY: readonly Cfg[] = [
+  C("gpt-6-astra", "low", 67.04, 1.3, 1.4),
+  C("gpt-6-astra", "medium", 72.79, 2.59, 2.69),
+  C("gpt-6-astra", "high", 73.23, 3.42, 3.44),
+  C("gpt-6-astra", "xhigh", 74.12, 2.87, 3.88),
+  C("gpt-6-astra", "max", 73.23, 0.83, 6.57),
+];
+
+/** Dieselbe Lupe wie `ASTRA_LENS`, nur mit den heutigen Preisen — Basis der
+ * eigenen „Effort-Falle"-Folie (`EffortFalle.vue`, routeAlias `effort-falle`).
+ * max/high ist jetzt 1,9× statt 2,2× teurer: dieselbe Pointe (0 zusätzlich
+ * gelöste Aufgaben), etwas kleinerer Faktor. */
+export const ASTRA_LENS_TODAY: Lens = {
+  title: "Die Effort-Falle: mehr ist nicht besser, nur teurer",
+  note: "gpt-6-astra auf max kostet 6,57 € und löst 331 von 452 Aufgaben. high löst dieselben 331 für 3,44 €, xhigh 335 für 3,88 €. Das Board zeigt max, weil seine Regel die höchste Stufe nimmt. Wer die höchste Stufe bucht, zahlt fast das Doppelte für nichts. Vor dem Buchen die Stufen vergleichen: Bei vier von 22 Modellen ist die billigere Stufe auch die bessere.",
+  // x reicht bis 14 €, nicht bis knapp über max (6,57 €): Die Nachbarn liegen
+  // heute dichter an astras Leiter als am 03.09. (max saß damals bei 10,84 €,
+  // jenseits der meisten Nachbarn; heute bei 6,57 €, mitten im Nachbar-
+  // Cluster) — ohne den zusätzlichen Raum kollidiert das Label von xhigh mit
+  // Nachbarn oder verschwindet ganz. Nachgerechnet in lens.test.ts.
+  region: { x: [1, 14], y: [62, 78] },
+  focus: "gpt-6-astra",
+  ladder: EFFORT_ORDER.flatMap((e) =>
+    ASTRA_TODAY.filter((c) => c.effort === e),
+  ),
+};
+
+/**
+ * `CURRENT`, aber der astra-Punkt trägt den heutigen `xhigh`-Preis statt den
+ * vom 03.09. — nur als `pts`-Argument für `lensView(ASTRA_LENS_TODAY, …)`.
+ * `lensView` markiert die Ladder-Stufe als „gezeigt“, deren Preis/Score exakt
+ * den `focus`-Punkt in `pts` trifft; mit dem unveränderten `CURRENT` (astra
+ * bei 5,71 €, dem 03.09.-Preis) träfe das keine der heutigen Stufen. Die
+ * anderen 21 Punkte bleiben unverändert — nur astras eigener Preis hat sich
+ * bewegt, siehe `ASTRA_TODAY` oben.
+ */
+export const CURRENT_ASTRA_TODAY: readonly Pt[] = CURRENT.map((p) => {
+  if (p.label !== "gpt-6-astra") return p;
+  const xhigh = ASTRA_TODAY.find((c) => c.effort === "xhigh")!;
+  return { ...p, x: xhigh.x, eur: fmt(xhigh.x) };
+});
 
 const RANG: Record<Effort, number> = {
   low: 2,

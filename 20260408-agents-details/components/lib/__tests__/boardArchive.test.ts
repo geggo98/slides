@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  ASTRA_TODAY,
   paretoFront,
   SNAPSHOTS,
   V1_COMPARE,
@@ -248,6 +249,37 @@ describe("Der Regelwechsel bewegt keine Front", () => {
       );
     },
   );
+});
+
+// `ASTRA_TODAY` (Grundlage der eigenen „Effort-Falle"-Folie, siehe
+// `EffortFalle.vue`) gegen den Live-Fetch vom 23.09.2026 nachgerechnet: Score
+// und Konfidenzintervall wie am 03.09., nur der Preis ist gefallen
+// („expected launch pricing" → „current pricing", siehe Kopf von
+// `paretoData.ts`).
+describe("astra heute (ASTRA_TODAY) gegen das Board-Archiv", () => {
+  const heute = zustand("e9886184").filter((r) => r.model === "gpt-6-astra");
+  const damals = zustand(ZUSTAND["0903"]!).filter(
+    (r) => r.model === "gpt-6-astra",
+  );
+
+  it("hat alle fünf Stufen mit demselben Score wie am 03.09., nur billiger", () => {
+    for (const c of ASTRA_TODAY) {
+      const r = heute.find((z) => z.reasoning_effort === c.effort);
+      expect(r, c.effort).toBeDefined();
+      expect(Math.round(100 * r!.pass_at_1!)).toBe(Math.round(c.y));
+      expect(Number((0.876 * r!.mean_cost_usd!).toFixed(2))).toBe(c.x);
+    }
+  });
+
+  it("ist gegenüber dem 03.09.-Stand um 27–39 % billiger, bei gleichem Score", () => {
+    for (const r of damals) {
+      const h = heute.find((z) => z.reasoning_effort === r.reasoning_effort)!;
+      expect(h.pass_at_1).toBeCloseTo(r.pass_at_1!, 9);
+      const verhaeltnis = h.mean_cost_usd! / r.mean_cost_usd!;
+      expect(verhaeltnis).toBeGreaterThan(0.6); // max: 39 % billiger
+      expect(verhaeltnis).toBeLessThan(0.74); // low: 27 % billiger
+    }
+  });
 });
 
 // Der Faktencheck vom 05.09.2026, gegen die Rohdaten festgehalten: Die

@@ -679,6 +679,7 @@ hideInToc: true
 
 ---
 hideInToc: true
+routeAlias: opusplan
 ---
 
 # `opusplan`: Opus plant, Sonnet führt aus
@@ -726,6 +727,7 @@ Weitergedacht — Rollen-Routing über Modellfamilien & Harnesse hinweg: <Link t
 ---
 hideInToc: true
 clicks: 2
+routeAlias: opusplan-wechsel
 ---
 
 # `opusplan`: Ersparnis & Break-even in Euro
@@ -840,7 +842,7 @@ clicks: 8
 
 <div class="text-xs opacity-60 leading-snug mt-2"><b>Von Hand (TUI):</b> erst <code>/model</code> (Modell + Stufe, schreibt <code>model</code> und <code>model_reasoning_effort</code>), dann <code>/plan</code>, dann <code>/model</code> erneut — <b>gleiches Modell</b>, andere Stufe: nur dann fragt Codex „Apply to Plan mode override“ und schreibt <code>plan_mode_reasoning_effort</code>. Nur für die Session: <kbd>Alt</kbd>+<kbd>,</kbd> / <kbd>Alt</kbd>+<kbd>.</kbd>.</div>
 
-<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll das vermeiden — <b>⚠ in 0.154/0.155 scheitert damit auf Sol, Terra und Luna jeder Turn</b> (HTTP 400, <a href="https://github.com/openai/codex/issues/44751">#44751</a>); nur Astra läuft, Fix erst ab 0.156. Effort-Faktor: <Link to="pareto-historie">Effort-Falle, Kap. 7</Link>.</div>
+<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll das vermeiden — der 0.154/0.155-Crash auf Sol, Terra und Luna (HTTP 400, <a href="https://github.com/openai/codex/issues/44751">#44751</a>) ist seit 0.156 (22.09.) behoben, aber bis 0.156.1 bleibt die Cache-schonende Wirkung für <b>jedes</b> Modell aus, auch Astra; das schaltet erst 0.157 frei (noch Alpha). Effort-Faktor: <Link to="effort-falle">Effort-Falle, Kap. 7</Link>.</div>
 
 </div>
 <div>
@@ -896,6 +898,27 @@ der fest eingebaute Plan-Preset-Wert
 (models-manager/src/collaboration_mode_presets.rs, per
 collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
 und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
+
+Nachtrag (Faktencheck 23.09.2026): 0.156.0/0.156.1 sind jetzt stable
+(22.09.2026). Der Crash ist weg, aber supports_reasoning_effort_updates
+steht dort für JEDES Modell auf false (Default, models-manager/src/model_info.rs,
+Fallback-Konstruktor) — auch gpt-6-astra. Codex sendet aktuell also nie
+einen configuration_update; jeder Effort-Wechsel bricht den Cache wie vor
+dem ganzen Feature, nur crasht nichts mehr. Das Flag kippt erst mit Commit
+24462234b2 (PR #47397 „Refresh bundled model metadata and instructions“,
+gemerged 23.09.2026 00:07 UTC) auf true, und zwar nur für Astra — das liegt
+bereits in rust-v0.157.0-alpha.* (`git compare` bestätigt: Vorfahre von
+0.157.0-alpha.11, aber NACH rust-v0.156.1 vom 22.09. 19:51 UTC), in keinem
+Stable-Release. gpt-6-sol und gpt-6-luna (neu im Katalog seit PR #47332,
+gemerged 22.09. 18:17 UTC) tragen das Flag nirgends — weder in 0.156.1 noch
+im aktuellen 0.157-Alpha-Stand. OpenAIs Reasoning-Doku
+(developers.openai.com/api/docs/guides/reasoning) sagt seit dieser Woche
+„Configuration updates are supported by the GPT-6 model family“ statt „…only
+by GPT-6 Astra“ (Wayback-Crawl 20.09. vs. 23.09.) — API-seitig also breiter,
+aber Codex' eigenes Client-Gate zieht (Stand 23.09.) nicht nach. GPT-6 Terra
+existiert noch nicht (developers.openai.com/api/docs/models/gpt-6-terra
+liefert 404, 23.09.2026). Details und die aktualisierten astra-Zahlen: die
+eigene „Effort-Falle"-Folie (Kap. 7, gleich nach der Historie).
 
 Versionsbeleg: PR openai/codex#12303 „Improve Plan mode reasoning
 selection flow“, gemerged 21.02.2026, erstes Release
@@ -1618,7 +1641,7 @@ sie gegen diese Notiz.
 
 ---
 hideInToc: true
-clicks: 10
+clicks: 9
 routeAlias: pareto-historie
 ---
 
@@ -1655,18 +1678,12 @@ Station 2 (10.07.): Die gpt-5.6-Familie kommt an einem Tag. terra hat den
 Score von fable-5 für gut ein Drittel des Preises, Anthropic verschwindet
 von der Front. Station 3 (22.07.) füllt dann nur noch das billige Ende auf.
 
-Neunter Klick (nach Station 9): die Lupe „Die Effort-Falle". Das Chart
-dimmt, ein Panel zeigt die Region 1,5 bis 13 € × 62 bis 78 % vergrößert und
-darin alle fünf gemessenen Effort-Stufen von gpt-6-astra als Leiter: low
-1,92 €/67,0 %, medium 3,84 €/72,8 %, high 5,01 €/73,2 %, xhigh 5,71 €/74,1 %
-(die geplottete Stufe), max 10,84 €/73,2 %. Die Klammer zwischen high und
-max sagt es in einem Satz: 2,2-facher Preis, gleicher Score. Trugschluss:
-„höherer Effort ist besser". Er kann auch einfach nur teurer sein, und das
-deutlich. Vor dem Buchen die Stufen vergleichen; bei vier von 22 Modellen ist
-die billigere Stufe auch die bessere (Details im ⓘ unter „Höchste
-Effort-Stufe").
+Die Lupe „Die Effort-Falle" (gpt-6-astras fünf Effort-Stufen) ist seit
+22.09.2026 keine Station mehr dieser Folie, sondern eine eigene Folie direkt
+danach (routeAlias `effort-falle`) — dort auch mit dem inzwischen
+korrigierten heutigen Preis statt der hier gezeigten 03.09.-Zahlen.
 
-Zehnter Klick: „Aktueller Stand" schließt die Klammer zur Folie davor —
+Neunter Klick: „Aktueller Stand" schließt die Klammer zur Folie davor —
 dasselbe Bild wie dort, jetzt mit allen Namen und Fadenkreuz. Die Notiz
 wiederholt die drei Sprossen und die Regel statt der Namen: der billigste
 Frontpunkt, der Deine Aufgaben löst. Punkt oder Label anklicken pinnt,
@@ -1683,6 +1700,64 @@ terra/glm-5.3, an Station 9 sol/astra (waagerecht). Frontpunkte rücken nur
 waagerecht. Kein dominierter Punkt rückt über die Front oder links an seinen
 Dominator vorbei. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
 rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
+-->
+
+---
+hideInToc: true
+routeAlias: effort-falle
+clicks: 3
+---
+
+# GPT-6 Astra: Die Effort-Falle
+
+<div class="text-sm opacity-70 mb-2">
+
+Ein Modell, fünf Preise — und ein Preis, der sich seit dem Start schon
+verschoben hat, bevor auch nur ein zweites GPT-6-Modell auf dem Board
+gelandet ist.
+
+</div>
+
+<EffortFalle :step="$clicks" />
+
+<!--
+Herausgelöst aus dem bisherigen neunten Klick der Historien-Folie (bis
+22.09.2026) — Details siehe deren Notiz. Drei Klicks:
+
+1 blendet die Preis/Score-Klammer zwischen high und max ein: beide lösen 331
+von 452 Aufgaben, max kostet trotzdem das 1,9-Fache. Rechnung siehe
+`components/paretoData.ts`, Abschnitt „astra heute". Board zeigt `max`, weil
+seine Regel die höchste Effort-Stufe nimmt, nicht die beste.
+
+2 der Preis-Kasten: Board führte astra bis mindestens zum 17.09.2026 als
+„expected launch pricing" (12 $/M Input, 15 $/M Cache-Write, 1,20 $/M
+Cache-Read, 2 $/M compute units — die einzige Zeile des ganzen Boards mit
+dieser Klausel). Zum 22.09.2026 08:52 UTC (Wayback) steht dort „current
+pricing" (10 $/M Input, 12,50 $/M Cache-Write, 1 $/M Cache-Read, keine
+Compute-Unit-Gebühr) — 27–39 % billiger, Score und Konfidenzintervall jeder
+Stufe unverändert. Die Historien-Folie (Stand 03.09.2026) bleibt bei den
+alten Zahlen, sie ist explizit datiert; diese Folie rechnet mit dem
+Live-Stand vom 23.09.2026 (`data/deepswe/board-20260922T062715Z-e9886184.ndjson`).
+
+3 der Vorläufig-Kasten: Claude Opus 5.5 (22.09.) und GPT-6 Sol + Luna (22.09.)
+sind auf dem DeepSWE-Board noch nicht gelistet — Live-Fetch vom 23.09.2026
+zeigt dieselben 70 Datensätze/28 Modelle wie am 03.09. Datacurves eigene
+Tracking-Issues (datacurve-ai/deep-swe#98 für Opus 5.5, #99 für Sol/Luna,
+beide vom 22.09., offen) enden mit „Please test". Die drei gezeigten Zahlen
+sind selbstberichtet: Opus 5.5 74,2 % (Ø 5 Durchläufe, Anthropics eigene
+„Claude Opus 5.5 System Card", Abschnitt 8.3 — kein Preis genannt), GPT-6 Sol
+68,8 % und GPT-6 Luna 66,6 % (beide bei max effort, aus OpenAIs eigenem
+Ankündigungs-Chart). Bewusst als Text, nicht als Chart-Punkt: Weder für Sol
+noch für Luna lässt sich aus dem Chart eine belastbare €/Task-Zahl ablesen,
+und Opus 5.5 nennt gar keinen Preis — ein erfundener x-Wert wäre keine
+Messung. Quelldatei `components/lib/preliminaryDeepSWE.ts`, bewusst getrennt
+von `paretoData.ts` und nicht Teil von `SNAPSHOTS`/`CURRENT`: sobald eines
+der beiden Issues einen echten Board-Wert bringt, wird diese Datei ersetzt
+(gelöscht, nicht nur editiert), ohne dass irgendwo sonst im Deck etwas
+nachgezogen werden muss.
+
+Kein GPT-6 Terra (Stand 23.09.2026): developers.openai.com/api/docs/models/gpt-6-terra
+liefert 404, anders als bei Astra/Sol/Luna.
 -->
 
 ---

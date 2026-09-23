@@ -8,19 +8,32 @@ import {
   MARKER,
   plotBounds,
 } from "../../paretoChrome";
-import { ASTRA_LENS, EFFORT_ORDER, EFFORTS, SNAPSHOTS } from "../../paretoData";
+import {
+  ASTRA_LENS,
+  ASTRA_LENS_TODAY,
+  ASTRA_TODAY,
+  CURRENT,
+  CURRENT_ASTRA_TODAY,
+  EFFORT_ORDER,
+  EFFORTS,
+  SNAPSHOTS,
+} from "../../paretoData";
 
-// Die Lupe ist der neunte Klick der Historie: Sie soll das Publikum vor einer
-// teuren Fehlkonfiguration bewahren. Was sie behauptet, muss aus der
-// Effort-Tabelle folgen, und ihr Panel muss lesbar sein.
+// Die Lupe war bis 22.09.2026 der neunte Klick der Historie, seither eine
+// eigene Folie (`EffortFalle.vue`, routeAlias `effort-falle`) mit den
+// aktualisierten astra-Preisen (`ASTRA_LENS_TODAY`, eigener Test unten). Sie
+// soll das Publikum vor einer teuren Fehlkonfiguration bewahren. Was sie
+// behauptet, muss aus der Effort-Tabelle folgen, und ihr Panel muss lesbar
+// sein — beides prüft dieser Block weiterhin an `ASTRA_LENS`, der Stand vom
+// 03.09.2026, an dem `EFFORTS`/`CURRENT` hängen. Kein Snapshot trägt sie mehr
+// (die Zuweisung ist mit dem Umzug entfallen), deshalb wird sie hier direkt
+// importiert statt über `SNAPSHOTS` gesucht.
 
 describe("Lupe: die Effort-Falle", () => {
-  const snap = SNAPSHOTS[SNAPSHOTS.length - 1]!;
-  const view = lensView(ASTRA_LENS, snap.pts, HISTORY_SCALE);
+  const view = lensView(ASTRA_LENS, CURRENT, HISTORY_SCALE);
 
-  it("hängt nur am letzten Stand und ist aus EFFORTS abgeleitet", () => {
-    expect(snap.lens).toBe(ASTRA_LENS);
-    expect(SNAPSHOTS.filter((s) => s.lens)).toHaveLength(1);
+  it("hängt an keinem Snapshot mehr und ist aus EFFORTS abgeleitet", () => {
+    expect(SNAPSHOTS.every((s) => !s.lens)).toBe(true);
     expect(ASTRA_LENS.ladder.map((c) => c.effort)).toStrictEqual([
       ...EFFORT_ORDER,
     ]);
@@ -95,5 +108,48 @@ describe("Lupe: die Effort-Falle", () => {
     expect(
       perPp / Math.abs(HISTORY_SCALE.py(1) - HISTORY_SCALE.py(0)),
     ).toBeGreaterThan(2);
+  });
+});
+
+// `EffortFalle.vue` (routeAlias `effort-falle`) zeigt dieselbe Leiter mit dem
+// Preis von heute statt vom 03.09.2026 — eigener Datensatz (`ASTRA_TODAY`),
+// damit `CURRENT`/`EFFORTS` beim historischen Stand bleiben. Score und CI
+// jeder Stufe sind identisch zu `ASTRA_LENS` (siehe `boardArchive.test.ts`
+// für den Beleg gegen die archivierten Rohdaten), nur die Preise und damit
+// der Klammer-Faktor unterscheiden sich.
+describe("Lupe heute: ASTRA_LENS_TODAY", () => {
+  const view = lensView(ASTRA_LENS_TODAY, CURRENT_ASTRA_TODAY, HISTORY_SCALE);
+
+  it("hat dieselben Scores wie ASTRA_LENS, aber niedrigere Preise", () => {
+    for (const today of ASTRA_TODAY) {
+      const alt = ASTRA_LENS.ladder.find((c) => c.effort === today.effort)!;
+      expect(today.y).toBe(alt.y);
+      expect(today.ci).toBe(alt.ci);
+      expect(today.x).toBeLessThan(alt.x);
+    }
+  });
+
+  it("zeigt dieselbe Falle mit kleinerem Faktor: max teurer, gleicher Score", () => {
+    const by = (e: string) => ASTRA_TODAY.find((c) => c.effort === e)!;
+    expect(by("max").y).toBe(by("high").y);
+    const ratio = by("max").x / by("high").x;
+    expect(ratio).toBeGreaterThan(1.5);
+    expect(ratio).toBeLessThan(2); // 1,9× statt der 2,2× vom 03.09.
+    expect(
+      view.ladder.filter((l) => l.shown).map((l) => l.c.effort),
+    ).toStrictEqual(["xhigh"]);
+  });
+
+  it("beschriftet alle fünf Stufen ohne Überschneidung", () => {
+    expect([...view.labels.keys()].sort()).toStrictEqual(
+      [...EFFORT_ORDER].sort(),
+    );
+    const blocks = [
+      ...view.obstacles,
+      ...view.ladder.map((l) => squareAt(l, LENS.hitR, l.c.effort)),
+    ];
+    expect(
+      collisions(view.labels.values(), blocks, plotBounds(view.scale)),
+    ).toStrictEqual([]);
   });
 });
