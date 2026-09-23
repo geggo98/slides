@@ -773,6 +773,52 @@ Prompt vom Hauptagenten generiert · Codex CLI verschlüsselt Sub-Agent-Prompts 
 
 ---
 hideInToc: true
+routeAlias: loop-vergisst-nichts
+---
+
+# Lektion: Der Loop vergisst nichts
+
+Kapitel 2 behauptete: „frischer Kontext pro Lauf“ — das stimmt nachweislich nur für Variante 2 (eigener Prozess je Tick).
+
+<v-clicks>
+
+- **Claude Codes `/loop` feuert denselben Prompt in dieselbe laufende Sitzung zurück** — kein neuer Prozess, kein neuer Kontext. Was ein Tick an Tool-Aufrufen anhäuft, bleibt für den nächsten Tick stehen.
+- **Gemessen über mehrere produktive Loop-Sitzungen** (Use Case 1, stündlich): die Kontextgröße zu Tick-Beginn wuchs in den längeren Läufen unbegrenzt mit — bis auf **~850.000 Tokens** in einer einzelnen Sitzung.
+- Ein wachsender Kontext kostet doppelt: jeder Tick zahlt ihn erneut mit, und irgendwann zwingt er zum Neustart der Sitzung.
+
+</v-clicks>
+
+<Callout v-click tone="warning" class="mt-4">
+
+Der Prompt-Cache rettet hier wenig: Bei stündlichem Takt ist er beim nächsten Tick ohnehin meist kalt (1‑Stunden‑TTL gegen 1‑Stunden‑Intervall) — der mitgeschleppte Kontext kostet also in jedem Request neu.
+
+</Callout>
+
+---
+hideInToc: true
+routeAlias: workflow-statt-agent-im-fork
+---
+
+# Lektion: Fan-out braucht eigene Isolation
+
+Naheliegender Fix: nach jedem Tick an einen **Fork-Subagenten** delegieren — dessen Tool-Output bleibt außerhalb der Hauptsitzung.
+
+<v-clicks>
+
+- **Fork + `Agent`-Tool bricht:** Innerhalb eines Forks ist das `Agent`-Tool gesperrt („you ARE the fork, execute directly“) — der Fan-out pro Ticket lief dadurch komplett sequenziell. **Gemessen:** 1 von 9 testbaren Tickets in der Stunde.
+- **Fork + `Workflow`-Tool funktioniert:** ein deterministisches Skript mit eigenem Subagenten-Pool ist aus dem Fork heraus uneingeschränkt nutzbar. **Gemessen, gleicher Lauftyp:** 16 von 16 Agenten fertig, 0 Fehler, ~30 Minuten Wandzeit, 8 von 8 testbaren Tickets.
+- **Nebeneffekt gemessen:** die Kontextgröße zu Tick-Beginn blieb danach auch über Läufe mit bis zu 38 Ticks durchgehend unter **~270.000 Tokens** — statt auf ~850.000 zu wachsen.
+
+</v-clicks>
+
+<Callout v-click tone="success" class="mt-4">
+
+Verallgemeinert: **wiederkehrende Fan-out-Arbeit gehört in isolierte Subagenten/Workflows, nicht in die Loop-Sitzung selbst** — sonst häuft sich Kontext ungebremst über Ticks hinweg an.
+
+</Callout>
+
+---
+hideInToc: true
 ---
 
 # Use Case 2: Tägliches CVE-Fixen
@@ -822,12 +868,12 @@ table {
 }
 </style>
 
-| Use Case                   | Runbook sagt …                     | Skills              | Zustand lebt in …       |
-| -------------------------- | ---------------------------------- | ------------------- | ----------------------- |
-| Ticket-Tests _(produktiv)_ | „teste die Änderungen am Ticket“   | API, Ticketsystem   | Ticket-Kommentar        |
-| CVE-Fixes _(produktiv)_    | „scanne & fixe Abhängigkeiten“     | Scanner, Build, PR  | Status-Datei + PRs      |
-| Code-Review _(Ausblick)_   | „prüfe offene PRs nach Checkliste“ | Diff, PR-Kommentare | PR-Kommentar mit Header |
-| Alert-Analyse _(Ausblick)_ | „trianguliere neue Alerts“         | Monitoring, Logs    | Alert-Ticket            |
+| Use Case                    | Runbook sagt …                     | Skills              | Zustand lebt in …       |
+| --------------------------- | ---------------------------------- | ------------------- | ----------------------- |
+| Ticket-Tests _(produktiv)_  | „teste die Änderungen am Ticket“   | API, Ticketsystem   | Ticket-Kommentar        |
+| CVE-Fixes _(produktiv)_     | „scanne & fixe Abhängigkeiten“     | Scanner, Build, PR  | Status-Datei + PRs      |
+| Code-Review _(Ausblick)_    | „prüfe offene PRs nach Checkliste“ | Diff, PR-Kommentare | PR-Kommentar mit Header |
+| Alert-Analyse _(pilotiert)_ | „trianguliere neue Alerts“         | Monitoring, Logs    | Alert-Ticket            |
 
 <Callout v-click tone="success" class="mt-4">
 
@@ -840,6 +886,29 @@ Es ändern sich nur **Runbook + Skills**. Orchestrierung, Idempotenz-Muster, Not
 Und am anderen Ende der Skala: 64 parallele Claudes porten eine JS-Runtime → <Link to="bun-fallstudie">Bonus: Fallstudie Bun</Link>
 
 </div>
+
+---
+hideInToc: true
+routeAlias: skript-statt-agent
+---
+
+# Lektion: Feste Abläufe ins Skript
+
+**Warum das lohnt:** ob ein teurer paralleler Fan-out sich lohnt, hängt an ein paar schnellen, immer gleichen Vorab-Checks — gemessen an zwei Läufen mit demselben 20-Minuten-Zeitbudget: einmal vor der Einengung gestartet (nichts Verwertbares), einmal danach (vier abgesicherte Befunde parallel).
+
+<v-clicks>
+
+- **Also:** die immer gleichen Vorab-Checks (Datenlage, Kennzahlen-Fenster, bekannte Verdachtsmuster) aus dem Agenten-Prompt in ein Skript verlagert — **ein Aufruf statt fünf Handgriffen**, jedes Mal dieselbe Reihenfolge.
+- **Innerhalb des Skripts weiter verdichtet:** eine wiederkehrende Kennzahlen-Abfrage von 4 Einzelabfragen auf 1.
+- **Reproduzierbarkeit als Bonus:** eine dort fest verdrahtete Gegenprüfung fing später einen Fehlalarm ab, den eine einfache Schwellwert-Heuristik fälschlich bestätigt hätte — derselbe Check liefert jedes Mal dasselbe Urteil.
+
+</v-clicks>
+
+<Callout v-click tone="info" class="mt-4">
+
+Grenze bleibt: die **Interpretation** — ist ein Ausschlag ein echter Vorfall oder Rauschen — bleibt beim Agenten. Skripte liefern die Zahlen schnell und immer gleich, nicht das Urteil.
+
+</Callout>
 
 ---
 layout: section
@@ -907,6 +976,7 @@ hideInToc: true
 2. **Zustand gehört ins Ticketsystem** — der Idempotenz-Header macht jeden Lauf gefahrlos wiederholbar.
 3. **Lernen = Agent notiert, Mensch kuratiert** — die Git-History des Runbooks ist die Lernkurve.
 4. **Der einzige Code sind die Skills** — Standard-Harness + Markdown + eine Schleife. Keine Hooks, kein Framework.
+5. **Wiederkehrende Arbeit isolieren, feste Abläufe skripten** — sonst wächst der Loop-Kontext ungebremst, und jeder Lauf tippt dieselben Handgriffe neu.
 
 </v-clicks>
 
