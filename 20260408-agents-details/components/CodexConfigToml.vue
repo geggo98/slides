@@ -18,7 +18,7 @@ import MonacoBlock from "@shared/components/MonacoBlock.vue";
 const props = withDefaults(defineProps<{ step?: number }>(), { step: 0 });
 
 const CODE = [
-  'model = "gpt-5.6-sol"  # oder astra, terra, luna',
+  'model = "gpt-6-sol"  # oder astra, luna',
   'model_reasoning_effort = "medium"',
   "# ⚠ Desktop-App ignoriert diesen Key (#18712)",
   'plan_mode_reasoning_effort = "xhigh"',
@@ -40,7 +40,7 @@ interface Markierung {
 
 // Schritte wie in CodexEffortTui.vue. 1 = Modellwahl (Default-Mode) → model
 // kräftig. 2 = Reasoning Level → model_reasoning_effort kräftig. 3 = „Model
-// changed to gpt-5.6-sol medium“: beide Zeilen sind geschrieben (grün) und
+// changed to gpt-6-sol medium“: beide Zeilen sind geschrieben (grün) und
 // bleiben es. 4 = /plan: nichts Neues. 5 = Modellwahl im Plan-Mode, gleiches
 // Modell — nichts wird geschrieben. 6 = Reasoning Level im Plan-Mode →
 // plan_mode_reasoning_effort schwach (ob der Wert dorthin geht, entscheidet
@@ -66,13 +66,14 @@ const HIGHLIGHTS: Record<number, Markierung[]> = {
 };
 
 // 11 px / 15 px Zeilenhöhe wie der frühere Markdown-Fence der Folie. Die
-// längste Zeile (47 Zeichen; 0xProto 0,62 em → 6,82 px je Zeichen bei 11 px)
-// braucht mit Glyph-Spalte (14 px) und Dekorationsspalte (4 px) rund 340 px
-// und passt so in die 360 px breite Folienspalte (Editor innen 358 px). Der
-// Modell-Kommentar ist deshalb bewusst kurz („astra, terra, luna“ statt der
-// vollen IDs — die stehen im TUI-Dialog daneben); mit den vollen IDs fehlten
-// bei 11 px 9 px und „-luna“ wurde abgeschnitten (gemessen mit
-// playwright-tests/codex-tui-qa.ts, tomlLine1).
+// längste Zeile (47 Zeichen, der Desktop-App-Kommentar; 0xProto 0,62 em →
+// 6,82 px je Zeichen bei 11 px) braucht mit Glyph-Spalte (14 px) und
+// Dekorationsspalte (4 px) rund 340 px und passt so in die 360 px breite
+// Folienspalte (Editor innen 358 px). Der Modell-Kommentar ist bewusst kurz
+// („astra, luna“ statt der vollen IDs — die stehen im TUI-Dialog daneben);
+// seit dem Wegfall von Terra (kein GPT-6 Terra) ist die Modellzeile ohnehin
+// nicht mehr die längste (gemessen mit playwright-tests/codex-tui-qa.ts,
+// tomlLine1).
 // Sieben Zeilen à 15 px + Innenabstand 2 × 6 px = 117 px; 125 px lässt Luft,
 // ohne dass Monaco eine vertikale Scrollbar einblendet.
 const HEIGHT = "125px";

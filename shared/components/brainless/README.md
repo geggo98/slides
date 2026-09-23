@@ -56,6 +56,14 @@ a shadcn/ui registry that recreates the terminal UIs of coding agents
   default path is unchanged and the regression harness
   `20260707-anatomy-of-autonomous-agents/playwright-tests/codex-permissions-regression.ts`
   is expected to stay byte-identical (not re-run for this change).
+- `CodexPermissions` gained a third opt-in prop, `footer` (defaults to
+  upstream's "Press enter to confirm or esc to go back"). Codex CLI 0.156.1
+  (screenshots, 23.09.2026) varies this line per popup type — "enter select
+  · esc back" for plain pickers, "enter default · s session · esc back" for
+  a reasoning-level picker — composed dynamically from the active keymap and
+  each item's `secondary_action` (`list_selection_view.rs`
+  `active_footer_hint`), too deep to port; a host passes the literal string
+  instead (`CodexEffortTui.vue`).
 
 ## Component index
 

@@ -856,23 +856,27 @@ clicks: 8
 Klicks (acht, nur die Klicks laufen im Presenter- und im Publikumsfenster
 synchron; die Tipp-Animation läuft je Fenster). Erst der globale Teil, im
 Default-Mode: 1 tippt /model, die Slash-Zeile erscheint, dann öffnet sich
-„Select Model and Effort“ — sol ist Default, terra „current“. 2 „Select
-Reasoning Level for gpt-5.6-sol“, der Cursor bleibt auf Medium. 3 „Model
-changed to gpt-5.6-sol medium“ — das schreibt model UND
-model_reasoning_effort GLOBAL, links werden beide Zeilen grün. Dann der
-Plan-Teil: 4 tippt /plan, die Statuszeile zeigt „Plan mode“. 5 tippt
-/model erneut — sol ist jetzt „current“ und BLEIBT gewählt. Das ist der
-Punkt, an dem Leute scheitern: Wer hier ein anderes Modell wählt, bekommt
-KEINEN Dialog, Codex schreibt model und model_reasoning_effort still
-global (should_prompt_plan_mode_reasoning_scope in
-tui/src/chatwidget/model_popups.rs, rust-v0.155.1: selected_model !=
-current_model → false; Issue #38236 beschreibt genau diese Falle). 6 der
-Cursor wandert von Medium auf Extra high; links ist
+„Select Model and Effort“ — GPT-6-Sol ist Default, das ALTE GPT-5.6-Sol
+„current“ (Katalog-Update vom 23.09.2026, PR #47332; Reihenfolge und
+Default-Markierung sind der Live-Backend-Stand vom Erscheinungstag, nicht
+der gebündelte Fallback-Katalog, der Astra zuerst listet). 2 „Select
+Reasoning Level for GPT-6-Sol“, der Cursor bleibt auf Medium. 3 „Model
+changed to gpt-6-sol medium“ — das schreibt model UND
+model_reasoning_effort GLOBAL, links werden beide Zeilen grün (die Meldung
+zeigt den Slug, Picker/Header/Status zeigen seit PR #46503 den
+Anzeigenamen „GPT-6-Sol“). Dann der Plan-Teil: 4 tippt /plan, die
+Statuszeile zeigt „Plan mode“. 5 tippt /model erneut — GPT-6-Sol ist jetzt
+„current“ und BLEIBT gewählt. Das ist der Punkt, an dem Leute scheitern:
+Wer hier ein anderes Modell wählt, bekommt KEINEN Dialog, Codex schreibt
+model und model_reasoning_effort still global (should_prompt_plan_mode_
+reasoning_scope in tui/src/chatwidget/model_popups.rs, rust-v0.156.1:
+selected_model != current_model → false; Issue #38236 beschreibt genau
+diese Falle). 6 der Cursor wandert von Medium auf Extra high; links ist
 plan_mode_reasoning_effort schwach markiert, weil erst der nächste Dialog
 entscheidet, ob der Wert dorthin geht. 7 „Apply reasoning change“ — Option
 1 „Apply to Plan mode override“ schreibt nur plan_mode_reasoning_effort,
-die Zeile leuchtet allein. 8 „Model changed to gpt-5.6-sol xhigh for Plan
-mode.“, Statuszeile gpt-5.6-sol xhigh · Plan mode; links stehen alle drei
+die Zeile leuchtet allein. 8 „Model changed to gpt-6-sol xhigh for Plan
+mode.“, Statuszeile GPT-6-Sol xhigh · Plan mode; links stehen alle drei
 geschriebenen Zeilen grün. Zurück (←) nimmt jeden Schritt ohne Animation
 zurück. Das Verzeichnis ~/slides ist das dieses Decks — Easter Egg.
 
@@ -890,12 +894,20 @@ neue Modell-Metadaten supports_reasoning_effort_updates) — NACH 0.155.1
 „der Harness ist mit den 5.6er-Modellen nicht benutzbar“. Kein Panic, aber
 jede Session tot; Workaround laut Issue: Flag aus, neue Session. Nachbau mit dem brainless-Port (MIT,
 shared/components/brainless); die Texte sind wörtlich aus Codex CLI
-0.153.4 (Screenshots 19.09.2026) bzw. aus den Quellen unten. Der Dialog
-in Klick 5 zeigt den Moment VOR dem ersten Override, die TOML-Zeile ist
-sein Ergebnis. Die zweite Beschreibung endet auf „built-in Plan default
-(medium)“, weil kein plan_mode_reasoning_effort gesetzt ist: medium ist
-der fest eingebaute Plan-Preset-Wert
-(models-manager/src/collaboration_mode_presets.rs, per
+0.156.1 (fünf Screenshots 23.09.2026, Katalog-Update auf GPT-6 Sol/Luna
+vom selben Tag) bzw. aus den Quellen unten. Seit PR #46503 (18.09.,
+in 0.156) zeigen Picker, Reasoning-Titel, Header und Statuszeile
+Anzeigenamen („GPT-6-Sol“); nur die Ergebnis-Meldungen bleiben beim Slug
+(„gpt-6-sol“). Der Untertitel „Access legacy models …“ unter „Select
+Model and Effort“ ist mit derselben PR weggefallen. Die Fußzeile
+variiert seit PR #45831/#46697 je Dialogtyp: „enter select · esc back“
+für Modell- und Scope-Dialog, „enter default · s session · esc back“
+für die Reasoning-Wahl (ein neuer `s`-Weg für Session-only, siehe
+CodexPermissions.vue). Der Dialog in Klick 5 zeigt den Moment VOR dem
+ersten Override, die TOML-Zeile ist sein Ergebnis. Die zweite
+Beschreibung endet auf „built-in Plan default (medium)“, weil kein
+plan_mode_reasoning_effort gesetzt ist: medium ist der fest eingebaute
+Plan-Preset-Wert (models-manager/src/collaboration_mode_presets.rs, per
 collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
 und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
 
@@ -939,9 +951,8 @@ Doku: learn.chatgpt.com/docs/config-file/config-reference —
 „Plan-mode-specific reasoning override. When unset, Plan mode uses its
 built-in preset default“ (medium). Gültige Werte laut Doku none…xhigh,
 der Code nimmt auch max und ultra; Ungültiges reicht Codex durch, die API
-antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier: CLI
-0.153.4 und das App-Bundle 0.154.0-alpha.6.2 (≈ Stable 0.154.0 vom
-09.09.2026), beide kennen den Key.
+antwortet 400. Der Key gilt auch je [profiles.x]. Installiert hier (Stand
+23.09.2026, Screenshots): CLI 0.156.1, kennt den Key.
 
 TUI-Beleg (rust-v0.154.0): die Konstanten PLAN_MODE_REASONING_SCOPE_* in
 tui/src/chatwidget.rs L184-186, der Dialog in

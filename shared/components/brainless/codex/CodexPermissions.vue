@@ -10,6 +10,14 @@
   columns already in v0.132, the version brainless captured; e.g. "Apply
   reasoning change" in Plan mode). Both are opt-in; without them the
   rendering stays upstream's stacked layout.
+  Deviation: `footer` (opt-in, defaults to upstream's text). Real Codex CLI
+  (screenshots, 0.156.1, 23.09.2026) varies the footer line per popup type —
+  "enter select · esc back" for plain pickers, "enter default · s session ·
+  esc back" for a reasoning-level picker (the `s` key applies the choice for
+  this session only, since PR openai/codex#45831). The exact composition
+  rule lives in list_selection_view.rs's `active_footer_hint` (per-item
+  `secondary_action`, keymap-driven) — too deep to port faithfully, so a
+  host passes the literal string it observed instead.
 -->
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
@@ -32,11 +40,14 @@ const props = withDefaults(
      * the widest row, description beside it, selected row in cyan.
      */
     columns?: boolean;
+    /** Overrides the footer line; see the Deviation note above. */
+    footer?: string;
   }>(),
   {
     title: "Update Model Permissions",
     subtitle: undefined,
     columns: false,
+    footer: "Press enter to confirm or esc to go back",
     options: () => [
       {
         label: "Default",
@@ -156,7 +167,7 @@ function onKey(e: KeyboardEvent, i: number) {
       </div>
     </div>
 
-    <p class="cxp-footer">Press enter to confirm or esc to go back</p>
+    <p class="cxp-footer">{{ footer }}</p>
   </div>
 </template>
 

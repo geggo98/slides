@@ -8,19 +8,44 @@
  * Statuszeile sind hier nachgezeichnet, weil CodexPrompt/CodexSlashMenu ein
  * echtes <input> mitbringen und der Nachbau nur Abbildung ist (`inert`).
  *
- * Schritte (Texte wörtlich aus Codex CLI 0.153/0.154):
- *   0 leerer Composer, terra medium · 1 „/model“ wird getippt, dann die
- *   Modellwahl (sol default, terra current) · 2 Reasoning Level für sol,
- *   Cursor bleibt auf Medium · 3 „Model changed to gpt-5.6-sol medium“ —
- *   das schreibt model und model_reasoning_effort GLOBAL · 4 „/plan“ wird
- *   getippt, danach „Plan mode“ · 5 „/model“ erneut, sol ist jetzt current
- *   und bleibt es · 6 Reasoning Level, Cursor wandert Medium → Extra high ·
- *   7 „Apply reasoning change“ · 8 „… xhigh for Plan mode.“
+ * Schritte (Texte wörtlich aus fünf Screenshots Codex CLI 0.156.1,
+ * 23.09.2026, Katalog-Erweiterung um GPT-6 Sol/Luna vom selben Tag):
+ *   0 leerer Composer, GPT-5.6-Sol medium (das ALTE Sol) · 1 „/model“ wird
+ *   getippt, dann die Modellwahl — Cursor auf Zeile 1, GPT-6-Sol (default);
+ *   GPT-5.6-Sol trägt „(current)“ · 2 Reasoning Level für GPT-6-Sol, Cursor
+ *   bleibt auf Medium (default) · 3 „Model changed to gpt-6-sol medium“ —
+ *   das schreibt model und model_reasoning_effort GLOBAL (Meldung bleibt
+ *   der Slug, nicht der Anzeigename — Header/Status zeigen „GPT-6-Sol“, die
+ *   Meldung „gpt-6-sol“, beides belegt) · 4 „/plan“ wird getippt, danach
+ *   „Plan mode“ · 5 „/model“ erneut, GPT-6-Sol ist jetzt current und bleibt
+ *   es · 6 Reasoning Level, Cursor wandert Medium → Extra high · 7 „Apply
+ *   reasoning change“ · 8 „… xhigh for Plan mode.“
+ *
+ * Warum GPT-5.6-Sol → GPT-6-Sol statt (wie bis 22.09.) Terra → Sol: die
+ * Screenshots zeigen echten Katalogstand vom Erscheinungstag — GPT-6-Sol
+ * steht als Default an Position 1 (das Backend-Ranking weicht vom
+ * gebündelten Fallback-Katalog ab, der Astra zuerst listet; Ground Truth
+ * ist der Screenshot), GPT-5.6-Sol war schon vorher aktiv. Der Umstieg auf
+ * das neue Sol ist die naheliegendere Erzählung als ein Sprung über zwei
+ * Generationen; GPT-6 Terra existiert nicht (Faktencheck auf der
+ * codex-effort-Folie).
+ *
+ * Anzeigenamen statt Slugs (seit PR openai/codex#46503, 18.09.2026, in
+ * 0.156): Picker, Reasoning-Titel, Header und Statuszeile zeigen
+ * „GPT-6-Sol“ — nur die Ergebnis-Meldungen („Model changed to …“) bleiben
+ * beim Slug `gpt-6-sol`. Der Untertitel „Access legacy models…“ unter
+ * „Select Model and Effort“ ist mit derselben PR weggefallen (Screenshots
+ * zeigen keinen mehr). Die Fußzeile variiert seit PR #45831/#46697 je
+ * Dialogtyp: „enter select · esc back“ für Modell- und Scope-Dialog,
+ * „enter default · s session · esc back“ für die Reasoning-Wahl (der neue
+ * `s`-Weg wendet die Wahl nur für diese Session an) — siehe FOOTER_PICKER/
+ * FOOTER_REASONING unten und die Deviation-Notiz in
+ * shared/components/brainless/README.md.
  *
  * Warum zweimal /model: Die TUI fragt nach dem Plan-Override nur, wenn im
  * Plan-Mode das AKTUELLE Modell gewählt wird und sich nur der Effort ändert
  * (should_prompt_plan_mode_reasoning_scope, tui/src/chatwidget/
- * model_popups.rs, rust-v0.155.1: `selected_model != self.current_model()`
+ * model_popups.rs, rust-v0.156.1: `selected_model != self.current_model()`
  * → kein Dialog). Ein Modellwechsel im Plan-Mode schreibt stattdessen
  * model und model_reasoning_effort global (Issue openai/codex#38236).
  *
@@ -40,12 +65,14 @@ import { usePrefersReducedMotion } from "@shared/components/brainless/lib/usePre
 
 const props = withDefaults(defineProps<{ step?: number }>(), { step: 0 });
 
-const VERSION = "v0.153.4";
+const VERSION = "v0.156.1";
 // Easter Egg fürs Publikum: das Verzeichnis dieses Decks.
 const DIRECTORY = "~/slides";
-const MODEL_VORHER = "gpt-5.6-terra medium";
-const MODEL_GLOBAL = "gpt-5.6-sol medium";
-const MODEL_NACHHER = "gpt-5.6-sol xhigh";
+// Anzeigenamen (Header/Status, seit #46503); die Ergebnis-Meldungen
+// unten bleiben beim Slug, s. ERGEBNIS.
+const MODEL_VORHER = "GPT-5.6-Sol medium";
+const MODEL_GLOBAL = "GPT-6-Sol medium";
+const MODEL_NACHHER = "GPT-6-Sol xhigh";
 const PLACEHOLDER = "Ask Codex to do anything";
 
 // Slash-Zeile unter dem Composer, Optik wie CodexSlashMenu (aktive Zeile).
@@ -55,43 +82,58 @@ const SLASH = {
 };
 
 // Dialoge je Schritt. `Select Model and Effort` und `Select Reasoning Level`
-// nach den Screenshots der TUI 0.153.4; die Scope-Optionen wörtlich aus
-// openai/codex rust-v0.154.0 (tui/src/chatwidget.rs L184-186,
-// PLAN_MODE_REASONING_SCOPE_*). Das „(medium)“ der zweiten Beschreibung ist
-// der eingebaute Plan-Preset-Wert (collaboration_mode_presets.rs), den die
-// TUI unabhängig vom globalen model_reasoning_effort meldet.
-// `current` wandert nach der ersten Wahl von terra zu sol. Die TUI zeigt je
-// Zeile nur EINEN Marker, „(current)“ schlägt „(default)“
-// (tui/src/bottom_pane/list_selection_view.rs, rust-v0.155.1: `if
+// nach fünf Screenshots der TUI 0.156.1 (23.09.2026); die Scope-Optionen
+// wörtlich aus openai/codex rust-v0.156.1 (tui/src/chatwidget.rs L181-183,
+// PLAN_MODE_REASONING_SCOPE_*, unverändert seit 0.154.0). Das „(medium)“
+// der zweiten Beschreibung ist der eingebaute Plan-Preset-Wert
+// (collaboration_mode_presets.rs), den die TUI unabhängig vom globalen
+// model_reasoning_effort meldet — der Screenshot dieser Session zeigte hier
+// „user-chosen Plan override (extra high)“ statt dessen, weil das
+// Test-Verzeichnis den Ablauf für die Screenshots zuvor schon einmal
+// durchlaufen hatte (die Beschreibung ist dynamisch,
+// model_popups.rs L381-403); die Folie zeigt bewusst den Erststand.
+// `current` wandert nach der ersten Wahl von GPT-5.6-Sol zu GPT-6-Sol. Die
+// TUI zeigt je Zeile nur EINEN Marker, „(current)“ schlägt „(default)“
+// (tui/src/bottom_pane/list_selection_view.rs, rust-v0.156.1: `if
 // item.is_current { " (current)" } else if item.is_default { " (default)" }`)
-// — in der zweiten Modellwahl heißt sol also „gpt-5.6-sol (current)“.
-const modelOptions = (current: "terra" | "sol") => [
+// — in der zweiten Modellwahl heißt GPT-6-Sol also nur noch „(current)“.
+// Reihenfolge und Default-Markierung sind Backend-Zustand vom
+// Erscheinungstag (Screenshot), nicht der gebündelte Fallback-Katalog, der
+// Astra zuerst listet.
+const modelOptions = (current: "gpt-5.6-sol" | "gpt-6-sol") => [
   {
-    label: current === "sol" ? "gpt-5.6-sol" : "gpt-5.6-sol (default)",
-    current: current === "sol",
-    description: "Reliable agentic workhorse for everyday tasks.",
+    label: current === "gpt-6-sol" ? "GPT-6-Sol" : "GPT-6-Sol (default)",
+    current: current === "gpt-6-sol",
+    description: "Workhorse model for coding and everyday work.",
   },
   {
-    label: "gpt-5.6-terra",
-    current: current === "terra",
-    description: "Balanced agentic coding model for everyday work.",
+    label: "GPT-6-Astra",
+    description: "Frontier intelligence for the most demanding work.",
   },
   {
-    label: "gpt-5.6-luna",
-    description: "Fast and affordable agentic coding model.",
+    label: "GPT-6-Luna",
+    description: "Fast and affordable model for easier tasks.",
   },
   {
-    label: "gpt-6-astra",
-    description: "Our most capable model for complex, demanding work.",
+    label: "GPT-5.6-Sol",
+    current: current === "gpt-5.6-sol",
+    description: "Older coding model for complex work.",
   },
   {
-    label: "gpt-5.5",
-    description:
-      "Proven previous-generation model for coding and general work.",
+    label: "GPT-5.6-Terra",
+    description: "Older balanced model for straightforward work.",
+  },
+  {
+    label: "GPT-5.6-Luna",
+    description: "Older fast and efficient model.",
+  },
+  {
+    label: "GPT-5.5",
+    description: "Legacy coding model.",
   },
 ];
-const MODEL_OPTIONS = modelOptions("terra");
-const MODEL_OPTIONS_2 = modelOptions("sol");
+const MODEL_OPTIONS = modelOptions("gpt-5.6-sol");
+const MODEL_OPTIONS_2 = modelOptions("gpt-6-sol");
 const REASONING_OPTIONS = [
   { label: "Low", description: "Fast responses with lighter reasoning" },
   {
@@ -140,19 +182,32 @@ const STEP = {
   ergebnis2: 8,
 } as const;
 
+// Fußzeilen je Dialogtyp (Screenshots 0.156.1, 23.09.2026) — s. Deviation-
+// Notiz in shared/components/brainless/README.md.
+const FOOTER_PICKER = "enter select · esc back";
+const FOOTER_REASONING = "enter default · s session · esc back";
+
+// Der Untertitel „Access legacy models by running codex -m …“ ist mit
+// PR #46503 (18.09.2026) weggefallen — die Screenshots zeigen keinen mehr.
 const MODELLWAHL = {
   title: "Select Model and Effort",
-  subtitle:
-    "Access legacy models by running codex -m <model_name> or in your config.toml",
+  subtitle: "",
+  footer: FOOTER_PICKER,
 };
 const REASONING = {
-  title: "Select Reasoning Level for gpt-5.6-sol",
+  title: "Select Reasoning Level for GPT-6-Sol",
   subtitle: "",
+  footer: FOOTER_REASONING,
   options: REASONING_OPTIONS,
 };
 const DIALOGE: Record<
   number,
-  { title: string; subtitle: string; options: typeof MODEL_OPTIONS }
+  {
+    title: string;
+    subtitle: string;
+    footer: string;
+    options: typeof MODEL_OPTIONS;
+  }
 > = {
   [STEP.modelTippen1]: { ...MODELLWAHL, options: MODEL_OPTIONS },
   [STEP.reasoning1]: REASONING,
@@ -161,13 +216,15 @@ const DIALOGE: Record<
   [STEP.scope]: {
     title: "Apply reasoning change",
     subtitle: "Choose where to apply extra high reasoning.",
+    footer: FOOTER_PICKER,
     options: SCOPE_OPTIONS,
   },
 };
 
+// Anzeigenamen im Picker, aber der Slug in der Meldung (s. Kopfkommentar).
 const ERGEBNIS = [
-  "Model changed to gpt-5.6-sol medium",
-  "Model changed to gpt-5.6-sol xhigh for Plan mode.",
+  "Model changed to gpt-6-sol medium",
+  "Model changed to gpt-6-sol xhigh for Plan mode.",
 ];
 
 // ---- Zustand -------------------------------------------------------------
@@ -332,8 +389,8 @@ onBeforeUnmount(clearTimer);
       :directory="DIRECTORY"
     />
     <div class="ctui-tip">
-      <b>Tip:</b> <i>New</i> Use <b>/fast</b> to enable our fastest inference
-      with increased plan usage.
+      <b>Tip:</b> Start a fresh idea with <b>/new</b>; the previous session
+      stays in history.
     </div>
 
     <div class="ctui-transcript">
@@ -349,6 +406,7 @@ onBeforeUnmount(clearTimer);
         :subtitle="dialog.subtitle || undefined"
         :options="dialog.options"
         :default-selected="dialogSel"
+        :footer="dialog.footer"
         columns
       />
       <template v-else>
