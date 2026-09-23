@@ -1451,15 +1451,22 @@ Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" ta
 
 ---
 hideInToc: true
+clicks: 1
 ---
 
 # Welches Modell wofür? Die Datenlage
 
 <ModelRoutingPareto />
 
-<div v-click class="text-sm mt-1">
+<div v-if="$clicks === 0" class="text-sm mt-1">
 
 **Nimm den billigsten Punkt der Front, der Deine Aufgaben löst** — im Zweifel unten anfangen, bei Fehlschlag eine Sprosse höher. **glm-5.3-flash** 0,21 € (63 %) → **gpt-5.6-luna** 0,53 € (67 %) → **gemini-3.8-flash** 2,07 € (74 %). Alle drei zusammen: 2,81 €, gut ein Viertel eines Laufs mit Opus 5 (10,37 €) — der nicht mehr löst als Sprosse 3. Was Du wählen kannst, hängt am Werkzeug (Filter oben): bei Windsurf sind es vier Sprossen bis 10,37 €.
+
+</div>
+
+<div v-if="$clicks >= 1" class="mt-1">
+
+<PreliminaryBox />
 
 </div>
 
@@ -1523,6 +1530,14 @@ Werkzeug-Katalog — am 04.09. bei Cursor und Windsurf nachgesehen, null
 Treffer. Das teuerste Modell dieser Folie kann man noch gar nicht
 kaufen.
 
+Nachtrag (23.09.2026): Der erste Vorbehalt ist überholt. Zwischen dem
+17. und dem 22.09.2026 hat das Board astras `cost_basis` von „expected
+launch pricing" (inkl. der compute-units-Klausel) auf „current pricing"
+umgestellt — 27–39 % billiger, Score und Konfidenzintervall unverändert.
+Diese Folie zeigt bewusst weiter den 03.09.-Stand (explizit datiert),
+die heutigen Zahlen und die Lupe auf astras Effort-Stufen stehen auf der
+eigenen `effort-falle`-Folie gleich nach der Historie.
+
 Nebenbei zu den Fehlerbalken: den engsten hat jetzt astra mit ±0,83,
 davor gemini-3.8-flash mit ±1,4. Opus 5 hat ±3,9.
 
@@ -1563,6 +1578,23 @@ sagte Ende August „Opus 5 führt mit 74 %". Ein einziger Board-Eintrag
 hat das widerlegt — und eine Woche später hat der nächste Neuzugang
 gar nichts bewegt. Beides ist das Thema des Kapitels: Die Zahl ist ein
 Datum, kein Naturgesetz.
+
+Zweiter Klick, `<PreliminaryBox />`: ERSETZT die Empfehlung, statt sie
+darunterzustapeln — beides zusammen sprengt die 720px-Slide-Grenze
+(gemessen 23.09.2026, `.pb-box` landete bei 817 px). Gleiches Muster wie
+in `EffortFalle.vue`. Inhaltlich: Am 22./23.09.2026 sind Claude
+Opus 5.5 und GPT-6 Sol + Luna erschienen — keins davon steht auf dem
+DeepSWE-Board (Live-Fetch 23.09.2026: dieselben 70 Datensätze/28
+Modelle wie am 03.09.). Die drei gezeigten Zahlen sind selbstberichtet
+von den Herstellern selbst (Opus 5.5 74,2 % über 5 Durchläufe, Anthropics
+System Card §8.3; GPT-6 Sol 68,8 % und GPT-6 Luna 66,6 %, beide bei
+max effort, aus OpenAIs eigenem Ankündigungs-Chart) — nicht von
+Datacurve nachgerechnet, deshalb der Badge, kein Chart-Punkt (kein
+belastbarer Preis) und kein Eingang in `SNAPSHOTS`/`CURRENT`. Datacurves
+eigene Tracking-Issues (datacurve-ai/deep-swe#98 für Opus 5.5, #99 für
+Sol/Luna, beide 22.09., offen) enden mit „Please test". Dieselbe Box
+läuft auf der `effort-falle`-Folie; Details, Quellen und die
+astra-Preiskorrektur dort.
 
 Zum Harness-Vorbehalt im ⓘ („±2 bis ±5 Prozentpunkte im Mittel, Kosten
 bis 5×"): Das ist ein Mittelwert über Modelle, kein Maximum — einzelne

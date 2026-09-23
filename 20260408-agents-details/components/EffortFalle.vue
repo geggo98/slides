@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
+import PreliminaryBox from "./PreliminaryBox.vue";
 import { ASTRA_LENS_TODAY, CURRENT_ASTRA_TODAY, fmt } from "./paretoData";
 import { HISTORY_SCALE, LENS, lensView, tickLabel } from "./paretoChrome";
-import {
-  PRELIMINARY_SELF_REPORTED,
-  type Preliminary,
-} from "./lib/preliminaryDeepSWE";
 
 // Eigenständige Folie, herausgelöst aus dem neunten Klick der Historie
 // (`ModelRoutingHistory.vue`, bis 22.09.2026). Dieselbe Panel-Geometrie
@@ -56,14 +53,6 @@ const bracketFactor = computed(() => {
 });
 
 const sourcesOpen = ref(false);
-
-const trialsNote = (p: Preliminary) =>
-  [
-    p.effort ? `bei ${p.effort} effort` : null,
-    p.trials ? `Ø ${p.trials} Durchläufe` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
 </script>
 
 <template>
@@ -236,31 +225,7 @@ const trialsNote = (p: Preliminary) =>
         low, am meisten auf max) — bei gleichem Score.
       </div>
 
-      <div v-else-if="step >= 3" class="ef-callout ef-prelim">
-        <div class="ef-prelim-badge">vorläufig · selbstberichtet</div>
-        <strong>Drei neue Modelle, noch nicht von DeepSWE gemessen</strong>
-        — beide Tracking-Issues enden mit „Please test“:
-        <span
-          v-for="(p, i) in PRELIMINARY_SELF_REPORTED"
-          :key="p.label"
-          class="ef-prelim-item"
-        >
-          <strong>{{ p.displayName }}</strong> {{ fmtPct(p.y) }} %<span
-            v-if="trialsNote(p)"
-            class="ef-prelim-meta"
-          >
-            ({{ trialsNote(p) }})</span
-          >
-          (<a :href="p.href" target="_blank" rel="noopener">Quelle</a>){{
-            i < PRELIMINARY_SELF_REPORTED.length - 1 ? " · " : ""
-          }}
-        </span>
-        <span class="ef-prelim-meta">
-          — die Zahlen kommen von Anthropic bzw. OpenAI selbst, nicht von
-          Datacurve; kein Preis pro Task (Opus 5.5 nennt keinen, aus dem
-          OpenAI-Chart lässt sich keiner belastbar ablesen).</span
-        >
-      </div>
+      <PreliminaryBox v-else-if="step >= 3" />
     </div>
 
     <button
@@ -385,32 +350,6 @@ const trialsNote = (p: Preliminary) =>
 }
 .ef-callout-warn {
   border-color: var(--color-text-danger);
-}
-.ef-prelim {
-  position: relative;
-  border-style: dashed;
-  border-width: 1.5px;
-  padding-top: 18px;
-}
-.ef-prelim-item {
-  display: inline;
-}
-.ef-prelim-meta {
-  opacity: 0.7;
-  font-size: 12px;
-}
-.ef-prelim-badge {
-  position: absolute;
-  top: -9px;
-  left: 10px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--color-text-warning);
-  color: var(--deck-surface, var(--color-background-primary));
 }
 
 .ef-ib {

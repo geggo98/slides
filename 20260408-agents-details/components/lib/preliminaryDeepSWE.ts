@@ -10,7 +10,10 @@
 // Ersetzen, sobald eines der beiden Issues einen echten Board-Wert bringt —
 // und diese Datei dann LÖSCHEN, nicht nur editieren: Kein Re-Export über
 // `paretoData.ts`, damit `grep -rl preliminaryDeepSWE` beim Aufräumen jede
-// betroffene Stelle findet (aktuell nur `EffortFalle.vue`).
+// betroffene Stelle findet. Einziger Konsument ist `PreliminaryBox.vue`
+// (gemeinsamer Baustein für die `effort-falle`-Folie und den zweiten Klick
+// von „Welches Modell wofür?", siehe deren slides.md-Abschnitt) — nicht
+// direkt aus den Host-Komponenten importieren, sonst driftet der Inhalt.
 //
 // Bewusst keine €/Task-Spalte: Opus 5.5 nennt gar keinen Preis, und das
 // OpenAI-Chart zu Sol/Luna ist zu niedrig aufgelöst, um eine Kosten-Zahl
