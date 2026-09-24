@@ -30,6 +30,24 @@
     status = "test -d $DEVENV_ROOT/node_modules";
   };
 
+  # devenv 2.3.1's git-hooks module wires its "run all files" check into the
+  # built-in devenv:git-hooks:run task (before devenv:enterTest), which fires
+  # on every non-interactive `devenv shell <cmd>` invocation, not just at
+  # commit time — src/modules/integrations/git-hooks.nix at that rev, `ci =
+  # [ cfg.run ]`. On the GitHub Actions runner that task now fires before
+  # node_modules exists (eslint/prettier hooks need it, see AGENTS.md),
+  # failing the build with "Cannot find package 'eslint-plugin-vue'" — first
+  # seen 24.09.2026, run 35994640764. `after` is a listOf-str option, so this
+  # merges with git-hooks.nix's own `after = [ "devenv:git-hooks:install" ]`
+  # instead of replacing it — the same accumulation devenv's own tasks.nix
+  # relies on for "devenv:enterTest".after. Not reproducible or verifiable
+  # locally: the nix-darwin-managed devenv CLI here is still 2.2.2, which
+  # doesn't run this task on shell entry at all (confirmed against a clean
+  # worktree with no node_modules — `devenv shell` succeeded either way).
+  # Local check is therefore limited to Nix evaluating without error; the
+  # real verification is the next CI run.
+  tasks."devenv:git-hooks:run".after = [ "slides:install" ];
+
   tasks."slides:build" = {
     exec = ''
       mkdir -p "$DEVENV_ROOT/dist"
