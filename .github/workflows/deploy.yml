@@ -29,9 +29,18 @@ jobs:
         with:
           name: devenv
 
+      # Pinned to the exact devenv build this machine's local nix-darwin setup
+      # uses (`devenv version` -> 2.2.2+b8030c5) and to devenv.yaml's module
+      # input, both by commit rev rather than a movable tag: a floating
+      # `nixpkgs#devenv` install drifted past the devenv.yaml module pin
+      # (v2.2.2) sometime between 2026-09-20 and 2026-09-24, breaking the
+      # build with a Nix eval error unrelated to any change in this repo.
+      # Confirmed this exact rev is prebuilt and signed on devenv.cachix.org
+      # (the cache the step above already trusts), so this is a fast fetch,
+      # not a from-source Rust build.
       - name: Install devenv
         shell: bash
-        run: nix profile add nixpkgs#devenv
+        run: nix profile add "github:cachix/devenv/b8030c58deafc013fc51791377fe8fea4dadcb00#devenv" # v2.2.2
 
       - name: Build all presentations
         run: |

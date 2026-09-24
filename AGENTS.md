@@ -39,11 +39,29 @@ ref, so every `devenv update` jumps to `main` HEAD. Modules from `main` may
 call CLI primops (`loadDotenv`, for one) that an older installed CLI does not
 provide, and evaluation then fails with an undefined-variable error. Modules
 older than the CLI are the supported direction, so a release tag is the safe
-pin: the tag must be **≤** the installed CLI (`devenv version`) and ≤ whatever
-`nix profile add nixpkgs#devenv` gives CI.
+pin: the tag must be **≤** the installed CLI (`devenv version`).
+
+**CI's devenv CLI is pinned to the same commit**, by rev rather than a
+movable tag (`.github/workflows/deploy.yml`, "Install devenv" step) — both for
+supply-chain safety (a floating install can silently start running unreviewed
+code; a signed, content-addressed store path can't) and to keep CI and this
+machine's local nix-darwin-installed CLI (`devenv version`) on the exact same
+build. Before this pin, that step ran the floating `nix profile add
+nixpkgs#devenv`, which drifted past the devenv.yaml module pin sometime
+between 2026-09-20 and 2026-09-24 and broke the build with a Nix eval error
+unrelated to any change in the repo — the incident that prompted pinning it.
 
 To raise it: put the new tag in `devenv.yaml`, then `devenv update devenv` —
-naming the input keeps the bump to that one node.
+naming the input keeps the bump to that one node — and read the new rev out
+of `devenv.lock`'s `nodes.devenv.locked.rev` into the CI workflow's "Install
+devenv" step (`github:cachix/devenv/<rev>#devenv`, with a `# vX.Y.Z` comment).
+Before pushing, confirm the exact rev is actually prebuilt on
+`devenv.cachix.org` (`curl -sf https://devenv.cachix.org/<32-char store-path
+hash>.narinfo`, hash from `nix eval --raw
+"github:cachix/devenv/<rev>#devenv.outPath"`) — otherwise CI compiles the
+devenv CLI from source instead of fetching a signed binary. If raising the pin
+also means the local machine should move, that CLI is nix-darwin-managed
+outside this repo; bump it there separately, not here.
 
 Run **`devenv update` without an argument only deliberately**: it also moves
 `nixpkgs`, which changes `pkgs.playwright-driver` and silently breaks its
