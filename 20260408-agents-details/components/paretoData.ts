@@ -191,6 +191,13 @@ export interface Pt {
   old?: Origin;
   sub?: number; // €/Task unter dem Wochenkontingent, +50 % (bis 13.09., nur Stand 7)
   sub25?: number; // dasselbe mit den dauerhaften +25 % ab 14.09.
+  /**
+   * Geschätzt, nicht gemessen: Score = Vorgängermodell, Preis auf die neue
+   * Preisliste re-skaliert. Bislang nur `lib/preliminaryParetoPoints.ts`
+   * (Opus 5.5, GPT-6 Sol/Luna — DeepSWE hat noch keine Werte). Getrennt von
+   * `story`, weil ein provisorischer Punkt trotzdem story-frei sein könnte.
+   */
+  provisional?: boolean;
 }
 
 export interface Snapshot {
@@ -250,8 +257,12 @@ export interface Lens {
 
 export const fmt = (v: number) => v.toFixed(2).replace(".", ",");
 
-/** Kompakter Konstruktor — `eur` kann so nicht von `x` abweichen. */
-function P(
+/**
+ * Kompakter Konstruktor — `eur` kann so nicht von `x` abweichen. Exportiert,
+ * damit `lib/preliminaryParetoPoints.ts` dieselbe Garantie für seine drei
+ * geschätzten Punkte bekommt, statt `eur` dort separat von Hand zu pflegen.
+ */
+export function P(
   label: string,
   x: number,
   y: number,

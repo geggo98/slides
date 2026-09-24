@@ -1463,11 +1463,12 @@ Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" ta
 ---
 hideInToc: true
 clicks: 1
+routeAlias: pareto-heute
 ---
 
 # Welches Modell wofür? Die Datenlage
 
-<ModelRoutingPareto />
+<ModelRoutingPareto :preliminary="$clicks >= 1" />
 
 <div v-if="$clicks === 0" class="text-sm mt-1">
 
@@ -1596,16 +1597,52 @@ darunterzustapeln — beides zusammen sprengt die 720px-Slide-Grenze
 in `EffortFalle.vue`. Inhaltlich: Am 22./23.09.2026 sind Claude
 Opus 5.5 und GPT-6 Sol + Luna erschienen — keins davon steht auf dem
 DeepSWE-Board (Live-Fetch 23.09.2026: dieselben 70 Datensätze/28
-Modelle wie am 03.09.). Die drei gezeigten Zahlen sind selbstberichtet
-von den Herstellern selbst (Opus 5.5 74,2 % über 5 Durchläufe, Anthropics
-System Card §8.3; GPT-6 Sol 68,8 % und GPT-6 Luna 66,6 %, beide bei
-max effort, aus OpenAIs eigenem Ankündigungs-Chart) — nicht von
-Datacurve nachgerechnet, deshalb der Badge, kein Chart-Punkt (kein
-belastbarer Preis) und kein Eingang in `SNAPSHOTS`/`CURRENT`. Datacurves
-eigene Tracking-Issues (datacurve-ai/deep-swe#98 für Opus 5.5, #99 für
-Sol/Luna, beide 22.09., offen) enden mit „Please test". Dieselbe Box
-läuft auf der `effort-falle`-Folie; Details, Quellen und die
-astra-Preiskorrektur dort.
+Modelle wie am 03.09.). Die drei in der Box gezeigten Zahlen sind
+selbstberichtet von den Herstellern selbst (Opus 5.5 74,2 % über 5
+Durchläufe, Anthropics System Card §8.3; GPT-6 Sol 68,8 % und GPT-6 Luna
+66,6 %, beide bei max effort, aus OpenAIs eigenem Ankündigungs-Chart) —
+nicht von Datacurve nachgerechnet, deshalb der Badge und kein Eingang in
+`SNAPSHOTS`/`CURRENT`. Datacurves eigene Tracking-Issues
+(datacurve-ai/deep-swe#98 für Opus 5.5, #99 für Sol/Luna, beide 22.09.,
+offen) enden mit „Please test". Dieselbe Box läuft auf der
+`effort-falle`-Folie; Details, Quellen und die astra-Preiskorrektur
+dort.
+
+Nachtrag (24.09.2026): Derselbe Klick blendet jetzt zusätzlich drei
+geschätzte CHART-Punkte ein (`preliminary`-Prop auf
+`<ModelRoutingPareto />`, Daten in `lib/preliminaryParetoPoints.ts`) —
+eine ANDERE Schätzung als die selbstberichteten Scores oben, mit
+anderer Herkunft: nicht „was der Hersteller behauptet", sondern „was
+DeepSWE mutmaßlich messen würde, unter einer expliziten Annahme".
+Angenommen ist derselbe Score wie beim Vorgängermodell (Opus 5.5 ←
+Opus 5, GPT-6 Sol ← GPT-5.6 Sol, GPT-6 Luna ← GPT-5.6 Luna — Namens-
+kontinuität, die OpenAI selbst für Sol/Luna zieht), der Preis ist per
+Zwei-Bucket-Skalierung auf die neue Preisliste umgerechnet — dieselbe
+Methode, mit der diese Datei schon die reale gpt-5.6-sol-Preissenkung
+vom 21.08. nachgerechnet hat (Output-Anteil über den bekannten
+`mean_output_tokens`, Rest über den Input-Preis skaliert). Ergebnis:
+Opus 5.5 8,30 €, GPT-6 Sol 2,83 €, GPT-6 Luna 0,26 € (Herleitung und
+Quellen im Kopfkommentar von `preliminaryParetoPoints.ts`). Sichtbar
+als hohle, gestrichelte Marker in derselben Warnfarbe wie die Box —
+bewusst NICHT über den Anbieter-Filter gesteuert, der fragt „was bietet
+mein Werkzeug an", und dafür gibt es bei unveröffentlichten Modellen
+noch keine Antwort.
+
+Einzige Auswirkung auf die Front: GPT-6 Luna (0,26 €, 67 %) dominiert
+GPT-5.6 Luna (gleicher Score, billiger) und ersetzt es als zweite
+Sprosse — die Leiter fällt von 2,81 € auf 2,54 € (−9,6 %). GPT-6 Sol
+und Opus 5.5 bleiben dominiert, dieselbe Pointe wie zuvor bei Opus 5
+und gpt-6-astra: gemini-3.8-flash liefert denselben gerundeten Score
+für weniger Geld.
+
+Ein Vorbehalt ausdrücklich dazu, falls gefragt: Bei Opus 5.5 ist
+8,30 € eher eine OBERE Schätzung. Anthropics Cache-Lese-Multiplikator
+sinkt bei Opus 5.5 zusätzlich (0,1× → 0,05× Base-Input), stärker als
+der Input/Output-Preis selbst (×0,8) — die Zwei-Bucket-Methode fasst
+Cache-Reads in den „Rest"-Anteil und erfasst diesen Zusatzrabatt nicht.
+Bei einem cache-lastigen Agenten-Workload wie DeepSWEs mini-swe-agent
+(Opus 5 max laut Board: ~98 % der Input-Tokens vermutlich Cache-
+Treffer) dürfte der reale Preis darunter liegen.
 
 Zum Harness-Vorbehalt im ⓘ („±2 bis ±5 Prozentpunkte im Mittel, Kosten
 bis 5×"): Das ist ein Mittelwert über Modelle, kein Maximum — einzelne

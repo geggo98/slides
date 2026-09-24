@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import ProviderPicker from "./ProviderPicker.vue";
 import { matchingPreset, presetModels } from "./providerFilter";
+import { PRELIMINARY_PARETO_POINTS } from "./lib/preliminaryParetoPoints";
 import {
   CURRENT,
   fmt,
@@ -45,6 +46,17 @@ import { useCrosshairs } from "./useCrosshairs";
 // eine Beschriftung steht, rechnet `labelLayout.ts`. Hier liegt nur die
 // Darstellung.
 
+// `preliminary` kommt aus `slides.md` synchron mit der `PreliminaryBox` (Klick
+// 1) — dieselbe Sichtbarkeit, kein eigener Schalter. Anders als der
+// Anbieter-Filter oder das Kontingent-Overlay betrifft die Prop keine echten,
+// im Katalog stehenden Modelle, sondern die drei geschätzten Punkte aus
+// `lib/preliminaryParetoPoints.ts` (Score wie Vorgänger, Preis re-skaliert,
+// noch nicht von DeepSWE gemessen). Sie laufen deshalb bewusst NICHT durch
+// den Anbieter-Filter (`sel`) — dessen ganzer Zweck ist „was bietet mein
+// Werkzeug real an", und dafür gibt es bei unveröffentlichten Modellen noch
+// keine Antwort.
+const props = defineProps<{ preliminary?: boolean }>();
+
 const sourcesOpen = ref(false);
 
 // Skala geteilt mit der Historien-Folie und den Tests: x logarithmisch von
@@ -75,9 +87,13 @@ const subOn = ref(false);
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const sel = ref<ReadonlySet<string>>(new Set(presetModels("all", CURRENT)));
 const preset = computed(() => matchingPreset(sel.value, CURRENT));
-const pts = computed<Pt[]>(() =>
-  visiblePoints(CURRENT, sel.value, subOn.value),
-);
+// Die drei geschätzten Punkte hängen nur an `props.preliminary`, nicht an
+// `sel`: Sie kommen nach dem Anbieter-Filter dazu, statt durch ihn gefiltert
+// zu werden (Begründung siehe `props`-Kommentar oben).
+const pts = computed<Pt[]>(() => {
+  const real = visiblePoints(CURRENT, sel.value, subOn.value);
+  return props.preliminary ? [...real, ...PRELIMINARY_PARETO_POINTS] : real;
+});
 
 const front = computed(() => paretoFront(pts.value).front);
 const dom = computed(() => paretoFront(pts.value).dom);
@@ -92,17 +108,24 @@ const allPts = computed(() => pts.value);
 // Fehlerbalken und Geisterringe bleiben am wahren Wert.
 const ALL = new Set(presetModels("all", CURRENT));
 // Punkte, die in irgendeinem Preset auf der Front stehen, rücken nur
-// waagerecht: Die Front darf in keiner Ansicht in der Höhe lügen.
+// waagerecht: Die Front darf in keiner Ansicht in der Höhe lügen. Bezieht
+// sich nur auf die 22 echten Punkte — die drei geschätzten bekommen diese
+// Wächter-Eigenschaft (noch) nicht, siehe Kommentar an `dodge` unten.
 const FRONT_UNION = frontUnion(CURRENT);
-const dodge = computed(() =>
-  dodgeDetailed(
-    visiblePoints(CURRENT, ALL, subOn.value),
-    S,
-    "pareto",
-    (p) => p.sub !== undefined,
-    { horizontalOnly: FRONT_UNION },
-  ),
-);
+// Wie bei den 22 echten Punkten: Entzerrung auf dem VOLLEN Satz, damit der
+// Anbieter-Filter nur ausblendet und nichts verschiebt. Die drei geschätzten
+// Punkte kommen NUR bei `preliminary` dazu — so bleibt die Geometrie der 22
+// echten Punkte beim Ein-/Ausschalten unverändert, und nur die drei neuen
+// docken sich gegen das bereits fertige Bild an.
+const dodge = computed(() => {
+  const real = visiblePoints(CURRENT, ALL, subOn.value);
+  const input = props.preliminary
+    ? [...real, ...PRELIMINARY_PARETO_POINTS]
+    : real;
+  return dodgeDetailed(input, S, "pareto", (p) => p.sub !== undefined, {
+    horizontalOnly: FRONT_UNION,
+  });
+});
 const at = (p: Pt): XY =>
   dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
 const dodgedMax = computed(() =>
@@ -131,8 +154,14 @@ const layoutOpts = {
   hitR: HIT_R,
   obstacles,
 };
+// „Voller Datensatz“ für den Platzierer: die 22 echten Punkte, plus — nur bei
+// `preliminary` — die drei geschätzten. Wie `CURRENT` bislang: unabhängig vom
+// Anbieter-Filter, der blendet nur beim Rendern aus.
+const fullData = computed<Pt[]>(() =>
+  props.preliminary ? [...CURRENT, ...PRELIMINARY_PARETO_POINTS] : CURRENT,
+);
 const layoutPts = computed(() =>
-  toLayoutPoints(CURRENT, S, {
+  toLayoutPoints(fullData.value, S, {
     overlay: true,
     subOn: subOn.value,
     story: (p) => p.story === true,
@@ -261,8 +290,24 @@ const chartLabel = computed(
       : "") +
     " Der Geisterring an gemini-3.8-flash markiert 4,14 Euro — den Listenpreis ab dem " +
     "1. Januar 2027, wenn Googles Einführungspreis ausläuft." +
+    (props.preliminary
+      ? " Zusätzlich sind drei geschätzte Punkte eingeblendet, hohl und in Warnfarbe: " +
+        "Claude Opus 5.5, GPT-6 Sol und GPT-6 Luna, noch nicht von DeepSWE gemessen. " +
+        "Angenommen ist derselbe Score wie beim jeweiligen Vorgängermodell, der Preis ist " +
+        "auf die neue Preisliste re-skaliert. GPT-6 Luna für 0,26 Euro ersetzt dadurch " +
+        "GPT-5.6 Luna als zweite Sprosse der Front — die Leiter kostet jetzt 2,54 statt " +
+        "2,81 Euro. GPT-6 Sol und Claude Opus 5.5 bleiben dominiert."
+      : "") +
     ".",
 );
+
+// Tooltip mit Hinweis auf die Schätzmethode bei den drei geschätzten Punkten
+// — `tip()` selbst bleibt unverändert, weil sie auch `ModelRoutingHistory.vue`
+// bedient, die diese Punkte nie zeigt.
+const tipFor = (p: Pt): string =>
+  p.provisional
+    ? `${tip(p)} · geschätzt: Score wie Vorgänger, Preis auf neue Preisliste re-skaliert — noch nicht von DeepSWE gemessen`
+    : tip(p);
 
 // Fehlerbalken nur an gepinnten Punkten — beim bloßen Hover wäre das Flackern.
 // Kernaussage der Folie: opus-5 74 ± 3,9 und sol 73 ± 2,8 überlappen deutlich,
@@ -516,8 +561,14 @@ const whiskers = computed(() =>
            kostete die Nummer 12 px Breite in der dichtesten Zone; im Marker
            kostet sie nichts. Die Zählung folgt dem Anbieter-Filter. -->
       <g v-for="(p, i) in front" :key="p.label">
-        <circle :cx="at(p).px" :cy="at(p).py" r="7" class="mp-front-pt">
-          <title>{{ tip(p) }}</title>
+        <circle
+          :cx="at(p).px"
+          :cy="at(p).py"
+          r="7"
+          class="mp-front-pt"
+          :class="{ 'mp-provisional': p.provisional }"
+        >
+          <title>{{ tipFor(p) }}</title>
         </circle>
         <text
           :x="at(p).px"
@@ -537,8 +588,9 @@ const whiskers = computed(() =>
           width="10"
           height="10"
           class="mp-dom-pt"
+          :class="{ 'mp-provisional': p.provisional }"
         >
-          <title>{{ tip(p) }}</title>
+          <title>{{ tipFor(p) }}</title>
         </rect>
       </g>
 
@@ -557,6 +609,7 @@ const whiskers = computed(() =>
         :class="[
           l.front ? 'mp-label-front' : 'mp-label-dom',
           pinCls(l.p.label),
+          { 'mp-provisional': l.p.provisional },
         ]"
         :data-model="l.p.label"
         :data-box="l.box"
@@ -665,7 +718,7 @@ const whiskers = computed(() =>
         :y="l.pl.y"
         :text-anchor="l.pl.ax"
         class="mp-label mp-label-hover"
-        :class="pinCls(l.p.label)"
+        :class="[pinCls(l.p.label), { 'mp-provisional': l.p.provisional }]"
         :data-model="l.p.label"
         :data-box="l.box"
       >
@@ -692,7 +745,7 @@ const whiskers = computed(() =>
         @click.stop="togglePin(p.label)"
         @keydown.enter.prevent="togglePin(p.label)"
       >
-        <title>{{ tip(p) }}</title>
+        <title>{{ tipFor(p) }}</title>
       </circle>
     </svg>
 
@@ -924,6 +977,28 @@ const whiskers = computed(() =>
   fill: var(--color-text-tertiary);
   opacity: 0.8;
 }
+/* Geschätzt statt gemessen (Opus 5.5, GPT-6 Sol/Luna — noch kein DeepSWE-
+   Wert): gestrichelter Rand in derselben Warnfarbe wie das Badge von
+   `PreliminaryBox.vue`, damit „vorläufig" auf der Folie einheitlich aussieht.
+   Ersetzt Front-Blau bzw. Dominiert-Grau vollständig, nicht additiv — zwei
+   Farben auf einem Punkt wären mehrdeutig. Der Front-Marker bleibt VOLL
+   gefüllt (nicht hohl): `.mp-front-num` braucht einen dunklen Untergrund,
+   sonst ist die weiße Sprossennummer unlesbar (gemessen 24.09.2026 — hohl +
+   surface-farbene Zahl = unsichtbar). Nur der dominierte Marker ist hohl, der
+   trägt keine Zahl. */
+.mp-front-pt.mp-provisional {
+  fill: var(--color-text-warning);
+  stroke: var(--color-text-warning);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 1.5;
+}
+.mp-dom-pt.mp-provisional {
+  fill: var(--deck-surface, var(--color-background-primary));
+  stroke: var(--color-text-warning);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 1.5;
+  opacity: 1;
+}
 /* Haarlinie zwischen Marker und abgesetzter Beschriftung — bewusst dünner als
    das Gitter, sie soll führen und nicht auffallen. */
 .mp-leader {
@@ -951,6 +1026,13 @@ const whiskers = computed(() =>
   fill: var(--color-text-primary);
   font-weight: 700;
   pointer-events: none;
+}
+/* Geschätzt statt gemessen — Beschriftung folgt derselben Warnfarbe wie der
+   Marker, unabhängig davon, ob er front oder dominiert wäre. Zwei Klassen
+   Spezifität schlagen `.mp-label-front`/`.mp-label-dom` zuverlässig, egal in
+   welcher Reihenfolge sie im `:class`-Array stehen. */
+.mp-label.mp-provisional {
+  fill: var(--color-text-warning);
 }
 /* Gepinnt: die Beschriftung trägt die Pin-Farbe ihres Fadenkreuzes (`--ch`
    kommt aus `.mp-ch-0…3` unten), nur die Farbe — Gewicht und Größe bleiben,
