@@ -819,6 +819,38 @@ Verallgemeinert: **wiederkehrende Fan-out-Arbeit gehört in isolierte Subagenten
 
 ---
 hideInToc: true
+routeAlias: teures-modell-nur-planung
+---
+
+# Lektion: Teures Modell nur für die Planung
+
+Der Workflow-Fix löst das Fan-out-Problem — aber jeder Subagent lief zunächst im selben (teuren) Modell wie die Hauptsitzung.
+
+<v-clicks>
+
+- **Rollen-Split statt Pauschalmodell:** Der Testplan-Entwurf (Interpretation, Abwägen) läuft weiter im starken Modell; Ausführung und Protokollierung — mechanische Arbeit — laufen im günstigeren.
+- **Gemessen über alle Fanout-Läufe seit Einführung dieser Trennung:** von der gesamten Tokenmenge entfielen **rund 33 % auf das teure Planungsmodell** und **rund 67 % auf das günstigere Ausführungsmodell**.
+- **Geschätzte Ersparnis** bei aktuellen Listenpreisen (das günstigere Modell kostet pro Token rund 2,5× weniger): **rund 40 % weniger Kosten** gegenüber einem durchgängigen Lauf im teuren Modell, bei gleichem Tokenvolumen.
+
+</v-clicks>
+
+<Callout v-click tone="success" class="mt-4">
+
+Verallgemeinert: **das teure Modell nur dort einsetzen, wo Interpretation nötig ist — mechanische Ausführung übernimmt das günstigere.** Dieselbe Rollentrennung trägt auch die nächste Lektion.
+
+</Callout>
+
+<!--
+Schätzung auf Basis von Listenpreisen (aktuell: günstigeres Modell rund
+Faktor 2,5 billiger pro Token, Input wie Output) und der gemessenen
+Token-Summe je Rolle aus den Workflow-Protokollen (mehrere Wochen, mehrere
+Dutzend Läufe seit Einführung der Plan/Execute-Trennung im Ticket-Test-
+Runbook). Keine exakte Input/Output/Cache-Aufschlüsselung pro Subagent
+verfügbar, daher bewusst als Schätzung ausgewiesen.
+-->
+
+---
+hideInToc: true
 ---
 
 # Use Case 2: Tägliches CVE-Fixen
@@ -911,6 +943,51 @@ Grenze bleibt: die **Interpretation** — ist ein Ausschlag ein echter Vorfall o
 </Callout>
 
 ---
+hideInToc: true
+routeAlias: zeit-bis-erstdiagnose
+---
+
+# Lektion: Ein neuer Datenpunkt — Zeit bis zur Erstdiagnose
+
+<v-clicks>
+
+- **Heute:** ein Alarm-Lauf mit Skript **und** günstigem Modell — **rund 5 Minuten** von Start bis zum veröffentlichten, belegten Befund (Crawl-Log-bestätigt, nicht nur Verdacht). Kosten des kompletten Laufs: **rund $1,90**.
+- **Zum Vergleich** derselbe Lauftyp vor der Einengungsregel, komplett im teuren Modell (siehe vorige Folie): **über 20 Minuten ohne verwertbares Ergebnis** — geschätzte Kosten allein für diese Phase: **rund $24**.
+- Nur je ein Datenpunkt — aber Zeit **und** Kosten zeigen in dieselbe Richtung wie die Modellwahl-Lektion zuvor.
+
+</v-clicks>
+
+<Callout v-click tone="info" class="mt-4">
+
+Ein Datenpunkt beweist nichts allein — aber Skript **plus** günstiges Modell multiplizieren sich: schneller **und** billiger, nicht eins gegen das andere.
+
+</Callout>
+
+<!--
+Herkunft, ohne Interna (keine Projektnamen, kein Prompt, kein Session-Inhalt):
+
+„Heute"-Datenpunkt — Session-ID 5e5616f5-dbc8-4986-811e-2f671b5602b1,
+Modell claude-sonnet-5, vollständige Session (~9 Min. Wall-Clock):
+input 64 / output 29.710 / cache_read 3.951.663 / cache_creation 316.241
+Tokens. Kosten exakt aus diesen Zahlen zu Listenpreis berechnet (nicht
+geschätzt): ≈$1,90. Ergebnis: eindeutiger Serverfehler beim Versicherer,
+per Crawl-Log bestätigt, gepostet noch vor dem automatischen
+Schwellwert-Alarm.
+
+„Zum Vergleich"-Datenpunkt — dieselbe Zahl wie auf der vorigen Folie
+(„vor der Einengung … zwanzig Minuten ins Leere", Lauf vom 10.09.2026).
+Session-ID b65002ae-ab6e-48f5-9f35-8c2d58a4d6db, Modell claude-opus-5
+(100 % der Aufrufe in diesem Fenster, 0 im günstigeren — eigens
+nachgemessen). Kostenschätzung deckt das erste, unproduktive
+Zeitfenster dieser Session ab (T0 bis zu einer Nutzer-Unterbrechung,
+~47 Min. — umfasst die "mindestens 20 Minuten Fan-out" vollständig,
+daher eher eine Ober- als eine Untergrenze für die reinen 20 Minuten):
+input 444 / output 173.518 / cache_read 34.769.831 / cache_creation
+391.638 Tokens → ≈$24 zu Listenpreis (Opus: $5/$25 pro 1M Token
+Input/Output, Cache-Read ≈$0,50, Cache-Creation ≈$6,25 pro 1M).
+-->
+
+---
 layout: section
 routeAlias: leitplanken
 ---
@@ -976,7 +1053,7 @@ hideInToc: true
 2. **Zustand gehört ins Ticketsystem** — der Idempotenz-Header macht jeden Lauf gefahrlos wiederholbar.
 3. **Lernen = Agent notiert, Mensch kuratiert** — die Git-History des Runbooks ist die Lernkurve.
 4. **Der einzige Code sind die Skills** — Standard-Harness + Markdown + eine Schleife. Keine Hooks, kein Framework.
-5. **Wiederkehrende Arbeit isolieren, feste Abläufe skripten** — sonst wächst der Loop-Kontext ungebremst, und jeder Lauf tippt dieselben Handgriffe neu.
+5. **Wiederkehrende Arbeit isolieren, feste Abläufe skripten, teures Modell nur wo nötig** — sonst wächst der Loop-Kontext ungebremst, jeder Lauf tippt dieselben Handgriffe neu und zahlt überall denselben hohen Preis.
 
 </v-clicks>
 
