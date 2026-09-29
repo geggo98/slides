@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { AA_COST } from "../../aaData";
 import { CURRENT, labOf, paretoFront, type Lab } from "../../paretoData";
 import {
   PRESETS,
@@ -43,17 +42,6 @@ describe("labOf()", () => {
 });
 
 describe("Werkzeug-Kataloge", () => {
-  // Die Listen gelten für beide Datenquellen (DeepSWE und Artificial Analysis):
-  // gleiche Bezeichnung, gleiches Modell, ein Abrufdatum je Werkzeug.
-  it("nennt nur Modelle, die eine der Ansichten auch zeichnet", () => {
-    const gezeigt = new Set([...CURRENT, ...AA_COST].map((p) => p.label));
-    for (const t of TOOLS)
-      for (const m of t.models)
-        expect(gezeigt.has(m), `${t.label}: ${m} steht nicht im Chart`).toBe(
-          true,
-        );
-  });
-
   it("führt Quelle und Abrufdatum je Werkzeug", () => {
     for (const t of TOOLS) {
       expect(t.source).toMatch(/^https:\/\//);
@@ -180,12 +168,13 @@ describe("Labs kombinieren", () => {
 });
 
 describe("Menü-Einträge", () => {
-  it("führt „Alle“ und die drei Werkzeuge als Presets", () => {
+  it("führt „Alle“ und die vier Werkzeuge als Presets", () => {
     expect(PRESETS.map((p) => p.id)).toStrictEqual([
       "all",
       "cursor",
       "windsurf",
       "jetbrains-ai",
+      "junie",
     ]);
   });
 

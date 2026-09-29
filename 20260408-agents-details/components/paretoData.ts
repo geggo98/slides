@@ -1225,6 +1225,9 @@ const LAB_PREFIXES: ReadonlyArray<readonly [string, Lab]> = [
 
 export function labOf(label: string): Lab {
   const l = label.toLowerCase();
+  // Die o-Reihe von OpenAI heißt `o1`, `o3`, `o4-mini` — ohne Bindestrich nach dem
+  // Buchstaben, deshalb greift die Präfixliste unten dort nicht.
+  if (/^o[134](-|$)/.test(l)) return "OpenAI";
   for (const [prefix, lab] of LAB_PREFIXES) if (l.includes(prefix)) return lab;
   return "Andere";
 }
