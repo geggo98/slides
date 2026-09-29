@@ -28,7 +28,7 @@ export interface CrosshairsOpts {
 
 export function useCrosshairs(
   pts: Ref<Pt[]> | ComputedRef<Pt[]>,
-  s: Scale | Ref<Scale>,
+  s: Scale | Ref<Scale> | ComputedRef<Scale>,
   opts: CrosshairsOpts = {},
 ) {
   const byLabel = computed(() => new Map(pts.value.map((p) => [p.label, p])));

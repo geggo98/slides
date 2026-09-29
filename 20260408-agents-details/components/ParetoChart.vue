@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import ProviderPicker from "./ProviderPicker.vue";
-import { matchingPreset, presetModels } from "./providerFilter";
+import { matchingPreset } from "./providerFilter";
 import { fmt, movedSegments, paretoFront, type Pt } from "./paretoData";
 import { frontSentence, type ParetoVariant } from "./paretoVariants";
 import {
@@ -12,17 +12,8 @@ import {
   type Placed,
   type XY,
 } from "./labelLayout";
-import {
-  arrowCluster,
-  dodgeDetailed,
-  frontUnion,
-  HIT_R,
-  LABEL_FONT,
-  plotBounds,
-  quadrantBoxes,
-  toLayoutPoints,
-  visiblePoints,
-} from "./paretoChrome";
+import { HIT_R, LABEL_FONT, visiblePoints } from "./paretoChrome";
+import { chartGeometry } from "./paretoGeometry";
 import { useCrosshairs } from "./useCrosshairs";
 
 // DeepSWE-Score vs. €/Task als statisches Inline-SVG — kein Chart.js/echarts
@@ -35,24 +26,18 @@ import { useCrosshairs } from "./useCrosshairs";
 // Darstellung.
 
 // Die Variante ist absichtlich nicht reaktiv gelesen: `ModelRoutingPareto.vue` mountet
-// diese Komponente pro Variante neu (`:key`). Skala, Pfeilcluster, Entzerrung und
-// Platzierer sind deshalb Setup-Konstanten, keine `computed`.
+// diese Komponente pro Variante neu (`:key`). Was sich mit der AUSWAHL ändert —
+// Skala, Ticks, Quadranten, Entzerrung, Beschriftung —, rechnet `chartGeometry`
+// (`paretoGeometry.ts`) in einem einzigen `computed`.
 const props = defineProps<{ variant: ParetoVariant }>();
 const V = props.variant;
 const pts0 = V.pts;
 
-const sourcesOpen = ref(false);
+// Die Auswahl gehört dem Wrapper: Er rendert Fußzeile und Menü und setzt sie beim
+// Wechsel der Ansicht zurück.
+const sel = defineModel<ReadonlySet<string>>({ required: true });
 
-// Skala geteilt mit der Historien-Folie und den Tests: x logarithmisch von
-// 0,08 € bis 30 €. Linear lagen 17 von 22 Markern auf einem Viertel der
-// Breite, und die Sprossen 1 und 2 der Leiter waren 11 px auseinander.
-const S = V.scale;
-const { W, H, L, R, T, B, px, py } = S;
-const QX = px(V.split.x); // Quadranten-Trennung (redaktionell), DeepSWE: 8 € …
-const QY = py(V.split.y); // … / 50 %
-const xTicks = V.xTicks;
-const yTicks = V.yTicks;
-const ghost = V.features.priceGhost;
+const sourcesOpen = ref(false);
 
 // Optionales Overlay auf das Claude-Code-Wochenkontingent. Kein API-Preis,
 // sondern eine Kontingentrechnung (Abo-Preis fix, Wochenlimit bindend ⇒
@@ -69,43 +54,47 @@ const subOn = ref(false);
 const sizeOn = ref(false);
 const haloR = (tps: number) => Math.min(22, 6 + 0.9 * Math.sqrt(tps));
 
+const ghost = V.features.priceGhost;
+
 // Anbieter-Filter. Der Zustand ist eine Modellmenge (warum, steht in
-// `providerFilter.ts`); Default ist alles. Jede Teilmenge blendet Punkte aus und
-// die Front wird über den Rest neu gerechnet. Achsen und Quadranten bleiben fest
-// — sonst wären die gefilterten Ansichten nicht miteinander vergleichbar.
+// `providerFilter.ts`); Default ist das kuratierte Feld. Jede Teilmenge blendet
+// Punkte aus, die Front wird über den Rest neu gerechnet, und die Achsen passen
+// sich an die Auswahl an (`chartGeometry`).
 //
 // Der Filter greift VOR dem Kontingent-Overlay, damit sich beide kombinieren
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
-const sel = ref<ReadonlySet<string>>(new Set(presetModels("all", pts0)));
 const preset = computed(() => matchingPreset(sel.value, pts0));
 const pts = computed<Pt[]>(() =>
   visiblePoints(pts0, sel.value, subOn.value, { ghost }),
 );
+
+// Alles, was von der Auswahl abhängt, in einem Aufruf. Im Standard („Alle“) ist
+// das exakt die bisherige Rechnung mit der redaktionellen Skala; sonst liegen
+// Skala, Quadranten-Linien, Entzerrung und Beschriftung auf den sichtbaren
+// Punkten.
+const geo = computed(() => chartGeometry(V, pts0, sel.value, subOn.value));
+const S = computed(() => geo.value.scale);
+const { W, H, L, R, T, B } = V.scale; // die Bühne ist fest, nur Achsen wandern
+const px = (v: number) => S.value.px(v);
+const py = (v: number) => S.value.py(v);
+const QX = computed(() => px(geo.value.split.x)); // Quadranten-Trennung
+const QY = computed(() => py(geo.value.split.y));
+const xTicks = computed(() => geo.value.xTicks);
+const yTicks = computed(() => geo.value.yTicks);
+const cluster = computed(() => geo.value.cluster);
 
 const front = computed(() => paretoFront(pts.value).front);
 const dom = computed(() => paretoFront(pts.value).dom);
 const allPts = computed(() => pts.value);
 
 // Entzerrung: Marker, die einander verdecken (sol/astra, terra/glm-5.3,
-// muse-spark-1.2/qwen3.8-max), rücken bis 8 px auseinander — gerechnet auf
-// dem VOLLEN Satz, damit der Anbieter-Filter nur ausblendet und nichts
-// verschiebt; das Overlay bewegt nur die Claude-Punkte (`dodgeMarkers`).
-// `at()` ist die angezeigte Lage für Marker, Sprossennummer, Front-Polyline,
-// Klickziele, Fadenkreuz-Ring und Pfeilende. Fadenkreuz-Linien, Badges,
-// Fehlerbalken und Geisterringe bleiben am wahren Wert.
-const ALL = new Set(presetModels("all", pts0));
-// Punkte, die in irgendeinem Preset auf der Front stehen, rücken nur
-// waagerecht: Die Front darf in keiner Ansicht in der Höhe lügen.
-const FRONT_UNION = frontUnion(pts0);
-const dodge = computed(() =>
-  dodgeDetailed(
-    visiblePoints(pts0, ALL, subOn.value, { ghost }),
-    S,
-    "pareto",
-    (p) => p.sub !== undefined,
-    { horizontalOnly: FRONT_UNION },
-  ),
-);
+// muse-spark-1.2/qwen3.8-max), rücken bis 8 px auseinander. Im Standard auf dem
+// VOLLEN Feld gerechnet, damit ein Schalter nur ausblendet und nichts verschiebt;
+// bei jeder anderen Auswahl auf den sichtbaren Punkten. `at()` ist die angezeigte
+// Lage für Marker, Sprossennummer, Front-Polyline, Klickziele, Fadenkreuz-Ring und
+// Pfeilende. Fadenkreuz-Linien, Badges, Fehlerbalken und Geisterringe bleiben am
+// wahren Wert.
+const dodge = computed(() => geo.value.dodge);
 const at = (p: Pt): XY =>
   dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
 const dodgedMax = computed(() =>
@@ -119,35 +108,14 @@ const frontPath = computed(() =>
 // Wanderungen: die gemini-Preiserhöhung zum 01.01. immer, die Kontingent-
 // Rechnung nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
 // Der Pfeil endet an der angezeigten Lage, der Ring bleibt an der wahren.
-const moved = computed(() => movedSegments(pts.value, S, undefined, at));
+const moved = computed(() => movedSegments(pts.value, S.value, undefined, at));
 
-// Beschriftung. Gerechnet aus dem VOLLEN Datensatz, nicht aus `pts`: Der
-// Filter blendet Labels nur aus, das Overlay bewegt nur die Claude-Labels mit
-// ihren Markern — alles andere bleibt stehen, wo es war. Was das im Detail
-// heißt, steht in `labelLayout.ts`; Hindernisse sind hier die Quadranten-
-// Überschriften und der Pfeilcluster.
-const cluster = arrowCluster(S, V.arrows);
-const obstacles: Obstacle[] = [
-  ...quadrantBoxes(S, undefined, V.quadrants),
-  ...cluster.boxes,
-];
-const layoutOpts = {
-  font: LABEL_FONT.pareto,
-  bounds: plotBounds(S),
-  hitR: HIT_R,
-  obstacles,
-};
-const layoutPts = computed(() =>
-  toLayoutPoints(pts0, S, {
-    overlay: V.features.subOverlay,
-    ghost,
-    subOn: subOn.value,
-    story: (p) => p.story === true,
-    presets: true,
-    pos: dodge.value.pos,
-  }),
-);
-const layout = computed(() => layoutLabels(layoutPts.value, layoutOpts));
+// Beschriftung: was das im Detail heißt, steht in `labelLayout.ts`; Hindernisse
+// sind die Quadranten-Überschriften und (nur im Standard) der Pfeilcluster.
+const obstacles = computed<Obstacle[]>(() => geo.value.obstacles);
+const layoutOpts = computed(() => geo.value.layoutOpts);
+const layoutPts = computed(() => geo.value.layoutPts);
+const layout = computed(() => geo.value.layout);
 
 // „Alle Namen“: der zweite Durchgang des Platzierers. Er legt die im Default
 // weggelassenen Namen mit Führungslinie nach und lässt jedes vorhandene Label,
@@ -223,8 +191,8 @@ const hoverLabels = computed<LabelView[]>(() => {
     const lp = layoutPts.value.find((q) => q.id === id);
     if (!p || !lp) continue;
     const pl = layoutLabels([lp], {
-      ...layoutOpts,
-      obstacles: [...obstacles, ...taken],
+      ...layoutOpts.value,
+      obstacles: [...obstacles.value, ...taken],
     }).all.get(id);
     if (pl) out.push({ p, pl, front: false, box: boxAttr(p, pl) });
   }
@@ -233,8 +201,8 @@ const hoverLabels = computed<LabelView[]>(() => {
 
 const chartLabel = computed(
   () =>
-    V.ariaIntro +
-    (sel.value.size === pts0.length
+    (geo.value.isDefault ? V.ariaIntro : V.ariaFit) +
+    (geo.value.isDefault
       ? ""
       : `, gefiltert auf ${preset.value?.label ?? "eine eigene Auswahl"} mit ${pts.value.length} von ${pts0.length} Modellen`) +
     `. Die Pareto-Front ist eine Leiter mit ${front.value.length} Sprossen; ` +
@@ -458,7 +426,7 @@ const whiskers = computed(() =>
            dunklen Flecken, keine Nähte). Der Hub-Kreis (r ≥ größte Schaft-
            Halbbreite aW) schluckt die überstehenden Schaftecken → runder Knoten.
            Z-Order innerhalb egal (vereinte Silhouette). -->
-      <g class="mp-arrow-cluster">
+      <g v-if="cluster" class="mp-arrow-cluster">
         <circle :cx="cluster.hub.x" :cy="cluster.hub.y" :r="cluster.hub.r" />
         <g
           v-for="a in cluster.arrows"
@@ -472,7 +440,7 @@ const whiskers = computed(() =>
       <!-- Labels separat gerendert: erben NICHT die Cluster-Opacity, bleiben
            crisp. Jedes Label behält den Transform seines Pfeils; `flip` dreht
            den Text zurück, wo er sonst kopfstünde. -->
-      <g class="mp-arrow-labels">
+      <g v-if="cluster" class="mp-arrow-labels">
         <g
           v-for="a in cluster.arrows"
           :key="`t-${a.key}`"

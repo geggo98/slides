@@ -93,8 +93,10 @@ export interface ParetoVariant {
   attribution?: { href: string; label: string };
   /** Der Empfehlungsabsatz unter dem Chart. */
   lead: Seg[];
-  /** Erklärt in der aria-Beschreibung, was die Ansicht zeigt. */
+  /** Erklärt in der aria-Beschreibung, was die Ansicht zeigt (redaktionelle Skala). */
   ariaIntro: string;
+  /** Dasselbe für jede andere Auswahl: Achsen angepasst, Quadranten am Median. */
+  ariaFit: string;
   /** Satz(e) am Ende der aria-Beschreibung, variantenspezifisch. */
   ariaTail: string;
 }
@@ -215,6 +217,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand " +
       AA_STAND,
+    ariaFit:
+      "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Kosten pro Task in Euro, x-Achse logarithmisch, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +
+      AA_STAND,
     ariaTail:
       " Kosten sind der Durchschnitt eines Durchlaufs des Intelligence Index, kein SWE-Task.",
   },
@@ -285,6 +290,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       "x-Achse logarithmisch, schnellere Modelle stehen links, unterteilt in vier Quadranten: " +
       "Schnell und stark, stark aber langsam, schnell aber schwach, langsam und schwach. Stand " +
       AA_STAND,
+    ariaFit:
+      "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Output-Geschwindigkeit in Tokens pro Sekunde, x-Achse logarithmisch, schnellere Modelle links, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +
+      AA_STAND,
     ariaTail: ` Ohne Geschwindigkeitswert fehlen ${AA_NO_TPS.join(" und ")}.`,
   },
 
@@ -349,6 +357,8 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       "von 0,1 bis 30 Euro, unterteilt in vier Quadranten: " +
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 03.09.2026",
+    ariaFit:
+      "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, x-Achse logarithmisch, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand 03.09.2026",
     ariaTail:
       " gpt-6-astra mit 5,71 Euro hat mit 74,12 Prozent den höchsten Rohwert des Boards und liegt " +
       "trotzdem nicht auf der Front — gemini-3.8-flash erreicht denselben gerundeten Wert für 2,07 Euro." +

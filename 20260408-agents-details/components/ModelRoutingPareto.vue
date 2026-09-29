@@ -20,8 +20,18 @@ const variantId = ref<VariantId>(DEFAULT_VARIANT);
 const V = () => VARIANTS[variantId.value];
 const open = ref(false);
 
+// Die Auswahl (Modellmenge aus Anbieter-Menü und Lab-Häkchen) lebt hier und nicht
+// im Chart: Ein Lab-Klick ändert die Achsen, ohne dass das Chart neu gemountet wird
+// — sonst schlösse sich das offene Menü, und Pins und Schalter gingen verloren.
+// Beim Wechsel der Ansicht beginnt sie von vorn: Eine Auswahl aus „Anbieter“ hat in
+// einer anderen Ansicht keine Bedeutung.
+const feld = (id: VariantId): ReadonlySet<string> =>
+  new Set(VARIANTS[id].pts.map((p) => p.label));
+const sel = ref<ReadonlySet<string>>(feld(variantId.value));
+
 function pick(id: VariantId) {
   variantId.value = id;
+  sel.value = feld(id);
   open.value = false;
 }
 
@@ -70,7 +80,7 @@ onBeforeUnmount(() => {
       </ul>
     </div>
 
-    <ParetoChart :key="variantId" :variant="V()" />
+    <ParetoChart :key="variantId" v-model="sel" :variant="V()" />
 
     <div v-click class="text-sm mt-1">
       <template v-for="(s, i) in V().lead" :key="i">
