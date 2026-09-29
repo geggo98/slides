@@ -49,6 +49,8 @@ export interface ParetoVariant {
   /** Zweite Menüzeile, klein. */
   menuNote: string;
   pts: Pt[];
+  /** Bedeutung der x-Achse für das Anpassen der Skala (`paretoGeometry.ts`). */
+  xKind: "cost" | "speed";
   scale: Scale;
   /** Tick-POSITIONEN in Datenkoordinaten (x) — bei `aa-speed` also Sekunden. */
   xTicks: number[];
@@ -154,6 +156,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "Intelligenz × Kosten",
     menuNote: "Artificial Analysis · Default",
     pts: AA_COST,
+    xKind: "cost",
     scale: AA_COST_SCALE,
     xTicks: AA_COST_TICKS,
     xTickLabel: tickLabel,
@@ -221,6 +224,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "Intelligenz × Tempo",
     menuNote: "Artificial Analysis · Output-Tokens/s",
     pts: AA_SPEED,
+    xKind: "speed",
     scale: AA_SPEED_SCALE,
     xTicks: TPS_TICKS.map((t) => 1000 / t),
     xTickLabel: (x) => String(Math.round(1000 / x)),
@@ -289,6 +293,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "DeepSWE × Kosten",
     menuNote: "Coding-Benchmark · Stand 03.09.",
     pts: CURRENT,
+    xKind: "cost",
     scale: PARETO_SCALE,
     xTicks: X_TICKS_LOG,
     xTickLabel: tickLabel,
