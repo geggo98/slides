@@ -288,6 +288,26 @@ die Section-Divider listet. Praxis-Sektion nutzt `MonacoBlockAnnotated`
 für die JSpecify-Migration.
 ```
 
+## Researching Facts for Slides
+
+Slide claims about the outside world — model catalogs, prices, benchmark
+boards, tool features — go stale within weeks, so they are researched, not
+recalled. Two habits, both learned the hard way on the model-routing slides:
+
+- **Use the `/web-research` skill in addition to plain search and fetch.** Its
+  Gemini and Perplexity scripts regularly surface results the built-in
+  `WebSearch`/`WebFetch` route misses — a second, independent path is the point.
+  Run both and compare; where they disagree, that is the finding.
+- **Read the raw page, not a summary.** `WebFetch` runs the page through a small
+  model, and on 29.09.2026 it silently dropped entries: Cursor's HTML page lists
+  13 default models while the raw `models-and-pricing.md` lists 66 (the rest are
+  "hidden by default"), and Windsurf's summary lost GLM 5.3 and Gemini 3.8 Flash.
+  Prefer `curl -sL` with a browser user agent (or a `.md` / `llms.txt` variant),
+  count the entries, and quote the evidence line in a comment next to the data.
+
+Date every list you write down (`retrieved: "YYYY-MM-DD"`), and say what the
+source does not tell you.
+
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
