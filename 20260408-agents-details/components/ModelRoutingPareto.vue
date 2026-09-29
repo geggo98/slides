@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import ParetoChart from "./ParetoChart.vue";
+import { footnoteFor, leadFor } from "./paretoText";
+import { summarize } from "./productCoverage";
 import {
   DEFAULT_VARIANT,
   VARIANT_ORDER,
@@ -28,6 +30,17 @@ const open = ref(false);
 const feld = (id: VariantId): ReadonlySet<string> =>
   new Set(VARIANTS[id].pts.map((p) => p.label));
 const sel = ref<ReadonlySet<string>>(feld(variantId.value));
+
+// Absatz und Fußzeile folgen der Auswahl: Im Standard die redaktionellen Texte der
+// Ansicht, bei einem Produkt oder einer eigenen Auswahl das, was aus ihrer
+// berechneten Front und Abdeckung folgt (`paretoText.ts`).
+const summary = computed(() => summarize(VARIANTS[variantId.value], sel.value));
+const lead = computed(() =>
+  summary.value.isDefault ? V().lead : leadFor(V(), summary.value),
+);
+const footnote = computed(() =>
+  summary.value.isDefault ? V().footnote : footnoteFor(V(), summary.value),
+);
 
 function pick(id: VariantId) {
   variantId.value = id;
@@ -83,15 +96,18 @@ onBeforeUnmount(() => {
     <ParetoChart :key="variantId" v-model="sel" :variant="V()" />
 
     <div v-click class="text-sm mt-1">
-      <template v-for="(s, i) in V().lead" :key="i">
+      <template v-for="(s, i) in lead" :key="i">
         <strong v-if="s.b">{{ s.t }}</strong>
         <template v-else>{{ s.t }}</template>
       </template>
     </div>
 
     <div class="text-xs opacity-70 mt-1">
-      <template v-for="(s, i) in V().footnote" :key="i">
+      <template v-for="(s, i) in footnote" :key="i">
         <strong v-if="s.b">{{ s.t }}</strong>
+        <span v-else-if="s.title" class="mpv-miss" :title="s.title">{{
+          s.t
+        }}</span>
         <template v-else>{{ s.t }}</template>
       </template>
       <a
@@ -172,6 +188,11 @@ onBeforeUnmount(() => {
 }
 .mpv-opt.on {
   background: color-mix(in srgb, var(--color-text-info) 16%, transparent);
+}
+/* Liste der Modelle ohne Wert: als Hover-Text, gepunktet unterstrichen als Hinweis. */
+.mpv-miss {
+  cursor: help;
+  text-decoration: underline dotted;
 }
 .mpv-n {
   font-size: 9.5px;

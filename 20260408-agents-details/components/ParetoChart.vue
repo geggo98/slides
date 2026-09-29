@@ -3,7 +3,13 @@ import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import ProviderPicker from "./ProviderPicker.vue";
 import { matchingPreset } from "./providerFilter";
-import { fmt, movedSegments, paretoFront, type Pt } from "./paretoData";
+import {
+  dominators,
+  fmt,
+  movedSegments,
+  paretoFront,
+  type Pt,
+} from "./paretoData";
 import { frontSentence, type ParetoVariant } from "./paretoVariants";
 import {
   labelBox,
@@ -141,6 +147,32 @@ const boxAttr = (p: Pt, pl: Placed) => {
   return [b.x, b.y, b.w, b.h].map((v) => v.toFixed(1)).join(" ");
 };
 const frontSet = computed(() => new Set(front.value.map((p) => p.label)));
+
+// Tooltip: die Zahlen der Ansicht, bei geschätztem Index der Hinweis, und bei einem
+// dominierten Punkt das Modell, das ihn strikt übertrifft — die Antwort auf „wann
+// gibt es ein besseres?“. Genannt werden der billigste und der stärkste Übertreffer
+// der SICHTBAREN Auswahl, also bei einem Produkt nur Modelle desselben Produkts.
+const tipFor = (p: Pt): string => {
+  let s = V.tip(p) + (p.est ? " · Index von AA geschätzt" : "");
+  if (frontSet.value.has(p.label)) return s + " · liegt auf der Front";
+  const d = dominators(p, pts.value);
+  if (!d.length) return s;
+  const staerkster = [...d].sort((a, b) => b.y - a.y || a.x - b.x)[0]!;
+  const namen = [...new Set([d[0]!, staerkster])]
+    .map((q) => `${q.label} (${V.yText(q.y)} · ${V.xText(q)})`)
+    .join(" bzw. ");
+  const naheUeberlappung =
+    V.features.ci &&
+    p.ci &&
+    staerkster.ci &&
+    staerkster.y - p.y < p.ci + staerkster.ci;
+  return (
+    s +
+    ` · strikt besser: ${namen}` +
+    (naheUeberlappung ? " (Abstand innerhalb der Fehlerbalken)" : "")
+  );
+};
+const hasEst = computed(() => pts.value.some((p) => p.est));
 const labels = computed<LabelView[]>(() =>
   pts.value.flatMap((p) => {
     const pl = placed.value.get(p.label);
@@ -258,6 +290,7 @@ const whiskers = computed(() =>
     <div class="mp-legend">
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
+      <span v-if="hasEst"><i class="mp-sw mp-sw-est" />≈ geschätzt</span>
       <!-- Seit Stand 8 zeigt der Ring ausschließlich KÜNFTIGE Preise, nie mehr
            vergangene: ohne Overlay den Listenpreis von gemini-3.8-flash ab
            01.01.2027, mit Overlay zusätzlich den Kontingent-Stand der
@@ -516,13 +549,20 @@ const whiskers = computed(() =>
            kostete die Nummer 12 px Breite in der dichtesten Zone; im Marker
            kostet sie nichts. Die Zählung folgt dem Anbieter-Filter. -->
       <g v-for="(p, i) in front" :key="p.label">
-        <circle :cx="at(p).px" :cy="at(p).py" r="7" class="mp-front-pt">
-          <title>{{ V.tip(p) }}</title>
+        <circle
+          :cx="at(p).px"
+          :cy="at(p).py"
+          r="7"
+          class="mp-front-pt"
+          :class="{ 'mp-est': p.est }"
+        >
+          <title>{{ tipFor(p) }}</title>
         </circle>
         <text
           :x="at(p).px"
           :y="at(p).py"
           class="mp-front-num"
+          :class="{ 'mp-est': p.est }"
           aria-hidden="true"
         >
           {{ i + 1 }}
@@ -537,8 +577,9 @@ const whiskers = computed(() =>
           width="10"
           height="10"
           class="mp-dom-pt"
+          :class="{ 'mp-est': p.est }"
         >
-          <title>{{ V.tip(p) }}</title>
+          <title>{{ tipFor(p) }}</title>
         </rect>
       </g>
 
@@ -692,7 +733,7 @@ const whiskers = computed(() =>
         @click.stop="togglePin(p.label)"
         @keydown.enter.prevent="togglePin(p.label)"
       >
-        <title>{{ V.tip(p) }}</title>
+        <title>{{ tipFor(p) }}</title>
       </circle>
     </svg>
 
@@ -728,6 +769,12 @@ const whiskers = computed(() =>
 .mp-sw-dom {
   border-radius: 2px;
   background: var(--color-text-tertiary);
+}
+.mp-sw-est {
+  box-sizing: border-box;
+  border: 1.4px dashed var(--color-text-tertiary);
+  border-radius: 2px;
+  background: none;
 }
 .mp-sw-old {
   box-sizing: border-box;
@@ -925,6 +972,21 @@ const whiskers = computed(() =>
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
+}
+/* Index von AA geschätzt: hohl und gestrichelt — der Wert ist eine Näherung. */
+.mp-front-pt.mp-est {
+  fill: var(--deck-surface, var(--color-background-primary));
+  stroke: var(--slidev-theme-primary);
+  stroke-dasharray: 3 2;
+}
+.mp-front-num.mp-est {
+  fill: var(--slidev-theme-primary);
+}
+.mp-dom-pt.mp-est {
+  fill: none;
+  stroke: var(--color-text-tertiary);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 2;
 }
 .mp-dom-pt {
   fill: var(--color-text-tertiary);

@@ -41,6 +41,8 @@ export type VariantId = "aa-cost" | "aa-speed" | "deepswe";
 export interface Seg {
   t: string;
   b?: boolean;
+  /** Hover-Text, z. B. die Liste der Modelle ohne Wert. */
+  title?: string;
 }
 
 export interface ParetoVariant {

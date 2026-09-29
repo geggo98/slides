@@ -1319,6 +1319,22 @@ export function paretoFront<T extends { x: number; y: number }>(
   return { front, dom };
 }
 
+/**
+ * Die Punkte, die `p` strikt übertreffen: höchstens so teuer (bzw. langsam) UND
+ * mindestens so gut, in einem von beiden echt besser — dieselbe Regel, nach der
+ * `paretoFront` einen Punkt als dominiert aussortiert. Billigster zuerst.
+ */
+export function dominators<T extends { x: number; y: number }>(
+  p: T,
+  pts: readonly T[],
+): T[] {
+  return pts
+    .filter(
+      (q) => q !== p && q.x <= p.x && q.y >= p.y && (q.x < p.x || q.y > p.y),
+    )
+    .sort((a, b) => a.x - b.x || b.y - a.y);
+}
+
 export const tip = (p: Pt) =>
   `${p.label}: ${p.y} %${p.ci ? ` ± ${fmt(p.ci).replace(",00", "")}` : ""} · ${p.eur} €/Task` +
   (p.old
