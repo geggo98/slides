@@ -148,7 +148,7 @@ describe("chartGeometry — Standard = bisherige Pipeline", () => {
     for (const subOn of V.features.subOverlay ? [false, true] : [false]) {
       it(`${id}, Overlay ${subOn ? "an" : "aus"}`, () => {
         const all = new Set(V.pts.map((p) => p.label));
-        const g = chartGeometry(V, V.pts, all, subOn);
+        const g = chartGeometry(V, [...V.pts, ...V.extras], all, subOn);
         expect(g.isDefault).toBe(true);
         expect(g.scale).toBe(V.scale);
         expect(g.xTicks).toBe(V.xTicks);
@@ -196,7 +196,7 @@ describe("chartGeometry — jede andere Auswahl", () => {
     return [
       ...PRESETS.filter((p) => p.id !== "all").map((p) => ({
         name: `Preset ${p.id}`,
-        sel: new Set(presetModels(p.id, V.pts)),
+        sel: new Set(presetModels(p.id, [...V.pts, ...V.extras], V.pts)),
       })),
       ...labs.map((l) => ({
         name: `Lab ${l}`,
@@ -218,7 +218,7 @@ describe("chartGeometry — jede andere Auswahl", () => {
     for (const { name, sel } of auswahlen(V)) {
       for (const subOn of V.features.subOverlay ? [false, true] : [false]) {
         it(`${id} · ${name} · Overlay ${subOn ? "an" : "aus"}: alles im Plot, nichts überlappt`, () => {
-          const g = chartGeometry(V, V.pts, sel, subOn);
+          const g = chartGeometry(V, [...V.pts, ...V.extras], sel, subOn);
           expect(g.isDefault).toBe(false);
           expect(g.cluster).toBeNull();
           const b = plotBounds(g.scale);
@@ -248,10 +248,10 @@ describe("chartGeometry — jede andere Auswahl", () => {
 
   it("verschiebt der Kontingent-Schalter die Achse nicht", () => {
     const V = VARIANTS["aa-cost"];
-    const sel = new Set(presetModels("cursor", V.pts));
+    const sel = new Set(presetModels("cursor", [...V.pts, ...V.extras], V.pts));
     expect(sel.size).toBeGreaterThan(0);
-    const aus = chartGeometry(V, V.pts, sel, false);
-    const an = chartGeometry(V, V.pts, sel, true);
+    const aus = chartGeometry(V, [...V.pts, ...V.extras], sel, false);
+    const an = chartGeometry(V, [...V.pts, ...V.extras], sel, true);
     expect(an.xTicks).toStrictEqual(aus.xTicks);
     expect(an.yTicks).toStrictEqual(aus.yTicks);
     for (const x of [0.1, 1, 5])
@@ -260,8 +260,10 @@ describe("chartGeometry — jede andere Auswahl", () => {
 
   it("liegt die Front einer Auswahl über der Auswahl, nicht über dem Feld", () => {
     const V = VARIANTS["aa-cost"];
-    const sel = new Set(presetModels("jetbrains-ai", V.pts));
-    const g = chartGeometry(V, V.pts, sel, false);
+    const sel = new Set(
+      presetModels("jetbrains-ai", [...V.pts, ...V.extras], V.pts),
+    );
+    const g = chartGeometry(V, [...V.pts, ...V.extras], sel, false);
     const front = paretoFront(g.base).front.map((p) => p.label);
     for (const l of front) expect(sel.has(l)).toBe(true);
   });
@@ -269,7 +271,7 @@ describe("chartGeometry — jede andere Auswahl", () => {
   it("legt die Quadranten-Linien auf den Median der Auswahl", () => {
     const V = VARIANTS["aa-cost"];
     const sel = new Set(V.pts.slice(0, 5).map((p) => p.label));
-    const g = chartGeometry(V, V.pts, sel, false);
+    const g = chartGeometry(V, [...V.pts, ...V.extras], sel, false);
     const xs = g.base.map((p) => p.x).sort((a, b) => a - b);
     expect(g.split.x).toBe(xs[2]);
   });

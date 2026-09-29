@@ -31,7 +31,9 @@ import { useCrosshairs } from "./useCrosshairs";
 // (`paretoGeometry.ts`) in einem einzigen `computed`.
 const props = defineProps<{ variant: ParetoVariant }>();
 const V = props.variant;
-const pts0 = V.pts;
+const pts0 = V.pts; // kuratiertes Feld: „Alle“ und die Lab-Zeilen
+// Alles, was ein Produkt einbringen kann; nur ein Produkt-Preset wählt Extras.
+const universe = [...V.pts, ...V.extras];
 
 // Die Auswahl gehört dem Wrapper: Er rendert Fußzeile und Menü und setzt sie beim
 // Wechsel der Ansicht zurück.
@@ -63,16 +65,16 @@ const ghost = V.features.priceGhost;
 //
 // Der Filter greift VOR dem Kontingent-Overlay, damit sich beide kombinieren
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
-const preset = computed(() => matchingPreset(sel.value, pts0));
+const preset = computed(() => matchingPreset(sel.value, universe, pts0));
 const pts = computed<Pt[]>(() =>
-  visiblePoints(pts0, sel.value, subOn.value, { ghost }),
+  visiblePoints(universe, sel.value, subOn.value, { ghost }),
 );
 
 // Alles, was von der Auswahl abhängt, in einem Aufruf. Im Standard („Alle“) ist
 // das exakt die bisherige Rechnung mit der redaktionellen Skala; sonst liegen
 // Skala, Quadranten-Linien, Entzerrung und Beschriftung auf den sichtbaren
 // Punkten.
-const geo = computed(() => chartGeometry(V, pts0, sel.value, subOn.value));
+const geo = computed(() => chartGeometry(V, universe, sel.value, subOn.value));
 const S = computed(() => geo.value.scale);
 const { W, H, L, R, T, B } = V.scale; // die Bühne ist fest, nur Achsen wandern
 const px = (v: number) => S.value.px(v);
@@ -305,7 +307,7 @@ const whiskers = computed(() =>
            Overflow-Checker sieht diese Richtung NICHT — er misst nur nach
            unten. Wer hier Text ergänzt, prüft mit
            playwright-tests/legend-width-check.ts. -->
-      <ProviderPicker v-model="sel" :pts="pts0" />
+      <ProviderPicker v-model="sel" :pts="pts0" :universe="universe" />
       <button
         class="mp-ib"
         aria-label="Quellen und Einschränkungen anzeigen"

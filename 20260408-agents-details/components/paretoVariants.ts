@@ -15,6 +15,7 @@
 // Tick-Beschriftung spricht von tok/s.
 
 import { AA_COST, AA_NO_TPS, AA_SPEED, AA_STAND, AA_URL } from "./aaData";
+import { AA_EXTRAS_COST, AA_EXTRAS_SPEED } from "./aaExtras";
 import {
   CURRENT,
   makeScale,
@@ -49,6 +50,12 @@ export interface ParetoVariant {
   /** Zweite Menüzeile, klein. */
   menuNote: string;
   pts: Pt[];
+  /**
+   * Modelle, die nur ein Produkt-Preset einblendet: ältere, abgekündigte, mit
+   * geschätztem Index (`aaExtras.ts`). Leer bei DeepSWE — das Board misst nur sein
+   * eigenes Feld.
+   */
+  extras: Pt[];
   /** Bedeutung der x-Achse für das Anpassen der Skala (`paretoGeometry.ts`). */
   xKind: "cost" | "speed";
   scale: Scale;
@@ -158,6 +165,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "Intelligenz × Kosten",
     menuNote: "Artificial Analysis · Default",
     pts: AA_COST,
+    extras: AA_EXTRAS_COST,
     xKind: "cost",
     scale: AA_COST_SCALE,
     xTicks: AA_COST_TICKS,
@@ -229,6 +237,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "Intelligenz × Tempo",
     menuNote: "Artificial Analysis · Output-Tokens/s",
     pts: AA_SPEED,
+    extras: AA_EXTRAS_SPEED,
     xKind: "speed",
     scale: AA_SPEED_SCALE,
     xTicks: TPS_TICKS.map((t) => 1000 / t),
@@ -301,6 +310,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     menu: "DeepSWE × Kosten",
     menuNote: "Coding-Benchmark · Stand 03.09.",
     pts: CURRENT,
+    extras: [],
     xKind: "cost",
     scale: PARETO_SCALE,
     xTicks: X_TICKS_LOG,

@@ -155,11 +155,20 @@ export const PRESETS: readonly Preset[] = [
   })),
 ];
 
-/** Die Modelle, die ein Preset auswählt. */
-export function presetModels(id: PresetId, pts: Pt[]): string[] {
+/**
+ * Die Modelle, die ein Preset auswählt. `universe` sind alle Punkte, die ein
+ * Produkt einbringen kann (kuratiertes Feld plus Extras, `aaExtras.ts`),
+ * `curated` das kuratierte Feld allein: „Alle“ ist das Feld, ein Produkt
+ * bekommt seine Modelle aus dem ganzen Universe — auch die älteren.
+ */
+export function presetModels(
+  id: PresetId,
+  universe: Pt[],
+  curated: Pt[] = universe,
+): string[] {
   return id === "all"
-    ? pts.map((p) => p.label)
-    : pts.filter((p) => toolHas(id, p.label)).map((p) => p.label);
+    ? curated.map((p) => p.label)
+    : universe.filter((p) => toolHas(id, p.label)).map((p) => p.label);
 }
 
 export interface LabRow {
@@ -218,9 +227,13 @@ export function toggleLab(sel: ModelSet, lab: Lab, pts: Pt[]): Set<string> {
  * „Windsurf", obwohl ein zugeschaltetes Lab den Werkzeug-Blick längst verlassen
  * hat.
  */
-export function matchingPreset(sel: ModelSet, pts: Pt[]): Preset | undefined {
+export function matchingPreset(
+  sel: ModelSet,
+  universe: Pt[],
+  curated: Pt[] = universe,
+): Preset | undefined {
   return PRESETS.find((p) => {
-    const m = presetModels(p.id, pts);
+    const m = presetModels(p.id, universe, curated);
     return m.length === sel.size && m.every((x) => sel.has(x));
   });
 }

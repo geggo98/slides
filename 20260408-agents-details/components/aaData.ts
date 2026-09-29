@@ -47,7 +47,7 @@ export const AA_FLOOR = 30;
 /** Claude-Code-Kontingent ab 14.09.2026: dauerhaft +25 % ⇒ €/Task × 0,8. */
 export const SUB_FACTOR = 0.8;
 
-interface Row {
+export interface Row {
   slug: string;
   name: string;
   deprecated: boolean | null;
@@ -102,6 +102,9 @@ export function labelOf(model: string): string {
 }
 
 const rows = raw as unknown as Row[];
+
+/** Alle Rohzeilen des Snapshots, auch abgekündigte und geschätzte — für `aaExtras.ts`. */
+export const AA_ROWS: readonly Row[] = rows;
 
 /** Alle gemessenen Konfigurationen der aktiven Modelle mit Index UND Kosten. */
 export const CONFIGS: readonly AaCfg[] = rows.flatMap((r) => {

@@ -40,7 +40,14 @@ import { LOGOS, LOGO_VIEWBOX } from "./providerLogos";
 // Das Menü klappt nach unten ins Chart hinein (die Legende sitzt oben), braucht
 // deshalb einen deckenden Hintergrund und z-index.
 
-const props = defineProps<{ modelValue: ModelSet; pts: Pt[] }>();
+// `pts` ist das kuratierte Feld („Alle“, Lab-Zeilen), `universe` dazu die Extras,
+// die nur ein Produkt-Preset einblendet.
+const props = defineProps<{
+  modelValue: ModelSet;
+  pts: Pt[];
+  universe?: Pt[];
+}>();
+const universe = computed(() => props.universe ?? props.pts);
 const emit = defineEmits<{
   (e: "update:modelValue", v: ReadonlySet<string>): void;
 }>();
@@ -59,7 +66,7 @@ type Zeile = { art: "preset"; z: PresetZeile } | { art: "lab"; z: LabRow };
 const presets = computed<PresetZeile[]>(() =>
   PRESETS.map((preset) => ({
     preset,
-    anzahl: presetModels(preset.id, props.pts).length,
+    anzahl: presetModels(preset.id, universe.value, props.pts).length,
   })),
 );
 const labs = computed<LabRow[]>(() => labRows(props.modelValue, props.pts));
@@ -70,11 +77,22 @@ const flat = computed<Zeile[]>(() => [
 ]);
 
 /** Deckt sich die Auswahl mit einem Preset, trägt der Auslöser dessen Namen. */
-const treffer = computed(() => matchingPreset(props.modelValue, props.pts));
-const gefiltert = computed(() => props.modelValue.size !== props.pts.length);
+const treffer = computed(() =>
+  matchingPreset(props.modelValue, universe.value, props.pts),
+);
+// Gefiltert heißt: nicht genau das kuratierte Feld — auch ein Produkt mit
+// gleicher Modellzahl wäre gefiltert.
+const gefiltert = computed(
+  () =>
+    props.modelValue.size !== props.pts.length ||
+    !props.pts.every((p) => props.modelValue.has(p.label)),
+);
 
 function waehlePreset(z: PresetZeile) {
-  emit("update:modelValue", new Set(presetModels(z.preset.id, props.pts)));
+  emit(
+    "update:modelValue",
+    new Set(presetModels(z.preset.id, universe.value, props.pts)),
+  );
   open.value = false; // fertige Aussage — Chart soll sofort zu sehen sein
 }
 

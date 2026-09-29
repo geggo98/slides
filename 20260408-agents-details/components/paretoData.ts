@@ -200,6 +200,8 @@ export interface Pt {
   provisional?: boolean;
   /** Median-Output-Tokens/s (nur AA-Varianten) — Tooltip und Größen-Halo. */
   tps?: number;
+  /** Der Index dieses Punkts ist von AA geschätzt, nicht gemessen (nur Extras). */
+  est?: true;
 }
 
 export interface Snapshot {
@@ -260,6 +262,15 @@ export interface Lens {
 export const fmt = (v: number) => v.toFixed(2).replace(".", ",");
 
 /**
+ * Kosten in €: ab 0,10 € zwei Nachkommastellen wie `fmt`, darunter zwei geltende
+ * Ziffern — ältere Modelle kosten teils Bruchteile eines Cents (`0,0045`), und
+ * „0,00 €“ wäre ein falscher Wert.
+ */
+export const fmtEur = (v: number) =>
+  v >= 0.095 ? fmt(v) : String(Number(v.toPrecision(2))).replace(".", ",");
+
+
+/**
  * Kompakter Konstruktor — `eur` kann so nicht von `x` abweichen. Exportiert,
  * damit `lib/preliminaryParetoPoints.ts` dieselbe Garantie für seine drei
  * geschätzten Punkte bekommt, statt `eur` dort separat von Hand zu pflegen.
@@ -275,18 +286,20 @@ export function P(
     sub?: number;
     sub25?: number;
     tps?: number;
+    est?: true;
   } = {},
 ): Pt {
   return {
     label,
     x,
     y,
-    eur: fmt(x),
+    eur: fmtEur(x),
     ci: extra.ci,
     story: extra.story,
     sub: extra.sub,
     sub25: extra.sub25,
     tps: extra.tps,
+    est: extra.est,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
   };
 }
