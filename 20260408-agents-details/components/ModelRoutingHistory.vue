@@ -29,7 +29,7 @@ import {
 } from "./paretoChrome";
 import { useCrosshairs } from "./useCrosshairs";
 
-// Dieselbe Achse wie `ModelRoutingPareto.vue` (geteilt über `paretoChrome.ts`,
+// Dieselbe Achse wie `ParetoChart.vue` (geteilt über `paretoChrome.ts`,
 // x logarithmisch), nur flacher und ohne Pfeil-Cluster/Quadranten-Labels —
 // darunter brauchen Timeline und Erklärtext Platz. Wurzelklasse bewusst `.mh-chart` statt `.mp-chart`: `verify-deploy.ts`
 // findet die Pareto-Folie per `querySelector("svg.mp-chart")` und würde sonst

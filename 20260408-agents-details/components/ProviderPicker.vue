@@ -256,7 +256,7 @@ const ariaChecked = (l: LabRow) =>
   position: relative;
 }
 
-/* Bewusst eigene Regeln statt der `.mp-tg` aus ModelRoutingPareto.vue: Vue
+/* Bewusst eigene Regeln statt der `.mp-tg` aus ParetoChart.vue: Vue
    gibt scoped CSS nur an das Wurzelelement einer Kindkomponente weiter, nicht
    an deren Inneres. Der Knopf trug die Klasse `mp-tg` und bekam trotzdem NICHTS
    davon — kein Rahmen, kein Padding, `inline-block` statt `inline-flex`. Mit

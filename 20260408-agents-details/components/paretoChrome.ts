@@ -154,8 +154,16 @@ export const QUADRANTS: readonly Quadrant[] = [
   },
 ];
 
-export const quadrantBoxes = (s: Scale, font = QUADRANT_FONT): Obstacle[] =>
-  QUADRANTS.map((q) => ({
+export const quadrantsWith = (
+  texts: Partial<Record<Quadrant["key"], string>>,
+): Quadrant[] => QUADRANTS.map((q) => ({ ...q, text: texts[q.key] ?? q.text }));
+
+export const quadrantBoxes = (
+  s: Scale,
+  font = QUADRANT_FONT,
+  quads: readonly Quadrant[] = QUADRANTS,
+): Obstacle[] =>
+  quads.map((q) => ({
     ...labelBox(q.text, q.x(s), q.y(s), q.ax, font, SANS_EM),
     name: `«${q.text}»`,
   }));
@@ -244,6 +252,8 @@ export interface ArrowClusterOpts {
   target?: (s: Scale) => XY;
   /** Hub-Höhe in Pixeln. Default: py(9 %). */
   hubY?: (s: Scale) => number;
+  /** Beschriftung der drei Pfeile. Default: Preis-Leistung wie auf der DeepSWE-Folie. */
+  texts?: { cheaper: string; stronger: string; better: string };
 }
 
 export function arrowCluster(
@@ -257,6 +267,11 @@ export function arrowCluster(
   // dort ist claude-sonnet-5 bei 54 %, auch mit Kontingent-Overlay.
   const hx = s.W - s.R - 26;
   const hy = opts.hubY ? opts.hubY(s) : s.py(9);
+  const txt = opts.texts ?? {
+    cheaper: "Billiger",
+    stronger: "Leistungsfähiger",
+    better: "Besseres Preis-Leistungs-Verhältnis",
+  };
   const target =
     opts.target ?? ((sc: Scale) => ({ x: sc.px(4), y: sc.py(42) }));
   const { x: tx, y: ty } = target(s);
@@ -297,18 +312,9 @@ export function arrowCluster(
     };
   };
   const parts = [
-    mk("cheaper", "Billiger", 11, bLen, 180, cW, cHW, cHL),
-    mk("stronger", "Leistungsfähiger", 11, cLen, -90, cW, cHW, cHL),
-    mk(
-      "better",
-      "Besseres Preis-Leistungs-Verhältnis",
-      12,
-      aLen,
-      aRot,
-      aW,
-      aHW,
-      aHL,
-    ),
+    mk("cheaper", txt.cheaper, 11, bLen, 180, cW, cHW, cHL),
+    mk("stronger", txt.stronger, 11, cLen, -90, cW, cHW, cHL),
+    mk("better", txt.better, 12, aLen, aRot, aW, aHW, aHL),
   ];
   return {
     hub: { x: hx, y: hy, r: aW + 2 },
@@ -328,6 +334,7 @@ export function visiblePoints(
   all: readonly Pt[],
   sel: ReadonlySet<string>,
   subOn: boolean,
+  opts: { ghost?: boolean } = {},
 ): Pt[] {
   const shown =
     sel.size === all.length ? [...all] : all.filter((p) => sel.has(p.label));
@@ -338,12 +345,16 @@ export function visiblePoints(
           ...p,
           x: p.sub,
           eur: fmt(p.sub),
-          old: {
-            x: p.sub25 ?? p.x,
-            eur: fmt(p.sub25 ?? p.x),
-            pre: "ab 14.09.",
-            why: "dauerhaft +25 % statt +50 % — Stand ab 14.09.2026",
-          },
+          ...(opts.ghost === false
+            ? {}
+            : {
+                old: {
+                  x: p.sub25 ?? p.x,
+                  eur: fmt(p.sub25 ?? p.x),
+                  pre: "ab 14.09.",
+                  why: "dauerhaft +25 % statt +50 % — Stand ab 14.09.2026",
+                },
+              }),
         }
       : p,
   );
@@ -417,7 +428,7 @@ export interface DodgeOpts {
   /**
    * Punkte, die in irgendeiner Ansicht auf der Front stehen (Anbieter-Presets
    * der Hauptfolie, siehe `frontUnion`): Sie rücken nur waagerecht, auch wenn
-   * sie im vollen Satz dominiert sind — sonst stünde terra im Windsurf-Preset
+   * sie im vollen Satz dominiert sind — sonst stünde terra im JetBrains-Preset
    * als Sprosse 2 um 1,7 Punkte zu hoch (Befund vom 05.09.2026).
    */
   horizontalOnly?: ReadonlySet<string>;
@@ -726,6 +737,8 @@ export interface LayoutSource {
    * der Filter das Layout ändert. Nur die Hauptfolie hat Presets.
    */
   presets?: boolean;
+  /** false = kein Geisterring des Kontingent-Overlays (Varianten nach dem 14.09.). */
+  ghost?: boolean;
 }
 
 /** Baut aus dem VOLLEN Datensatz die Eingabe des Platzierers für einen Zustand. */
@@ -754,7 +767,9 @@ export function toLayoutPoints(
       }
     }
     const ghost = moved
-      ? at(p.sub25 ?? p.x, p.y)
+      ? o.ghost === false
+        ? undefined
+        : at(p.sub25 ?? p.x, p.y)
       : p.old
         ? at(p.old.x, p.old.y ?? p.y)
         : undefined;

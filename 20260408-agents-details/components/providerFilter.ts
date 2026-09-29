@@ -10,9 +10,10 @@
 //
 // Der Zweck der Presets: Ein Nutzer von Cursor oder Windsurf sieht mit einem
 // Klick, welche der für ihn VERFÜGBAREN Modelle auf der Front liegen — und das
-// ist am 03.09.2026 nicht dieselbe Antwort. Windsurfs Katalog endet bei Gemini
-// 3.6 Flash, dort führt weiter Opus 5 für 10,37 €; bei Cursor kostet derselbe
-// Score 2,07 €.
+// ist nicht immer dieselbe Antwort. Am 29.09.2026 führen Cursor und Windsurf
+// alle drei Frontpunkte; bei JetBrains AI endet der Katalog bei Gemini 3.6
+// Flash, dort führt weiter Opus 5 für 10,37 €. Am 03.09. war es Windsurf, das
+// zurücklag — Kataloge wandern, deshalb Abrufdatum je Werkzeug.
 //
 // Der Zweck der Checkboxen: Ein einzelnes Lab hat ein bis vier Punkte, seine
 // „Front" ist dann kaum mehr als der beste Punkt. Interessant wird es
@@ -46,11 +47,11 @@ export type PresetId = "all" | ToolId;
 /**
  * Der Zustand des Filters ist eine MODELLMENGE, keine Lab-Menge — und das ist
  * kein Geschmack, sondern Rechnung. Ein Werkzeug deckt Labs oft nur teilweise
- * ab: Windsurf führt von Google nur 3.5 und 3.6 Flash. Schriebe ein Preset auf
- * Lab-Häkchen, bekäme Windsurf das ganze Google-Lab und damit gemini-3.8-flash,
- * das es gar nicht anbietet — seine Front wäre dann Zeichen für Zeichen die von
- * „Alle" (20 statt 14 Modelle), und die Aussage, für die es diesen Filter gibt,
- * wäre weg. Cursor bekäme auf demselben Weg glm-5.3-flash dazu.
+ * ab: JetBrains AI führt von Google nur 3.5 und 3.6 Flash. Schriebe ein Preset auf
+ * Lab-Häkchen, bekäme JetBrains das ganze Google-Lab und damit gemini-3.8-flash,
+ * das es gar nicht anbietet — 13 statt 10 Modelle, und mit gemini-3.8-flash auf
+ * der Front die Leiter von „Alle" statt der eines JetBrains-Nutzers. Die Aussage,
+ * für die es diesen Filter gibt, wäre weg. Von OpenAI fehlt dort gpt-6-astra.
  *
  * Deshalb: Presets schreiben Modellmengen, die Lab-Checkboxen arbeiten auf
  * derselben Menge, und ein nur teilweise enthaltenes Lab wird als „teilweise"
@@ -64,14 +65,13 @@ export interface Tool {
   source: string;
   /** Abrufdatum der Modell-Liste. Diese Kataloge ändern sich monatlich. */
   retrieved: string;
-  /** Modelle dieses Charts, die das Werkzeug anbietet. */
-  models?: readonly string[];
   /**
-   * Alternativ zur Modell-Liste: Freigabe auf Providerebene. Nur für
-   * JetBrains AI — die Preisseite nennt Anbieter, keine Modelle. Das ist eine
-   * Obergrenze, keine Aufzählung.
+   * Modelle dieses Charts (beider Datenquellen — gleiche Bezeichnung heißt
+   * dasselbe Modell), die das Werkzeug anbietet. Eine Liste je Werkzeug und ein
+   * Abrufdatum: `gemini-3.8-flash` gibt es bei Windsurf oder nicht, egal in
+   * welcher Ansicht.
    */
-  labs?: readonly Lab[];
+  models: readonly string[];
   /** Was die Quelle nicht hergibt. Steht im Menü-Tooltip und im ⓘ-Dialog. */
   caveat: string;
 }
@@ -80,27 +80,39 @@ export const TOOLS: readonly Tool[] = [
   {
     id: "cursor",
     label: "Cursor",
-    source: "https://cursor.com/docs/models",
-    retrieved: "2026-09-03",
+    source: "https://cursor.com/docs/models-and-pricing",
+    retrieved: "2026-09-29",
+    // Rohseite `models-and-pricing.md`: 66 Zeilen. Die HTML-Ansicht
+    // `/docs/models` zeigt nur die 13 Standard-Modelle; alles andere trägt dort
+    // „Hidden by default“ und ist erst nach dem Einschalten wählbar. Wer nur die
+    // HTML-Seite liest, findet Kimi K3, GLM 5.x, Opus 5 und Gemini 3.5–3.7 nicht.
+    // Hier zählt „wählbar“, also auch das Versteckte.
     models: [
       "claude-fable-5",
+      "claude-fable-5.1",
       "claude-opus-4.8",
       "claude-opus-5",
+      "claude-opus-5.5",
       "claude-sonnet-5",
+      "claude-sonnet-5.5",
       "gemini-3.5-flash",
       "gemini-3.6-flash",
       "gemini-3.7-flash",
       "gemini-3.8-flash",
       "glm-5.2",
+      "glm-5.3",
+      "glm-5.3-flash",
       "gpt-5.5",
       "gpt-5.6-luna",
       "gpt-5.6-sol",
       "gpt-5.6-terra",
       "grok-4.6",
+      "grok-4.7",
       "kimi-k3",
+      "muse-spark-1.3",
     ],
     caveat:
-      "Cursors eigenes Composer-Modell misst DeepSWE nicht; es fehlt hier also.",
+      "Viele Modelle sind in Cursor „hidden by default“ und erst nach dem Einschalten wählbar; hier zählen sie mit. GPT-6 (Astra/Sol/Luna), DeepSeek, Qwen und MiMo fehlen im Katalog. Cursors eigenes Composer-Modell misst kein Board; es fehlt hier also.",
   },
   {
     id: "windsurf",
@@ -108,38 +120,65 @@ export const TOOLS: readonly Tool[] = [
     // Die alte Adresse docs.windsurf.com leitet seit der Übernahme durch
     // Cognition per 307 hierher um.
     source: "https://docs.devin.ai/desktop/models",
-    retrieved: "2026-09-03",
+    retrieved: "2026-09-29",
+    // Rohseite `models.md`, die Modellliste steckt als JSON darin (269
+    // verschiedene Einträge im Pro-Tarif, je Effort-Stufe einer). Ein
+    // Zusammenfassungs-Abruf hatte am 29.09. GLM 5.3, DeepSeek V4 Flash und
+    // Gemini 3.7/3.8 Flash verloren.
+    models: [
+      "claude-fable-5",
+      "claude-fable-5.1",
+      "claude-opus-4.8",
+      "claude-opus-5",
+      "claude-opus-5.5",
+      "claude-sonnet-5",
+      "deepseek-v4-flash",
+      "deepseek-v4-pro",
+      "gemini-3.5-flash",
+      "gemini-3.6-flash",
+      "gemini-3.7-flash",
+      "gemini-3.8-flash",
+      "glm-5.2",
+      "glm-5.3",
+      "glm-5.3-flash",
+      "gpt-5.5",
+      "gpt-5.6-luna",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-6-astra",
+      "gpt-6-luna",
+      "gpt-6-sol",
+      "grok-4.6",
+      "kimi-k3",
+    ],
+    caveat:
+      "Die Seite trägt kein Änderungsdatum und verweist auf die Modellauswahl in der App als aktuellen Stand. Sonnet 5.5, Grok 4.7, Muse Spark, Qwen und MiMo fehlen im Katalog. Windsurfs eigenes SWE-x misst kein Board; es fehlt hier also.",
+  },
+  {
+    id: "jetbrains-ai",
+    label: "JetBrains AI",
+    source: "https://www.jetbrains.com/help/ai-assistant/supported-llms.html",
+    retrieved: "2026-09-29",
+    // Bis 29.09. stand hier eine Obergrenze auf Providerebene (OpenAI,
+    // Anthropic, Google, xAI), weil nur die Preisseite geprüft war. Die Hilfe
+    // „Supported models“ (AI Assistant 2026.2, Seitenstand 14.09.2026, zuletzt
+    // geändert 06.08.2026) führt die Modelle einzeln — und deutlich weniger, als
+    // die vier Labs hergäben: Gemini nur bis 3.6 Flash, von xAI nur Grok-4.3, von
+    // Anthropic Opus/Sonnet/Fable 5, aber weder 5.5 noch 5.1.
     models: [
       "claude-fable-5",
       "claude-opus-4.8",
       "claude-opus-5",
       "claude-sonnet-5",
-      "deepseek-v4-pro",
       "gemini-3.5-flash",
       "gemini-3.6-flash",
-      "glm-5.2",
       "gpt-5.5",
       "gpt-5.6-luna",
       "gpt-5.6-sol",
       "gpt-5.6-terra",
-      "grok-4.6",
-      "kimi-k3",
     ],
     caveat:
-      "Der Katalog endet bei Gemini 3.6 Flash — 3.7 und 3.8 stehen nicht darin, ebenso wenig GLM 5.3 und DeepSeek V4 Flash. Windsurfs eigenes SWE-1.x misst DeepSWE nicht.",
-  },
-  {
-    id: "jetbrains-ai",
-    label: "JetBrains AI",
-    source: "https://www.jetbrains.com/ai-ides/buy/",
-    retrieved: "2026-09-03",
-    // Providerebene statt Modell-Liste: die Preisseite sagt „Third-party cloud
-    // AI models via JetBrains AI — OpenAI, Anthropic, Google, and xAI" und
-    // nennt keine einzelnen Modelle. Diese Auswahl nimmt deshalb ALLE Modelle
-    // dieser vier Labs und ist damit eine Obergrenze, keine Aufzählung.
-    labs: ["OpenAI", "Anthropic", "Google", "xAI"],
-    caveat:
-      "Auf Providerebene belegt, nicht je Modell — die Auswahl ist eine Obergrenze. Junie fehlt ganz: dort veröffentlicht JetBrains keinen Modellkatalog.",
+      "Gilt für das JetBrains-AI-Abo. Eigene API-Schlüssel (BYOK) und lokale Modelle (Ollama, LM Studio) sind zusätzlich möglich und stehen nicht in der Liste — ein „fehlt“ heißt also nicht „unbenutzbar“. Die Seite ist vom 06.08. bzw. 14.09.2026 und kennt spätere Neuzugänge nicht. Für Junie fand sich keine eigene Modellliste.",
   },
 ];
 
@@ -147,11 +186,7 @@ const TOOL_BY_ID = new Map(TOOLS.map((t) => [t.id, t]));
 
 /** Bietet das Werkzeug dieses Modell an? Baut die Preset-Mengen. */
 export function toolHas(id: ToolId, label: string): boolean {
-  const t = TOOL_BY_ID.get(id);
-  if (!t) return false;
-  return t.labs
-    ? t.labs.includes(labOf(label))
-    : (t.models?.includes(label) ?? false);
+  return TOOL_BY_ID.get(id)?.models.includes(label) ?? false;
 }
 
 export interface Preset {

@@ -252,7 +252,7 @@ describe("Folie 42 — Default ohne Überschneidung", () => {
   });
 
   // Die Entzerrung rückt terra und glm-5.3 waagerecht auseinander (terra ist
-  // im Windsurf-Preset Frontpunkt, darf also nicht in der Höhe wandern);
+  // im JetBrains-Preset Frontpunkt, darf also nicht in der Höhe wandern);
   // glm-5.3 behält seinen Nahplatz, kimi-k3 bleibt namenlos.
   it("lässt im Default nur diese Punkte namenlos", () => {
     const { layout } = pareto(false);

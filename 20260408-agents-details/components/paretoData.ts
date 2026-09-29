@@ -198,6 +198,8 @@ export interface Pt {
    * `story`, weil ein provisorischer Punkt trotzdem story-frei sein könnte.
    */
   provisional?: boolean;
+  /** Median-Output-Tokens/s (nur AA-Varianten) — Tooltip und Größen-Halo. */
+  tps?: number;
 }
 
 export interface Snapshot {
@@ -272,6 +274,7 @@ export function P(
     old?: Omit<Origin, "eur">;
     sub?: number;
     sub25?: number;
+    tps?: number;
   } = {},
 ): Pt {
   return {
@@ -283,6 +286,7 @@ export function P(
     story: extra.story,
     sub: extra.sub,
     sub25: extra.sub25,
+    tps: extra.tps,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
   };
 }
@@ -794,8 +798,9 @@ export const SNAPSHOTS: Snapshot[] = [
     // Namen. Nur eine Zahl („siebenmal"), und die rechnet paretoData.test.ts
     // nach; die drei Sprossen hält derselbe Test gegen die Front des Stands.
     closing: {
-      title: "Aktueller Stand: dieselbe Leiter wie auf der Folie davor",
-      note: "Das ist der Stand vom 03.09., den die Folie davor zeigt, jetzt mit allen Namen. Drei Sprossen: glm-5.3-flash 0,21 €, gpt-5.6-luna 0,53 €, gemini-3.8-flash 2,07 €. In zwei Monaten hat sich die Front siebenmal verschoben, auch durch bloße Preisänderungen. Die Namen haben ein Verfallsdatum, die Regel nicht: der billigste Frontpunkt, der Deine Aufgaben löst. Suche Dein Modell im Chart — das Fadenkreuz zeigt, was die nächste Sprosse kostet.",
+      title:
+        "Aktueller Stand: dieselbe Leiter wie in der DeepSWE-Ansicht der Folie davor",
+      note: "Das ist der Stand vom 03.09., den die DeepSWE-Ansicht der Folie davor zeigt, jetzt mit allen Namen. Drei Sprossen: glm-5.3-flash 0,21 €, gpt-5.6-luna 0,53 €, gemini-3.8-flash 2,07 €. In zwei Monaten hat sich die Front siebenmal verschoben, auch durch bloße Preisänderungen. Die Namen haben ein Verfallsdatum, die Regel nicht: der billigste Frontpunkt, der Deine Aufgaben löst. Suche Dein Modell im Chart — das Fadenkreuz zeigt, was die nächste Sprosse kostet.",
     },
   },
 ];
@@ -1194,6 +1199,7 @@ export type Lab =
   | "Alibaba"
   | "Xiaomi"
   | "MiniMax"
+  | "StepFun"
   | "Cursor"
   | "Andere";
 
@@ -1212,6 +1218,7 @@ const LAB_PREFIXES: ReadonlyArray<readonly [string, Lab]> = [
   ["mistral-", "Mistral"],
   ["mimo-", "Xiaomi"],
   ["minimax", "MiniMax"],
+  ["step-", "StepFun"],
   ["qwen", "Alibaba"],
   ["composer-", "Cursor"],
 ];

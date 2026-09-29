@@ -1470,25 +1470,34 @@ routeAlias: pareto-heute
 
 <ModelRoutingPareto :preliminary="$clicks >= 1" />
 
-<div v-if="$clicks === 0" class="text-sm mt-1">
-
-**Nimm den billigsten Punkt der Front, der Deine Aufgaben löst** — im Zweifel unten anfangen, bei Fehlschlag eine Sprosse höher. **glm-5.3-flash** 0,21 € (63 %) → **gpt-5.6-luna** 0,53 € (67 %) → **gemini-3.8-flash** 2,07 € (74 %). Alle drei zusammen: 2,81 €, gut ein Viertel eines Laufs mit Opus 5 (10,37 €) — der nicht mehr löst als Sprosse 3. Was Du wählen kannst, hängt am Werkzeug (Filter oben): bei Windsurf sind es vier Sprossen bis 10,37 €.
-
-</div>
-
-<div v-if="$clicks >= 1" class="mt-1">
-
-<PreliminaryBox />
-
-</div>
-
-<div class="text-xs opacity-70 mt-1">
-
-DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 03.09. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell
-
-</div>
-
 <!--
+DREI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
+„Intelligenz × Kosten“ (Artificial Analysis, Stand 29.09.2026). Die Regel
+ist in allen dreien dieselbe, nur die Daten wechseln.
+
+Artificial Analysis (AA) misst breite Fähigkeit — der Intelligence Index
+mischt Wissen, Logik und Agenten-Aufgaben —, DeepSWE misst Coding-Agenten
+auf 113 echten Repo-Tasks. „Kosten pro Task“ heißt bei AA: Ø Kosten eines
+Durchlaufs des Index, kein SWE-Task. Die €-Werte der beiden Datenquellen
+sind deshalb NICHT vergleichbar. AA liefert Preise in USD, umgerechnet
+mit 0,876 wie bei DeepSWE. Je Modell die beste Effort-Stufe, Index ≥ 30.
+
+Die AA-Kostenleiter hat fünf Sprossen: mimo-v2.6-flash 0,05 € (37,9) →
+mimo-v2.6-pro 0,12 € (46,3) → gpt-6.1-sol 0,63 € (51,8) → gpt-6-astra
+2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Opus 5.5 führt mit
+57,6, aber sein Vorsprung auf astra ist 4,9 Punkte für fast den doppelten
+Preis — das ist die Eskalations-Frage der Folie. Sonnet 5.5 und Fable 5.1
+sind dominiert: Opus 5.5 ist besser UND billiger als beide.
+
+Ansicht „Tempo“: Front nach Output-Tokens/s — gemini-3.8-flash 239 →
+muse-spark-1.3 174 → sonnet-5.5 138 → opus-5.5 93. gpt-6.1-sol und kimi-k3
+fehlen dort, AA führt für sie keine Geschwindigkeit. Der Schalter „Tempo
+als Größe“ legt die Geschwindigkeit als Halo um die Marker der
+Kostenansicht. Attribution: AA verlangt den Link, er steht in der
+Fußzeile.
+
+Ab hier die Notiz zur DeepSWE-Ansicht (Menü „DeepSWE × Kosten“).
+
 Diese Folie hat eine Handlungsanweisung, keinen Befund. Sie zuerst
 aussprechen, alles andere ist Begründung: Nimm den billigsten Punkt der
 Front, von dem Du glaubst, dass er Deine Aufgaben löst. Weißt Du es
@@ -1537,10 +1546,11 @@ stimmt bei vier von 22 Modellen nicht mehr. Details im ⓘ.
 Zwei Vorbehalte, beide gehören dazu. Erstens ist astras Preis der
 einzige auf dem Board, den Datacurve als „expected launch pricing"
 ausweist: angekündigt, nicht abgerechnet, mit einer Position „compute
-units", die es sonst nirgends gibt. Zweitens steht astra in keinem
-Werkzeug-Katalog — am 04.09. bei Cursor und Windsurf nachgesehen, null
-Treffer. Das teuerste Modell dieser Folie kann man noch gar nicht
-kaufen.
+units", die es sonst nirgends gibt. Zweitens stand astra
+am 04.09. in keinem Werkzeug-Katalog — bei Cursor und Windsurf nachgesehen,
+null Treffer. Am 29.09. führt Windsurf es (GPT-6 Astra), Cursor und
+JetBrains AI noch nicht: Das teuerste Modell dieser Folie kann man nur in
+einem der drei Werkzeuge wählen.
 
 Nachtrag (23.09.2026): Der erste Vorbehalt ist überholt. Zwischen dem
 17. und dem 22.09.2026 hat das Board astras `cost_basis` von „expected
@@ -1562,12 +1572,15 @@ Drei Klicks im Anbieter-Filter, die sich lohnen:
 - Anthropic: ein einziger Punkt, keine Kurve. Wer an einen Anbieter
   gebunden ist, hat keine Preis-Leistungs-Wahl mehr, nur noch eine
   Entscheidung.
-- Windsurf: vier Frontpunkte mit Opus 5 für 10,37 € an der Spitze —
-  also genau die Front von letzter Woche. Windsurfs Katalog endet bei
-  Gemini 3.6 Flash. Für diese Nutzer ist der Befund dieser Folie noch
-  gar nicht passiert.
-- Cursor: zwei Punkte, Spitze der Neuzugang für 2,07 €. Dieselbe
-  Woche, dasselbe Board, ein anderes Werkzeug, ein Fünftel des Preises.
+- JetBrains AI: vier Frontpunkte mit Opus 5 für 10,37 € an der Spitze —
+  also genau die Front von letzter Woche. Der Katalog (Hilfeseite vom
+  06.08./14.09.) endet bei Gemini 3.6 Flash und führt kein astra. Für
+  diese Nutzer ist der Befund dieser Folie noch gar nicht passiert.
+- Cursor und Windsurf: dieselbe Leiter wie „Alle“, Spitze der Neuzugang
+  für 2,07 €. Am 03.09. war das bei Windsurf noch anders — dessen Katalog
+  endete damals bei Gemini 3.6 Flash. Kataloge wandern, das Datum im
+  ⓘ gehört dazu. Bei Cursor zählen auch die Modelle, die dort „hidden by
+  default“ sind; wählbar sind sie nach dem Einschalten.
 
 Wenn aus dem Publikum „bei uns ist nur X freigegeben" kommt: Die Labs
 darunter sind Checkboxen, mehrere gehen gleichzeitig. Anthropic allein
@@ -1577,7 +1590,7 @@ gerundeten Score für 5,71 € statt 10,37 € liefert. Das ist im ganzen
 Filter der einzige Fall, in dem ein zusätzliches Lab die Front NICHT
 verbessert, und ein gutes Beispiel dafür, dass „mehr Auswahl" und
 „bessere Auswahl" verschiedene Dinge sind. Ein Werkzeug-Preset setzt
-dabei Modelle, keine Lab-Häkchen: Deshalb steht Google nach „Windsurf"
+dabei Modelle, keine Lab-Häkchen: Deshalb steht Google nach „JetBrains AI"
 auf 2/4 und nicht auf 4/4.
 
 Was der Filter NICHT sagt: Er zeigt Verfügbarkeit, nicht Preis. Cursor
@@ -1713,7 +1726,7 @@ senkrecht oder 4,0 % im Preis waagerecht. Betroffen: sol und astra sowie
 terra und glm-5.3 (waagerecht auseinander), muse-spark-1.2 und qwen3.8-max
 (senkrecht). Mit Kontingent-Overlay rückt zusätzlich claude-fable-5 um
 1,7 px. Frontpunkte rücken in jeder Ansicht nur waagerecht, auch im
-Windsurf-Preset, wo terra Sprosse 2 ist. Kein dominierter Punkt rückt über
+JetBrains-Preset, wo terra Sprosse 2 ist. Kein dominierter Punkt rückt über
 die Front oder links an seinen Dominator vorbei. Fadenkreuz und Tooltip
 zeigen den wahren Wert. Die Zahlen rechnet markerDodge.test.ts nach und hält
 sie gegen diese Notiz.

@@ -51,7 +51,7 @@ import {
 import { useCrosshairs } from "./useCrosshairs";
 
 // HarnessTax-Streudiagramm (21 Modell×Harness-Paare) im Look von
-// `ModelRoutingPareto.vue`: dieselbe Gitter-/Tick-/Achsen-Optik, dieselben
+// `ParetoChart.vue`: dieselbe Gitter-/Tick-/Achsen-Optik, dieselben
 // Markergrößen (`MARKER.pareto`), derselbe Platzierer (`labelLayout.ts`),
 // dieselbe Entzerrung (`dodgeDetailed`) und dieselben Fadenkreuze
 // (`useCrosshairs`). Bewusst OHNE die DeepSWE-Schicht (Quadranten,
@@ -820,7 +820,7 @@ const chartLabel = computed(() => {
   <div class="ht-wrap">
     <!-- Legendenzeile ist nowrap; Breite mit
          playwright-tests/harness-chart-qa.ts messen, wenn hier Text dazukommt.
-         Die Pill-Optik ist von `.mp-tg` (ModelRoutingPareto.vue) abgeschrieben,
+         Die Pill-Optik ist von `.mp-tg` (ParetoChart.vue) abgeschrieben,
          weil scoped CSS keine fremden Komponenten erreicht. -->
     <div class="ht-legend" @click="blurLater">
       <button
@@ -910,7 +910,7 @@ const chartLabel = computed(() => {
         />
       </g>
 
-      <!-- Gitter + Achsen — identisch zu ModelRoutingPareto.vue -->
+      <!-- Gitter + Achsen — identisch zu ParetoChart.vue -->
       <g class="ht-grid">
         <line
           v-for="t in X_TICKS"
@@ -1252,7 +1252,7 @@ const chartLabel = computed(() => {
 .ht-wrap {
   margin-top: 0;
   /* Fläche hinter Labels, Halos und Marker-Rändern — dieselbe Form wie in
-     ModelRoutingPareto.vue und ModelRoutingHistory.vue. `--deck-surface`
+     ParetoChart.vue und ModelRoutingHistory.vue. `--deck-surface`
      definiert die `style.css` des Decks auf Slidevs Folienfarbe (`bg-main`:
      `bg-white dark:bg-[#121212]`, `@slidev/client/uno.config.ts`); der
      Fallback `--color-background-primary` ist im Dark Mode #1e1e1e und
@@ -1269,7 +1269,7 @@ const chartLabel = computed(() => {
   font-size: 11px;
   color: var(--color-text-secondary);
 }
-/* Pill-Schalter — Kopie von `.mp-tg` in ModelRoutingPareto.vue. */
+/* Pill-Schalter — Kopie von `.mp-tg` in ParetoChart.vue. */
 .ht-tg {
   display: inline-flex;
   align-items: baseline;
@@ -1343,7 +1343,7 @@ const chartLabel = computed(() => {
   height: auto;
 }
 /* Erinnerung an das Modell-Chart (Schritt 0): Werte 1:1 aus
-   ModelRoutingPareto.vue (.mp-q*, .mp-qline, .mp-qlabel, .mp-arrow-*), weil
+   ParetoChart.vue (.mp-q*, .mp-qline, .mp-qlabel, .mp-arrow-*), weil
    scoped CSS die Nachbarkomponente nicht erreicht. */
 .ht-remind {
   opacity: 0;

@@ -219,7 +219,7 @@ describe("Marker-Entzerrung", () => {
 
   // Der Anbieter-Filter blendet nur aus, die Lagen bleiben die des vollen
   // Satzes. Was im vollen Satz dominiert ist, kann im Preset auf der Front
-  // stehen (terra bei Windsurf) — dann darf es nicht in der Höhe verschoben
+  // stehen (terra bei JetBrains AI) — dann darf es nicht in der Höhe verschoben
   // sein, und die Front des Presets muss weiter über jedem dominierten Punkt
   // liegen. Befund der Prüfung vom 05.09.2026, seither Front-Vereinigung.
   it.each(
@@ -262,7 +262,7 @@ describe("Marker-Entzerrung", () => {
   // Gelesen aus den Templates, damit eine geänderte Markergröße hier auffällt.
   it.each([
     ["history", "ModelRoutingHistory.vue", "mh"],
-    ["pareto", "ModelRoutingPareto.vue", "mp"],
+    ["pareto", "ParetoChart.vue", "mp"],
   ] as const)("nutzt die Halbmaße der Marker aus %s", (kind, file, cls) => {
     const src = readFileSync(join(import.meta.dirname, "../..", file), "utf8");
     const num = (re: RegExp) => {

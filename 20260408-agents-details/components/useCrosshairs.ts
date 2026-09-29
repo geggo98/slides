@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from "vue";
+import { computed, ref, unref, type ComputedRef, type Ref } from "vue";
 import type { Pt, Scale } from "./paretoData";
 
 // Fadenkreuz-Vergleichsmodus, geteilt von `ModelRoutingPareto.vue` (Folie
@@ -28,7 +28,7 @@ export interface CrosshairsOpts {
 
 export function useCrosshairs(
   pts: Ref<Pt[]> | ComputedRef<Pt[]>,
-  s: Scale,
+  s: Scale | Ref<Scale>,
   opts: CrosshairsOpts = {},
 ) {
   const byLabel = computed(() => new Map(pts.value.map((p) => [p.label, p])));
@@ -65,7 +65,7 @@ export function useCrosshairs(
   const crosshairs = computed<Crosshair[]>(() => {
     const list = [...activeCls.value].flatMap(([label, cls]) => {
       const p = byLabel.value.get(label);
-      return p ? [{ p, cls, badgeY: s.py(p.y) + 3 }] : [];
+      return p ? [{ p, cls, badgeY: unref(s).py(p.y) + 3 }] : [];
     });
     const gap =
       opts.ciBadge &&

@@ -42,24 +42,29 @@ const sources = [
     note: "isolierte Verifikation, neun Konfigurationen doppelt gemessen",
   },
   {
+    href: "https://artificialanalysis.ai/leaderboards/models",
+    label: "Artificial Analysis: LLM-Leaderboard",
+    note: "Ansichten „Intelligenz × Kosten/Tempo“, Stand 29.09.2026 — Quellenangabe laut AA-Bedingungen",
+  },
+  {
     href: "https://ai.google.dev/gemini-api/docs/pricing",
     label: "Google-Preisliste (Gemini)",
     note: "3.8 Flash 0,75/3,75 $ bis 31.12.2026, danach das Doppelte",
   },
   {
-    href: "https://cursor.com/docs/models",
-    label: "Cursor: unterstützte Modelle",
-    note: "Modell-Liste des Anbieter-Filters, abgerufen 03.09.2026",
+    href: "https://cursor.com/docs/models-and-pricing",
+    label: "Cursor: Modelle und Preise",
+    note: "Modell-Liste des Anbieter-Filters, Rohseite samt „Hidden by default“, abgerufen 29.09.2026",
   },
   {
     href: "https://docs.devin.ai/desktop/models",
     label: "Windsurf: unterstützte Modelle",
-    note: "dito; docs.windsurf.com leitet seit der Übernahme hierher",
+    note: "dito, Rohseite models.md; docs.windsurf.com leitet seit der Übernahme hierher",
   },
   {
-    href: "https://www.jetbrains.com/ai-ides/buy/",
-    label: "JetBrains AI: Preisseite",
-    note: "nennt nur Anbieter (OpenAI, Anthropic, Google, xAI), keine Modelle",
+    href: "https://www.jetbrains.com/help/ai-assistant/supported-llms.html",
+    label: "JetBrains AI: Supported models",
+    note: "dito, Seitenstand 14.09.2026 (zuletzt geändert 06.08.); die Preisseite nennt nur Anbieter",
   },
   {
     href: "https://news.ycombinator.com/item?id=49528037",
@@ -146,12 +151,16 @@ const caveats = [
     text: "Marker, die einander verdeckten (sol/astra, terra/glm-5.3, muse-spark/grok-4.5, muse-spark-1.2/qwen3.8-max), stehen bis 8 px auseinandergerückt: höchstens 2,0 Prozentpunkte senkrecht oder 4,7 % im Preis waagerecht, immer unter dem Fehlerbalken des Punkts. Frontpunkte rücken nur waagerecht, kein dominierter Punkt rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert; die Speaker Notes jeder Chart-Folie nennen ihr Maximum.",
   },
   {
+    lead: "Artificial-Analysis-Ansichten:",
+    text: "Nur auf der Folie „Welches Modell wofür?“, Menü „Ansicht“, beim Öffnen Intelligenz × Kosten. Der Intelligence Index mischt Wissen, Logik und Agenten-Aufgaben und misst kein Coding-Agenten-Verhalten wie DeepSWE; „Kosten pro Task“ heißt dort Ø Kosten eines Index-Durchlaufs (Listenpreis × Tokenverbrauch, USD, hier zu 0,876 €), kein SWE-Task — die €-Werte der beiden Datenquellen sind nicht vergleichbar. AA führt jede Effort-Stufe als eigenen Eintrag; das Chart nimmt je Modell die mit dem höchsten Index, bei Gleichstand die billigere, und zeigt 24 Modelle mit Index ≥ 30 (die Seite trägt 681 Einträge, 101 aktive mit Kosten). Der Index steht auf eine Nachkommastelle, weil auf ganze Punkte gerundet viele Modelle gleichauf lägen. Tempo = Median der Output-Tokens/s; für gpt-6.1-sol und kimi-k3 führt AA keinen Wert, sie fehlen in der Tempo-Ansicht und haben in der Kostenansicht keinen Halo. Die Tempo-Ansicht rechnet intern mit der Zeit je 1 000 Tokens, damit die Front-Logik unverändert bleibt; die Achse trägt tok/s, schnell links. Fehlerbalken und Preis-Geisterringe gibt es dort nicht. Der Kontingent-Schalter gilt dort mit ×0,8 (dauerhaft +25 % seit 14.09.). Der Anbieter-Filter gilt in allen drei Ansichten mit derselben Katalogliste je Werkzeug (Stand 29.09.2026); ein Modell, das ein Werkzeug nicht führt, fehlt dort in jeder Ansicht.",
+  },
+  {
     lead: "Board-Default:",
     text: "Das Board zeigt per Default 21 von 28 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes unter v1.1 gemessene Modell stehen.",
   },
   {
     lead: "Anbieter-Filter:",
-    text: "Nur auf der Folie „Welches Modell wofür?“. Die Labs sind Checkboxen und beliebig kombinierbar — einzeln sagt ein Lab wenig, interessant wird „bei uns sind OpenAI und Anthropic freigegeben“. Die Werkzeuge sind Presets und überschreiben die Auswahl. Sie setzen dabei Modelle, nicht Lab-Häkchen, und das ist wesentlich: Windsurf führt von Google nur 3.5 und 3.6 Flash. Über Lab-Häkchen bekäme es das ganze Google-Lab und damit gemini-3.8-flash, das es gar nicht anbietet — seine Front wäre dann die von „Alle“. Ein nur teilweise abgedecktes Lab steht deshalb auf „teilweise“ (2/4), nicht auf „an“. Die Labs kommen aus der Zuordnung des Boards selbst; die drei Werkzeuge aus der jeweiligen Hersteller-Doku, abgerufen am 03.09.2026 — solche Kataloge ändern sich monatlich. Der Filter zeigt Verfügbarkeit, nicht Preis: Cursor und Windsurf rechnen nach eigenen Tarifen ab, geplottet bleibt der API-Listenpreis. Das jeweils eigene Modell fehlt jeder Werkzeug-Ansicht, weil DeepSWE es nicht misst — Cursors Composer so wenig wie Windsurfs SWE-1.x. JetBrains AI ist nur auf Providerebene belegt (OpenAI, Anthropic, Google, xAI) und deshalb eine Obergrenze; Junie fehlt ganz, dort veröffentlicht JetBrains keinen Modellkatalog. Achsen und Quadranten bleiben in jeder Auswahl gleich, nur die Front wird neu gerechnet.",
+    text: "Nur auf der Folie „Welches Modell wofür?“. Die Labs sind Checkboxen und beliebig kombinierbar — einzeln sagt ein Lab wenig, interessant wird „bei uns sind OpenAI und Anthropic freigegeben“. Die Werkzeuge sind Presets und überschreiben die Auswahl. Sie setzen dabei Modelle, nicht Lab-Häkchen, und das ist wesentlich: JetBrains AI führt von Google nur 3.5 und 3.6 Flash. Über Lab-Häkchen bekäme es das ganze Google-Lab und damit gemini-3.8-flash, das es gar nicht anbietet — seine Front wäre dann die von „Alle“. Ein nur teilweise abgedecktes Lab steht deshalb auf „teilweise“ (2/4), nicht auf „an“. Die Labs kommen aus der Zuordnung des Boards selbst; die drei Werkzeuge aus der jeweiligen Hersteller-Doku, abgerufen am 29.09.2026 — solche Kataloge ändern sich monatlich, und am 03.09. sah die Antwort noch anders aus (Windsurf ohne Gemini 3.8 und GPT-6). Bei Cursor zählen auch Modelle, die dort „hidden by default“ sind: wählbar nach dem Einschalten. Der Filter zeigt Verfügbarkeit, nicht Preis: Cursor und Windsurf rechnen nach eigenen Tarifen ab, geplottet bleibt der API-Listenpreis. Das jeweils eigene Modell fehlt jeder Werkzeug-Ansicht, weil DeepSWE es nicht misst — Cursors Composer so wenig wie Windsurfs SWE-1.x. JetBrains AI führt seine Modelle einzeln in der Hilfe „Supported models“ (Seitenstand 14.09.2026, zuletzt geändert 06.08.) und damit weniger, als die vier Labs OpenAI, Anthropic, Google und xAI hergäben; eigene API-Schlüssel (BYOK) und lokale Modelle stehen dort nicht, ein „fehlt“ heißt also nicht „unbenutzbar“. Für Junie fand sich keine eigene Liste. Achsen und Quadranten bleiben in jeder Auswahl gleich, nur die Front wird neu gerechnet.",
   },
   {
     lead: "Kosten sind kein Messwert:",
