@@ -1,0 +1,129 @@
+{
+  "tool": "jetbrains-ai",
+  "source": "https://www.jetbrains.com/help/ai-assistant/supported-llms.html",
+  "models": [
+    {
+      "name": "Claude Fable 5"
+    },
+    {
+      "name": "Claude Opus 5"
+    },
+    {
+      "name": "Claude Sonnet 5"
+    },
+    {
+      "name": "Claude 4.8 Opus"
+    },
+    {
+      "name": "Claude 4.7 Opus"
+    },
+    {
+      "name": "Claude 4.6 Opus"
+    },
+    {
+      "name": "Claude 4.6 Sonnet"
+    },
+    {
+      "name": "Claude 4.5 Opus"
+    },
+    {
+      "name": "Claude 4.5 Sonnet"
+    },
+    {
+      "name": "Claude 4.5 Haiku"
+    },
+    {
+      "name": "Gemini 3.6 Flash"
+    },
+    {
+      "name": "Gemini 3.5 Flash"
+    },
+    {
+      "name": "Gemini 3.5 Flash Lite"
+    },
+    {
+      "name": "Gemini 3.1 Pro"
+    },
+    {
+      "name": "Gemini 3.1 Flash Lite"
+    },
+    {
+      "name": "Gemini 3 Flash"
+    },
+    {
+      "name": "Gemini 2.5 Pro"
+    },
+    {
+      "name": "Gemini 2.5 Flash"
+    },
+    {
+      "name": "Gemini 2.5 Flash-Lite"
+    },
+    {
+      "name": "GPT 5.6 Luna"
+    },
+    {
+      "name": "GPT 5.6 Sol"
+    },
+    {
+      "name": "GPT 5.6 Terra"
+    },
+    {
+      "name": "GPT-5.5"
+    },
+    {
+      "name": "GPT-5.4 mini"
+    },
+    {
+      "name": "GPT-5.4 nano"
+    },
+    {
+      "name": "GPT-5.4"
+    },
+    {
+      "name": "GPT-5.3 Codex"
+    },
+    {
+      "name": "GPT-5.2"
+    },
+    {
+      "name": "GPT-5.1"
+    },
+    {
+      "name": "GPT-5"
+    },
+    {
+      "name": "GPT-5 mini"
+    },
+    {
+      "name": "GPT-5 nano"
+    },
+    {
+      "name": "GPT-4.1"
+    },
+    {
+      "name": "GPT-4.1 mini"
+    },
+    {
+      "name": "GPT-4.1 nano"
+    },
+    {
+      "name": "GPT-4o"
+    },
+    {
+      "name": "o1"
+    },
+    {
+      "name": "o3"
+    },
+    {
+      "name": "o3-mini"
+    },
+    {
+      "name": "o4-mini"
+    },
+    {
+      "name": "Grok-4.3"
+    }
+  ]
+}

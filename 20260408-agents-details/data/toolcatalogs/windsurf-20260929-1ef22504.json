@@ -1,0 +1,1082 @@
+{
+  "tool": "windsurf",
+  "source": "https://docs.devin.ai/desktop/models.md",
+  "models": [
+    {
+      "name": "GPT-4o",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-4.1",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "o3",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "o3 High Reasoning",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "Claude Opus 4.5",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.5 Thinking",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Gemini 2.5 Pro",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3 Flash High",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3 Flash Low",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3 Flash Medium",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3 Flash Minimal",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "GPT-5.2 High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.2 XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-OSS 120B Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "Claude Haiku 4.5",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "GPT-5.1 No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "Claude Sonnet 4.5",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "GPT-5.1 No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.1 High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "Claude Sonnet 4.5 Thinking",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Grok Code Fast 1",
+      "provider": "XAI"
+    },
+    {
+      "name": "GPT-5 Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5 Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5 High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "xAI Grok-3",
+      "provider": "XAI"
+    },
+    {
+      "name": "xAI Grok-3 mini Thinking",
+      "provider": "XAI"
+    },
+    {
+      "name": "Adaptive",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "Fast Arena",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "Hybrid Arena",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "Frontier Arena",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "Claude Fable 5 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5.1 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5.1 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5.1 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5.1 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Fable 5.1 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.6",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.6 1M",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.6 Thinking",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.6 Thinking 1M",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.7 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.7 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.7 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.7 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.7 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 High Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Low Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Max Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 Medium Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 4.8 XHigh Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 High Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Low Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Max Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 Medium Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5 XHigh Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 High Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Low Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Max Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 Medium Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Opus 5.5 XHigh Fast",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 4.6",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 4.6 1M",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 4.6 Thinking",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 4.6 Thinking 1M",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 5 High",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 5 Low",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 5 Max",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 5 Medium",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Claude Sonnet 5 XHigh",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "DeepSeek V4 Flash High",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "DeepSeek V4 Flash Low",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "DeepSeek V4 Flash Max",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "DeepSeek V4 Pro High",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "DeepSeek V4 Pro Low",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "DeepSeek V4 Pro Max",
+      "provider": "DEEPSEEK"
+    },
+    {
+      "name": "Gemini 3.1 Pro High Thinking",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.1 Pro Low Thinking",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.5 Flash High",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.5 Flash Low",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.5 Flash Medium",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.5 Flash Minimal",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.6 Flash High",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.6 Flash Low",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.6 Flash Medium",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.6 Flash Minimal",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.7 Flash High",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.7 Flash Low",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.7 Flash Medium",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.8 Flash High",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.8 Flash Low",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "Gemini 3.8 Flash Medium",
+      "provider": "GOOGLE"
+    },
+    {
+      "name": "GLM-5.2 High",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.2 High 1M",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.2 Max",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.2 Max 1M",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.2 No Thinking",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.2 No Thinking 1M",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 Flash High",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 Flash Low",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 Flash Max",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 High",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 Low",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GLM-5.3 Max",
+      "provider": "ZAI"
+    },
+    {
+      "name": "GPT-5.3-Codex High",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex High Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex Low",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex Low Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex Medium",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex Medium Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex Spark Medium",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex X-High",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.3-Codex XHigh Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Mini High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Mini Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Mini Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 Mini XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.4 XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT 5.5 Review",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.5 XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Max Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Luna XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Max Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Sol XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Max Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-5.6 Terra XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Astra High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Astra Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Astra Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Astra Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Astra XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Max Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Luna XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol High Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol High Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Low Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Low Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Max Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Max Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Medium Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol Medium Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol No Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol No Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol XHigh Thinking",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "GPT-6 Sol XHigh Thinking Fast",
+      "provider": "OPENAI"
+    },
+    {
+      "name": "Grok 4.5 High",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.5 Low",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.5 Medium",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.6 High",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.6 Low",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.6 Medium",
+      "provider": "XAI"
+    },
+    {
+      "name": "Grok 4.6 XHigh",
+      "provider": "XAI"
+    },
+    {
+      "name": "Inkling High",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Inkling Low",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Inkling Max",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Inkling Medium",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Inkling None",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Inkling X-High",
+      "provider": "THINKING_MACHINES"
+    },
+    {
+      "name": "Kimi K2.6",
+      "provider": "MOONSHOT"
+    },
+    {
+      "name": "Kimi K2.7",
+      "provider": "MOONSHOT"
+    },
+    {
+      "name": "Kimi K3 High",
+      "provider": "MOONSHOT"
+    },
+    {
+      "name": "Kimi K3 Low",
+      "provider": "MOONSHOT"
+    },
+    {
+      "name": "Kimi K3 Max",
+      "provider": "MOONSHOT"
+    },
+    {
+      "name": "Nemotron 3 Ultra High",
+      "provider": "NVIDIA"
+    },
+    {
+      "name": "Nemotron 3 Ultra Medium",
+      "provider": "NVIDIA"
+    },
+    {
+      "name": "Nemotron 3 Ultra None",
+      "provider": "NVIDIA"
+    },
+    {
+      "name": "Opus 4.7 Review",
+      "provider": "ANTHROPIC"
+    },
+    {
+      "name": "Penguin High",
+      "provider": "UNSPECIFIED"
+    },
+    {
+      "name": "Penguin Max",
+      "provider": "UNSPECIFIED"
+    },
+    {
+      "name": "Penguin Medium",
+      "provider": "UNSPECIFIED"
+    },
+    {
+      "name": "SWE-1.6",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-1.6 Fast",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-1.7 Max",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-1.7 Lightning Max",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-1.7 Lightning Medium",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-1.7 Medium",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-2 High",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-2 Max",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-2 Medium",
+      "provider": "WINDSURF"
+    },
+    {
+      "name": "SWE-check",
+      "provider": "WINDSURF"
+    }
+  ]
+}

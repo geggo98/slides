@@ -1,0 +1,219 @@
+{
+  "tool": "cursor",
+  "source": "https://cursor.com/docs/models-and-pricing.md",
+  "models": [
+    {
+      "name": "Grok 4.7"
+    },
+    {
+      "name": "Grok 4.7 (Fast)"
+    },
+    {
+      "name": "Grok 4.7 500k"
+    },
+    {
+      "name": "Grok 4.7 500k (Fast)"
+    },
+    {
+      "name": "Grok 4.6"
+    },
+    {
+      "name": "Grok 4.6 (Fast)"
+    },
+    {
+      "name": "Grok 4.5"
+    },
+    {
+      "name": "Grok 4.5 (Fast)"
+    },
+    {
+      "name": "Composer 2.5"
+    },
+    {
+      "name": "Composer 2.5 (Fast)"
+    },
+    {
+      "name": "Claude 4 Sonnet",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4 Sonnet 1M",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.5 Haiku",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.5 Opus",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.5 Sonnet",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.6 Opus",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.6 Sonnet",
+      "hidden": true
+    },
+    {
+      "name": "Claude 4.7 Opus",
+      "hidden": true
+    },
+    {
+      "name": "Claude Fable 5",
+      "hidden": true
+    },
+    {
+      "name": "Claude Fable 5.1"
+    },
+    {
+      "name": "Claude Opus 4.7 (fast mode)",
+      "hidden": true
+    },
+    {
+      "name": "Claude Opus 4.8",
+      "hidden": true
+    },
+    {
+      "name": "Claude Opus 5",
+      "hidden": true
+    },
+    {
+      "name": "Claude Opus 5.5"
+    },
+    {
+      "name": "Claude Sonnet 5",
+      "hidden": true
+    },
+    {
+      "name": "Claude Sonnet 5.5"
+    },
+    {
+      "name": "Gemini 2.5 Flash",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3 Flash",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3 Pro",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3 Pro Image Preview",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3.1 Pro"
+    },
+    {
+      "name": "Gemini 3.5 Flash",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3.6 Flash",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3.7 Flash",
+      "hidden": true
+    },
+    {
+      "name": "Gemini 3.8 Flash"
+    },
+    {
+      "name": "GLM 5.2",
+      "hidden": true
+    },
+    {
+      "name": "GLM 5.3",
+      "hidden": true
+    },
+    {
+      "name": "GLM 5.3 Flash",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5 Fast",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5 Mini",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5-Codex",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.1 Codex",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.1 Codex Max",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.1 Codex Mini",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.2",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.2 Codex",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.3 Codex",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.4",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.4 Mini",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.4 Nano",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.5",
+      "hidden": true
+    },
+    {
+      "name": "GPT-5.6 Luna"
+    },
+    {
+      "name": "GPT-5.6 Sol"
+    },
+    {
+      "name": "GPT-5.6 Terra"
+    },
+    {
+      "name": "Kimi K2.7 Code",
+      "hidden": true
+    },
+    {
+      "name": "Kimi K3",
+      "hidden": true
+    },
+    {
+      "name": "Muse Spark 1.3"
+    }
+  ]
+}

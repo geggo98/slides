@@ -1,0 +1,66 @@
+{
+  "tool": "junie",
+  "source": "https://junie.jetbrains.com/",
+  "retrieved": "2026-09-29",
+  "note": "Von Hand geführt: Junie veröffentlicht keine vollständige Modellliste („works with any model you choose“; die Auswahl hängt vom Abo ab, `/model` zeigt sie; mit BYOK nur Modelle des jeweiligen Anbieters). Belegt sind die Modelle der Landingpage („Top performing models supported“) und die datierten Einträge unter /whats-new. Die Liste ist eine Untergrenze, keine Aufzählung.",
+  "models": [
+    {
+      "name": "Claude Opus 5.5",
+      "evidence": [
+        "landing: Top performing models supported",
+        "whats-new 22.09.2026: Claude Opus 5.5"
+      ]
+    },
+    {
+      "name": "Claude Sonnet 5.5",
+      "evidence": ["whats-new 29.09.2026: Claude Sonnet 5.5 support"]
+    },
+    {
+      "name": "Claude Sonnet 5",
+      "evidence": ["landing: Top performing models supported"]
+    },
+    {
+      "name": "Claude Fable 5.1",
+      "evidence": ["landing: Top performing models supported"]
+    },
+    {
+      "name": "Claude Opus 5",
+      "evidence": [
+        "whats-new 29.09.2026: Fixed an issue causing false safety refusals with Claude Opus 5"
+      ]
+    },
+    {
+      "name": "Gemini 3.1 Pro",
+      "evidence": ["landing: Top performing models supported"]
+    },
+    {
+      "name": "Gemini 3.8 Flash",
+      "evidence": ["landing: Top performing models supported"]
+    },
+    {
+      "name": "GPT-6 Astra",
+      "evidence": [
+        "landing: Top performing models supported",
+        "whats-new 04.09.2026: GPT-6 Astra support"
+      ]
+    },
+    {
+      "name": "GPT-6 Sol",
+      "evidence": [
+        "landing: Top performing models supported",
+        "whats-new 22.09.2026: GPT-6 Sol and GPT-6 Luna"
+      ]
+    },
+    {
+      "name": "GPT-6 Luna",
+      "evidence": ["whats-new 22.09.2026: GPT-6 Sol and GPT-6 Luna"]
+    },
+    {
+      "name": "Grok 4.7",
+      "evidence": [
+        "landing: Top performing models supported",
+        "whats-new 22.09.2026: Grok 4.7"
+      ]
+    }
+  ]
+}
