@@ -1496,6 +1496,35 @@ als Größe“ legt die Geschwindigkeit als Halo um die Marker der
 Kostenansicht. Attribution: AA verlangt den Link, er steht in der
 Fußzeile.
 
+PRODUKT-AUSWAHL (Anbieter-Menü; Katalog- und AA-Stand 29.09.2026).
+Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER Modelle sich
+lohnen und wann es ein strikt besseres gibt. Ein Produkt zeigt deshalb
+alle seine Modelle mit Messwert — auch ältere und von AA abgekündigte —
+und rechnet die Front nur über diese, selbst wenn andere Produkte neuere
+Modelle haben. Achsen und Quadranten-Linien (Median) folgen der Auswahl;
+„Alle“ und die Labs bleiben beim aktuellen Feld. Der Tooltip eines grauen
+Punkts nennt das Modell, das ihn strikt übertrifft. Hohle, gestrichelte
+Marker (nur Tempo-Ansicht) haben einen von AA geschätzten Index.
+
+Kostenansicht, die vier Produkte:
+- JetBrains AI (21 von 41 Modellen mit Kostenwert): gemini-3.1-flash-lite 0,035 € (15,6) → gpt-5-mini 0,047 € (16,8) → gemini-3.5-flash-lite 0,11 € (22,2) → gpt-5.6-luna 0,16 € (37,3) → gpt-5.6-terra 1,23 € (42,1) → gpt-5.6-sol 1,74 € (47,0) → claude-opus-5 5,13 € (50,8). Kein Opus 5.5, kein GPT-6: Der Katalog stammt von der Hilfeseite vom 06.08./14.09. und hat seit IDE 2026.1 keinen Neuzugang.
+- Junie (11 von 11): gpt-6-luna 0,06 € (37,3) → gpt-6-sol 0,92 € (47,5) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Eine Modellgeneration vor dem AI Assistant.
+- Windsurf (33 von 64): gpt-6-luna 0,06 € (37,3) → glm-5.3-flash 0,22 € (41,8) → gpt-6-sol 0,92 € (47,5) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6).
+- Cursor (31 von 49): gpt-5-mini 0,047 € (16,8) → gpt-5.6-luna 0,16 € (37,3) → glm-5.3-flash 0,22 € (41,8) → gpt-5.6-terra 1,23 € (42,1) → muse-spark-1.3 1,41 € (48,1) → claude-opus-5 5,13 € (50,8) → claude-opus-5.5 5,24 € (57,6). Opus 5 und 5.5 stehen beide auf der Front: für 11 Cent mehr gibt es 6,8 Punkte.
+
+Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten; ≈ = Index geschätzt):
+- JetBrains AI (40 von 41, elf Sprossen; Scores bei langen Leitern nur im Tooltip): claude-opus-5 57 tok/s → claude-fable-5 63 tok/s → gpt-5.6-sol 85 tok/s → gpt-5.6-terra 98 tok/s → gpt-5.4 103 tok/s → gpt-5.6-luna 121 tok/s → gemini-3.6-flash 182 tok/s → gemini-3.5-flash 195 tok/s → gpt-5.4-mini 226 tok/s → gemini-3.5-flash-lite 320 tok/s → gemini-2.5-flash-lite 353 tok/s.
+- Junie (11 von 11): claude-opus-5.5 93 tok/s (57,6) → claude-sonnet-5.5 138 tok/s (56,0) → gemini-3.8-flash 239 tok/s (40,9).
+- Cursor (38 von 49): claude-opus-5.5 93 tok/s (57,6) → claude-sonnet-5.5 138 tok/s (56,0) → muse-spark-1.3 174 tok/s (48,1) → gemini-3.8-flash 239 tok/s (40,9) → gemini-3.7-flash 290 tok/s (39,1).
+- Windsurf (44 von 64): claude-opus-5.5 93 tok/s (57,6) → gpt-5.6-terra 98 tok/s (42,1) → gemini-3.8-flash 239 tok/s (40,9) → gemini-3.7-flash 290 tok/s (39,1).
+
+Die Frage aus dem Publikum, was mit dem eigenen API-Schlüssel ist: JetBrains
+AI und Junie erlauben BYOK. Dann das Lab des Schlüssels anhaken (OpenAI,
+Anthropic, Google, xAI), bei einem OpenRouter-Schlüssel „Alle“. Die Presets
+zeigen nur, was das JetBrains-Abo mitbringt. Und Junie veröffentlicht keine
+vollständige Modellliste: elf Modelle sind belegt (Landingpage, datierte
+Release-Notes), das Produkt selbst zeigt mit /model mehr.
+
 Ab hier die Notiz zur DeepSWE-Ansicht (Menü „DeepSWE × Kosten“).
 
 Diese Folie hat eine Handlungsanweisung, keinen Befund. Sie zuerst
@@ -1568,7 +1597,7 @@ Einführungspreis läuft am 31.12.2026 aus, danach verdoppelt sich der
 Punkt auf 4,14 €. Auch dann bliebe er auf der Front — dann hinter
 terra, das zurückkäme.
 
-Drei Klicks im Anbieter-Filter, die sich lohnen:
+Vier Klicks im Anbieter-Filter, die sich lohnen (DeepSWE-Ansicht):
 - Anthropic: ein einziger Punkt, keine Kurve. Wer an einen Anbieter
   gebunden ist, hat keine Preis-Leistungs-Wahl mehr, nur noch eine
   Entscheidung.
@@ -1576,6 +1605,11 @@ Drei Klicks im Anbieter-Filter, die sich lohnen:
   also genau die Front von letzter Woche. Der Katalog (Hilfeseite vom
   06.08./14.09.) endet bei Gemini 3.6 Flash und führt kein astra. Für
   diese Nutzer ist der Befund dieser Folie noch gar nicht passiert.
+- Junie: nur vier der elf Modelle misst das Board (Opus 5, Sonnet 5, Gemini
+  3.8 Flash, GPT-6 Astra). Die Front ist gemini-3.8-flash allein, die drei
+  anderen sind dominiert. Junies neueste Modelle (Opus 5.5, Sonnet 5.5,
+  Fable 5.1, GPT-6 Sol und Luna, Grok 4.7) kennt DeepSWE nicht — diese
+  Ansicht sagt über Junie wenig, die Artificial-Analysis-Ansichten mehr.
 - Cursor und Windsurf: dieselbe Leiter wie „Alle“, Spitze der Neuzugang
   für 2,07 €. Am 03.09. war das bei Windsurf noch anders — dessen Katalog
   endete damals bei Gemini 3.6 Flash. Kataloge wandern, das Datum im

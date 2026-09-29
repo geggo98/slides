@@ -67,6 +67,16 @@ const sources = [
     note: "dito, Seitenstand 14.09.2026 (zuletzt geändert 06.08.); die Preisseite nennt nur Anbieter",
   },
   {
+    href: "https://junie.jetbrains.com/",
+    label: "JetBrains Junie",
+    note: "Landingpage „Top performing models supported“ — keine vollständige Liste",
+  },
+  {
+    href: "https://junie.jetbrains.com/whats-new",
+    label: "Junie: What's new",
+    note: "datierte Modell-Neuzugänge (04.09., 22.09., 29.09.2026)",
+  },
+  {
     href: "https://news.ycombinator.com/item?id=49528037",
     label: "Erfahrungsbericht: Harness und Abbruch",
     note: "HN, 01.09.2026 — Hypothese, inzwischen gemessen: siehe HarnessTax, Kap. 7",
@@ -159,9 +169,14 @@ const caveats = [
     text: "Das Board zeigt per Default 21 von 28 Modellen; sieben ältere blendet es aus — die Liste steckt hartcodiert im Board-Bundle. Auf der Folie „Welches Modell wofür?“ ist gpt-5.6-terra wieder dabei — es ist bestellbar und läge auf der Front. Im Historien-Chart bleibt jedes unter v1.1 gemessene Modell stehen.",
   },
   {
-    lead: "Anbieter-Filter:",
-    text: "Nur auf der Folie „Welches Modell wofür?“. Die Labs sind Checkboxen und beliebig kombinierbar — einzeln sagt ein Lab wenig, interessant wird „bei uns sind OpenAI und Anthropic freigegeben“. Die Werkzeuge sind Presets und überschreiben die Auswahl. Sie setzen dabei Modelle, nicht Lab-Häkchen, und das ist wesentlich: JetBrains AI führt von Google nur 3.5 und 3.6 Flash. Über Lab-Häkchen bekäme es das ganze Google-Lab und damit gemini-3.8-flash, das es gar nicht anbietet — seine Front wäre dann die von „Alle“. Ein nur teilweise abgedecktes Lab steht deshalb auf „teilweise“ (2/4), nicht auf „an“. Die Labs kommen aus der Zuordnung des Boards selbst; die drei Werkzeuge aus der jeweiligen Hersteller-Doku, abgerufen am 29.09.2026 — solche Kataloge ändern sich monatlich, und am 03.09. sah die Antwort noch anders aus (Windsurf ohne Gemini 3.8 und GPT-6). Bei Cursor zählen auch Modelle, die dort „hidden by default“ sind: wählbar nach dem Einschalten. Der Filter zeigt Verfügbarkeit, nicht Preis: Cursor und Windsurf rechnen nach eigenen Tarifen ab, geplottet bleibt der API-Listenpreis. Das jeweils eigene Modell fehlt jeder Werkzeug-Ansicht, weil DeepSWE es nicht misst — Cursors Composer so wenig wie Windsurfs SWE-1.x. JetBrains AI führt seine Modelle einzeln in der Hilfe „Supported models“ (Seitenstand 14.09.2026, zuletzt geändert 06.08.) und damit weniger, als die vier Labs OpenAI, Anthropic, Google und xAI hergäben; eigene API-Schlüssel (BYOK) und lokale Modelle stehen dort nicht, ein „fehlt“ heißt also nicht „unbenutzbar“. Für Junie fand sich keine eigene Liste. Achsen und Quadranten bleiben in jeder Auswahl gleich, nur die Front wird neu gerechnet.",
+    lead: "Ältere Modelle bei AA:",
+    text: "Ein Produkt bringt Modelle mit, die das aktuelle Feld nicht zeigt. Je Modellfamilie und Ansicht gilt die beste Konfiguration: gemessen vor geschätzt, dann höchster Index, dann billiger bzw. schneller — sonst hätte ein Label in zwei Ansichten zwei verschiedene Werte. Kein von AA geschätzter Index hat einen Kostenwert (0 von 490), „geschätzt“ erscheint deshalb nur in der Tempo-Ansicht. Kosten und Tempo abgekündigter Modelle sind der Stand des letzten AA-Laufs und können veraltet sein. Der Punkt ist die höchste Effort-Stufe der Familie; ein Produkt bietet nicht immer alle an (Windsurf führt jede einzeln). Das Board von DeepSWE misst nur sein eigenes Feld: dort haben Produkte keine älteren Modelle.",
   },
+  {
+    lead: "Anbieter-Filter und Produkte:",
+    text: "Nur auf der Folie „Welches Modell wofür?“. Die Labs sind Checkboxen auf dem aktuellen Feld und beliebig kombinierbar — einzeln sagt ein Lab wenig, interessant wird „bei uns sind OpenAI und Anthropic freigegeben“. Die Produkte (Cursor, Windsurf, JetBrains AI, Junie) sind Presets und überschreiben die Auswahl. Ein Produkt zeigt alle seine Modelle, für die es in der jeweiligen Ansicht einen Messwert gibt — auch ältere, von AA abgekündigte und solche mit von AA geschätztem Index (hohl, gestrichelt) — und rechnet die Front nur über diese, selbst wenn andere Produkte neuere Modelle haben. Achsen und Quadranten-Linien (Median) folgen der Auswahl; der Tooltip eines dominierten Punkts nennt das Modell, das ihn strikt übertrifft. Ein Preset setzt Modelle, keine Lab-Häkchen: JetBrains AI führt von Google nur 3.5 und 3.6 Flash, über Lab-Häkchen bekäme es auch gemini-3.8-flash; ein nur teilweise abgedecktes Lab steht deshalb auf „teilweise“ (2/4). Die Kataloge stammen aus den Rohseiten der Hersteller, abgerufen am 29.09.2026 (Cursor samt „Hidden by default“, Windsurf aus dem Pro-Tarif, JetBrains AI die aktiven Modelle des Abos); Junie steht von Hand aus Landingpage und datierten Release-Notes im Archiv, weil es keine vollständige Liste veröffentlicht — das Produkt zeigt mit /model mehr, die Liste ist eine Untergrenze. Welches Chart-Label zu welchem Katalogeintrag gehört, entscheidet ein Namensabgleich: Effort-Stufen, Reasoning, Fast, Kontextvarianten und Datumsangaben zählen als dasselbe Modell, Flash und Flash-Lite nicht. Wie viele Modelle eines Produkts das Chart zeichnet, steht in der Fußzeile; die übrigen stehen mit Grund im Hover (kein Kostenwert, kein Tempo-Wert oder kein Index bei AA, nicht auf dem Board). Mit eigenem API-Schlüssel (BYOK, bei JetBrains AI und Junie möglich) das Lab des Schlüssels anhaken, bei OpenRouter „Alle“: Die Presets zeigen nur, was das JetBrains-Abo mitbringt. Der Filter zeigt Verfügbarkeit, nicht Preis: Alle Produkte rechnen nach eigenen Tarifen ab, geplottet bleibt der API-Listenpreis. Das jeweils eigene Modell (Cursors Composer, Windsurfs SWE-x) fehlt jeder Ansicht, weil kein Board es misst.",
+  },
+
   {
     lead: "Kosten sind kein Messwert:",
     text: "Sie entstehen aus Tokens × Listenpreis. Datacurve hat sie mehrfach nachträglich korrigiert (Token-Zählfehler 13.08., Doppelrabatt 14.08., DeepSeek-Preiserhöhung 21.08.). Die Sol-Senkung vom 21.08. hatten wir zuerst selbst eingerechnet; das Board rechnet sie inzwischen auch — auf den Cent gleich. Ältere Datenstände zeigen den damals veröffentlichten Wert, jeder ist gegen einen archivierten Board-Zustand nachgerechnet. Umgerechnet wird konstant mit 1 USD = 0,876 € über alle Stände, damit die Zeitreihe Preisbewegungen zeigt und kein Wechselkurs-Rauschen.",

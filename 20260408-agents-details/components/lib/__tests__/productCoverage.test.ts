@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { AA_ROWS } from "../../aaData";
 import { dominators, paretoFront, type Pt } from "../../paretoData";
 import { footnoteFor, leadFor } from "../../paretoText";
 import { VARIANTS, type VariantId } from "../../paretoVariants";
@@ -214,5 +217,50 @@ describe("Texte für eine Auswahl", () => {
     const est = summarize(V, new Set(presetModels("jetbrains-ai", u, V.pts)));
     expect(text(footnoteFor(V, est))).toContain("≈ = Index von AA geschätzt");
     expect(text(footnoteFor(cost, jb))).not.toContain("≈");
+  });
+});
+
+// Die Sprechernotizen und der ⓘ-Dialog nennen Leitern und Zahlen. Sie stehen von
+// Hand dort — dieser Test rechnet sie aus den Daten nach, damit ein neuer Katalog
+// oder AA-Snapshot nicht still falsche Notizen hinterlässt.
+describe("Notizen und Dialog gegen die Berechnung", () => {
+  const dir = join(import.meta.dirname, "../..");
+  const notes = readFileSync(join(dir, "../slides.md"), "utf8").replace(
+    /\s+/g,
+    " ",
+  );
+  const dialog = readFileSync(join(dir, "ModelRoutingSources.vue"), "utf8");
+  const tools = ["jetbrains-ai", "junie", "cursor", "windsurf"] as const;
+
+  for (const view of ["aa-cost", "aa-speed"] as const)
+    for (const id of tools) {
+      const V = VARIANTS[view];
+      const u = [...V.pts, ...V.extras];
+      const s = summarize(V, new Set(presetModels(id, u, V.pts)));
+
+      it(`${view} · ${id}: die Leiter in den Notizen ist die berechnete`, () => {
+        const segs = leadFor(V, s);
+        const leiter = segs
+          .slice(2, -1)
+          .map((x) => x.t)
+          .join("");
+        expect(leiter.length).toBeGreaterThan(20);
+        expect(notes).toContain(leiter);
+      });
+
+      it(`${view} · ${id}: „${s.coverage!.plotted} von ${s.coverage!.total}“ steht in den Notizen`, () => {
+        const { plotted, total } = s.coverage!;
+        expect(notes).toContain(`(${plotted} von ${total}`);
+      });
+    }
+
+  it("nennt im Dialog die Zahl der geschätzten AA-Einträge ohne Kosten", () => {
+    const schaetz = AA_ROWS.filter((r) => r.intelligenceIndexIsEstimated);
+    expect(dialog).toContain(`(0 von ${schaetz.length})`);
+  });
+
+  it("führt Junie im Dialog mit beiden Quellen", () => {
+    expect(dialog).toContain("https://junie.jetbrains.com/whats-new");
+    expect(dialog).toContain("https://junie.jetbrains.com/");
   });
 });
