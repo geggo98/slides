@@ -206,7 +206,14 @@ export type GeometryVariant = Pick<
   | "arrows"
   | "features"
   | "xKind"
->;
+> & {
+  /**
+   * Punkte, aus denen die Front-Wächter der Entzerrung stammen (`frontUnion`).
+   * Default: das kuratierte Feld. Die geschätzten Punkte der DeepSWE-Ansicht
+   * gehören zum Feld, bekommen die Wächter-Eigenschaft aber nicht.
+   */
+  frontGuard?: readonly Pt[];
+};
 
 export function chartGeometry(
   V: GeometryVariant,
@@ -255,7 +262,7 @@ export function chartGeometry(
     (p) => p.sub !== undefined,
     {
       horizontalOnly: isDefault
-        ? frontUnion(curated)
+        ? frontUnion([...(V.frontGuard ?? curated)])
         : new Set(paretoFront(base).front.map((p) => p.label)),
     },
   );

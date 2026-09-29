@@ -269,7 +269,6 @@ export const fmt = (v: number) => v.toFixed(2).replace(".", ",");
 export const fmtEur = (v: number) =>
   v >= 0.095 ? fmt(v) : String(Number(v.toPrecision(2))).replace(".", ",");
 
-
 /**
  * Kompakter Konstruktor — `eur` kann so nicht von `x` abweichen. Exportiert,
  * damit `lib/preliminaryParetoPoints.ts` dieselbe Garantie für seine drei

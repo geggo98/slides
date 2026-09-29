@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import ParetoChart from "./ParetoChart.vue";
+import PreliminaryBox from "./PreliminaryBox.vue";
 import { footnoteFor, leadFor } from "./paretoText";
 import { summarize } from "./productCoverage";
 import {
@@ -18,7 +19,16 @@ import {
 // von vorn, was gewollt ist: Eine Auswahl aus „Anbieter“ oder „alle Namen“ hat
 // in einer anderen Ansicht keine Bedeutung.
 
+// `preliminary` kommt aus `slides.md` (`$clicks >= 1`): Klick 1 blendet in der
+// DeepSWE-Ansicht die drei geschätzten Punkte und statt des Absatzes die
+// `PreliminaryBox` ein. In den AA-Ansichten ist nichts vorläufig — dort bleibt der
+// Absatz stehen, und der Klick ändert nichts.
+const props = defineProps<{ preliminary?: boolean }>();
+
 const variantId = ref<VariantId>(DEFAULT_VARIANT);
+const showBox = computed(
+  () => props.preliminary && variantId.value === "deepswe",
+);
 const V = () => VARIANTS[variantId.value];
 const open = ref(false);
 
@@ -93,9 +103,18 @@ onBeforeUnmount(() => {
       </ul>
     </div>
 
-    <ParetoChart :key="variantId" v-model="sel" :variant="V()" />
+    <ParetoChart
+      :key="variantId"
+      v-model="sel"
+      :variant="V()"
+      :preliminary="preliminary"
+    />
 
-    <div v-click class="text-sm mt-1">
+    <!-- Klick 0: der Absatz. Klick 1 (nur DeepSWE-Ansicht): statt seiner die
+         PreliminaryBox — Ablauf wie zuvor in slides.md, nur hier im Wrapper, weil
+         Absatz und Fußzeile jetzt der Ansicht und der Auswahl folgen. -->
+    <div v-if="showBox" class="mt-1"><PreliminaryBox /></div>
+    <div v-else class="text-sm mt-1">
       <template v-for="(s, i) in lead" :key="i">
         <strong v-if="s.b">{{ s.t }}</strong>
         <template v-else>{{ s.t }}</template>

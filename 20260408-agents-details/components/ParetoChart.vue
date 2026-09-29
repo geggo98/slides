@@ -18,6 +18,7 @@ import {
   type Placed,
   type XY,
 } from "./labelLayout";
+import { PRELIMINARY_PARETO_POINTS } from "./lib/preliminaryParetoPoints";
 import { HIT_R, LABEL_FONT, visiblePoints } from "./paretoChrome";
 import { chartGeometry } from "./paretoGeometry";
 import { useCrosshairs } from "./useCrosshairs";
@@ -35,11 +36,36 @@ import { useCrosshairs } from "./useCrosshairs";
 // diese Komponente pro Variante neu (`:key`). Was sich mit der AUSWAHL ändert —
 // Skala, Ticks, Quadranten, Entzerrung, Beschriftung —, rechnet `chartGeometry`
 // (`paretoGeometry.ts`) in einem einzigen `computed`.
-const props = defineProps<{ variant: ParetoVariant }>();
+// `preliminary` kommt aus `slides.md` synchron mit der `PreliminaryBox` (Klick 1)
+// und betrifft nur die DeepSWE-Ansicht: drei GESCHÄTZTE DeepSWE-Punkte
+// (`lib/preliminaryParetoPoints.ts`: Score wie der Vorgänger, Preis re-skaliert,
+// noch nicht gemessen). In den AA-Ansichten sind Opus 5.5 und GPT-6 Sol/Luna
+// gemessen, dort gibt es nichts Vorläufiges.
+const props = defineProps<{ variant: ParetoVariant; preliminary?: boolean }>();
 const V = props.variant;
 const pts0 = V.pts; // kuratiertes Feld: „Alle“ und die Lab-Zeilen
 // Alles, was ein Produkt einbringen kann; nur ein Produkt-Preset wählt Extras.
 const universe = [...V.pts, ...V.extras];
+
+// Die geschätzten Punkte hängen nur an `preliminary`, nicht an der Auswahl: Sie
+// laufen am Anbieter-Filter vorbei (dessen Zweck ist „was bietet mein Werkzeug
+// real an“, und für unveröffentlichte Modelle gibt es noch keine Antwort) und
+// zählen für die Geometrie zum Feld. So behält der Standard seine redaktionelle
+// Skala, und beim Ein- und Ausschalten wandern die 22 echten Punkte nicht.
+const prelim = computed<Pt[]>(() =>
+  V.id === "deepswe" && props.preliminary ? PRELIMINARY_PARETO_POINTS : [],
+);
+const Veff = computed(() =>
+  prelim.value.length
+    ? { ...V, pts: [...V.pts, ...prelim.value], frontGuard: V.pts }
+    : V,
+);
+const universeEff = computed(() => [...Veff.value.pts, ...V.extras]);
+const selEff = computed<ReadonlySet<string>>(() =>
+  prelim.value.length
+    ? new Set([...sel.value, ...prelim.value.map((p) => p.label)])
+    : sel.value,
+);
 
 // Die Auswahl gehört dem Wrapper: Er rendert Fußzeile und Menü und setzt sie beim
 // Wechsel der Ansicht zurück.
@@ -73,14 +99,16 @@ const ghost = V.features.priceGhost;
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const preset = computed(() => matchingPreset(sel.value, universe, pts0));
 const pts = computed<Pt[]>(() =>
-  visiblePoints(universe, sel.value, subOn.value, { ghost }),
+  visiblePoints(universeEff.value, selEff.value, subOn.value, { ghost }),
 );
 
 // Alles, was von der Auswahl abhängt, in einem Aufruf. Im Standard („Alle“) ist
 // das exakt die bisherige Rechnung mit der redaktionellen Skala; sonst liegen
 // Skala, Quadranten-Linien, Entzerrung und Beschriftung auf den sichtbaren
 // Punkten.
-const geo = computed(() => chartGeometry(V, universe, sel.value, subOn.value));
+const geo = computed(() =>
+  chartGeometry(Veff.value, universeEff.value, selEff.value, subOn.value),
+);
 const S = computed(() => geo.value.scale);
 const { W, H, L, R, T, B } = V.scale; // die Bühne ist fest, nur Achsen wandern
 const px = (v: number) => S.value.px(v);
@@ -153,7 +181,12 @@ const frontSet = computed(() => new Set(front.value.map((p) => p.label)));
 // gibt es ein besseres?“. Genannt werden der billigste und der stärkste Übertreffer
 // der SICHTBAREN Auswahl, also bei einem Produkt nur Modelle desselben Produkts.
 const tipFor = (p: Pt): string => {
-  let s = V.tip(p) + (p.est ? " · Index von AA geschätzt" : "");
+  let s =
+    V.tip(p) +
+    (p.est ? " · Index von AA geschätzt" : "") +
+    (p.provisional
+      ? " · geschätzt: Score wie Vorgänger, Preis auf neue Preisliste re-skaliert — noch nicht von DeepSWE gemessen"
+      : "");
   if (frontSet.value.has(p.label)) return s + " · liegt auf der Front";
   const d = dominators(p, pts.value);
   if (!d.length) return s;
@@ -267,6 +300,14 @@ const chartLabel = computed(
           "Geisterringe zeigen mit vier Fünfteln die Position ab 14.09.2026."
         : " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
           "vier Fünfteln ihrer API-Kosten, wie es die dauerhaften +25 % seit 14.09.2026 hergeben."
+      : "") +
+    (prelim.value.length
+      ? " Zusätzlich sind drei geschätzte Punkte eingeblendet, hohl und in Warnfarbe: " +
+        "Claude Opus 5.5, GPT-6 Sol und GPT-6 Luna, noch nicht von DeepSWE gemessen. " +
+        "Angenommen ist derselbe Score wie beim jeweiligen Vorgängermodell, der Preis ist " +
+        "auf die neue Preisliste re-skaliert. GPT-6 Luna für 0,26 Euro ersetzt dadurch " +
+        "GPT-5.6 Luna als zweite Sprosse der Front — die Leiter kostet jetzt 2,54 statt " +
+        "2,81 Euro. GPT-6 Sol und Claude Opus 5.5 bleiben dominiert."
       : "") +
     (sizeOn.value
       ? " Ein Halo um jeden Marker zeigt die Output-Geschwindigkeit; je größer, desto schneller."
@@ -598,6 +639,7 @@ const whiskers = computed(() =>
         :class="[
           l.front ? 'mp-label-front' : 'mp-label-dom',
           pinCls(l.p.label),
+          { 'mp-provisional': l.p.provisional },
         ]"
         :data-model="l.p.label"
         :data-box="l.box"
@@ -706,7 +748,7 @@ const whiskers = computed(() =>
         :y="l.pl.y"
         :text-anchor="l.pl.ax"
         class="mp-label mp-label-hover"
-        :class="pinCls(l.p.label)"
+        :class="[pinCls(l.p.label), { 'mp-provisional': l.p.provisional }]"
         :data-model="l.p.label"
         :data-box="l.box"
       >
@@ -974,6 +1016,26 @@ const whiskers = computed(() =>
   pointer-events: none;
 }
 /* Index von AA geschätzt: hohl und gestrichelt — der Wert ist eine Näherung. */
+/* Geschätzt statt gemessen (Opus 5.5, GPT-6 Sol/Luna — noch kein DeepSWE-Wert):
+   gestrichelter Rand in derselben Warnfarbe wie das Badge von `PreliminaryBox.vue`,
+   damit „vorläufig“ auf der Folie einheitlich aussieht. Ersetzt Front-Blau bzw.
+   Dominiert-Grau vollständig, nicht additiv — zwei Farben auf einem Punkt wären
+   mehrdeutig. Der Front-Marker bleibt VOLL gefüllt (nicht hohl): `.mp-front-num`
+   braucht einen dunklen Untergrund, sonst ist die weiße Sprossennummer unlesbar
+   (gemessen 24.09.2026). Nur der dominierte Marker ist hohl, der trägt keine Zahl. */
+.mp-front-pt.mp-provisional {
+  fill: var(--color-text-warning);
+  stroke: var(--color-text-warning);
+  stroke-width: 1.6;
+  stroke-dasharray: 2 1.5;
+}
+.mp-dom-pt.mp-provisional {
+  fill: var(--deck-surface, var(--color-background-primary));
+  stroke: var(--color-text-warning);
+  stroke-width: 1.4;
+  stroke-dasharray: 2 1.5;
+  opacity: 1;
+}
 .mp-front-pt.mp-est {
   fill: var(--deck-surface, var(--color-background-primary));
   stroke: var(--slidev-theme-primary);
@@ -1014,6 +1076,11 @@ const whiskers = computed(() =>
 }
 .mp-label-dom {
   fill: var(--color-text-tertiary);
+}
+/* Geschätzt statt gemessen — Beschriftung folgt derselben Warnfarbe wie der Marker.
+   Zwei Klassen Spezifität schlagen `.mp-label-front`/`.mp-label-dom` zuverlässig. */
+.mp-label.mp-provisional {
+  fill: var(--color-text-warning);
 }
 .mp-label-hover {
   fill: var(--color-text-primary);
