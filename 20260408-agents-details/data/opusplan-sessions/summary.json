@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "retrieved": "2026-09-30",
+  "fenster": {
+    "since": "2026-08-30",
+    "until": "2026-09-29"
+  },
+  "eingelesen": {
+    "dateien": 181,
+    "zeilen": 53801,
+    "requests": 26627,
+    "dubletten_datei": 65,
+    "kaputte_zeilen": 0
+  },
+  "sitzungen_mit_opus_zu_sonnet": 57,
+  "sitzungen_davon_exit_plan": 56,
+  "wechsel": {
+    "opus->sonnet": 137,
+    "sonnet->opus": 81
+  },
+  "break_share_opus_zu_sonnet": {
+    "n": 137,
+    "p25": 0.0179,
+    "median": 0.674,
+    "p75": 0.8553,
+    "max": 1.0
+  },
+  "break_share_sonnet_zu_opus": {
+    "n": 81,
+    "p25": 0.0121,
+    "median": 0.0245,
+    "p75": 0.0579,
+    "max": 1.0
+  },
+  "ctx_beim_wechsel_opus_zu_sonnet_mtok": {
+    "n": 137,
+    "p25": 0.1765,
+    "median": 0.19,
+    "p75": 0.1981,
+    "max": 0.2177
+  },
+  "ctx_beim_wechsel_sonnet_zu_opus_mtok": {
+    "n": 81,
+    "p25": 0.2031,
+    "median": 0.2088,
+    "p75": 0.2178,
+    "max": 0.2417
+  },
+  "plan_out_mtok": {
+    "n": 56,
+    "p25": 0.0236,
+    "median": 0.0298,
+    "p75": 0.0392,
+    "max": 0.0623
+  },
+  "plan_read_mtok": {
+    "n": 56,
+    "p25": 2.7582,
+    "median": 4.0977,
+    "p75": 5.036,
+    "max": 8.2723
+  },
+  "plan_write_mtok": {
+    "n": 56,
+    "p25": 0.1489,
+    "median": 0.1631,
+    "p75": 0.1743,
+    "max": 0.3312
+  },
+  "exec_out_mtok": {
+    "n": 138,
+    "p25": 0.0005,
+    "median": 0.0066,
+    "p75": 0.0755,
+    "max": 0.5558
+  },
+  "exec_read_mtok": {
+    "n": 138,
+    "p25": 0.179,
+    "median": 0.3937,
+    "p75": 21.8618,
+    "max": 332.3018
+  },
+  "exec_write_mtok": {
+    "n": 138,
+    "p25": 0.0045,
+    "median": 0.1626,
+    "p75": 0.3892,
+    "max": 2.0564
+  },
+  "replan_out_mtok": {
+    "n": 81,
+    "p25": 0.0004,
+    "median": 0.0011,
+    "p75": 0.0037,
+    "max": 0.0675
+  },
+  "sitzungen": {
+    "sitzungen_mit_rueckkehr": 25,
+    "rueckkehren_je_sitzung_max": 9,
+    "rueckkehren_gesamt": 81,
+    "rueckkehren_ohne_compact": 69,
+    "erster_wechsel_break_share": {
+      "n": 57,
+      "p25": 0.7928,
+      "median": 0.8508,
+      "p75": 1.0,
+      "max": 1.0
+    },
+    "erster_wechsel_ctx_mtok": {
+      "n": 57,
+      "p25": 0.1661,
+      "median": 0.1792,
+      "p75": 0.1908,
+      "max": 0.2022
+    },
+    "spaetere_wechsel_break_share": {
+      "n": 80,
+      "p25": 0.0121,
+      "median": 0.0199,
+      "p75": 0.0615,
+      "max": 1.0
+    },
+    "spaetere_wechsel_write_mtok": {
+      "n": 80,
+      "p25": 0.0022,
+      "median": 0.0038,
+      "p75": 0.012,
+      "max": 0.2088
+    },
+    "rueckkehr_write_mtok": {
+      "n": 81,
+      "p25": 0.0026,
+      "median": 0.0051,
+      "p75": 0.0122,
+      "max": 0.125
+    },
+    "erste_exec_phase_out_mtok": {
+      "n": 57,
+      "p25": 0.0013,
+      "median": 0.0302,
+      "p75": 0.0759,
+      "max": 0.2973
+    },
+    "erste_exec_phase_read_mtok": {
+      "n": 57,
+      "p25": 0.0363,
+      "median": 6.6305,
+      "p75": 21.6716,
+      "max": 128.0099
+    }
+  },
+  "kontrollrechnung_usd": {
+    "n_sitzungen": 56,
+    "ausgelassen": 1,
+    "kontrafaktisch_A_nur_erster_bruch": {
+      "verteilung_prozent": {
+        "n": 56,
+        "p25": 10.5694,
+        "median": 39.0724,
+        "p75": 47.3135,
+        "max": 56.8493
+      },
+      "sitzungen_billiger": 50,
+      "summe_ist_usd": 999.86,
+      "summe_kontrafaktisch_usd": 1750.28,
+      "summe_prozent": 42.9
+    },
+    "kontrafaktisch_B_alle_wechsel": {
+      "verteilung_prozent": {
+        "n": 56,
+        "p25": 7.8694,
+        "median": 38.4757,
+        "p75": 47.2037,
+        "max": 56.7751
+      },
+      "sitzungen_billiger": 48,
+      "summe_ist_usd": 999.86,
+      "summe_kontrafaktisch_usd": 1718.08,
+      "summe_prozent": 41.8
+    },
+    "exec_read_je_sitzung_mtok": {
+      "n": 56,
+      "p25": 7.8992,
+      "median": 21.1711,
+      "p75": 56.1282,
+      "max": 365.758
+    },
+    "exec_out_je_sitzung_mtok": {
+      "n": 56,
+      "p25": 0.0312,
+      "median": 0.0757,
+      "p75": 0.1349,
+      "max": 0.7952
+    }
+  },
+  "modelle": {
+    "claude-opus-5": 92,
+    "claude-opus-5-5": 45,
+    "claude-sonnet-5": 138
+  },
+  "sha256": {
+    "phases.tsv": "1852e76efa941db7130c17af53df512c91da29b6315742488c99fc4948651b90",
+    "switches.tsv": "6da8ad54f47a1b0ce14cd7d43f9430b20f1e4019b063cfb6e2ea485ede6d2d0d"
+  }
+}
