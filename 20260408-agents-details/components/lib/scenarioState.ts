@@ -13,8 +13,8 @@
  * eigene Komponenten-Instanz, und nur ein modul-globaler `ref` überlebt den
  * Folienwechsel (Muster: 20260707-…/components/agentRunState.ts).
  *
- * Die Volumina sind Claude-Code-Mediane (42 802 Requests, siehe
- * ./opusplanMath.ts). Für Codex gelten sie vorläufig unverändert; die
+ * Die Volumina sind Mediane echter Opus→Sonnet-Sessions (57 Sessions, Archiv
+ * data/opusplan-sessions/, siehe ./opusplanMath.ts). Für Codex gelten sie vorläufig unverändert; die
  * spätere Umrechnung Claude → Codex (anderer Tokenizer, andere Schrittzahl)
  * wird eine reine Funktion zwischen diesem Zustand und `codexSzenarien()` —
  * Platzhalter `toCodexSzenario()` in ./codexEffortMath.ts. Der Zustand
@@ -26,26 +26,26 @@
 import { ref } from "vue";
 
 export interface Szenario {
-  /** Kontext beim Wechsel Plan → Exec, kTok (Median 177k). */
+  /** Kontext beim ersten Wechsel Plan → Exec, kTok (Median 179k). */
   ctxK: number;
-  /** Exec-Cache-Read, MTok (Median langer Läufe ≈ 31 M). */
+  /** Exec-Cache-Read je Session, MTok (Median 21 M, Quartile 8 / 56). */
   readM: number;
-  /** Exec-Output, kTok. */
+  /** Exec-Output je Session, kTok (Median 76k, Quartile 31k / 135k). */
   outK: number;
   /**
-   * Re-Plans ohne /compact. Default 3: dort liegen Anti-Pattern und
-   * „Nur Opus“ praktisch gleichauf (Schnittpunkt der Balken bei 3,05), die
-   * vierte Rückkehr schiebt den Balken klar darüber. Beobachtetes Maximum
-   * der eigenen Historie: 13.
+   * Rückkehren in den Plan-Modus, im Worst Case mit kaltem Cache (zwei volle
+   * Brüche je Rückkehr). Default 2: Median der 25 Sessions mit Rückkehr;
+   * beobachtetes Maximum 9. Dass ein Bruch voll ausfällt, ist die Ausnahme
+   * (12 von 81 Rückkehren) — der Regler zeigt die Obergrenze, nicht den Normalfall.
    */
   n: number;
 }
 
 export const SZENARIO_DEFAULTS: Readonly<Szenario> = Object.freeze({
   ctxK: 180,
-  readM: 30,
-  outK: 150,
-  n: 3,
+  readM: 21,
+  outK: 80,
+  n: 2,
 });
 
 /** Regler-Bereiche, auf beiden Folien identisch. */

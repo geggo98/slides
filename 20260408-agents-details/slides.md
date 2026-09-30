@@ -704,10 +704,10 @@ Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige A
 
 ### Warum es sich trotzdem lohnt
 
-- **Sonnet 5** ist stark genug für die Ausführung — Opus ist dafür oft Overkill
+- **Sonnet** ist stark genug für die Ausführung — Opus ist dafür oft Overkill
 - Der einmalige Cache-Bruch amortisiert sich: der **Plan wird verwendet, nicht weggeworfen**
 - Ein guter Plan von einem starken Modell zahlt sich aus — **wenn** das Ergebnis nutzbar ist
-- Unterm Strich: **massiv billiger** als durchgängig Opus
+- Unterm Strich: **billiger** als Opus durchgängig (−8 % bis −44 %, nächste Folie)
 
 </div>
 </div>
@@ -734,7 +734,7 @@ routeAlias: opusplan-wechsel
 
 <div class="text-sm opacity-70 mb-2">
 
-Die Behauptung der letzten Folie nachgerechnet — Regler mit Median-Defaults aus 42,8k eigenen Claude-Code-Requests.
+Die Behauptung der letzten Folie nachgerechnet — Median-Defaults aus 57 echten Opus→Sonnet-Sessions (30.08.–29.09.2026).
 
 </div>
 
@@ -742,60 +742,68 @@ Die Behauptung der letzten Folie nachgerechnet — Regler mit Median-Defaults au
 
 <div class="text-xs opacity-70 leading-snug mt-1">
 
-„Re-Plan" = zurück in den Plan-Modus derselben Session — davor `/compact`, ebenso bei neuem Ziel mit anderem Inhalt: sonst zahlt jeder Bruch den alten Kontext mit. Gerechnet mit 1 h — die bekommt die Hauptkonversation in jedem Claude-Abo im Kontingent.<br>
-Listenpreise/MTok: Sonnet 5 $2 / $10 · Opus 5 $5 / $25 · Cache-Read 0,1× · Cache-Write 1,25× (5 min) bzw. 2× (1 h) · 1 USD = 0,876 €
+„Re-Plan“ = Rückkehr in den Plan-Modus; Worst Case: kalter Cache, 2 volle Brüche (gemessen 12 von 81). Gerechnet mit 1 h — die bekommt die Hauptkonversation in jedem Claude-Abo im Kontingent.<br>
+Listenpreise/MTok: Sonnet 5.5 $2/$10 · Opus 5.5 $4/$20 · Read 0,1× (Opus: 0,05×) · Write 1,25× (5 min) / 2× (1 h) · 1 USD = 0,876 €
 
 </div>
 
 <!--
-Rechenmodell (components/lib/opusplanMath.ts, per vitest gepinnt):
-Kosten je Phase = Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×
-TTL-Faktor×In (1,25× bei 5 min, 2× bei 1 h). Plan-Phase (Median): 100k
-Out, 7M Read, 360k Write. Exec: Regler. Cache-Bruch beim Modellwechsel:
-~93 % des Kontexts werden als Write neu berechnet (n=625 beobachtete
-Bruch-Events) — bei 180k Kontext ≈ 0,59 € statt ~0,07 € als Opus-Read.
+Rechenmodell (components/lib/opusplanMath.ts, per vitest gepinnt, die
+Konstanten zusätzlich gegen data/opusplan-sessions/summary.json gehalten):
+Kosten je Phase = Output×Out-Preis + Cache-Read×Read-Faktor×In + Cache-Write×
+TTL-Faktor×In (1,25× bei 5 min, 2× bei 1 h). Plan-Phase (Median, n=56): 30k
+Out, 4,1M Read, 160k Write. Exec: Regler, Defaults = Median je Session
+(n=57): 21 MTok Read, 76k Out (der Regler beginnt bei 80k), dazu pauschal
+0,0147 MTok Write je MTok Read. Cache-Bruch beim ERSTEN Wechsel: 85 % des
+Kontexts (Median, Quartile 79/100 %, alle 57 Sessions über 50 %) — bei 180k
+Kontext 0,61 $ ≈ 0,54 €.
 
-Preisbasis: opusplan löst in der TUI auf Opus 5 (Plan) und Sonnet 5
-(Exec) auf; Sonnet 4.6 steht im /model-Picker gar nicht mehr. Sonnet 5
-kostet $2/$10 — die zum 01.09.2026 angekündigte Erhöhung auf $3/$15
-wurde gestrichen (platform.claude.com/docs/en/about-claude/pricing,
-geprüft 01.09.2026). Die KV-Cache-Folie in Kapitel 6 rechnet weiter mit
-Sonnet 4.6, dort geht es nur um die Multiplikatoren. Tokenizer-Falle,
-falls jemand fragt: Sonnet 5 zählt ~30 % mehr Tokens als 4.6, aber Opus 5
-und Sonnet 5 teilen sich denselben Tokenizer — der übergebene Kontext und
-damit der Cache-Bruch sind davon unberührt. Nur die beiden Exec-Regler
-stammen aus einem Messfenster über den Wechsel hinweg.
+Preisbasis: opusplan löst auf der Anthropic-API auf Opus 5.5 (Plan) und
+Sonnet 5.5 (Exec) auf (code.claude.com/docs/en/model-config, geprüft
+30.09.2026). Opus 5.5 kostet $4/$20 und liest zu 0,05× — Fußnote 2 der
+Preisseite — also $0,20/MTok, genauso viel wie Sonnet. Dadurch sitzt die
+Ersparnis nur noch in Output ($20 gegen $10) und Cache-Writes ($8 gegen $4),
+nicht mehr im Read. Bei den Defaults: Nur Sonnet 7,00 € · Nur Opus 9,61 € ·
+opusplan 8,36 € — Ersparnis 1,25 € (−13 %). Break-even bei ~6,3 MTok
+Exec-Cache-Read; 46 von 57 Sessions liegen darüber, 11 darunter.
 
-Break-even bewusst NUR gegen „Nur Opus" erzählt: beide planen mit Opus,
-die Plan-Prämie (~3 $) kürzt sich raus. „Nur Sonnet" ist der
-Referenzboden — noch billiger, aber mit schwächerem Plan; das ist ein
-Qualitäts-, kein Preisvergleich. Break-even bei Defaults: ~1,8 MTok
-Exec-Cache-Read (Output skaliert mit) — typische Exec-Phasen liegen bei
-5–120 MTok, also Faktor 3–67 darüber. Ersparnis bei Defaults: 9,27 €
-(−37 %); die Exec-Phase allein wird 60 % billiger — daher das „massiv
-billiger" der vorigen Folie.
+Was die echten Sessions zeigen (data/opusplan-sessions/, 30.08.–29.09.2026,
+57 Sessions, 137 Wechsel Opus→Sonnet, 81 zurück; 56 von 57 mit
+ExitPlanMode — ob ein Wechsel opusplan oder ein manuelles /model war, sagt
+das Protokoll nicht):
+- Ersparnis kontrafaktisch (dieselben Tokens zum Preis des Plan-Opus, ohne
+  den Bruch des ersten Wechsels): Opus 5 (n=39) Median −44 % (Quartile
+  −38/−51), Opus 5.5 (n=17) Median −8 % (−0,1/−11), 12 von 17 billiger.
+  Die gepoolten −43 % mischen zwei Preisstände und werden nicht zitiert.
+  Die Modellrechnung am Regler-Default (−13 %) liegt im 5.5er-Bereich.
+- Die Sonnet-Seite ist jetzt gemessen, nicht mehr abgeleitet. Was sich
+  gegenüber der alten Stichprobe (42.802 Requests, 48 Plan-Sessions) ändert:
+  Plan-Output 30k statt 100k, Plan-Read 4,1M statt 7M, Bruch 0,85 statt 0,93,
+  Exec-Read 21 MTok statt 30, Exec-Out 76k statt 150k. 32 von 57 Sessions
+  sind ein einziger Plan→Exec-Durchlauf.
+- Vorbehalt: „Nur Opus“ ist kontrafaktisch mit den Sonnet-Tokens gerechnet.
+  Braucht Sonnet für dieselbe Aufgabe mehr Tokens oder mehr Anläufe als Opus,
+  ist die Ersparnis kleiner — das geben diese Daten nicht her.
 
-Anti-Pattern (aus der eigenen Historie: 60 % der Sessions kehren in den
-Plan-Mode zurück, 72 % davon ohne Compaction, max. 13 Zyklen): Jede
-Rückkehr ohne /compact = ZWEI Cache-Brüche — erst der Kontext als
-OPUS-Write (der teure!), dann wieder als Sonnet-Write, zusammen ≈ 2,05 €,
-plus Re-Plan (~45k Output) ≈ 0,99 €. Allein die Brüche fressen ab
-5 Rückkehren die gesamte Ersparnis auf (mit 5-min-TTL erst ab 8).
-Der Regler-Default steht auf n=3: dort liegen Anti-Pattern (24,68 €) und
-„Nur Opus" (24,83 €) praktisch gleichauf — 0,15 € Abstand, 0,6 %, auf der
-Leinwand nicht unterscheidbar. Die vierte Rückkehr schiebt den Balken mit
-27,72 € (+11,6 %) klar darüber. Falls jemand fragt, warum die Box dann
-„ab 5×" sagt: zwei Maßstäbe. Der Balkenschnitt liegt bei 3,05, weil der
-Anti-Pattern-Balken auch den neuen Plan-Output mitzahlt, den der „Nur
-Opus"-Balken gar nicht kennt; die 5 zählt nur die Brüche, also den Preis
-des Modellwechsels allein. Mit 5-min-TTL werden daraus 4,2 und 8. Mit den
-alten Sonnet-4.6-Preisen lag der Balken schon bei zwei darüber — Sonnet 5
-macht die Exec-Phase billiger, also braucht das Anti-Pattern mehr
-Anläufe. Merksatz: vor erneutem Planen /compact — das schrumpft den
-Kontext und damit beide Brüche. Gleiches gilt beim Themenwechsel: wer
-eine Session über lauter fremde Aufgaben weiterlaufen lässt, schleppt
-deren Kontext mit und zahlt ihn bei jedem Bruch erneut — /compact (oder
-eine neue Session) macht ihn klein.
+Anti-Pattern → Worst Case. 25 von 57 Sessions kehren in den Plan-Mode
+zurück (81 Rückkehren, Median 2 je Session, max. 9), 69 von 81 ohne
+/compact (85 %). Der Folien-Balken rechnet jede Rückkehr als ZWEI volle
+Brüche — erst der Kontext als Opus-Write, dann wieder als Sonnet-Write,
+zusammen 1,61 €. Gemessen ist das die Ausnahme: eine Rückkehr schreibt im
+Median nur 5k Tokens neu (n=81), nur 12 von 81 schreiben mehr als die
+Hälfte des Kontexts; 9 von 80 Rückkehren kommen nach mehr als 60 Minuten
+Pause. Grund: beide Modelle halten ihren Cache 1 h warm (100 % der Writes
+in den Sessions sind 1-h-Writes), eine Rückkehr liest den alten Eintrag und
+schreibt nur das Delta, das das andere Modell angehängt hat. Der Balken ist
+also die Obergrenze bei kaltem Cache (beide Caches abgelaufen), nicht der
+Normalfall; der Regler heißt deshalb Worst Case. Bei den Defaults (n=2)
+steht er bei 11,61 € gegen 9,61 € „Nur Opus“; schon EINE Worst-Case-
+Rückkehr (1,63 € mit Re-Plan) frisst die Ersparnis von 1,25 €. Der
+Re-Plan-Output ist mit 1k Tokens (Median, n=81) vernachlässigbar — die alte
+Annahme von 45k Output galt für einen echten neuen Plan, den die Sessions
+so selten zeigen. Den /compact-Rat aus der alten Fassung ausdrücklich NICHT
+mehr als Regel verkaufen: er schrumpft bei kaltem Cache beide Brüche, ist
+aber selbst eine Cache-Unterbrechung (Schlussfolgerung, nicht gemessen).
 
 TTL-Toggle: Die 1h-TTL ist der Default der Hauptkonversation in JEDEM
 Claude-Abo, solange das Kontingent reicht — Pro, Max, Team und
@@ -819,10 +827,12 @@ teuer. Ausführlich in den Notes der Folie „Welches Modell wofür?" in
 Kapitel 7, dort hängt der Kontingent-Toggle dran.
 
 Vereinfachungen (bewusst): input_tokens
-(~90/Request) ignoriert; laufende Exec-Cache-Writes weggelassen (fallen
-überall ähnlich an; Sonnet-Writes billiger → konservativ pro opusplan);
-Re-Plan-Reads nicht bepreist; Kontext beim Wiedereintritt konstant
-(Median dort 174k ≈ 177k beim Erst-Wechsel).
+(~90/Request) ignoriert; laufende Exec-Cache-Writes pauschal 0,0147 MTok je
+MTok Read statt je Phase gemessen; Re-Plan-Reads nicht bepreist; Kontext beim
+Wiedereintritt konstant (Median dort 209k, beim Erst-Wechsel 179k). Die
+TTL-Abschnitte oben (1-h-Default, Kontingent-Aktion) sind Stand 25.08.2026
+geprüft und hier nicht erneuert; die Sessions bestätigen nur, dass alle Writes
+1-h-Writes waren.
 -->
 
 ---
@@ -987,8 +997,9 @@ sitzungsunabhängige statische Prefix, für den Sitzungsanteil also ein
 voller Bruch; Rückkehr auf eine schon benutzte Stufe innerhalb der TTL
 bricht NICHT (der alte Eintrag lebt noch). Nicht modelliert, konservativ
 gegen den Wechsel. #42996 (Desktop 0.153.4): Hit-Rate 99 % → 12 % / 0 % /
-12 % je Wechsel. Bei 180k Kontext ist (180−10)/180 ≈ 0,94 — praktisch das
-BREAK_SHARE 0,93 von opusplan, deshalb dieselbe Konstante.
+12 % je Wechsel. Bei 180k Kontext ist (180−10)/180 ≈ 0,94 — etwas über dem
+BREAK_SHARE 0,85 von opusplan (gemessener Median des ersten Wechsels, n=57);
+dieselbe Konstante, also leicht konservativ gegen den Wechsel.
 
 Der Schalter: [features] reasoning_effort_override = true — im Quellcode
 Stage UnderDevelopment, default aus, weder im /experimental-Menü noch in
@@ -1038,35 +1049,39 @@ toCodexSzenario in codexEffortMath.ts).
 Rechenmodell (components/lib/codexEffortMath.ts, per vitest gepinnt):
 Gleiches Modell in beiden Phasen, nur der Effort wechselt. Kosten je Phase
 = Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×1,25×In, alle Volumina
-von der opusplan-Folie (Plan: 100k Out, 7M Read, 360k Write; Kontext 180k;
-Exec: Regler, 150k Out je 30 MTok Read) × Fähigkeitsfaktor c = pass@1 Opus
+von der opusplan-Folie (Plan: 30k Out, 4,1M Read, 160k Write; Kontext 180k;
+Exec: Regler, 80k Out je 21 MTok Read) × Fähigkeitsfaktor c = pass@1 Opus
 5 ÷ bestes pass@1 des Modells (Astra 0,99, Sol 1,01, Terra 1,06, Luna 1,10
 — alle unter den Fehlerbalken, bewusst trotzdem drin). xhigh = Faktor f ×
 medium für die GANZE Phase; f ist €/Task xhigh ÷ €/Task medium aus der
 DeepSWE-Leiter (paretoData.ts, Stand 03.09.): Astra 1,49, Sol 2,54, Terra
 3,63, Luna 6,75 — der Regler rundet auf eine Stelle. Cache-Bruch wie bei
-opusplan 0,93 × Kontext × Write, aber 1,25× statt 2× (Anthropic 1-h-TTL).
-Sol-Defaults (f 2,5, 30 MTok, 3 Re-Plans): Nur medium 19,18 € · Nur xhigh
-47,94 € · Effort-Wechsel 28,71 € · Ersparnis 19,23 € (−40 %) · Bruch 0,74 €
-· Break-even 1,1 MTok Exec-Read (Astra 3,3 — teuerster Bruch, 1,82 €) ·
-Balken über „Nur xhigh“ ab 6 Rückkehren, allein die Brüche ab 13.
+opusplan 0,85 × Kontext × Write, aber 1,25× statt 2× (Anthropic 1-h-TTL).
+Sol-Defaults (f 2,5, 21 MTok, 2 Re-Plans): Nur medium 11,58 € · Nur xhigh
+28,94 € · Effort-Wechsel 16,30 € · Ersparnis 12,64 € (−44 %) · Bruch 0,68 €
+· Break-even 1,1 MTok Exec-Read (Astra 3,2 — teuerster Bruch, 1,66 €) ·
+Balken über „Nur xhigh“ ab 10 Rückkehren, allein die Brüche ebenfalls ab 10.
+Stand der Volumina: 30.09.2026 auf die 57 echten Opus→Sonnet-Sessions
+umgestellt (data/opusplan-sessions/); vorher die 42,8k-Requests-Mediane.
 Die Folie selbst nennt die Vorläufigkeit nur im Badge des Rechners
 (geliehene Volumina, geschätzter Faktor) und in der Preiszeile (Sol-
 Aktionspreis); die Rechnung mit dem Fähigkeitsfaktor steht nur hier.
-Ersparnis je Modell: Sol 19,23 € (−40 %), Terra 18,41 € (−49 %), Astra
-14,50 € (−21 %), Luna 4,30 € (−58 %) — opusplan bei SEINEN Defaults: 9,27 €
-(−37 %), aus opusplanMath abgeleitet (OPUSPLAN_REF), nicht abgetippt. Der
-Euro-Vergleich hinkt: die Codex-Basis „Nur xhigh“ (Sol 47,94 €) ist eine
-teurere Session als „Nur Opus“ (24,83 €), weil Sol über Sonnet 5 liegt und
+Ersparnis je Modell: Sol 12,64 € (−44 %), Terra 12,08 € (−54 %), Astra
+9,22 € (−22 %), Luna 2,84 € (−65 %) — opusplan bei SEINEN Defaults: 1,25 €
+(−13 %), aus opusplanMath abgeleitet (OPUSPLAN_REF), nicht abgetippt. Der
+Euro-Vergleich hinkt: die Codex-Basis „Nur xhigh“ (Sol 28,94 €) ist eine
+teurere Session als „Nur Opus“ (9,61 €), weil Sol über Sonnet 5.5 liegt und
 f die ganze Session multipliziert. Preisneutral ist der Prozentwert — und
-da liegt nur Astra unter opusplan; das sagt die Note-Box („opusplan schafft
-−37 %“). Die Regler-Fußnote trägt bewusst keine Zahl mehr: sie wäre nur bei
+da liegen jetzt alle vier Codex-Modelle über opusplan (früher nur Sol, Terra
+und Luna); das sagt die Note-Box („opusplan schafft −13 %“). Der Grund ist
+opusplan, nicht Codex: mit Opus 5.5 liest Opus so billig wie Sonnet (0,05×),
+die Ersparnis schrumpft von −37 % auf −13 %. Die Regler-Fußnote trägt bewusst keine Zahl mehr: sie wäre nur bei
 den Defaults wahr, die Balken darüber bewegen sich.
 
 Annahme „Effekt kleiner als bei Claude, weil Codex-Modelle billiger sind
 und der Effort weniger ausmacht“ — geprüft, stimmt nur zum Teil: (a) pro
 Token billiger als Opus 5 sind Sol/Terra/Luna, Astra kostet das Doppelte;
-für die Exec-Phase zählt aber Sonnet 5 ($2/$10), und Sol ($4/$20) liegt
+für die Exec-Phase zählt aber Sonnet 5.5 ($2/$10), und Sol ($4/$20) liegt
 darüber. (b) Der Effort-Faktor ist NICHT klein: 1,5× (Astra) bis 6,8×
 (Luna), Sol 2,5× — dasselbe Verhältnis wie die Opus/Sonnet-Preise.
 Zweiter, unabhängiger Datenpunkt: Artificial Analysis Index v4.3,
@@ -1076,8 +1091,8 @@ qualitativ: „Higher reasoning effort can improve results for complex
 tasks, but it takes longer and uses more tokens.“ (learn.chatgpt.com/
 docs/models). (c) Kleiner ist allein der Write-Multiplikator (1,25× statt
 2×). Absolut liegt der einzelne Bruch bei Sol gut ein Viertel ÜBER opusplan
-(0,74 € gegen 0,59 €), weil Sol pro Input-Token das Doppelte von Sonnet
-kostet; das Rückkehr-Paar liegt darunter (1,49 € gegen 2,05 €), weil ohne
+(0,68 € gegen 0,54 €), weil Sol pro Input-Token das Doppelte von Sonnet
+kostet; das Rückkehr-Paar liegt darunter (1,36 € gegen 1,61 €), weil ohne
 Modellwechsel kein Opus-Write anfällt.
 
 f gilt für die ganze Phase, nicht nur den Output — das ist keine offene
@@ -1106,14 +1121,16 @@ prompt_cache_options.ttl kennt nur "30m"; Codex fordert keine Retention
 an. Im ChatGPT-Abo zählt das Kontingent, nicht der Preis — die €-Werte
 sind wie bei opusplan das API-Äquivalent.
 
-Vereinfachungen (bewusst, wie opusplan): input_tokens ignoriert, laufende
-Exec-Writes weggelassen, Re-Plan-Reads nicht bepreist, Kontext beim
+Vereinfachungen (bewusst): input_tokens ignoriert, laufende Exec-Writes
+weggelassen (anders als bei opusplan, das sie pauschal mitrechnet — hier
+gleicher Preis in beiden Phasen, sie kürzen sich fast raus), Re-Plan-Reads
+nicht bepreist, Kontext beim
 Wiedereintritt konstant. Zusätzlich hier: EIN Faktor f für Reads und
 Output (im Archiv skalieren die Reads stärker — leicht konservativ); die
 geliehenen Volumina gelten als medium-Volumina, auch die der Plan-Phase
-(der xhigh-Plan liest also 2,5 × 7 = 17,5 MTok bei Sol) — liest man die
+(der xhigh-Plan liest also 2,5 × 4,1 = 10,25 MTok bei Sol) — liest man die
 Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in € gleich,
-der Prozentwert würde −49 % statt −40 %; Kontext beim Wechsel fest 180k,
+der Prozentwert würde −50 % statt −44 %; Kontext beim Wechsel fest 180k,
 also unter der 272k-Schwelle (2× Input); Rückkehr auf eine bekannte Stufe
 innerhalb 30 min bräche nicht (nicht modelliert); Sol-Aktionspreis
 ($4/$20, bis mindestens 21.11.2026, vorher $5/$30) statt Listenpreis.
@@ -1251,8 +1268,9 @@ Einen Pfad verlassen oder verzweigen — ohne den Prefix neu zu bauen.
 </div>
 
 <!--
-Anschluss an die opusplan-Folie: dort hieß der Merksatz „vor erneutem
-Planen /compact". Hier die andere Hälfte — wer den Pfad ganz verlässt,
+Anschluss an die opusplan-Folie: dort steht /compact als Gegenmittel für
+den Worst Case (kalter Cache bei der Rückkehr in den Plan-Mode). Hier die
+andere Hälfte — wer den Pfad ganz verlässt,
 braucht gar kein /compact. Faustregel ansagen: Compaction ist für
 „Kontext ist gut, aber zu groß", Rewind für „Kontext ist falsch".
 

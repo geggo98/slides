@@ -105,9 +105,10 @@ const prozent = computed(() =>
 // ── Break-even-Chart (Geraden in €, Darstellung in ./BreakEvenChart.vue) ────
 const ratio = computed(() => outK.value / 1000 / readM.value);
 const xStar = computed(() => erg.value.breakEvenRead);
-// x-Leiter {12, 20}: mit Sonnet 5 bleibt der Break-even überall unter
-// 8,4 MTok (per Test gepinnt), die 20er-Sprosse ist also Reserve für den
-// nächsten Preiswechsel — mit Sonnet 4.6 wurden es bis zu 18,9 MTok.
+// x-Leiter {12, 20}: bei den Defaults (Opus 5.5) liegt der Break-even bei
+// 6,3 MTok. Im Worst Case der Regler (Kontext 700k, viel Read, wenig Output)
+// wandert er auf 36 MTok und damit jenseits der 20er-Sprosse — das Chart
+// zeigt dann seinen „Break-even jenseits“-Hinweis, statt die Achse zu dehnen.
 const xMax = computed(() => (xStar.value > 12 ? 20 : 12));
 const xTicks = computed(() =>
   xMax.value === 12 ? [0, 4, 8, 12] : [0, 5, 10, 15, 20],
@@ -127,8 +128,7 @@ const yPlan = (x: number) =>
   );
 // Die y-Leiter {15, 20, 25, 40, 60} und die 8 % Luft sind die Defaults des
 // Charts; die Sprosse 20 verhindert, dass die Luft direkt auf 25 springt und
-// die Geraden im unteren Drittel kleben (mit 1-h-TTL schon bei den Defaults:
-// 14,98 € gegen Sprosse 15).
+// die Geraden im unteren Drittel kleben.
 const chartLines = computed<BreakEvenLinie[]>(() => [
   { label: "Nur Opus", cls: "warning", at: yOpus },
   { label: "opusplan", cls: "info", at: yPlan },
@@ -138,22 +138,22 @@ const chartLines = computed<BreakEvenLinie[]>(() => [
 const bruchEur = computed(() => fmt(toEur(erg.value.bruchEinmal)));
 const proMtokEur = computed(() => fmt(toEur(erg.value.proMtokErsparnis)));
 const bruchPaarEur = computed(() => fmt(toEur(erg.value.rueckkehrBrueche)));
-// Der Re-Plan-Output einer Rückkehr — im Anti-Pattern-Balken enthalten, im
-// „Nur Opus“-Balken nicht. Ohne ihn geht die Rechnung der Notiz-Box nicht auf.
-const replanEur = computed(() =>
-  fmt(toEur(erg.value.rueckkehrGesamt - erg.value.rueckkehrBrueche)),
-);
+// Ab wann der Cache des Zielmodells abgelaufen ist — der Worst Case setzt
+// voraus, dass beide Caches kalt sind.
+const ttlText = computed(() => (ttl.value === "1h" ? "1 h" : "5 min"));
 
 const warnung = computed(() => showAnti.value && n.value >= 1);
 const noteText = computed(() => {
   if (showAnti.value) {
     if (n.value === 0)
-      return `Regler „Re-Plans“: jede Rückkehr in den Plan-Mode ohne /compact kostet 2 zusätzliche Cache-Brüche (≈ ${bruchPaarEur.value} €).`;
+      return `Regler „Re-Plans“: Rückkehr in den Plan-Mode nach mehr als ${ttlText.value} Pause (Cache kalt) = 2 volle Cache-Brüche ≈ ${bruchPaarEur.value} €. Gemessen die Ausnahme: 12 von 81.`;
     const schluss =
-      erg.value.ersparnisWegAb > 0
-        ? `ab ${erg.value.balkenUeberAb}× liegt der Balken über „Nur Opus“, allein die Brüche fressen die Ersparnis ab ${erg.value.ersparnisWegAb}×`
-        : `und schon ohne Rückkehr ist opusplan hier teurer als Nur Opus`;
-    return `${n.value}× zurück in den Plan-Mode ohne /compact: je Rückkehr 2 Cache-Brüche ≈ ${bruchPaarEur.value} € (einer als Opus-Write!) + neuer Plan ≈ ${replanEur.value} € — ${schluss}. Vor erneutem Planen: /compact.`;
+      erg.value.ersparnisWegAb === 0
+        ? `schon ohne Rückkehr ist opusplan hier teurer als Nur Opus`
+        : erg.value.balkenUeberAb === erg.value.ersparnisWegAb
+          ? `schon ab ${erg.value.ersparnisWegAb}× ist die Ersparnis aufgezehrt`
+          : `ab ${erg.value.balkenUeberAb}× liegt der Balken über „Nur Opus“, die Brüche allein fressen die Ersparnis ab ${erg.value.ersparnisWegAb}×`;
+    return `Worst Case (Cache kalt, mehr als ${ttlText.value} Pause): ${n.value}× zurück in den Plan-Mode = je 2 volle Cache-Brüche ≈ ${bruchPaarEur.value} € — ${schluss}. Bei warmem Cache nur das Delta (Median 5k Tokens).`;
   }
   if (showChart.value)
     return `Break-even bei ~${fmt1(xStar.value)} MTok Exec-Cache-Read: der eine Bruch kostet ${bruchEur.value} €, jedes weitere MTok spart ${proMtokEur.value} €. Dein Regler: ${readM.value} MTok.`;
@@ -279,7 +279,7 @@ const chartLabel = computed(
             }}</span>
           </div>
           <div class="ob-row" :class="{ 'ob-versteckt': !showAnti }">
-            <span class="ob-name ob-warnname">⚠ Anti-Pattern</span>
+            <span class="ob-name ob-warnname">⚠ Worst Case</span>
             <span class="ob-track"
               ><span
                 class="ob-fill ob-f4"

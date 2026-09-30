@@ -5,8 +5,8 @@
  * ⚠ VORLÄUFIG (Stand 16.09.2026). Es gibt noch keine eigene Codex-Messung:
  * `plan_mode_reasoning_effort = "xhigh"` läuft lokal erst seit dem 15.09.2026.
  * Bis echte Sessions vorliegen, rechnet die Folie mit den Volumina der
- * opusplan-Folie (Mediane aus 42.802 Claude-Code-Requests, Juni–August 2026,
- * siehe ./opusplanMath.ts), damit beide Rechnungen vergleichbar bleiben, und
+ * opusplan-Folie (Mediane aus 57 echten Claude-Code-Sessions mit Modellwechsel,
+ * 30.08.–29.09.2026, siehe ./opusplanMath.ts), damit beide Rechnungen vergleichbar bleiben, und
  * skaliert sie je Modell mit zwei Faktoren aus der DeepSWE-v1.1-Leiter
  * (../paretoData.ts, `EFFORTS`, Stand 03.09.2026):
  *
@@ -30,11 +30,11 @@
  *   `effortFaktorRegler()` liefert die Vorgabe auf eine Nachkommastelle
  *   gerundet, damit Folie und Test dieselbe Zahl zeigen.
  * - Die geliehenen Volumina gelten als medium-Volumina, auch die der
- *   Plan-Phase (der xhigh-Plan liest also 2,5 × 7 = 17,5 MTok bei Sol). Liest
+ *   Plan-Phase (der xhigh-Plan liest also 2,5 × 4,1 = 10,25 MTok bei Sol). Liest
  *   man die Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in
- *   € gleich, der Prozentwert würde −49 % statt −40 %. Kontext beim
+ *   € gleich, der Prozentwert würde −50 % statt −44 %. Kontext beim
  *   Wechsel und Exec-Output kommen als Eingaben aus dem geteilten Szenario
- *   (./scenarioState.ts, Defaults 180k / 150k je 30 MTok); der 180k-Default
+ *   (./scenarioState.ts, Defaults 180k / 80k je 21 MTok); der 180k-Default
  *   liegt unter der 272k-Schwelle (2× Input).
  *
  * Mechanik gegenüber opusplan:
@@ -83,11 +83,11 @@ export type { Modell };
 
 /** Cache-Write für GPT-5.6 und neuer: 1,25× Input, unabhängig von der TTL. */
 export const WRITE_FAKTOR = 1.25;
-/** Kontext beim Moduswechsel, MTok — Regler-Default (opusplan-Median 177k). */
+/** Kontext beim Moduswechsel, MTok — Regler-Default (opusplan-Median 179k). */
 export const DEFAULT_CTX = SZENARIO_DEFAULTS.ctxK / 1000;
 /**
- * Exec-Output je MTok Exec-Cache-Read bei den Regler-Defaults — 150k Out auf
- * 30 MTok Read. Kein Modellparameter mehr, nur noch die Vorgabe für Tests und
+ * Exec-Output je MTok Exec-Cache-Read bei den Regler-Defaults — 80k Out auf
+ * 21 MTok Read. Kein Modellparameter mehr, nur noch die Vorgabe für Tests und
  * für `execOutAusRatio()`, falls jemand ohne eigenen Output-Regler rechnet.
  */
 export const EXEC_OUT_RATIO =

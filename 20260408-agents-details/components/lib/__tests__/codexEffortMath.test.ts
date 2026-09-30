@@ -2,16 +2,16 @@
  * codexEffortMath.test.ts — pinnt das Kostenmodell der Codex-Effort-Wechsel-
  * Folie, damit spätere Änderungen die gezeigten Zahlen nicht still verstellen.
  * Referenzwerte von Hand nachgerechnet (Sol, Regler-Defaults der Folie:
- * Faktor 2,5 · Kontext 180k · Exec-Read 30 MTok · Exec-Out 150k · 3 Re-Plans
+ * Faktor 2,5 · Kontext 180k · Exec-Read 21 MTok · Exec-Out 80k · 2 Re-Plans
  * · Cache-Bruch an — Kontext und Exec-Out kommen aus SZENARIO_DEFAULTS):
  *
  *   c = 73,65 / 72,67 = 1,013486 (capFaktor Sol)
- *   Plan medium  = c · (0,1·20 + 7,0·0,4 + 0,36·5)   = c · 6,6  =  6,689 $
- *   Exec medium  = c · (0,15·20 + 30·0,4)            = c · 15   = 15,202 $
- *   Bruch        = 0,93 · c · 0,18 · 5               = c · 0,837 = 0,848 $
- *   Nur medium   = 21,891 $ · Nur xhigh = 2,5 · 21,891 = 54,728 $
- *   Wechsel      = 2,5·6,689 + 0,848 + 15,202        = 32,773 $
- *   Ersparnis    = 21,955 $ = 19,23 € (−40,1 %)
+ *   Plan medium  = c · (0,03·20 + 4,1·0,4 + 0,16·5)  = c · 3,04 =  3,081 $
+ *   Exec medium  = c · (0,08·20 + 21·0,4)            = c · 10   = 10,135 $
+ *   Bruch        = 0,85 · c · 0,18 · 5               = c · 0,765 = 0,775 $
+ *   Nur medium   = 13,216 $ · Nur xhigh = 2,5 · 13,216 = 33,040 $
+ *   Wechsel      = 2,5·3,081 + 0,775 + 10,135        = 18,613 $
+ *   Ersparnis    = 14,427 $ = 12,64 € (−43,7 %)
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -64,16 +64,16 @@ const DEFAULTS: Eingaben = {
 };
 
 describe("Konstanten", () => {
-  it("teilt Read 0,1× und BREAK_SHARE 0,93 mit opusplanMath", () => {
+  it("teilt Read 0,1× und BREAK_SHARE 0,85 mit opusplanMath", () => {
     expect(READ_FAKTOR).toBe(0.1);
-    expect(BREAK_SHARE).toBe(0.93);
-    expect(PLAN).toEqual({ out: 0.1, read: 7.0, write: 0.36 });
+    expect(BREAK_SHARE).toBe(0.85);
+    expect(PLAN).toEqual({ out: 0.03, read: 4.1, write: 0.16 });
   });
-  it("Write 1,25× (GPT-5.6+, einzige TTL 30 min), Kontext 180k, 150k Out je 30 MTok", () => {
+  it("Write 1,25× (GPT-5.6+, einzige TTL 30 min), Kontext 180k, 80k Out je 21 MTok", () => {
     expect(WRITE_FAKTOR).toBe(1.25);
     expect(DEFAULT_CTX).toBe(0.18);
-    expect(EXEC_OUT_RATIO).toBe(0.005);
-    expect(execOutAusRatio(30)).toBeCloseTo(0.15, 12);
+    expect(EXEC_OUT_RATIO).toBeCloseTo(0.08 / 21, 12);
+    expect(execOutAusRatio(21)).toBeCloseTo(0.08, 12);
   });
   it("Sol ist der Default, Reihenfolge teuer → billig", () => {
     expect(DEFAULT_MODELL).toBe("sol");
@@ -123,12 +123,12 @@ describe("Faktoren aus der DeepSWE-Leiter (paretoData.EFFORTS)", () => {
 });
 
 describe("Geteiltes Szenario (scenarioState.ts)", () => {
-  it("Defaults 180k · 30 MTok · 150k · 3 — die Regler-Defaults beider Folien", () => {
+  it("Defaults 180k · 21 MTok · 80k · 2 — die Regler-Defaults beider Folien", () => {
     expect(SZENARIO_DEFAULTS).toEqual({
       ctxK: 180,
-      readM: 30,
-      outK: 150,
-      n: 3,
+      readM: 21,
+      outK: 80,
+      n: 2,
     });
     expect(Object.isFrozen(SZENARIO_DEFAULTS)).toBe(true);
   });
@@ -189,29 +189,29 @@ describe("Geteiltes Szenario (scenarioState.ts)", () => {
   });
   it("opusplanVergleich rechnet opusplan (1-h-TTL) über einem bewegten Szenario — die Notiz vergleicht damit live", () => {
     expect(opusplanVergleich(SZENARIO_DEFAULTS)).toEqual(OPUSPLAN_REF);
-    // Exec-Read 60 statt 30 (der Fall aus breakeven-sync-qa.ts): opusplan
-    // zeigt dann −45 %, nicht mehr die −37 % der Defaults.
+    // Exec-Read 60 statt 21 (der Fall aus breakeven-sync-qa.ts): opusplan
+    // zeigt dann −16 %, nicht mehr die −13 % der Defaults.
     const bewegt = { ...SZENARIO_DEFAULTS, readM: 60 };
     const live = opusplanVergleich(bewegt);
     expect(live).toEqual(
       opusplanSzenarien({
         ctx: 0.18,
         execRead: 60,
-        execOut: 0.15,
-        replans: 3,
+        execOut: 0.08,
+        replans: 2,
         ttl: DEFAULT_TTL,
       }),
     );
-    expect(Math.round(Math.abs(live.ersparnisProzent))).toBe(45);
-    expect(Math.round(Math.abs(OPUSPLAN_REF.ersparnisProzent))).toBe(37);
+    expect(Math.round(Math.abs(live.ersparnisProzent))).toBe(16);
+    expect(Math.round(Math.abs(OPUSPLAN_REF.ersparnisProzent))).toBe(13);
     // Es wird das rohe Szenario verglichen, keine Codex-Umrechnung:
     expect(opusplanVergleich(toCodexSzenario(bewegt))).toEqual(live);
   });
 });
 
 describe("Cache-Bruch eines Effort-Wechsels", () => {
-  it("Sol: 0,93 × 180k × 1,25 × $4 = 0,837 $ (vor Fähigkeitsfaktor)", () => {
-    expect(bruchKosten(SOL, DEFAULT_CTX)).toBeCloseTo(0.837, 6);
+  it("Sol: 0,85 × 180k × 1,25 × $4 = 0,765 $ (vor Fähigkeitsfaktor)", () => {
+    expect(bruchKosten(SOL, DEFAULT_CTX)).toBeCloseTo(0.765, 6);
   });
 });
 
@@ -234,16 +234,16 @@ describe("Kontext und Exec-Output als Eingaben", () => {
   it("mehr Exec-Output verteuert medium wie xhigh und hebt die Ersparnis je MTok", () => {
     const e = szenarien({ ...DEFAULTS, execOut: 0.3 });
     const c = SOL.capFaktor;
-    // +150k Out auf medium = c · 0,15 · $20 = 3,04 $; auf xhigh f-mal so viel.
-    expect(e.nurMedium - basis.nurMedium).toBeCloseTo(c * 0.15 * 20, 10);
-    expect(e.nurXhigh - basis.nurXhigh).toBeCloseTo(2.5 * c * 0.15 * 20, 10);
+    // +220k Out auf medium = c · 0,22 · $20 = 4,46 $; auf xhigh f-mal so viel.
+    expect(e.nurMedium - basis.nurMedium).toBeCloseTo(c * 0.22 * 20, 10);
+    expect(e.nurXhigh - basis.nurXhigh).toBeCloseTo(2.5 * c * 0.22 * 20, 10);
     expect(e.proMtokErsparnis).toBeGreaterThan(basis.proMtokErsparnis);
     expect(e.breakEvenRead).toBeLessThan(basis.breakEvenRead);
     expect(e.bruchEinmal).toBeCloseTo(basis.bruchEinmal, 10);
   });
 
   it("execOut im Default-Verhältnis reproduziert exakt die Referenz", () => {
-    const e = szenarien({ ...DEFAULTS, execOut: execOutAusRatio(30) });
+    const e = szenarien({ ...DEFAULTS, execOut: execOutAusRatio(21) });
     expect(e.effortWechsel).toBeCloseTo(basis.effortWechsel, 12);
     // und bei anderem Exec-Read bleibt der Break-even nur dann volumenneutral,
     // wenn der Output im selben Verhältnis mitwächst
@@ -317,51 +317,51 @@ describe("Kostengeraden fürs Break-even-Chart", () => {
   });
 });
 
-describe("Sol, Regler-Defaults (Faktor 2,5 · 30 MTok · 3 Re-Plans)", () => {
+describe("Sol, Regler-Defaults (Faktor 2,5 · 21 MTok · 2 Re-Plans)", () => {
   const e = szenarien(DEFAULTS);
 
-  it("Szenarien: Nur medium 21,89 $ · Nur xhigh 54,73 $ · Effort-Wechsel 32,77 $", () => {
-    expect(e.nurMedium).toBeCloseTo(21.8913, 3);
-    expect(e.nurXhigh).toBeCloseTo(54.7282, 3);
-    expect(e.effortWechsel).toBeCloseTo(32.7731, 3);
-    expect(e.antiPattern).toBeCloseTo(44.7038, 3);
+  it("Szenarien: Nur medium 13,22 $ · Nur xhigh 33,04 $ · Effort-Wechsel 18,61 $", () => {
+    expect(e.nurMedium).toBeCloseTo(13.2159, 3);
+    expect(e.nurXhigh).toBeCloseTo(33.0396, 3);
+    expect(e.effortWechsel).toBeCloseTo(18.6127, 3);
+    expect(e.antiPattern).toBeCloseTo(21.8153, 3);
   });
 
-  it("Ersparnis 21,96 $ = 19,23 € (−40,1 %) gegenüber durchgängig xhigh", () => {
-    expect(e.ersparnis).toBeCloseTo(21.9551, 3);
-    expect(toEur(e.ersparnis)).toBeCloseTo(19.23, 2);
-    expect(e.ersparnisProzent).toBeCloseTo(40.12, 2);
+  it("Ersparnis 14,43 $ = 12,64 € (−43,7 %) gegenüber durchgängig xhigh", () => {
+    expect(e.ersparnis).toBeCloseTo(14.427, 3);
+    expect(toEur(e.ersparnis)).toBeCloseTo(12.64, 2);
+    expect(e.ersparnisProzent).toBeCloseTo(43.67, 2);
   });
 
-  it("der eine Bruch kostet 0,85 $, Break-even bei 1,12 MTok Exec-Read bzw. Faktor 1,056", () => {
-    expect(e.bruchEinmal).toBeCloseTo(0.8483, 4);
-    expect(e.proMtokErsparnis).toBeCloseTo(0.7601, 4);
-    expect(e.breakEvenRead).toBeCloseTo(1.116, 3);
-    expect(e.breakEvenFaktor).toBeCloseTo(1.0558, 4);
+  it("der eine Bruch kostet 0,78 $, Break-even bei 1,07 MTok Exec-Read bzw. Faktor 1,077", () => {
+    expect(e.bruchEinmal).toBeCloseTo(0.7753, 4);
+    expect(e.proMtokErsparnis).toBeCloseTo(0.7239, 4);
+    expect(e.breakEvenRead).toBeCloseTo(1.071, 3);
+    expect(e.breakEvenFaktor).toBeCloseTo(1.0765, 4);
   });
 
-  it("Rückkehr ohne /compact: 2 Brüche 1,70 $ + neuer Plan auf xhigh 2,28 $ = 3,98 $", () => {
-    expect(e.rueckkehrBrueche).toBeCloseTo(1.6966, 4);
-    expect(e.rueckkehrGesamt).toBeCloseTo(3.9769, 4);
+  it("Rückkehr ohne /compact: 2 Brüche 1,55 $ + neuer Plan auf xhigh 0,05 $ = 1,60 $", () => {
+    expect(e.rueckkehrBrueche).toBeCloseTo(1.5506, 4);
+    expect(e.rueckkehrGesamt).toBeCloseTo(1.6013, 4);
   });
 
-  it("Balken über „Nur xhigh“ ab 6 Rückkehren, allein die Brüche ab 13", () => {
-    expect(e.balkenUeberAb).toBe(6);
-    expect(e.ersparnisWegAb).toBe(13);
-    const bei5 = szenarien({ ...DEFAULTS, replans: 5 });
-    const bei6 = szenarien({ ...DEFAULTS, replans: 6 });
-    expect(bei5.antiPattern).toBeLessThan(bei5.nurXhigh);
-    expect(bei6.antiPattern).toBeGreaterThan(bei6.nurXhigh);
+  it("Balken über „Nur xhigh“ ab 10 Rückkehren, allein die Brüche ebenfalls ab 10", () => {
+    expect(e.balkenUeberAb).toBe(10);
+    expect(e.ersparnisWegAb).toBe(10);
+    const bei9 = szenarien({ ...DEFAULTS, replans: 9 });
+    const bei10 = szenarien({ ...DEFAULTS, replans: 10 });
+    expect(bei9.antiPattern).toBeLessThan(bei9.nurXhigh);
+    expect(bei10.antiPattern).toBeGreaterThan(bei10.nurXhigh);
   });
 
-  it("Vergleichsmaßstab opusplan (dessen Regler-Defaults): 9,27 € und −37,3 %", () => {
-    expect(toEur(OPUSPLAN_REF.ersparnis)).toBeCloseTo(9.27, 2);
-    expect(OPUSPLAN_REF.ersparnisProzent).toBeCloseTo(37.32, 1);
+  it("Vergleichsmaßstab opusplan (dessen Regler-Defaults): 1,25 € und −13,0 %", () => {
+    expect(toEur(OPUSPLAN_REF.ersparnis)).toBeCloseTo(1.25, 2);
+    expect(OPUSPLAN_REF.ersparnisProzent).toBeCloseTo(12.97, 1);
   });
 
-  it("relativ nicht kleiner als opusplan: −40,1 % gegen −37,3 %", () => {
+  it("relativ deutlich größer als opusplan: −43,7 % gegen −13,0 %", () => {
     // Der Prozentwert ist preisneutral; die €-Beträge vergleichen zwei
-    // verschieden teure Basen (Nur xhigh 47,94 € gegen Nur Opus 24,83 €).
+    // verschieden teure Basen (Nur xhigh 28,94 € gegen Nur Opus 9,61 €).
     expect(e.ersparnisProzent).toBeGreaterThan(OPUSPLAN_REF.ersparnisProzent);
     expect(toEur(e.ersparnis)).toBeGreaterThan(toEur(OPUSPLAN_REF.ersparnis));
   });
@@ -379,18 +379,27 @@ describe("Schalter „Cache erhalten“ (configuration_update, experimentell)", 
     expect(an.ersparnis - aus.ersparnis).toBeCloseTo(aus.bruchEinmal, 10);
   });
 
-  it("Rückkehren kosten nur den neuen Plan: bei 10 exakt gleichauf, Balken strikt drüber erst ab 11", () => {
-    expect(an.rueckkehrGesamt).toBeCloseTo(2.2803, 4);
+  it("Rückkehren kosten nur den neuen Plan: Balken strikt drüber erst ab 301", () => {
+    expect(an.rueckkehrGesamt).toBeCloseTo(0.0507, 4);
     expect(an.ersparnisWegAb).toBe(Infinity);
-    // (f−1)·15 / (f·0,9) = 10 exakt: bei 10 Rückkehren sind beide Balken
-    // gleich (47,94 €), erst 11 liegt STRIKT darüber. Kippt der Pin auf 10,
-    // hat eine Umsortierung der Produkte den Quotienten auf 9,99… gedrückt.
-    expect(an.ersparnis / an.rueckkehrGesamt).toBeCloseTo(10, 10);
-    const bei10 = szenarien({ ...DEFAULTS, cacheErhalten: true, replans: 10 });
-    const bei11 = szenarien({ ...DEFAULTS, cacheErhalten: true, replans: 11 });
-    expect(bei10.antiPattern).toBeCloseTo(bei10.nurXhigh, 8);
-    expect(bei11.antiPattern).toBeGreaterThan(bei11.nurXhigh);
-    expect(an.balkenUeberAb).toBe(11);
+    // Mit dem gemessenen Re-Plan-Output von 1k Tokens ist eine Rückkehr fast
+    // gratis: 14,43 $ Ersparnis / 0,0507 $ = 300 exakt. Bei 300 sind beide
+    // Balken gleich, erst 301 liegt STRIKT darüber. Kippt der Pin auf 300,
+    // hat eine Umsortierung der Produkte den Quotienten auf 299,99… gedrückt.
+    expect(an.ersparnis / an.rueckkehrGesamt).toBeCloseTo(300, 6);
+    const bei300 = szenarien({
+      ...DEFAULTS,
+      cacheErhalten: true,
+      replans: 300,
+    });
+    const bei301 = szenarien({
+      ...DEFAULTS,
+      cacheErhalten: true,
+      replans: 301,
+    });
+    expect(bei300.antiPattern).toBeCloseTo(bei300.nurXhigh, 6);
+    expect(bei301.antiPattern).toBeGreaterThan(bei301.nurXhigh);
+    expect(an.balkenUeberAb).toBe(301);
   });
 });
 
@@ -398,41 +407,35 @@ describe("Modellwahl ändert die Zahlen", () => {
   const bei = (modell: ModellKey) =>
     szenarien({ ...DEFAULTS, modell, faktor: effortFaktorRegler(modell) });
 
-  it("Ersparnis in €: Astra 14,50 · Sol 19,23 · Terra 18,41 · Luna 4,30", () => {
-    expect(toEur(bei("astra").ersparnis)).toBeCloseTo(14.5, 1);
-    expect(toEur(bei("sol").ersparnis)).toBeCloseTo(19.23, 1);
-    expect(toEur(bei("terra").ersparnis)).toBeCloseTo(18.41, 1);
-    expect(toEur(bei("luna").ersparnis)).toBeCloseTo(4.3, 1);
+  it("Ersparnis in €: Astra 9,22 · Sol 12,64 · Terra 12,08 · Luna 2,84", () => {
+    expect(toEur(bei("astra").ersparnis)).toBeCloseTo(9.22, 1);
+    expect(toEur(bei("sol").ersparnis)).toBeCloseTo(12.64, 1);
+    expect(toEur(bei("terra").ersparnis)).toBeCloseTo(12.08, 1);
+    expect(toEur(bei("luna").ersparnis)).toBeCloseTo(2.84, 1);
   });
 
-  it("in Prozent: Sol −40 · Terra −49 · Luna −58 — nur Astra (−21) liegt unter opusplans −37", () => {
-    expect(bei("sol").ersparnisProzent).toBeCloseTo(40.1, 1);
-    expect(bei("terra").ersparnisProzent).toBeCloseTo(48.8, 1);
-    expect(bei("luna").ersparnisProzent).toBeCloseTo(58.3, 1);
-    expect(bei("astra").ersparnisProzent).toBeCloseTo(20.6, 1);
-    for (const k of ["sol", "terra", "luna"] as const)
+  it("in Prozent: Astra −22 · Sol −44 · Terra −54 · Luna −65 — alle vier über opusplans −13", () => {
+    expect(bei("astra").ersparnisProzent).toBeCloseTo(21.7, 1);
+    expect(bei("sol").ersparnisProzent).toBeCloseTo(43.7, 1);
+    expect(bei("terra").ersparnisProzent).toBeCloseTo(53.7, 1);
+    expect(bei("luna").ersparnisProzent).toBeCloseTo(64.5, 1);
+    for (const k of ["astra", "sol", "terra", "luna"] as const)
       expect(bei(k).ersparnisProzent).toBeGreaterThan(
         OPUSPLAN_REF.ersparnisProzent,
       );
-    expect(bei("astra").ersparnisProzent).toBeLessThan(
-      OPUSPLAN_REF.ersparnisProzent,
-    );
   });
 
-  it("in Euro (verschiedene Basen!): nur Luna spart weniger als opusplans 9,27 €", () => {
-    expect(toEur(bei("luna").ersparnis)).toBeLessThan(
-      toEur(OPUSPLAN_REF.ersparnis),
-    );
-    for (const k of ["astra", "sol", "terra"] as const)
+  it("in Euro (verschiedene Basen!): jedes Codex-Modell spart mehr als opusplans 1,25 €", () => {
+    for (const k of ["astra", "sol", "terra", "luna"] as const)
       expect(toEur(bei(k).ersparnis)).toBeGreaterThan(
         toEur(OPUSPLAN_REF.ersparnis),
       );
   });
 
-  it("Astra: teuerster Bruch (2,08 $), Break-even 3,35 MTok, Balken drüber ab 3", () => {
+  it("Astra: teuerster Bruch (1,90 $), Break-even 3,21 MTok, Balken drüber ab 3", () => {
     const a = bei("astra");
-    expect(a.bruchEinmal).toBeCloseTo(2.0792, 4);
-    expect(a.breakEvenRead).toBeCloseTo(3.348, 3);
+    expect(a.bruchEinmal).toBeCloseTo(1.9004, 4);
+    expect(a.breakEvenRead).toBeCloseTo(3.213, 3);
     expect(a.balkenUeberAb).toBe(3);
   });
 });
@@ -466,7 +469,7 @@ describe("Invarianten", () => {
       prev = cur;
     }
     expect(szenarien({ ...DEFAULTS, execRead: 60 }).ersparnis).toBeGreaterThan(
-      szenarien({ ...DEFAULTS, execRead: 30 }).ersparnis,
+      szenarien({ ...DEFAULTS, execRead: 21 }).ersparnis,
     );
   });
 

@@ -14,7 +14,7 @@
  *   Zeile 2 — das Szenario: Kontext, Exec-Read, Exec-Out, Re-Plans. Diese
  *   vier sind modul-globaler Zustand aus ./lib/scenarioState.ts, geteilt mit
  *   der opusplan-Folie — beide Rechner beschreiben dasselbe Szenario, sonst
- *   wären die Ersparnisse („opusplan −37 %“ gegen „Effort-Wechsel −40 %“)
+ *   wären die Ersparnisse („opusplan −13 %“ gegen „Effort-Wechsel −44 %“)
  *   nicht vergleichbar. Darum rechnet auch die Notiz den opusplan-Vergleich
  *   live über den geteilten Reglern (`opusplanVergleich`, 1-h-TTL — der
  *   TTL-Schalter der opusplan-Folie ist dort lokal) statt gegen die
@@ -71,7 +71,7 @@ watch(modellKey, (key) => {
   if (!faktorManuell.value) faktor.value = effortFaktorRegler(key);
 });
 // Szenario-Regler (ctxK, readM, outK, n): siehe Kopfkommentar, geteilt.
-// Default n = 3 wie auf der opusplan-Folie; der Balken kippt hier erst bei 6.
+// Default n = 2 wie auf der opusplan-Folie; der Balken kippt hier erst bei 10.
 const cacheErhalten = ref(false); // configuration_update, experimentell
 
 // Fokus abgeben, sobald Maus/Touch fertig sind — sonst frisst ein weiterhin
