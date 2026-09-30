@@ -179,6 +179,35 @@
       "summe_kontrafaktisch_usd": 1718.08,
       "summe_prozent": 41.8
     },
+    "kontrafaktisch_A_je_opus_modell": {
+      "claude-opus-5": {
+        "verteilung_prozent": {
+          "n": 39,
+          "p25": 38.4757,
+          "median": 44.4278,
+          "p75": 51.287,
+          "max": 56.8493
+        },
+        "sitzungen_billiger": 38,
+        "summe_ist_usd": 731.43,
+        "summe_kontrafaktisch_usd": 1446.63,
+        "summe_prozent": 49.4
+      },
+      "claude-opus-5-5": {
+        "verteilung_prozent": {
+          "n": 17,
+          "p25": -0.0938,
+          "median": 7.9399,
+          "p75": 10.708,
+          "max": 16.589
+        },
+        "sitzungen_billiger": 12,
+        "summe_ist_usd": 268.43,
+        "summe_kontrafaktisch_usd": 303.65,
+        "summe_prozent": 11.6
+      }
+    },
+    "exec_write_pro_read": 0.0147,
     "exec_read_je_sitzung_mtok": {
       "n": 56,
       "p25": 7.8992,

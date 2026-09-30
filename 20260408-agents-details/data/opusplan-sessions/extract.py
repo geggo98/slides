@@ -231,20 +231,30 @@ def kontrollrechnung(phasen_zeilen: list, wechsel_zeilen: list, kopf_p: list, ko
         erster = next((w for w in ws if w[wi["richtung"]] == "opus->sonnet"), None)
         cf_a = cf_nur - (bruch(erster) if erster else 0)
         cf_b = cf_nur - sum(bruch(w) for w in ws)
-        zeilen.append({"ist": ist, "a": cf_a, "b": cf_b,
+        zeilen.append({"ist": ist, "a": cf_a, "b": cf_b, "opus": opus,
+                       "exec_write": sum(z[pi["write_5m"]] + z[pi["write_1h"]]
+                                         for z in ps if z[pi["rolle"]] == "exec") / 1e6,
                        "exec_read": sum(z[pi["read"]] for z in ps if z[pi["rolle"]] == "exec") / 1e6,
                        "exec_out": sum(z[pi["out"]] for z in ps if z[pi["rolle"]] == "exec") / 1e6})
-    def stat(key: str) -> dict:
-        pct = [100 * (1 - z["ist"] / z[key]) for z in zeilen]
+    def stat(key: str, zs: list | None = None) -> dict:
+        zs = zeilen if zs is None else zs
+        pct = [100 * (1 - z["ist"] / z[key]) for z in zs]
         return {"verteilung_prozent": verteilung(pct),
                 "sitzungen_billiger": sum(1 for p in pct if p > 0),
-                "summe_ist_usd": round(sum(z["ist"] for z in zeilen), 2),
-                "summe_kontrafaktisch_usd": round(sum(z[key] for z in zeilen), 2),
-                "summe_prozent": round(100 * (1 - sum(z["ist"] for z in zeilen)
-                                              / sum(z[key] for z in zeilen)), 1)}
+                "summe_ist_usd": round(sum(z["ist"] for z in zs), 2),
+                "summe_kontrafaktisch_usd": round(sum(z[key] for z in zs), 2),
+                "summe_prozent": round(100 * (1 - sum(z["ist"] for z in zs)
+                                              / sum(z[key] for z in zs)), 1)}
     return {"n_sitzungen": len(zeilen), "ausgelassen": ausgelassen,
             "kontrafaktisch_A_nur_erster_bruch": stat("a"),
             "kontrafaktisch_B_alle_wechsel": stat("b"),
+            # Die gepoolte Zahl oben mischt zwei Preisstaende: Opus 5.5 ist billiger
+            # (Read 0,05x) und laesst opusplan viel weniger sparen als Opus 5.
+            "kontrafaktisch_A_je_opus_modell": {
+                m: stat("a", [z for z in zeilen if z["opus"] == m])
+                for m in sorted({z["opus"] for z in zeilen})},
+            "exec_write_pro_read": round(
+                sum(z["exec_write"] for z in zeilen) / sum(z["exec_read"] for z in zeilen), 4),
             "exec_read_je_sitzung_mtok": verteilung([z["exec_read"] for z in zeilen]),
             "exec_out_je_sitzung_mtok": verteilung([z["exec_out"] for z in zeilen])}
 
