@@ -55,8 +55,8 @@ describe("dominators", () => {
 });
 
 // Die Zahlen, die in der Fußzeile stehen: „21 von 41 Modellen mit Messwert“. Sie
-// werden hier aus Katalogen und AA-Snapshot vom 29.09.2026 nachgerechnet; bewegt
-// sich einer der beiden, stimmt die Fußzeile nicht mehr, und dieser Test sagt es.
+// werden hier aus Katalogen (29.09.2026) und AA-Snapshot (01.10.2026)
+// nachgerechnet; bewegt sich einer der beiden, stimmt die Fußzeile nicht mehr, und dieser Test sagt es.
 describe("coverage", () => {
   const erwartet: Record<VariantId, Record<ToolId, [number, number]>> = {
     // [Familien des Produkts, davon gezeichnet]
@@ -67,8 +67,8 @@ describe("coverage", () => {
       junie: [11, 11],
     },
     "aa-speed": {
-      cursor: [49, 38],
-      windsurf: [64, 44],
+      cursor: [49, 40],
+      windsurf: [64, 46],
       "jetbrains-ai": [41, 40],
       junie: [11, 11],
     },
@@ -170,7 +170,7 @@ describe("Texte für eine Auswahl", () => {
     expect(t).toContain("Wo Du wartest");
     // elf Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
     expect(t).toContain(
-      "gemini-3.5-flash-lite 320 tok/s → gemini-2.5-flash-lite 353 tok/s",
+      "gemini-3.5-flash-lite 326 tok/s → gemini-2.5-flash-lite 333 tok/s",
     );
     expect(t).not.toContain("(≈");
     expect(t.indexOf("claude-opus-5")).toBeLessThan(

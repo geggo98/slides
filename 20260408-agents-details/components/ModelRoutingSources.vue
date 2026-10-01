@@ -44,7 +44,7 @@ const sources = [
   {
     href: "https://artificialanalysis.ai/leaderboards/models",
     label: "Artificial Analysis: LLM-Leaderboard",
-    note: "Ansichten „Intelligenz × Kosten/Tempo“, Stand 29.09.2026 — Quellenangabe laut AA-Bedingungen",
+    note: "Ansichten „Intelligenz × Kosten/Tempo“, Stand 01.10.2026 — Quellenangabe laut AA-Bedingungen",
   },
   {
     href: "https://ai.google.dev/gemini-api/docs/pricing",
@@ -162,7 +162,7 @@ const caveats = [
   },
   {
     lead: "Artificial-Analysis-Ansichten:",
-    text: "Nur auf der Folie „Welches Modell wofür?“, Menü „Ansicht“, beim Öffnen Intelligenz × Kosten. Der Intelligence Index mischt Wissen, Logik und Agenten-Aufgaben und misst kein Coding-Agenten-Verhalten wie DeepSWE; „Kosten pro Task“ heißt dort Ø Kosten eines Index-Durchlaufs (Listenpreis × Tokenverbrauch, USD, hier zu 0,876 €), kein SWE-Task — die €-Werte der beiden Datenquellen sind nicht vergleichbar. AA führt jede Effort-Stufe als eigenen Eintrag; das Chart nimmt je Modell die mit dem höchsten Index, bei Gleichstand die billigere, und zeigt 24 Modelle mit Index ≥ 30 (die Seite trägt 681 Einträge, 101 aktive mit Kosten). Der Index steht auf eine Nachkommastelle, weil auf ganze Punkte gerundet viele Modelle gleichauf lägen. Tempo = Median der Output-Tokens/s; für gpt-6.1-sol und kimi-k3 führt AA keinen Wert, sie fehlen in der Tempo-Ansicht und haben in der Kostenansicht keinen Halo. Die Tempo-Ansicht rechnet intern mit der Zeit je 1 000 Tokens, damit die Front-Logik unverändert bleibt; die Achse trägt tok/s, schnell links. Fehlerbalken und Preis-Geisterringe gibt es dort nicht. Der Kontingent-Schalter gilt dort mit ×0,8 (dauerhaft +25 % seit 14.09.). Der Anbieter-Filter gilt in allen drei Ansichten mit derselben Katalogliste je Werkzeug (Stand 29.09.2026); ein Modell, das ein Werkzeug nicht führt, fehlt dort in jeder Ansicht.",
+    text: "Nur auf der Folie „Welches Modell wofür?“, Menü „Ansicht“, beim Öffnen Intelligenz × Kosten. Der Intelligence Index mischt Wissen, Logik und Agenten-Aufgaben und misst kein Coding-Agenten-Verhalten wie DeepSWE; „Kosten pro Task“ heißt dort Ø Kosten eines Index-Durchlaufs (Listenpreis × Tokenverbrauch, USD, hier zu 0,876 €), kein SWE-Task — die €-Werte der beiden Datenquellen sind nicht vergleichbar. AA führt jede Effort-Stufe als eigenen Eintrag; das Chart nimmt je Modell die mit dem höchsten Index, bei Gleichstand die billigere, und zeigt 25 Modelle mit Index ≥ 30 (die Seite trägt 688 Einträge, 110 aktive mit Kosten). Der Index steht auf eine Nachkommastelle, weil auf ganze Punkte gerundet viele Modelle gleichauf lägen. Tempo = Median der Output-Tokens/s; für gemini-4-argon führt AA noch keinen Wert, es fehlt in der Tempo-Ansicht und hat in der Kostenansicht keinen Halo. Die Tempo-Ansicht rechnet intern mit der Zeit je 1 000 Tokens, damit die Front-Logik unverändert bleibt; die Achse trägt tok/s, schnell links. Fehlerbalken und Preis-Geisterringe gibt es dort nicht. Der Kontingent-Schalter gilt dort mit ×0,8 (dauerhaft +25 % seit 14.09.). Der Anbieter-Filter gilt in allen drei Ansichten mit derselben Katalogliste je Werkzeug (Stand 29.09.2026); ein Modell, das ein Werkzeug nicht führt, fehlt dort in jeder Ansicht.",
   },
   {
     lead: "Board-Default:",
@@ -170,7 +170,7 @@ const caveats = [
   },
   {
     lead: "Ältere Modelle bei AA:",
-    text: "Ein Produkt bringt Modelle mit, die das aktuelle Feld nicht zeigt. Je Modellfamilie und Ansicht gilt die beste Konfiguration: gemessen vor geschätzt, dann höchster Index, dann billiger bzw. schneller — sonst hätte ein Label in zwei Ansichten zwei verschiedene Werte. Kein von AA geschätzter Index hat einen Kostenwert (0 von 490), „geschätzt“ erscheint deshalb nur in der Tempo-Ansicht. Kosten und Tempo abgekündigter Modelle sind der Stand des letzten AA-Laufs und können veraltet sein. Der Punkt ist die höchste Effort-Stufe der Familie; ein Produkt bietet nicht immer alle an (Windsurf führt jede einzeln). Das Board von DeepSWE misst nur sein eigenes Feld: dort haben Produkte keine älteren Modelle.",
+    text: "Ein Produkt bringt Modelle mit, die das aktuelle Feld nicht zeigt. Je Modellfamilie und Ansicht gilt die beste Konfiguration: gemessen vor geschätzt, dann höchster Index, dann billiger bzw. schneller — sonst hätte ein Label in zwei Ansichten zwei verschiedene Werte. Kein von AA geschätzter Index hat einen Kostenwert (0 von 485), „geschätzt“ erscheint deshalb nur in der Tempo-Ansicht. Kosten und Tempo abgekündigter Modelle sind der Stand des letzten AA-Laufs und können veraltet sein. Der Punkt ist die höchste Effort-Stufe der Familie; ein Produkt bietet nicht immer alle an (Windsurf führt jede einzeln). Das Board von DeepSWE misst nur sein eigenes Feld: dort haben Produkte keine älteren Modelle.",
   },
   {
     lead: "Anbieter-Filter und Produkte:",

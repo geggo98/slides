@@ -79,7 +79,7 @@ describe("Extras", () => {
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
     expect(PRODUCT_FAMILIES.size).toBe(90);
     expect(AA_EXTRAS_COST.length).toBe(28);
-    expect(AA_EXTRAS_SPEED.length).toBe(46);
+    expect(AA_EXTRAS_SPEED.length).toBe(48);
   });
 
   for (const [view, kurat, extras] of [

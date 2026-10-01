@@ -1490,7 +1490,7 @@ routeAlias: pareto-heute
 
 <!--
 DREI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
-„Intelligenz × Kosten“ (Artificial Analysis, Stand 29.09.2026). Die Regel
+„Intelligenz × Kosten“ (Artificial Analysis, Stand 01.10.2026). Die Regel
 ist in allen dreien dieselbe, nur die Daten wechseln.
 
 Artificial Analysis (AA) misst breite Fähigkeit — der Intelligence Index
@@ -1500,16 +1500,41 @@ Durchlaufs des Index, kein SWE-Task. Die €-Werte der beiden Datenquellen
 sind deshalb NICHT vergleichbar. AA liefert Preise in USD, umgerechnet
 mit 0,876 wie bei DeepSWE. Je Modell die beste Effort-Stufe, Index ≥ 30.
 
-Die AA-Kostenleiter hat fünf Sprossen: mimo-v2.6-flash 0,05 € (37,9) →
-mimo-v2.6-pro 0,12 € (46,3) → gpt-6.1-sol 0,63 € (51,8) → gpt-6-astra
-2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Opus 5.5 führt mit
-57,6, aber sein Vorsprung auf astra ist 4,9 Punkte für fast den doppelten
-Preis — das ist die Eskalations-Frage der Folie. Sonnet 5.5 und Fable 5.1
+Die AA-Kostenleiter hat sieben Sprossen: mimo-v2.6-flash 0,05 € (37,9) →
+gpt-6-luna 0,06 € (38,1) → mimo-v2.6-pro 0,12 € (46,3) → gpt-6.1-sol
+0,63 € (51,8) → gemini-4-argon 1,74 € (52,6) → gpt-6-astra 2,85 € (52,7)
+→ claude-opus-5.5 5,24 € (57,6). Opus 5.5 führt mit 57,6, aber sein
+Vorsprung auf astra ist 4,9 Punkte für fast den doppelten Preis — das
+ist die Eskalations-Frage der Folie.
+
+NEU AM 01.10.2026 — Gemini 4 Argon (Google, angekündigt 30.09.): AA misst
+es schon, Index 52,6 bei 1,99 $ = 1,74 € pro Index-Durchlauf. Damit ist
+es eine neue Sprosse zwischen gpt-6.1-sol und astra und dominiert
+glm-5.3, grok-4.7, kimi-k3, qwen3.8-2.4t und qwen3.8-max. Zu astra: 0,1
+Punkte Abstand, also gleichauf, bei 61 % der Kosten — AA selbst schreibt,
+Argon gleiche astra auf dem Index bei 60 % der Kosten. Drei Vorbehalte,
+alle gehören dazu. Erstens rechnet AA mit dem EINFÜHRUNGSPREIS (2 / 10 $
+je Million Tokens); ab 4 / 20 $ läge Argon bei rund 3,5 € und wäre von
+astra dominiert — dieselbe Pointe wie beim Gemini-Listenpreis weiter
+unten. Zweitens ist Argon nicht allgemein verfügbar, sondern bisher nur
+im Programm „Fairwind“ für Cyber-Defender, ohne Release-Termin; keiner
+der vier Produktkataloge führt es, die Anbieter-Presets sind deshalb
+unverändert. Drittens fehlt bei AA noch der Tempo-Wert — Argon steht nur
+in der Kostenansicht (und nicht in der Tempo-Ansicht).
+
+Ebenfalls neu auf der Front, aber NICHT wegen Argon: gpt-6-luna. AA hat
+mit dem neuen Snapshot den Index von 37,3 auf 38,1 korrigiert; damit
+schlägt es mimo-v2.6-flash (37,9) für einen Cent mehr (0,06 € gegen
+0,05 €). Die Leiter hat eine Sprosse mehr, weil sich eine Messung bewegt hat, nicht
+weil ein Modell erschienen ist — dasselbe Thema wie bei der Historie. Sonnet 5.5 und Fable 5.1
 sind dominiert: Opus 5.5 ist besser UND billiger als beide.
 
-Ansicht „Tempo“: Front nach Output-Tokens/s — gemini-3.8-flash 239 →
-muse-spark-1.3 174 → sonnet-5.5 138 → opus-5.5 93. gpt-6.1-sol und kimi-k3
-fehlen dort, AA führt für sie keine Geschwindigkeit. Der Schalter „Tempo
+Ansicht „Tempo“: Front nach Output-Tokens/s — gemini-3.8-flash 221 →
+muse-spark-1.3 163 → sonnet-5.5 139 → opus-5.5 90. Dieselben vier wie am
+29.09., nur die Zahlen sind gesunken (AA misst den Median laufend).
+gemini-4-argon fehlt dort, AA führt für das neue Modell noch keine
+Geschwindigkeit; gpt-6.1-sol und kimi-k3 haben seit dem neuen Snapshot einen
+Wert und stehen jetzt in der Ansicht. Der Schalter „Tempo
 als Größe“ legt die Geschwindigkeit als Halo um die Marker der
 Kostenansicht. Attribution: AA verlangt den Link, er steht in der
 Fußzeile.
@@ -1524,17 +1549,17 @@ Modelle haben. Achsen und Quadranten-Linien (Median) folgen der Auswahl;
 Punkts nennt das Modell, das ihn strikt übertrifft. Hohle, gestrichelte
 Marker (nur Tempo-Ansicht) haben einen von AA geschätzten Index.
 
-Kostenansicht, die vier Produkte:
+Kostenansicht, die vier Produkte (Argon steht in keinem Katalog):
 - JetBrains AI (21 von 41 Modellen mit Kostenwert): gemini-3.1-flash-lite 0,035 € (15,6) → gpt-5-mini 0,047 € (16,8) → gemini-3.5-flash-lite 0,11 € (22,2) → gpt-5.6-luna 0,16 € (37,3) → gpt-5.6-terra 1,23 € (42,1) → gpt-5.6-sol 1,74 € (47,0) → claude-opus-5 5,13 € (50,8). Kein Opus 5.5, kein GPT-6: Der Katalog stammt von der Hilfeseite vom 06.08./14.09. und hat seit IDE 2026.1 keinen Neuzugang.
-- Junie (11 von 11): gpt-6-luna 0,06 € (37,3) → gpt-6-sol 0,92 € (47,5) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Eine Modellgeneration vor dem AI Assistant.
-- Windsurf (33 von 64): gpt-6-luna 0,06 € (37,3) → glm-5.3-flash 0,22 € (41,8) → gpt-6-sol 0,92 € (47,5) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6).
+- Junie (11 von 11): gpt-6-luna 0,06 € (38,1) → gpt-6-sol 0,92 € (47,6) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Eine Modellgeneration vor dem AI Assistant.
+- Windsurf (33 von 64): gpt-6-luna 0,06 € (38,1) → glm-5.3-flash 0,22 € (41,8) → gpt-6-sol 0,92 € (47,6) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6).
 - Cursor (31 von 49): gpt-5-mini 0,047 € (16,8) → gpt-5.6-luna 0,16 € (37,3) → glm-5.3-flash 0,22 € (41,8) → gpt-5.6-terra 1,23 € (42,1) → muse-spark-1.3 1,41 € (48,1) → claude-opus-5 5,13 € (50,8) → claude-opus-5.5 5,24 € (57,6). Opus 5 und 5.5 stehen beide auf der Front: für 11 Cent mehr gibt es 6,8 Punkte.
 
 Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten; ≈ = Index geschätzt):
-- JetBrains AI (40 von 41, elf Sprossen; Scores bei langen Leitern nur im Tooltip): claude-opus-5 57 tok/s → claude-fable-5 63 tok/s → gpt-5.6-sol 85 tok/s → gpt-5.6-terra 98 tok/s → gpt-5.4 103 tok/s → gpt-5.6-luna 121 tok/s → gemini-3.6-flash 182 tok/s → gemini-3.5-flash 195 tok/s → gpt-5.4-mini 226 tok/s → gemini-3.5-flash-lite 320 tok/s → gemini-2.5-flash-lite 353 tok/s.
-- Junie (11 von 11): claude-opus-5.5 93 tok/s (57,6) → claude-sonnet-5.5 138 tok/s (56,0) → gemini-3.8-flash 239 tok/s (40,9).
-- Cursor (38 von 49): claude-opus-5.5 93 tok/s (57,6) → claude-sonnet-5.5 138 tok/s (56,0) → muse-spark-1.3 174 tok/s (48,1) → gemini-3.8-flash 239 tok/s (40,9) → gemini-3.7-flash 290 tok/s (39,1).
-- Windsurf (44 von 64): claude-opus-5.5 93 tok/s (57,6) → gpt-5.6-terra 98 tok/s (42,1) → gemini-3.8-flash 239 tok/s (40,9) → gemini-3.7-flash 290 tok/s (39,1).
+- JetBrains AI (40 von 41, elf Sprossen; Scores bei langen Leitern nur im Tooltip): claude-opus-5 52 tok/s → claude-fable-5 63 tok/s → gpt-5.6-sol 79 tok/s → gpt-5.6-terra 89 tok/s → gpt-5.4 92 tok/s → gpt-5.6-luna 112 tok/s → gemini-3.6-flash 177 tok/s → gemini-3.5-flash 190 tok/s → gpt-5.4-mini 216 tok/s → gemini-3.5-flash-lite 326 tok/s → gemini-2.5-flash-lite 333 tok/s.
+- Junie (11 von 11): claude-opus-5.5 90 tok/s (57,6) → claude-sonnet-5.5 139 tok/s (56,0) → gemini-3.8-flash 221 tok/s (40,9).
+- Cursor (40 von 49): claude-opus-5.5 90 tok/s (57,6) → claude-sonnet-5.5 139 tok/s (56,0) → muse-spark-1.3 163 tok/s (48,1) → gemini-3.8-flash 221 tok/s (40,9) → gemini-3.7-flash 291 tok/s (39,1).
+- Windsurf (46 von 64): claude-opus-5.5 90 tok/s (57,6) → gemini-3.8-flash 221 tok/s (40,9) → gemini-3.7-flash 291 tok/s (39,1). gpt-5.6-terra (jetzt 89 tok/s, Index 42,1) ist von opus-5.5 dominiert — 90 tok/s bei 57,6 — und fällt heraus; am 29.09. war es mit 98 tok/s noch schneller.
 
 Die Frage aus dem Publikum, was mit dem eigenen API-Schlüssel ist: JetBrains
 AI und Junie erlauben BYOK. Dann das Lab des Schlüssels anhaken (OpenAI,
@@ -1649,6 +1674,19 @@ Was der Filter NICHT sagt: Er zeigt Verfügbarkeit, nicht Preis. Cursor
 und Windsurf rechnen nach eigenen Tarifen ab; geplottet ist der
 API-Listenpreis. Und das jeweils eigene Modell fehlt — DeepSWE misst
 weder Cursors Composer noch Windsurfs SWE-1.x.
+
+Nachtrag (01.10.2026), Gemini 4 Argon: Das DeepSWE-Board führt es NICHT,
+und datacurve-ai/deep-swe hat noch kein Tracking-Issue dafür (offen sind
+u. a. #102 GPT 6.1 Sol und #104 dessen unabhängige Verifikation). Es gibt
+nur Googles eigene Angabe: 77,9 % auf DeepSWE v1.1, vor Opus 5.5 mit
+74,2 % und GPT-6 Astra mit 74,1 % (Vergleichstabelle des Herstellers,
+zitiert nach MarkTechPost vom 30.09.2026; ein Primärdokument von Google
+war am 01.10. nicht abrufbar). Weil selbstberichtet und von Datacurve
+nicht nachgerechnet, steht Argon weder im Chart noch in
+`PreliminaryBox` — dieselbe Logik wie bei Opus 5.5 und GPT-6 Sol: erst
+das Board, dann die Front. Sollte die Zahl sich bestätigen, wäre Argon
+der erste Punkt über 75 % auf diesem Board, und die Frage dieser Folie
+(„lohnt sich die oberste Sprosse?“) stellte sich neu.
 
 Wenn jemand fragt, warum das Deck so ein Datum betont: Diese Folie
 sagte Ende August „Opus 5 führt mit 74 %". Ein einziger Board-Eintrag

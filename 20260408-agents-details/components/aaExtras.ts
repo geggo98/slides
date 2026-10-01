@@ -7,7 +7,7 @@
 // Warum eigene Regeln je Ansicht
 // ------------------------------
 // Die Kostenansicht braucht einen Kostenwert, die Tempoansicht nur tok/s. Kein
-// von AA GESCHÄTZTER Index hat einen Kostenwert (am 29.09.2026: keiner von 490),
+// von AA GESCHÄTZTER Index hat einen Kostenwert (am 01.10.2026: keiner von 485),
 // „geschätzt“ kommt also nur in der Tempoansicht vor. Deshalb wird je Ansicht
 // getrennt gewählt und nicht einmal für beide.
 //

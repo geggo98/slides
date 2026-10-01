@@ -5,7 +5,7 @@
 //
 // Herkunft
 // --------
-// https://artificialanalysis.ai/leaderboards/models, Stand 29.09.2026. Die Rohdaten
+// https://artificialanalysis.ai/leaderboards/models, Stand 01.10.2026. Die Rohdaten
 // liegen als Archiv unter `data/artificialanalysis/` (`fetch.ts` erklärt, wie
 // sie aus der Seite kommen und warum nicht aus der API). Hier steht nur, was
 // daraus wird. Attribution laut AA-Bedingungen: Link auf artificialanalysis.ai
@@ -36,10 +36,10 @@
 // Boden: Index ≥ 30. Darunter stehen Modelle, die als Routing-Kandidaten keine
 // Rolle spielen und das Chart auf 40 Punkte aufblähen würden.
 
-import raw from "../data/artificialanalysis/board-20260929-18a57f05.json";
+import raw from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
-export const AA_STAND = "29.09.2026";
+export const AA_STAND = "01.10.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
 export const USD_EUR = 0.876;

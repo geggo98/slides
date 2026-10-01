@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import raw from "../../../data/artificialanalysis/board-20260929-18a57f05.json";
+import raw from "../../../data/artificialanalysis/board-20261001-ae520e03.json";
 import {
   AA_CFGS,
   AA_COST,
@@ -123,7 +123,7 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(24);
+    expect(AA_COST.length).toBe(25);
     const rows = raw as {
       deprecated: boolean;
       intelligenceIndexCostPerTask: unknown;
@@ -136,7 +136,7 @@ describe("aaData — die beiden Punktmengen", () => {
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „681 Einträge, 101 aktive mit Kosten“ und „24 Modelle“.
+    // Die Notiz nennt „688 Einträge, 110 aktive mit Kosten“ und „25 Modelle“.
     expect(src).toContain(
       `${rows.length} Einträge, ${mitKosten} aktive mit Kosten`,
     );
@@ -163,7 +163,7 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["gpt-6.1-sol", "kimi-k3"]);
+    expect(AA_NO_TPS).toStrictEqual(["gemini-4-argon"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -180,8 +180,10 @@ describe("aaData — die beiden Punktmengen", () => {
   it("hat die Fronten, die die Speaker Notes nennen", () => {
     expect(paretoFront(AA_COST).front.map((p) => p.label)).toStrictEqual([
       "mimo-v2.6-flash",
+      "gpt-6-luna",
       "mimo-v2.6-pro",
       "gpt-6.1-sol",
+      "gemini-4-argon",
       "gpt-6-astra",
       "claude-opus-5.5",
     ]);
