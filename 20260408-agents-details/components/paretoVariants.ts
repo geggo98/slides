@@ -158,6 +158,17 @@ const AA_ATTRIBUTION = {
   label: "artificialanalysis.ai",
 } as const;
 
+/**
+ * Modelle mit AA-Messwert, die heute kaum jemand buchen kann. Der Absatz der
+ * Kostenansicht ergänzt bei ihnen „sofern verfügbar“: sonst liest sich die
+ * Front wie eine Auswahl, obwohl die Sprosse nur auf dem Papier steht.
+ * gemini-4-argon: nur im Programm „Fairwind“ für Cyber-Defender, ohne
+ * Termin für die allgemeine Freigabe (Google-Blog, 30.09.2026).
+ */
+const NUR_EINGESCHRAENKT = new Set(["gemini-4-argon"]);
+const kostenText = (p: Pt) =>
+  `${p.eur} € (${dez1(p.y)}${NUR_EINGESCHRAENKT.has(p.label) ? ", sofern verfügbar" : ""})`;
+
 const costFront = paretoFront(AA_COST).front;
 const speedFront = paretoFront(AA_SPEED).front;
 
@@ -216,7 +227,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       {
         t: " — im Zweifel unten anfangen, bei Fehlschlag eine Sprosse höher. ",
       },
-      ...leiter(costFront, (p) => `${p.eur} € (${dez1(p.y)})`),
+      ...leiter(costFront, kostenText),
       {
         t: `. Der Index misst breite Fähigkeit, nicht Coding-Agenten — die DeepSWE-Ansicht ordnet die Spitze deshalb anders.`,
       },
