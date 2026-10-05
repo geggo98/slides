@@ -18,12 +18,13 @@ import MonacoBlock from "@shared/components/MonacoBlock.vue";
 const props = withDefaults(defineProps<{ step?: number }>(), { step: 0 });
 
 const CODE = [
-  'model = "gpt-6-sol"  # oder astra, luna',
+  'model = "gpt-6.1-sol"  # oder gpt-6-astra',
   'model_reasoning_effort = "medium"',
   "# ⚠ Desktop-App ignoriert diesen Key (#18712)",
   'plan_mode_reasoning_effort = "xhigh"',
   "[features]",
-  "# ⚠ experimentell, nur Astra",
+  "# ⚠ experimentell, nur Astra und Sol 6.1",
+  "# (supports_reasoning_effort_updates)",
   "reasoning_effort_override = true",
 ].join("\n");
 
@@ -40,7 +41,7 @@ interface Markierung {
 
 // Schritte wie in CodexEffortTui.vue. 1 = Modellwahl (Default-Mode) → model
 // kräftig. 2 = Reasoning Level → model_reasoning_effort kräftig. 3 = „Model
-// changed to gpt-6-sol medium“: beide Zeilen sind geschrieben (grün) und
+// changed to gpt-6.1-sol medium“: beide Zeilen sind geschrieben (grün) und
 // bleiben es. 4 = /plan: nichts Neues. 5 = Modellwahl im Plan-Mode, gleiches
 // Modell — nichts wird geschrieben. 6 = Reasoning Level im Plan-Mode →
 // plan_mode_reasoning_effort schwach (ob der Wert dorthin geht, entscheidet
@@ -70,13 +71,17 @@ const HIGHLIGHTS: Record<number, Markierung[]> = {
 // 6,82 px je Zeichen bei 11 px) braucht mit Glyph-Spalte (14 px) und
 // Dekorationsspalte (4 px) rund 340 px und passt so in die 360 px breite
 // Folienspalte (Editor innen 358 px). Der Modell-Kommentar ist bewusst kurz
-// („astra, luna“ statt der vollen IDs — die stehen im TUI-Dialog daneben);
-// seit dem Wegfall von Terra (kein GPT-6 Terra) ist die Modellzeile ohnehin
-// nicht mehr die längste (gemessen mit playwright-tests/codex-tui-qa.ts,
-// tomlLine1).
-// Sieben Zeilen à 15 px + Innenabstand 2 × 6 px = 117 px; 125 px lässt Luft,
+// (ein Alternativmodell statt der Liste — die steht im TUI-Dialog daneben).
+// Die experimentell-Zeilen nennen die Allow-List: Codex sendet
+// configuration_update nur für Modelle, deren Katalogeintrag
+// `supports_reasoning_effort_updates` setzt (0.160: gpt-6-astra und
+// gpt-6.1-sol, models-manager/models.json); im Rechner steht dieselbe Liste
+// als CONFIG_UPDATE_SLUGS in lib/codexEffortMath.ts. Die Modellzeile
+// (gemessen mit playwright-tests/codex-tui-qa.ts, tomlLine1) bleibt unter
+// der längsten Zeile.
+// Acht Zeilen à 15 px + Innenabstand 2 × 6 px = 132 px; 140 px lässt Luft,
 // ohne dass Monaco eine vertikale Scrollbar einblendet.
-const HEIGHT = "125px";
+const HEIGHT = "140px";
 const EDITOR_OPTIONS: MonacoNs.editor.IStandaloneEditorConstructionOptions = {
   fontSize: 11,
   lineHeight: 15,

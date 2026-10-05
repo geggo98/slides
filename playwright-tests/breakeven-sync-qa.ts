@@ -215,7 +215,7 @@ const browser = await chromium.launch();
   );
   // Codex: Modell-Pille klicken, dann ArrowRight
   await go(page, CODEX, 0);
-  await ce.locator(".ce-modell button", { hasText: "Terra" }).click();
+  await ce.locator(".ce-modell button", { hasText: /^Sol 6$/ }).click();
   await page.waitForTimeout(50);
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(300);

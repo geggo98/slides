@@ -11,6 +11,8 @@
  *
  * Regler in zwei Zeilen (sieben Bedienelemente passen nicht in 848 px):
  *   Zeile 1 — Codex-spezifisch: Modell-Pillen, Effort-Faktor, „Cache erhalten“
+ *            (wirkt nur bei Modellen der Allow-List; sonst bleibt er bedienbar,
+ *            aber gedimmt und ohne Einfluss auf die Zahlen — wie in Codex)
  *   Zeile 2 — das Szenario: Kontext, Exec-Read, Exec-Out, Re-Plans. Diese
  *   vier sind modul-globaler Zustand aus ./lib/scenarioState.ts, geteilt mit
  *   der opusplan-Folie — beide Rechner beschreiben dasselbe Szenario, sonst
@@ -31,7 +33,7 @@
  *
  * Das „⚠ vorläufig“-Badge bleibt bei jedem Reglerstand sichtbar: die Volumina
  * sind von der opusplan-Folie geliehen, der Effort-Faktor stammt aus der
- * DeepSWE-Leiter (siehe ./lib/codexEffortMath.ts, Kopfkommentar).
+ * Artificial-Analysis-Leiter (siehe ./lib/codexEffortMath.ts, Kopfkommentar).
  *
  * Rechenmodell und Datenherkunft: ./lib/codexEffortMath.ts (per vitest gepinnt).
  * Chart: ./BreakEvenChart.vue (geteilt mit der opusplan-Folie).
@@ -41,7 +43,9 @@ import { fmt } from "./paretoData";
 import {
   DEFAULT_MODELL,
   MODELLE,
+  cacheBleibt,
   effortFaktorRegler,
+  modellByKey,
   kostenGeraden,
   opusplanVergleich,
   szenarien,
@@ -73,6 +77,19 @@ watch(modellKey, (key) => {
 // Szenario-Regler (ctxK, readM, outK, n): siehe Kopfkommentar, geteilt.
 // Default n = 2 wie auf der opusplan-Folie; der Balken kippt hier erst bei 10.
 const cacheErhalten = ref(false); // configuration_update, experimentell
+// Schalter an UND Modell auf der Allow-List: nur dann entfällt der Bruch.
+const modell = computed(() => modellByKey(modellKey.value));
+const cacheWirkt = computed(() =>
+  cacheBleibt({ modell: modellKey.value, cacheErhalten: cacheErhalten.value }),
+);
+const cacheIgnoriert = computed(
+  () => cacheErhalten.value && !modell.value.cacheUpdate,
+);
+const cacheTitle = computed(() =>
+  modell.value.cacheUpdate
+    ? `[features] reasoning_effort_override = true — configuration_update statt Prefix-Änderung; in Entwicklung (Stage UnderDevelopment, default aus). Codex 0.160 sendet es für ${modell.value.slug}.`
+    : `Codex 0.160 ignoriert den Schalter für ${modell.value.slug} still: supports_reasoning_effort_updates fehlt im Katalog (nur gpt-6-astra und gpt-6.1-sol). Der Cache bricht wie ohne Schalter.`,
+);
 
 // Fokus abgeben, sobald Maus/Touch fertig sind — sonst frisst ein weiterhin
 // fokussiertes Element den nächsten ArrowRight/ArrowLeft des Presenter-
@@ -127,8 +144,8 @@ const eur = computed(() => ({
 }));
 
 // Feste Skalen-Leiter statt fließendem Maximum (wie OpusplanBreakEven): kleine
-// Regler-Bewegungen lassen die Skala nicht zittern. Spannweite Luna (≈ 1 €)
-// bis Astra × Faktor 8 × 120 MTok (≈ 1 160 €), gemessen in codexEffortMath.
+// Regler-Bewegungen lassen die Skala nicht zittern. Spannweite Luna (≈ 0,5 €)
+// bis Astra × Faktor 8 × 120 MTok (≈ 1 150 €), gemessen in codexEffortMath.
 const BALKEN_LEITER = [
   2, 3, 5, 8, 12, 20, 30, 50, 80, 120, 200, 300, 500, 800, 1200,
 ];
@@ -198,15 +215,15 @@ const proMtokEur = computed(() => fmt(toEur(erg.value.proMtokErsparnis)));
 
 // ── Break-even-Chart (Geraden in €, Darstellung in ./BreakEvenChart.vue) ────
 const xStar = computed(() => erg.value.breakEvenRead);
-// x-Leiter {12, 20} wie opusplan: bei Regler-Faktor ≥ 1,5 liegt der Break-even
-// unter 5 MTok (per Test gepinnt); knapp über 1,0× wandert er nach rechts
+// x-Leiter {12, 20} wie opusplan: bei Regler-Faktor ≥ 2 liegt der Break-even
+// unter 5 MTok (per Test gepinnt; Sol 6.1 bei 1,5: 5,5); knapp über 1,0× wandert er nach rechts
 // hinaus, dann zeigt das Chart den Hinweis „→“ statt des Markers.
 const xMax = computed(() => (xStar.value > 12 ? 20 : 12));
 const xTicks = computed(() =>
   xMax.value === 12 ? [0, 4, 8, 12] : [0, 5, 10, 15, 20],
 );
-// y-Leiter über die ganze Spannweite der Modelle: Luna ≈ 1 € bis Astra ×
-// Faktor 8 auf 20 MTok ≈ 200 € (bei 120 MTok wären es 1 160 €, die liegen
+// y-Leiter über die ganze Spannweite der Modelle: Luna ≈ 0,5 € bis Astra ×
+// Faktor 8 auf 20 MTok ≈ 240 € (bei 120 MTok wären es 1 150 €, die liegen
 // aber rechts außerhalb der x-Achse).
 const Y_LEITER = [5, 10, 15, 20, 25, 40, 60, 80, 120, 200, 300, 500];
 const Y_TICKS: Record<number, number[]> = {
@@ -241,17 +258,24 @@ const chartLabel = computed(() =>
 );
 
 const warnung = computed(() => showAnti.value && n.value >= 1);
-const noteText = computed(() => {
+// Ohne Wirkung (Schalter an, Modell nicht auf der Allow-List) rechnet jeder
+// Text wie bei „aus“; der Zusatz sagt nur, warum der Schalter nichts ändert.
+const ignoriertHinweis = computed(() =>
+  cacheIgnoriert.value
+    ? ` Schalter ohne Wirkung: Codex sendet configuration_update nur für Astra und Sol 6.1.`
+    : "",
+);
+const noteBasis = computed(() => {
   const e = erg.value;
   if (showAnti.value) {
     if (n.value === 0)
-      return cacheErhalten.value
-        ? `Regler „Re-Plans“: ohne Cache-Bruch (Zielzustand) kostet jede Rückkehr in den Plan-Mode nur den neuen Plan auf xhigh (≈ ${replanEur.value} €).`
+      return cacheWirkt.value
+        ? `Regler „Re-Plans“: ohne Cache-Bruch kostet jede Rückkehr in den Plan-Mode nur den neuen Plan auf xhigh (≈ ${replanEur.value} €).`
         : `Regler „Re-Plans“: jede Rückkehr in den Plan-Mode ohne /compact kostet 2 zusätzliche Cache-Brüche (≈ ${bruchPaarEur.value} €) plus den neuen Plan auf xhigh (≈ ${replanEur.value} €).`;
     if (e.balkenUeberAb === 0)
       return `${n.value}× zurück in den Plan-Mode — und schon ohne Rückkehr ist der Effort-Wechsel hier teurer als „Nur xhigh“. Vor erneutem Planen: /compact.`;
-    const brueche = cacheErhalten.value
-      ? `je Rückkehr nur der neue Plan ≈ ${replanEur.value} € (ohne Bruch, Zielzustand)`
+    const brueche = cacheWirkt.value
+      ? `je Rückkehr nur der neue Plan ≈ ${replanEur.value} € (ohne Bruch)`
       : `je Rückkehr 2 Cache-Brüche ≈ ${bruchPaarEur.value} € + neuer Plan ≈ ${replanEur.value} €`;
     const schluss = Number.isFinite(e.ersparnisWegAb)
       ? `Ab ${e.balkenUeberAb}× liegt der Balken über „Nur xhigh“, allein die Brüche fressen die Ersparnis ab ${e.ersparnisWegAb}×`
@@ -259,18 +283,20 @@ const noteText = computed(() => {
     return `${n.value}× zurück in den Plan-Mode ohne /compact: ${brueche}. ${schluss}. Vor erneutem Planen: /compact.`;
   }
   if (showChart.value) {
-    if (cacheErhalten.value)
-      return `Ohne Cache-Bruch (Zielzustand) gibt es keinen Break-even: jedes MTok Exec-Cache-Read spart ${proMtokEur.value} €, der Wechsel lohnt ab dem ersten Token. Dein Regler: ${eingaben.value.execRead} MTok.`;
+    if (cacheWirkt.value)
+      return `Ohne Cache-Bruch gibt es keinen Break-even: jedes MTok Exec-Cache-Read spart ${proMtokEur.value} €, der Wechsel lohnt ab dem ersten Token. Dein Regler: ${eingaben.value.execRead} MTok.`;
     if (!Number.isFinite(e.breakEvenRead))
       return `Faktor ${fmt1(faktor.value)}×: xhigh kostet nicht mehr als medium, der Wechsel bringt nichts und zahlt den Bruch (${bruchEur.value} €) obendrauf — kein Break-even.`;
     return `Break-even bei ${breakEvenText.value} Exec-Cache-Read: der eine Bruch kostet ${bruchEur.value} €, jedes weitere MTok spart ${proMtokEur.value} € (bei Faktor ${fmt1(faktor.value)}×). Dein Regler: ${eingaben.value.execRead} MTok.`;
   }
-  if (cacheErhalten.value)
-    return `Ohne Cache-Bruch (configuration_update, Zielzustand): Effort-Wechsel spart ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh, jeder Faktor über 1,0× lohnt sich. Laut API-Doku nur GPT-6 Astra; Codex setzt es erst ab 0.155 vollständig um.`;
+  if (cacheWirkt.value)
+    return `Ohne Cache-Bruch (configuration_update): Effort-Wechsel spart ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh, jeder Faktor über 1,0× lohnt sich. In Codex 0.160 nur mit dem Feature reasoning_effort_override (in Entwicklung) und einem Modell der Allow-List (Astra, Sol 6.1).`;
   if (spart.value)
     return `Effort-Wechsel spart hier ${fmt(toEur(e.ersparnis))} € (−${prozent.value} %) gegenüber durchgängig xhigh — opusplan schafft hier ${opusplanSchafft.value} (1-h-TTL). Der eine Cache-Bruch kostet ${bruchEur.value} €, Break-even bei ${breakEvenText.value} Exec-Read.`;
   return `Effort-Wechsel kostet hier ${fmt(toEur(-e.ersparnis))} € mehr als „Nur xhigh“ — der Faktor ${fmt1(faktor.value)}× liegt unter dem Break-even ab ${breakEvenFaktorText.value}. Erst darüber zahlt sich der Cache-Bruch (${bruchEur.value} €) aus.`;
 });
+
+const noteText = computed(() => noteBasis.value + ignoriertHinweis.value);
 
 const balkenLabel = computed(
   () =>
@@ -308,9 +334,9 @@ const balkenLabel = computed(
         </label>
         <button
           class="ce-toggle"
-          :class="{ on: cacheErhalten }"
+          :class="{ on: cacheErhalten, ignoriert: cacheIgnoriert }"
           :aria-pressed="cacheErhalten"
-          title="[features] reasoning_effort_override = true — configuration_update statt Prefix-Änderung; experimentell"
+          :title="cacheTitle"
           @click="toggleCache"
         >
           Cache erhalten <span class="ce-exp">exp.</span>
@@ -543,6 +569,12 @@ const balkenLabel = computed(
 .ce-toggle.on {
   background: color-mix(in srgb, var(--color-text-info) 12%, transparent);
   color: var(--color-text-primary);
+}
+/* An, aber ohne Wirkung (Modell nicht auf der Allow-List): gedimmt, durchgestrichen */
+.ce-toggle.ignoriert {
+  background: none;
+  color: var(--color-text-tertiary);
+  text-decoration: line-through;
 }
 
 /* zweispaltiger Hauptbereich wie OpusplanBreakEven */

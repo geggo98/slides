@@ -852,7 +852,7 @@ clicks: 8
 
 <div class="text-xs opacity-60 leading-snug mt-2"><b>Von Hand (TUI):</b> erst <code>/model</code> (Modell + Stufe, schreibt <code>model</code> und <code>model_reasoning_effort</code>), dann <code>/plan</code>, dann <code>/model</code> erneut — <b>gleiches Modell</b>, andere Stufe: nur dann fragt Codex „Apply to Plan mode override“ und schreibt <code>plan_mode_reasoning_effort</code>. Nur für die Session: <kbd>Alt</kbd>+<kbd>,</kbd> / <kbd>Alt</kbd>+<kbd>.</kbd>.</div>
 
-<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). <code>reasoning_effort_override</code> soll das vermeiden — der 0.154/0.155-Crash auf Sol, Terra und Luna (HTTP 400, <a href="https://github.com/openai/codex/issues/44751">#44751</a>) ist seit 0.156 (22.09.) behoben, aber bis 0.156.1 bleibt die Cache-schonende Wirkung für <b>jedes</b> Modell aus, auch Astra; das schaltet erst 0.157 frei (noch Alpha). Effort-Faktor: <Link to="effort-falle">Effort-Falle, Kap. 7</Link>.</div>
+<div class="text-xs opacity-60 leading-snug mt-2">Der Effort-Wechsel <b>bricht den Cache</b> wie ein Modellwechsel: <code>reasoning.effort</code> gehört zum Prefix (<a href="https://github.com/openai/codex/issues/35416">#35416</a>). Der Ausweg <code>configuration_update</code> braucht <code>[features] reasoning_effort_override</code> (in Entwicklung, aus) und ein Modell aus Codex' Liste: in 0.160 nur <b>Astra</b> und <b>Sol 6.1</b> — sonst ignoriert Codex den Schalter still. Effort-Faktor: <Link to="effort-falle">Effort-Falle, Kap. 7</Link>.</div>
 
 </div>
 <div>
@@ -866,16 +866,15 @@ clicks: 8
 Klicks (acht, nur die Klicks laufen im Presenter- und im Publikumsfenster
 synchron; die Tipp-Animation läuft je Fenster). Erst der globale Teil, im
 Default-Mode: 1 tippt /model, die Slash-Zeile erscheint, dann öffnet sich
-„Select Model and Effort“ — GPT-6-Sol ist Default, das ALTE GPT-5.6-Sol
-„current“ (Katalog-Update vom 23.09.2026, PR #47332; Reihenfolge und
-Default-Markierung sind der Live-Backend-Stand vom Erscheinungstag, nicht
-der gebündelte Fallback-Katalog, der Astra zuerst listet). 2 „Select
-Reasoning Level for GPT-6-Sol“, der Cursor bleibt auf Medium. 3 „Model
-changed to gpt-6-sol medium“ — das schreibt model UND
-model_reasoning_effort GLOBAL, links werden beide Zeilen grün (die Meldung
-zeigt den Slug, Picker/Header/Status zeigen seit PR #46503 den
-Anzeigenamen „GPT-6-Sol“). Dann der Plan-Teil: 4 tippt /plan, die
-Statuszeile zeigt „Plan mode“. 5 tippt /model erneut — GPT-6-Sol ist jetzt
+„Select Model and Effort“ — GPT-6.1-Sol ist Default (Priorität 1 im
+gebündelten Katalog von rust-v0.160.0, seit 0.159.1), das VORIGE GPT-6-Sol
+„current“; Reihenfolge und Beschreibungen aus models.json, das Backend kann
+live umsortieren. 2 „Select Reasoning Level for GPT-6.1-Sol“, der Cursor
+bleibt auf Medium. 3 „Model changed to gpt-6.1-sol medium“ — das schreibt
+model UND model_reasoning_effort GLOBAL, links werden beide Zeilen grün (die
+Meldung zeigt den Slug, Picker/Header/Status zeigen seit PR #46503 den
+Anzeigenamen „GPT-6.1-Sol“). Dann der Plan-Teil: 4 tippt /plan, die
+Statuszeile zeigt „Plan mode“. 5 tippt /model erneut — GPT-6.1-Sol ist jetzt
 „current“ und BLEIBT gewählt. Das ist der Punkt, an dem Leute scheitern:
 Wer hier ein anderes Modell wählt, bekommt KEINEN Dialog, Codex schreibt
 model und model_reasoning_effort still global (should_prompt_plan_mode_
@@ -885,8 +884,8 @@ diese Falle). 6 der Cursor wandert von Medium auf Extra high; links ist
 plan_mode_reasoning_effort schwach markiert, weil erst der nächste Dialog
 entscheidet, ob der Wert dorthin geht. 7 „Apply reasoning change“ — Option
 1 „Apply to Plan mode override“ schreibt nur plan_mode_reasoning_effort,
-die Zeile leuchtet allein. 8 „Model changed to gpt-6-sol xhigh for Plan
-mode.“, Statuszeile GPT-6-Sol xhigh · Plan mode; links stehen alle drei
+die Zeile leuchtet allein. 8 „Model changed to gpt-6.1-sol xhigh for Plan
+mode.“, Statuszeile GPT-6.1-Sol xhigh · Plan mode; links stehen alle drei
 geschriebenen Zeilen grün. Zurück (←) nimmt jeden Schritt ohne Animation
 zurück. Das Verzeichnis ~/slides ist das dieses Decks — Easter Egg.
 
@@ -903,12 +902,13 @@ neue Modell-Metadaten supports_reasoning_effort_updates) — NACH 0.155.1
 „bringt vielleicht nichts“ (der Cache bricht trotzdem, s. u.), sondern
 „der Harness ist mit den 5.6er-Modellen nicht benutzbar“. Kein Panic, aber
 jede Session tot; Workaround laut Issue: Flag aus, neue Session. Nachbau mit dem brainless-Port (MIT,
-shared/components/brainless); die Texte sind wörtlich aus Codex CLI
-0.156.1 (fünf Screenshots 23.09.2026, Katalog-Update auf GPT-6 Sol/Luna
-vom selben Tag) bzw. aus den Quellen unten. Seit PR #46503 (18.09.,
+shared/components/brainless); die Dialogtexte sind wörtlich aus Codex CLI
+0.156.1 (fünf Screenshots 23.09.2026) und gegen rust-v0.160.0 gegengelesen,
+Modellnamen und -beschreibungen aus models.json von 0.160 (seit 05.10.;
+kein neuer Screenshot) bzw. aus den Quellen unten. Seit PR #46503 (18.09.,
 in 0.156) zeigen Picker, Reasoning-Titel, Header und Statuszeile
-Anzeigenamen („GPT-6-Sol“); nur die Ergebnis-Meldungen bleiben beim Slug
-(„gpt-6-sol“). Der Untertitel „Access legacy models …“ unter „Select
+Anzeigenamen („GPT-6.1-Sol“); nur die Ergebnis-Meldungen bleiben beim Slug
+(„gpt-6.1-sol“). Der Untertitel „Access legacy models …“ unter „Select
 Model and Effort“ ist mit derselben PR weggefallen. Die Fußzeile
 variiert seit PR #45831/#46697 je Dialogtyp: „enter select · esc back“
 für Modell- und Scope-Dialog, „enter default · s session · esc back“
@@ -921,7 +921,8 @@ Plan-Preset-Wert (models-manager/src/collaboration_mode_presets.rs, per
 collaborationMode/list an die TUI), unabhängig von model_reasoning_effort
 und Modell — der TUI-Test plan_mode.rs belegt genau diese Formulierung.
 
-Nachtrag (Faktencheck 23.09.2026): 0.156.0/0.156.1 sind jetzt stable
+Nachtrag (Faktencheck 23.09.2026, ÜBERHOLT — siehe Nachtrag vom 05.10.
+unten): 0.156.0/0.156.1 sind jetzt stable
 (22.09.2026). Der Crash ist weg, aber supports_reasoning_effort_updates
 steht dort für JEDES Modell auf false (Default, models-manager/src/model_info.rs,
 Fallback-Konstruktor) — auch gpt-6-astra. Codex sendet aktuell also nie
@@ -941,6 +942,59 @@ aber Codex' eigenes Client-Gate zieht (Stand 23.09.) nicht nach. GPT-6 Terra
 existiert noch nicht (developers.openai.com/api/docs/models/gpt-6-terra
 liefert 404, 23.09.2026). Details und die aktualisierten astra-Zahlen: die
 eigene „Effort-Falle"-Folie (Kap. 7, gleich nach der Historie).
+
+Nachtrag (Faktencheck 05.10.2026, Codex rust-v0.160.0 vom 01.10., stable;
+Quellen im Tag und auf main geprüft, OpenAI-Doku als rohes .md): Der Stand
+vom 23.09. ist überholt.
+
+1. Allow-List. Das Gate ist core/src/client.rs,
+reasoning_effort_override_enabled() (im Tag L552–556, auf main L559–562):
+Feature an UND Provider OpenAI UND model_info.supports_reasoning_effort_
+updates. Im gebündelten Katalog (models-manager/models.json) steht das Flag
+auf true bei gpt-6-astra und gpt-6.1-sol. gpt-6-sol, gpt-6-luna und die
+daybreak-Einträge setzen es nicht (Default false, models-manager/src/
+model_info.rs L140); gpt-5.6-*, gpt-5.5 und codex-auto-review tragen
+ausdrücklich false. Astra seit 0.157.0 (stabil 25.09., PR #47397 vom 23.09.).
+Sol 6.1: PR #49318 (29.09.), im Katalog seit 0.159.1 und dort Default-Modell;
+0.158.0 und 0.159.0 kennen es nicht. Terra gibt es bei GPT-6 nicht.
+
+2. „Still ignoriert“ stimmt: Ohne Flag filtert build_responses_request
+gespeicherte ConfigurationUpdate-Items aus der Request-Kopie (L896–900),
+und der Request-Effort bleibt der gewählte. Meldung gibt es keine; die TUI
+benutzt das Flag nirgends (Codesuche über das Repo). Ebenfalls aus sind
+Guardian-/Basic-Sessions und Memory-Consolidation (L505–514).
+
+3. Das Feature selbst ist unverändert Stage::UnderDevelopment, default false
+(features/src/lib.rs L1726–1731). Ohne [features] reasoning_effort_override
+= true bricht der Cache bei JEDEM Modell, auch bei Astra und Sol 6.1 — die
+Allow-List ist nur die zweite Hürde. Grenze: Der Live-Katalog des Backends
+kann das gebündelte Flag überschreiben; ohne Login nicht geprüft.
+
+4. OpenAI-Doku, 05.10.: reasoning (Abschnitt „Change reasoning mid-
+conversation“) „Configuration updates are supported by the GPT-6 model
+family in standard, single-agent mode. They change only reasoning effort.“;
+prompt-caching „On supported GPT-6 and later models …“. API-seitig also die
+GPT-6-Familie, Codex' Allow-List ist enger.
+
+5. Geprüfter Text („Why it works across the entire GPT-6 suite …“): Halb
+richtig. „Prior to GPT-6 … changing reasoning.effort altered the hidden
+instruction“ gilt auch für GPT-6, sobald man den Request-Parameter ändert —
+neu ist nur der Ausweg per configuration_update (Request-Parameter bleibt
+gleich, das Item steht im input). „Immediately invalidated“ ist übertrieben:
+der statische Prefix bleibt (#35416: 9 984 von ~15 k Tokens), es bricht der
+Sitzungsanteil. „GPT-6.1 and future iterations“ ist Spekulation, die Doku
+sagt „GPT-6 and later“ und nennt standard und single-agent als Bedingung.
+„Astra, Sol or Luna“ stimmt API-seitig für die Familie, in Codex nur für
+Astra und Sol 6.1 — und nur mit eingeschaltetem Feature. „KV cache“: OpenAI
+spricht von Prompt-Caching und gecachtem Prefix.
+
+6. Nachbau und Beispiel-config.toml dieser Folie zeigen seit 05.10. GPT-6.1-
+Sol statt GPT-6-Sol: Sol 6.1 ist Katalog-Default (PR #49318, Priorität 1)
+und steht auf der Allow-List. Picker-Reihenfolge und Beschreibungen aus
+models.json von 0.160, Dialogtexte aus den 0.156.1-Screenshots (Titel und
+Scope-Optionen in 0.160 unverändert gegengelesen). Die toml nennt die
+Allow-List als Kommentar (supports_reasoning_effort_updates); im Rechner
+steht sie als CONFIG_UPDATE_SLUGS in lib/codexEffortMath.ts.
 
 Versionsbeleg: PR openai/codex#12303 „Improve Plan mode reasoning
 selection flow“, gemerged 21.02.2026, erstes Release
@@ -1013,10 +1067,12 @@ core/tests/suite/reasoning_effort_override.rs erwartet dort noch
 medium,high,high,low — der Cache bricht also trotzdem. Das Pinning
 (PR #43795, 08.09.) liegt erst in 0.155.0-alpha. API-Doku
 (…/guides/reasoning#change-reasoning-mid-conversation): „supported only by
-GPT-6 Astra … in standard, single-agent mode“; Codex' Gate ist breiter
-(alle Responses-Lite-Modelle: astra, sol, terra, luna) — ob die API es auf
-5.6 honoriert, ist unbelegt. Der Schalter „Cache erhalten“ auf der Folie
-rechnet den Zielzustand (Bruch 0), nicht den heutigen.
+GPT-6 Astra … in standard, single-agent mode“ (Stand 16.09.; seit 05.10.
+„the GPT-6 model family“). Codex' Gate war damals die Responses-Lite-
+Fähigkeit (alle Modelle); seit PR #46530 ist es eine eigene Fähigkeit mit
+Allow-List — siehe Nachtrag 05.10. Der Schalter „Cache erhalten“ der Folie
+codex-effort-wechsel rechnet den Bruch nur für Allow-List-Modelle auf 0 und
+ist bei den anderen wirkungslos, wie in Codex.
 -->
 
 ---
@@ -1035,7 +1091,7 @@ Dieselbe Rechnung wie bei `opusplan` — gleiches Szenario, gleiche Regler (sie 
 
 <CodexEffortBreakEven :step="$clicks" />
 
-<div class="text-xs opacity-70 leading-snug mt-1">Preise/MTok, vorläufig (Sol-Aktion): Astra $10/$50 · Sol $4/$20 · Terra $2/$12 · Luna $0,20/$1,20 · Read 0,1× · Write 1,25× · TTL 30 min · 1 USD = 0,876 €</div>
+<div class="text-xs opacity-70 leading-snug mt-1">Preise/MTok (In/Out), 05.10.2026: Astra $10/$50 · Sol 6.1 $2/$10 · Sol 6 $2/$10 · Luna $0,10/$0,50 · Read 0,1× (Sol 6.1: 0,05×) · Write 1,25× · TTL 30 min · 1 USD = 0,876 €. Effort- und Fähigkeitsfaktor: <a href="https://artificialanalysis.ai/leaderboards/models">Artificial Analysis</a>, 01.10.2026</div>
 
 <!--
 Klicks wie auf der opusplan-Folie: 1 blendet das Break-even-Chart ein, 2
@@ -1048,95 +1104,115 @@ toCodexSzenario in codexEffortMath.ts).
 
 Rechenmodell (components/lib/codexEffortMath.ts, per vitest gepinnt):
 Gleiches Modell in beiden Phasen, nur der Effort wechselt. Kosten je Phase
-= Output×Out-Preis + Cache-Read×0,1×In + Cache-Write×1,25×In, alle Volumina
-von der opusplan-Folie (Plan: 30k Out, 4,1M Read, 160k Write; Kontext 180k;
-Exec: Regler, 80k Out je 21 MTok Read) × Fähigkeitsfaktor c = pass@1 Opus
-5 ÷ bestes pass@1 des Modells (Astra 0,99, Sol 1,01, Terra 1,06, Luna 1,10
-— alle unter den Fehlerbalken, bewusst trotzdem drin). xhigh = Faktor f ×
-medium für die GANZE Phase; f ist €/Task xhigh ÷ €/Task medium aus der
-DeepSWE-Leiter (paretoData.ts, Stand 03.09.): Astra 1,49, Sol 2,54, Terra
-3,63, Luna 6,75 — der Regler rundet auf eine Stelle. Cache-Bruch wie bei
+= Output×Out-Preis + Cache-Read×Read-Preis + Cache-Write×1,25×In, alle
+Volumina von der opusplan-Folie (Plan: 30k Out, 4,1M Read, 160k Write;
+Kontext 180k; Exec: Regler, 80k Out je 21 MTok Read) × Fähigkeitsfaktor
+c = bester Intelligence Index von Opus 5.5 ÷ bester Index des Modells
+(Astra 1,09, Sol 6.1 1,11, Sol 6 1,21, Luna 1,51). Ein Index-Verhältnis ist
+kein Tokenverhältnis: c ist eine Setzung, bei Luna die gröbste. xhigh =
+Faktor f × medium für die GANZE Phase; f ist USD/Task xhigh ÷ USD/Task
+medium aus dem Artificial-Analysis-Snapshot vom 01.10.2026 (aaData.ts,
+`intelligenceIndexCostPerTask`): Astra 1,50, Sol 6.1 1,84, Sol 6 2,11,
+Luna 2,41 — der Regler rundet auf eine Stelle. Cache-Bruch wie bei
 opusplan 0,85 × Kontext × Write, aber 1,25× statt 2× (Anthropic 1-h-TTL).
-Sol-Defaults (f 2,5, 21 MTok, 2 Re-Plans): Nur medium 11,58 € · Nur xhigh
-28,94 € · Effort-Wechsel 16,30 € · Ersparnis 12,64 € (−44 %) · Bruch 0,68 €
-· Break-even 1,1 MTok Exec-Read (Astra 3,2 — teuerster Bruch, 1,66 €) ·
-Balken über „Nur xhigh“ ab 10 Rückkehren, allein die Brüche ebenfalls ab 10.
+Der Schalter „Cache erhalten“ setzt den Bruch nur für Modelle der
+Allow-List auf 0 (Astra, Sol 6.1 — siehe Nachtrag 05.10. auf der Folie
+davor); bei Sol 6 und Luna ist er wirkungslos, die Zahlen bleiben gleich,
+die Notiz sagt es, und der Knopf steht durchgestrichen.
+
+Umstellung vom 05.10.2026: Vorher rechnete die Folie mit den 5.6-Modellen
+(Sol, Terra, Luna) und DeepSWE-Faktoren (Sol 5.6 2,54, Terra 3,63, Luna 6,75);
+jetzt die aktuellen GPT-6-Modelle, weil nur Astra und Sol 6.1 überhaupt
+einen configuration_update bekommen. Terra entfällt (kein GPT-6 Terra).
+DeepSWE führt für diese Modelle nur Astra (74 % pass@1 auf xhigh), AA alle
+vier — deshalb AA, wie auf der Pareto-Folie. Die Faktoren sind nicht
+dasselbe: ein AA-Task ist ein Eval-Task des Index-Mixes, kein SWE-Task, und
+die Effort-Faktoren fallen kleiner aus (Astra 1,50 gegen 1,49 bei DeepSWE,
+Sol 5.6 2,35 gegen 2,54, Luna 5.6 5,47 gegen 6,75).
+
+Sol-6.1-Defaults (f 1,8, 21 MTok, 2 Re-Plans): Nur medium 3,91 € · Nur xhigh
+7,03 € · Effort-Wechsel 5,14 € · Ersparnis 1,89 € (−27 %) · Bruch 0,37 € ·
+Break-even 3,5 MTok Exec-Read · Balken über „Nur xhigh“ ab 3 Rückkehren,
+allein die Brüche ebenfalls ab 3. Mit eingeschaltetem Schalter (Allow-List):
+Ersparnis 2,26 € (−32 %), Balken über „Nur xhigh“ erst ab 129 Rückkehren —
+eine Rückkehr kostet nur noch den neuen Plan (0,02 $).
 Stand der Volumina: 30.09.2026 auf die 57 echten Opus→Sonnet-Sessions
 umgestellt (data/opusplan-sessions/); vorher die 42,8k-Requests-Mediane.
 Die Folie selbst nennt die Vorläufigkeit nur im Badge des Rechners
-(geliehene Volumina, geschätzter Faktor) und in der Preiszeile (Sol-
-Aktionspreis); die Rechnung mit dem Fähigkeitsfaktor steht nur hier.
-Ersparnis je Modell: Sol 12,64 € (−44 %), Terra 12,08 € (−54 %), Astra
-9,22 € (−22 %), Luna 2,84 € (−65 %) — opusplan bei SEINEN Defaults: 1,25 €
-(−13 %), aus opusplanMath abgeleitet (OPUSPLAN_REF), nicht abgetippt. Der
-Euro-Vergleich hinkt: die Codex-Basis „Nur xhigh“ (Sol 28,94 €) ist eine
-teurere Session als „Nur Opus“ (9,61 €), weil Sol über Sonnet 5.5 liegt und
-f die ganze Session multipliziert. Preisneutral ist der Prozentwert — und
-da liegen jetzt alle vier Codex-Modelle über opusplan (früher nur Sol, Terra
-und Luna); das sagt die Note-Box („opusplan schafft −13 %“). Der Grund ist
-opusplan, nicht Codex: mit Opus 5.5 liest Opus so billig wie Sonnet (0,05×),
-die Ersparnis schrumpft von −37 % auf −13 %. Die Regler-Fußnote trägt bewusst keine Zahl mehr: sie wäre nur bei
-den Defaults wahr, die Balken darüber bewegen sich.
+(geliehene Volumina, geschätzter Faktor); die Rechnung mit dem Fähigkeits-
+faktor steht nur hier.
+Ersparnis je Modell (jeweils mit eigenem Regler-Faktor): Astra 10,15 €
+(−22 %), Sol 6.1 1,89 € (−27 %), Sol 6 5,42 € (−37 %), Luna 0,44 € (−42 %) —
+opusplan bei SEINEN Defaults: 1,25 € (−13 %), aus opusplanMath abgeleitet
+(OPUSPLAN_REF), nicht abgetippt. Der Euro-Vergleich hinkt, weil die Basen
+verschieden teuer sind: „Nur xhigh“ kostet bei Astra 46,86 €, bei Sol 6.1
+7,03 €, bei Luna 1,04 €, „Nur Opus“ 9,61 €. Preisneutral ist der Prozentwert
+— und da liegen alle vier Codex-Modelle über opusplan (−22 … −42 % gegen
+−13 %); nur Luna spart in Euro weniger als opusplan (0,44 gegen 1,25 €).
+Der Grund für opusplans geringe Ersparnis ist opusplan, nicht Codex: mit
+Opus 5.5 liest Opus so billig wie Sonnet (0,05×), die Ersparnis schrumpft
+von −37 % auf −13 %. Die Regler-Fußnote trägt bewusst keine Zahl: sie wäre
+nur bei den Defaults wahr, die Balken darüber bewegen sich.
 
 Annahme „Effekt kleiner als bei Claude, weil Codex-Modelle billiger sind
 und der Effort weniger ausmacht“ — geprüft, stimmt nur zum Teil: (a) pro
-Token billiger als Opus 5 sind Sol/Terra/Luna, Astra kostet das Doppelte;
-für die Exec-Phase zählt aber Sonnet 5.5 ($2/$10), und Sol ($4/$20) liegt
-darüber. (b) Der Effort-Faktor ist NICHT klein: 1,5× (Astra) bis 6,8×
-(Luna), Sol 2,5× — dasselbe Verhältnis wie die Opus/Sonnet-Preise.
-Zweiter, unabhängiger Datenpunkt: Artificial Analysis Index v4.3,
-gpt-5.6-terra, gleiche Aufgaben je Stufe — Output-Tokens medium 17 M →
-xhigh 52 M (3,1×), Laufkosten $447 → $1 187 (2,7×). OpenAI selbst bleibt
-qualitativ: „Higher reasoning effort can improve results for complex
-tasks, but it takes longer and uses more tokens.“ (learn.chatgpt.com/
-docs/models). (c) Kleiner ist allein der Write-Multiplikator (1,25× statt
-2×). Absolut liegt der einzelne Bruch bei Sol gut ein Viertel ÜBER opusplan
-(0,68 € gegen 0,54 €), weil Sol pro Input-Token das Doppelte von Sonnet
-kostet; das Rückkehr-Paar liegt darunter (1,36 € gegen 1,61 €), weil ohne
-Modellwechsel kein Opus-Write anfällt.
+Token kosten Sol 6.1 und Sol 6 ($2/$10) so viel wie Sonnet 5.5, Luna
+($0,10/$0,50) weniger, Astra ($10/$50) das 2,5-Fache von Opus 5.5 ($4/$20);
+Preise: developers.openai.com/api/docs/pricing, 05.10.2026. (b) Der
+Effort-Faktor ist kleiner als bei den 5.6ern, aber nicht klein: 1,5 (Astra)
+bis 2,4 (Luna) auf AA, Opus 5.5 liegt dort bei 2,59 (3,46 $ ÷ 1,34 $) — ein
+ähnliches Verhältnis wie bei Codex' Sol/Luna, deutlich über Astra. OpenAI
+selbst bleibt qualitativ: „Higher reasoning effort can improve results for
+complex tasks, but it takes longer and uses more tokens.“ (learn.chatgpt.com/
+docs/models). (c) Kleiner ist der Write-Multiplikator (1,25× statt 2×) und,
+bei Sol 6.1, der Read (0,05× wie bei Opus 5.5): der einzelne Bruch kostet bei
+Sol 6.1 0,37 € gegen 0,54 € bei opusplan; das Rückkehr-Paar liegt mit 0,75 €
+weit unter opusplans 1,61 €, weil ohne Modellwechsel kein Opus-Write
+anfällt. Gegenläufig: der billigere Read drückt die Ersparnis je MTok —
+deshalb liegt der Break-even bei Sol 6.1 mit 3,5 MTok über dem von Sol 6
+(1,5) und Luna (1,1), und bei Faktor 1,5 lohnt sich der Wechsel dort erst
+ab 5,5 MTok.
 
-f gilt für die ganze Phase, nicht nur den Output — das ist keine offene
-Frage, das Archiv beantwortet sie: Board-Stand c55e58f2 vom 03.09.
-(data/deepswe/, derselbe, aus dem EFFORTS stammt), xhigh/medium: Sol
-Kosten 2,54× · Cache-Reads 2,87× · Output 2,21× · Schritte 1,42× (Terra
-3,65/4,68/3,37/1,71 · Luna 7,10/14,2/5,5/3,0 · Astra 1,49/1,45/1,45/1,10 ·
-Opus 5 2,76/3,19/2,48/1,70). Die Reads wachsen mindestens so stark wie der
-Output, weil xhigh mehr Schritte macht und je Schritt mehr Kontext trägt
-(Sol 45k → 90k Cache je Schritt). f auf die Reads ist also eher
-konservativ; nur auf den Output angewandt gäbe es f_eq ≈ 1,3 und 3,25 €
-Ersparnis bei Sol — was dem 2,54× widerspräche, aus dem f stammt. Offen
-bleibt: ein Plan→Exec-Split auf einem Modell ist kein ganzer Benchmark-
-Lauf, und der Exec-Mix der Folie (80 % Read-Kosten, 20 % Out) ist nicht
-der von DeepSWE (Sol: 44 % Read, 33 % unkachiert, 23 % Out) — deshalb
-„vorläufig“. Und die Leiter ist eine Obergrenze: medium löst weniger
-Aufgaben und gibt früher auf, bei Terra (35 % pass@1 auf medium) und Luna
-(11 %) dominiert das, Sol (61 %) und Astra (73 %) sind belastbar. Deshalb
-ist f ein Regler.
+f gilt für die ganze Phase, nicht nur den Output. AA liefert nur die Summe
+(USD/Task), keine Aufteilung in Reads, Output und Schritte. Die Aufteilung
+stammt aus dem DeepSWE-Archiv (data/deepswe/, Board-Stand c55e58f2 vom
+03.09.), und dort nur für Astra, das auch auf der Folie steht: xhigh/medium
+Kosten 1,49× · Cache-Reads 1,45× · Output 1,45× · Schritte 1,10× — die
+Reads wachsen also so stark wie der Output; für die 5.6er (Sol 2,54 · 2,87 ·
+2,21 · 1,42, Terra 3,65/4,68/3,37/1,71, Luna 7,10/14,2/5,5/3,0) wachsen sie
+stärker. f auf die Reads anzuwenden ist deshalb eher konservativ; nur auf
+den Output angewandt gäbe es einen kleineren Wert und eine kleinere
+Ersparnis. Offen bleibt: ein Plan→Exec-Split auf einem Modell ist kein
+ganzer Benchmark-Lauf, und der Exec-Mix der Folie (Read-Kosten dominieren)
+ist nicht der des Index — deshalb „vorläufig“. Und die Leiter ist eine
+Obergrenze: medium löst weniger Aufgaben. Auf AA erreicht medium 94 %
+(Astra), 92 % (Sol 6.1), 84 % (Sol 6) und 79 % (Luna) des besten Index —
+bei Luna und Sol 6 ist die Qualitätslücke also spürbar. Deshalb ist f ein
+Regler.
 
-Preise: developers.openai.com/api/docs/pricing, geprüft 16.09.2026 —
-Astra $10/$1/$12,50/$50 (In/Cached/Write/Out), Sol $4/$0,40/$5/$20 (Aktion
-„at least through November 21, 2026“, regulär $5/$30), Terra
-$2/$0,20/$2,50/$12, Luna $0,20/$0,02/$0,25/$1,20. Read 0,1×, Write 1,25×,
-prompt_cache_options.ttl kennt nur "30m"; Codex fordert keine Retention
-an. Im ChatGPT-Abo zählt das Kontingent, nicht der Preis — die €-Werte
-sind wie bei opusplan das API-Äquivalent.
+Preise: developers.openai.com/api/docs/pricing, geprüft 05.10.2026
+(In/Cached/Write/Out, Standard, kurzer Kontext) — Astra $10/$1/$12,50/$50,
+Sol 6.1 $2/$0,10/$2,50/$10, Sol 6 $2/$0,20/$2,50/$10, Luna
+$0,10/$0,01/$0,125/$0,50. Read 0,1× (Sol 6.1: 0,05×), Write 1,25×. Die
+Sol-Aktion („through November 21, 2026“) gilt nur für gpt-5.6-sol, das hier
+nicht mehr steht. prompt_cache_options.ttl kennt nur "30m"; Codex fordert
+keine Retention an. Im ChatGPT-Abo zählt das Kontingent, nicht der Preis —
+die €-Werte sind wie bei opusplan das API-Äquivalent.
 
 Vereinfachungen (bewusst): input_tokens ignoriert, laufende Exec-Writes
 weggelassen (anders als bei opusplan, das sie pauschal mitrechnet — hier
 gleicher Preis in beiden Phasen, sie kürzen sich fast raus), Re-Plan-Reads
-nicht bepreist, Kontext beim
-Wiedereintritt konstant. Zusätzlich hier: EIN Faktor f für Reads und
-Output (im Archiv skalieren die Reads stärker — leicht konservativ); die
-geliehenen Volumina gelten als medium-Volumina, auch die der Plan-Phase
-(der xhigh-Plan liest also 2,5 × 4,1 = 10,25 MTok bei Sol) — liest man die
-Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in € gleich,
-der Prozentwert würde −50 % statt −44 %; Kontext beim Wechsel fest 180k,
-also unter der 272k-Schwelle (2× Input); Rückkehr auf eine bekannte Stufe
-innerhalb 30 min bräche nicht (nicht modelliert); Sol-Aktionspreis
-($4/$20, bis mindestens 21.11.2026, vorher $5/$30) statt Listenpreis.
-Nachtragen, sobald eigene Codex-Sessions vorliegen: Kontext, Plan-/Exec-
-Volumina, gemessener Faktor — dann Konstanten in codexEffortMath.ts
-ersetzen, Test-Referenzwerte nachziehen, „vorläufig“ streichen.
+nicht bepreist, Kontext beim Wiedereintritt konstant. Zusätzlich hier: EIN
+Faktor f für Reads und Output; die geliehenen Volumina gelten als
+medium-Volumina, auch die der Plan-Phase (der xhigh-Plan liest also
+1,8 × 4,1 = 7,4 MTok bei Sol 6.1) — liest man die Plan-Mediane stattdessen
+als xhigh-Plan, bleibt die Ersparnis in € gleich, der Prozentwert würde −31 %
+statt −27 %; Kontext beim Wechsel fest 180k, also unter der 272k-Schwelle
+(2× Input; für GPT-6 nicht eigens geprüft); Rückkehr auf eine bekannte Stufe
+innerhalb 30 min bräche nicht (nicht modelliert). Nachtragen, sobald eigene
+Codex-Sessions vorliegen: Kontext, Plan-/Exec-Volumina, gemessener Faktor —
+dann Konstanten in codexEffortMath.ts ersetzen, Test-Referenzwerte
+nachziehen, „vorläufig“ streichen.
 -->
 
 ---

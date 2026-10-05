@@ -1,27 +1,30 @@
 /**
  * codexEffortMath.test.ts — pinnt das Kostenmodell der Codex-Effort-Wechsel-
  * Folie, damit spätere Änderungen die gezeigten Zahlen nicht still verstellen.
- * Referenzwerte von Hand nachgerechnet (Sol, Regler-Defaults der Folie:
- * Faktor 2,5 · Kontext 180k · Exec-Read 21 MTok · Exec-Out 80k · 2 Re-Plans
- * · Cache-Bruch an — Kontext und Exec-Out kommen aus SZENARIO_DEFAULTS):
+ * Referenzwerte von Hand nachgerechnet (Sol 6.1, Regler-Defaults der Folie:
+ * Faktor 1,8 · Kontext 180k · Exec-Read 21 MTok · Exec-Out 80k · 2 Re-Plans
+ * · Cache-Bruch an — Kontext und Exec-Out kommen aus SZENARIO_DEFAULTS;
+ * Preise $2 / $10, Read 0,05×, Write 1,25×):
  *
- *   c = 73,65 / 72,67 = 1,013486 (capFaktor Sol)
- *   Plan medium  = c · (0,03·20 + 4,1·0,4 + 0,16·5)  = c · 3,04 =  3,081 $
- *   Exec medium  = c · (0,08·20 + 21·0,4)            = c · 10   = 10,135 $
- *   Bruch        = 0,85 · c · 0,18 · 5               = c · 0,765 = 0,775 $
- *   Nur medium   = 13,216 $ · Nur xhigh = 2,5 · 13,216 = 33,040 $
- *   Wechsel      = 2,5·3,081 + 0,775 + 10,135        = 18,613 $
- *   Ersparnis    = 14,427 $ = 12,64 € (−43,7 %)
+ *   c = 57,622 / 51,833 = 1,111687 (capFaktor Sol 6.1, AA-Index, Opus 5.5)
+ *   Plan medium  = c · (0,03·10 + 4,1·0,1 + 0,16·2,5) = c · 1,11  = 1,2340 $
+ *   Exec medium  = c · (0,08·10 + 21·0,1)             = c · 2,9   = 3,2239 $
+ *   Bruch        = 0,85 · c · 0,18 · 2,5              = c · 0,3825 = 0,4252 $
+ *   Nur medium   = 4,4579 $ · Nur xhigh = 1,8 · 4,4579 = 8,0242 $
+ *   Wechsel      = 1,8·1,2340 + 0,4252 + 3,2239       = 5,8703 $
+ *   Ersparnis    = 2,1539 $ = 1,89 € (−26,8 %)
  */
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_CTX,
+  CONFIG_UPDATE_SLUGS,
   DEFAULT_MODELL,
   EXEC_OUT_RATIO,
   MODELLE,
   OPUSPLAN_REF,
   WRITE_FAKTOR,
   bruchKosten,
+  cacheBleibt,
   effortFaktorRegler,
   execOutAusRatio,
   kostenGeraden,
@@ -51,11 +54,11 @@ import {
   szenarioSnapshot,
 } from "../scenarioState";
 
-const SOL = modellByKey("sol");
+const SOL = modellByKey("sol61");
 
 const DEFAULTS: Eingaben = {
-  modell: "sol",
-  faktor: effortFaktorRegler("sol"),
+  modell: "sol61",
+  faktor: effortFaktorRegler("sol61"),
   ctx: SZENARIO_DEFAULTS.ctxK / 1000,
   execRead: SZENARIO_DEFAULTS.readM,
   execOut: SZENARIO_DEFAULTS.outK / 1000,
@@ -75,49 +78,119 @@ describe("Konstanten", () => {
     expect(EXEC_OUT_RATIO).toBeCloseTo(0.08 / 21, 12);
     expect(execOutAusRatio(21)).toBeCloseTo(0.08, 12);
   });
-  it("Sol ist der Default, Reihenfolge teuer → billig", () => {
-    expect(DEFAULT_MODELL).toBe("sol");
+  it("Sol 6.1 ist der Default (Codex-Default seit 0.159.1), Reihenfolge teuer → billig, kein Terra", () => {
+    expect(DEFAULT_MODELL).toBe("sol61");
     expect(MODELLE.map((m) => m.key)).toEqual([
       "astra",
+      "sol61",
       "sol",
-      "terra",
       "luna",
     ]);
+    expect(MODELLE.map((m) => m.slug)).toEqual([
+      "gpt-6-astra",
+      "gpt-6.1-sol",
+      "gpt-6-sol",
+      "gpt-6-luna",
+    ]);
   });
-  it("Listenpreise USD/MTok (developers.openai.com/api/docs/pricing, 16.09.2026)", () => {
+  it("Listenpreise USD/MTok (developers.openai.com/api/docs/pricing, 05.10.2026)", () => {
     const preise = Object.fromEntries(
       MODELLE.map((m) => [m.key, [m.input, m.output]]),
     );
     expect(preise).toEqual({
       astra: [10, 50],
-      sol: [4, 20],
-      terra: [2, 12],
-      luna: [0.2, 1.2],
+      sol61: [2, 10],
+      sol: [2, 10],
+      luna: [0.1, 0.5],
     });
+  });
+  it("Read 0,05× nur bei Sol 6.1 (cached $0,10 auf $2), sonst 0,1×; Write überall 1,25×", () => {
+    expect(Object.fromEntries(MODELLE.map((m) => [m.key, m.read]))).toEqual({
+      astra: undefined,
+      sol61: 0.05,
+      sol: undefined,
+      luna: undefined,
+    });
+    expect(SOL.input * (SOL.read ?? READ_FAKTOR)).toBeCloseTo(0.1, 12);
+    expect(Math.round(SOL.input * WRITE_FAKTOR * 100) / 100).toBe(2.5);
   });
 });
 
-describe("Faktoren aus der DeepSWE-Leiter (paretoData.EFFORTS)", () => {
-  it("effortFaktor = €/Task xhigh ÷ medium: Astra 1,49 · Sol 2,54 · Terra 3,63 · Luna 6,75", () => {
+describe("Faktoren aus dem Artificial-Analysis-Snapshot (aaData.CONFIGS)", () => {
+  it("effortFaktor = USD/Task xhigh ÷ medium: Astra 1,50 · Sol 6.1 1,84 · Sol 6 2,11 · Luna 2,41", () => {
     const f = Object.fromEntries(
       MODELLE.map((m) => [m.key, Number(m.effortFaktor.toFixed(2))]),
     );
-    expect(f).toEqual({ astra: 1.49, sol: 2.54, terra: 3.63, luna: 6.75 });
+    expect(f).toEqual({ astra: 1.5, sol61: 1.84, sol: 2.11, luna: 2.41 });
   });
   it("Regler-Vorgabe ist auf eine Nachkommastelle gerundet", () => {
     expect(effortFaktorRegler("astra")).toBe(1.5);
-    expect(effortFaktorRegler("sol")).toBe(2.5);
-    expect(effortFaktorRegler("terra")).toBe(3.6);
-    expect(effortFaktorRegler("luna")).toBe(6.8);
+    expect(effortFaktorRegler("sol61")).toBe(1.8);
+    expect(effortFaktorRegler("sol")).toBe(2.1);
+    expect(effortFaktorRegler("luna")).toBe(2.4);
   });
-  it("capFaktor = pass@1 Opus 5 ÷ bestes pass@1 des Modells, alle ≤ 10 %", () => {
+  it("capFaktor = bester Index Opus 5.5 ÷ bester Index des Modells: 1,09 bis 1,51", () => {
     const c = Object.fromEntries(
       MODELLE.map((m) => [m.key, Number(m.capFaktor.toFixed(3))]),
     );
-    expect(c).toEqual({ astra: 0.994, sol: 1.013, terra: 1.058, luna: 1.096 });
+    expect(c).toEqual({ astra: 1.094, sol61: 1.112, sol: 1.21, luna: 1.511 });
+    // Ein Index-Verhältnis ist kein Tokenverhältnis: der Faktor ist eine
+    // Setzung, und alle Modelle liegen unter Opus 5.5.
     for (const m of MODELLE) {
-      expect(m.capFaktor).toBeGreaterThan(0.95);
-      expect(m.capFaktor).toBeLessThan(1.1);
+      expect(m.capFaktor).toBeGreaterThan(1);
+      expect(m.capFaktor).toBeLessThan(1.6);
+    }
+  });
+});
+
+describe("Allow-List für configuration_update (Codex 0.160)", () => {
+  it("nur gpt-6-astra und gpt-6.1-sol tragen supports_reasoning_effort_updates", () => {
+    // models.json, rust-v0.160.0: true bei diesen beiden, bei gpt-6-sol und
+    // gpt-6-luna fehlt das Flag (Default false), gpt-5.6-* ausdrücklich false.
+    expect([...CONFIG_UPDATE_SLUGS]).toEqual(["gpt-6-astra", "gpt-6.1-sol"]);
+    expect(
+      Object.fromEntries(MODELLE.map((m) => [m.key, m.cacheUpdate])),
+    ).toEqual({ astra: true, sol61: true, sol: false, luna: false });
+  });
+  it("cacheBleibt braucht Schalter UND Allow-List", () => {
+    for (const m of MODELLE) {
+      expect(cacheBleibt({ modell: m.key, cacheErhalten: false })).toBe(false);
+      expect(cacheBleibt({ modell: m.key, cacheErhalten: true })).toBe(
+        m.cacheUpdate,
+      );
+    }
+  });
+  it("Schalter an bei Sol 6 und Luna: Codex ignoriert ihn, die Zahlen sind exakt die des ausgeschalteten Schalters", () => {
+    for (const modell of ["sol", "luna"] as const) {
+      const e: Eingaben = {
+        ...DEFAULTS,
+        modell,
+        faktor: effortFaktorRegler(modell),
+      };
+      expect(szenarien({ ...e, cacheErhalten: true })).toEqual(
+        szenarien({ ...e, cacheErhalten: false }),
+      );
+      const an = kostenGeraden({ ...e, cacheErhalten: true });
+      const aus = kostenGeraden({ ...e, cacheErhalten: false });
+      for (const x of [0, 5, 20]) {
+        expect(an.effortWechsel(x)).toBe(aus.effortWechsel(x));
+        expect(an.nurXhigh(x)).toBe(aus.nurXhigh(x));
+      }
+      expect(
+        szenarien({ ...e, cacheErhalten: true }).bruchEinmal,
+      ).toBeGreaterThan(0);
+    }
+  });
+  it("Schalter an bei Astra und Sol 6.1: der Bruch entfällt", () => {
+    for (const modell of ["astra", "sol61"] as const) {
+      const e: Eingaben = {
+        ...DEFAULTS,
+        modell,
+        faktor: effortFaktorRegler(modell),
+        cacheErhalten: true,
+      };
+      expect(szenarien(e).bruchEinmal).toBe(0);
+      expect(szenarien(e).breakEvenRead).toBe(0);
     }
   });
 });
@@ -210,8 +283,8 @@ describe("Geteiltes Szenario (scenarioState.ts)", () => {
 });
 
 describe("Cache-Bruch eines Effort-Wechsels", () => {
-  it("Sol: 0,85 × 180k × 1,25 × $4 = 0,765 $ (vor Fähigkeitsfaktor)", () => {
-    expect(bruchKosten(SOL, DEFAULT_CTX)).toBeCloseTo(0.765, 6);
+  it("Sol 6.1: 0,85 × 180k × 1,25 × $2 = 0,3825 $ (vor Fähigkeitsfaktor)", () => {
+    expect(bruchKosten(SOL, DEFAULT_CTX)).toBeCloseTo(0.3825, 6);
   });
 });
 
@@ -234,9 +307,12 @@ describe("Kontext und Exec-Output als Eingaben", () => {
   it("mehr Exec-Output verteuert medium wie xhigh und hebt die Ersparnis je MTok", () => {
     const e = szenarien({ ...DEFAULTS, execOut: 0.3 });
     const c = SOL.capFaktor;
-    // +220k Out auf medium = c · 0,22 · $20 = 4,46 $; auf xhigh f-mal so viel.
-    expect(e.nurMedium - basis.nurMedium).toBeCloseTo(c * 0.22 * 20, 10);
-    expect(e.nurXhigh - basis.nurXhigh).toBeCloseTo(2.5 * c * 0.22 * 20, 10);
+    // +220k Out auf medium = c · 0,22 · $10 = 2,45 $; auf xhigh f-mal so viel.
+    expect(e.nurMedium - basis.nurMedium).toBeCloseTo(c * 0.22 * 10, 10);
+    expect(e.nurXhigh - basis.nurXhigh).toBeCloseTo(
+      DEFAULTS.faktor * c * 0.22 * 10,
+      10,
+    );
     expect(e.proMtokErsparnis).toBeGreaterThan(basis.proMtokErsparnis);
     expect(e.breakEvenRead).toBeLessThan(basis.breakEvenRead);
     expect(e.bruchEinmal).toBeCloseTo(basis.bruchEinmal, 10);
@@ -301,7 +377,7 @@ describe("Kostengeraden fürs Break-even-Chart", () => {
     expect(szenarien(e).breakEvenRead).toBeGreaterThan(20);
     const g2 = kostenGeraden(e);
     expect(g2.effortWechsel(20)).toBeGreaterThan(g2.nurXhigh(20));
-    // Defaults: Break-even 1,12 MTok, am Rand liegt „Nur xhigh“ oben.
+    // Defaults: Break-even 3,46 MTok, am Rand liegt „Nur xhigh“ oben.
     const g3 = kostenGeraden(DEFAULTS);
     expect(g3.nurXhigh(20)).toBeGreaterThan(g3.effortWechsel(20));
   });
@@ -311,47 +387,47 @@ describe("Kostengeraden fürs Break-even-Chart", () => {
     expect(g.effortWechsel(0) - g.nurXhigh(0)).toBeCloseTo(erg.bruchEinmal, 10);
     const steigung = (fn: (x: number) => number) => fn(10) - fn(0);
     expect(steigung(g.nurXhigh) / steigung(g.effortWechsel)).toBeCloseTo(
-      2.5,
+      DEFAULTS.faktor,
       10,
     );
   });
 });
 
-describe("Sol, Regler-Defaults (Faktor 2,5 · 21 MTok · 2 Re-Plans)", () => {
+describe("Sol 6.1, Regler-Defaults (Faktor 1,8 · 21 MTok · 2 Re-Plans)", () => {
   const e = szenarien(DEFAULTS);
 
-  it("Szenarien: Nur medium 13,22 $ · Nur xhigh 33,04 $ · Effort-Wechsel 18,61 $", () => {
-    expect(e.nurMedium).toBeCloseTo(13.2159, 3);
-    expect(e.nurXhigh).toBeCloseTo(33.0396, 3);
-    expect(e.effortWechsel).toBeCloseTo(18.6127, 3);
-    expect(e.antiPattern).toBeCloseTo(21.8153, 3);
+  it("Szenarien: Nur medium 4,46 $ · Nur xhigh 8,02 $ · Effort-Wechsel 5,87 $", () => {
+    expect(e.nurMedium).toBeCloseTo(4.4579, 3);
+    expect(e.nurXhigh).toBeCloseTo(8.0242, 3);
+    expect(e.effortWechsel).toBeCloseTo(5.8703, 3);
+    expect(e.antiPattern).toBeCloseTo(7.6112, 3);
   });
 
-  it("Ersparnis 14,43 $ = 12,64 € (−43,7 %) gegenüber durchgängig xhigh", () => {
-    expect(e.ersparnis).toBeCloseTo(14.427, 3);
-    expect(toEur(e.ersparnis)).toBeCloseTo(12.64, 2);
-    expect(e.ersparnisProzent).toBeCloseTo(43.67, 2);
+  it("Ersparnis 2,15 $ = 1,89 € (−26,8 %) gegenüber durchgängig xhigh", () => {
+    expect(e.ersparnis).toBeCloseTo(2.1539, 3);
+    expect(toEur(e.ersparnis)).toBeCloseTo(1.89, 2);
+    expect(e.ersparnisProzent).toBeCloseTo(26.84, 2);
   });
 
-  it("der eine Bruch kostet 0,78 $, Break-even bei 1,07 MTok Exec-Read bzw. Faktor 1,077", () => {
-    expect(e.bruchEinmal).toBeCloseTo(0.7753, 4);
-    expect(e.proMtokErsparnis).toBeCloseTo(0.7239, 4);
-    expect(e.breakEvenRead).toBeCloseTo(1.071, 3);
-    expect(e.breakEvenFaktor).toBeCloseTo(1.0765, 4);
+  it("der eine Bruch kostet 0,43 $, Break-even bei 3,46 MTok Exec-Read bzw. Faktor 1,132", () => {
+    expect(e.bruchEinmal).toBeCloseTo(0.4252, 4);
+    expect(e.proMtokErsparnis).toBeCloseTo(0.1228, 4);
+    expect(e.breakEvenRead).toBeCloseTo(3.462, 3);
+    expect(e.breakEvenFaktor).toBeCloseTo(1.1319, 4);
   });
 
-  it("Rückkehr ohne /compact: 2 Brüche 1,55 $ + neuer Plan auf xhigh 0,05 $ = 1,60 $", () => {
-    expect(e.rueckkehrBrueche).toBeCloseTo(1.5506, 4);
-    expect(e.rueckkehrGesamt).toBeCloseTo(1.6013, 4);
+  it("Rückkehr ohne /compact: 2 Brüche 0,85 $ + neuer Plan auf xhigh 0,02 $ = 0,87 $", () => {
+    expect(e.rueckkehrBrueche).toBeCloseTo(0.8504, 4);
+    expect(e.rueckkehrGesamt).toBeCloseTo(0.8705, 4);
   });
 
-  it("Balken über „Nur xhigh“ ab 10 Rückkehren, allein die Brüche ebenfalls ab 10", () => {
-    expect(e.balkenUeberAb).toBe(10);
-    expect(e.ersparnisWegAb).toBe(10);
-    const bei9 = szenarien({ ...DEFAULTS, replans: 9 });
-    const bei10 = szenarien({ ...DEFAULTS, replans: 10 });
-    expect(bei9.antiPattern).toBeLessThan(bei9.nurXhigh);
-    expect(bei10.antiPattern).toBeGreaterThan(bei10.nurXhigh);
+  it("Balken über „Nur xhigh“ ab 3 Rückkehren, allein die Brüche ebenfalls ab 3", () => {
+    expect(e.balkenUeberAb).toBe(3);
+    expect(e.ersparnisWegAb).toBe(3);
+    const bei2 = szenarien({ ...DEFAULTS, replans: 2 });
+    const bei3 = szenarien({ ...DEFAULTS, replans: 3 });
+    expect(bei2.antiPattern).toBeLessThan(bei2.nurXhigh);
+    expect(bei3.antiPattern).toBeGreaterThan(bei3.nurXhigh);
   });
 
   it("Vergleichsmaßstab opusplan (dessen Regler-Defaults): 1,25 € und −13,0 %", () => {
@@ -359,15 +435,15 @@ describe("Sol, Regler-Defaults (Faktor 2,5 · 21 MTok · 2 Re-Plans)", () => {
     expect(OPUSPLAN_REF.ersparnisProzent).toBeCloseTo(12.97, 1);
   });
 
-  it("relativ deutlich größer als opusplan: −43,7 % gegen −13,0 %", () => {
+  it("relativ größer als opusplan: −26,8 % gegen −13,0 %", () => {
     // Der Prozentwert ist preisneutral; die €-Beträge vergleichen zwei
-    // verschieden teure Basen (Nur xhigh 28,94 € gegen Nur Opus 9,61 €).
+    // verschieden teure Basen (Nur xhigh 7,03 € gegen Nur Opus 9,61 €).
     expect(e.ersparnisProzent).toBeGreaterThan(OPUSPLAN_REF.ersparnisProzent);
     expect(toEur(e.ersparnis)).toBeGreaterThan(toEur(OPUSPLAN_REF.ersparnis));
   });
 });
 
-describe("Schalter „Cache erhalten“ (configuration_update, experimentell)", () => {
+describe("Schalter „Cache erhalten“ (configuration_update, Sol 6.1 auf der Allow-List)", () => {
   const an = szenarien({ ...DEFAULTS, cacheErhalten: true });
   const aus = szenarien(DEFAULTS);
 
@@ -379,27 +455,26 @@ describe("Schalter „Cache erhalten“ (configuration_update, experimentell)", 
     expect(an.ersparnis - aus.ersparnis).toBeCloseTo(aus.bruchEinmal, 10);
   });
 
-  it("Rückkehren kosten nur den neuen Plan: Balken strikt drüber erst ab 301", () => {
-    expect(an.rueckkehrGesamt).toBeCloseTo(0.0507, 4);
+  it("Rückkehren kosten nur den neuen Plan: Balken strikt drüber erst ab 129", () => {
+    expect(an.rueckkehrGesamt).toBeCloseTo(0.02, 4);
     expect(an.ersparnisWegAb).toBe(Infinity);
     // Mit dem gemessenen Re-Plan-Output von 1k Tokens ist eine Rückkehr fast
-    // gratis: 14,43 $ Ersparnis / 0,0507 $ = 300 exakt. Bei 300 sind beide
-    // Balken gleich, erst 301 liegt STRIKT darüber. Kippt der Pin auf 300,
-    // hat eine Umsortierung der Produkte den Quotienten auf 299,99… gedrückt.
-    expect(an.ersparnis / an.rueckkehrGesamt).toBeCloseTo(300, 6);
-    const bei300 = szenarien({
+    // gratis: 2,58 $ Ersparnis / 0,0200 $ = 128,9. Bei 128 liegt der Balken
+    // noch darunter, erst 129 STRIKT darüber.
+    expect(an.ersparnis / an.rueckkehrGesamt).toBeCloseTo(128.89, 2);
+    const bei128 = szenarien({
       ...DEFAULTS,
       cacheErhalten: true,
-      replans: 300,
+      replans: 128,
     });
-    const bei301 = szenarien({
+    const bei129 = szenarien({
       ...DEFAULTS,
       cacheErhalten: true,
-      replans: 301,
+      replans: 129,
     });
-    expect(bei300.antiPattern).toBeCloseTo(bei300.nurXhigh, 6);
-    expect(bei301.antiPattern).toBeGreaterThan(bei301.nurXhigh);
-    expect(an.balkenUeberAb).toBe(301);
+    expect(bei128.antiPattern).toBeLessThan(bei128.nurXhigh);
+    expect(bei129.antiPattern).toBeGreaterThan(bei129.nurXhigh);
+    expect(an.balkenUeberAb).toBe(129);
   });
 });
 
@@ -407,34 +482,38 @@ describe("Modellwahl ändert die Zahlen", () => {
   const bei = (modell: ModellKey) =>
     szenarien({ ...DEFAULTS, modell, faktor: effortFaktorRegler(modell) });
 
-  it("Ersparnis in €: Astra 9,22 · Sol 12,64 · Terra 12,08 · Luna 2,84", () => {
-    expect(toEur(bei("astra").ersparnis)).toBeCloseTo(9.22, 1);
-    expect(toEur(bei("sol").ersparnis)).toBeCloseTo(12.64, 1);
-    expect(toEur(bei("terra").ersparnis)).toBeCloseTo(12.08, 1);
-    expect(toEur(bei("luna").ersparnis)).toBeCloseTo(2.84, 1);
+  it("Ersparnis in €: Astra 10,15 · Sol 6.1 1,89 · Sol 6 5,42 · Luna 0,44", () => {
+    expect(toEur(bei("astra").ersparnis)).toBeCloseTo(10.15, 1);
+    expect(toEur(bei("sol61").ersparnis)).toBeCloseTo(1.89, 1);
+    expect(toEur(bei("sol").ersparnis)).toBeCloseTo(5.42, 1);
+    expect(toEur(bei("luna").ersparnis)).toBeCloseTo(0.44, 1);
   });
 
-  it("in Prozent: Astra −22 · Sol −44 · Terra −54 · Luna −65 — alle vier über opusplans −13", () => {
+  it("in Prozent: Astra −22 · Sol 6.1 −27 · Sol 6 −37 · Luna −42 — alle vier über opusplans −13", () => {
     expect(bei("astra").ersparnisProzent).toBeCloseTo(21.7, 1);
-    expect(bei("sol").ersparnisProzent).toBeCloseTo(43.7, 1);
-    expect(bei("terra").ersparnisProzent).toBeCloseTo(53.7, 1);
-    expect(bei("luna").ersparnisProzent).toBeCloseTo(64.5, 1);
-    for (const k of ["astra", "sol", "terra", "luna"] as const)
+    expect(bei("sol61").ersparnisProzent).toBeCloseTo(26.8, 1);
+    expect(bei("sol").ersparnisProzent).toBeCloseTo(37.4, 1);
+    expect(bei("luna").ersparnisProzent).toBeCloseTo(42.3, 1);
+    for (const k of ["astra", "sol61", "sol", "luna"] as const)
       expect(bei(k).ersparnisProzent).toBeGreaterThan(
         OPUSPLAN_REF.ersparnisProzent,
       );
   });
 
-  it("in Euro (verschiedene Basen!): jedes Codex-Modell spart mehr als opusplans 1,25 €", () => {
-    for (const k of ["astra", "sol", "terra", "luna"] as const)
+  it("in Euro (verschiedene Basen!): nur Luna spart weniger als opusplans 1,25 € — ihre Basis „Nur xhigh“ kostet 1,04 €", () => {
+    for (const k of ["astra", "sol61", "sol"] as const)
       expect(toEur(bei(k).ersparnis)).toBeGreaterThan(
         toEur(OPUSPLAN_REF.ersparnis),
       );
+    expect(toEur(bei("luna").ersparnis)).toBeLessThan(
+      toEur(OPUSPLAN_REF.ersparnis),
+    );
+    expect(toEur(bei("luna").nurXhigh)).toBeCloseTo(1.04, 2);
   });
 
-  it("Astra: teuerster Bruch (1,90 $), Break-even 3,21 MTok, Balken drüber ab 3", () => {
+  it("Astra: teuerster Bruch (2,09 $), Break-even 3,21 MTok, Balken drüber ab 3", () => {
     const a = bei("astra");
-    expect(a.bruchEinmal).toBeCloseTo(1.9004, 4);
+    expect(a.bruchEinmal).toBeCloseTo(2.0922, 4);
     expect(a.breakEvenRead).toBeCloseTo(3.213, 3);
     expect(a.balkenUeberAb).toBe(3);
   });
@@ -506,9 +585,12 @@ describe("Invarianten", () => {
     }
   });
 
-  it("Sweep: über alle Modelle und Regler-Ecken (Faktor ≥ 1,5) spart der Wechsel ab 5 MTok Exec-Read immer", () => {
+  it("Sweep: über alle Modelle und Regler-Ecken (Faktor ≥ 2) spart der Wechsel ab 5 MTok Exec-Read immer", () => {
+    // Bei Faktor 1,5 gilt das nicht mehr für Sol 6.1: Read 0,05× macht jedes
+    // MTok billiger, der Write (und damit der Bruch) bleibt bei $2,50 — Break-
+    // even dort 5,5 MTok (Astra, Sol 6 und Luna: 3,2).
     for (const m of MODELLE)
-      for (const faktor of [1.5, 2, 4, 8])
+      for (const faktor of [2, 4, 8])
         for (const execRead of [5, 30, 120])
           for (const cacheErhalten of [false, true]) {
             const e = szenarien({

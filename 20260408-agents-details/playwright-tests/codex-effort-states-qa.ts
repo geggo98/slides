@@ -13,13 +13,13 @@ import { chromium, type Page } from "playwright";
 
 const PORT = process.argv[2] ?? "3041";
 const BASE = `http://localhost:${PORT}`;
-const SLIDE = 35;
+const SLIDE = 36;
 const SHOTS = "20260408-agents-details/playwright-tests/qa";
 
 type State = {
   name: string;
   clicks: 0 | 3;
-  model?: "Astra" | "Sol" | "Terra" | "Luna";
+  model?: "Astra" | "Sol 6.1" | "Sol 6" | "Luna";
   faktor?: number;
   read?: number;
   replans?: number;
@@ -28,10 +28,10 @@ type State = {
 
 const STATES: State[] = [
   { name: "default-click3", clicks: 3 },
-  { name: "sol-n0-click3", clicks: 3, replans: 0 },
-  { name: "sol-n13-click3", clicks: 3, replans: 13 },
-  { name: "sol-f1-click0", clicks: 0, faktor: 1 },
-  { name: "sol-f1-click3", clicks: 3, faktor: 1 },
+  { name: "sol61-n0-click3", clicks: 3, replans: 0 },
+  { name: "sol61-n13-click3", clicks: 3, replans: 13 },
+  { name: "sol61-f1-click0", clicks: 0, faktor: 1 },
+  { name: "sol61-f1-click3", clicks: 3, faktor: 1 },
   { name: "cache-click0", clicks: 0, cache: true },
   { name: "cache-n0-click3", clicks: 3, cache: true, replans: 0 },
   { name: "cache-n13-click3", clicks: 3, cache: true, replans: 13 },
@@ -44,7 +44,10 @@ const STATES: State[] = [
     read: 120,
     replans: 13,
   },
-  { name: "terra-click3", clicks: 3, model: "Terra" },
+  { name: "sol6-click3", clicks: 3, model: "Sol 6" },
+  // Sol 6 steht nicht auf der Allow-List: Schalter an, aber ohne Wirkung.
+  { name: "sol6-cache-click0", clicks: 0, model: "Sol 6", cache: true },
+  { name: "sol6-cache-click3", clicks: 3, model: "Sol 6", cache: true },
   { name: "luna-click0", clicks: 0, model: "Luna" },
   {
     name: "luna-f8-r5-click3",
@@ -140,7 +143,8 @@ for (const scheme of ["light", "dark"] as const) {
     if (st.model) {
       await page
         .locator(`[data-slidev-no="${SLIDE}"] .ce-modell button`, {
-          hasText: st.model,
+          // exakt: „Sol 6“ träfe sonst auch „Sol 6.1“
+          hasText: new RegExp(`^${st.model.replace(".", "\\.")}$`),
         })
         .click();
     }
@@ -153,11 +157,14 @@ for (const scheme of ["light", "dark"] as const) {
     const m = await measure(page);
     // Note-Box: 12,5 px × 1,45 × 1,3 Skalierung ≈ 23,6 px je Zeile → 2 Zeilen ≈ 47, 3 Zeilen ≈ 71
     const noteLines = Math.round(m.noteHeight / 23.6);
+    // Schalter an bei einem Modell außerhalb der Allow-List: der Zusatzsatz darf die Notiz auf 3 Zeilen bringen
+    const maxNoteLines =
+      st.cache && (st.model === "Sol 6" || st.model === "Luna") ? 3 : 2;
     const bad =
       m.maxBottom > 720 ||
       m.maxRight > 1280 ||
-      noteLines > 2 ||
-      m.controlsHeight > 60;
+      noteLines > maxNoteLines ||
+      m.controlsHeight > 90; // zwei Zeilen Regler (Zeile 1 + Szenario), ≈ 81 px bei Skalierung 1,3
     if (bad) failures++;
     console.log(
       `${bad ? "✗" : "✓"} [${scheme}] ${st.name.padEnd(26)} bottom=${m.maxBottom} right=${m.maxRight} note=${noteLines}L(${m.noteHeight}px) controls=${m.controlsHeight}px antiHidden=${m.antiHidden}${bad ? `  worst: ${m.worst}` : ""}`,
@@ -170,7 +177,7 @@ for (const scheme of ["light", "dark"] as const) {
       failures++;
       console.log(`    ✗ Anti-Pattern-Zeile ist bei Klick 0 schon sichtbar`);
     }
-    if (noteLines > 2) console.log(`    note: ${m.noteText}`);
+    if (noteLines > maxNoteLines) console.log(`    note: ${m.noteText}`);
     await page.screenshot({
       path: `${SHOTS}/codex-effort-${st.name}-${scheme}.png`,
     });

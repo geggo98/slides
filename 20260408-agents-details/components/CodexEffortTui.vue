@@ -8,32 +8,34 @@
  * Statuszeile sind hier nachgezeichnet, weil CodexPrompt/CodexSlashMenu ein
  * echtes <input> mitbringen und der Nachbau nur Abbildung ist (`inert`).
  *
- * Schritte (Texte wörtlich aus fünf Screenshots Codex CLI 0.156.1,
- * 23.09.2026, Katalog-Erweiterung um GPT-6 Sol/Luna vom selben Tag):
- *   0 leerer Composer, GPT-5.6-Sol medium (das ALTE Sol) · 1 „/model“ wird
- *   getippt, dann die Modellwahl — Cursor auf Zeile 1, GPT-6-Sol (default);
- *   GPT-5.6-Sol trägt „(current)“ · 2 Reasoning Level für GPT-6-Sol, Cursor
- *   bleibt auf Medium (default) · 3 „Model changed to gpt-6-sol medium“ —
- *   das schreibt model und model_reasoning_effort GLOBAL (Meldung bleibt
- *   der Slug, nicht der Anzeigename — Header/Status zeigen „GPT-6-Sol“, die
- *   Meldung „gpt-6-sol“, beides belegt) · 4 „/plan“ wird getippt, danach
- *   „Plan mode“ · 5 „/model“ erneut, GPT-6-Sol ist jetzt current und bleibt
- *   es · 6 Reasoning Level, Cursor wandert Medium → Extra high · 7 „Apply
- *   reasoning change“ · 8 „… xhigh for Plan mode.“
+ * Schritte (Dialogtexte aus fünf Screenshots Codex CLI 0.156.1, 23.09.2026,
+ * Titel und Optionen gegen rust-v0.160.0 gegengelesen; Modellnamen,
+ * Beschreibungen und Reihenfolge aus dem gebündelten Katalog
+ * `models-manager/models.json` von rust-v0.160.0, 01.10.2026):
+ *   0 leerer Composer, GPT-6-Sol medium (das VORIGE Sol) · 1 „/model“ wird
+ *   getippt, dann die Modellwahl — Cursor auf Zeile 1, GPT-6.1-Sol
+ *   (default); GPT-6-Sol trägt „(current)“ · 2 Reasoning Level für
+ *   GPT-6.1-Sol, Cursor bleibt auf Medium (default) · 3 „Model changed to
+ *   gpt-6.1-sol medium“ — das schreibt model und model_reasoning_effort
+ *   GLOBAL (Meldung bleibt der Slug, nicht der Anzeigename — Header/Status
+ *   zeigen „GPT-6.1-Sol“, die Meldung „gpt-6.1-sol“) · 4 „/plan“ wird
+ *   getippt, danach „Plan mode“ · 5 „/model“ erneut, GPT-6.1-Sol ist jetzt
+ *   current und bleibt es · 6 Reasoning Level, Cursor wandert Medium → Extra
+ *   high · 7 „Apply reasoning change“ · 8 „… xhigh for Plan mode.“
  *
- * Warum GPT-5.6-Sol → GPT-6-Sol statt (wie bis 22.09.) Terra → Sol: die
- * Screenshots zeigen echten Katalogstand vom Erscheinungstag — GPT-6-Sol
- * steht als Default an Position 1 (das Backend-Ranking weicht vom
- * gebündelten Fallback-Katalog ab, der Astra zuerst listet; Ground Truth
- * ist der Screenshot), GPT-5.6-Sol war schon vorher aktiv. Der Umstieg auf
- * das neue Sol ist die naheliegendere Erzählung als ein Sprung über zwei
- * Generationen; GPT-6 Terra existiert nicht (Faktencheck auf der
- * codex-effort-Folie).
+ * Warum GPT-6-Sol → GPT-6.1-Sol: Sol 6.1 ist seit 0.159.1 der Katalog-
+ * Default (PR #49318, Priorität 1) und eines von zwei Modellen, für die
+ * Codex `configuration_update` sendet (Allow-List auf der codex-effort-
+ * Folie) — die Beispiel-config.toml daneben nennt dasselbe Modell. Der
+ * Umstieg vom vorigen Sol ist die naheliegende Erzählung; GPT-6 Terra
+ * existiert nicht. Ground Truth für die Dialogtexte bleibt der Screenshot-
+ * Stand 0.156.1; für 0.160 sind nur Katalog und Quelltext geprüft, kein
+ * neuer Screenshot (Abweichungen in Details wie Abständen möglich).
  *
  * Anzeigenamen statt Slugs (seit PR openai/codex#46503, 18.09.2026, in
  * 0.156): Picker, Reasoning-Titel, Header und Statuszeile zeigen
- * „GPT-6-Sol“ — nur die Ergebnis-Meldungen („Model changed to …“) bleiben
- * beim Slug `gpt-6-sol`. Der Untertitel „Access legacy models…“ unter
+ * „GPT-6.1-Sol“ — nur die Ergebnis-Meldungen („Model changed to …“) bleiben
+ * beim Slug `gpt-6.1-sol`. Der Untertitel „Access legacy models…“ unter
  * „Select Model and Effort“ ist mit derselben PR weggefallen (Screenshots
  * zeigen keinen mehr). Die Fußzeile variiert seit PR #45831/#46697 je
  * Dialogtyp: „enter select · esc back“ für Modell- und Scope-Dialog,
@@ -65,14 +67,14 @@ import { usePrefersReducedMotion } from "@shared/components/brainless/lib/usePre
 
 const props = withDefaults(defineProps<{ step?: number }>(), { step: 0 });
 
-const VERSION = "v0.156.1";
+const VERSION = "v0.160.0";
 // Easter Egg fürs Publikum: das Verzeichnis dieses Decks.
 const DIRECTORY = "~/slides";
 // Anzeigenamen (Header/Status, seit #46503); die Ergebnis-Meldungen
 // unten bleiben beim Slug, s. ERGEBNIS.
-const MODEL_VORHER = "GPT-5.6-Sol medium";
-const MODEL_GLOBAL = "GPT-6-Sol medium";
-const MODEL_NACHHER = "GPT-6-Sol xhigh";
+const MODEL_VORHER = "GPT-6-Sol medium";
+const MODEL_GLOBAL = "GPT-6.1-Sol medium";
+const MODEL_NACHHER = "GPT-6.1-Sol xhigh";
 const PLACEHOLDER = "Ask Codex to do anything";
 
 // Slash-Zeile unter dem Composer, Optik wie CodexSlashMenu (aktive Zeile).
@@ -92,23 +94,29 @@ const SLASH = {
 // Test-Verzeichnis den Ablauf für die Screenshots zuvor schon einmal
 // durchlaufen hatte (die Beschreibung ist dynamisch,
 // model_popups.rs L381-403); die Folie zeigt bewusst den Erststand.
-// `current` wandert nach der ersten Wahl von GPT-5.6-Sol zu GPT-6-Sol. Die
+// `current` wandert nach der ersten Wahl von GPT-6-Sol zu GPT-6.1-Sol. Die
 // TUI zeigt je Zeile nur EINEN Marker, „(current)“ schlägt „(default)“
 // (tui/src/bottom_pane/list_selection_view.rs, rust-v0.156.1: `if
 // item.is_current { " (current)" } else if item.is_default { " (default)" }`)
-// — in der zweiten Modellwahl heißt GPT-6-Sol also nur noch „(current)“.
-// Reihenfolge und Default-Markierung sind Backend-Zustand vom
-// Erscheinungstag (Screenshot), nicht der gebündelte Fallback-Katalog, der
-// Astra zuerst listet.
-const modelOptions = (current: "gpt-5.6-sol" | "gpt-6-sol") => [
+// — in der zweiten Modellwahl heißt GPT-6.1-Sol also nur noch „(current)“.
+// Reihenfolge = `priority` im gebündelten Katalog von rust-v0.160.0 (1 sol-6.1,
+// 2 astra, 3 sol-6, 4 luna, 5 5.6-sol, 8 5.6-terra, 9 5.6-luna, 13 5.5);
+// das Backend kann sie live umsortieren. Beschreibungen wörtlich aus
+// `description`. Der Default ist hier der Eintrag mit Priorität 1.
+const modelOptions = (current: "gpt-6-sol" | "gpt-6.1-sol") => [
   {
-    label: current === "gpt-6-sol" ? "GPT-6-Sol" : "GPT-6-Sol (default)",
-    current: current === "gpt-6-sol",
-    description: "Workhorse model for coding and everyday work.",
+    label: current === "gpt-6.1-sol" ? "GPT-6.1-Sol" : "GPT-6.1-Sol (default)",
+    current: current === "gpt-6.1-sol",
+    description: "Latest workhorse model for coding and everyday work.",
   },
   {
     label: "GPT-6-Astra",
     description: "Frontier intelligence for the most demanding work.",
+  },
+  {
+    label: "GPT-6-Sol",
+    current: current === "gpt-6-sol",
+    description: "Previous generation workhorse model.",
   },
   {
     label: "GPT-6-Luna",
@@ -116,8 +124,7 @@ const modelOptions = (current: "gpt-5.6-sol" | "gpt-6-sol") => [
   },
   {
     label: "GPT-5.6-Sol",
-    current: current === "gpt-5.6-sol",
-    description: "Older coding model for complex work.",
+    description: "Older generation workhorse model.",
   },
   {
     label: "GPT-5.6-Terra",
@@ -132,8 +139,8 @@ const modelOptions = (current: "gpt-5.6-sol" | "gpt-6-sol") => [
     description: "Legacy coding model.",
   },
 ];
-const MODEL_OPTIONS = modelOptions("gpt-5.6-sol");
-const MODEL_OPTIONS_2 = modelOptions("gpt-6-sol");
+const MODEL_OPTIONS = modelOptions("gpt-6-sol");
+const MODEL_OPTIONS_2 = modelOptions("gpt-6.1-sol");
 const REASONING_OPTIONS = [
   { label: "Low", description: "Fast responses with lighter reasoning" },
   {
@@ -195,7 +202,7 @@ const MODELLWAHL = {
   footer: FOOTER_PICKER,
 };
 const REASONING = {
-  title: "Select Reasoning Level for GPT-6-Sol",
+  title: "Select Reasoning Level for GPT-6.1-Sol",
   subtitle: "",
   footer: FOOTER_REASONING,
   options: REASONING_OPTIONS,
@@ -223,8 +230,8 @@ const DIALOGE: Record<
 
 // Anzeigenamen im Picker, aber der Slug in der Meldung (s. Kopfkommentar).
 const ERGEBNIS = [
-  "Model changed to gpt-6-sol medium",
-  "Model changed to gpt-6-sol xhigh for Plan mode.",
+  "Model changed to gpt-6.1-sol medium",
+  "Model changed to gpt-6.1-sol xhigh for Plan mode.",
 ];
 
 // ---- Zustand -------------------------------------------------------------

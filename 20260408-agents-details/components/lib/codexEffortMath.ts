@@ -2,37 +2,36 @@
  * codexEffortMath.ts — Kostenmodell für die Codex-Effort-Wechsel-Folie,
  * Pendant zu ./opusplanMath.ts.
  *
- * ⚠ VORLÄUFIG (Stand 16.09.2026). Es gibt noch keine eigene Codex-Messung:
+ * ⚠ VORLÄUFIG (Stand 05.10.2026). Es gibt noch keine eigene Codex-Messung:
  * `plan_mode_reasoning_effort = "xhigh"` läuft lokal erst seit dem 15.09.2026.
  * Bis echte Sessions vorliegen, rechnet die Folie mit den Volumina der
  * opusplan-Folie (Mediane aus 57 echten Claude-Code-Sessions mit Modellwechsel,
  * 30.08.–29.09.2026, siehe ./opusplanMath.ts), damit beide Rechnungen vergleichbar bleiben, und
- * skaliert sie je Modell mit zwei Faktoren aus der DeepSWE-v1.1-Leiter
- * (../paretoData.ts, `EFFORTS`, Stand 03.09.2026):
+ * skaliert sie je Modell mit zwei Faktoren aus dem Artificial-Analysis-
+ * Snapshot der Pareto-Folie (../aaData.ts, `CONFIGS`, Stand `AA_STAND`):
  *
- * - capFaktor: bestes pass@1 von Opus 5 ÷ bestes pass@1 des Modells — ein
- *   schwächeres Modell braucht mehr Anläufe und damit mehr Tokens für
- *   dieselbe Aufgabe. Liegt zwischen 0,99 (Astra) und 1,10 (Luna), also
- *   unter den Fehlerbalken der Scores; auf Wunsch trotzdem im Modell.
- * - effortFaktor: €/Task auf xhigh ÷ €/Task auf medium desselben Modells —
- *   die „SWE-bench-analoge“ Skalierung des Efforts. Er gilt für die GANZE
- *   Phase (Reads, Writes, Output), nicht nur für den Output: im Board-Stand
- *   c55e58f2 (03.09., data/deepswe/) wachsen bei Sol von medium auf xhigh
- *   die Cache-Reads 2,87×, der Output 2,21×, die Kosten 2,54× (Terra
- *   4,68/3,37/3,65, Luna 14,2/5,5/7,1, Opus 5 3,19/2,48/2,76, Astra
- *   1,45/1,45/1,49) — xhigh macht mehr Schritte und trägt je Schritt mehr
- *   Kontext (Sol 45k → 90k Cache je Schritt). f auf die Reads ist also eher
- *   konservativ; nur auf den Output angewandt gäbe es f_eq ≈ 1,3 und 3,25 €
- *   Ersparnis bei Sol, was dem 2,54× widerspräche, aus dem f stammt.
- *   Eine Obergrenze bleibt er trotzdem: medium löst weniger Aufgaben und
- *   gibt früher auf, bei Terra (35 % pass@1 auf medium) und Luna (11 %)
- *   dominiert das. Deshalb ist der Faktor ein Regler, kein Fixwert;
- *   `effortFaktorRegler()` liefert die Vorgabe auf eine Nachkommastelle
- *   gerundet, damit Folie und Test dieselbe Zahl zeigen.
+ * - capFaktor: bester Intelligence Index von Opus 5.5 ÷ bester Index des
+ *   Modells — ein schwächeres Modell braucht mehr Anläufe und damit mehr
+ *   Tokens für dieselbe Aufgabe. Referenz ist Opus 5.5, weil opusplan seit
+ *   30.09. damit rechnet. Liegt zwischen 1,09 (Astra) und 1,51 (Luna); ein
+ *   Index-Verhältnis ist KEIN Tokenverhältnis, der Faktor ist also eine
+ *   Setzung und bei Luna die grobste. Vorher stand hier das DeepSWE-pass@1
+ *   (0,99–1,10): dort liegen die Modelle dichter beieinander, weil das Board
+ *   eine Aufgabe misst, der Index einen Mix aus Wissen, Logik und Agenten.
+ * - effortFaktor: USD/Task auf xhigh ÷ USD/Task auf medium desselben Modells
+ *   (`intelligenceIndexCostPerTask`) — die Skalierung des Efforts. Er gilt für
+ *   die GANZE Phase (Reads, Writes, Output), nicht nur für den Output. Ein
+ *   AA-Task ist ein Eval-Task des Index-Mixes, kein SWE-Task; die Faktoren
+ *   fallen etwas niedriger aus als bei DeepSWE (Astra 1,50 gegen 1,49, Sol
+ *   5.6 2,35 gegen 2,54, Luna 5.6 5,47 gegen 6,75). Auch das Obergrenze-
+ *   Argument bleibt: medium löst weniger Aufgaben und gibt früher auf.
+ *   Deshalb ist der Faktor ein Regler, kein Fixwert; `effortFaktorRegler()`
+ *   liefert die Vorgabe auf eine Nachkommastelle gerundet, damit Folie und
+ *   Test dieselbe Zahl zeigen.
  * - Die geliehenen Volumina gelten als medium-Volumina, auch die der
- *   Plan-Phase (der xhigh-Plan liest also 2,5 × 4,1 = 10,25 MTok bei Sol). Liest
+ *   Plan-Phase (der xhigh-Plan liest also f × 4,1 MTok). Liest
  *   man die Plan-Mediane stattdessen als xhigh-Plan, bleibt die Ersparnis in
- *   € gleich, der Prozentwert würde −50 % statt −44 %. Kontext beim
+ *   € gleich, der Prozentwert würde größer. Kontext beim
  *   Wechsel und Exec-Output kommen als Eingaben aus dem geteilten Szenario
  *   (./scenarioState.ts, Defaults 180k / 80k je 21 MTok); der 180k-Default
  *   liegt unter der 272k-Schwelle (2× Input).
@@ -56,15 +55,19 @@
  *   nichts anderes an. Kein TTL-Regler nötig.
  * - Experimentell: `[features] reasoning_effort_override = true` hängt
  *   `configuration_update`-Items an die History, statt den Prefix zu ändern.
- *   In Codex 0.154.0 nur halb verdrahtet (der Request-Effort wechselt
- *   weiter), das Pinning kommt mit 0.155 (PR openai/codex#43795); laut
- *   API-Doku nur für GPT-6 Astra. Der Schalter `cacheErhalten` setzt den
- *   Bruch auf 0 — das ist der Zielzustand, nicht der heutige.
+ *   API-seitig gilt das für die GPT-6-Familie (reasoning.md: „supported by
+ *   the GPT-6 model family in standard, single-agent mode“). Codex sendet es
+ *   aber nur für Modelle, deren Katalogeintrag `supports_reasoning_effort_
+ *   updates` auf true setzt (`CONFIG_UPDATE_SLUGS`). Bei allen anderen
+ *   ignoriert Codex den Schalter still und bricht den Cache wie gehabt;
+ *   `cacheBleibt()` bildet das ab. Der Schalter `cacheErhalten` setzt den
+ *   Bruch also nur für Allow-List-Modelle auf 0 — und auch dort nur, wenn
+ *   man das Feature selbst einschaltet (Stage UnderDevelopment, default aus).
  *
  * Alle Token-Größen in MTok, alle Kosten in USD; Umrechnung erst am Ende.
  */
 
-import { EFFORTS, type Effort } from "../paretoData";
+import { CONFIGS } from "../aaData";
 import {
   BREAK_SHARE,
   DEFAULT_TTL,
@@ -96,73 +99,97 @@ export const EXEC_OUT_RATIO =
 export const execOutAusRatio = (execRead: number): number =>
   execRead * EXEC_OUT_RATIO;
 
-export type ModellKey = "astra" | "sol" | "terra" | "luna";
+export type ModellKey = "astra" | "sol61" | "sol" | "luna";
 
 export interface CodexModell extends Modell {
   key: ModellKey;
   label: string;
-  /** Name des Modells in `EFFORTS`. */
-  ladder: string;
-  /** €/Task xhigh ÷ €/Task medium, aus `EFFORTS`. */
+  /** Slug des Modells — bei Codex, OpenAI und AA derselbe (`gpt-6.1-sol`). */
+  slug: string;
+  /** USD/Task xhigh ÷ USD/Task medium, aus dem AA-Snapshot. */
   effortFaktor: number;
-  /** bestes pass@1 Opus 5 ÷ bestes pass@1 des Modells, aus `EFFORTS`. */
+  /** bester Index Opus 5.5 ÷ bester Index des Modells, aus dem AA-Snapshot. */
   capFaktor: number;
+  /** Codex sendet `configuration_update` für dieses Modell (Allow-List). */
+  cacheUpdate: boolean;
 }
 
-const OPUS_LADDER = "claude-opus-5";
+/**
+ * Die Allow-List: Modelle, für die Codex `configuration_update` sendet —
+ * `supports_reasoning_effort_updates: true` im gebündelten Katalog
+ * (openai/codex, `codex-rs/models-manager/models.json`, rust-v0.160.0 vom
+ * 01.10.2026, gleich main). Das Gate sitzt in `core/src/client.rs`,
+ * `reasoning_effort_override_enabled()`: Feature an, Provider OpenAI UND
+ * dieses Flag. Fehlt das Flag im Eintrag (gpt-6-sol, gpt-6-luna), gilt der
+ * Default false (`models-manager/src/model_info.rs`); gpt-5.6-*, gpt-5.5 und
+ * codex-auto-review tragen es ausdrücklich als false. Astra seit 0.157.0
+ * (PR #47397), 6.1 Sol seit 0.159.1 (PR #49318, dort auch Default-Modell).
+ * Der Live-Katalog des Backends kann den gebündelten Wert überschreiben —
+ * ohne Login nicht geprüft.
+ */
+export const CONFIG_UPDATE_SLUGS: readonly string[] = [
+  "gpt-6-astra",
+  "gpt-6.1-sol",
+];
 
-function kostenProTask(ladder: string, effort: Effort): number {
-  const cfg = EFFORTS.find((c) => c.label === ladder && c.effort === effort);
-  if (!cfg) throw new Error(`EFFORTS: keine Sprosse ${ladder}/${effort}`);
-  return cfg.x;
+const OPUS_SLUG = "claude-opus-5.5";
+
+function aaKostenProTask(slug: string, effort: "medium" | "xhigh"): number {
+  const cfg = CONFIGS.find((c) => c.label === slug && c.effort === effort);
+  if (!cfg) throw new Error(`AA: keine Sprosse ${slug}/${effort}`);
+  return cfg.usd;
 }
 
-function bestesPassAt1(ladder: string): number {
-  const ys = EFFORTS.filter((c) => c.label === ladder).map((c) => c.y);
-  if (ys.length === 0) throw new Error(`EFFORTS: kein Modell ${ladder}`);
-  return Math.max(...ys);
+function aaBestIndex(slug: string): number {
+  const xs = CONFIGS.filter((c) => c.label === slug).map((c) => c.index);
+  if (xs.length === 0) throw new Error(`AA: kein Modell ${slug}`);
+  return Math.max(...xs);
 }
 
-const OPUS_BEST = bestesPassAt1(OPUS_LADDER);
+const OPUS_BEST = aaBestIndex(OPUS_SLUG);
 
 function modell(
   key: ModellKey,
   label: string,
-  ladder: string,
+  slug: string,
   input: number,
   output: number,
+  read?: number,
 ): CodexModell {
   return {
     key,
     label,
-    ladder,
+    slug,
     input,
     output,
+    ...(read === undefined ? {} : { read }),
     effortFaktor:
-      kostenProTask(ladder, "xhigh") / kostenProTask(ladder, "medium"),
-    capFaktor: OPUS_BEST / bestesPassAt1(ladder),
+      aaKostenProTask(slug, "xhigh") / aaKostenProTask(slug, "medium"),
+    capFaktor: OPUS_BEST / aaBestIndex(slug),
+    cacheUpdate: CONFIG_UPDATE_SLUGS.includes(slug),
   };
 }
 
 /**
- * Listenpreise USD/MTok Input/Output, developers.openai.com/api/docs/pricing,
- * geprüft 16.09.2026. Sol ist eine befristete Aktion („promotional pricing is
- * available at least through November 21, 2026“), regulär $5/$30. Reihenfolge
- * = Reihenfolge der Pillen auf der Folie, teuer nach billig.
+ * Listenpreise USD/MTok Input/Output (Standard, kurzer Kontext),
+ * developers.openai.com/api/docs/pricing, geprüft 05.10.2026. Die Sol-Aktion
+ * („through November 21, 2026“) gilt nur für gpt-5.6-sol, das hier nicht mehr
+ * steht. gpt-6.1-sol liest mit 0,05× (cached $0,10 auf $2), die anderen mit
+ * 0,1×; Write überall 1,25×. Reihenfolge = Reihenfolge der Pillen auf der
+ * Folie, teuer nach billig. GPT-6 Terra gibt es nicht.
  */
 export const MODELLE: readonly CodexModell[] = [
   modell("astra", "Astra", "gpt-6-astra", 10, 50),
-  modell("sol", "Sol", "gpt-5.6-sol", 4, 20),
-  modell("terra", "Terra", "gpt-5.6-terra", 2, 12),
-  modell("luna", "Luna", "gpt-5.6-luna", 0.2, 1.2),
+  modell("sol61", "Sol 6.1", "gpt-6.1-sol", 2, 10, 0.05),
+  modell("sol", "Sol 6", "gpt-6-sol", 2, 10),
+  modell("luna", "Luna", "gpt-6-luna", 0.1, 0.5),
 ];
 
 /**
- * Vorgabe der Folie (Wunsch des Vortragenden): mittlerer Preis, belastbare
- * Leiter (61 % pass@1 schon auf medium). Codex' eigener Picker-Default ist
- * das Modell mit der höchsten Priorität im Katalog (0.154: gpt-6-astra).
+ * Vorgabe der Folie: Sol 6.1 ist seit 0.159.1 Codex' Default-Modell
+ * (PR #49318) und trägt das `configuration_update`-Flag.
  */
-export const DEFAULT_MODELL: ModellKey = "sol";
+export const DEFAULT_MODELL: ModellKey = "sol61";
 
 /**
  * Platzhalter für die Umrechnung Claude → Codex: heute die Identität, weil
@@ -216,6 +243,14 @@ export function modellByKey(key: ModellKey): CodexModell {
 export const effortFaktorRegler = (key: ModellKey): number =>
   Math.round(modellByKey(key).effortFaktor * 10) / 10;
 
+/**
+ * Bleibt der Cache beim Effort-Wechsel erhalten? Nur wenn der Schalter an ist
+ * UND das Modell auf der Allow-List steht — sonst ignoriert Codex ihn still.
+ */
+export const cacheBleibt = (
+  e: Pick<Eingaben, "modell" | "cacheErhalten">,
+): boolean => e.cacheErhalten && modellByKey(e.modell).cacheUpdate;
+
 export const writePreis = (m: Modell): number => m.input * WRITE_FAKTOR;
 
 /** Kosten einer Phase: Output + Cache-Read + Cache-Write zum jeweiligen Preis. */
@@ -242,7 +277,7 @@ export interface Eingaben {
   execOut: number;
   /** Rückkehren in den Plan-Modus ohne vorheriges /compact. */
   replans: number;
-  /** Experimenteller Schalter: `configuration_update` statt Prefix-Änderung, Bruch = 0. */
+  /** Experimenteller Schalter: `configuration_update` statt Prefix-Änderung, Bruch = 0 — nur für Modelle der Allow-List, sonst ohne Wirkung. */
   cacheErhalten: boolean;
 }
 
@@ -255,13 +290,13 @@ export interface Ergebnis {
   /** Ersparnis Effort-Wechsel vs. Nur xhigh (negativ, wenn der Faktor unter dem Break-even liegt). */
   ersparnis: number;
   ersparnisProzent: number;
-  /** Der eine Bruch beim Plan→Exec-Wechsel (0 bei cacheErhalten). */
+  /** Der eine Bruch beim Plan→Exec-Wechsel (0 bei `cacheBleibt`). */
   bruchEinmal: number;
   /** Ersparnis pro MTok Exec-Cache-Read inkl. anteiligem Output. */
   proMtokErsparnis: number;
   /** Exec-Cache-Read in MTok, ab dem der Wechsel billiger ist als Nur xhigh (Infinity bei faktor ≤ 1). */
   breakEvenRead: number;
-  /** Faktor xhigh/medium, ab dem der Wechsel billiger ist als Nur xhigh (1 bei cacheErhalten). */
+  /** Faktor xhigh/medium, ab dem der Wechsel billiger ist als Nur xhigh (1 bei `cacheBleibt`). */
   breakEvenFaktor: number;
   /** Nur die zwei Cache-Brüche einer Rückkehr. */
   rueckkehrBrueche: number;
@@ -269,7 +304,7 @@ export interface Ergebnis {
   rueckkehrGesamt: number;
   /**
    * Ab so vielen Rückkehren fressen allein die Brüche die Ersparnis auf.
-   * 0 = keine Ersparnis vorhanden; Infinity = ohne Brüche (cacheErhalten) nie.
+   * 0 = keine Ersparnis vorhanden; Infinity = ohne Brüche (`cacheBleibt`) nie.
    */
   ersparnisWegAb: number;
   /** Ab so vielen Rückkehren liegt der Anti-Pattern-Balken strikt über „Nur xhigh“ (0 = keine Ersparnis). */
@@ -294,7 +329,7 @@ export function kostenGeraden(e: Eingaben): {
   const c = m.capFaktor;
   const f = e.faktor;
   const planXhigh = f * c * phasenKosten(m, PLAN.out, PLAN.read, PLAN.write);
-  const bruch = e.cacheErhalten ? 0 : c * bruchKosten(m, e.ctx);
+  const bruch = cacheBleibt(e) ? 0 : c * bruchKosten(m, e.ctx);
   const proMtokMedium = c * (readPreis(m) + outRatio(e) * m.output);
   return {
     nurXhigh: (x) => planXhigh + f * x * proMtokMedium,
@@ -311,7 +346,7 @@ export function szenarien(e: Eingaben): Ergebnis {
   const execMedium = c * (e.execOut * m.output + e.execRead * readPreis(m));
   const planXhigh = f * planMedium;
   const execXhigh = f * execMedium;
-  const bruch = e.cacheErhalten ? 0 : c * bruchKosten(m, e.ctx);
+  const bruch = cacheBleibt(e) ? 0 : c * bruchKosten(m, e.ctx);
 
   const nurMedium = planMedium + execMedium;
   const nurXhigh = planXhigh + execXhigh;
