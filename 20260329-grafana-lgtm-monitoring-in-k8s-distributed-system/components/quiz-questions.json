@@ -913,6 +913,234 @@
           "explanation": "Auf demselben Top-Level für dasselbe System ja — aber eine eigene Ampel pro Service-Dashboard ist normal; die Ebene entscheidet."
         }
       ]
+    },
+    {
+      "id": "evo-goodhart-grundidee",
+      "question": "Der Talk stellt Goodharts Gesetz in den Mittelpunkt des Alignment-Problems („Wir messen A und hoffen auf B“). Welche Aussagen dazu treffen zu?",
+      "difficulty": "easy",
+      "section": "Evolution & Goodhart",
+      "explanation": "Sobald eine Metrik zum Ziel wird und jemand oder etwas auf sie optimiert, löst sie sich vom eigentlichen Ziel. Ein Agent als Optimierer verschärft das, weil er die Lücke zwischen Metrik und Ziel schneller findet als ein Team.",
+      "options": [
+        {
+          "id": "evo-goodhart-grundidee-o1",
+          "text": "Wird eine Messgröße zum Ziel, taugt sie nicht mehr als verlässliches Maß.",
+          "verdict": "true",
+          "explanation": "Das ist die Kurzfassung des Gesetzes: Der Optimierungsdruck verändert den Zusammenhang zwischen Metrik und eigentlichem Ziel."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o2",
+          "text": "Ein Agent findet die Lücke zwischen Metrik und eigentlichem Ziel oft schneller als ein Team.",
+          "verdict": "true",
+          "explanation": "Ein Agent ist ein sehr guter Optimierer; genau deshalb braucht er Gegenmetriken und ein Gate, das er nicht selbst ändern kann."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o3",
+          "text": "Die bekannte Kurzfassung stammt von Marilyn Strathern (1997) und verdichtet Charles Goodharts Beobachtung von 1975.",
+          "verdict": "true",
+          "explanation": "Goodhart schrieb 1975 über Geldpolitik; die Formulierung „When a measure becomes a target, it ceases to be a good measure“ prägte Strathern 1997."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o4",
+          "text": "Das Gesetz gilt nur für Menschen, automatisierte Optimierer sind davon nicht betroffen.",
+          "verdict": "false",
+          "explanation": "Es gilt für jeden Optimierer. Die Darwin Gödel Machine ist ein Beispiel für einen Agenten, der die Metrik statt der Aufgabe optimiert hat."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o5",
+          "text": "Das Gesetz bedeutet, dass Metriken grundsätzlich nutzlos sind und man auf sie verzichten sollte.",
+          "verdict": "false",
+          "explanation": "Metriken bleiben das Werkzeug des Monitorings. Das Gesetz warnt vor blindem Optimieren einer einzelnen Metrik, nicht vor dem Messen."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o6",
+          "text": "Eine einmal eingeführte Gegenmetrik beseitigt das Problem endgültig.",
+          "verdict": "false",
+          "explanation": "Auch eine Gegenmetrik kann zum Ziel werden und umgangen werden. Sie erschwert die Manipulation, schließt sie aber nicht für immer aus."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o7",
+          "text": "Eine Metrik als Ziel vorzugeben ist immer ein Fehler.",
+          "verdict": "depends",
+          "explanation": "Als Orientierung ist ein Ziel hilfreich. Kritisch wird es bei starkem Optimierungsdruck ohne Gegenmetrik, besonders wenn ein Agent optimiert."
+        },
+        {
+          "id": "evo-goodhart-grundidee-o8",
+          "text": "Ein Alert-Schwellwert ist ein Ziel im Sinne des Gesetzes.",
+          "verdict": "depends",
+          "explanation": "Das hängt davon ab, woran jemand gemessen wird: Zählt ein Team oder Agent die Zahl der Alerts als Erfolg, lädt das zum Anheben der Schwellwerte ein."
+        }
+      ]
+    },
+    {
+      "id": "evo-probe-200-provider",
+      "question": "Im Versicherungsintegrator sind alle Pods „Ready“, 99,9 % der Antworten sind HTTP 200 und die interne Error-Rate ist niedrig, trotzdem melden Kunden unvollständige Quotes. Welche Aussagen treffen zu?",
+      "difficulty": "medium",
+      "section": "Evolution & Goodhart",
+      "explanation": "Pod-Status, Statuscode und globale Raten messen den Prozess, nicht den Nutzerpfad. Vollständige Quotes und die Fehlerrate je Provider zeigen, ob das Ziel erreicht wird.",
+      "options": [
+        {
+          "id": "evo-probe-200-provider-o1",
+          "text": "Eine 200-Antwort kann unvollständig sein, etwa wenn nur 7 von 10 Providern geantwortet haben.",
+          "verdict": "true",
+          "explanation": "Das ist die Partielle Degradation von der Errors-Folie: technisch erfolgreich, fachlich unvollständig."
+        },
+        {
+          "id": "evo-probe-200-provider-o2",
+          "text": "Fällt ein Provider aus und der Service liefert trotzdem 200, bleibt die interne Error-Rate niedrig.",
+          "verdict": "true",
+          "explanation": "Die interne Rate zählt 5xx des eigenen Services. Der Provider-Ausfall steckt in den Client-Metriken, nicht in den Server-Statuscodes."
+        },
+        {
+          "id": "evo-probe-200-provider-o3",
+          "text": "Die Fehlerrate je Provider (by clientName) macht den Ausfall sichtbar.",
+          "verdict": "true",
+          "explanation": "Die Aufschlüsselung verhindert, dass ein einzelner Anbieter in der Summe aller Provider-Calls untergeht."
+        },
+        {
+          "id": "evo-probe-200-provider-o4",
+          "text": "Sind alle Pods „Ready“, funktionieren auch alle Abhängigkeiten.",
+          "verdict": "false",
+          "explanation": "Ready sagt, dass ein Pod Traffic annehmen kann, nicht, dass Redis oder die Provider erreichbar sind."
+        },
+        {
+          "id": "evo-probe-200-provider-o5",
+          "text": "Spring Boot nimmt standardmäßig Datenbank- und Redis-Checks in die Readiness-Gruppe auf.",
+          "verdict": "false",
+          "explanation": "Laut Spring-Boot-Dokumentation fügt Spring Boot der Readiness- und der Liveness-Gruppe standardmäßig keine weiteren Health-Indikatoren hinzu."
+        },
+        {
+          "id": "evo-probe-200-provider-o6",
+          "text": "Mehr Pods zu starten behebt den Ausfall des Providers.",
+          "verdict": "false",
+          "explanation": "Zusätzliche Pods ändern nichts daran, dass der Anbieter nicht antwortet; sie erhöhen höchstens die Last auf ihn."
+        },
+        {
+          "id": "evo-probe-200-provider-o7",
+          "text": "Die Readiness-Probe sollte immer alle externen Abhängigkeiten prüfen.",
+          "verdict": "depends",
+          "explanation": "Prüft jeder Pod alle Provider, nimmt der Ausfall eines Anbieters alle Pods aus dem Traffic und macht aus einer Teildegradation einen Totalausfall. Die Probe entscheidet nur über den Traffic."
+        },
+        {
+          "id": "evo-probe-200-provider-o8",
+          "text": "Quote-Completeness ist die beste Metrik für den Dienst.",
+          "verdict": "depends",
+          "explanation": "Sie bildet den Nutzerpfad gut ab, braucht aber eine Gegenmetrik wie die Conversion-Rate, sonst wird auch sie zum Ziel, das sich gezielt verbessern lässt."
+        }
+      ]
+    },
+    {
+      "id": "evo-gegenmetrik-paare",
+      "question": "Eine Metrik wird optimiert, vielleicht sogar von einem Agenten. Welche Metrik-Gegenmetrik-Paare aus dem Talk sind sinnvoll?",
+      "difficulty": "medium",
+      "section": "Evolution & Goodhart",
+      "explanation": "Eine Gegenmetrik misst das, was die optimierte Metrik opfern könnte. Sie muss einen anderen blinden Fleck haben als die Metrik selbst.",
+      "options": [
+        {
+          "id": "evo-gegenmetrik-paare-o1",
+          "text": "Cache-Hit-Ratio und Alter der ausgelieferten Tarife.",
+          "verdict": "true",
+          "explanation": "Eine längere TTL treibt die Hit-Ratio hoch, macht die Daten aber älter. Das Alter fängt genau diesen Tausch auf."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o2",
+          "text": "Niedrigere CPU-Limits und CPU-Throttling-Prozentsatz samt P99.",
+          "verdict": "true",
+          "explanation": "Weniger Ressourcen senken Kosten, bis das Throttling steigt und GC-Pausen den P99 verschlechtern. Throttling und P99 sind das Gate."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o3",
+          "text": "Weniger Alerts und Störungen, die Kunden vor dem Alert melden.",
+          "verdict": "true",
+          "explanation": "Stille Alarme sind nur gut, wenn nicht gleichzeitig mehr Störungen unbemerkt bleiben. Kundenmeldungen vor dem Alert zeigen diese Lücke."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o4",
+          "text": "Durchschnittliche Antwortzeit und derselbe Durchschnitt über ein längeres Zeitfenster.",
+          "verdict": "false",
+          "explanation": "Beide Werte teilen denselben blinden Fleck: Der Mittelwert verdeckt langsame Requests. Ein Perzentil wäre die ergänzende Sicht."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o5",
+          "text": "Anteil der HTTP-200-Antworten und Anteil der HTTP-2xx-Antworten.",
+          "verdict": "false",
+          "explanation": "Beide zählen Statuscodes und übersehen unvollständige Quotes im gleichen Maß. Eine Gegenmetrik braucht eine andere Perspektive."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o6",
+          "text": "Cache-Hit-Ratio und Anzahl der Cache-Keys.",
+          "verdict": "false",
+          "explanation": "Die Zahl der Keys sagt nichts darüber, ob die ausgelieferten Daten noch aktuell sind. Das Risiko der längeren TTL bleibt unsichtbar."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o7",
+          "text": "P99 und P50 als Paar.",
+          "verdict": "depends",
+          "explanation": "Zusammen zeigen sie die Form der Verteilung. Beide sagen aber nichts über Korrektheit oder Vollständigkeit der Antwort."
+        },
+        {
+          "id": "evo-gegenmetrik-paare-o8",
+          "text": "Conversion-Rate als Gegenmetrik zur Quote-Completeness.",
+          "verdict": "depends",
+          "explanation": "Sie misst den Geschäftserfolg, schwankt aber mit Saison und Preisen. Als Gegenmetrik taugt sie nur, wenn sich diese Einflüsse herausrechnen lassen."
+        }
+      ]
+    },
+    {
+      "id": "evo-dgm-objective-hacking",
+      "question": "Die Darwin Gödel Machine erreichte in einem Lauf den Höchstwert der Prüffunktion gegen Halluzinationen bei Tool-Aufrufen, ohne das Problem zu lösen. Welche Aussagen zu diesem Fall und seinen Lehren für Produktionsmetriken treffen zu?",
+      "difficulty": "hard",
+      "section": "Evolution & Goodhart",
+      "explanation": "Der Agent entfernte das Logging der Spezial-Tokens, auf das die Prüffunktion angewiesen war. Das ist Objective Hacking: Er optimierte den messbaren Wert statt der Aufgabe, und eine Anweisung allein verhinderte das nicht.",
+      "options": [
+        {
+          "id": "evo-dgm-objective-hacking-o1",
+          "text": "Der Agent entfernte das Logging der Spezial-Tokens und umging so die Prüffunktion.",
+          "verdict": "true",
+          "explanation": "Ohne die Tokens im Log fand die Prüfung keine Halluzination mehr; der Score stieg, das zugrunde liegende Problem blieb."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o2",
+          "text": "Die Anweisung, die Spezial-Tokens nicht zu ändern, hielt den Agenten nicht ab.",
+          "verdict": "true",
+          "explanation": "Eine Regel im Prompt ist kein Schutz. Was ein Agent nicht ändern darf, muss technisch schreibgeschützt sein."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o3",
+          "text": "Objective Hacking trat im Paper häufiger auf, wenn die Prüffunktionen für den Agenten nicht verborgen waren.",
+          "verdict": "true",
+          "explanation": "Deshalb empfiehlt der Talk, Prüffunktionen vor dem Optimierer zu verbergen und eine zweite Messung zu führen, die er nicht sieht."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o4",
+          "text": "Der Agent hat das Halluzinationsproblem gelöst, der hohe Score war berechtigt.",
+          "verdict": "false",
+          "explanation": "Der Score stieg, weil die Messung umgangen wurde, nicht weil weniger halluziniert wurde."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o5",
+          "text": "Eine ausdrückliche Anweisung im Prompt schließt solches Verhalten vollständig aus.",
+          "verdict": "false",
+          "explanation": "Der Fall zeigt das Gegenteil: Trotz der Anweisung wurde der Eingriff vorgenommen."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o6",
+          "text": "Verborgene Prüffunktionen schließen Objective Hacking vollständig aus.",
+          "verdict": "false",
+          "explanation": "Im beschriebenen Lauf waren die Prüffunktionen vor dem Agenten verborgen, und er hat dennoch den Weg über das Logging gefunden. Verbergen senkt die Häufigkeit, es eliminiert sie nicht."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o7",
+          "text": "Eine Holdout-Messung, die der Agent nie sieht, löst das Problem.",
+          "verdict": "depends",
+          "explanation": "Sie erschwert die Manipulation erheblich. Sie hilft aber nur, wenn der Agent weder die Daten noch die Infrastruktur der Messung beeinflussen kann."
+        },
+        {
+          "id": "evo-dgm-objective-hacking-o8",
+          "text": "Ein Agent mit Schreibrechten kann auch Alert-Regeln in Produktion umgehen.",
+          "verdict": "depends",
+          "explanation": "Das hängt davon ab, was er ändern darf. Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar zu machen, nimmt dem Agenten diese Möglichkeit."
+        }
+      ]
     }
   ]
 }

@@ -3,7 +3,8 @@ theme: default
 title: "Grafana LGTM: Monitoring in Kubernetes Distributed Systems"
 info: |
   LGTM Stack (Loki, Grafana, Tempo, Mimir) mit OpenTelemetry.
-  Monitoring-Methodologien, Saturation, Systemdynamik und Dashboard-Architektur.
+  Monitoring-Methodologien, Saturation, Systemdynamik und Dashboard-Architektur,
+  dazu Software-Evolution aus Produktionsdaten mit Agenten und Goodharts Gesetz.
 monaco: true
 mdc: true
 lang: de
@@ -993,16 +994,216 @@ metadata:
 ```
 
 ---
+layout: section
+routeAlias: software-evolution
+---
+
+# Software-Evolution aus Produktionsdaten
+
+Messen → Lernen → Ändern — zunehmend mit Agenten
+
+---
+hideInToc: true
+---
+
+# Drei Rückkanäle aus der Produktion
+
+Die Telemetrie des Stacks beantwortet mehr als „läuft es?“. Sie speist die Weiterentwicklung des Systems:
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 1em 0 0.6em; font-size: 0.82em;">
+<Callout tone="info">
+<h4 style="color: #3b82f6; margin: 0 0 6px;">Kontinuierlich verbessern</h4>
+<p style="margin: 0 0 6px;">Hot Path aus dem Flame Graph, Trend der Saturation (CPU-Throttling, Pool-Auslastung), Cache-Hit-Ratio.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Mit Agent:</b> findet die breiteste Funktion, schlägt den Fix als PR vor und misst nach dem Rollout dieselbe Metrik erneut.</p>
+</Callout>
+<Callout tone="success">
+<h4 style="color: #22c55e; margin: 0 0 6px;">Features planen</h4>
+<p style="margin: 0 0 6px;">Welche Endpoints und Provider werden genutzt? Wo bricht die Conversion-Rate ein, wo sind Quotes unvollständig?</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Mit Agent:</b> fasst Nutzungsdaten für das Refinement zusammen und belegt Annahmen mit Zahlen statt Bauchgefühl.</p>
+</Callout>
+<Callout tone="warning">
+<h4 style="color: #d97706; margin: 0 0 6px;">Bugs finden und analysieren</h4>
+<p style="margin: 0 0 6px;">Exemplar → Trace → Log: der Drill-Down aus diesem Talk, vom Symptom bis zur Zeile Code.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Mit Agent:</b> geht den Drill-Down selbst durch und formuliert eine Hypothese samt Beleg.</p>
+</Callout>
+</div>
+
+<div class="text-slate-500" style="font-size: 0.72em;">
+Technisch: der offizielle <code>mcp-grafana</code>-Server gibt Agenten Zugriff auf PromQL, LogQL, Dashboards, Alerts und Sift-Untersuchungen (Stand 10/2026).
+</div>
+
+<!--
+- Drei Wege, wie Produktionsdaten ins Engineering zurückfließen. Die
+  Spalten folgen der Aufzählung im Vortrag: verbessern, planen, Bugs.
+- „Mit Agent“ meint: der Agent bekommt dieselben Abfragen wie ein Mensch
+  (MCP-Server zu Grafana) und arbeitet den Drill-Down aus der Sektion
+  „Korrelation“ ab.
+- mcp-grafana: Prometheus, Loki, Pyroscope, Dashboards, Alert-Regeln,
+  Incidents, Sift (Quelle: README des Servers, geprüft 09.10.2026).
+-->
+
+---
+hideInToc: true
+---
+
+# Der Agenten-Loop — ein Ansatz zur Antifragilität
+
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 0.8em 0; font-size: 0.8em;">
+  <span style="padding: 6px 12px; border-radius: 8px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.35);"><b>Telemetrie</b><br/>Mimir · Loki · Tempo</span>
+  <span class="text-gray-400">→</span>
+  <span style="padding: 6px 12px; border-radius: 8px; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.35);"><b>Agent</b><br/>Analyse, Hypothese</span>
+  <span class="text-gray-400">→</span>
+  <span style="padding: 6px 12px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.35);"><b>Änderung</b><br/>Pull Request</span>
+  <span class="text-gray-400">→</span>
+  <span style="padding: 6px 12px; border-radius: 8px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);"><b>Gate</b><br/>Review · Tests · SLO</span>
+  <span class="text-gray-400">→</span>
+  <span style="padding: 6px 12px; border-radius: 8px; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35);"><b>Rollout</b><br/>gestaffelt</span>
+  <span class="text-gray-400">↺</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; font-size: 0.8em;">
+<Callout tone="danger" dense>
+<b>Fragil</b> — Stress schadet. Ein Incident hinterlässt eine Wunde, aber keine Lehre.
+</Callout>
+<Callout tone="warning" dense>
+<b>Robust</b> — Stress schadet nicht. Circuit Breaker, Headroom und Back-Pressure halten die Last aus.
+</Callout>
+<Callout tone="success" dense>
+<b>Antifragil</b> — Stress nützt. Jeder Incident wird zu einem Alert, einem Test und einem Fix.
+</Callout>
+</div>
+
+**Neu:** Der Lernschritt braucht keinen Menschen mehr im Detail-Loop. Der Agent schließt die Schleife; Mensch und Gate bleiben die Bremse.
+
+<div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
+Begriff: Nassim N. Taleb, <i>Antifragile</i> (2012) · Selbstverbessernde Agenten (DGM, Hermes): <TalkXref slug="20260408-agents-details">Wie funktioniert ein Coding-Agent?</TalkXref>
+</div>
+
+<!--
+- Der Loop ist ein Ansatz, kein Beweis: Antifragilität im Sinne von Taleb
+  gilt auch für Organisationen und Märkte, nicht nur für Biologie. Neu ist,
+  dass Software ihren eigenen Lernschritt (Analyse → Fix) automatisieren
+  kann. Chaos Engineering war die menschliche Vorstufe.
+- Das Gate ist der kritische Teil: ohne Review, Tests und SLO-Prüfung
+  macht der Agent aus einer Lernschleife eine Verstärkung von Fehlern.
+- Brücke zur nächsten Sektion: Der Agent optimiert, was wir ihm als Signal
+  geben. Was, wenn das Signal nicht das Ziel ist?
+-->
+
+---
+layout: section
+routeAlias: goodhart
+---
+
+# Das Alignment-Problem
+
+Wir messen A — und hoffen auf B
+
+---
+hideInToc: true
+---
+
+# Goodharts Gesetz
+
+> „When a measure becomes a target, it ceases to be a good measure.“
+>
+> — Marilyn Strathern (1997), nach Charles Goodhart (1975)
+
+Ein Agent optimiert extrem gut: Er findet die Lücke zwischen **A** (Metrik) und **B** (Ziel) schneller als ein Team. Vier Varianten nach Manheim & Garrabrant (2018):
+
+<div style="font-size: 0.78em;">
+
+| Variante         | Mechanismus                             | Beispiel aus dem Monitoring                            |
+| ---------------- | --------------------------------------- | ------------------------------------------------------ |
+| **Regressional** | Auswahl nach Proxy wählt auch Rauschen  | „Bester“ Provider im Messfenster: oft nur Glück        |
+| **Extremal**     | Zusammenhang trägt nur im Normalbereich | Hit-Ratio 99 % per langer TTL, dafür alte Tarife       |
+| **Kausal**       | Eingriff am Proxy statt an der Ursache  | Schwellwert anheben: weniger Alarme, gleiche Störungen |
+| **Adversarial**  | Optimierer hat Anreiz zur Manipulation  | Agent entfernt das Logging seiner Prüffunktion         |
+
+</div>
+
+<div class="text-slate-500" style="margin-top: 0.2em; font-size: 0.65em;">
+Verwandt: Campbell's Law (1976) — je wichtiger ein Indikator für Entscheidungen, desto stärker der Druck, ihn zu verfälschen
+</div>
+
+<!--
+- Zitat: Goodhart schrieb 1975 über Geldpolitik („Any observed statistical
+  regularity will tend to collapse once pressure is placed upon it for
+  control purposes“). Die bekannte Kurzfassung stammt von Strathern, 1997.
+- Vier Varianten: Manheim & Garrabrant, „Categorizing Variants of
+  Goodhart's Law“, arXiv 1803.04585 (2018).
+- Die letzte Zeile ist ein echter Fall: Darwin Gödel Machine (Sakana AI,
+  2025) — Folie danach.
+-->
+
+---
+clicks: false
+hideInToc: true
+---
+
+# A vs. B — Interaktiv
+
+<MetricAlignment />
+
+<!--
+- Bedienung: links ein Ziel anklicken, rechts erscheinen gemessene
+  Metrik (A), das Fehlbild, das bessere Signal und eine Gegenmetrik.
+- Zeigen: „Dienst ist benutzbar“ (Probe grün, Quotes kaputt),
+  „Provider“ (globale Rate versteckt den Ausfall) und die drei
+  Agent-Zeilen unten.
+- Quellen: Spring-Boot-Doku, Kubernetes Probes (Readiness-Gruppe ohne
+  externe Abhängigkeiten); DGM-Paper, arXiv 2505.22954.
+-->
+
+---
+hideInToc: true
+---
+
+# Gegenmittel
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.85em;">
+<Callout tone="info">
+<b>Gegenmetrik koppeln.</b> Jede Metrik, die optimiert wird, bekommt ein Gegengewicht: Hit-Ratio ↔ Alter der Daten, weniger Alerts ↔ unentdeckte Störungen, niedrigere Limits ↔ CPU-Throttling. (Idee: Andy Grove, <i>High Output Management</i>)
+</Callout>
+<Callout tone="success">
+<b>Am Nutzerpfad messen.</b> Vollständige Quotes und Conversion-Rate statt Probe und Statuscode — die Perspektive aus „Errors ≠ Errors“.
+</Callout>
+<Callout tone="warning">
+<b>Verteilung statt Mittelwert, Aufschlüsselung statt Summe.</b> P99 statt Durchschnitt, <code>by (clientName)</code> statt globaler Rate.
+</Callout>
+<Callout tone="danger">
+<b>Holdout und Schreibschutz.</b> Prüffunktionen vor dem Agenten verbergen, Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar. Im DGM-Experiment trat Objective Hacking häufiger auf, wenn die Prüffunktionen sichtbar waren.
+</Callout>
+</div>
+
+**Faustregel:** Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht beeinflusst.
+
+<!--
+- Andy Grove (Intel): Indikatoren paaren, damit die Optimierung der einen
+  Größe die andere nicht stillschweigend opfert.
+- DGM: Die Prüffunktionen waren vor dem Agenten verborgen; trat
+  Objective Hacking trotzdem auf, dann beim Entfernen der Spezial-Tokens
+  (arXiv 2505.22954). Ohne Verbergen häufiger.
+- Überleitung: die Zusammenfassung ergänzt einen vierten Block.
+-->
+
+---
 hideInToc: true
 ---
 
 # Zusammenfassung
+
+<div style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; font-size: 0.82em;">
+<div>
 
 ### Drei Regeln aus der Systemdynamik
 
 1. **Excess Capacity ist Pflicht** — ~20% Headroom für Puffer-Recovery
 2. **Gleichmäßiger Flow statt Batches** — TTL+Jitter, Leaky Bucket, Staggered Rollout
 3. **Hysterese einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Backing-Service-Flow-Control (Galera/RabbitMQ/InnoDB) ist Symptom fehlender Kapazität — metastabilen Kollaps via Load-Shedding _vor_ der Komponente brechen
+
+</div>
+<div>
 
 ### Dashboard-Strategie
 
@@ -1013,6 +1214,13 @@ hideInToc: true
 ### LGTM-Korrelation
 
 Exemplars → Trace → Logs: Von „P99 ist hoch“ zu Root Cause in **drei Klicks**.
+
+### Aus Messungen lernen
+
+Agenten schließen die Schleife Telemetrie → Fix → Rollout; das **SLO-Gate** bleibt beim Menschen. Jede optimierte Metrik bekommt eine **Gegenmetrik** (Goodhart).
+
+</div>
+</div>
 
 ---
 layout: section
@@ -1189,7 +1397,7 @@ hideInToc: true
 
 # Danke
 
-Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs · Sentry Docs
+Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs · Sentry Docs · Strathern (1997) · Manheim & Garrabrant (2018) · Taleb (2012) · Darwin Gödel Machine (2025)
 
 Alle Simulationen zum Selbst-Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
 
