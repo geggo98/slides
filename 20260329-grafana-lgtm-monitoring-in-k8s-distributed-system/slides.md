@@ -667,6 +667,11 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="back
   Sägezahn im Hystereseband; Regler: exponentielle Annäherung; Reflex: Rate
   kippt sofort auf 0 und zurück; Dämpfer: gedämpftes Mitlaufen. ⓘ an jeder
   Spur hält alles an und öffnet die Vergrößerung mit Erklärung.
+  Jeder Datenpunkt ist klickbar: Dialog mit Was, Warum hier, Achtung und Link
+  auf die Original-Doku. Einordnung faktengeprüft: Fenster-/Credit-Verfahren
+  (TCP, Netty, HTTP/2, Reactive Streams, credit_flow) sind pegelbasiert und
+  stehen im Wehr. Lehrpaar: Envoy stop_accepting_requests ist mit Trigger
+  threshold ein Reflex, mit scaled ein Dämpfer.
 -->
 
 ---

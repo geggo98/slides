@@ -23,6 +23,8 @@
  * die Spur (ⓘ) hält alle Spuren an, dimmt die Folie und öffnet einen Dialog
  * mit der vergrößerten Spur und einer Abgrenzung zu den anderen Quadranten;
  * Klick irgendwohin oder Escape schließt und setzt die Animationen fort.
+ * Jeder Datenpunkt ist ebenfalls klickbar und öffnet einen Dialog mit
+ * Einordnung, Back-Pressure-Hinweis und Link auf die Original-Doku.
  */
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { onSlideLeave, useDarkMode } from "@slidev/client";
@@ -186,35 +188,327 @@ const TRACES = {
 // Mechanismen mit *relativer* Ausprägung auf beiden Achsen (0..1).
 // s = Seite des Labels relativ zum Punkt ('r' rechts, 'l' links) — Labels
 // wachsen zur Mitte, damit die Plot-Ränder frei bleiben.
+// Dialog je Punkt: name (voller Name), what (Was ist es), why (Warum steht
+// es hier), watch (Worauf achten) und doc (Original-Doku). Einordnung und
+// Belege: geprüft gegen die Primärdoku (Stand 10.10.2026); was nur aus dem
+// Quellcode stammt, ist im Text als solches benannt.
 const POINTS = [
   // Schwellwert-Wehr — zustandsbehaftet + binär
-  { l: "OOM-Kill", x: 0.07, y: 0.93, q: "wehr", s: "r" },
-  { l: "ZGC-Stall", x: 0.14, y: 0.886, q: "wehr", s: "r" },
-  { l: "RabbitMQ-Block", x: 0.24, y: 0.842, q: "wehr", s: "r" },
-  { l: "Netty Watermark", x: 0.08, y: 0.798, q: "wehr", s: "r" },
-  { l: "Galera-FC", x: 0.2, y: 0.754, q: "wehr", s: "r" },
-  { l: "Kafka-Buffer", x: 0.29, y: 0.71, q: "wehr", s: "r" },
-  { l: "TCP Zero-Window", x: 0.07, y: 0.666, q: "wehr", s: "r" },
-  { l: "HTTP/2", x: 0.22, y: 0.622, q: "wehr", s: "r" },
-  { l: "RabbitMQ credit_flow", x: 0.12, y: 0.578, q: "wehr", s: "r" },
-  { l: "Reactive Streams", x: 0.24, y: 0.534, q: "wehr", s: "r" },
+  {
+    l: "OOM-Kill",
+    name: "OOM-Kill (cgroup memory.max)",
+    x: 0.07,
+    y: 0.93,
+    q: "wehr",
+    s: "r",
+    what: "Erreicht ein Container sein Memory-Limit (`memory.max`) und lässt sich nichts mehr freigeben, beendet der Kernel einen Prozess der cgroup.",
+    why: "Der Kernel kennt nur laufen oder töten: binär. Auslöser ist der gespeicherte Speicherstand: Pegel. Eine Reset-Schwelle gibt es nicht, der Reset ist ein Neustart mit kaltem Cache. Das ist die härteste Form des Wehrs.",
+    watch:
+      "Page-Cache zählt zum Limit. `working_set` gegen Limit beobachten (`container_memory_working_set_bytes`), dazu den Grund `OOMKilled` und `restartCount`.",
+    doc: "https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files",
+  },
+  {
+    l: "ZGC-Stall",
+    name: "ZGC Allocation Stall",
+    x: 0.14,
+    y: 0.886,
+    q: "wehr",
+    s: "r",
+    what: "Kann ein Java-Thread nicht allokieren, weil ZGC keinen freien Speicher mehr hat, hält ZGC ihn an, bis Seiten frei sind.",
+    why: "Der Thread steht oder läuft: binär. Auslöser ist der freie Heap: Pegel. Eine eigene Reset-Schwelle gibt es nicht, sobald Speicher frei ist, läuft der Thread weiter.",
+    watch:
+      "Jeder Stall ist ein Alarm, ein gesundes ZGC stallt praktisch nie. JFR-Event `jdk.ZAllocationStall` und GC-Log-Ursache „Allocation Stall“ beobachten, Heap-Headroom oder CPU erhöhen.",
+    doc: "https://openjdk.org/jeps/439",
+  },
+  {
+    l: "RabbitMQ-Block",
+    name: "RabbitMQ Connection-Blocking",
+    x: 0.24,
+    y: 0.842,
+    q: "wehr",
+    s: "r",
+    what: "Übersteigt der Speicher den `vm_memory_high_watermark` (Standard 0,6 des RAM) oder fällt der freie Platz unter `disk_free_limit`, blockiert RabbitMQ alle publizierenden Verbindungen.",
+    why: "Alles oder nichts: binär. Auslöser ist der Speicherstand: Pegel. Anders als bei Galera gibt es keine eigene Reset-Schwelle, der Alarm endet, sobald der Pegel wieder unter derselben Watermark liegt.",
+    watch:
+      "Consumer bleiben unblockiert. Clients sollten `connection.blocked` behandeln. `memory.used` gegen die Watermark und den Verbindungsstatus `blocked/blocking` beobachten.",
+    doc: "https://www.rabbitmq.com/docs/alarms",
+  },
+  {
+    l: "Netty Watermark",
+    name: "Netty isWritable (Write Buffer Water Mark)",
+    x: 0.08,
+    y: 0.798,
+    q: "wehr",
+    s: "r",
+    what: "`Channel.isWritable()` meldet false, sobald die ausgehenden Bytes die High Water Mark überschreiten, und wieder true, wenn sie unter die Low Water Mark fallen.",
+    why: "Das Signal ist ein Schalter: binär. Er hängt am Füllstand der Schreibwarteschlange: Pegel. High und Low Water Mark bilden eine echte Hysterese mit getrennter Set- und Reset-Schwelle.",
+    watch:
+      "Nur ein Hinweis: Wer `isWritable()` oder `channelWritabilityChanged` ignoriert, puffert weiter bis zum OutOfMemoryError. `bytesBeforeUnwritable()` zeigt den Abstand zur Schwelle.",
+    doc: "https://netty.io/4.1/api/io/netty/channel/WriteBufferWaterMark.html",
+  },
+  {
+    l: "Galera-FC",
+    name: "Galera Flow Control",
+    x: 0.2,
+    y: 0.754,
+    q: "wehr",
+    s: "r",
+    what: "Wächst die Receive-Queue eines Nodes über `gcs.fc_limit` (Standard 16), pausiert der Cluster die Replikation (`FC_PAUSE`).",
+    why: "Pause oder Weiter: binär. Die Queue-Länge ist ein Pegel. Eine Doppelschwelle entsteht nur, wenn `gcs.fc_factor` kleiner als 1 ist: der Standard 1,0 setzt Pause und Resume auf dieselbe Schwelle.",
+    watch:
+      "Ein langsamer Node bremst alle. `wsrep_flow_control_paused` (Anteil der Pausenzeit) und `wsrep_flow_control_sent` (welcher Node ist der Verursacher) beobachten.",
+    doc: "https://mariadb.com/docs/galera-cluster/reference/wsrep-variable-details/wsrep_provider_options",
+  },
+  {
+    l: "Kafka-Buffer",
+    name: "Kafka Producer buffer.memory",
+    x: 0.29,
+    y: 0.71,
+    q: "wehr",
+    s: "r",
+    what: "Ist der Producer-Puffer `buffer.memory` (Standard 32\u00a0MB) voll, blockiert `send()` bis `max.block.ms` und wirft dann eine Exception.",
+    why: "`send()` blockiert oder nicht: binär. Auslöser ist der Füllstand des Puffers: Pegel. Eine Hysterese gibt es nicht, sobald genug Bytes frei sind, geht es weiter.",
+    watch:
+      "`send()` blockiert den aufrufenden Thread, in einem Event-Loop also das ganze Programm. Producer-Metriken `buffer-available-bytes` und `buffer-exhausted-rate` beobachten.",
+    doc: "https://kafka.apache.org/40/generated/producer_config.html#producerconfigs_buffer.memory",
+  },
+  {
+    l: "TCP Zero-Window",
+    name: "TCP Zero-Window",
+    x: 0.07,
+    y: 0.666,
+    q: "wehr",
+    s: "r",
+    what: "Ist der Empfangspuffer voll, meldet der Empfänger Window 0. Der Sender stoppt und fragt in Abständen mit Zero-Window-Probes nach.",
+    why: "Window 0 ist ein harter Stopp: binär. Das Fenster ist der freie Pufferplatz: Pegel. Die Silly-Window-Vermeidung (RFC 9293) öffnet es erst wieder, wenn ein größerer Block frei ist, das wirkt wie ein Reset-Band.",
+    watch:
+      "Die Probes folgen mit wachsendem Abstand, ein Stillstand kann die Ursache überdauern. Im Mitschnitt zeigt der Wireshark-Filter `tcp.analysis.zero_window` die Fälle.",
+    doc: "https://www.rfc-editor.org/rfc/rfc9293.html#section-3.8.6.1",
+  },
+  {
+    l: "HTTP/2",
+    name: "HTTP/2 Flow Control",
+    x: 0.22,
+    y: 0.622,
+    q: "wehr",
+    s: "r",
+    what: "HTTP/2 begrenzt die gesendeten Daten pro Stream und pro Verbindung durch ein Credit-Fenster, das der Empfänger mit `WINDOW_UPDATE` auffüllt.",
+    why: "RFC 9113 nennt es „credit-based“: Ist das Fenster verbraucht, darf der Sender nichts mehr schicken (binär), der Restkredit ist ein gespeicherter Zähler (Pegel). Proportional wäre nur eine Implementierung, die ihr Fenster adaptiv anpasst. Das Protokoll schreibt es nicht vor.",
+    watch:
+      "Das Standardfenster von 65.535\u00a0Byte begrenzt den Durchsatz auf Fenster/RTT. Das Verbindungsfenster kann alle Streams gleichzeitig aushungern.",
+    doc: "https://www.rfc-editor.org/rfc/rfc9113.html#section-5.2.1",
+  },
+  {
+    l: "RabbitMQ credit_flow",
+    name: "RabbitMQ credit_flow",
+    x: 0.12,
+    y: 0.578,
+    q: "wehr",
+    s: "r",
+    what: "Zwischen den Erlang-Prozessen reader → channel → queue → `msg_store` gewährt jeder Prozess dem Vorgänger Credits: 200 am Anfang, 50 weitere nach je 50 verarbeiteten Nachrichten.",
+    why: "Sind die Credits verbraucht, blockt der Prozess: binär. Die Credits sind ein Zähler, also ein Pegel mit kleinem Reset-Band (+50), nur im Millisekundenbereich. Darum liegt der Punkt am unteren Rand des Wehrs.",
+    watch:
+      "Die Bremse wirkt stromaufwärts: Ein langsamer Message-Store kann den Reader blockieren, Publisher werden ohne Alarm langsamer. Der Verbindungsstatus „flow“ in der Management-UI zeigt es.",
+    doc: "https://www.rabbitmq.com/blog/2015/10/06/new-credit-flow-settings-on-rabbitmq-3-5-5",
+  },
+  {
+    l: "Reactive Streams",
+    name: "Reactive Streams request(n)",
+    x: 0.24,
+    y: 0.534,
+    q: "wehr",
+    s: "r",
+    what: "Ein Publisher darf nur so viele Elemente senden, wie der Subscriber per `request(n)` angefordert hat.",
+    why: "Der offene Bedarf ist ein Zähler: Pegel. Bei 0 herrscht harter Stopp (Regel 1.1): binär. Wie viel angefordert wird, regelt die Spezifikation nicht. Proportional wird es erst durch eine Operator-Strategie wie `limitRate`.",
+    watch:
+      "`request(Long.MAX_VALUE)` gilt als „effectively unbounded“ und schaltet Back-Pressure ab (Regel 3.17). Prefetch-Puffer in Operatoren verstecken Warteschlangen.",
+    doc: "https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.4/README.md#1.1",
+  },
   // Pegel-Regler — zustandsbehaftet + proportional
-  { l: "InnoDB-Checkpoint", x: 0.78, y: 0.92, q: "regler", s: "l" },
-  { l: "cgroup memory.high", x: 0.9, y: 0.86, q: "regler", s: "l" },
-  { l: "CockroachDB", x: 0.7, y: 0.8, q: "regler", s: "l" },
-  { l: "MongoDB-FC", x: 0.7, y: 0.68, q: "regler", s: "l" },
-  { l: "Shenandoah ≤ JDK 25", x: 0.86, y: 0.74, q: "regler", s: "l" },
-  { l: "Go GC-assist", x: 0.88, y: 0.62, q: "regler", s: "l" },
+  {
+    l: "InnoDB-Checkpoint",
+    name: "InnoDB Adaptive Flushing / Checkpoint",
+    x: 0.78,
+    y: 0.92,
+    q: "regler",
+    s: "l",
+    what: "InnoDB schreibt veränderte Seiten (Dirty Pages) schneller zurück, je weiter der Checkpoint hinter dem Redo-Log-Kopf liegt (Adaptive Flushing).",
+    why: "Die Flush-Rate wächst mit der Checkpoint-Age: proportional und pegelbasiert. Das letzte Stück ist hart: Füllt sich das Redo-Log, folgt ein Sharp Checkpoint mit Durchsatzeinbruch. Darum liegt der Punkt rechts, aber nicht am Rand.",
+    watch:
+      "`Innodb_checkpoint_age` gegen die Redo-Kapazität und den Dirty-Page-Anteil gegen `innodb_max_dirty_pages_pct_lwm` (Standard 10\u00a0%) beobachten. Die Stufen Async 7/8 und Sync 15/16 nennt das MySQL-Handbuch nicht.",
+    doc: "https://dev.mysql.com/doc/refman/8.4/en/innodb-buffer-pool-flushing.html",
+  },
+  {
+    l: "cgroup memory.high",
+    name: "cgroup v2 memory.high",
+    x: 0.9,
+    y: 0.86,
+    q: "regler",
+    s: "l",
+    what: "Weiche Speichergrenze der cgroup v2: Darüber werden die Prozesse gedrosselt und unter Reclaim-Druck gesetzt, der OOM-Killer läuft nicht.",
+    why: "Auslöser ist der Speicherstand: Pegel. Die Bremse wirkt gestuft statt hart: proportional. Dass die Verzögerung mit der Überschreitung wächst, ist aus dem Kernel-Code abgeleitet, das Handbuch beschreibt nur Drosselung und Reclaim-Druck.",
+    watch:
+      "Unter extremen Bedingungen kann die Grenze überschritten werden. `memory.pressure` (PSI) beobachten und `memory.max` als harten Backstop setzen.",
+    doc: "https://docs.kernel.org/admin-guide/cgroup-v2.html#memory-interface-files",
+  },
+  {
+    l: "CockroachDB",
+    name: "CockroachDB Admission Control",
+    x: 0.7,
+    y: 0.8,
+    q: "regler",
+    s: "l",
+    what: "Admission Control vergibt Schreib-Tokens je Store anhand der Gesundheit des LSM-Baums (L0). Arbeit ohne Token wartet in einer Prioritätswarteschlange.",
+    why: "Die Token-Menge sinkt stufenlos mit wachsendem L0-Druck: proportional. Die Eingangsgröße (L0-Sublevels, IO-Overload-Score) ist ein Füllstand: Pegel.",
+    watch:
+      "Ein Overload-Score über 1,0 deutet auf Überlast. `admission.granter.io_tokens_exhausted_duration.kv` und das IO-Overload-Diagramm beobachten. Sind viele Nodes betroffen, ist der Cluster zu klein.",
+    doc: "https://www.cockroachlabs.com/docs/stable/admission-control",
+  },
+  {
+    l: "MongoDB-FC",
+    name: "MongoDB Flow Control",
+    x: 0.7,
+    y: 0.68,
+    q: "regler",
+    s: "l",
+    what: "Flow Control begrenzt auf dem Primary die Schreibrate über Tickets, damit der Majority-Commit-Lag unter `flowControlTargetLagSeconds` (Standard 10) bleibt.",
+    why: "Je näher der Lag dem Ziel kommt, desto weniger Tickets pro Sekunde: proportional. Der Lag ist ein aufgelaufener Wert: Pegel.",
+    watch:
+      "Bei PSA (Primary-Secondary-Arbiter: zwei Datenknoten plus ein Arbiter, der nur abstimmt und keine Daten hält) kann der Majority-Commit-Punkt nicht mehr vorrücken, sobald der Secondary ausfällt. Der Lag wächst dann ohne Lastproblem, und Flow Control drosselt den Primary unnötig. `flowControl.isLagged` und `timeAcquiringMicros` beobachten.",
+    doc: "https://www.mongodb.com/docs/manual/replication/#replication-lag-and-flow-control",
+  },
+  {
+    l: "Shenandoah ≤ JDK 25",
+    name: "Shenandoah Pacing (bis JDK 25)",
+    x: 0.86,
+    y: 0.74,
+    q: "regler",
+    s: "l",
+    what: "Der Pacer lässt allokierende Threads bis zu `ShenandoahPacingMaxDelay` (10\u00a0ms) warten, wenn ihr Allokationsbudget im laufenden GC-Zyklus aufgebraucht ist.",
+    why: "Das Budget ergibt sich aus Heap-Ständen (Live-Daten und Belegung, laut JDK-21-Quellcode): Pegel. Die Wartezeit wächst stufenlos: proportional. Der Deckel liegt bei 10\u00a0ms, Set- und Reset-Schwellen gibt es nicht.",
+    watch:
+      "Pacing erscheint nur im GC-Log, nicht als JFR-Event. Das Verfahren wurde mit JDK-8350050 für JDK 26 entfernt, die verlinkte Seite ist das Ticket.",
+    doc: "https://bugs.openjdk.org/browse/JDK-8350050",
+  },
+  {
+    l: "Go GC-assist",
+    name: "Go GC Mutator Assist",
+    x: 0.88,
+    y: 0.62,
+    q: "regler",
+    s: "l",
+    what: "Während der Mark-Phase müssen allokierende Goroutinen Scan-Arbeit im Verhältnis zu ihrer Allokation leisten (Mutator Assist).",
+    why: "Die Assist-Arbeit pro Byte ergibt sich laut Quellcode (`mgcpacer.go`) aus dem Restabstand zum Heap-Ziel: Scan-Rest geteilt durch Heap-Rest. Stufenlos und pegelbasiert: Regler.",
+    watch:
+      "Die Kosten landen als Latenz bei der Goroutine, die gerade allokiert. `GODEBUG=gcpacertrace=1` zeigt den Pacer.",
+    doc: "https://go.dev/doc/gc-guide#Latency",
+  },
   // Stop-and-Go-Reflex — zustandsarm + binär
-  { l: "gRPC-Deadline", x: 0.07, y: 0.16, q: "reflex", s: "r" },
-  { l: "Readiness-Probe", x: 0.22, y: 0.24, q: "reflex", s: "r" },
-  { l: "Envoy CPU-Schwelle", x: 0.09, y: 0.32, q: "reflex", s: "r" },
-  { l: "Mimir CPU-Limit", x: 0.24, y: 0.41, q: "reflex", s: "r" },
+  {
+    l: "gRPC-Deadline",
+    name: "gRPC Deadline",
+    x: 0.07,
+    y: 0.16,
+    q: "reflex",
+    s: "r",
+    what: "Jeder Aufruf trägt eine Deadline. Ist sie verstrichen, bricht der Client mit `DEADLINE_EXCEEDED` ab und der Server beendet die Arbeit (`CANCELLED`).",
+    why: "Auslöser ist die Laufzeit dieses einen Aufrufs gegen eine Uhr, ohne Systemfüllstand und ohne Verlauf: zustandsarm. Der Abbruch ist alles oder nichts: binär.",
+    watch:
+      "Die Deadline spart Arbeit, auf die niemand mehr wartet, und misst keine Überlast. Zu knapp gesetzt, sieht jede Verzögerung wie Überlast aus. Metrik: `grpc_server_handled_total` mit `grpc_code=DeadlineExceeded`.",
+    doc: "https://grpc.io/docs/guides/deadlines/",
+  },
+  {
+    l: "Readiness-Probe",
+    name: "Kubernetes Readiness-Probe",
+    x: 0.22,
+    y: 0.24,
+    q: "reflex",
+    s: "r",
+    what: "Schlägt der Readiness-Check `failureThreshold`-mal in Folge fehl (Standard 3), nimmt Kubernetes den Pod aus den Service-Endpoints. Es kommt kein Traffic mehr an.",
+    why: "Der Pod ist im Verkehr oder draußen: binär. Auslöser sind die letzten Probe-Ergebnisse, kein Füllstand: zustandsarm. Der Zähler der Fehlschläge ist ein kleines Gedächtnis. Mit `failureThreshold` 1 wäre es ein reiner Reflex.",
+    watch:
+      "Der Traffic wandert auf die übrigen Pods. Sind auch sie fast voll, kippen sie nacheinander (Kaskade). `kube_pod_status_ready` mit `condition=false` beobachten.",
+    doc: "https://kubernetes.io/docs/concepts/configuration/liveness-readiness-startup-probes/",
+  },
+  {
+    l: "Envoy CPU-Schwelle",
+    name: "Envoy Overload Manager (threshold)",
+    x: 0.09,
+    y: 0.32,
+    q: "reflex",
+    s: "r",
+    what: "Der Overload Manager beantwortet neue Requests sofort mit 503, solange der CPU-Druck über dem Schwellwert liegt (Aktion `stop_accepting_requests`).",
+    why: "Der Trigger `threshold` kennt nur 1 über der Schwelle und 0 darunter, ohne Reset-Schwelle: binär und ohne Hysterese. Die CPU-Auslastung ist eine Rate, geglättet nur kurz (laut Quellcode ein EWMA mit alpha 0,05): darum knapp über der Basis.",
+    watch:
+      "Ohne Haltezeit flattert die Bremse um die Schwelle. Gauge `overload.envoy.resource_monitors.cpu_utilization.pressure` beobachten. Mit Trigger `scaled` wird dieselbe Aktion zum Dämpfer.",
+    doc: "https://www.envoyproxy.io/docs/envoy/latest/configuration/operations/overload_manager/overload_manager",
+  },
+  {
+    l: "Mimir CPU-Limit",
+    name: "Mimir Ingester Read-Path-Limit (CPU)",
+    x: 0.24,
+    y: 0.41,
+    q: "reflex",
+    s: "r",
+    what: "Ingester lehnen Leseanfragen mit 503 ab, solange die CPU-Auslastung im gleitenden Mittel das Limit erreicht oder überschreitet. So bleibt der Schreibpfad gesund.",
+    why: "Ablehnen oder nicht: binär. Auslöser ist die CPU-Rate, im Quellcode über 60\u00a0Sekunden gemittelt: etwas Gedächtnis, aber kein Füllstand. Darum liegt der Punkt in der oberen Hälfte des Reflex. Das Speicherlimit derselben Funktion ist ein Heap-Pegel und gehörte ins Wehr.",
+    watch:
+      "Abfragen scheitern, während die Ingestion gesund bleibt: Dashboards werden zuerst leer. Metrik `cortex_ingester_utilization_limited_read_requests_total`.",
+    doc: "https://grafana.com/docs/mimir/latest/configure/configure-resource-utilization-based-ingester-read-path-limiting/",
+  },
   // Mitlauf-Dämpfer — zustandsarm + proportional
-  { l: "Envoy Admission", x: 0.76, y: 0.34, q: "daempfer", s: "l" },
-  { l: "Envoy CPU-Rampe", x: 0.88, y: 0.16, q: "daempfer", s: "l" },
-  { l: "Adaptive Throttling", x: 0.84, y: 0.43, q: "daempfer", s: "l" },
-  { l: "Kafka Quotas", x: 0.7, y: 0.25, q: "daempfer", s: "l" },
+  {
+    l: "Envoy Admission",
+    name: "Envoy Admission Control",
+    x: 0.76,
+    y: 0.34,
+    q: "daempfer",
+    s: "l",
+    what: "Der Admission-Control-Filter lehnt Requests clientseitig mit einer Wahrscheinlichkeit ab, die steigt, wenn die Erfolgsquote des Upstreams fällt.",
+    why: "Die Ablehnungswahrscheinlichkeit `P = ((n_total − s)/(n_total + 1))^(1/aggression)` wächst stufenlos: proportional. Eingang ist die Erfolgsquote der letzten 60\u00a0Sekunden, kein Füllstand: zustandsarm.",
+    watch:
+      "Was als Erfolg zählt, entscheidet alles: Ein Sturm von 4xx kann die Bremse auslösen. Metrik `admission_control.rq_rejected`.",
+    doc: "https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/admission_control_filter",
+  },
+  {
+    l: "Envoy CPU-Rampe",
+    name: "Envoy Overload Manager (scaled)",
+    x: 0.88,
+    y: 0.16,
+    q: "daempfer",
+    s: "l",
+    what: "Dieselbe Aktion `stop_accepting_requests`, aber mit Trigger `scaled`: Die 503-Wahrscheinlichkeit steigt linear zwischen `scaling_threshold` und `saturation_threshold`.",
+    why: "Ein einziger Konfigurationswert verschiebt Envoy vom Reflex in den Dämpfer: Aus der harten Kante wird eine Rampe, der Eingang bleibt dieselbe CPU-Rate. Die Zufallsentscheidung pro Request steht im Quellcode (Bernoulli).",
+    watch:
+      "Gemessen wird Envoys eigene CPU oder die seines Containers, nicht die des Backends. Die Doku zeigt das Beispiel mit `mode: CONTAINER` und 0,80 bis 0,95.",
+    doc: "https://www.envoyproxy.io/docs/envoy/latest/configuration/operations/overload_manager/overload_manager",
+  },
+  {
+    l: "Adaptive Throttling",
+    name: "Adaptive Throttling (Google SRE)",
+    x: 0.84,
+    y: 0.43,
+    q: "daempfer",
+    s: "l",
+    what: "Jeder Client verwirft Requests lokal mit der Wahrscheinlichkeit `max(0, (requests − K·accepts)/(requests + 1))`, berechnet über die letzten zwei Minuten.",
+    why: "Die Wahrscheinlichkeit wächst stufenlos mit der Ablehnungsquote: proportional. Eingang sind Zähler im kurzen Fenster, kein Füllstand: zustandsarm. Zwei Minuten sind etwas mehr Gedächtnis als bei Envoy, darum liegt der Punkt etwas höher.",
+    watch:
+      "Ablehnungen kosten das Backend selbst noch Arbeit, das Buch schlägt dafür K = 1,1 vor. Metrik: Anteil lokal abgelehnter an gesendeten Requests je Client.",
+    doc: "https://sre.google/sre-book/handling-overload/",
+  },
+  {
+    l: "Kafka Quotas",
+    name: "Kafka Client Quotas",
+    x: 0.7,
+    y: 0.25,
+    q: "daempfer",
+    s: "l",
+    what: "Überschreitet ein Client seine Quote, berechnet der Broker eine Verzögerung und hält die Antwort entsprechend lange zurück.",
+    why: "Die Verzögerung wächst mit der Überschreitung: proportional. Gemessen wird die Rate über mehrere kleine Fenster (zum Beispiel 30\u00a0×\u00a01\u00a0Sekunde), kein Füllstand: zustandsarm.",
+    watch:
+      "Producer sehen Latenz, keine Fehler, das versteckt sich als „Kafka ist langsam“. `produce-throttle-time-avg` und `fetch-throttle-time-avg` im Client beobachten.",
+    doc: "https://kafka.apache.org/documentation/#design_quotas",
+  },
 ];
 
 // Datenkoordinaten in die um INSET eingerückte Plotfläche abbilden, damit die
@@ -319,21 +613,51 @@ const examples = computed(() =>
     .join(" · "),
 );
 
+// Dialogtexte: `…` markiert Konfigurationsparameter, Metriken und Formeln als
+// Inline-Code (Code-Schrift). Liefert Segmente { t, code } für das Template.
+const PT_FIELDS = [
+  { k: "what", h: "Was" },
+  { k: "why", h: "Warum hier" },
+  { k: "watch", h: "Achtung" },
+];
+const parts = (text) =>
+  text
+    .split("`")
+    .map((t, i) => ({ t, code: i % 2 === 1 }))
+    .filter((seg) => seg.t);
+
+// Welcher Datenpunkt ist im Dialog offen (null = keiner)? Gleicher Overlay,
+// gleiche Pause; es ist immer nur ein Dialog offen.
+const openP = ref(null);
+const openPt = computed(() => POINTS.find((p) => p.l === openP.value));
+const openPtQ = computed(() => QUADS.find((q) => q.key === openPt.value?.q));
+const isOpen = computed(() => !!(openQ.value || openPt.value));
+const showQuad = (key) => {
+  openP.value = null;
+  open.value = key;
+};
+const showPoint = (label) => {
+  open.value = null;
+  openP.value = label;
+};
+const closeAll = () => {
+  open.value = null;
+  openP.value = null;
+};
+
 function onKey(ev) {
-  if (ev.key === "Escape") open.value = null;
+  if (ev.key === "Escape") closeAll();
 }
-watch(open, (o) => {
+watch(isOpen, (o) => {
   if (o) window.addEventListener("keydown", onKey);
   else window.removeEventListener("keydown", onKey);
 });
 onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
-onSlideLeave(() => {
-  open.value = null;
-});
+onSlideLeave(closeAll);
 </script>
 
 <template>
-  <div class="bpq" :class="{ paused: open }" :style="cssVars">
+  <div class="bpq" :class="{ paused: isOpen }" :style="cssVars">
     <div class="bpq-plot">
       <!-- Quadranten-Tönung -->
       <div class="quad q-tl" />
@@ -366,7 +690,7 @@ onSlideLeave(() => {
           type="button"
           class="trace-btn"
           :aria-label="`${q.name}: Verhalten vergrößert erklären`"
-          @click.stop="open = q.key"
+          @click.stop="showQuad(q.key)"
         >
           <svg
             class="trace"
@@ -402,17 +726,26 @@ onSlideLeave(() => {
       <div class="meta">↖ metastabil · ∞&nbsp;Hysterese</div>
 
       <!-- Datenpunkte -->
-      <div v-for="p in POINTS" :key="p.l" class="pt" :style="dotStyle(p)">
+      <button
+        v-for="p in POINTS"
+        :key="p.l"
+        type="button"
+        class="pt"
+        :style="dotStyle(p)"
+        :aria-label="`${p.name}: Einordnung erklären`"
+        @click.stop="showPoint(p.l)"
+      >
         <span class="dot" />
         <span class="lab" :class="p.s === 'l' ? 'lab-l' : 'lab-r'">{{
           p.l
         }}</span>
-      </div>
+      </button>
     </div>
 
     <!-- ⓘ-Dialog: dimmt die Folie, zeigt die Spur groß; Klick schließt -->
-    <div v-if="openQ" class="bpq-overlay" @click="open = null">
+    <div v-if="isOpen" class="bpq-overlay" @click="closeAll">
       <div
+        v-if="openQ"
         class="bpq-card"
         :style="{ '--c': `var(--bpq-${openQ.key})` }"
         role="dialog"
@@ -462,6 +795,38 @@ onSlideLeave(() => {
           </template>
         </p>
         <div class="card-ex">Beispiele: {{ examples }}</div>
+        <div class="card-hint">Klick irgendwohin schließt</div>
+      </div>
+
+      <!-- Datenpunkt: Was · Warum hier · Achtung · Doku -->
+      <div
+        v-else-if="openPt"
+        class="bpq-card pt-card"
+        :style="{ '--c': `var(--bpq-${openPt.q})` }"
+        role="dialog"
+        :aria-label="openPt.name"
+      >
+        <div class="card-h">
+          <span class="card-t">{{ openPt.name }}</span>
+          <span class="card-axes">{{ openPtQ.name }}</span>
+        </div>
+        <div class="card-legend">{{ INFO[openPt.q].axes }}</div>
+        <p v-for="f in PT_FIELDS" :key="f.k" class="card-p">
+          <strong>{{ f.h }}: </strong>
+          <template v-for="(seg, i) in parts(openPt[f.k])" :key="i">
+            <code v-if="seg.code" class="ic">{{ seg.t }}</code>
+            <template v-else>{{ seg.t }}</template>
+          </template>
+        </p>
+        <div class="card-ex">
+          <a
+            :href="openPt.doc"
+            target="_blank"
+            rel="noopener noreferrer"
+            @click.stop
+            >Original-Doku ↗</a
+          >
+        </div>
         <div class="card-hint">Klick irgendwohin schließt</div>
       </div>
     </div>
@@ -700,6 +1065,9 @@ onSlideLeave(() => {
   border-radius: 12px;
   line-height: 1.45;
 }
+.bpq-card.pt-card {
+  width: 500px;
+}
 .card-h {
   display: flex;
   align-items: baseline;
@@ -743,6 +1111,20 @@ onSlideLeave(() => {
   margin-top: 8px;
   font-size: 0.85em;
   color: var(--bpq-muted);
+}
+.card-p code.ic {
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c) 14%, transparent);
+  color: var(--bpq-text);
+  font-family: var(--slidev-code-font-family);
+  font-size: 0.88em;
+  overflow-wrap: anywhere;
+}
+.card-ex a {
+  color: var(--c);
+  font-weight: 700;
+  cursor: pointer;
 }
 .card-hint {
   margin-top: 8px;
@@ -794,7 +1176,34 @@ onSlideLeave(() => {
   position: absolute;
   width: 0;
   height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
   line-height: 0;
+  cursor: pointer;
+  user-select: none;
+}
+/* Größere Trefferfläche um den Punkt; Layout bleibt unberührt. */
+.pt::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+}
+.pt:focus-visible {
+  outline: none;
+}
+.pt:hover .dot,
+.pt:focus-visible .dot {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.pt:hover .lab,
+.pt:focus-visible .lab {
+  text-decoration: underline;
 }
 .dot {
   position: absolute;
