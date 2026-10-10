@@ -11,6 +11,9 @@
  * kein eigener Punkt, sondern eine Eskalation aus dem Schwellwert-Wehr heraus
  * (super-lineare Rückkopplung = effektiv unendliche Hysterese) und wird als
  * roter Pfeil über die obere-linke Ecke hinaus markiert.
+ *
+ * In jeder Ecke läuft zusätzlich eine kleine Spur (grau = Last, Farbe =
+ * Reaktion), die das typische Verhalten des Quadranten zeigt.
  */
 import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
@@ -69,6 +72,106 @@ const QUADS = [
     corner: "br",
   },
 ];
+
+// Eck-Animationen: je Quadrant eine winzige, endlos scrollende Spur. Grau =
+// Last (Zufluss), Quadrantenfarbe = Reaktion. Fläche = Pegel (Gedächtnis),
+// Linie = Rate; harte Kanten = binär, glatte Kurve = proportional.
+// Alle Folgen sind periodisch mit Periode PERIOD; der Pfad deckt zwei
+// Perioden ab und wird per CSS um genau eine verschoben (nahtlose Schleife).
+const PERIOD = 64;
+const TH = 24; // Spurhöhe
+const yOf = (v) => (TH - 1 - v * (TH - 2)).toFixed(1);
+const linePath = (vals) =>
+  vals.map((v, i) => `${i ? "L" : "M"}${i},${yOf(v)}`).join("");
+const areaPath = (vals) =>
+  `M0,${TH}${vals.map((v, i) => `L${i},${yOf(v)}`).join("")}L${vals.length - 1},${TH}Z`;
+const samples = (f) => Array.from({ length: 2 * PERIOD + 1 }, (_, i) => f(i));
+const phase = (i) => i % PERIOD;
+const TAU = 2 * Math.PI;
+
+// Wehr: Pegel steigt bis zur Set-Schwelle, Bremse an, fällt bis zur
+// Reset-Schwelle (Sägezahn im Hystereseband).
+const WEHR = { set: 0.8, reset: 0.3 };
+const wehr = {
+  level: samples((i) => {
+    const p = phase(i);
+    return p < 38
+      ? WEHR.reset + ((WEHR.set - WEHR.reset) * p) / 38
+      : WEHR.set - ((WEHR.set - WEHR.reset) * (p - 38)) / 26;
+  }),
+  load: samples(() => 0.92),
+};
+
+// Regler: Zufluss ∝ Abstand zum Sollwert — Pegel nähert sich exponentiell.
+const regler = (() => {
+  const load = (p) => (p < 32 ? 0.9 : 0.4);
+  const out = [];
+  let level = 0.4;
+  for (let i = 0; i < 4 * PERIOD + 1; i++) {
+    level += (load(phase(i)) - level) * 0.09;
+    out.push(level);
+  }
+  return {
+    level: out.slice(2 * PERIOD),
+    load: samples((i) => load(phase(i))),
+  };
+})();
+
+// Reflex: sobald die Last die Grenze reißt, fällt die Rate sofort auf 0 und
+// kehrt ebenso sofort zurück — kein Gedächtnis, kein Band.
+const REFLEX_LIMIT = 0.68;
+const reflexLoad = (i) => {
+  const p = phase(i);
+  const spike = p >= 20 && p < 28 ? 0.3 : 0;
+  return 0.42 + 0.14 * Math.sin((TAU * p) / 16) + spike;
+};
+const reflex = {
+  load: samples(reflexLoad),
+  rate: samples((i) => (reflexLoad(i) > REFLEX_LIMIT ? 0.04 : reflexLoad(i))),
+};
+
+// Dämpfer: Rate folgt der welligen Last, oberhalb des Knies weich gestaucht.
+const daempferLoad = (i) => {
+  const p = phase(i);
+  return (
+    0.55 +
+    0.3 * Math.sin((TAU * p) / PERIOD) +
+    0.12 * Math.sin((TAU * 3 * p) / PERIOD)
+  );
+};
+const daempfer = {
+  load: samples(daempferLoad),
+  rate: samples((i) => 0.65 * Math.tanh(daempferLoad(i) / 0.65)),
+};
+
+const TRACES = {
+  wehr: {
+    dur: 5.2,
+    fill: areaPath(wehr.level),
+    line: linePath(wehr.level),
+    load: linePath(wehr.load),
+    marks: [WEHR.set, WEHR.reset],
+  },
+  regler: {
+    dur: 6.4,
+    fill: areaPath(regler.level),
+    line: linePath(regler.level),
+    load: linePath(regler.load),
+    marks: [0.65],
+  },
+  reflex: {
+    dur: 4.4,
+    line: linePath(reflex.rate),
+    load: linePath(reflex.load),
+    marks: [REFLEX_LIMIT],
+  },
+  daempfer: {
+    dur: 5.8,
+    line: linePath(daempfer.rate),
+    load: linePath(daempfer.load),
+    marks: [],
+  },
+};
 
 // Mechanismen mit *relativer* Ausprägung auf beiden Achsen (0..1).
 // s = Seite des Labels relativ zum Punkt ('r' rechts, 'l' links) — Labels
@@ -135,8 +238,36 @@ const dotStyle = (p) => ({
         :class="'c-' + q.corner"
         :style="{ '--c': `var(--bpq-${q.key})` }"
       >
-        <span class="qname-t">{{ q.name }}</span>
-        <span class="qname-s">{{ q.sub }}</span>
+        <span class="qtext">
+          <span class="qname-t">{{ q.name }}</span>
+          <span class="qname-s">{{ q.sub }}</span>
+        </span>
+        <svg
+          class="trace"
+          :viewBox="`0 0 ${PERIOD} ${TH}`"
+          :width="PERIOD"
+          :height="TH"
+          aria-hidden="true"
+        >
+          <line
+            v-for="m in TRACES[q.key].marks"
+            :key="m"
+            class="t-mark"
+            x1="0"
+            :x2="PERIOD"
+            :y1="yOf(m)"
+            :y2="yOf(m)"
+          />
+          <g class="t-scroll" :style="{ '--dur': TRACES[q.key].dur + 's' }">
+            <path class="t-load" :d="TRACES[q.key].load" />
+            <path
+              v-if="TRACES[q.key].fill"
+              class="t-fill"
+              :d="TRACES[q.key].fill"
+            />
+            <path class="t-line" :d="TRACES[q.key].line" />
+          </g>
+        </svg>
       </div>
 
       <!-- Metastabiler Fehler: Eskalation aus dem Schwellwert-Wehr -->
@@ -253,85 +384,62 @@ const dotStyle = (p) => ({
 .qname {
   position: absolute;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   max-width: 47%;
   color: var(--c);
 }
-.qname-t {
-  font-weight: 800;
-  font-size: 0.84em;
-  line-height: 1.1;
+.qtext {
+  display: flex;
+  flex-direction: column;
 }
-.qname-s {
-  font-size: 0.66em;
-  color: var(--bpq-muted);
-  line-height: 1.1;
+/* Spur sitzt zur Plotmitte hin: links neben dem Text bei rechten Ecken. */
+.c-tr .trace,
+.c-br .trace {
+  order: -1;
 }
-.c-tl {
-  top: 18px;
-  left: 8px;
-  text-align: left;
-}
-.c-tr {
-  top: 18px;
-  right: 8px;
-  text-align: right;
+.c-tr .qtext,
+.c-br .qtext {
   align-items: flex-end;
 }
-.c-bl {
-  bottom: 18px;
-  left: 8px;
-  text-align: left;
+.trace {
+  flex: none;
+  overflow: hidden;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--c) 8%, transparent);
 }
-.c-br {
-  bottom: 18px;
-  right: 8px;
-  text-align: right;
-  align-items: flex-end;
+.t-scroll {
+  animation: bpq-scroll var(--dur, 5s) linear infinite;
 }
-
-.meta {
-  position: absolute;
-  top: 2px;
-  left: 6px;
-  font-size: 0.66em;
-  font-weight: 700;
-  color: var(--bpq-danger);
-  white-space: nowrap;
+@keyframes bpq-scroll {
+  to {
+    transform: translateX(-64px);
+  }
 }
-
-.pt {
-  position: absolute;
-  width: 0;
-  height: 0;
-  line-height: 0;
+.t-mark {
+  stroke: var(--bpq-muted);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 2;
 }
-.dot {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--c);
-  border: 1.5px solid var(--bpq-text);
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent);
+.t-load,
+.t-line {
+  fill: none;
+  stroke-linejoin: round;
 }
-.lab {
-  position: absolute;
-  top: 0;
-  transform: translateY(-50%);
-  font-size: 0.72em;
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--bpq-text);
+.t-load {
+  stroke: var(--bpq-dim);
+  stroke-width: 1;
 }
-.lab-r {
-  left: 9px;
+.t-line {
+  stroke: var(--c);
+  stroke-width: 1.6;
 }
-.lab-l {
-  right: 9px;
+.t-fill {
+  fill: color-mix(in srgb, var(--c) 28%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-scroll {
+    animation: none;
+  }
 }
 </style>

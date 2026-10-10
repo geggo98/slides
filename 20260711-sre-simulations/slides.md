@@ -759,6 +759,10 @@ Brendan Gregg · USE-Methode &nbsp;·&nbsp; Neil Gunther · Universal Scalabilit
 - Merksatz: zustandsbehaftet = vorhersagbar (Pegel-Gauge + dL/dt → Time-to-
   threshold); zustandsarm = nur detektierbar. Metastabiler Fehler = die
   super-lineare Eskalation oben-links (∞ Hysterese).
+- Eck-Animationen: grau = Last, Farbe = Reaktion. Fläche = Pegel (Gedächtnis),
+  Linie = Rate; harte Kanten = binär, glatte Kurve = proportional. Wehr:
+  Sägezahn im Hystereseband; Regler: exponentielle Annäherung; Reflex: Rate
+  kippt sofort auf 0 und zurück; Dämpfer: gedämpftes Mitlaufen.
 -->
 
 ---
