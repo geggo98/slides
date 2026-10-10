@@ -507,12 +507,6 @@ hideInToc: true
 
 <MMcCompare />
 
-<div class="sim-xref">
-
-Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mmc-vergleich">SRE-Simulationen</TalkXref>
-
-</div>
-
 <!--
 - Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool) ist Default. Metrik im
   Scope zwischen Wq und T umschalten — der Gewinner dreht sich. Slider hinter 🛠️.
