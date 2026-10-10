@@ -343,8 +343,8 @@ const paletteVars = computed(() => ({
 const currentIdx = ref(0);
 const stepIdx = ref(0);
 
-const sc = computed(() => scenarios[currentIdx.value]);
-const st = computed(() => sc.value.steps[stepIdx.value]);
+const sc = computed(() => scenarios[currentIdx.value]!);
+const st = computed(() => sc.value.steps[stepIdx.value]!);
 const isLast = computed(() => stepIdx.value === sc.value.steps.length - 1);
 const isFirst = computed(() => stepIdx.value === 0);
 const codeText = computed(() => sc.value.code.join("\n"));
