@@ -313,7 +313,10 @@ export function P(
 // nennt als Sorge, ein Agent könne eine ähnliche, upstream gemergte Lösung per
 // `git log` finden (Blog „DeepSWE v1.1", 14.06.2026). v1.1 bewertet nur noch
 // den committeten Patch in einem eigenen Container und zeigt keine späteren
-// Commits mehr.
+// Commits mehr. Datacurve verglich die Upstream-Repos der Tasks (Stand
+// 05.06.2026), fand keine ähnliche Implementierung und schreibt: „results
+// from v1.0 remain free of this form of cheating“ — der Pfad war ein Risiko,
+// kein beobachteter Fall.
 //
 // Wie groß der Effekt ist, sagt Datacurve selbst: „Scores stay close: the
 // ordering at the top is unchanged, and most configurations land within a few
@@ -322,8 +325,9 @@ export function P(
 // stehen, tragen auf der Bonusfolie ihren v1-Wert als Geisterring.
 //
 // NICHT hierher gehört die Zahl „18 % der Opus-4.7-Treffer per git log --all":
-// Sie stammt aus Datacurves SWE-Bench-Pro-Auswertung im DeepSWE-Blog, nicht aus
-// DeepSWE v1. Bis 05.09.2026 stand sie trotzdem in der Stationsnotiz.
+// Sie stammt aus Datacurves SWE-Bench-Pro-Audit im Launch-Post „Introducing
+// DeepSWE“ (26.05.2026, nicht im v1.1-Post), nicht aus DeepSWE v1. Bis
+// 05.09.2026 stand sie trotzdem in der Stationsnotiz.
 const S_V1: Pt[] = [
   P("minimax-m2.7", 0.62, 0),
   P("claude-haiku-4.5", 0.73, 0),

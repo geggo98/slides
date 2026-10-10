@@ -2636,9 +2636,12 @@ Chart:
 3. Benchmark-Design: In v1 stand das Repo im Detached-HEAD-Modus mit
    sichtbarer Historie. Datacurves Sorge: Ein Agent findet eine ähnliche,
    upstream gemergte Lösung per git log. Gemessen hat Datacurve das Cheaten
-   auf SWE-Bench Pro, im selben Blog: 18 % der Opus-4.7-Treffer und 25 % der
-   Opus-4.6-Treffer per git log --all oder git show auf den Gold-Commit. Für
-   DeepSWE v1 ist es ein dokumentierter Risikopfad, den v1.1 schließt.
+   auf SWE-Bench Pro, im Launch-Post "Introducing DeepSWE" (26.05.2026):
+   18 % der Opus-4.7-Treffer und 25 % der Opus-4.6-Treffer per
+   git log --all oder git show auf den Gold-Commit. Für DeepSWE v1 ist es
+   ein dokumentierter Risikopfad, den v1.1 schließt. Ein Abgleich mit den
+   Upstream-Repos (Stand 05.06.2026) fand keinen Fall: "results from v1.0
+   remain free of this form of cheating". Abgerufen 10.10.2026.
 
 Klick 1: v1.1 mit Pfeilen (v1-Wert zu v1.1-Wert) und Kreuzen. Klick 2: alle
 Namen plus Fadenkreuz.
