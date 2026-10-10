@@ -81,7 +81,7 @@ export function effortOf(name: string): string | null {
   const klammer = name.slice(name.indexOf("("));
   if (!klammer.startsWith("(")) return null;
   const m = /\b(low|medium|high|xhigh|max)\b(?: effort)?\s*[,)]/i.exec(klammer);
-  return m ? m[1].toLowerCase() : null;
+  return m ? m[1]!.toLowerCase() : null;
 }
 
 export function modelSlug(slug: string, name: string): string {

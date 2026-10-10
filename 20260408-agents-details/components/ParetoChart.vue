@@ -52,7 +52,7 @@ const universe = [...V.pts, ...V.extras];
 // real an“, und für unveröffentlichte Modelle gibt es noch keine Antwort) und
 // zählen für die Geometrie zum Feld. So behält der Standard seine redaktionelle
 // Skala, und beim Ein- und Ausschalten wandern die 22 echten Punkte nicht.
-const prelim = computed<Pt[]>(() =>
+const prelim = computed<readonly Pt[]>(() =>
   V.id === "deepswe" && props.preliminary ? PRELIMINARY_PARETO_POINTS : [],
 );
 const Veff = computed(() =>
@@ -98,7 +98,7 @@ const ghost = V.features.priceGhost;
 // Der Filter greift VOR dem Kontingent-Overlay, damit sich beide kombinieren
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const preset = computed(() => matchingPreset(sel.value, universe, pts0));
-const pts = computed<Pt[]>(() =>
+const pts = computed<readonly Pt[]>(() =>
   visiblePoints(universeEff.value, selEff.value, subOn.value, { ghost }),
 );
 

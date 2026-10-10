@@ -27,7 +27,7 @@ export interface CrosshairsOpts {
 }
 
 export function useCrosshairs(
-  pts: Ref<Pt[]> | ComputedRef<Pt[]>,
+  pts: Ref<readonly Pt[]> | ComputedRef<readonly Pt[]>,
   s: Scale | Ref<Scale> | ComputedRef<Scale>,
   opts: CrosshairsOpts = {},
 ) {

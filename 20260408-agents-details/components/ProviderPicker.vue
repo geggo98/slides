@@ -130,7 +130,7 @@ function onKey(e: KeyboardEvent) {
   e.stopPropagation();
   if (e.key === "Escape") return void (open.value = false);
   if (e.key === "Enter" || e.key === " ")
-    return aktivieren(flat.value[active.value]);
+    return aktivieren(flat.value[active.value]!);
   if (e.key === "Home") active.value = 0;
   else if (e.key === "End") active.value = last;
   else if (e.key === "ArrowDown")

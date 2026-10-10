@@ -1,3 +1,12 @@
+<script lang="ts">
+interface StatItem {
+  value: string;
+  label: string;
+  desc: string;
+  highlight?: boolean;
+}
+</script>
+
 <script setup lang="ts" generic="T extends StatItem">
 // Deck-lokales Stat-Card-Grid — dedupliziert das Karten-Layout von
 // LeakStatsGrid (3 Spalten, kompakt) und ToolSearchImpact (2 Spalten).
@@ -8,13 +17,6 @@ import { computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 import { useDeckPalette } from "./palette";
 import type { ThemedColor } from "./chartData";
-
-interface StatItem {
-  value: string;
-  label: string;
-  desc: string;
-  highlight?: boolean;
-}
 
 const props = defineProps<{
   stats: T[];

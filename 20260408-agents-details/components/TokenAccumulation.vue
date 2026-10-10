@@ -44,7 +44,7 @@ const ROWS = [
 
 const total = (r: (typeof ROWS)[number]) => r.cached + r.fromOut + r.fresh;
 // Output von Runde i landet als fromOut-Segment in Bar i+1
-const outChip = (i: number) => (i < ROWS.length - 1 ? ROWS[i + 1].fromOut : 0);
+const outChip = (i: number) => (i < ROWS.length - 1 ? ROWS[i + 1]!.fromOut : 0);
 
 // clicks 0 → Start; 1–3 → Zeilen 1–3; 4 → Segment-Split + Legende; 5 → Summe+$
 const visibleCount = computed(() => Math.min(c.value + 1, ROWS.length));

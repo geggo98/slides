@@ -82,7 +82,7 @@ const idx = computed(() => {
   const raw = override.value ?? props.step ?? 0;
   return Math.max(0, Math.min(list.value.length - 1, raw));
 });
-const snap = computed(() => list.value[idx.value]);
+const snap = computed(() => list.value[idx.value]!);
 
 // Detailmodus: alle Modellnamen plus Fadenkreuz-Vergleich. Default aus — bei bis
 // zu 25 Punkten auf dieser Höhe ist die Vollbeschriftung dicht, sie beantwortet

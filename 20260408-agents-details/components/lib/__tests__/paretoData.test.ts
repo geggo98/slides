@@ -229,7 +229,7 @@ describe("kimi-k2.7-code steht auf dem Mittelwert, nicht dem Median", () => {
       const s = SNAPSHOTS.find((x) => x.id === id)!;
       const { front } = paretoFront(s.pts);
       expect(front.map((p) => p.label)).not.toContain("kimi-k2.7-code");
-      expect(front[0].label).toBe("muse-spark-1.1");
+      expect(front[0]!.label).toBe("muse-spark-1.1");
     }
   });
 

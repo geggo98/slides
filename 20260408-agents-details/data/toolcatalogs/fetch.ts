@@ -101,8 +101,8 @@ export function parseCursor(md: string): CatalogModel[] {
       inModelle = zellen[1] === "Provider";
       continue;
     }
-    if (!inModelle || /^-+$/.test(zellen[0])) continue;
-    const name = linkText(zellen[0]);
+    if (!inModelle || /^-+$/.test(zellen[0]!)) continue;
+    const name = linkText(zellen[0]!);
     if (!name) continue;
     out.push({
       name,

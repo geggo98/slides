@@ -1301,7 +1301,7 @@ export function makeScale(o: ScaleOpts): Scale {
  * ändert an keinem bestehenden Aufrufer etwas.
  */
 export function paretoFront<T extends { x: number; y: number }>(
-  pts: T[],
+  pts: readonly T[],
 ): { front: T[]; dom: T[] } {
   const sorted = [...pts].sort((a, b) => a.x - b.x);
   const front: T[] = [];
@@ -1368,7 +1368,7 @@ export interface MovedSeg {
  * kann. Der Geisterring bleibt an der wahren alten Lage.
  */
 export function movedSegments(
-  pts: Pt[],
+  pts: readonly Pt[],
   s: Scale,
   pick: (p: Pt) => Origin | undefined = (p) => p.old,
   at: (p: Pt) => { px: number; py: number } = (p) => ({

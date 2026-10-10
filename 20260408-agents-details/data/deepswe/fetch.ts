@@ -92,7 +92,7 @@ class Leser {
   ) {}
 
   private leer() {
-    while (this.i < this.s.length && /\s/.test(this.s[this.i])) this.i++;
+    while (this.i < this.s.length && /\s/.test(this.s[this.i]!)) this.i++;
   }
 
   /** `$R[12]=` vor einem Wert überspringen — die Payload teilt Werte so. */
@@ -133,7 +133,7 @@ class Leser {
         out += c;
         continue;
       }
-      const e = this.s[this.i++];
+      const e = this.s[this.i++]!;
       if (e === "u") {
         out += String.fromCharCode(
           parseInt(this.s.slice(this.i, this.i + 4), 16),
@@ -381,7 +381,7 @@ async function crawls(): Promise<string[]> {
       if (Array.isArray(zeilen) && zeilen.length > 1)
         return zeilen
           .slice(1)
-          .map((z) => z[1])
+          .map((z) => z[1]!)
           .sort();
       letzter = `${zeilen.length} Zeilen`;
     } catch {

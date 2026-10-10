@@ -452,6 +452,8 @@ const balkenLabel = computed(
       <!-- Break-even-Chart -->
       <div :class="{ 'ce-versteckt': !showChart }">
         <div class="ce-h">Ab wann lohnt der Cache-Bruch?</div>
+        <!-- vue-tsc matches aria-* literally, not the ariaLabel prop -->
+        <!-- eslint-disable vue/attribute-hyphenation -->
         <BreakEvenChart
           class="ce-chart"
           :lines="chartLines"
@@ -463,8 +465,9 @@ const balkenLabel = computed(
           :y-tick-map="Y_TICKS"
           kein-break-even-text="kein Break-even (Faktor ≤ 1)"
           null-break-even-text="lohnt ab dem ersten Token"
-          :aria-label="chartLabel"
+          :ariaLabel="chartLabel"
         />
+        <!-- eslint-enable vue/attribute-hyphenation -->
       </div>
     </div>
 

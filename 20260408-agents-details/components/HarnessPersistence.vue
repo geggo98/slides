@@ -44,7 +44,8 @@ interface Row {
   highlight: boolean;
 }
 
-const MODELS: readonly HModel[] = ["luna", "fable", "haiku"];
+const MODELS = ["luna", "fable", "haiku"] as const;
+type PModel = (typeof MODELS)[number];
 const HARNESS_ORDER: readonly Harness[] = ["pi", "codex", "cc"];
 
 const rows = computed<Row[]>(() =>
@@ -88,7 +89,7 @@ const fmtTokens = (n: number) =>
     ? `${(n / 1e6).toFixed(2).replace(".", ",")} Mio.`
     : `${(n / 1e3).toFixed(0)}k`;
 
-const VERDICT: Record<HModel, string> = {
+const VERDICT: Record<PModel, string> = {
   luna: "Ausdauer ja, Ertrag kaum: 3,4× so viele Schritte, 5,1× so teuer, für +2,3 Punkte.",
   fable:
     "Gleiche Schrittzahl (15,3 gegen 15,4) — der Aufpreis ist Gewicht pro Schritt, nicht Ausdauer.",
@@ -97,9 +98,9 @@ const VERDICT: Record<HModel, string> = {
 
 // Aus den Daten abgeleitet statt hartkodiert, damit die Marke nie von der
 // Tabelle abdriftet, gegen die sie steht — siehe holdsGiveUpThesis().
-const HOLDS: Record<HModel, boolean> = Object.fromEntries(
+const HOLDS: Record<PModel, boolean> = Object.fromEntries(
   MODELS.map((m) => [m, holdsGiveUpThesis(m)]),
-) as Record<HModel, boolean>;
+) as Record<PModel, boolean>;
 </script>
 
 <template>

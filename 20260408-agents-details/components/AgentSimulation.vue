@@ -18,7 +18,7 @@ const panelMode = ref<"step" | "node">("step");
 const selectedNode = ref<string | null>(null);
 let playTimer: ReturnType<typeof setInterval> | null = null;
 
-const step = computed(() => STEPS[currentStep.value]);
+const step = computed(() => STEPS[currentStep.value]!);
 const catColors = computed(() => getCatColors(isDark.value));
 
 const P = computed(() => {
@@ -52,8 +52,8 @@ function center(n: SimNode) {
 }
 
 function edgePoints(fromId: string, toId: string) {
-  const from = NODES[fromId];
-  const to = NODES[toId];
+  const from = NODES[fromId]!;
+  const to = NODES[toId]!;
   const c1 = center(from);
   const c2 = center(to);
   const dx = c2.x - c1.x;
@@ -88,7 +88,7 @@ function isEdgeActive(edgeId: string) {
 }
 
 function nodeClass(id: string) {
-  const cat = NODES[id].cat;
+  const cat = NODES[id]!.cat;
   return {
     active: isNodeActive(id),
     [`cat-${cat}`]: true,
@@ -96,12 +96,12 @@ function nodeClass(id: string) {
 }
 
 function nodeFill(id: string) {
-  const cat = NODES[id].cat as keyof ReturnType<typeof getCatColors>;
+  const cat = NODES[id]!.cat as keyof ReturnType<typeof getCatColors>;
   return catColors.value[cat]?.fill ?? P.value.nodeFill;
 }
 
 function nodeStroke(id: string) {
-  const cat = NODES[id].cat as keyof ReturnType<typeof getCatColors>;
+  const cat = NODES[id]!.cat as keyof ReturnType<typeof getCatColors>;
   return catColors.value[cat]?.stroke ?? P.value.nodeStroke;
 }
 
@@ -204,8 +204,8 @@ const panelDetail = computed(() => {
 const involvedNodes = computed(() =>
   step.value.nodes.map((id) => ({
     id,
-    label: NODES[id].label,
-    cat: NODES[id].cat,
+    label: NODES[id]!.label,
+    cat: NODES[id]!.cat,
   })),
 );
 

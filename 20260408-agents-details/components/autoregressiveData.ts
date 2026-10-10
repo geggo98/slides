@@ -163,7 +163,7 @@ export function sampleFrom(dist: TokenProb[]): string {
     c += d[1];
     if (r <= c) return d[0];
   }
-  return n[n.length - 1][0];
+  return n[n.length - 1]![0];
 }
 
 export function argmax(dist: TokenProb[]): string {

@@ -53,7 +53,7 @@ function isDone() {
 function doStep() {
   if (isDone()) return;
   const idx = history.value.length;
-  const step = STEPS[idx];
+  const step = STEPS[idx]!;
   const { token, working } = pick(
     step.dist,
     mode.value,
@@ -106,7 +106,7 @@ const explain = computed(() => {
   if (history.value.length === 0)
     return 'Klicke „Nächster Schritt" (oder →), um mit dem Prefill zu beginnen.';
   if (isDone()) {
-    const out = PROMPT.concat(generated.value.filter((t) => t !== EOS)).join(
+    const out = [...PROMPT, ...generated.value.filter((t) => t !== EOS)].join(
       " ",
     );
     return `Ausgabe: „${out}". Gestoppt durch ⟨EOS⟩ bzw. Ende der Sequenz.`;
@@ -120,7 +120,7 @@ const bars = computed(() => {
   const c = current.value;
   if (!c) return null;
   const shown = [...c.step.dist].sort((a, b) => b[1] - a[1]).slice(0, TOPN);
-  const maxP = shown[0][1];
+  const maxP = shown[0]![1];
   const cum = shown.reduce((a, d) => a + d[1], 0);
   const active = new Set(c.working.map((d) => d[0]));
   const dimMode =

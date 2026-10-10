@@ -118,12 +118,12 @@ const ACCENTS = computed(() => {
       ink: d ? "#fbbf24" : "#d97706",
       tint: d ? "rgba(251,191,36,0.10)" : "rgba(217,119,6,0.07)",
     },
-  ];
+  ] as const;
 });
 
 function ringStyle(i: number) {
   const on = active.value === i || finale.value;
-  const a = ACCENTS.value[i];
+  const a = ACCENTS.value[i]!;
   return {
     borderColor: on ? a.ink : pal.value.border,
     background: on ? a.tint : "transparent",
@@ -137,7 +137,7 @@ function hdrStyle(i: number) {
 }
 function inkStyle(i: number) {
   const on = active.value === i || finale.value;
-  return { color: on ? ACCENTS.value[i].ink : pal.value.text };
+  return { color: on ? ACCENTS.value[i]!.ink : pal.value.text };
 }
 
 const P = computed(() => {

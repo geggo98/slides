@@ -543,10 +543,10 @@ export function collisions(
   const list = [...placed];
   const out: string[] = [];
   for (let i = 0; i < list.length; i++) {
-    const a = list[i];
+    const a = list[i]!;
     for (let j = i + 1; j < list.length; j++) {
-      if (hits(a.box, list[j].box))
-        out.push(`label/label  ${a.id}  ×  ${list[j].id}`);
+      if (hits(a.box, list[j]!.box))
+        out.push(`label/label  ${a.id}  ×  ${list[j]!.id}`);
     }
     for (const b of obstacles) {
       // Das eigene Klickziel und die eigenen anderen Lagen zählen nicht — dort

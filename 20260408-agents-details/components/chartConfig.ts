@@ -4,13 +4,13 @@ import type { ThemedColor } from "./chartData";
 // Löst ein Light/Dark-Farbpaar aus chartData.ts gegen den aktuellen Modus auf.
 export function resolveColor(
   color: ThemedColor,
-  isDark: Ref<boolean> | { value: boolean },
+  isDark: boolean | Ref<boolean> | { value: boolean },
 ) {
   const d = typeof isDark === "object" ? isDark.value : isDark;
   return d ? color.dark : color.light;
 }
 
-export function getAxis(isDark: Ref<boolean> | { value: boolean }) {
+export function getAxis(isDark: boolean | Ref<boolean> | { value: boolean }) {
   const d = typeof isDark === "object" ? isDark.value : isDark;
   return {
     axisLine: { lineStyle: { color: d ? "#3a3a4a" : "#d4d4d8" } },
@@ -20,7 +20,9 @@ export function getAxis(isDark: Ref<boolean> | { value: boolean }) {
   };
 }
 
-export function getTooltip(isDark: Ref<boolean> | { value: boolean }) {
+export function getTooltip(
+  isDark: boolean | Ref<boolean> | { value: boolean },
+) {
   const d = typeof isDark === "object" ? isDark.value : isDark;
   return {
     backgroundColor: d ? "#1a1a24" : "#ffffff",
@@ -29,7 +31,9 @@ export function getTooltip(isDark: Ref<boolean> | { value: boolean }) {
   };
 }
 
-export function getThemeName(isDark: Ref<boolean> | { value: boolean }) {
+export function getThemeName(
+  isDark: boolean | Ref<boolean> | { value: boolean },
+) {
   const d = typeof isDark === "object" ? isDark.value : isDark;
   return d ? "agentDark" : "agentLight";
 }

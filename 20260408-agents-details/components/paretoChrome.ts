@@ -249,7 +249,7 @@ export interface ArrowClusterOpts {
    * freie Bereich der DeepSWE-Folie. Ein Chart mit anderer Skala (HarnessTax:
    * 0,02–1,8 €) gibt seine eigene Spitze vor, sonst läge sie außerhalb.
    */
-  target?: (s: Scale) => XY;
+  target?: (s: Scale) => { x: number; y: number };
   /** Hub-Höhe in Pixeln. Default: py(9 %). */
   hubY?: (s: Scale) => number;
   /** Beschriftung der drei Pfeile. Default: Preis-Leistung wie auf der DeepSWE-Folie. */

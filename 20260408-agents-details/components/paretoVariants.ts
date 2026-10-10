@@ -71,7 +71,7 @@ export interface ParetoVariant {
   quadrants: Quadrant[];
   arrows: {
     texts: { cheaper: string; stronger: string; better: string };
-    target?: (s: Scale) => XY;
+    target?: (s: Scale) => { x: number; y: number };
     hubY?: (s: Scale) => number;
   };
   axisTitle: string;

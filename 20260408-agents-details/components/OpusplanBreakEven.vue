@@ -298,6 +298,8 @@ const chartLabel = computed(
       <!-- Break-even-Chart -->
       <div :class="{ 'ob-versteckt': !showChart }">
         <div class="ob-h">Ab wann lohnt der Cache-Bruch?</div>
+        <!-- vue-tsc matches aria-* literally, not the ariaLabel prop -->
+        <!-- eslint-disable vue/attribute-hyphenation -->
         <BreakEvenChart
           class="ob-chart"
           :lines="chartLines"
@@ -305,8 +307,9 @@ const chartLabel = computed(
           :break-even="xStar"
           :x-max="xMax"
           :x-ticks="xTicks"
-          :aria-label="chartLabel"
+          :ariaLabel="chartLabel"
         />
+        <!-- eslint-enable vue/attribute-hyphenation -->
       </div>
     </div>
 
