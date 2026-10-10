@@ -49,15 +49,15 @@ const steps = computed(() => [
       background: C.surface,
       border: `1px solid ${C.border}`,
       borderRadius: '7px',
-      padding: '13px 14px',
+      padding: '16px 18px',
     }"
   >
     <div
       :style="{
-        fontSize: '8.4px',
+        fontSize: '13px',
         fontWeight: 700,
         color: C.text,
-        marginBottom: '8px',
+        marginBottom: '10px',
       }"
     >
       Diagnostischer Trichter: RED &rarr; Golden &rarr; USE
@@ -70,7 +70,7 @@ const steps = computed(() => [
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            padding: '4px 8px',
+            padding: '7px 12px',
             background: `${step.color}08`,
             borderRadius: '4px',
             border: `1px solid ${step.color}15`,
@@ -78,7 +78,7 @@ const steps = computed(() => [
         >
           <span
             :style="{
-              fontSize: '7.7px',
+              fontSize: '12px',
               fontWeight: 700,
               color: step.color,
               fontFamily: 'var(--slidev-code-font-family)',
@@ -88,7 +88,7 @@ const steps = computed(() => [
           <span :style="{ color: C.dim }">&rarr;</span>
           <span
             :style="{
-              fontSize: '7.7px',
+              fontSize: '12px',
               fontWeight: 700,
               color: step.color,
               fontFamily: 'var(--slidev-code-font-family)',
@@ -96,7 +96,7 @@ const steps = computed(() => [
             >{{ step.to }}</span
           >
           <span
-            :style="{ fontSize: '7.7px', color: C.muted, marginLeft: '3px' }"
+            :style="{ fontSize: '12px', color: C.muted, marginLeft: '5px' }"
             >{{ step.label }}</span
           >
         </div>
@@ -107,8 +107,8 @@ const steps = computed(() => [
         >
           <span
             :style="{
-              fontSize: '7px',
-              color: C.dim,
+              fontSize: '15px',
+              color: C.muted,
               fontFamily: 'var(--slidev-code-font-family)',
             }"
             >&blacktriangledown; Warum?</span
@@ -119,8 +119,8 @@ const steps = computed(() => [
       <div :style="{ display: 'flex', justifyContent: 'center' }">
         <span
           :style="{
-            fontSize: '7px',
-            color: C.dim,
+            fontSize: '15px',
+            color: C.muted,
             fontFamily: 'var(--slidev-code-font-family)',
           }"
           >&blacktriangledown; Fix</span
@@ -129,11 +129,11 @@ const steps = computed(() => [
       <!-- Fix result -->
       <div
         :style="{
-          padding: '6px 8px',
+          padding: '8px 12px',
           background: C.greenDim,
           borderRadius: '4px',
           border: `1px solid ${C.green}15`,
-          fontSize: '8.4px',
+          fontSize: '13px',
           color: C.green,
           fontWeight: 600,
         }"

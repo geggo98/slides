@@ -39,24 +39,26 @@ const useErrors = [
       background: C.surface,
       border: `1px solid ${C.border}`,
       borderRadius: '7px',
-      padding: '13px 14px',
+      padding: '16px 18px',
     }"
   >
     <div
       :style="{
-        fontSize: '8.4px',
+        fontSize: '13px',
         fontWeight: 700,
         color: C.text,
-        marginBottom: '8px',
+        marginBottom: '12px',
       }"
     >
       Errors &ne; Errors: Zwei Perspektiven
     </div>
-    <div :style="{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }">
+    <div
+      :style="{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }"
+    >
       <!-- RED / Golden Signals errors -->
       <div
         :style="{
-          padding: '8px 10px',
+          padding: '12px 14px',
           borderRadius: '6px',
           background: C.redDim,
           border: `1px solid ${C.red}20`,
@@ -64,7 +66,7 @@ const useErrors = [
       >
         <div
           :style="{
-            fontSize: '7.7px',
+            fontSize: '12px',
             fontWeight: 700,
             color: C.red,
             marginBottom: '4px',
@@ -75,22 +77,22 @@ const useErrors = [
         </div>
         <div
           :style="{
-            fontSize: '8.4px',
+            fontSize: '13px',
             color: C.text,
             lineHeight: 1.5,
-            marginBottom: '6px',
+            marginBottom: '8px',
           }"
         >
           Perspektive: User
         </div>
-        <div :style="{ display: 'flex', flexDirection: 'column', gap: '2px' }">
+        <div :style="{ display: 'flex', flexDirection: 'column', gap: '4px' }">
           <div
             v-for="(e, i) in redErrors"
             :key="i"
             :style="{
-              fontSize: '7.7px',
+              fontSize: '12px',
               color: C.muted,
-              paddingLeft: '7px',
+              paddingLeft: '10px',
               position: 'relative',
             }"
           >
@@ -103,7 +105,7 @@ const useErrors = [
       <!-- USE errors -->
       <div
         :style="{
-          padding: '8px 10px',
+          padding: '12px 14px',
           borderRadius: '6px',
           background: C.purpleDim,
           border: `1px solid ${C.purple}20`,
@@ -111,7 +113,7 @@ const useErrors = [
       >
         <div
           :style="{
-            fontSize: '7.7px',
+            fontSize: '12px',
             fontWeight: 700,
             color: C.purple,
             marginBottom: '4px',
@@ -122,22 +124,22 @@ const useErrors = [
         </div>
         <div
           :style="{
-            fontSize: '8.4px',
+            fontSize: '13px',
             color: C.text,
             lineHeight: 1.5,
-            marginBottom: '6px',
+            marginBottom: '8px',
           }"
         >
           Perspektive: Maschine
         </div>
-        <div :style="{ display: 'flex', flexDirection: 'column', gap: '2px' }">
+        <div :style="{ display: 'flex', flexDirection: 'column', gap: '4px' }">
           <div
             v-for="(e, i) in useErrors"
             :key="i"
             :style="{
-              fontSize: '7.7px',
+              fontSize: '12px',
               color: C.muted,
-              paddingLeft: '7px',
+              paddingLeft: '10px',
               position: 'relative',
             }"
           >

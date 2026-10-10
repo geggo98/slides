@@ -46,7 +46,7 @@ RED · USE · Golden Signals
 hideInToc: true
 ---
 
-# Die zentrale Gleichung
+# Die drei wichtigsten Monitoring-Methoden
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 1.5em 0; flex-wrap: wrap;">
   <span class="text-amber-700 dark:text-amber-400" style="font-size: 1.3em; font-weight: 800; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
@@ -110,26 +110,6 @@ hideInToc: true
 # Diagnostischer Trichter
 
 <DiagnosticFunnel />
-
----
-clicks: false
-hideInToc: true
----
-
-# Monitoring-Methodologien — Interaktiv
-
-<MonitoringMethods />
-
-<!--
-- Bedienung: zwei Tabs oben — „Überblick & Zusammenhang“ (zentrale
-  Gleichung, RED/USE/Golden mit allen Signalen) und „Monitoring-Praxis“
-  (Schwellwerte, Hysterese-Alerting, XY-Charts). Inhalt ist scrollbar.
-- Zeigen: im Überblick die Gleichung Golden = RED + Saturation und die
-  zwei Errors-Perspektiven (User vs. Maschine); der diagnostische
-  Trichter RED → Golden → USE ist der rote Faden der nächsten Sektionen.
-- „Monitoring-Praxis“ nur anreißen — Schwellwerte und Hysterese kommen
-  später als eigene Sektionen ausführlich.
--->
 
 ---
 layout: section
