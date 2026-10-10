@@ -1,5 +1,6 @@
 {
   "ltex.language": "de-DE",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "slidev.force-enabled": true
 }
