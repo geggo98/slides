@@ -154,7 +154,7 @@ const TEXT_PANEL_EXAMPLES = [
     title: "Service-Runbook-Header",
     level: "Level 2 \u2013 Service",
     content: `## quote-service
-Owner: Team KFZ-IF
+Owner: Team Partner-APIs
 [Runbook](https://wiki/runbooks/quote-api)
 [PagerDuty](https://pd/services/quote)
 
@@ -173,11 +173,11 @@ SLO: p99 < 500ms, Error < 0.5%`,
   {
     title: "Eskalations-Matrix",
     level: "Level 2 \u2013 Service",
-    content: `| Severity | Aktion |
-|----------|--------|
-| Warning  | Slack #kfzif-alerts |
-| Critical | PagerDuty + TL |
-| P1       | War Room + Mgmt |`,
+    content: `| Severity | Aktion               |
+|----------|----------------------|
+| Warning  | Slack #devops-alerts |
+| Critical | PagerDuty + TL       |
+| P1       | War Room + Mgmt      |`,
     tip: "Markdown-Tabellen. Direkt neben dem Alert-List-Panel platzieren.",
     color: DARK_PALETTE.red,
   },
