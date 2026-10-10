@@ -163,7 +163,7 @@ function closePop() {
             {{ r.label }}
           </text>
           <rect
-            :class="`bun-c-${phases[i].a}`"
+            :class="`bun-c-${phases[i]!.a}`"
             :x="r.x"
             :y="6 + i * 22"
             :width="r.w"

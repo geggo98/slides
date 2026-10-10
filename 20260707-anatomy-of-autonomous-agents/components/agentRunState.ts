@@ -22,8 +22,8 @@ function sumTokens(steps: SimStep[], count: number) {
   let main = 0;
   let sub = 0;
   for (let i = 0; i < Math.min(count, steps.length); i++) {
-    main += steps[i].tokens?.main ?? 0;
-    sub += steps[i].tokens?.sub ?? 0;
+    main += steps[i]!.tokens?.main ?? 0;
+    sub += steps[i]!.tokens?.sub ?? 0;
   }
   return { main, sub };
 }

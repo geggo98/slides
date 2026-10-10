@@ -41,7 +41,7 @@ const lastEventIndex = computed(() => events.value.length - 1);
 const atEnd = computed(() => stepCount.value >= steps.length);
 const currentNote = computed(() => {
   for (let i = Math.min(stepCount.value, steps.length) - 1; i >= 0; i--) {
-    if (steps[i].note) return steps[i].note;
+    if (steps[i]!.note) return steps[i]!.note;
   }
   return "";
 });

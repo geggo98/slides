@@ -20,7 +20,7 @@ const LOGO_BITS = [
   "000010100001010000",
 ];
 
-const W = LOGO_BITS[0].length;
+const W = LOGO_BITS[0]!.length;
 const H = LOGO_BITS.length;
 // Terminal char cells are taller than wide, so each sprite pixel is stretched
 // vertically (PH) to keep the logo's proportions instead of looking squat.

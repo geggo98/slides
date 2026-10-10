@@ -80,9 +80,9 @@ const idx = ref<number | null>(null);
 
     <BunPopover :open="idx !== null" @close="idx = null">
       <template v-if="idx !== null">
-        <div class="bun-pop-h">{{ cards[idx].h }}</div>
-        <div class="bun-pop-t">{{ cards[idx].t }}</div>
-        <div class="bun-pop-t bun-pop-sep">{{ cards[idx].g }}</div>
+        <div class="bun-pop-h">{{ cards[idx]!.h }}</div>
+        <div class="bun-pop-t">{{ cards[idx]!.t }}</div>
+        <div class="bun-pop-t bun-pop-sep">{{ cards[idx]!.g }}</div>
       </template>
     </BunPopover>
   </div>
