@@ -98,8 +98,8 @@ export function usePredictSketch(opts: PredictSketchOptions) {
         lastI = i;
       }
     if (firstI == null || lastI == null) return;
-    for (let i = 0; i < firstI; i++) pred[i] = pred[firstI];
-    for (let i = lastI + 1; i < n; i++) pred[i] = pred[lastI];
+    for (let i = 0; i < firstI; i++) pred[i] = pred[firstI]!;
+    for (let i = lastI + 1; i < n; i++) pred[i] = pred[lastI]!;
     let i = firstI;
     while (i < lastI) {
       if (pred[i + 1] == null) {

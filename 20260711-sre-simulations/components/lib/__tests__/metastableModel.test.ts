@@ -65,14 +65,14 @@ describe("Potential und Barriere", () => {
     const { qs, U } = potential(90, 2, 200, 400);
     expect(U[0]).toBe(0);
     let iMax = 0;
-    for (let i = 0; i < U.length; i++) if (U[i] > U[iMax]) iMax = i;
+    for (let i = 0; i < U.length; i++) if (U[i]! > U[iMax]!) iMax = i;
     const qu = tippingPoint(90) ?? Infinity;
-    expect(Math.abs(qs[iMax] - qu)).toBeLessThan(1.5);
+    expect(Math.abs(qs[iMax]! - qu)).toBeLessThan(1.5);
   });
   it("Barriere fällt monoton: ΔU(80)≈1290 > ΔU(90)≈523 > ΔU(95)≈206 > 0", () => {
     const b80 = barrier(80);
-    const b90 = barrier(90);
-    const b95 = barrier(95);
+    const b90 = barrier(90)!;
+    const b95 = barrier(95)!;
     expect(b80).toBeGreaterThan(1220);
     expect(b80).toBeLessThan(1360);
     expect(b90).toBeGreaterThan(490);

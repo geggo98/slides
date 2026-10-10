@@ -50,7 +50,7 @@ describe("Exakte stationäre Verteilung", () => {
     let maxErr = 0;
     for (let n = 0; n <= K; n++) {
       const exact = norm * Math.pow(rho, n);
-      maxErr = Math.max(maxErr, Math.abs(pi[n] - exact));
+      maxErr = Math.max(maxErr, Math.abs(pi[n]! - exact));
     }
     expect(maxErr).toBeLessThan(1e-9);
   });

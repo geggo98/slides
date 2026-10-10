@@ -17,7 +17,11 @@ const SEED = 12345;
 const run = (opts: any = {}) => {
   const c = new Chain(SEED, 2, 0.4, false, opts);
   c.runTo(T);
-  return c;
+  return c as unknown as {
+    orders: number[][];
+    inv: number[][];
+    demand: number[];
+  };
 };
 const longestZero = (a: number[]) => {
   let best = 0,
@@ -46,11 +50,11 @@ describe("Grundszenario (priceShock aus)", () => {
     expect(beyond.demand).toEqual(base.demand);
   });
   it("eingefrorene Kennzahlen (Regressions-Guard gegen Mathe-Drift)", () => {
-    const o3 = base.orders[3];
+    const o3 = base.orders[3]!;
     expect(Math.max(...o3)).toBeGreaterThan(606); // Spitze ~607
     expect(Math.max(...o3)).toBeLessThan(608);
     expect(o3.reduce((a, b) => a + b, 0)).toBeCloseTo(7210.75, 0);
-    expect(base.inv[3][T - 1]).toBeCloseTo(179.02, 0);
+    expect(base.inv[3]![T - 1]).toBeCloseTo(179.02, 0);
   });
 });
 
@@ -62,35 +66,35 @@ describe("Preisschock: Lagerabbau → Bestell-Blackout", () => {
     expect(shock.demand).toEqual(nom.demand);
   });
   it("Micron: mehrwöchiger Bestell-Blackout ab dem Schock (W20)", () => {
-    expect(shock.orders[3][20]).toBeLessThan(1);
-    expect(longestZero(shock.orders[3])).toBeGreaterThanOrEqual(6);
+    expect(shock.orders[3]![20]).toBeLessThan(1);
+    expect(longestZero(shock.orders[3]!)).toBeGreaterThanOrEqual(6);
   });
   it("Blackout wächst stromaufwärts: 1/3/5/7 Wochen (unten→oben)", () => {
     const streaks = shock.orders.map((o: number[]) => longestZero(o));
-    expect(streaks[0]).toBeLessThanOrEqual(streaks[1]);
-    expect(streaks[1]).toBeLessThanOrEqual(streaks[2]);
-    expect(streaks[2]).toBeLessThanOrEqual(streaks[3]);
-    expect(streaks[0]).toBeLessThanOrEqual(2);
-    expect(streaks[3]).toBeGreaterThanOrEqual(6);
+    expect(streaks[0]!).toBeLessThanOrEqual(streaks[1]!);
+    expect(streaks[1]!).toBeLessThanOrEqual(streaks[2]!);
+    expect(streaks[2]!).toBeLessThanOrEqual(streaks[3]!);
+    expect(streaks[0]!).toBeLessThanOrEqual(2);
+    expect(streaks[3]!).toBeGreaterThanOrEqual(6);
   });
   it("Erholung von unten: Lokales Inventar verlässt den Blackout vor Micron", () => {
-    expect(lastZero(shock.orders[0])).toBeLessThan(lastZero(shock.orders[3]));
+    expect(lastZero(shock.orders[0]!)).toBeLessThan(lastZero(shock.orders[3]!));
   });
   it("Bestell-Rate erholt sich auf ~Nachfrage (kein Dauer-Null)", () => {
-    const late = mean(shock.orders[3].slice(50, 60));
+    const late = mean(shock.orders[3]!.slice(50, 60));
     expect(late).toBeGreaterThan(110);
     expect(late).toBeLessThan(135);
   });
   it("Lagerbestand bleibt dauerhaft magerer (Rückstand am Ende)", () => {
-    expect(shock.inv[3][T - 1]).toBeLessThan(0); // ~ -51
-    expect(shock.inv[3][T - 1]).toBeGreaterThan(-90);
+    expect(shock.inv[3]![T - 1]).toBeLessThan(0); // ~ -51
+    expect(shock.inv[3]![T - 1]).toBeGreaterThan(-90);
   });
 });
 
 describe("K-Skalierung", () => {
   it("die fünfte Stufe verdoppelt die Spitzen-Bestellung (~2×)", () => {
-    const k4 = Math.max(...run({ K: 4 }).orders[3]);
-    const k5 = Math.max(...run({ K: 5 }).orders[4]);
+    const k4 = Math.max(...run({ K: 4 }).orders[3]!);
+    const k5 = Math.max(...run({ K: 5 }).orders[4]!);
     expect(k5 / k4).toBeGreaterThan(1.8);
     expect(k5 / k4).toBeLessThan(2.2);
   });
