@@ -42,6 +42,14 @@ jobs:
         shell: bash
         run: nix profile add "github:cachix/devenv/b8030c58deafc013fc51791377fe8fea4dadcb00#devenv" # v2.2.2
 
+      # Warn-only for now: a type error shows up as an annotation on the run
+      # but does not stop the deploy. Drop `continue-on-error` to make it a gate.
+      - name: Type check
+        continue-on-error: true
+        run: |
+          bun install --frozen-lockfile
+          bun run typecheck || { echo "::warning::vue-tsc reports type errors"; exit 1; }
+
       - name: Build all presentations
         run: |
           export SLIDES_BASE_PATH="${{ github.event.repository.name }}"
