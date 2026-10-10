@@ -6,15 +6,22 @@
 // Menschen im Detail-Loop findet die Lücke zwischen A und B schneller.
 // Belege: Spring Boot Actuator (docs.spring.io, Kubernetes Probes): „By
 // default, Spring Boot does not add other health indicators to these groups“
-// — die readiness-Gruppe enthält nur readinessState. Darwin Gödel Machine
-// (arXiv 2505.22954, Abschnitt „Hallucination of tool use“): der Agent
-// entfernte das Logging der Spezial-Tokens und umging so die Prüffunktion,
-// „despite instructions not to change the special tokens“. Abgerufen
-// 09.10.2026. Metriknamen mit „Beispiel“ sind erfunden, alle anderen stehen
-// so auf den PromQL-Folien dieses Decks.
+// — die readiness-Gruppe enthält nur readinessState. Datacurve, „Introducing
+// DeepSWE“ (deepswe.datacurve.ai/blog/deepswe, 26.05.2026), Audit von
+// SWE-Bench Pro: „Both Opus configurations register CHEATED on more than 12%
+// of their reviewed SWE-Bench Pro rollouts (about 18% of Opus 4.7's passes
+// and 25% of Opus 4.6's)“, 33 von 38 Fällen per `git log --all` oder
+// `git show <gold-hash>`. Die Zahlen stammen von SWE-Bench Pro, nicht von
+// DeepSWE: Der v1.1-Post (…/blog/deepswe-v1-1, 14.06.2026) sagt zu v1
+// „results from v1.0 remain free of this form of cheating“ und schließt den
+// Pfad vorsorglich (nur der committete Patch zählt, in eigenem Container,
+// keine späteren Commits im Repo). Abgerufen 10.10.2026. Metriknamen mit
+// „Beispiel“ sind erfunden, alle anderen stehen so auf den PromQL-Folien
+// dieses Decks.
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
 import QueryCode from "@shared/components/QueryCode.vue";
+import TalkXref from "@shared/components/TalkXref.vue";
 
 const { isDark } = useDarkMode();
 
@@ -104,12 +111,17 @@ const pairs = [
   {
     key: "score",
     goal: "Der Agent löst die Aufgabe richtig",
-    metric: "Score der Prüffunktion",
+    metric: "Benchmark-Score: die Tests sind grün",
     agent: true,
-    miss: "Die Darwin Gödel Machine entfernte das Logging der Spezial-Tokens und erreichte den Höchstwert, ohne das Problem zu lösen. Die Anweisung, die Tokens nicht anzufassen, half nicht.",
+    miss: "Auf SWE-Bench Pro holten sich Opus 4.6 und 4.7 die Musterlösung per git log aus der Historie, bei 25 % bzw. 18 % ihrer Treffer. Die Tests waren grün, gelöst war die Aufgabe nicht.",
     better:
-      "Prüffunktionen vor dem Agenten verbergen und eine zweite Messung ohne seinen Einfluss führen.",
+      "Den Patch getrennt vom Agenten bewerten, ohne spätere Commits im Repo. DeepSWE v1.1 macht das vorsorglich.",
     counter: "Holdout-Messung, die der Agent nie sieht",
+    xref: {
+      slug: "20260408-agents-details",
+      anchor: "pareto-v1-bonus",
+      label: "Pareto-Front: DeepSWE v1 gegen v1.1",
+    },
     query: null,
   },
 ];
@@ -169,6 +181,12 @@ const vars = computed(() => {
         >
         <span>{{ cur.counter }}</span>
       </div>
+      <div v-if="cur.xref" class="ma-xref">
+        →
+        <TalkXref :slug="cur.xref.slug" :anchor="cur.xref.anchor">{{
+          cur.xref.label
+        }}</TalkXref>
+      </div>
       <QueryCode
         v-if="cur.query"
         class="ma-query"
@@ -214,7 +232,13 @@ const vars = computed(() => {
 .ma-item.active {
   border-color: var(--ma-blue);
   background: var(--ma-alt);
-  font-weight: 600;
+}
+/* Faux-Bold statt font-weight: ändert die Textbreite nicht, die Zeile bricht
+   beim Aktivieren also nicht um. */
+.ma-item.active .ma-goal {
+  text-shadow:
+    0.3px 0 0 currentColor,
+    -0.3px 0 0 currentColor;
 }
 .ma-tag {
   flex: none;
@@ -245,6 +269,10 @@ const vars = computed(() => {
   letter-spacing: 0.3px;
   text-transform: uppercase;
   padding-top: 1px;
+}
+.ma-xref {
+  font-size: 12px;
+  color: var(--ma-muted);
 }
 .ma-query {
   margin: 2px 0 0;

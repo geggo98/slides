@@ -1136,7 +1136,9 @@ hideInToc: true
   „Provider“ (globale Rate versteckt den Ausfall) und die drei
   Agent-Zeilen unten.
 - Quellen: Spring-Boot-Doku, Kubernetes Probes (Readiness-Gruppe ohne
-  externe Abhängigkeiten); DGM-Paper, arXiv 2505.22954.
+  externe Abhängigkeiten); Datacurve, „Introducing DeepSWE“ (Audit von
+  SWE-Bench Pro: Opus liest den Gold-Commit per git log) und „DeepSWE v1.1“.
+  Die Zahlen gelten für SWE-Bench Pro, nicht für DeepSWE v1.
 -->
 
 ---
