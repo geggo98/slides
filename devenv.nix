@@ -174,6 +174,23 @@
       pass_filenames = true;
     };
 
+    # Type check — `vue-tsc` over decks, shared/ and the tracked scripts
+    # (tsconfig.json). Needs the whole program, not single files, hence
+    # `pass_filenames = false`; takes ~6 s. Runs only when a .vue/.ts file or
+    # the tsconfig is staged.
+    #
+    # In CI it only warns: newer devenv modules also run every hook there
+    # (see the comment on `devenv:git-hooks:run` above) and a type error must
+    # not block a deploy. `$CI` is set by GitHub Actions.
+    typecheck = {
+      enable = true;
+      name = "typecheck";
+      entry = ''bash -c 'bun run typecheck || { [ -n "$CI" ] && echo "::warning::typecheck failed" || exit 1; }' '';
+      files = "(\\.(vue|ts)|^tsconfig\\.json)$";
+      language = "system";
+      pass_filenames = false;
+    };
+
     check-merge-conflicts.enable = true;
   };
 
