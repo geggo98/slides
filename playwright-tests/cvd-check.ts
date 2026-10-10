@@ -52,9 +52,9 @@ let coocMin = Infinity,
 const violations: string[] = [];
 for (let i = 0; i < LANGS.length; i++)
   for (let j = i + 1; j < LANGS.length; j++) {
-    const a = LANGS[i],
-      b = LANGS[j];
-    const d = minDistAcrossCVD(map[a], map[b]);
+    const a = LANGS[i]!,
+      b = LANGS[j]!;
+    const d = minDistAcrossCVD(map[a]!, map[b]!);
     if (d < globalMin) {
       globalMin = d;
       globalWorst = `${a}/${b}`;
@@ -75,7 +75,10 @@ console.log(`languages: ${LANGS.length}, co-occurring pairs: ${cooc.size}`);
 console.log(
   `co-occurring min ΔE2000 (worst CVD): ${coocMin.toFixed(1)}  (${coocWorst})`,
 );
-const pc = perCVD(map[coocWorst.split("/")[0]], map[coocWorst.split("/")[1]]);
+const pc = perCVD(
+  map[coocWorst.split("/")[0]!]!,
+  map[coocWorst.split("/")[1]!]!,
+);
 console.log(
   `  └ per-CVD: ${Object.entries(pc)
     .map(([k, v]) => `${k}=${v.toFixed(0)}`)
@@ -89,8 +92,8 @@ console.log(
 console.log(`\ntext contrast (auto-picked white/dark):`);
 const lowContrast: string[] = [];
 for (const l of LANGS) {
-  const fg = bestText(map[l]);
-  const cr = contrastRatio(map[l], fg);
+  const fg = bestText(map[l]!);
+  const cr = contrastRatio(map[l]!, fg);
   if (cr < 4.5) lowContrast.push(`${l} ${map[l]} cr=${cr.toFixed(1)}`);
   console.log(
     `  ${l.padEnd(11)} ${map[l]} text ${fg} contrast ${cr.toFixed(1)}:1`,

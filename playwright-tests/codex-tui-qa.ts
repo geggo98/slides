@@ -45,14 +45,18 @@ async function mountIso(page: Page, width: number, fontPx: number | null) {
   await page.evaluate(
     async ({ w, fontPx }) => {
       const src = await (await fetch("/components/CodexEffortTui.vue")).text();
-      const vueUrl = src.match(/from "([^"]*\/vue\.esm-bundler\.js[^"]*)"/)![1];
+      const vueUrl = src.match(
+        /from "([^"]*\/vue\.esm-bundler\.js[^"]*)"/,
+      )![1]!;
       const slidevUrl = src.match(
         /from "([^"]*@slidev\/client\/index\.ts[^"]*)"/,
-      )![1];
+      )![1]!;
       const vue = await import(/* @vite-ignore */ vueUrl);
       const slidev = await import(/* @vite-ignore */ slidevUrl);
-      const Tui = (await import("/components/CodexEffortTui.vue")).default;
-      const Toml = (await import("/components/CodexConfigToml.vue")).default;
+      const tuiUrl: string = "/components/CodexEffortTui.vue";
+      const tomlUrl: string = "/components/CodexConfigToml.vue";
+      const Tui = (await import(/* @vite-ignore */ tuiUrl)).default;
+      const Toml = (await import(/* @vite-ignore */ tomlUrl)).default;
       const step = vue.ref(0);
       const tomlStep = vue.ref(0);
       const host = document.createElement("div");

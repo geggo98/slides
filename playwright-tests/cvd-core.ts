@@ -21,7 +21,9 @@ export const blocks: string[][] = [];
 const langSet = new Set<string>();
 for (const [, pat] of Object.entries<any>(PATTERNS)) {
   const langs = [
-    ...new Set((pat.tabs || []).map((t: any) => norm(t.language || "java"))),
+    ...new Set<string>(
+      (pat.tabs || []).map((t: any) => norm(t.language || "java")),
+    ),
   ];
   langs.forEach((l) => langSet.add(l));
   if (langs.length > 1) blocks.push(langs);
@@ -75,16 +77,16 @@ export const MACHADO: Record<string, number[][]> = {
 };
 
 export const simulate = (rgb: RGB, type: string): RGB => {
-  const m = MACHADO[type];
-  const lin = rgb.map(srgbToLinear);
+  const m = MACHADO[type]!;
+  const lin = rgb.map(srgbToLinear) as RGB;
   const out = m.map(
-    (row) => row[0] * lin[0] + row[1] * lin[1] + row[2] * lin[2],
+    (row) => row[0]! * lin[0] + row[1]! * lin[1] + row[2]! * lin[2],
   );
   return out.map((v) => linearToSrgb(Math.max(0, Math.min(1, v)))) as RGB;
 };
 
 export const rgbToLab = (rgb: RGB): [number, number, number] => {
-  const [r, g, b] = rgb.map(srgbToLinear);
+  const [r, g, b] = rgb.map(srgbToLinear) as RGB;
   let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
   let y = r * 0.2126 + g * 0.7152 + b * 0.0722;
   let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
@@ -94,8 +96,8 @@ export const rgbToLab = (rgb: RGB): [number, number, number] => {
 };
 
 export const ciede2000 = (l1: number[], l2: number[]): number => {
-  const [L1, a1, b1] = l1,
-    [L2, a2, b2] = l2;
+  const [L1, a1, b1] = l1 as [number, number, number],
+    [L2, a2, b2] = l2 as [number, number, number];
   const rad = Math.PI / 180,
     deg = 180 / Math.PI;
   const C1 = Math.hypot(a1, b1),
@@ -167,7 +169,7 @@ export const perCVD = (hexA: string, hexB: string): Record<string, number> => {
 
 // relative luminance (WCAG) for picking white vs dark text on a badge
 export const relLuminance = (hex: string): number => {
-  const [r, g, b] = hexToRgb(hex).map(srgbToLinear);
+  const [r, g, b] = hexToRgb(hex).map(srgbToLinear) as RGB;
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 export const contrastRatio = (hexA: string, hexB: string): number => {

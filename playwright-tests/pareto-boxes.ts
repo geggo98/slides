@@ -34,7 +34,10 @@ if (klick) {
   await page.waitForTimeout(400);
 }
 
-const daten = await page.evaluate(
+const daten = await page.evaluate<{
+  labels: { model: string; x1: number; y1: number; x2: number; y2: number }[];
+  marker: { model: string; cx: number; cy: number }[];
+}>(
   `(() => {
   const svg = document.querySelector("svg.SEL-chart");
   const m = svg.getScreenCTM().inverse();

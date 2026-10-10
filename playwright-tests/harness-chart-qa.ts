@@ -136,21 +136,21 @@ function report(where: string, boxes: Box[], soft: boolean): number {
   const hits: string[] = [];
   for (let i = 0; i < labels.length; i++) {
     for (let j = i + 1; j < labels.length; j++) {
-      if (overlap(labels[i], labels[j]))
-        hits.push(`  label/label  ${tag(labels[i])}  ×  ${tag(labels[j])}`);
+      if (overlap(labels[i]!, labels[j]!))
+        hits.push(`  label/label  ${tag(labels[i]!)}  ×  ${tag(labels[j]!)}`);
     }
     for (const m of marks) {
       // Das eigene Klickziel: der Marker, dessen Modell·Harness das Label trägt,
       // ist im Default nicht erkennbar (Label = Modell). Ein Label DARF seinen
       // eigenen Marker nicht überdecken — also zählen alle.
-      if (overlap(labels[i], m))
-        hits.push(`  label/marker ${tag(labels[i])}  ×  ${m.label}`);
+      if (overlap(labels[i]!, m))
+        hits.push(`  label/marker ${tag(labels[i]!)}  ×  ${m.label}`);
     }
   }
   for (let i = 0; i < marks.length; i++) {
     for (let j = i + 1; j < marks.length; j++) {
-      if (overlap(marks[i], marks[j]))
-        hits.push(`  marker/marker ${marks[i].label}  ×  ${marks[j].label}`);
+      if (overlap(marks[i]!, marks[j]!))
+        hits.push(`  marker/marker ${marks[i]!.label}  ×  ${marks[j]!.label}`);
     }
   }
   console.log(`${where}: ${labels.length} Labels, ${marks.length} Marker`);

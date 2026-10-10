@@ -36,7 +36,7 @@ const readN = async (): Promise<number> => {
   const t = await root.textContent();
   const m = t?.match(/(\d+)\s*Pers\./);
   if (!m) fail(`N-Gauge nicht lesbar in: ${t?.slice(0, 200)}`);
-  return parseInt(m[1], 10);
+  return parseInt(m[1]!, 10);
 };
 
 const nBefore = await readN();

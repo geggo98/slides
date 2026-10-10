@@ -35,23 +35,23 @@ function report(where: string, boxes: Box[], soft = false) {
   const hits: string[] = [];
   for (let i = 0; i < labels.length; i++) {
     for (let j = i + 1; j < labels.length; j++) {
-      if (overlap(labels[i], labels[j]))
-        hits.push(`  label/label  ${labels[i].label}  ×  ${labels[j].label}`);
+      if (overlap(labels[i]!, labels[j]!))
+        hits.push(`  label/label  ${labels[i]!.label}  ×  ${labels[j]!.label}`);
     }
     for (const m of marks) {
-      if (m.label === labels[i].label) continue;
-      if (overlap(labels[i], m))
-        hits.push(`  label/marker ${labels[i].label}  ×  ${m.label}`);
+      if (m.label === labels[i]!.label) continue;
+      if (overlap(labels[i]!, m))
+        hits.push(`  label/marker ${labels[i]!.label}  ×  ${m.label}`);
     }
   }
   // Seit der Entzerrung dürfen sich auch Marker nicht mehr verdecken. Der
   // eigene Geisterring trägt denselben Namen und zählt nicht.
   for (let i = 0; i < marks.length; i++) {
     for (let j = i + 1; j < marks.length; j++) {
-      if (marks[i].kind !== "marker" || marks[j].kind !== "marker") continue;
-      if (marks[i].label === marks[j].label) continue;
-      if (overlap(marks[i], marks[j]))
-        hits.push(`  marker/marker ${marks[i].label}  ×  ${marks[j].label}`);
+      if (marks[i]!.kind !== "marker" || marks[j]!.kind !== "marker") continue;
+      if (marks[i]!.label === marks[j]!.label) continue;
+      if (overlap(marks[i]!, marks[j]!))
+        hits.push(`  marker/marker ${marks[i]!.label}  ×  ${marks[j]!.label}`);
     }
   }
   console.log(`\n${where}: ${labels.length} Labels, ${marks.length} Marker`);
@@ -195,7 +195,7 @@ for (const theme of ["light", "dark"] as const) {
     }
   }
   await page.waitForTimeout(250);
-  const bars = await page.evaluate(`(() => {
+  const bars = await page.evaluate<{ y1: number; y2: number }[]>(`(() => {
     const g = [...document.querySelectorAll("svg.mp-chart g.mp-ci")];
     return g.map((x) => {
       const bar = x.querySelector("line.mp-ci-bar");
@@ -213,7 +213,7 @@ for (const theme of ["light", "dark"] as const) {
     const [a, b] = bars.map((v: any) => [
       Math.min(v.y1, v.y2),
       Math.max(v.y1, v.y2),
-    ]);
+    ]) as [[number, number], [number, number]];
     const ok = a[0] < b[1] && b[0] < a[1];
     console.log(`  Intervalle überlappen: ${ok ? "ja" : "NEIN"}`);
     if (!ok) problems++;
@@ -273,7 +273,10 @@ for (const theme of ["light", "dark"] as const) {
   await page.click("button.mp-tg"); // Overlay wieder aus
   await page.click("button.mp-ib");
   await page.waitForTimeout(250);
-  const pop = await page.evaluate(`(() => {
+  const pop = await page.evaluate<{
+    count: number;
+    links: string[];
+  } | null>(`(() => {
     const card = document.querySelector(".bun-pop-card");
     if (!card) return null;
     const li = [...card.querySelectorAll("li")].map((e) => e.textContent.trim());
@@ -434,7 +437,7 @@ for (const theme of ["light", "dark"] as const) {
       await page.keyboard.press("ArrowRight");
       await page.waitForTimeout(450);
     }
-    const boxes = await page.evaluate(collect("svg.mh-chart"));
+    const boxes = await page.evaluate<Box[]>(collect("svg.mh-chart"));
     const date = await page.evaluate(
       `document.querySelector("svg.mh-chart") ? document.querySelector(".mh-tl-item.active .mh-tl-date").textContent.trim() : "?"`,
     );
@@ -559,7 +562,12 @@ for (const theme of ["light", "dark"] as const) {
     `  Detailmodus: ${bewegt.length ? "✗ verschoben: " + bewegt.join(", ") : "kein Label der Station verschoben"} (${Object.keys(vorDetail).length} → ${Object.keys(imDetail).length})`,
   );
   problems += bewegt.length;
-  const detail = await page.evaluate(`(() => {
+  const detail = await page.evaluate<{
+    labels: number;
+    pts: number;
+    hits: number;
+    toggleOn: boolean;
+  }>(`(() => {
     const svg = document.querySelector("svg.mh-chart");
     const pts = svg.querySelectorAll("circle[class*='front-pt'], rect[class*='dom-pt']").length;
     return {
@@ -637,7 +645,11 @@ for (const theme of ["light", "dark"] as const) {
   // Zurück: der Detailmodus muss wieder aus sein, die Pins weg.
   await page.keyboard.press("ArrowLeft");
   await page.waitForTimeout(400);
-  const off = await page.evaluate(`(() => {
+  const off = await page.evaluate<{
+    ch: number;
+    hits: number;
+    toggleOn: boolean;
+  }>(`(() => {
     const svg = document.querySelector("svg.mh-chart");
     return {
       ch: svg.querySelectorAll("g.mp-ch").length,
@@ -658,7 +670,11 @@ for (const theme of ["light", "dark"] as const) {
   await page.click(".mh-tl-item:first-child .mh-tl-btn");
   await page.click("button.mh-tg");
   await page.waitForTimeout(400);
-  const v1 = await page.evaluate(`(() => {
+  const v1 = await page.evaluate<{
+    date: string;
+    labels: number;
+    pts: number;
+  }>(`(() => {
     const svg = document.querySelector("svg.mh-chart");
     return {
       date: document.querySelector(".mh-tl-item.active .mh-tl-date").textContent.trim(),

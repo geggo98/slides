@@ -39,7 +39,10 @@ for (const s of SLIDES) {
   await page.click(s.btn);
   await page.waitForTimeout(300);
 
-  const items = await page.evaluate(`(() => {
+  const items = await page.evaluate<{
+    sources: string[];
+    caveats: string[];
+  }>(`(() => {
     const card = document.querySelector(".bun-pop-card");
     if (!card) return null;
     const cols = card.querySelectorAll(".mrs-list");
@@ -55,7 +58,7 @@ for (const s of SLIDES) {
   // Nur die Leads ausgeben — der Volltext steht in den Screenshots.
   for (const c of items.caveats) console.log(`   · ${c.slice(0, 90)}`);
 
-  const scope = await page.evaluate(
+  const scope = await page.evaluate<string>(
     `document.querySelector(".mrs-scope")?.textContent?.trim() ?? ""`,
   );
   if (!scope.includes("drei")) {

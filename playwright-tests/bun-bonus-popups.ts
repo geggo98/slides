@@ -143,7 +143,7 @@ async function run(colorScheme: "light" | "dark") {
     const t = (await page.locator(".bun-pop-card").textContent()) ?? "";
     check(
       `${tag} 42 Karte ${i + 1}: "${expected[i]}" + Gegenposition/Einordnung`,
-      t.includes(expected[i]) &&
+      t.includes(expected[i]!) &&
         (t.includes("Gegenposition") || t.includes("Einordnung")),
     );
     await closeByClick(page, `${tag} 42 Karte ${i + 1}`);
