@@ -14,6 +14,7 @@
 // so auf den PromQL-Folien dieses Decks.
 import { ref, computed } from "vue";
 import { useDarkMode } from "@slidev/client";
+import QueryCode from "@shared/components/QueryCode.vue";
 
 const { isDark } = useDarkMode();
 
@@ -168,7 +169,12 @@ const vars = computed(() => {
         >
         <span>{{ cur.counter }}</span>
       </div>
-      <pre v-if="cur.query" class="ma-query">{{ cur.query }}</pre>
+      <QueryCode
+        v-if="cur.query"
+        class="ma-query"
+        lang="promql"
+        :code="cur.query"
+      />
     </div>
   </div>
 </template>

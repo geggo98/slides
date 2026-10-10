@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useDarkMode } from "@slidev/client";
 import GaugeRing from "./GaugeRing.vue";
+import QueryCode from "@shared/components/QueryCode.vue";
 
 // --- Color constants ---
 const { isDark } = useDarkMode();
@@ -1540,7 +1541,11 @@ function phaseFilled(phases, idx, prog) {
                 class="promql-item"
               >
                 <div class="promql-label">{{ item.label }}</div>
-                <pre class="promql-code">{{ item.query }}</pre>
+                <QueryCode
+                  class="promql-code"
+                  lang="promql"
+                  :code="item.query"
+                />
               </div>
             </div>
           </div>

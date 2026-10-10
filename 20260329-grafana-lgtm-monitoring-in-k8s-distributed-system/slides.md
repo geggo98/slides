@@ -155,7 +155,7 @@ Drei Latenz-Ebenen im Versicherungsintegrator:
 | **Externe B2B-API-Latenz**   | 500ms–5s    | Allianz, AXA etc. — stark schwankend |
 | **Cache-Hit vs. Cache-Miss** | Hit < 10ms  | Miss triggert B2B-Call               |
 
-```text
+```promql
 # P99 Latenz für erfolgreiche interne Requests
 histogram_quantile(0.99,
   sum(rate(http_server_requests_seconds_bucket{status=~"2.."}[5m])) by (le, uri))
@@ -169,7 +169,7 @@ hideInToc: true
 
 Quantifiziert die Last. Im Versicherungskontext ist der **Fan-out-Multiplikator** zentral: ein Kundenrequest auf `/api/v1/quotes` löst 5–15 parallele Provider-Calls aus.
 
-```text
+```promql
 # Gesamte Request-Rate über alle Services
 sum(rate(http_server_requests_seconds_count[5m]))
 
@@ -194,7 +194,7 @@ Drei Kategorien im Integrator-Kontext:
 - **Upstream-Provider-Fehler** — 500er, Timeouts, 429 Rate-Limiting
 - **Partielle Degradation** — 3 von 10 Anbietern fallen aus → Quote unvollständig, aber nicht komplett fehlerhaft
 
-```text
+```promql
 # Interne Error-Rate als Prozentsatz
 sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
   / sum(rate(http_server_requests_seconds_count[5m]))
@@ -215,7 +215,7 @@ _"Many systems degrade in performance before achieving 100% utilization."_ — S
 
 Beste Indikatoren: **Queuing** — Arbeit, die auf Verarbeitung wartet.
 
-```text
+```promql
 # Tomcat Thread-Pool-Auslastung
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads
 
@@ -275,7 +275,7 @@ Beantwortet: „Ist die Infrastruktur der Engpass?“
 
 ### CPU in Kubernetes
 
-```text
+```promql
 # Utilization: CPU-Nutzung als Anteil des Limits
 sum(rate(container_cpu_usage_seconds_total{container!=""}[5m])) by (pod)
   / sum(kube_pod_container_resource_limits{resource="cpu"}) by (pod)
@@ -287,7 +287,7 @@ sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
 
 ### Memory in Kubernetes
 
-```text
+```promql
 # Utilization: Working Set vs. Limit (was der OOM-Killer beobachtet)
 sum(container_memory_working_set_bytes{container!=""}) by (pod)
   / sum(kube_pod_container_resource_limits{resource="memory"}) by (pod)
@@ -315,7 +315,7 @@ CFS (Completely Fair Scheduler) arbeitet in **100ms-Perioden**. Container, der s
 
 Für JVM: **Bereits 15% Throttling kann GC-Pausen verstärken** — Stop-the-World-Pausen werden durch CFS-Pausen zusätzlich verstärkt.
 
-```text
+```promql
 # CPU-Throttling-Prozentsatz
 sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
   / sum(rate(container_cpu_cfs_periods_total[5m])) by (pod, container) * 100
@@ -333,7 +333,7 @@ hideInToc: true
 
 Pool-Erschöpfung → blockierte Threads → kaskadierende Timeouts
 
-```text
+```promql
 hikaricp_connections_active / hikaricp_connections_max * 100
 hikaricp_connections_pending  # Wartende Threads (>0 = Saturation!)
 ```
@@ -344,7 +344,7 @@ Sizing: `(core_count × 2) + effective_spindle_count` → 4-Core SSD: **(4×2)+1
 
 Default: max 200 Threads, Accept-Queue: 100. Alle busy + Queue voll → HTTP 503.
 
-```text
+```promql
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
 ```
 
@@ -913,7 +913,7 @@ hideInToc: true
 
 Labels beschreiben die **Quelle**, nicht den Inhalt. `trace_id`, `user_id` → Structured Metadata (Loki 3.0+).
 
-```text
+```logql
 # Fehler-Logs eines Services
 {namespace="production", app="quote-service"} | json | level="error"
 
@@ -932,7 +932,7 @@ hideInToc: true
 
 # Tempo für Traces (TraceQL)
 
-```text
+```traceql
 // Spans langsamer als 2 Sekunden
 { duration > 2s }
 
