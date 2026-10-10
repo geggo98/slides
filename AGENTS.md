@@ -81,11 +81,38 @@ through `bun run`, which is what the git hooks do too.
 devenv tasks run slides:deploy       # full build pipeline: install → build all talks → landing page
 bun run test                         # vitest: shared/, deploy/ and the decks' components/lib/
 bun run eslint --fix <files>         # same linter the pre-commit hook runs on *.vue
+bun run typecheck                  # vue-tsc over decks, shared/ and the tracked scripts (~6 s)
 ```
 
 Run `bun run test` before committing anything under `shared/`, `deploy/` or a
 deck's `components/lib/`. It takes seconds; the slide overflow check is the one
 that needs a running dev server, these do not.
+
+### Type Checking (`vue-tsc`)
+
+`bun run typecheck` checks every deck's `components/`, `layouts/`, `setup/` and
+`data/`, `shared/`, `deploy/` and the **tracked** `playwright-tests/*.ts` against
+the strict `tsconfig.json` (`noUncheckedIndexedAccess` included). It must report
+zero errors; the pre-commit hook enforces that for staged `.vue`/`.ts` files and
+CI only warns.
+
+- **A new Playwright script that should stay** is picked up automatically once
+  `git add -f`ed — it is then checked. Untracked scratch scripts are not part of
+  the program on purpose (most of them predate the strict flags).
+- **`@slidev/client` is typed by a stub**, `shared/types/slidev-client.d.ts`
+  (via `paths` in `tsconfig.json`; Vite and Vitest ignore `paths`, so runtime is
+  untouched). The real client ships `.ts` sources, and their ~70 strict-mode
+  errors cannot be fixed from here. A component that needs another Slidev API
+  member adds it to the stub; `shared/__tests__/slidev-client-stub.test.ts`
+  checks every stub name against the installed client.
+- **Fix an index access with `!` at the source** (the computed or const that
+  the template reads) once you have checked why the index is in range — not with
+  `?.`, `?? ""` or a `v-if` in the template, which add paths that never run and
+  hide a real failure.
+- **`aria-label` on a component** is typed as an HTML attribute, not as the
+  `ariaLabel` prop: write `:ariaLabel=` when the prop is declared.
+- The editor shows the same diagnostics: `Vue.volar` is in
+  `.vscode/extensions.json`.
 
 ### Starting the Dev Server
 
@@ -226,14 +253,16 @@ Bei komplexeren Szenarien (eigene Tab-/Scroll-Logik) ein Ad-hoc-Playwright-Scrip
 
 ### What Runs on Every Commit
 
-Three hooks, declared in `devenv.nix` under `git-hooks.hooks` and executed by
+Four hooks, declared in `devenv.nix` under `git-hooks.hooks` and executed by
 `prek`: `check-merge-conflicts`, then `eslint --fix` on `*.vue`, then
-`prettier --write` on text files. Two of them **rewrite** rather than complain,
+`prettier --write` on text files, then `bun run typecheck` when a `.vue`/`.ts`
+file or `tsconfig.json` is staged. Two of them **rewrite** rather than complain,
 so a failing commit usually arrives with the fix already applied in the working
 tree — inspect it, stage it, commit again.
 
 **They only ever see the files you staged** (`pass_filenames: true`,
-`always_run: false`). A tracked file that nobody has staged since the hooks went
+`always_run: false`) — except `typecheck`, which needs the whole program and
+checks all of it whenever it fires. A tracked file that nobody has staged since the hooks went
 in is unchecked, however long it has been in the repo — that is what produced
 the two catch-up commits `e02a545` and `3c584e9`. To judge the whole tree you
 have to sweep it yourself; see Formatting.
