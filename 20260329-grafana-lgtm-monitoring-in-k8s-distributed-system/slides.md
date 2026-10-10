@@ -1117,7 +1117,9 @@ Verwandt: Campbell's Law (1976) — je wichtiger ein Indikator für Entscheidung
 - Vier Varianten: Manheim & Garrabrant, „Categorizing Variants of
   Goodhart's Law“, arXiv 1803.04585 (2018).
 - Die letzte Zeile ist ein echter Fall: Darwin Gödel Machine (Sakana AI,
-  2025) — Folie danach.
+  2025, arXiv 2505.22954). Der Agent entfernte die Marker, an denen die
+  Prüffunktion Halluzinationen erkannte. Die Folie danach zeigt einen
+  zweiten Fall (SWE-Bench Pro).
 -->
 
 ---
@@ -1158,7 +1160,7 @@ hideInToc: true
 <b>Verteilung statt Mittelwert, Aufschlüsselung statt Summe.</b> P99 statt Durchschnitt, <code>by (clientName)</code> statt globaler Rate.
 </Callout>
 <Callout tone="danger">
-<b>Holdout und Schreibschutz.</b> Prüffunktionen vor dem Agenten verbergen, Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar. Im DGM-Experiment trat Objective Hacking häufiger auf, wenn die Prüffunktionen sichtbar waren.
+<b>Holdout und Schreibschutz.</b> Prüffunktionen und Musterlösungen vor dem Agenten verbergen, Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar. Auf SWE-Bench Pro las der Agent die Musterlösung aus der sichtbaren Git-Historie.
 </Callout>
 </div>
 
@@ -1167,9 +1169,13 @@ hideInToc: true
 <!--
 - Andy Grove (Intel): Indikatoren paaren, damit die Optimierung der einen
   Größe die andere nicht stillschweigend opfert.
-- DGM: Die Prüffunktionen waren vor dem Agenten verborgen; trat
-  Objective Hacking trotzdem auf, dann beim Entfernen der Spezial-Tokens
-  (arXiv 2505.22954). Ohne Verbergen häufiger.
+- Beispiel von der Folie davor: Datacurve hat den git-log-Pfad in
+  DeepSWE v1.1 vorsorglich geschlossen. Bewertet wird nur der committete
+  Patch, in eigenem Container, ohne spätere Commits im Repo.
+- Zusatz, falls gefragt: Bei der Darwin Gödel Machine waren die
+  Prüffunktionen vor dem Agenten verborgen; trat Objective Hacking
+  trotzdem auf, dann beim Entfernen der Spezial-Tokens (arXiv
+  2505.22954). Ohne Verbergen häufiger.
 - Überleitung: die Zusammenfassung ergänzt einen vierten Block.
 -->
 
