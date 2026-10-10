@@ -81,12 +81,12 @@ const PAIRS: Pair[] = [
   },
 ];
 
-const pairKey = ref(PAIRS[0].key);
+const pairKey = ref(PAIRS[0]!.key);
 const tabs = computed(() =>
   PAIRS.map((pair) => ({ key: pair.key, label: pair.label })),
 );
 const current = computed(
-  () => PAIRS.find((pair) => pair.key === pairKey.value) ?? PAIRS[0],
+  () => PAIRS.find((pair) => pair.key === pairKey.value) ?? PAIRS[0]!,
 );
 const largest = computed(() =>
   Math.max(...current.value.bars.map((bar) => bar.mib)),

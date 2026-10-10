@@ -78,8 +78,8 @@ describe("Praefix-Delta", () => {
       }).target;
       return compressUsingDict(cctx, mutated, base, SAFE_LEVEL).length;
     });
-    expect(sizes[0]).toBeLessThan(sizes[1]);
-    expect(sizes[1]).toBeLessThan(sizes[2]);
+    expect(sizes[0]!).toBeLessThan(sizes[1]!);
+    expect(sizes[1]!).toBeLessThan(sizes[2]!);
   });
 
   it("laesst sich byteidentisch zurueckrechnen", () => {

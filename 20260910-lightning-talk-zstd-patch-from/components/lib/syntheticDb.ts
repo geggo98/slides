@@ -60,7 +60,7 @@ function fillPage(view: Uint8Array, pageNo: number, rnd: () => number): void {
     key += 1 + Math.floor(rnd() * 3);
     dv.setUint32(offset, key, false);
     dv.setFloat64(offset + 4, Math.floor(rnd() * 10000) / 100, false);
-    const tag = TAGS[Math.floor(rnd() * TAGS.length)];
+    const tag = TAGS[Math.floor(rnd() * TAGS.length)]!;
     for (let i = 0; i < TAG_BYTES; i++) {
       view[offset + 12 + i] = i < tag.length ? tag.charCodeAt(i) : 0x20;
     }
