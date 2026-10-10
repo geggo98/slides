@@ -80,9 +80,10 @@ const pairs = [
     key: "cache",
     goal: "Der Cache entlastet die B2B-Calls",
     metric: "Cache-Hit-Ratio",
-    miss: "Eine längere TTL treibt die Ratio nach oben, die Kunden sehen dafür veraltete Tarife. Die Metrik ist für sich genommen leicht zu verbessern.",
+    miss: "Eine längere TTL treibt die Ratio nach oben, die Kunden sehen dafür veraltete Preise, die nicht abschließbar sind. Die Metrik ist für sich genommen leicht zu verbessern.",
     better: "Hit-Ratio nur zusammen mit dem Alter der Daten bewerten.",
-    counter: "Alter der ausgelieferten Tarife",
+    counter:
+      "Alter der ausgelieferten Preise, Anzahl Preisabweichungen beim Abschluss",
     query:
       'sum(rate(cache_gets_total{result="hit"}[5m]))\n  / sum(rate(cache_gets_total[5m]))',
   },
