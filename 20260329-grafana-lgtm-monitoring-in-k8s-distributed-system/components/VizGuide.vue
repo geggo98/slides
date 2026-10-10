@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { useDarkMode } from "@slidev/client";
+import VizSample from "./VizSample.vue";
 
 const props = defineProps({
   initialSelectedViz: { type: String, default: null },
@@ -459,7 +460,15 @@ function getLevelInfo(levelId) {
             </div>
           </div>
           <div class="viz-detail-body">
-            <div class="viz-detail-usefor">{{ vizDetail.useFor }}</div>
+            <div class="viz-detail-left">
+              <div class="viz-detail-usefor">{{ vizDetail.useFor }}</div>
+              <VizSample
+                :type="vizDetail.id"
+                :label="vizDetail.name"
+                :color="vizDetail.color"
+                :palette="PALETTE"
+              />
+            </div>
             <div class="viz-detail-examples">
               <div class="section-label">Beispiele</div>
               <div class="examples-list">
@@ -640,16 +649,21 @@ function getLevelInfo(levelId) {
   align-items: flex-start;
 }
 
+.viz-detail-left {
+  width: 180px;
+  flex-shrink: 0;
+}
+
 .viz-detail-usefor {
   font-size: 8px;
   color: v-bind("PALETTE.text");
   margin-bottom: 4px;
   line-height: 1.3;
-  flex-shrink: 0;
 }
 
 .viz-detail-examples {
   margin-bottom: 0;
+  margin-left: 6px;
   flex-shrink: 0;
 }
 
@@ -681,6 +695,8 @@ function getLevelInfo(levelId) {
 }
 
 .viz-detail-tip {
+  flex: 1;
+  min-width: 0;
   border-radius: 4px;
   padding: 6px 8px;
   border: 1px solid;
