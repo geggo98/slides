@@ -1,3 +1,5 @@
 {
-  "ltex.language": "de-DE"
+  "ltex.language": "de-DE",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
 }
