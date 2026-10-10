@@ -39,7 +39,7 @@ for (const dir of talkDirs) {
   const file = resolve(repoRoot, dir, "slides.md");
   const md = readFileSync(file, "utf8");
   for (const m of md.matchAll(/<TalkXref[^>]*\bslug=["']([^"']+)["']/g)) {
-    xrefSlugs.push({ file: `${dir}/slides.md`, slug: m[1] });
+    xrefSlugs.push({ file: `${dir}/slides.md`, slug: m[1]! });
   }
 }
 
@@ -101,7 +101,7 @@ for (const dir of talkDirs) {
     dir,
     new Set(
       [...md.matchAll(/^routeAlias:\s*["']?([\w-]+)["']?\s*$/gm)].map(
-        (m) => m[1],
+        (m) => m[1]!,
       ),
     ),
   );
@@ -120,7 +120,7 @@ for (const dir of talkDirs) {
   // Form 2: Objekt-Literale mit slug+anchor (z.B. in :refs von TalkXrefPanel).
   for (const m of md.matchAll(/\{[^{}]*\bslug:\s*["']([^"']+)["'][^{}]*\}/g)) {
     const anchor = /\banchor:\s*["']([^"']+)["']/.exec(m[0])?.[1];
-    if (anchor) xrefAnchors.push({ file, slug: m[1], anchor });
+    if (anchor) xrefAnchors.push({ file, slug: m[1]!, anchor });
   }
 }
 
