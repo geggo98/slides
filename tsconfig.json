@@ -20,7 +20,8 @@
       "@slidev/client": ["./shared/types/slidev-client.d.ts"],
       "@slidev/client/builtin/Mermaid.vue": [
         "./shared/types/slidev-mermaid.d.ts"
-      ]
+      ],
+      "@slidev/client/setup/shiki.ts": ["./shared/types/slidev-shiki.d.ts"]
     }
   },
   "include": [
