@@ -744,7 +744,7 @@ function getLevelInfo(levelId) {
 
 /* Decision Matrix */
 .decision-matrix {
-  width: 210px;
+  width: 230px;
   flex-shrink: 0;
   padding: 6px;
   background: v-bind("PALETTE.surface");
@@ -753,7 +753,7 @@ function getLevelInfo(levelId) {
 }
 
 .dm-title {
-  font-size: 6px;
+  font-size: 7px;
   font-weight: 700;
   color: v-bind("PALETTE.textDim");
   text-transform: uppercase;
@@ -770,8 +770,8 @@ function getLevelInfo(levelId) {
 .dm-item {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding: 3px 5px;
+  gap: 2px;
+  padding: 4px 6px;
   background: rgba(59, 130, 246, 0.02);
   border: 1px solid v-bind("PALETTE.border");
   border-radius: 3px;
@@ -783,13 +783,13 @@ function getLevelInfo(levelId) {
 }
 
 .dm-question {
-  font-size: 7px;
+  font-size: 9px;
   color: v-bind("PALETTE.text");
   line-height: 1.2;
 }
 
 .dm-answer {
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   color: v-bind("PALETTE.accent");
   white-space: nowrap;
