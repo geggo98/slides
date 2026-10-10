@@ -13,10 +13,13 @@
  * roter Pfeil über die obere-linke Ecke hinaus markiert.
  *
  * In jeder Ecke läuft zusätzlich eine kleine Spur (grau = Last, Farbe =
- * Reaktion), die das typische Verhalten des Quadranten zeigt.
+ * Reaktion), die das typische Verhalten des Quadranten zeigt. Ein Klick auf
+ * die Spur (ⓘ) hält alle Spuren an, dimmt die Folie und öffnet einen Dialog
+ * mit der vergrößerten Spur und einer Abgrenzung zu den anderen Quadranten;
+ * Klick irgendwohin oder Escape schließt und setzt die Animationen fort.
  */
-import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { onSlideLeave, useDarkMode } from "@slidev/client";
 
 const { isDark } = useDarkMode();
 
@@ -35,6 +38,7 @@ const cssVars = computed(() => {
     "--bpq-text": d ? "#e2e8f0" : "#1e293b",
     "--bpq-muted": d ? "#94a3b8" : "#64748b",
     "--bpq-dim": d ? "#64748b" : "#94a3b8",
+    "--bpq-card": d ? "#0f172a" : "#ffffff",
     "--bpq-line": d ? "rgba(148,163,184,0.28)" : "rgba(100,116,139,0.32)",
     "--bpq-frame": d ? "rgba(148,163,184,0.22)" : "rgba(100,116,139,0.22)",
     "--bpq-danger": d ? "#f87171" : "#dc2626",
@@ -210,10 +214,112 @@ const dotStyle = (p) => ({
   top: py(p.y) + "%",
   "--c": `var(--bpq-${p.q})`,
 });
+
+// ⓘ-Dialog: Text je Quadrant. Absatz = Liste von Segmenten, b = fett.
+// `marks` benennt die gestrichelten Linien von oben nach unten.
+const INFO = {
+  wehr: {
+    axes: "zustandsbehaftet · binär",
+    marks: "gestrichelt: Set-Schwelle (oben), Reset-Schwelle (unten)",
+    paras: [
+      [
+        { t: "Ein Pegel (Puffer, Heap, Queue) läuft bis zur " },
+        { t: "Set-Schwelle", b: true },
+        {
+          t: " voll. Dann bremst das Wehr ganz und hält, bis der Pegel unter die ",
+        },
+        { t: "Reset-Schwelle", b: true },
+        { t: " gefallen ist. Das Band dazwischen ist die Hysterese." },
+      ],
+      [
+        { t: "Anders als die anderen: ", b: true },
+        {
+          t: "harte Kanten wie der Reflex, aber mit Gedächtnis. Es flattert nicht, dafür gibt es einen Sägezahn und lange Stopp-Phasen. Kippt die Bremse in positive Rückkopplung, wird daraus der metastabile Fehler.",
+        },
+      ],
+    ],
+  },
+  regler: {
+    axes: "zustandsbehaftet · proportional",
+    marks: "gestrichelt: Sollwert",
+    paras: [
+      [
+        { t: "Der Zufluss wird proportional zum Abstand vom " },
+        { t: "Sollwert", b: true },
+        {
+          t: " gedrosselt. Nach einem Lastsprung nähert sich der Pegel exponentiell an, ohne Überschwingen und ohne Stopp.",
+        },
+      ],
+      [
+        { t: "Anders als die anderen: ", b: true },
+        {
+          t: "hat einen Pegel wie das Wehr, bremst aber stufenlos. Der Dämpfer hat keinen Pegel. Er hält den Sollwert auch bei dauerhaft hoher Last und ist darum am besten vorhersagbar.",
+        },
+      ],
+    ],
+  },
+  reflex: {
+    axes: "zustandsarm · binär",
+    marks: "gestrichelt: Grenze",
+    paras: [
+      [
+        { t: "Reißt die momentane Last die " },
+        { t: "Grenze", b: true },
+        {
+          t: ", fällt die durchgelassene Rate sofort auf 0 und kommt ebenso sofort zurück.",
+        },
+      ],
+      [
+        { t: "Anders als die anderen: ", b: true },
+        {
+          t: "kein Band und kein Gedächtnis, nur der Momentanwert. Der Reflex reagiert am schnellsten, flattert aber bei Last nahe der Grenze. Man sieht ihn nur an seiner Wirkung: detektierbar, nicht vorhersagbar.",
+        },
+      ],
+    ],
+  },
+  daempfer: {
+    axes: "zustandsarm · proportional",
+    marks: "",
+    paras: [
+      [
+        { t: "Die Rate folgt der Last. Oberhalb eines Knies wird sie " },
+        { t: "weich gestaucht", b: true },
+        { t: ": Spitzen werden abgeflacht statt abgeschnitten." },
+      ],
+      [
+        { t: "Anders als die anderen: ", b: true },
+        {
+          t: "weder Stopp (Reflex, Wehr) noch Pegel (Regler). Die Bremskraft wächst mit der Last, deshalb stabilisiert sich das System selbst.",
+        },
+      ],
+    ],
+  },
+};
+
+// Welcher Quadrant ist im Dialog offen (null = keiner)?
+const open = ref(null);
+const openQ = computed(() => QUADS.find((q) => q.key === open.value));
+const examples = computed(() =>
+  POINTS.filter((p) => p.q === open.value)
+    .map((p) => p.l)
+    .join(" · "),
+);
+
+function onKey(ev) {
+  if (ev.key === "Escape") open.value = null;
+}
+watch(open, (o) => {
+  if (o) window.addEventListener("keydown", onKey);
+  else window.removeEventListener("keydown", onKey);
+});
+onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
+onSlideLeave(() => {
+  open.value = null;
+});
 </script>
 
 <template>
-  <div class="bpq" :style="cssVars">
+  <div class="bpq" :class="{ paused: open }" :style="cssVars">
     <div class="bpq-plot">
       <!-- Quadranten-Tönung -->
       <div class="quad q-tl" />
@@ -242,32 +348,40 @@ const dotStyle = (p) => ({
           <span class="qname-t">{{ q.name }}</span>
           <span class="qname-s">{{ q.sub }}</span>
         </span>
-        <svg
-          class="trace"
-          :viewBox="`0 0 ${PERIOD} ${TH}`"
-          :width="PERIOD"
-          :height="TH"
-          aria-hidden="true"
+        <button
+          type="button"
+          class="trace-btn"
+          :aria-label="`${q.name}: Verhalten vergrößert erklären`"
+          @click.stop="open = q.key"
         >
-          <line
-            v-for="m in TRACES[q.key].marks"
-            :key="m"
-            class="t-mark"
-            x1="0"
-            :x2="PERIOD"
-            :y1="yOf(m)"
-            :y2="yOf(m)"
-          />
-          <g class="t-scroll" :style="{ '--dur': TRACES[q.key].dur + 's' }">
-            <path class="t-load" :d="TRACES[q.key].load" />
-            <path
-              v-if="TRACES[q.key].fill"
-              class="t-fill"
-              :d="TRACES[q.key].fill"
+          <svg
+            class="trace"
+            :viewBox="`0 0 ${PERIOD} ${TH}`"
+            :width="PERIOD"
+            :height="TH"
+            aria-hidden="true"
+          >
+            <line
+              v-for="m in TRACES[q.key].marks"
+              :key="m"
+              class="t-mark"
+              x1="0"
+              :x2="PERIOD"
+              :y1="yOf(m)"
+              :y2="yOf(m)"
             />
-            <path class="t-line" :d="TRACES[q.key].line" />
-          </g>
-        </svg>
+            <g class="t-scroll" :style="{ '--dur': TRACES[q.key].dur + 's' }">
+              <path class="t-load" :d="TRACES[q.key].load" />
+              <path
+                v-if="TRACES[q.key].fill"
+                class="t-fill"
+                :d="TRACES[q.key].fill"
+              />
+              <path class="t-line" :d="TRACES[q.key].line" />
+            </g>
+          </svg>
+          <span class="info-badge" aria-hidden="true">i</span>
+        </button>
       </div>
 
       <!-- Metastabiler Fehler: Eskalation aus dem Schwellwert-Wehr -->
@@ -279,6 +393,62 @@ const dotStyle = (p) => ({
         <span class="lab" :class="p.s === 'l' ? 'lab-l' : 'lab-r'">{{
           p.l
         }}</span>
+      </div>
+    </div>
+
+    <!-- ⓘ-Dialog: dimmt die Folie, zeigt die Spur groß; Klick schließt -->
+    <div v-if="openQ" class="bpq-overlay" @click="open = null">
+      <div
+        class="bpq-card"
+        :style="{ '--c': `var(--bpq-${openQ.key})` }"
+        role="dialog"
+        :aria-label="openQ.name"
+      >
+        <div class="card-h">
+          <span class="card-t">{{ openQ.name }}</span>
+          <span class="card-axes">{{ INFO[openQ.key].axes }}</span>
+        </div>
+        <svg
+          class="trace big"
+          :viewBox="`0 0 ${PERIOD} ${TH}`"
+          :width="PERIOD * 6"
+          :height="TH * 6"
+          aria-hidden="true"
+        >
+          <line
+            v-for="m in TRACES[openQ.key].marks"
+            :key="m"
+            class="t-mark"
+            x1="0"
+            :x2="PERIOD"
+            :y1="yOf(m)"
+            :y2="yOf(m)"
+          />
+          <g class="t-scroll" :style="{ '--dur': TRACES[openQ.key].dur + 's' }">
+            <path class="t-load" :d="TRACES[openQ.key].load" />
+            <path
+              v-if="TRACES[openQ.key].fill"
+              class="t-fill"
+              :d="TRACES[openQ.key].fill"
+            />
+            <path class="t-line" :d="TRACES[openQ.key].line" />
+          </g>
+        </svg>
+        <div class="card-legend">
+          grau: Last · Farbe: Reaktion ·
+          {{ TRACES[openQ.key].fill ? "Fläche: Pegel" : "Linie: Rate" }}
+          <template v-if="INFO[openQ.key].marks">
+            · {{ INFO[openQ.key].marks }}
+          </template>
+        </div>
+        <p v-for="(para, i) in INFO[openQ.key].paras" :key="i" class="card-p">
+          <template v-for="(s, j) in para" :key="j">
+            <strong v-if="s.b">{{ s.t }}</strong>
+            <template v-else>{{ s.t }}</template>
+          </template>
+        </p>
+        <div class="card-ex">Beispiele: {{ examples }}</div>
+        <div class="card-hint">Klick irgendwohin schließt</div>
       </div>
     </div>
   </div>
@@ -394,10 +564,6 @@ const dotStyle = (p) => ({
   flex-direction: column;
 }
 /* Spur sitzt zur Plotmitte hin: links neben dem Text bei rechten Ecken. */
-.c-tr .trace,
-.c-br .trace {
-  order: -1;
-}
 .c-tr .qtext,
 .c-br .qtext {
   align-items: flex-end;
@@ -441,5 +607,207 @@ const dotStyle = (p) => ({
   .t-scroll {
     animation: none;
   }
+}
+
+/* ⓘ-Knopf: die ganze Spur ist Klickfläche, das Badge sitzt an der äußeren
+   oberen Ecke (weg von den Datenpunkt-Labels). */
+.trace-btn {
+  position: relative;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 0;
+  cursor: pointer;
+  order: 0;
+}
+.c-tr .trace-btn,
+.c-br .trace-btn {
+  order: -1;
+}
+.trace-btn:focus-visible {
+  outline: 2px solid var(--c);
+  outline-offset: 2px;
+}
+.info-badge {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--c);
+  color: var(--bpq-card);
+  font-size: 8px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 11px;
+  text-align: center;
+}
+.c-tr .info-badge,
+.c-br .info-badge {
+  left: auto;
+  right: -5px;
+}
+.trace-btn:hover .trace {
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+
+/* Angehalten, solange der Dialog offen ist; die große Spur im Dialog liegt
+   außerhalb von .bpq-plot und läuft weiter. */
+.bpq.paused .bpq-plot .t-scroll {
+  animation-play-state: paused;
+}
+
+/* position:fixed bezieht sich wegen des Slidev-Scaler-Transforms auf den
+   Folien-Canvas (siehe BunPopover). */
+.bpq-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: left;
+}
+.bpq-card {
+  width: 420px;
+  max-width: 100%;
+  padding: 14px 18px;
+  background: var(--bpq-card);
+  color: var(--bpq-text);
+  border: 1px solid var(--c);
+  border-radius: 12px;
+  line-height: 1.45;
+}
+.card-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.card-t {
+  font-size: 1.25em;
+  font-weight: 800;
+  color: var(--c);
+}
+.card-axes {
+  font-size: 0.85em;
+  color: var(--bpq-muted);
+}
+.trace.big {
+  display: block;
+  margin: 0 auto;
+  border-radius: 6px;
+}
+.big .t-load {
+  stroke-width: 0.3;
+}
+.big .t-line {
+  stroke-width: 0.5;
+}
+.big .t-mark {
+  stroke-width: 0.15;
+  stroke-dasharray: 0.8 0.8;
+}
+.card-legend {
+  margin: 6px 0 8px;
+  font-size: 0.85em;
+  color: var(--bpq-muted);
+}
+.card-p {
+  margin: 0 0 6px;
+}
+.card-ex {
+  margin-top: 8px;
+  font-size: 0.85em;
+  color: var(--bpq-muted);
+}
+.card-hint {
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: var(--bpq-dim);
+}
+.qname-t {
+  font-weight: 800;
+  font-size: 0.84em;
+  line-height: 1.1;
+}
+.qname-s {
+  font-size: 0.66em;
+  color: var(--bpq-muted);
+  line-height: 1.1;
+}
+.c-tl {
+  top: 18px;
+  left: 8px;
+  text-align: left;
+}
+.c-tr {
+  top: 18px;
+  right: 8px;
+  text-align: right;
+}
+.c-bl {
+  bottom: 18px;
+  left: 8px;
+  text-align: left;
+}
+.c-br {
+  bottom: 18px;
+  right: 8px;
+  text-align: right;
+}
+
+.meta {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  font-size: 0.66em;
+  font-weight: 700;
+  color: var(--bpq-danger);
+  white-space: nowrap;
+}
+
+.pt {
+  position: absolute;
+  width: 0;
+  height: 0;
+  line-height: 0;
+}
+.dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c);
+  border: 1.5px solid var(--bpq-text);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 22%, transparent);
+}
+.lab {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 0.72em;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--bpq-text);
+}
+.lab-r {
+  left: 9px;
+}
+.lab-l {
+  right: 9px;
 }
 </style>

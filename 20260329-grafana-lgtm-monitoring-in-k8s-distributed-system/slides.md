@@ -665,7 +665,8 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="back
 - Eck-Animationen: grau = Last, Farbe = Reaktion. Fläche = Pegel (Gedächtnis),
   Linie = Rate; harte Kanten = binär, glatte Kurve = proportional. Wehr:
   Sägezahn im Hystereseband; Regler: exponentielle Annäherung; Reflex: Rate
-  kippt sofort auf 0 und zurück; Dämpfer: gedämpftes Mitlaufen.
+  kippt sofort auf 0 und zurück; Dämpfer: gedämpftes Mitlaufen. ⓘ an jeder
+  Spur hält alles an und öffnet die Vergrößerung mit Erklärung.
 -->
 
 ---
