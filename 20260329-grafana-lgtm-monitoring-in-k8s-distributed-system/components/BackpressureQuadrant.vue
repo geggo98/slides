@@ -7,6 +7,12 @@
  *   X (Bremsform):  binär · Bang-Bang  →  proportional
  *   Y (Gedächtnis): zustandsarm · Rate →  zustandsbehaftet · Pegel
  *
+ * Y-Leitlinie: zustandsbehaftet ist ein Mechanismus, dessen Auslöser ein
+ * gespeicherter Zähler oder Füllstand ist (Puffer, Heap, Lag, Credit- oder
+ * Fensterzähler, Token-Bucket, In-Flight-Zahl). Zustandsarm ist er nur, wenn
+ * der Auslöser ein Momentanwert ist (Zeit pro Request, CPU-Rate, Erfolgsquote
+ * im kurzen Fenster). Je länger das Glättungsfenster, desto höher der Punkt.
+ *
  * Jeder der vier Quadranten trägt einen Namen. Der „Metastabile Fehler“ ist
  * kein eigener Punkt, sondern eine Eskalation aus dem Schwellwert-Wehr heraus
  * (super-lineare Rückkopplung = effektiv unendliche Hysterese) und wird als
@@ -183,24 +189,32 @@ const TRACES = {
 const POINTS = [
   // Schwellwert-Wehr — zustandsbehaftet + binär
   { l: "OOM-Kill", x: 0.07, y: 0.93, q: "wehr", s: "r" },
-  { l: "ZGC-Stall", x: 0.13, y: 0.84, q: "wehr", s: "r" },
-  { l: "RabbitMQ-Block", x: 0.21, y: 0.76, q: "wehr", s: "r" },
-  { l: "Galera-FC", x: 0.32, y: 0.69, q: "wehr", s: "r" },
-  { l: "Kafka-Buffer", x: 0.18, y: 0.61, q: "wehr", s: "r" },
+  { l: "ZGC-Stall", x: 0.14, y: 0.886, q: "wehr", s: "r" },
+  { l: "RabbitMQ-Block", x: 0.24, y: 0.842, q: "wehr", s: "r" },
+  { l: "Netty Watermark", x: 0.08, y: 0.798, q: "wehr", s: "r" },
+  { l: "Galera-FC", x: 0.2, y: 0.754, q: "wehr", s: "r" },
+  { l: "Kafka-Buffer", x: 0.29, y: 0.71, q: "wehr", s: "r" },
+  { l: "TCP Zero-Window", x: 0.07, y: 0.666, q: "wehr", s: "r" },
+  { l: "HTTP/2", x: 0.22, y: 0.622, q: "wehr", s: "r" },
+  { l: "RabbitMQ credit_flow", x: 0.12, y: 0.578, q: "wehr", s: "r" },
+  { l: "Reactive Streams", x: 0.24, y: 0.534, q: "wehr", s: "r" },
   // Pegel-Regler — zustandsbehaftet + proportional
-  { l: "InnoDB-Checkpoint", x: 0.67, y: 0.87, q: "regler", s: "l" },
-  { l: "cgroup memory.high", x: 0.87, y: 0.79, q: "regler", s: "l" },
-  { l: "CockroachDB", x: 0.74, y: 0.7, q: "regler", s: "l" },
-  { l: "MongoDB-FC", x: 0.62, y: 0.62, q: "regler", s: "l" },
+  { l: "InnoDB-Checkpoint", x: 0.78, y: 0.92, q: "regler", s: "l" },
+  { l: "cgroup memory.high", x: 0.9, y: 0.86, q: "regler", s: "l" },
+  { l: "CockroachDB", x: 0.7, y: 0.8, q: "regler", s: "l" },
+  { l: "MongoDB-FC", x: 0.7, y: 0.68, q: "regler", s: "l" },
+  { l: "Shenandoah ≤ JDK 25", x: 0.86, y: 0.74, q: "regler", s: "l" },
+  { l: "Go GC-assist", x: 0.88, y: 0.62, q: "regler", s: "l" },
   // Stop-and-Go-Reflex — zustandsarm + binär
-  { l: "TCP Zero-Window", x: 0.1, y: 0.34, q: "reflex", s: "r" },
-  { l: "Netty isWritable", x: 0.22, y: 0.25, q: "reflex", s: "r" },
-  { l: "RabbitMQ credit_flow", x: 0.34, y: 0.15, q: "reflex", s: "r" },
+  { l: "gRPC-Deadline", x: 0.07, y: 0.16, q: "reflex", s: "r" },
+  { l: "Readiness-Probe", x: 0.22, y: 0.24, q: "reflex", s: "r" },
+  { l: "Envoy CPU-Schwelle", x: 0.09, y: 0.32, q: "reflex", s: "r" },
+  { l: "Mimir CPU-Limit", x: 0.24, y: 0.41, q: "reflex", s: "r" },
   // Mitlauf-Dämpfer — zustandsarm + proportional
-  { l: "Shenandoah-Pacing", x: 0.7, y: 0.35, q: "daempfer", s: "l" },
-  { l: "Go GC-assist", x: 0.88, y: 0.27, q: "daempfer", s: "l" },
-  { l: "HTTP/2", x: 0.65, y: 0.18, q: "daempfer", s: "l" },
-  { l: "Reactive Streams", x: 0.82, y: 0.1, q: "daempfer", s: "l" },
+  { l: "Envoy Admission", x: 0.76, y: 0.34, q: "daempfer", s: "l" },
+  { l: "Envoy CPU-Rampe", x: 0.88, y: 0.16, q: "daempfer", s: "l" },
+  { l: "Adaptive Throttling", x: 0.84, y: 0.43, q: "daempfer", s: "l" },
+  { l: "Kafka Quotas", x: 0.7, y: 0.25, q: "daempfer", s: "l" },
 ];
 
 // Datenkoordinaten in die um INSET eingerückte Plotfläche abbilden, damit die

@@ -737,13 +737,13 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Der Pacer drosselt allokierende Threads proaktiv und proportional zur Allokationsmenge, während der nebenläufige Zyklus läuft — ein Budget-Modell, das den Thread kurz warten lässt, bevor der Heap erschöpft ist.",
     whyStick:
-      "Kein langsamer Pegel: das Budget setzt pro Zyklus zurück. Reicht Pacing nicht, eskaliert es: Pacing → Degenerated GC → Full GC.",
+      "Das Budget leitet sich aus Heap-Ständen ab und setzt pro Zyklus zurück, ein langsamer Pegel entsteht nicht. Reicht Pacing nicht, eskaliert es: Pacing → Degenerated GC → Full GC. Das Verfahren gibt es bis JDK 25, JDK-8350050 entfernt es für JDK 26.",
     recovery:
       "Heuristik 'compact' für Latenz, mehr CPU/Heap statt ShenandoahPacingMaxDelay hochzusetzen. Pacing nur im GC-Log sichtbar — kein JFR-Event, unsichtbar in Profilern.",
     severity: "mittel",
     metrics: "-Xlog:gc (Pacing-Delays), Häufung von Degenerated/Full GC",
     brakeForm: "proportional",
-    memory: "zustandsarm",
+    memory: "zustandsbehaftet",
     setReset: "gedeckelt ≤10 ms (ShenandoahPacingMaxDelay)",
   },
   {
@@ -821,7 +821,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Wächst die Receive-Queue eines Nodes über gcs.fc_limit, broadcastet er FC_PAUSE und der ganze Cluster stoppt temporär die Replikation neuer Transaktionen — ein einziger langsamer Node drosselt alle.",
     whyStick:
-      "Doppelschwelle: gelockert wird erst bei gcs.fc_limit · gcs.fc_factor (< 1). Solange der langsame Node nicht aufholt, bleibt der Cluster pausiert.",
+      "Doppelschwelle nur bei gcs.fc_factor < 1: dann wird erst bei gcs.fc_limit · gcs.fc_factor gelockert. Der Standard 1,0 setzt Pause und Resume auf dieselbe Schwelle. Solange der langsame Node nicht aufholt, bleibt der Cluster pausiert.",
     recovery:
       "Den langsamen Node fixen, nicht die FC-Limits lockern. wsrep_flow_control_paused (>0 verdächtig) und wsrep_flow_control_sent (Täter-Node) beobachten.",
     severity: "hoch",
@@ -829,7 +829,8 @@ const HYSTERESES = computed(() => [
       "wsrep_flow_control_paused, wsrep_flow_control_sent, wsrep_local_recv_queue",
     brakeForm: "binär",
     memory: "zustandsbehaftet",
-    setReset: "Set: recv-queue > fc_limit · Reset: < fc_limit · fc_factor",
+    setReset:
+      "Set: recv-queue > fc_limit · Reset: < fc_limit · fc_factor (Standard 1,0)",
   },
   {
     id: "mongodb-flow-control",
@@ -864,7 +865,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Nähert sich der Majority-Committed-Lag dem flowControlTargetLagSeconds (10 s), müssen Writes auf dem Primary erst Tickets erwerben — die Tickets/s begrenzen die Schreibrate, um den Lag unter dem Ziel zu halten.",
     whyStick:
-      "Credit-/Ticket-basiert auf dem Primary, gesteuert über die Lag-Einschätzung. In PSA-Topologien drohen unnötiges Throttling oder Stalls bei ausgefallenem Secondary.",
+      "Credit-/Ticket-basiert auf dem Primary, gesteuert über die Lag-Einschätzung. Bei PSA (Primary-Secondary-Arbiter: zwei Datenknoten plus ein Arbiter ohne Daten) rückt der Majority-Commit-Punkt bei ausgefallenem Secondary nicht mehr vor, der Lag wächst ohne Lastproblem, und es drohen unnötiges Throttling oder Stalls.",
     recovery:
       "Langsames Secondary fixen. flowControl.isLagged und timeAcquiringMicros beobachten. Nicht das Ziel-Lag blind hochsetzen.",
     severity: "mittel",
@@ -956,7 +957,8 @@ const HYSTERESES = computed(() => [
       "rabbitmqctl list_connections state (blocked/blocking), memory.used vs watermark",
     brakeForm: "binär",
     memory: "zustandsbehaftet",
-    setReset: "Set: mem-watermark ~60% · Reset: Alarm clear",
+    setReset:
+      "Set: mem-watermark ~60% · Reset: gleiche Watermark (Alarm clear)",
   },
   {
     id: "rabbitmq-credit-flow",
@@ -991,13 +993,13 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Intern fließen Nachrichten reader → channel → queue → msg_store; jeder Prozess gewährt Credits (200 init, +50 / 50 verarbeitet). Verarbeitet der Channel langsamer, blockt er den Reader → Producer werden gedrosselt.",
     whyStick:
-      "Nicht ressourcengetrieben und mit Millisekunden-Gedächtnis: das Credit-Fenster toggelt mehrmals pro Sekunde — nur als Rate beobachtbar, kein Pegel zum Hochrechnen.",
+      "Nicht ressourcengetrieben und mit Millisekunden-Gedächtnis: das Credit-Fenster toggelt mehrmals pro Sekunde. Die Credits sind ein Zähler (Pegel mit kleinem Reset-Band), für den Operator aber nur als Flow-Zustand sichtbar, kein Pegel zum Hochrechnen.",
     recovery:
       "Verkettung (queue → channel → reader) entzerren. Interne Flow-Control-Metriken / Channel-Block-Events beobachten.",
     severity: "mittel",
     metrics: "interne credit_flow-Metriken, Channel-Block-Events",
     brakeForm: "binär",
-    memory: "zustandsarm",
+    memory: "zustandsbehaftet",
     setReset: "Credits 200 init, +50 / 50 verarbeitet",
   },
   {

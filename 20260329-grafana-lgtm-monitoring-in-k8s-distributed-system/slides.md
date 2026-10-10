@@ -619,7 +619,7 @@ Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (
 <div class="bpq-diagram"><BackpressureQuadrant /></div>
 <div class="bpq-explain">
 <Callout tone="info" dense>
-<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code>, Grafana Recovery Threshold).
+<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code> &lt; 1, Grafana Recovery Threshold).
 </Callout>
 <Callout tone="danger" dense>
 <strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
