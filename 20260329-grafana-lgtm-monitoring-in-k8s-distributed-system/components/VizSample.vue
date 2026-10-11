@@ -180,7 +180,7 @@ const label = computed(() => props.label || props.type);
       />
     </g>
 
-    <!-- Gauge: Halbbogen mit Schwellen bei 70 % / 90 % -->
+    <!-- Gauge: Halbbogen mit Schwellen bei 70 % / 95 % -->
     <g v-else-if="type === 'gauge'">
       <path
         d="M52,52 A38,38 0 0 1 112.3,21.3"
@@ -189,13 +189,13 @@ const label = computed(() => props.label || props.type);
         stroke-width="8"
       />
       <path
-        d="M112.3,21.3 A38,38 0 0 1 126.1,40.3"
+        d="M112.3,21.3 A38,38 0 0 1 127.5,46.1"
         fill="none"
         :stroke="palette.yellow"
         stroke-width="8"
       />
       <path
-        d="M126.1,40.3 A38,38 0 0 1 128,52"
+        d="M127.5,46.1 A38,38 0 0 1 128,52"
         fill="none"
         :stroke="palette.red"
         stroke-width="8"

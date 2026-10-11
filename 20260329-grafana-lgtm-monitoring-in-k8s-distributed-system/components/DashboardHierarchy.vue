@@ -693,7 +693,7 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
                         GESUND
                       </div>
                       <div class="hero-slo">
-                        99,92 %<span class="hero-slo-target">
+                        99,93 %<span class="hero-slo-target">
                           / 99,9 % Ziel</span
                         >
                       </div>
@@ -703,11 +703,11 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
                     <div class="hero-budget">
                       <div
                         class="hero-budget-fill"
-                        :style="{ width: '72%', background: p.color }"
+                        :style="{ width: '70%', background: p.color }"
                       />
                     </div>
                     <span class="hero-budget-label"
-                      >Error-Budget · 72% übrig</span
+                      >Error-Budget · 70% übrig</span
                     >
                   </div>
                   <div class="hero-caption">

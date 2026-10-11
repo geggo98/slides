@@ -25,7 +25,7 @@
           "id": "meth-duration-steigt-kausalitaet-o3",
           "text": "Der Durchschnitt der Latenz ist die richtige Messgröße, weil er alle Requests gleichermaßen berücksichtigt.",
           "verdict": "false",
-          "explanation": "Entscheidend ist die Verteilung (p50, p90, p99): Der Durchschnitt verdeckt, dass ein kleiner Teil der Nutzer sehr lange wartet."
+          "explanation": "Entscheidend ist die Verteilung (p50, p95, p99): Der Durchschnitt verdeckt, dass ein kleiner Teil der Nutzer sehr lange wartet."
         },
         {
           "id": "meth-duration-steigt-kausalitaet-o4",
@@ -334,7 +334,7 @@
           "id": "queue-pooling-head-of-line-o7",
           "text": "Ein einzelner, c-fach schnellerer Bediener ist besser als ein Pool aus c normalen Bedienern.",
           "verdict": "depends",
-          "explanation": "Bei der reinen Wartezeit Wq und der Wahrscheinlichkeit zu warten gewinnt der Pool, weil meist einer frei ist; bei der Verweildauer T gewinnt oft der schnelle Bediener, weil er c-fach kürzer bedient; die Metrik entscheidet."
+          "explanation": "Bei der reinen Wartezeit Wq und der Wahrscheinlichkeit zu warten gewinnt der Pool, weil meist einer frei ist; bei der Verweildauer T gewinnt immer der schnelle Bediener, weil er c-fach kürzer bedient; die Metrik entscheidet."
         },
         {
           "id": "queue-pooling-head-of-line-o8",
@@ -406,7 +406,7 @@
       "question": "Ein Provider-Adapter bleibt nach einer Lastspitze überlastet, obwohl die Eingangsrate seit einer Stunde unter der Kapazität liegt. Welche Aussagen treffen zu?",
       "difficulty": "hard",
       "section": "Systemdynamik & Hysterese",
-      "explanation": "Hält eine positive Rückkopplung die Überlast selbst aufrecht, ist das ein metastabiler Fehler: effektiv unendliche Hysterese, die Reset-Schwelle wird nicht erreicht – zustandsbehaftete Mechanismen sind vorhersagbar, zustandsarme nur detektierbar.",
+      "explanation": "Hält eine positive Rückkopplung die Überlast selbst aufrecht, ist das ein metastabiler Fehler: effektiv unendliche Hysterese (unendliches Gedächtnis), das System kehrt trotz sinkender Last nicht zurück – zustandsbehaftete Mechanismen sind vorhersagbar, zustandsarme nur detektierbar.",
       "options": [
         {
           "id": "sysdyn-metastabil-vorhersagbar-o1",
@@ -440,7 +440,7 @@
         },
         {
           "id": "sysdyn-metastabil-vorhersagbar-o6",
-          "text": "Metastabil heißt effektiv unendliche Hysterese: Die Reset-Schwelle bleibt unerreichbar, obwohl die Last sinkt.",
+          "text": "Metastabil heißt effektiv unendliche Hysterese (unendliches Gedächtnis): Das System bleibt überlastet, obwohl die Last sinkt.",
           "verdict": "true",
           "explanation": "Im Quadranten ist der metastabile Fehler als Eskalation aus dem Schwellwert-Wehr über die obere linke Ecke hinaus markiert – ein Wehr, das nie wieder öffnet."
         },
@@ -454,7 +454,7 @@
           "id": "sysdyn-metastabil-vorhersagbar-o8",
           "text": "Das Muster deutet auf einen metastabilen Fehler: Eine positive Rückkopplung hält die Überlast selbst aufrecht.",
           "verdict": "true",
-          "explanation": "Wird die Bremse super-linear, bleibt das System nach der Lastspitze überlastet, weil die Rückkopplung den Reset-Punkt unerreichbar macht."
+          "explanation": "Wird die Bremse super-linear, bleibt das System nach der Lastspitze überlastet, weil die Rückkopplung die Überlast selbst aufrechterhält (unendliches Gedächtnis)."
         }
       ]
     },
@@ -691,7 +691,7 @@
       "question": "Welche Aussagen zu den Gegenmitteln gegen Goodhart-Effekte aus dem Talk treffen zu?",
       "difficulty": "easy",
       "section": "Evolution & Goodhart",
-      "explanation": "Vier Gegenmittel: Gegenmetrik koppeln, am Nutzerpfad messen, Verteilung statt Mittelwert und Aufschlüsselung statt Summe, Holdout und Schreibschutz. Faustregel: Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht beeinflusst.",
+      "explanation": "Vier Gegenmittel: Gegenmetrik koppeln, am Nutzerpfad messen, Verteilung statt Mittelwert und Aufschlüsselung statt Summe, Holdout und Schreibschutz. Faustregel: Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht verfälschen kann.",
       "options": [
         {
           "id": "goodhart-gegenmittel-o1",
@@ -703,7 +703,7 @@
           "id": "goodhart-gegenmittel-o2",
           "text": "Eine zusätzlich gemessene Gegenmetrik reicht aus, um Goodhart-Effekte zu verhindern.",
           "verdict": "depends",
-          "explanation": "Sie wirkt nur, wenn der Optimierer sie nicht beeinflussen kann; darf ein Agent auch ihre Definition oder Messung ändern, optimiert er beide. Deshalb gehören Holdout und Schreibschutz dazu."
+          "explanation": "Sie wirkt nur, wenn der Optimierer sie nicht verfälschen kann; darf ein Agent auch ihre Definition oder Messung ändern, optimiert er beide. Deshalb gehören Holdout und Schreibschutz dazu."
         },
         {
           "id": "goodhart-gegenmittel-o3",

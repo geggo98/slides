@@ -61,7 +61,7 @@ const takeaways = computed(() => [
     color: C.value.yellow,
   },
   {
-    title: "Hysterese einplanen",
+    title: "Doppelschwelle einplanen",
     desc: "Systeme kehren nicht sofort zurück. Cache-Warmup, Queue-Drain, GC-Recovery brauchen Zeit → Alerting mit asymmetrischen Schwellen (Grafana Recovery Threshold).",
     icon: "🔄",
     color: C.value.red,

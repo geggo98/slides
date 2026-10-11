@@ -62,7 +62,7 @@ const QUADS = [
   {
     key: "wehr",
     name: "Schwellwert-Wehr",
-    sub: "hohe Hysterese · gut vorhersagbar",
+    sub: "hohes Gedächtnis · gut vorhersagbar",
     corner: "tl",
   },
   {
@@ -102,7 +102,7 @@ const phase = (i) => i % PERIOD;
 const TAU = 2 * Math.PI;
 
 // Wehr: Pegel steigt bis zur Set-Schwelle, Bremse an, fällt bis zur
-// Reset-Schwelle (Sägezahn im Hystereseband).
+// Reset-Schwelle (Sägezahn im Schwellenband).
 const WEHR = { set: 0.8, reset: 0.3 };
 const wehr = {
   level: samples((i) => {
@@ -241,7 +241,7 @@ const POINTS = [
     q: "wehr",
     s: "r",
     what: "`Channel.isWritable()` meldet false, sobald die ausgehenden Bytes die High Water Mark überschreiten, und wieder true, wenn sie unter die Low Water Mark fallen.",
-    why: "Das Signal ist ein Schalter: binär. Er hängt am Füllstand der Schreibwarteschlange: Pegel. High und Low Water Mark bilden eine echte Hysterese mit getrennter Set- und Reset-Schwelle.",
+    why: "Das Signal ist ein Schalter: binär. Er hängt am Füllstand der Schreibwarteschlange: Pegel. High und Low Water Mark bilden einen echten Schmitt-Trigger mit getrennter Set- und Reset-Schwelle.",
     watch:
       "Nur ein Hinweis: Wer `isWritable()` oder `channelWritabilityChanged` ignoriert, puffert weiter bis zum OutOfMemoryError. `bytesBeforeUnwritable()` zeigt den Abstand zur Schwelle.",
     doc: "https://netty.io/4.1/api/io/netty/channel/WriteBufferWaterMark.html",
@@ -267,7 +267,7 @@ const POINTS = [
     q: "wehr",
     s: "r",
     what: "Ist der Producer-Puffer `buffer.memory` (Standard 32\u00a0MB) voll, blockiert `send()` bis `max.block.ms` und wirft dann eine Exception.",
-    why: "`send()` blockiert oder nicht: binär. Auslöser ist der Füllstand des Puffers: Pegel. Eine Hysterese gibt es nicht. Sobald genug Bytes frei sind, geht es weiter.",
+    why: "`send()` blockiert oder nicht: binär. Auslöser ist der Füllstand des Puffers: Pegel. Eine Doppelschwelle gibt es nicht. Sobald genug Bytes frei sind, geht es weiter.",
     watch:
       "`send()` blockiert den aufrufenden Thread, in einem Event-Loop also das ganze Programm. Producer-Metriken `buffer-available-bytes` und `buffer-exhausted-rate` beobachten.",
     doc: "https://kafka.apache.org/40/generated/producer_config.html#producerconfigs_buffer.memory",
@@ -438,7 +438,7 @@ const POINTS = [
     q: "reflex",
     s: "r",
     what: "Der Overload Manager beantwortet neue Requests sofort mit 503, solange der CPU-Druck über dem Schwellwert liegt (Aktion `stop_accepting_requests`).",
-    why: "Der Trigger `threshold` kennt nur 1 über der Schwelle und 0 darunter, ohne Reset-Schwelle: binär und ohne Hysterese. Die CPU-Auslastung ist eine Rate, geglättet nur kurz (laut Quellcode ein EWMA mit alpha 0,05): darum knapp über der Basis.",
+    why: "Der Trigger `threshold` kennt nur 1 über der Schwelle und 0 darunter, ohne Reset-Schwelle: binär und ohne Doppelschwelle. Die CPU-Auslastung ist eine Rate, geglättet nur kurz (laut Quellcode ein EWMA mit alpha 0,05): darum knapp über der Basis.",
     watch:
       "Ohne Haltezeit flattert die Bremse um die Schwelle. Gauge `overload.envoy.resource_monitors.cpu_utilization.pressure` beobachten. Mit Trigger `scaled` wird dieselbe Aktion zum Dämpfer.",
     doc: "https://www.envoyproxy.io/docs/envoy/latest/configuration/operations/overload_manager/overload_manager",
@@ -537,7 +537,9 @@ const INFO = {
           t: " voll. Dann bremst das Wehr ganz und hält, bis der Pegel unter die ",
         },
         { t: "Reset-Schwelle", b: true },
-        { t: " gefallen ist. Das Band dazwischen ist die Hysterese." },
+        {
+          t: " gefallen ist. Das Band dazwischen ist die Doppelschwelle (Schmitt-Trigger).",
+        },
       ],
       [
         { t: "Anders als die anderen: ", b: true },
@@ -561,7 +563,7 @@ const INFO = {
       [
         { t: "Anders als die anderen: ", b: true },
         {
-          t: "hat einen Pegel wie das Wehr, bremst aber stufenlos. Der Dämpfer hat keinen Pegel. Er hält den Sollwert auch bei dauerhaft hoher Last und ist darum am besten vorhersagbar.",
+          t: "hat einen Pegel wie das Wehr, bremst aber stufenlos und hält den Sollwert auch bei dauerhaft hoher Last. Darum ist er am besten vorhersagbar.",
         },
       ],
     ],

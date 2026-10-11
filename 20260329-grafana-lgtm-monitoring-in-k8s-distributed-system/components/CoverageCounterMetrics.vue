@@ -67,7 +67,7 @@ const footers = [
     label: "Gemeinsamer blinder Fleck",
     id: "blind",
     title: "Fehlender Code",
-    text: "Eine ganz fehlende Anforderung hat keinen Code, den man abdecken oder mutieren könnte. Bei Marick waren 22–54 % der Fehler Auslassungen. Fachliche Szenarien, Integration und reale Fehlerbilder brauchen eigene Aufmerksamkeit.",
+    text: "Eine ganz fehlende Anforderung hat keinen Code, den man abdecken oder mutieren könnte. Marick zitiert Studien: 22–54 % der Fehler waren Auslassungen. Fachliche Szenarien, Integration und reale Fehlerbilder brauchen eigene Aufmerksamkeit.",
   },
   {
     label: "Risiko vor Durchschnitt",

@@ -170,7 +170,7 @@ const HYSTERESES = computed(() => [
     whyStick:
       "Old-Gen-Fragmentierung bleibt nach Last-Reduktion. G1 muss viele Mixed-GC-Zyklen fahren, um zu verdichten.",
     recovery:
-      "G1 statt CMS. -XX:G1HeapRegionSize tunen. Allocation-Rate reduzieren (Object Pooling für heiße Pfade).",
+      "-XX:G1HeapRegionSize tunen. Allocation-Rate reduzieren (Object Pooling für heiße Pfade).",
     severity: "mittel",
     metrics:
       'jvm_gc_pause_seconds_count{gc="G1 Old Generation"}, jvm_memory_pool_bytes_used',
@@ -247,7 +247,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Circuit Breaker trippt bei Fehlerrate. Provider erholt sich, aber Breaker ist OPEN: keine Requests.",
     whyStick:
-      "Half-Open lässt nur 1–3 Probe-Requests durch. Slow Recovery by Design (Resilience4j waitDurationInOpenState).",
+      "Half-Open lässt nur wenige Probes durch. Slow Recovery by Design (Resilience4j waitDurationInOpenState).",
     recovery:
       "waitDurationInOpenState tunen. permittedNumberOfCallsInHalfOpenState erhöhen. Fallback mit Stale-Daten.",
     severity: "hoch",
@@ -326,7 +326,7 @@ const HYSTERESES = computed(() => [
       [0.1, 0.0],
     ],
     mechanism:
-      "200 Threads busy + Accept-Queue (100) voll = Connection Refused. Oft Folgeproblem: langsame Upstream-Calls.",
+      "200 Threads busy: Requests warten; erst bei maxConnections + voller OS-Queue (100) Refused/Timeout. Oft Folgeproblem: langsame Upstream-Calls.",
     whyStick:
       "Accept-Queue muss erst leerlaufen. Blockierte Threads halten Connections offen.",
     recovery:
@@ -609,9 +609,9 @@ const HYSTERESES = computed(() => [
       [0.08, 0.05],
     ],
     mechanism:
-      "Rolling Updates ändern Endpoints. DNS-TTL und Client-Caches (JVM: unendlich!) halten stale Einträge.",
+      "Rolling Updates ändern Endpoints. DNS-TTL und Client-Caches (JVM: 30 s) halten stale Einträge.",
     whyStick:
-      "JVM cached DNS per Default unendlich. Nach Deployment zeigen Requests auf terminierte Pods → Connection Refused.",
+      "JVM cached DNS per Default 30 s. Nach Deployment zeigen Requests auf terminierte Pods → Connection Refused.",
     recovery:
       "JVM: -Dnetworkaddress.cache.ttl=10. CoreDNS TTL anpassen. Headless Services für client-side LB.",
     severity: "mittel",
@@ -963,7 +963,7 @@ const HYSTERESES = computed(() => [
   {
     id: "rabbitmq-credit-flow",
     short:
-      "Ein langsamer Channel verbraucht Credits nicht nach → blockt den Reader → Producer gedrosselt.",
+      "Ein langsamer Channel gewährt keine Credits nach → blockt den Reader → Producer gedrosselt.",
     name: "RabbitMQ credit_flow",
     icon: "🎟️",
     category: "component",
@@ -1120,7 +1120,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Linux startet Background-Writeback ab dirty_background_ratio; überschreiten die Dirty Pages dirty_ratio, werden schreibende Prozesse synchron gedrosselt, bis genug zurückgeschrieben ist.",
     whyStick:
-      "Doppelschwelle (dirty_background_ratio < dirty_ratio) erzeugt ein Hystereseband. Bei langsamem Storage stauen sich Dirty Pages und der Throttle bleibt aktiv.",
+      "Doppelschwelle (dirty_background_ratio < dirty_ratio) erzeugt ein Schwellenband (Schmitt-Trigger). Bei langsamem Storage stauen sich Dirty Pages und der Throttle bleibt aktiv.",
     recovery:
       "dirty_ratio / dirty_background_ratio an die Storage-Geschwindigkeit anpassen, schnelleres Storage, fsync-Verhalten der App prüfen.",
     severity: "mittel",

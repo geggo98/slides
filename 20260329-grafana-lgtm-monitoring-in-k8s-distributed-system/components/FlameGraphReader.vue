@@ -121,7 +121,9 @@ const layout = computed(() => {
     });
     if (!node.children.length) return;
     let cx = leftPct;
-    for (const child of node.children) {
+    for (const child of [...node.children].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )) {
       const childW = widthPct * (child.samples / node.samples);
       walk(child, cx, childW, depth + 1);
       cx += childW;

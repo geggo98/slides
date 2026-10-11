@@ -284,7 +284,7 @@ const SCENARIOS = [
         t: 0.25,
         severity: "degraded",
         label: "Erste 429s",
-        desc: "Ein Provider drosselt, Quote-Completeness 92%",
+        desc: "Ein Provider drosselt, Quote-Completeness 90%",
       },
       {
         t: 0.5,
@@ -296,7 +296,7 @@ const SCENARIOS = [
         t: 0.75,
         severity: "critical",
         label: "Massives Throttling",
-        desc: "5+ Provider drosseln, Completeness <50%, Conversion-Rate eingebrochen",
+        desc: "Mindestens die Hälfte der Provider drosselt, Completeness ~45%, Conversion-Rate eingebrochen",
       },
     ],
     metrics: [
@@ -314,7 +314,7 @@ const SCENARIOS = [
         name: "Quote Completeness",
         unit: "%",
         healthy: 100,
-        degraded: 92,
+        degraded: 90,
         warning: 70,
         critical: 45,
         thresholdWarn: 85,
@@ -323,13 +323,13 @@ const SCENARIOS = [
       },
       {
         name: "Provider verf\u00fcgbar",
-        unit: "/15",
-        healthy: 15,
-        degraded: 14,
-        warning: 12,
-        critical: 10,
-        thresholdWarn: 13,
-        thresholdCrit: 11,
+        unit: "/10",
+        healthy: 10,
+        degraded: 9,
+        warning: 7,
+        critical: 5,
+        thresholdWarn: 8,
+        thresholdCrit: 6,
         invert: true,
       },
       {
@@ -352,7 +352,7 @@ const SCENARIOS = [
       {
         label: "Quote-Completeness",
         query:
-          "sum(provider_quote_success_total) / sum(provider_quote_attempt_total) * 100",
+          "sum(rate(provider_quote_success_total[5m]))\n  / sum(rate(provider_quote_attempt_total[5m])) * 100",
       },
       {
         label: "Retry-After Header (Sekunden)",
@@ -369,7 +369,7 @@ const SCENARIOS = [
     subtitle: "Alle Worker-Threads busy \u2192 HTTP 503",
     category: "pool",
     description:
-      "Tomcat hat max. 200 Worker-Threads (Default). Wenn alle busy sind, landen neue Requests in der Accept-Queue (Default: 100). Ist auch sie voll \u2192 Connection Refused / HTTP 503. H\u00e4ufig ein Folgeproblem: langsame Upstream-Calls oder DB-Queries blockieren Threads.",
+      "Tomcat hat max. 200 Worker-Threads (Default). Wenn alle busy sind, warten neue Requests (OS-Queue acceptCount: 100, greift erst ab maxConnections 8192) \u2192 Timeouts / Connection Refused; 503 setzt meist das Gateway. H\u00e4ufig ein Folgeproblem: langsame Upstream-Calls oder DB-Queries blockieren Threads.",
     trigger:
       "HikariCP-Ersch\u00f6pfung blockiert Threads auf getConnection() \u2192 Tomcat-Threads stauen sich \u2192 Dominoeffekt",
     phases: [
@@ -461,7 +461,7 @@ const SCENARIOS = [
     subtitle: "Working-Set \u00fcberschreitet Limit \u2192 Pod-Restart",
     category: "compute",
     description:
-      "container_memory_working_set_bytes n\u00e4hert sich dem Memory-Limit. Der Kubelet-OOM-Killer terminiert den Container. Bei JVM: Off-Heap-Bereiche (Metaspace, Thread-Stacks, NIO-Buffer) wachsen \u00fcber den JVM-Heap hinaus. Der Container stirbt, obwohl -Xmx noch Platz hat.",
+      "container_memory_working_set_bytes n\u00e4hert sich dem Memory-Limit. Der Kernel-OOM-Killer terminiert den Container. Bei JVM: Off-Heap-Bereiche (Metaspace, Thread-Stacks, NIO-Buffer) wachsen \u00fcber den JVM-Heap hinaus. Der Container stirbt, obwohl -Xmx noch Platz hat.",
     trigger:
       "Memory-Leak im JSON-Parsing (gro\u00dfe Provider-Responses nicht gestreamt) oder Metaspace-Wachstum durch dynamische Proxy-Klassen (Hibernate, Spring AOP)",
     phases: [
@@ -481,7 +481,7 @@ const SCENARIOS = [
         t: 0.5,
         severity: "warning",
         label: "Hoch",
-        desc: "Memory bei 88%, Full-GC alle 2 Minuten",
+        desc: "Memory bei 88%, Full-GC 2× pro Minute",
       },
       {
         t: 0.75,
@@ -536,7 +536,7 @@ const SCENARIOS = [
       {
         label: "Memory vs. Limit",
         query:
-          'container_memory_working_set_bytes{container!=""}\n  / kube_pod_container_resource_limits{resource="memory"} * 100',
+          'sum(container_memory_working_set_bytes{container!=""}) by (pod)\n  / sum(kube_pod_container_resource_limits{resource="memory"}) by (pod) * 100',
       },
       {
         label: "OOMKilled erkennen",
@@ -548,7 +548,7 @@ const SCENARIOS = [
         query: "increase(kube_pod_container_status_restarts_total[1h])",
       },
     ],
-    fix: "Immer container_memory_working_set_bytes \u00fcberwachen (nicht usage_bytes). JVM: -XX:MaxRAMPercentage=75 (l\u00e4sst 25% f\u00fcr Off-Heap). Memory-Limit = JVM-Heap + ~30% f\u00fcr Metaspace/Stacks/NIO. Heap-Dump bei 85% automatisch ausl\u00f6sen: -XX:+HeapDumpOnOutOfMemoryError.",
+    fix: "Immer container_memory_working_set_bytes \u00fcberwachen (nicht usage_bytes). JVM: -XX:MaxRAMPercentage=75 (l\u00e4sst 25% f\u00fcr Off-Heap). Memory-Limit = JVM-Heap + ~30% f\u00fcr Metaspace/Stacks/NIO. Heap-Dump bei OutOfMemoryError automatisch schreiben: -XX:+HeapDumpOnOutOfMemoryError.",
     dashboardLevel: 3,
   },
   {
@@ -648,8 +648,8 @@ const SCENARIOS = [
   },
   {
     id: "db-checkpoint",
-    name: "DB Checkpoint-Sättigung",
-    icon: "\u{1F418}",
+    name: "MySQL/InnoDB: Checkpoint-Sättigung",
+    icon: "\u{1F42C}",
     subtitle: "Redo-/WAL-Backlog → Flush-Storm → Commit-Latenz steigt",
     category: "component",
     description:
@@ -934,7 +934,7 @@ const SCENARIOS = [
           "# Tomcat\ntomcat_threads_busy_threads / tomcat_threads_config_max_threads\n# HikariCP\nhikaricp_connections_active / hikaricp_connections_max",
       },
     ],
-    fix: "Circuit Breaker (Resilience4j) pro Provider mit Timeout <3s. Bulkhead: dedizierte Thread-Pools pro Provider, damit ein langsamer Provider nicht alle Threads blockiert. Virtual Threads l\u00f6sen das Problem fundamental (blockierte Threads sind billig). Fallback: gecachte/leere Response statt Warten.",
+    fix: "Circuit Breaker (Resilience4j) pro Provider mit Timeout <3s. Bulkhead: dedizierte Thread-Pools pro Provider, damit ein langsamer Provider nicht alle Threads blockiert. Virtual Threads machen Blockieren billig (der Provider bleibt langsam). Fallback: gecachte/leere Response statt Warten.",
     dashboardLevel: 2,
   },
 ];

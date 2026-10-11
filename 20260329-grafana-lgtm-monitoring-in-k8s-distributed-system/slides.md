@@ -125,7 +125,7 @@ hideInToc: true
 
 # Latency
 
-Misst, wie lange ein Request bis zur Antwort braucht. Entscheidend ist die **Verteilung** (p50, p90, p99), nicht der Durchschnitt.
+Misst, wie lange ein Request bis zur Antwort braucht. Entscheidend ist die **Verteilung** (p50, p95, p99), nicht der Durchschnitt.
 
 Drei Latenz-Ebenen im Versicherungsintegrator:
 
@@ -175,7 +175,7 @@ Drei Fehlerkategorien:
 - **Partielle Degradation**: 3 von 10 Anbietern (30 %) fallen aus → Quote unvollständig, aber nutzbar
 
 ```promql
-# Interne Error-Rate als Prozentsatz
+# Interne Error-Rate als Anteil (0–1)
 sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
   / sum(rate(http_server_requests_seconds_count[5m]))
 
@@ -191,7 +191,7 @@ hideInToc: true
 
 Misst, wie nahe das System an seinen Kapazitätsgrenzen ist.
 
-_"Many systems degrade in performance before achieving 100% utilization."_ — SRE Book
+_"Many systems degrade in performance before they achieve 100% utilization."_ — SRE Book
 
 Bester Indikator: **Queuing**, also Arbeit, die auf Bearbeitung wartet.
 
@@ -214,7 +214,7 @@ layout: section
 # RED-Methode
 
 _"The RED Method is a good proxy to how happy your customers will be."_
-— Tom Wilkie, 2015
+— Tom Wilkie
 
 ---
 hideInToc: true
@@ -268,14 +268,14 @@ sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
 ### Memory in Kubernetes
 
 ```promql
-# Utilization: Working Set vs. Limit (was der OOM-Killer beobachtet)
+# Utilization: Working Set vs. Limit (Näherung an den OOM-Kill)
 sum(container_memory_working_set_bytes{container!=""}) by (pod)
   / sum(kube_pod_container_resource_limits{resource="memory"}) by (pod)
 ```
 
 **Immer** `container_memory_working_set_bytes` statt `container_memory_usage_bytes`!
 
-**Errors**: `rate(node_network_receive_errs_total[5m])` — Fehler auf Interface-Ebene (Drops, CRC).
+**Errors**: `rate(node_network_receive_errs_total[5m])` — Fehler auf Interface-Ebene (CRC, Frame).
 
 ---
 layout: section
@@ -293,7 +293,7 @@ hideInToc: true
 
 CFS (Completely Fair Scheduler) arbeitet in **100-ms-Perioden**. Ein Container, der sein Quota aufbraucht, pausiert bis zur nächsten Periode.
 
-Für die JVM: **Schon 15 % Throttling können Stop-the-World-Pausen verlängern.**
+Für die JVM: **Schon moderates Throttling (im Simulator ab ca. 15 %) kann Stop-the-World-Pausen verlängern.**
 
 ```promql
 # CPU-Throttling-Prozentsatz
@@ -318,11 +318,11 @@ hikaricp_connections_active / hikaricp_connections_max * 100
 hikaricp_connections_pending  # Wartende Threads (>0 = Saturation!)
 ```
 
-Sizing: `(core_count × 2) + effective_spindle_count` → 4-Core SSD: **(4×2)+1 = 9**
+Startwert: `(core_count × 2) + effective_spindle_count` (DB-Server) → 4-Core: **(4×2)+1 = 9**
 
 ### Tomcat Thread-Pool
 
-Default: max 200 Threads, Accept-Queue: 100. Sind alle Threads belegt und die Queue voll → HTTP 503.
+Default: 200 Threads, acceptCount 100. Alle Threads belegt: Requests warten, Clients laufen in Timeouts.
 
 ```promql
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
@@ -348,7 +348,7 @@ table {
 | **P1** | OOMKilled Pods                             | Service-Neustarts, Datenverlust     |
 | **P2** | CPU-Throttling >25%                        | JVM-GC-Verstärkung → Latenz-Spikes  |
 | **P2** | P99-Latenz über SLO                        | Erstes Signal vor Kaskaden          |
-| **P2** | Redis Cache-Hit-Ratio <80%                 | Mehr Upstream-Calls → Rate-Limiting |
+| **P2** | Redis Cache-Hit-Ratio <85%                 | Mehr Upstream-Calls → Rate-Limiting |
 | **P3** | HPA am Maximum                             | Keine Auto-Skalierung mehr          |
 | **P3** | Disk-I/O-Saturation, DNS-Fehler            | Infrastruktur-Bottlenecks           |
 
@@ -368,13 +368,15 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="satu
 </div>
 
 <!--
-- Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
-  Infra-Komponente, Extern, Kaskade), dann ▶ drücken. Der Fortschritts-Slider
+- Bedienung: links Szenario wählen (nach Kategorie gruppiert: Compute, Pool,
+  Infra, Extern, Kaskade), dann ▶ drücken. Der Fortschritts-Slider
   fährt das Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
   Gauges laufen mit. Slider auch manuell ziehbar.
 - Zeigen: „CPU-Throttling“ komplett durchspielen (GC-Verstärkung beim
-  JVM-Killer von eben!), danach „DB Checkpoint-Sättigung“ oder „Broker
+  JVM-Killer von eben!), danach „MySQL/InnoDB: Checkpoint-Sättigung“ oder „Broker
   Back-Pressure“ als Infra-Komponente, „Kaskaden-Failure“ als Eskalation.
+- Unser Stack ist PostgreSQL (Checkpoint/WAL); das Szenario zeigt die
+  InnoDB-Variante derselben Mechanik.
 - Unten „PromQL-Queries anzeigen“ aufklappen. Die Queries entsprechen
   den Schwellwerten der vorigen Folien; Gegenmaßnahmen-Box mitgeben.
 -->
@@ -458,10 +460,10 @@ h3 {
 
 | Ressource          | Warning | Critical | Hinweis                              |
 | ------------------ | ------- | -------- | ------------------------------------ |
-| CPU (Container)    | 70–80%  | 90%+     | CFS-Throttling beachten              |
+| CPU (Container)    | 70–80%  | 95%+     | CFS-Throttling beachten              |
 | Memory (Container) | 80%     | 90%+     | `container_memory_working_set_bytes` |
 | HikariCP Pool      | 80%     | 95%+     | Pending > 0 ist bereits Saturation   |
-| Tomcat Threads     | 75%     | 90%+     | Gepaart mit Upstream-Timeout-Check   |
+| Tomcat Threads     | 75%     | 95%+     | Gepaart mit Upstream-Timeout-Check   |
 | Redis Memory       | 80%     | 95%+     | Evictions = aktive Saturation        |
 | Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Saturation beginnt |
 
@@ -547,7 +549,7 @@ Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstell
 | --------------------------------------------- | ---------------------------------------------- |
 | Cronjob refresht alle Cache-Keys gleichzeitig | Cache-Refresh mit Jitter (TTL + random 0–60 s) |
 | Batch-Import: 10.000 Quotes auf einmal        | Rate-Limiter: Leaky Bucket                     |
-| HPA skaliert 10 Pods gleichzeitig hoch        | Staggered Rollout (maxSurge: 1)                |
+| HPA skaliert 10 Pods gleichzeitig hoch        | HPA behavior.scaleUp (Pods/min)                |
 | Retry-Storm nach Upstream-Recovery            | Exponential Backoff mit Jitter                 |
 
 ---
@@ -564,15 +566,15 @@ table td, table th { padding-top: 0.28em; padding-bottom: 0.28em; }
 
 Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden, wenn die externe Last sinkt:
 
-| Mechanismus                      | Feedback-Loop                                                                                                                |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Cache-Stampede**               | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch                                                   |
-| **Runtime GC Death Spiral**      | Heap-Druck → mehr GC → GC frisst CPU → Requests langsamer → mehr GC · _JVM/V8/Go/.NET; Python nur zyklischer GC_             |
-| **Queue-Backlog**                | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate)                                                  |
-| **Circuit-Breaker**              | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr                                                          |
-| **Backing-Service Flow-Control** | Pegel über Set-Schwelle → Broker/DB drosselt (RabbitMQ-Block, Galera-FC, InnoDB-Checkpoint) → löst erst unter Reset-Schwelle |
-| **Metastabiler Fehler**          | Positive Rückkopplung hält die Überlast → Reset-Punkt unerreichbar → nur Load-Shedding/Drain/Restart                         |
-| **Autoscaler-Lag**               | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch                                                        |
+| Mechanismus                      | Feedback-Loop                                                                                                             |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Cache-Stampede**               | Überlast → Evictions → Cache kalt → mehr Upstream-Calls → Last bleibt hoch                                                |
+| **Runtime GC Death Spiral**      | Heap-Druck → mehr GC → GC frisst CPU → Requests langsamer → mehr GC · _JVM/V8/Go/.NET; Python nur zyklischer GC_          |
+| **Queue-Backlog**                | Pool erschöpft → Backlog wächst → Drain-Time = Backlog / (Kapazität − Rate)                                               |
+| **Circuit-Breaker**              | Errors → Breaker OPEN → Recovery nur via Probes → langsame Rückkehr                                                       |
+| **Backing-Service Flow-Control** | Pegel steigt → Broker/DB drosselt (RabbitMQ-Block, Galera-FC, InnoDB-Checkpoint) → löst erst, wenn der Pegel wieder fällt |
+| **Metastabiler Fehler**          | Positive Rückkopplung hält die Überlast → Reset-Punkt unerreichbar → nur Load-Shedding/Drain/Restart                      |
+| **Autoscaler-Lag**               | Scale-Up mit kalten Pods → Cold Cache + Cold JIT → Latenz bleibt hoch                                                     |
 
 ---
 clicks: false
@@ -613,7 +615,7 @@ Zwei Achsen bestimmen Monitorbarkeit und Hysterese: **Gedächtnis** (Pegel vs. M
 <div class="bpq-diagram"><BackpressureQuadrant /></div>
 <div class="bpq-explain">
 <Callout tone="info" dense>
-<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht dort, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger), gewollt gegen Flapping (Galera <code>fc_factor</code> &lt; 1, Grafana Recovery Threshold).
+<strong>Hysterese = Integrator (Gedächtnis).</strong> Eine <strong>Doppelschwelle</strong> (Set/Reset, Schmitt-Trigger) kommt hinzu, wo getrennte Schwellen gewollt sind, gegen Flapping (Galera <code>fc_factor</code> &lt; 1, Grafana Recovery Threshold).
 </Callout>
 <Callout tone="danger" dense>
 <strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
@@ -658,7 +660,7 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="back
   super-lineare Eskalation oben-links (∞ Hysterese).
 - Eck-Animationen: grau = Last, Farbe = Reaktion. Fläche = Pegel (Gedächtnis),
   Linie = Rate; harte Kanten = binär, glatte Kurve = proportional. Wehr:
-  Sägezahn im Hystereseband; Regler: exponentielle Annäherung; Reflex: Rate
+  Sägezahn im Schwellenband; Regler: exponentielle Annäherung; Reflex: Rate
   kippt sofort auf 0 und zurück; Dämpfer: gedämpftes Mitlaufen. ⓘ an jeder
   Spur hält alles an und öffnet die Vergrößerung mit Erklärung.
   Jeder Datenpunkt ist klickbar: Dialog mit Was, Warum hier, Achtung und Link
@@ -684,20 +686,20 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="syst
 </div>
 
 <!--
-- Bedienung: Tab „Simulation“: Szenario wählen (Queues als Federn,
+- Bedienung: Szenario wählen (Queues als Federn,
   Dirac-Impuls, Überlast + Recovery, Rolling Bottleneck), ▶ startet die
   Pipeline-Animation Gateway → Quote-Service → Provider-Adapter.
 - Zeigen: „Dirac-Impuls“ (Batch = maximale Oszillation) und „Rolling
   Bottleneck“ (der Engpass wandert) — die Kernaussagen der Sektion live.
-- Tab „M/M/1 & Regeln“: Kurve plus die drei Regeln (Excess Capacity,
-  Steady Flow, Hysterese) — als Abschluss der Sektion kurz zeigen.
+- Die drei Regeln (Excess Capacity, Steady Flow, Doppelschwelle) stehen auf der
+  M/M/1-Folie und in der Zusammenfassung.
 -->
 
 ---
 layout: section
 ---
 
-# Hysterese-Alerting
+# Doppelschwelle im Alerting
 
 Grafana Recovery Thresholds
 
@@ -815,7 +817,7 @@ hideInToc: true
   Alternativ unten der „Drill-Down“-Button für die nächste Ebene.
 - Zeigen: L1 Platform Overview — genau eine Ampel (Anna Karenina und
   Segal's Law von eben), dann L2 → L3 als Drill-Down-Pfad durchklicken.
-- Hinweis: pro Ebene wechselt die Methode — L1/L2 RED bzw. Golden
+- Hinweis: pro Ebene wechselt die Methode — L1 RED, L2 RED + Golden
   Signals (User-Sicht), L3/L4 USE (Ressourcen-Sicht). Links unten der
   Sizing-Spickzettel für das 24-Spalten-Grid.
 -->
@@ -945,7 +947,7 @@ hideInToc: true
 ### Exemplars konfigurieren
 
 ```hcl
-// Alloy verwendet die River-Konfigurationssyntax (kein YAML)
+// Alloy-Konfigurationssyntax (kein YAML)
 prometheus.remote_write "default" {
   endpoint {
     url            = "http://mimir:9009/api/v1/push"
@@ -1013,17 +1015,17 @@ Die Telemetrie des Stacks beantwortet mehr als „läuft es?“. Sie speist die 
 </div>
 
 <div class="text-slate-500" style="font-size: 0.72em;">
-Technisch: der offizielle <code>mcp-grafana</code>-Server gibt Agenten Zugriff auf PromQL, LogQL, Dashboards, Alerts und Sift-Untersuchungen (Stand 10/2026).
+Technisch: der offizielle <code>mcp-grafana</code>-Server gibt Agenten Zugriff auf PromQL, LogQL, Dashboards, Alerts und Incidents (Stand 10/2026).
 </div>
 
 <!--
 - Drei Wege, wie Produktionsdaten ins Engineering zurückfließen. Die
   Spalten folgen der Aufzählung im Vortrag: verbessern, planen, Bugs.
 - „Mit Agent“ meint: der Agent bekommt dieselben Abfragen wie ein Mensch
-  (MCP-Server zu Grafana) und arbeitet den Drill-Down aus der Sektion
+  (MCP-Server zu Grafana) und arbeitet den Drill-Down der Folie
   „Korrelation“ ab.
 - mcp-grafana: Prometheus, Loki, Pyroscope, Dashboards, Alert-Regeln,
-  Incidents, Sift (Quelle: README des Servers, geprüft 09.10.2026).
+  Incidents (Quelle: README des Servers, geprüft 11.10.2026).
 -->
 
 ---
@@ -1057,7 +1059,7 @@ hideInToc: true
 </Callout>
 </div>
 
-**Neu:** Der Lernschritt braucht keinen Menschen mehr im Detail-Loop. Der Agent schließt die Schleife; Mensch und Gate bleiben die Bremse.
+**Neu:** Der Lernschritt braucht keinen Menschen mehr im Detail-Loop. Der Agent schließt die Schleife; das Review bleibt beim Menschen, das SLO-Gate prüft automatisch.
 
 <div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
 Begriff: Nassim N. Taleb, <i>Antifragile</i> (2012) · Selbstverbessernde Agenten (DGM, Hermes): <TalkXref slug="20260408-agents-details">Wie funktioniert ein Coding-Agent?</TalkXref>
@@ -1102,7 +1104,7 @@ Ein Agent findet die Lücke zwischen **A** (Metrik) und **B** (Ziel) schneller a
 | **Regressional** | Auswahl nach Proxy belohnt auch Rauschen | „Bester“ Provider im Messfenster: oft nur Glück        |
 | **Extremal**     | Zusammenhang trägt nur im Normalbereich  | Hit-Ratio 99 % per langer TTL, dafür alte Tarife       |
 | **Kausal**       | Eingriff am Proxy statt an der Ursache   | Schwellwert anheben: weniger Alarme, gleiche Störungen |
-| **Adversarial**  | Optimierer hat Anreiz zur Manipulation   | Agent entfernt das Logging seiner Prüffunktion         |
+| **Adversarial**  | Optimierer hat Anreiz zur Manipulation   | Agent entfernt die Marker der Prüffunktion             |
 
 </div>
 
@@ -1231,7 +1233,7 @@ hideInToc: true
 </Callout>
 </div>
 
-**Faustregel:** Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht beeinflusst.
+**Faustregel:** Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht verfälschen kann.
 
 <!--
 - Andy Grove (Intel): Indikatoren paaren, damit die Optimierung der einen
@@ -1243,7 +1245,7 @@ hideInToc: true
   Prüffunktionen vor dem Agenten verborgen; trat Objective Hacking
   trotzdem auf, dann beim Entfernen der Spezial-Tokens (arXiv
   2505.22954). Ohne Verbergen häufiger.
-- Überleitung: die Zusammenfassung ergänzt einen vierten Block.
+- Überleitung: die Zusammenfassung fasst Goodhart im Block „Aus Messungen lernen“ zusammen.
 -->
 
 ---
@@ -1259,7 +1261,7 @@ hideInToc: true
 
 1. **Excess Capacity ist Pflicht** — ca. 20 % Headroom für Puffer-Recovery
 2. **Gleichmäßiger Flow statt Batches** — TTL+Jitter, Leaky Bucket, Staggered Rollout
-3. **Hysterese einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Flow-Control im Backing Service (Galera, RabbitMQ, InnoDB) signalisiert fehlende Kapazität; Load-Shedding _vor_ der Komponente bricht den metastabilen Kollaps
+3. **Doppelschwelle einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Flow-Control im Backing Service (Galera, RabbitMQ, InnoDB) signalisiert fehlende Kapazität; Load-Shedding _vor_ der Komponente bricht den metastabilen Kollaps
 
 </div>
 <div>
@@ -1272,11 +1274,11 @@ hideInToc: true
 
 ### LGTM-Korrelation
 
-Exemplars → Trace → Logs: Von „P99 ist hoch“ zu Root Cause in **drei Klicks**.
+Exemplars → Trace → Logs: Von „P99 ist hoch“ zu Root Cause in **drei Schritten** (Dashboard → Trace → Logs).
 
 ### Aus Messungen lernen
 
-Agenten schließen die Schleife Telemetrie → Fix → Rollout; das **SLO-Gate** bleibt beim Menschen. Jede optimierte Metrik bekommt eine **Gegenmetrik** (Goodhart).
+Agenten schließen die Schleife Telemetrie → Fix → Rollout; das **Review** bleibt beim Menschen, das **SLO-Gate** prüft die Automatik. Jede optimierte Metrik bekommt eine **Gegenmetrik** (Goodhart).
 
 </div>
 </div>
@@ -1317,10 +1319,10 @@ Pyroscope zeigt die Daten als _Flame Graph_ (**interaktives** Beispiel):
 
 <div>
 
-- **Y**: Stack-Tiefe (unten Einstieg, oben Leaf auf der CPU)
+- **Y**: Stack-Tiefe (klassisch unten Einstieg; Pyroscope: Wurzel oben)
 - **X**: Samples alphabetisch — **keine Zeitachse**
 - **Breite**: Anteil der CPU-Samples → der Hot Path
-- **Farben**: bewusst zufällig, keine Semantik
+- **Farben**: im Original zufällig; Grafana: Wert/Package
 - „Breit = teuer“ stimmt, „schmal = unwichtig“ stimmt **nicht**
 - Nachbar-Frames stehen **nicht** in Aufrufreihenfolge
 
@@ -1402,7 +1404,7 @@ LGTM beobachtet die **Plattform**, Sentry die **Applikation aus Entwicklersicht*
 <SentryCompare />
 
 <div class="text-slate-500" style="margin-top: 0.4em; font-size: 0.65em;">
-Stand Mitte 2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ Open Beta seit 11/2025 · Self-Hosted-Anforderungen laut getsentry/self-hosted
+Stand 10/2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ (App-Ebene, kein OTLP-Ingest) · Self-Hosted-Anforderungen laut getsentry/self-hosted
 </div>
 
 <!--
@@ -1410,7 +1412,7 @@ Stand Mitte 2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ Ope
   (Exceptions, Releases, User-Sessions), LGTM auf die Plattform
   (Metriken, SLOs, Cluster).
 - Klick-Demo 1: Sentry × „Metriken & SLO/Burn-Rate“ — Custom-Metrics-Beta
-  10/2024 eingestellt, neue Application Metrics erst Open Beta, kein
+  10/2024 eingestellt, neue Application Metrics (App-Ebene), kein
   OTLP-Metrics-Ingest, kein natives Burn-Rate-Alerting.
 - Klick-Demo 2: Sentry × „K8s“ — sentry-kubernetes (Beta) macht aus
   K8s-Events Sentry-Errors, mehr nicht.
@@ -1425,7 +1427,7 @@ hideInToc: true
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
 <Callout tone="info">
 <h4 style="color: #3b82f6; margin: 0 0 8px;">Offiziell komplementär</h4>
-<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Grafana Labs pflegt die <b>Sentry-Datasource</b> (v2.x): Issues, Events, Spans und Stats direkt neben Mimir-Metriken im Dashboard. Sentry wirbt selbst für die Kopplung mit Prometheus-Infrastrukturdaten: „You don't need to pick one“.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Grafana Labs pflegt die <b>Sentry-Datasource</b> (v2.x): Issues, Events, Spans und Stats direkt neben Mimir-Metriken im Dashboard. Sentry wirbt selbst dafür, Prometheus-Infrastrukturdaten mit Issue- und Stats-Daten zu koppeln.</p>
 </Callout>
 <Callout tone="success">
 <h4 style="color: #22c55e; margin: 0 0 8px;">Arbeitsteilung bei Tickets</h4>

@@ -103,7 +103,7 @@ const pairs = [
     goal: "Kosten senken ohne Qualitätsverlust",
     metric: "Niedrigere CPU-Requests und -Limits",
     agent: true,
-    miss: "Weniger Ressourcen sparen Geld, bis das CPU-Throttling steigt. Schon 15 % Throttling verstärken GC-Pausen und treiben den P99.",
+    miss: "Weniger Ressourcen sparen Geld, bis das CPU-Throttling steigt. Schon moderates Throttling (im Simulator ab ca. 15 %) kann GC-Pausen verlängern und den P99 treiben.",
     better: "Throttling und P99 als Gate vor jeder Änderung der Limits.",
     counter: "CPU-Throttling-Prozentsatz",
     query:

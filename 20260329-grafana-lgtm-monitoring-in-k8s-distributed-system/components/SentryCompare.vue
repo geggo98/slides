@@ -1,10 +1,10 @@
 <script setup>
-// Vergleichsmatrix LGTM-Stack vs. Sentry (Stand Mitte 2026) — erste Verwendung
+// Vergleichsmatrix LGTM-Stack vs. Sentry (Stand 10/2026) — erste Verwendung
 // der geteilten MatrixPivot-Kreuztabelle. Marks nutzen das eingebaute Schema
 // (yes ✓ / partial ◐ / no ✗ / none); Details öffnen als Klick-Bubbles.
-// Faktenlage (Primärquellen, 07/2026): Sentry Logs GA seit 09/2025;
+// Faktenlage (Primärquellen, geprüft 11.10.2026): Sentry Logs GA seit 09/2025;
 // General-Purpose-Metriken fehlen (Custom-Metrics-Beta 10/2024 eingestellt,
-// „Application Metrics“ nur Open Beta 11/2025, kein OTLP-Metrics-Ingest);
+// „Application Metrics“ auf App-Ebene, kein OTLP-Metrics-Ingest);
 // kein natives SLO-/Burn-Rate-Alerting; Ticket-Auto-Create via Alert Rules.
 import MatrixPivot from "@shared/components/MatrixPivot.vue";
 
@@ -90,7 +90,7 @@ const data = {
           mark: "no",
           teaser: "keine General-Purpose-Metriken",
           detail:
-            "Custom-Metrics-Beta 10/2024 eingestellt; trace-basierte „Application Metrics“ erst Open Beta (11/2025). Alerting statisch, Prozent oder Anomalie, kein natives SLO-/Error-Budget-/Burn-Rate-Alerting.",
+            "Custom-Metrics-Beta 10/2024 eingestellt; trace-basierte „Application Metrics“ (App-Ebene, kein OTLP-Ingest). Alerting statisch, Prozent oder Anomalie, kein natives SLO-/Error-Budget-/Burn-Rate-Alerting.",
         },
         k8s: {
           mark: "partial",

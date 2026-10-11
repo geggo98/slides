@@ -5,7 +5,7 @@ import { useDarkMode } from "@slidev/client";
 // Vier Referenz-Sektionen passen nicht auf einen Canvas — der Split verteilt
 // sie auf zwei Folien: "mechanisms" = Drei Mechanismen + URL-Parameter,
 // "drilldown" = Drill-Down-Karte + Text-Panels. "all" (Default) stapelt
-// weiterhin alles, für den Tab-Container GrafanaDashboard.
+// weiterhin alles.
 const props = defineProps({
   part: { type: String, default: "all" },
 });
@@ -65,7 +65,7 @@ Include current template variables: true
 # Oder manuell:
 d/pod-details/pod-instance
   ?var-namespace=$namespace
-  &var-pod=$__series.labels.pod
+  &var-pod=$pod
   &from=$__from&to=$__to`,
     useCase: "Globale Navigation: Overview -> Service -> Pod -> Infra",
   },
@@ -82,7 +82,7 @@ URL: d/pod-details/pod-instance
 
 # Auf Time-Series: Klick auf Serie
 URL: d/pod-details/pod-instance
-  ?var-pod=\${__series.labels.pod}`,
+  ?var-pod=\${__field.labels.pod}`,
     useCase:
       "Klick auf Pod in Table -> Pod-Dashboard. Klick auf Latenz-Serie -> Instance-Detail.",
   },
@@ -112,7 +112,7 @@ const DRILL_DOWN_MAP = [
     to: "Service Dashboard",
     trigger: "Klick auf Service in State-Timeline oder Service-Map",
     vars: "var-service, var-namespace",
-    method: "Golden Signals \u2192 RED",
+    method: "RED \u2192 RED + Golden",
     color: DARK_PALETTE.red,
   },
   {
@@ -158,7 +158,7 @@ Owner: Team Partner-APIs
 [Runbook](https://wiki/runbooks/quote-api)
 [PagerDuty](https://pd/services/quote)
 
-SLO: p99 < 500ms, Error < 0.5%`,
+SLO: p99 < 200ms, Error < 0.5%`,
     tip: "Erste Zeile im Dashboard. Collapsible Row, default eingeklappt.",
     color: DARK_PALETTE.accent,
   },
@@ -167,7 +167,7 @@ SLO: p99 < 500ms, Error < 0.5%`,
     level: "Level 1 \u2013 Platform",
     content:
       "```mermaid\ngraph LR\n  FE[Frontend] --> BFF\n  BFF --> QuoteAPI\n  QuoteAPI --> Provider-A\n  QuoteAPI --> Provider-B\n  QuoteAPI --> Redis\n```",
-    tip: "Mermaid-Diagramme rendern ab Grafana 10+ nativ im Text Panel.",
+    tip: "Mermaid braucht im Text Panel ein Plugin.",
     color: DARK_PALETTE.green,
   },
   {
@@ -207,7 +207,7 @@ const URL_PARAMS = [
     desc: "Aus Table Data Link: Feldwert",
   },
   {
-    param: "var-pod=${__series.labels.pod}",
+    param: "var-pod=${__field.labels.pod}",
     desc: "Aus Time-Series Data Link: Label",
   },
   { param: "from=$__from&to=$__to", desc: "Aktuellen Zeitbereich weitergeben" },
@@ -226,8 +226,8 @@ const URL_PARAMS = [
       <div class="mechanisms-title">Dashboard-Linking: Drei Mechanismen</div>
       <div class="mechanisms-desc">
         Grafana bietet drei Wege, Dashboards zu vernetzen. Zusammen erzeugen sie
-        einen navigierbaren Drill-Down-Pfad von der Anomalie-Erkennung (Golden
-        Signals / RED) zur Root-Cause-Analyse (USE).
+        einen navigierbaren Drill-Down-Pfad von der Anomalie-Erkennung (RED /
+        Golden Signals) zur Root-Cause-Analyse (USE).
       </div>
       <div class="mechanisms-list">
         <div
