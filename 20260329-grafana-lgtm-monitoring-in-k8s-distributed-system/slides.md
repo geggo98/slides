@@ -46,29 +46,6 @@ RED · USE · Golden Signals
 hideInToc: true
 ---
 
-# Die drei wichtigsten Monitoring-Methoden
-
-<div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 1.5em 0; flex-wrap: wrap;">
-  <span class="text-amber-700 dark:text-amber-400" style="font-size: 1.3em; font-weight: 800; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
-  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">=</span>
-  <span style="font-size: 1.3em; font-weight: 800; color: #ef4444; padding: 8px 20px; border-radius: 8px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);">RED</span>
-  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">+</span>
-  <span style="font-size: 1.3em; font-weight: 800; color: #a855f7; padding: 8px 20px; border-radius: 8px; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);">Saturation</span>
-</div>
-
-<p class="text-slate-500" style="text-align: center; font-size: 0.8em; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
-
-| Golden Signal  | RED-Äquivalent | Perspektive                        |
-| -------------- | -------------- | ---------------------------------- |
-| **Traffic**    | Rate           | User-facing                        |
-| **Errors**     | Errors         | User-facing                        |
-| **Latency**    | Duration       | User-facing                        |
-| **Saturation** | —              | Infrastruktur (nur Golden Signals) |
-
----
-hideInToc: true
----
-
 # Drei komplementäre Methoden
 
 <MethodsOverview />
@@ -94,6 +71,29 @@ hideInToc: true
 - Untere Reihe ordnet jeder Methode ihre Perspektive zu: Golden Signals sind
   der HYBRID aus RESOURCE (USE, Ressourcen-Sicht) und SERVICE (RED, User-Sicht).
 -->
+
+---
+hideInToc: true
+---
+
+# Die zentrale Gleichung des Monitorings
+
+<div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin: 1.5em 0; flex-wrap: wrap;">
+  <span class="text-amber-700 dark:text-amber-400" style="font-size: 1.3em; font-weight: 800; padding: 8px 20px; border-radius: 8px; background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3);">4 Golden Signals</span>
+  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">=</span>
+  <span style="font-size: 1.3em; font-weight: 800; color: #ef4444; padding: 8px 20px; border-radius: 8px; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);">RED</span>
+  <span class="text-gray-400 dark:text-slate-600" style="font-size: 1.4em;">+</span>
+  <span style="font-size: 1.3em; font-weight: 800; color: #a855f7; padding: 8px 20px; border-radius: 8px; background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.3);">Saturation</span>
+</div>
+
+<p class="text-slate-500" style="text-align: center; font-size: 0.8em; font-style: italic;">— Tom Wilkie, Grafana Labs</p>
+
+| Golden Signal  | RED-Äquivalent | Perspektive                        |
+| -------------- | -------------- | ---------------------------------- |
+| **Traffic**    | Rate           | User-facing                        |
+| **Errors**     | Errors         | User-facing                        |
+| **Latency**    | Duration       | User-facing                        |
+| **Saturation** | —              | Infrastruktur (nur Golden Signals) |
 
 ---
 hideInToc: true
