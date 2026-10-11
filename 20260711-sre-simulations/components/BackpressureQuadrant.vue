@@ -561,7 +561,7 @@ const INFO = {
       [
         { t: "Anders als die anderen: ", b: true },
         {
-          t: "hat einen Pegel wie das Wehr, bremst aber stufenlos. Der Dämpfer hat keinen Pegel. Er hält den Sollwert auch bei dauerhaft hoher Last und ist darum am besten vorhersagbar.",
+          t: "hat einen Pegel wie das Wehr, bremst aber stufenlos und hält den Sollwert auch bei dauerhaft hoher Last. Darum ist er am besten vorhersagbar.",
         },
       ],
     ],

@@ -633,8 +633,8 @@ routeAlias: saturation-szenarien
 <SaturationSimulator />
 
 <!--
-- Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
-  Infra-Komponente, Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider
+- Bedienung: links Szenario wählen (nach Kategorie gruppiert: Compute, Pool,
+  Infra, Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider
   fährt das Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
   Gauges laufen mit. Slider auch manuell ziehbar.
 - Zeigen: „CPU-Throttling" komplett durchspielen (GC-Verstärkung!), danach
@@ -782,13 +782,13 @@ routeAlias: systemdynamik
 <SystemDynamicsSimulator />
 
 <!--
-- Bedienung: Tab „Simulation": Szenario wählen (Queues als Federn,
+- Bedienung: Szenario wählen (Queues als Federn,
   Dirac-Impuls, Überlast + Recovery, Rolling Bottleneck), ▶ startet die
   Pipeline-Animation Gateway → Quote-Service → Provider-Adapter.
 - Zeigen: „Dirac-Impuls" (Batch = maximale Oszillation) und „Rolling
   Bottleneck" (der Engpass wandert) — die Kernaussagen der Sektion live.
-- Tab „M/M/1 & Regeln": Kurve plus die drei Regeln (Excess Capacity,
-  Steady Flow, Hysterese) — als Abschluss der Sektion kurz zeigen.
+- Die drei Regeln (Excess Capacity, Steady Flow, Hysterese) stehen auf der
+  M/M/1-Folie.
 -->
 
 ---

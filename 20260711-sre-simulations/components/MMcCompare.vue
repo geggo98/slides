@@ -228,13 +228,13 @@ const HELP = {
     "Eine gemeinsame Schlange für alle c Köche: Der vorderste Gast geht zum nächsten freien Koch. Essen-Emoji = Bedienlänge, „Xs“ = Restzeit, „+N“ = zusätzlich Wartende. Diese Kantine ist in beiden Modi identisch — die Referenz, gegen die links verglichen wird.",
   race: "Beide Seiten bekommen denselben Gast (gleiche Ankunft, gleicher Arbeitsbedarf — gekoppelte Zufallsströme). Der Balken zeigt, wie oft derselbe Zwilling links bzw. im Pool zuerst fertig wird; Ø-Vorsprung in Bedienzeiten. Der ehrlichste Vergleich, weil dieselbe Realisierung beide Systeme durchläuft.",
   scope:
-    "Theoriekurven über der Auslastung ρ: Amber = Alternative, Grün = Pool. Die leuchtenden Punkte sind die aktuellen Messwerte bei deinem ρ (gestrichelte Linie). Schalte zwischen Wq, T und P(warten) um: Im Tempo-Modus tauschen die Kurven die Führung; im Pooling-Modus liegt der Pool immer unten.",
+    "Theoriekurven über der Auslastung ρ: Amber = Alternative, Grün = Pool. Die leuchtenden Punkte sind die aktuellen Messwerte bei deinem ρ (gestrichelte Linie). Schalte zwischen Wq, T und P(warten) um: Im Tempo-Modus wechselt der Sieger mit der Metrik; im Pooling-Modus liegt der Pool immer unten.",
   "sb-pw":
     "Anteil der Gäste, die überhaupt warten müssen (kein Koch sofort frei). Amber = Alternative, Grün = Pool, cyan Strich = exakte Theorie (Erlang-C bzw. ρ). Niedriger ist besser.",
   "sb-wq":
     "Mittlere reine Wartezeit vor der Bedienung, in Vielfachen einer Bedienzeit am langsamen Koch (×Bed). Im Tempo-Modus gewinnt hier der Pool (Pooling-Effekt: eine Schlange für alle).",
   "sb-t":
-    "Verweildauer gesamt = Warten + Bedienung (×Bed). Im Tempo-Modus gewinnt hier oft die Alternative, weil der eine schnelle Koch c-fach kürzer bedient. Der Gegensatz zu Wq ist die Pointe.",
+    "Verweildauer gesamt = Warten + Bedienung (×Bed). Im Tempo-Modus gewinnt immer die Alternative, weil der eine schnelle Koch c-fach kürzer bedient. Der Gegensatz zu Wq ist die Pointe.",
   "sb-n":
     "Mittlere Anzahl Gäste im System (wartend + in Bedienung). Strich = Theorie L = λ·T (Little). Der gemessene Wert springt; der Strich ist der Langzeitmittelwert.",
 };

@@ -167,7 +167,7 @@ const SIMS = [
     icon: "\u{1F4C8}",
     subtitle: "Last steigt, bleibt, sinkt — Hysterese sichtbar",
     description:
-      "Last steigt für 10 Sekunden über die Kapazität, dann zurück auf Normal. Im Phasenraum-Diagramm (Throughput vs. Latenz-Proxy) wird die Hysterese-Schleife sichtbar: der Rückweg folgt einem anderen Pfad als der Hinweg.",
+      "Last steigt für 10 Sekunden über die Kapazität, dann zurück auf Normal. Im Phasenraum-Diagramm (Input vs. letzter Output) wird die Hysterese-Schleife sichtbar: der Rückweg folgt einem anderen Pfad als der Hinweg.",
     stages: [
       { name: "API Gateway", capacity: 100, bufferMax: 60, damping: 0.2 },
       { name: "Quote-Service", capacity: 70, bufferMax: 35, damping: 0.15 },
