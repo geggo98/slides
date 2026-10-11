@@ -346,10 +346,10 @@
     },
     {
       "id": "sysdyn-steady-flow-headroom",
-      "question": "Welche Aussagen zu Steady Flow, Excess Capacity und Rolling Bottlenecks treffen zu?",
+      "question": "Welche Aussagen zu Steady Flow, Schutzkapazität und wandernden Engpässen treffen zu?",
       "difficulty": "easy",
       "section": "Systemdynamik & Hysterese",
-      "explanation": "Batch-Peaks sind Dirac-Impulse und erzeugen maximale Oszillation; in einer Service-Kette wandert der Engpass, und nur Überschusskapazität von etwa 20 % lässt die Puffer sich leeren, bevor die nächste Schwankung kommt.",
+      "explanation": "Batch-Peaks sind Dirac-Impulse und erzeugen maximale Oszillation; in einer Service-Kette mit fast gleichen Kapazitäten wandert der Engpass, wenn Kapazität oder Last schwanken, und nur Schutzkapazität (Faustregel etwa 20 %) lässt den Rückstau abbauen, bevor die nächste Schwankung kommt.",
       "options": [
         {
           "id": "sysdyn-steady-flow-headroom-o1",
@@ -365,21 +365,21 @@
         },
         {
           "id": "sysdyn-steady-flow-headroom-o3",
-          "text": "20 % Headroom sind keine Verschwendung, sondern Systemanforderung, damit sich Puffer nach Schwankungen wieder füllen.",
+          "text": "20 % Headroom sind keine Verschwendung, sondern Systemanforderung, damit sich Rückstau nach Schwankungen abbaut.",
           "verdict": "true",
-          "explanation": "Excess Capacity ist im Talk ausdrücklich keine Verschwendung: Ohne Überschuss füllt sich der Puffer nicht rechtzeitig, und Starvation kaskadiert downstream."
+          "explanation": "Schutzkapazität ist im Talk ausdrücklich keine Verschwendung: Ohne Reserve baut sich der Rückstau nicht ab, bevor die nächste Schwankung kommt. Vor dem Engpass staut es, dahinter laufen die Stationen leer."
         },
         {
           "id": "sysdyn-steady-flow-headroom-o4",
-          "text": "Bei einer Kette abhängiger Services wandert der Engpass; ohne Überschusskapazität kaskadiert Starvation downstream.",
+          "text": "In einer Kette abhängiger Services mit fast gleichen Kapazitäten kann der Engpass wandern; ohne Reserve staut es sich vor dem Engpass, und dahinter laufen die Stationen leer.",
           "verdict": "true",
-          "explanation": "Rolling Bottleneck aus der Theory of Constraints: Bei Last nahe der Kapazität staut es mal am Gateway, mal am Provider-Adapter, und die Puffer dahinter laufen leer."
+          "explanation": "Das ist der Shifting Bottleneck der Theory of Constraints (Lawrence & Buss 1994): Der Engpass sitzt dort, wo die Kapazität gerade unter die Last fällt, etwa durch GC-Pause, langsamen Provider oder Pod-Neustart. Goldratt sieht darin meist einen schlecht geschützten alten Engpass."
         },
         {
           "id": "sysdyn-steady-flow-headroom-o5",
-          "text": "Skaliert man den langsamsten Service der Kette, ist das Rolling-Bottleneck-Problem gelöst, danach wandert nichts mehr.",
+          "text": "Skaliert man den langsamsten Service der Kette, ist das Problem der wandernden Engpässe gelöst, danach wandert nichts mehr.",
           "verdict": "false",
-          "explanation": "Der Engpass wandert dann zur nächsten Station; das Problem liegt am fehlenden Headroom entlang der ganzen Kette, nicht an einer einzelnen Station."
+          "explanation": "Der Engpass wandert dann zur nächsten Station, die jetzt am knappsten ist; das Problem liegt an der fehlenden Schutzkapazität entlang der ganzen Kette, nicht an einer einzelnen Station."
         },
         {
           "id": "sysdyn-steady-flow-headroom-o6",

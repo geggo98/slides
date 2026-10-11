@@ -521,17 +521,67 @@ hideInToc: true
 
 ---
 hideInToc: true
+clicks: 4
 ---
 
-# Rolling Bottlenecks und Excess Capacity
+# Wandernde Engpässe und Schutzkapazität
 
-In einer Kette abhängiger Services wandert der Engpass (Goldratt, Theory of Constraints).
+Die langsamste Station begrenzt den Durchsatz der Kette (Goldratt, Theory of Constraints). Liegen die Kapazitäten nah beieinander und schwanken, wechselt der Engpass: Er **wandert** (Lawrence & Buss, 1994).
 
-Ohne Überschusskapazität füllt sich der Puffer nicht wieder, bevor die nächste Schwankung kommt. **Starvation kaskadiert downstream.**
+Ohne Reserve baut sich der Rückstau nicht ab, bevor die nächste Schwankung kommt: **Vor dem Engpass staut es, dahinter laufen Stationen leer (Starvation).**
 
 <PipelineViz />
 
-**Excess Capacity (~20 % Headroom) ist eine Systemanforderung, keine Verschwendung.**
+**Schutzkapazität (Protective Capacity, Faustregel ~20 % Headroom) ist eine Systemanforderung, keine Verschwendung.**
+
+<!--
+- Lesen: links die Last (62 req/s), rechts die drei Stationen. Große Zahl =
+  aktuelle Kapazität in req/s (durchgestrichen: der Nennwert), „Reserve“ =
+  Kapazität / Last − 1, Balken = Warteschlange vor der Station („buf“; rot und
+  „voll, 503“ = Puffer voll, Requests werden verworfen). Rote Umrandung mit
+  Badge „Engpass“ = die Kapazität liegt gerade unter der Last.
+- Klick für Klick:
+  0 Normalbetrieb — alle über der Last, aber die Reserve ist schmal (13–29 %).
+  1 GC-Pause im Quote-Service — 75 → 53 req/s, unter der Last: davor staut es,
+    der Puffer läuft voll (503); dahinter kommen nur noch 53 req/s an.
+  2 Provider wird langsam — der Engpass wandert nach hinten (70 → 53); der
+    Quote-Service ist frei.
+  3 Pod-Neustart am Gateway — 80 → 56; dahinter laufen Quote-Service und
+    Provider-Adapter leer (Starvation downstream).
+  4 Dieselben drei Einbrüche gleichzeitig, aber mit ~20 % mehr Kapazität
+    (96/90/84): 67/63/63 req/s, jede Station bleibt über der Last. Kein
+    Rückstau, kein 503.
+- Kernaussage: Der Engpass ist keine feste Station, sondern dort, wo die
+  Kapazität gerade unter die Last fällt. Goldratt sieht das Wandern selbst
+  als Fehlwahrnehmung: „the problem was not wandering bottlenecks. It was
+  insufficient protection for the existing bottlenecks“ (The Goal,
+  überarbeitete Ausgabe 1992). Ursache nach Goldratt: abhängige Ereignisse
+  plus statistische Schwankungen.
+- Zwei Sichten auf denselben Effekt. ToC: Die Schutzkapazität der
+  Nicht-Engpässe füllt den Puffer vor dem Engpass nach einer Störung wieder
+  auf (TOCICO Dictionary). Warteschlange: Ein Rückstau Q baut sich nur mit
+  μ − λ ab, Abbauzeit = Q / (μ − λ). Provider-Adapter (μ = 70, buf 15): bei
+  λ = 62 gut 1,9 s, bei λ = 67 schon 5 s — und die nächste Schwankung kommt
+  vorher.
+- Begriffe: „Excess Capacity“ heißt in der ToC der Teil, der weder
+  produziert noch schützt (also echte Verschwendung); gemeint ist
+  Protective Capacity. „Rolling Bottleneck“ ist kein Fachbegriff, etabliert
+  sind shifting bzw. wandering bottleneck (Lawrence & Buss 1994; das APICS
+  Dictionary nennt sie „pseudo-constraints“).
+- 20 % sind eine Praktiker-Faustregel, keine Norm (andere Quellen nennen
+  25–30 %): mehr bei Bursts, vielen Abhängigkeiten und langen Ketten.
+  Verwandt mit der M/M/1-Folie: 80 % Auslastung ist ein Punkt auf 1/(1−ρ),
+  keine Klippe.
+- Praxis: Ein Autoscaler skaliert eine Stufe hoch, der Engpass rutscht zur
+  nächsten (SRE Workbook, Managing Load, Niantic: „moved the capacity
+  bottleneck from GFE to the Niantic stack“); GC-Pausen; ein langsamer
+  Provider bindet Threads im Adapter.
+- Vereinfachung des Modells: Ein voller Puffer verwirft Requests, statt die
+  Vorstufe zu blockieren. In echten Systemen läuft der Rückstau zusätzlich
+  upstream (Backpressure, erschöpfte Pools).
+- Zum Selbstausprobieren: Folie „Systemdynamik — Interaktiv“, Szenario
+  „Wandernder Engpass“.
+-->
 
 ---
 hideInToc: true
@@ -1261,7 +1311,7 @@ hideInToc: true
 
 ### Drei Regeln aus der Systemdynamik
 
-1. **Excess Capacity ist Pflicht** — ca. 20 % Headroom für Puffer-Recovery
+1. **Schutzkapazität ist Pflicht** — Faustregel ca. 20 % Headroom, damit sich Rückstau abbaut
 2. **Gleichmäßiger Flow statt Batches** — TTL+Jitter, Leaky Bucket, Staggered Rollout
 3. **Doppelschwelle einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Flow-Control im Backing Service (Galera, RabbitMQ, InnoDB) signalisiert fehlende Kapazität; Load-Shedding _vor_ der Komponente bricht den metastabilen Kollaps
 
