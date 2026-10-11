@@ -57,6 +57,16 @@ function clamp(v, lo, hi) {
   return Math.max(lo, Math.min(hi, v));
 }
 
+/* Effektive Kapazität zur Zeit `time`: Nennwert mal alle gerade aktiven
+   Einbrüche (z. B. GC-Pause, langsamer Provider). Ohne `capacityDips`
+   bleibt die Kapazität konstant. */
+function capacityAt(st, time) {
+  let c = st.capacity;
+  for (const d of st.capacityDips ?? [])
+    if (time >= d.start && time < d.end) c *= d.factor;
+  return c;
+}
+
 function simulatePipeline(inputSignal, stages, steps, dt) {
   const nStages = stages.length;
   const outputs = stages.map(() => new Float64Array(steps));
@@ -74,7 +84,7 @@ function simulatePipeline(inputSignal, stages, steps, dt) {
     for (let s = 0; s < nStages; s++) {
       const st = stages[s];
       buf[s] += flowIn * dt;
-      const drain = Math.min(buf[s], st.capacity * dt);
+      const drain = Math.min(buf[s], capacityAt(st, t * dt) * dt);
       buf[s] -= drain;
       const overflow = Math.max(0, buf[s] - st.bufferMax);
       buf[s] = Math.min(buf[s], st.bufferMax);
@@ -182,22 +192,40 @@ const SIMS = [
   },
   {
     id: "rolling",
-    name: "Rolling Bottleneck",
+    name: "Wandernder Engpass",
     icon: "\u{1F30A}",
-    subtitle: "Engpass wandert durch die Kette",
+    subtitle: "Der Rückstau wandert mit den Einbrüchen",
     description:
-      "Gleichmäßige Last nahe der Kapazität. Kleine Schwankungen verursachen wandernde Engpässe: mal staut es am Gateway, mal am Provider-Adapter. Ohne Excess Capacity leeren sich die Puffer nicht rechtzeitig.",
+      "Last knapp unter der Kapazität (~62 req/s bei 70–80 req/s Nennwert). Nacheinander bricht die Kapazität einzelner Stationen ein: Quote-Service bei 5–9 s (GC-Pause), Provider-Adapter bei 11–15 s (langsamer Provider), Gateway bei 17–21 s (Pod-Neustart). Wo gerade die wenigste Kapazität bleibt, staut es sich; dahinter laufen die Stationen leer (Starvation).",
     stages: [
-      { name: "API Gateway", capacity: 80, bufferMax: 25, damping: 0.25 },
-      { name: "Quote-Service", capacity: 75, bufferMax: 20, damping: 0.2 },
-      { name: "Provider-Adapter", capacity: 70, bufferMax: 15, damping: 0.15 },
+      {
+        name: "API Gateway",
+        capacity: 80,
+        bufferMax: 25,
+        damping: 0.25,
+        capacityDips: [{ start: 17, end: 21, factor: 0.7 }],
+      },
+      {
+        name: "Quote-Service",
+        capacity: 75,
+        bufferMax: 20,
+        damping: 0.2,
+        capacityDips: [{ start: 5, end: 9, factor: 0.7 }],
+      },
+      {
+        name: "Provider-Adapter",
+        capacity: 70,
+        bufferMax: 15,
+        damping: 0.15,
+        capacityDips: [{ start: 11, end: 15, factor: 0.75 }],
+      },
     ],
     inputType: "oscillating",
-    inputParams: { freq: 0.15, amplitude: 15, baseRate: 72 },
+    inputParams: { freq: 0.15, amplitude: 4, baseRate: 62 },
     duration: 25,
     steps: 250,
     insight:
-      "Bei 90%+ Auslastung wandert der Engpass. Puffer können sich nicht mehr rechtzeitig leeren bevor die nächste Schwankung kommt. Ergebnis: Starvation kaskadiert. Bei ~80% Auslastung (baseRate 60 statt 72) verschwinden die Probleme.",
+      "Der Engpass ist keine feste Station: Er sitzt dort, wo die Kapazität gerade unter die Last fällt. Ohne Schutzkapazität baut sich der Rückstau nicht ab, bevor der nächste Einbruch kommt, und volle Puffer verwerfen Requests (503). Mit ~20 % Reserve (96/90/84 statt 80/75/70) bleiben dieselben Einbrüche über der Last: kein Rückstau, keine 503. Goldratt: Meist ist der „wandernde“ Engpass ein schlecht geschützter alter.",
   },
 ];
 

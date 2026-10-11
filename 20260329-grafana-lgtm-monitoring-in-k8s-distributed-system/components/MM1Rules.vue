@@ -49,8 +49,8 @@ const caveats = computed(() => [
 
 const takeaways = computed(() => [
   {
-    title: "Excess Capacity ist Pflicht",
-    desc: "Systeme brauchen Headroom (~20%), um Puffer nach Schwankungen wieder aufzufüllen. Ohne Headroom kaskadieren Rolling Bottlenecks.",
+    title: "Schutzkapazität ist Pflicht",
+    desc: "Systeme brauchen Headroom (~20 %, Faustregel), damit sich Rückstau nach Schwankungen abbaut. Ohne Headroom wandern Engpässe durch die Kette.",
     icon: "🏋️",
     color: C.value.green,
   },

@@ -783,11 +783,13 @@ routeAlias: systemdynamik
 
 <!--
 - Bedienung: Szenario wählen (Queues als Federn,
-  Dirac-Impuls, Überlast + Recovery, Rolling Bottleneck), ▶ startet die
+  Dirac-Impuls, Überlast + Recovery, Wandernder Engpass), ▶ startet die
   Pipeline-Animation Gateway → Quote-Service → Provider-Adapter.
-- Zeigen: „Dirac-Impuls" (Batch = maximale Oszillation) und „Rolling
-  Bottleneck" (der Engpass wandert) — die Kernaussagen der Sektion live.
-- Die drei Regeln (Excess Capacity, Steady Flow, Hysterese) stehen auf der
+- Zeigen: „Dirac-Impuls" (Batch = maximale Oszillation) und „Wandernder
+  Engpass" (der Rückstau wandert mit den Kapazitätseinbrüchen: erst
+  Quote-Service, dann Provider-Adapter, dann Gateway) — die Kernaussagen
+  der Sektion live.
+- Die drei Regeln (Schutzkapazität, Steady Flow, Hysterese) stehen auf der
   M/M/1-Folie.
 -->
 
