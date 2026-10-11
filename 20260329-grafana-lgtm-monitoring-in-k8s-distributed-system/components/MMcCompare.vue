@@ -120,8 +120,8 @@ const leftCaption = computed(() =>
 
 const HELP = {
   "kantine-r":
-    "Eine gemeinsame Schlange für alle c Köche: Der vorderste Gast geht zum nächsten freien Koch. Essen-Emoji = Bedienlänge, „Xs“ = Restzeit, „+N“ = zusätzlich Wartende. Diese Kantine ist in beiden Modi identisch — die Referenz, gegen die links verglichen wird.",
-  race: "Beide Seiten bekommen denselben Gast (gleiche Ankunft, gleicher Arbeitsbedarf — gekoppelte Zufallsströme). Der Balken zeigt, wie oft derselbe Zwilling links bzw. im Pool zuerst fertig wird; Ø-Vorsprung in Bedienzeiten. Der ehrlichste Vergleich, weil dieselbe Realisierung beide Systeme durchläuft.",
+    "Eine gemeinsame Schlange für alle c Köche: Der vorderste Gast geht zum nächsten freien Koch. Essen-Emoji = Bedienlänge, „Xs“ = Restzeit, „+N“ = zusätzlich Wartende. Diese Kantine ist in beiden Modi identisch, die Referenz, gegen die links verglichen wird.",
+  race: "Beide Seiten bekommen denselben Gast (gleiche Ankunft, gleicher Arbeitsbedarf, gekoppelte Zufallsströme). Der Balken zeigt, wie oft derselbe Zwilling links bzw. im Pool zuerst fertig wird; Ø-Vorsprung in Bedienzeiten. Der ehrlichste Vergleich, weil dieselbe Realisierung beide Systeme durchläuft.",
   scope:
     "Theoriekurven über der Auslastung ρ: Amber = Alternative, Grün = Pool. Die leuchtenden Punkte sind die aktuellen Messwerte bei deinem ρ (gestrichelte Linie). Schalte zwischen Wq, T und P(warten) um: Im Tempo-Modus tauschen die Kurven die Führung; im Pooling-Modus liegt der Pool immer unten.",
   "sb-pw":
@@ -138,7 +138,7 @@ const kantineLHelp = computed(
     "Gäste kommen links an, stellen sich an, werden vom 🧑‍🍳 bedient und gehen rechts. Essen-Emoji = Bedienlänge, „Xs“ = Restzeit, „+N“ = zusätzlich Wartende. " +
     (mode.value === "tempo"
       ? "⚡ = ein einzelner, c-fach schnellerer Koch."
-      : "Jeder Koch hat seine eigene Schlange — die Spur wird bei Ankunft zufällig gewählt, daher mögliches Head-of-Line-Blocking."),
+      : "Jeder Koch hat seine eigene Schlange. Sie wird bei Ankunft zufällig gewählt, daher droht Head-of-Line-Blocking."),
 );
 
 /* ---- Scoreboard ---- */
@@ -443,7 +443,7 @@ onUnmounted(() => {
           <InfoPopover
             id="kantine-l"
             :active-id="info"
-            title="Kantine — Alternative (links)"
+            title="Kantine links (Alternative)"
             @toggle="toggle('kantine-l')"
             >{{ kantineLHelp }}</InfoPopover
           >
@@ -466,7 +466,7 @@ onUnmounted(() => {
           <InfoPopover
             id="kantine-r"
             :active-id="info"
-            title="Kantine — Pool (rechts)"
+            title="Kantine rechts (Pool)"
             @toggle="toggle('kantine-r')"
             >{{ HELP["kantine-r"] }}</InfoPopover
           >
@@ -485,7 +485,7 @@ onUnmounted(() => {
     <!-- Race-Bar: prominent, zentriert, direkt unter den Kantinen -->
     <div class="race" :style="{ background: C.panel, borderColor: C.border }">
       <div class="race-head" :style="{ color: C.textMid }">
-        <span>Wettrennen identischer Zwillinge — wer ist zuerst fertig?</span>
+        <span>Wettrennen identischer Zwillinge: Wer ist zuerst fertig?</span>
         <InfoPopover
           id="race"
           :active-id="info"

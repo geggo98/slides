@@ -215,7 +215,7 @@ const POINTS = [
     q: "wehr",
     s: "r",
     what: "Kann ein Java-Thread nicht allokieren, weil ZGC keinen freien Speicher mehr hat, hält ZGC ihn an, bis Seiten frei sind.",
-    why: "Der Thread steht oder läuft: binär. Auslöser ist der freie Heap: Pegel. Eine eigene Reset-Schwelle gibt es nicht, sobald Speicher frei ist, läuft der Thread weiter.",
+    why: "Der Thread steht oder läuft: binär. Auslöser ist der freie Heap: Pegel. Eine eigene Reset-Schwelle gibt es nicht. Sobald Speicher frei ist, läuft der Thread weiter.",
     watch:
       "Jeder Stall ist ein Alarm, ein gesundes ZGC stallt praktisch nie. JFR-Event `jdk.ZAllocationStall` und GC-Log-Ursache „Allocation Stall“ beobachten, Heap-Headroom oder CPU erhöhen.",
     doc: "https://openjdk.org/jeps/439",
@@ -267,7 +267,7 @@ const POINTS = [
     q: "wehr",
     s: "r",
     what: "Ist der Producer-Puffer `buffer.memory` (Standard 32\u00a0MB) voll, blockiert `send()` bis `max.block.ms` und wirft dann eine Exception.",
-    why: "`send()` blockiert oder nicht: binär. Auslöser ist der Füllstand des Puffers: Pegel. Eine Hysterese gibt es nicht, sobald genug Bytes frei sind, geht es weiter.",
+    why: "`send()` blockiert oder nicht: binär. Auslöser ist der Füllstand des Puffers: Pegel. Eine Hysterese gibt es nicht. Sobald genug Bytes frei sind, geht es weiter.",
     watch:
       "`send()` blockiert den aufrufenden Thread, in einem Event-Loop also das ganze Programm. Producer-Metriken `buffer-available-bytes` und `buffer-exhausted-rate` beobachten.",
     doc: "https://kafka.apache.org/40/generated/producer_config.html#producerconfigs_buffer.memory",
@@ -280,9 +280,9 @@ const POINTS = [
     q: "wehr",
     s: "r",
     what: "Ist der Empfangspuffer voll, meldet der Empfänger Window 0. Der Sender stoppt und fragt in Abständen mit Zero-Window-Probes nach.",
-    why: "Window 0 ist ein harter Stopp: binär. Das Fenster ist der freie Pufferplatz: Pegel. Die Silly-Window-Vermeidung (RFC 9293) öffnet es erst wieder, wenn ein größerer Block frei ist, das wirkt wie ein Reset-Band.",
+    why: "Window 0 ist ein harter Stopp: binär. Das Fenster ist der freie Pufferplatz: Pegel. Die Silly-Window-Vermeidung (RFC 9293) öffnet es erst wieder, wenn ein größerer Block frei ist. Das wirkt wie ein Reset-Band.",
     watch:
-      "Die Probes folgen mit wachsendem Abstand, ein Stillstand kann die Ursache überdauern. Im Mitschnitt zeigt der Wireshark-Filter `tcp.analysis.zero_window` die Fälle.",
+      "Die Probes folgen mit wachsendem Abstand. Ein Stillstand kann die Ursache überdauern. Im Mitschnitt zeigt der Wireshark-Filter `tcp.analysis.zero_window` die Fälle.",
     doc: "https://www.rfc-editor.org/rfc/rfc9293.html#section-3.8.6.1",
   },
   {

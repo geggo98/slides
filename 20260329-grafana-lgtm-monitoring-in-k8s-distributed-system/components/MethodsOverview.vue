@@ -39,7 +39,7 @@ const methods = computed(() => [
       {
         letter: "E",
         name: "Errors",
-        desc: "Fehlgeschlagene Requests/s — User-Sicht",
+        desc: "Fehlgeschlagene Requests/s (User-Sicht)",
         accent: C.value.red,
         color: C.value.redDim,
       },

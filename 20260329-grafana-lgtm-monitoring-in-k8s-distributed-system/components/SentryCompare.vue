@@ -35,7 +35,7 @@ const data = {
           mark: "none",
           teaser: "Plattform & Infrastruktur",
           detail:
-            "Metriken, Logs, Traces und Profile der ganzen Plattform — vom Node bis zum Service. Zielgruppe Ops/SRE; Dashboards und Alerting als Zentrale.",
+            "Metriken, Logs, Traces und Profile der ganzen Plattform, vom Node bis zum Service. Zielgruppe Ops/SRE. Dashboards und Alerting als Zentrale.",
         },
         signale: {
           mark: "yes",
@@ -53,7 +53,7 @@ const data = {
           mark: "yes",
           teaser: "K8s-nativ via Alloy",
           detail:
-            "Node-Metriken, Pod-Logs und Cluster-Dashboards out of the box — Grafana Alloy bzw. kube-prometheus-stack.",
+            "Node-Metriken, Pod-Logs und Cluster-Dashboards out of the box mit Grafana Alloy bzw. kube-prometheus-stack.",
         },
         tickets: {
           mark: "partial",
@@ -78,19 +78,19 @@ const data = {
           mark: "none",
           teaser: "Applikation & Developer",
           detail:
-            "Blick aus der App heraus: Exceptions mit Stacktrace, Releases, Source Maps, Session Replay. Zielgruppe Entwickler — vom Fehler zum Commit.",
+            "Blick aus der App heraus: Exceptions mit Stacktrace, Releases, Source Maps, Session Replay. Zielgruppe Entwickler: vom Fehler zum Commit.",
         },
         signale: {
           mark: "partial",
           teaser: "Errors · Traces · Logs · Replay",
           detail:
-            "Stark bei Errors/Issues (Auto-Grouping), Tracing, Profiling, Session Replay, Crons, Uptime. Logs GA seit 09/2025, trace-verlinkt. OTLP: Traces + Logs ja — Metrics nein.",
+            "Stark bei Errors/Issues (Auto-Grouping), Tracing, Profiling, Session Replay, Crons, Uptime. Logs GA seit 09/2025, trace-verlinkt. OTLP: Traces + Logs ja, Metrics nein.",
         },
         metriken: {
           mark: "no",
           teaser: "keine General-Purpose-Metriken",
           detail:
-            "Custom-Metrics-Beta 10/2024 eingestellt; trace-basierte „Application Metrics“ erst Open Beta (11/2025). Alerting statisch, Prozent oder Anomalie — kein natives SLO-/Error-Budget-/Burn-Rate-Alerting.",
+            "Custom-Metrics-Beta 10/2024 eingestellt; trace-basierte „Application Metrics“ erst Open Beta (11/2025). Alerting statisch, Prozent oder Anomalie, kein natives SLO-/Error-Budget-/Burn-Rate-Alerting.",
         },
         k8s: {
           mark: "partial",
@@ -102,7 +102,7 @@ const data = {
           mark: "yes",
           teaser: "Auto-Tickets aus Alert Rules",
           detail:
-            "Alert Rules legen Tickets automatisch an: Jira, GitHub, Azure DevOps, Linear u. a. — rund 19 Issue-Tracker-Integrationen, Two-Way-Sync ab Team-Plan.",
+            "Alert Rules legen Tickets automatisch an: Jira, GitHub, Azure DevOps, Linear u. a. Rund 19 Issue-Tracker-Integrationen, Two-Way-Sync ab Team-Plan.",
         },
         betrieb: {
           mark: "none",

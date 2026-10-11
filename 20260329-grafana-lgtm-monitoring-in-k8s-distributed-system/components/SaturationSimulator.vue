@@ -80,7 +80,7 @@ const SCENARIOS = [
     subtitle: "CFS Quota ersch\u00f6pft \u2192 JVM-GC-Verst\u00e4rkung",
     category: "compute",
     description:
-      "Container verbraucht sein CPU-Quota innerhalb der 100ms-CFS-Periode. Kubernetes pausiert den Container bis zur n\u00e4chsten Periode. Bei JVM-Anwendungen kompoundiert das mit Stop-the-World-GC-Pausen: eine 20ms-GC-Pause kann durch CFS-Throttling auf 120ms+ anschwellen.",
+      "Container verbraucht sein CPU-Quota innerhalb der 100-ms-CFS-Periode. Kubernetes pausiert den Container bis zur n\u00e4chsten Periode. Bei JVM-Anwendungen verstärkt sich das mit Stop-the-World-GC-Pausen: eine 20-ms-GC-Pause kann durch CFS-Throttling auf 120 ms+ anschwellen.",
     trigger:
       "Hohe Parallelit\u00e4t bei Quote-Aggregation: 10+ Provider-Calls gleichzeitig, JSON-Parsing, Objektallokation \u2192 GC-Druck + CPU-Spike",
     phases: [
@@ -163,7 +163,7 @@ const SCENARIOS = [
           'rate(container_cpu_cfs_throttled_seconds_total{container!=""}[5m])',
       },
     ],
-    fix: "CPU-Limit erh\u00f6hen (z.B. 500m \u2192 1000m), oder Request-Parallelit\u00e4t begrenzen. Burstable QoS erw\u00e4gen (kein Limit, nur Request). GC-Tuning: -XX:MaxGCPauseMillis=100.",
+    fix: "CPU-Limit erh\u00f6hen (z. B. 500m \u2192 1000m) oder Request-Parallelit\u00e4t begrenzen. Burstable QoS erw\u00e4gen (kein Limit, nur Request). GC-Tuning: -XX:MaxGCPauseMillis=100.",
     dashboardLevel: 3,
   },
   {
@@ -173,9 +173,9 @@ const SCENARIOS = [
     subtitle: "DB-Connection-Pool leer \u2192 Thread-Blockade",
     category: "pool",
     description:
-      "Alle Connections im HikariCP-Pool sind belegt. Neue Requests blockieren auf pool.getConnection() bis connectionTimeout (Default: 30s) abl\u00e4uft \u2192 SQLTransientConnectionException. Blockierte Threads k\u00f6nnen den Tomcat-Thread-Pool mitrei\u00dfen (Kaskadeneffekt).",
+      "Alle Connections im HikariCP-Pool sind belegt. Neue Requests blockieren auf pool.getConnection(), bis connectionTimeout (Default: 30 s) abl\u00e4uft \u2192 SQLTransientConnectionException. Blockierte Threads k\u00f6nnen den Tomcat-Thread-Pool mitrei\u00dfen (Kaskadeneffekt).",
     trigger:
-      "Langsame SQL-Query (fehlender Index auf Datenbank-Join) h\u00e4lt Connections 5x l\u00e4nger als normal \u2192 Pool l\u00e4uft leer",
+      "Langsame SQL-Query (fehlender Index auf Datenbank-Join) h\u00e4lt Connections 5\u00d7 l\u00e4nger als normal \u2192 Pool l\u00e4uft leer",
     phases: [
       {
         t: 0,
@@ -369,7 +369,7 @@ const SCENARIOS = [
     subtitle: "Alle Worker-Threads busy \u2192 HTTP 503",
     category: "pool",
     description:
-      "Tomcat hat max. 200 Worker-Threads (Default). Wenn alle busy sind, landen neue Requests in der Accept-Queue (Default: 100). Ist auch die voll \u2192 Connection Refused / HTTP 503. H\u00e4ufig ein Folgeproblem: langsame Upstream-Calls oder DB-Queries blockieren Threads.",
+      "Tomcat hat max. 200 Worker-Threads (Default). Wenn alle busy sind, landen neue Requests in der Accept-Queue (Default: 100). Ist auch sie voll \u2192 Connection Refused / HTTP 503. H\u00e4ufig ein Folgeproblem: langsame Upstream-Calls oder DB-Queries blockieren Threads.",
     trigger:
       "HikariCP-Ersch\u00f6pfung blockiert Threads auf getConnection() \u2192 Tomcat-Threads stauen sich \u2192 Dominoeffekt",
     phases: [
@@ -395,7 +395,7 @@ const SCENARIOS = [
         t: 0.75,
         severity: "critical",
         label: "Ersch\u00f6pft",
-        desc: "200/200 busy, Queue \u00fcerl\u00e4uft, HTTP 503",
+        desc: "200/200 busy, Queue \u00fcberl\u00e4uft, HTTP 503",
       },
     ],
     metrics: [
@@ -451,7 +451,7 @@ const SCENARIOS = [
         query: "tomcat_connections_current_connections",
       },
     ],
-    fix: "Root Cause finden: warum blockieren Threads? (DB-Pool? Upstream-Timeout?). Upstream-Timeouts verk\u00fcrzen (<5s). Virtual Threads evaluieren (spring.threads.virtual.enabled=true). Nicht einfach max-threads erh\u00f6hen \u2013 das verschiebt das Problem nur.",
+    fix: "Root Cause finden: Warum blockieren Threads? (DB-Pool? Upstream-Timeout?). Upstream-Timeouts verk\u00fcrzen (<5s). Virtual Threads evaluieren (spring.threads.virtual.enabled=true). Nicht einfach max-threads erh\u00f6hen \u2013 das verschiebt das Problem nur.",
     dashboardLevel: 2,
   },
   {
@@ -463,7 +463,7 @@ const SCENARIOS = [
     description:
       "container_memory_working_set_bytes n\u00e4hert sich dem Memory-Limit. Der Kubelet-OOM-Killer terminiert den Container. Bei JVM: Off-Heap-Bereiche (Metaspace, Thread-Stacks, NIO-Buffer) wachsen \u00fcber den JVM-Heap hinaus. Der Container stirbt, obwohl -Xmx noch Platz hat.",
     trigger:
-      "Memory-Leak im JSON-Parsing (gro\u00dfe Provider-Responses nicht gestreamt), oder Metaspace-Wachstum durch dynamische Proxy-Klassen (Hibernate, Spring AOP)",
+      "Memory-Leak im JSON-Parsing (gro\u00dfe Provider-Responses nicht gestreamt) oder Metaspace-Wachstum durch dynamische Proxy-Klassen (Hibernate, Spring AOP)",
     phases: [
       {
         t: 0,
@@ -559,9 +559,9 @@ const SCENARIOS = [
       "Cache voll \u2192 Evictions \u2192 Miss-Rate steigt \u2192 API-Flut",
     category: "component",
     description:
-      "Redis erreicht maxmemory. Die Eviction-Policy (z.B. allkeys-lru) beginnt, Keys zu verdr\u00e4ngen. Cache-Hit-Ratio sinkt \u2192 mehr Requests an B2B-APIs \u2192 Rate-Limiting-Risiko steigt. Kaskadeneffekt: Cache-Miss \u2192 Upstream-Call \u2192 h\u00f6here Latenz \u2192 mehr gleichzeitige Requests \u2192 noch mehr Cache-Misses.",
+      "Redis erreicht maxmemory. Die Eviction-Policy (z. B. allkeys-lru) beginnt, Keys zu verdr\u00e4ngen. Cache-Hit-Ratio sinkt \u2192 mehr Requests an B2B-APIs \u2192 Rate-Limiting-Risiko steigt. Kaskadeneffekt: Cache-Miss \u2192 Upstream-Call \u2192 h\u00f6here Latenz \u2192 mehr gleichzeitige Requests \u2192 noch mehr Cache-Misses.",
     trigger:
-      "Neue Produktsparte mit vielen Tarifen ongeboardet, Cache-Keys explodieren. Oder: TTL zu lang, Stale-Daten f\u00fcllen den Cache.",
+      "Neue Produktsparte mit vielen Tarifen aufgenommen, Cache-Keys wachsen stark an. Oder: TTL zu lang, Stale-Daten f\u00fcllen den Cache.",
     phases: [
       {
         t: 0,
@@ -643,7 +643,7 @@ const SCENARIOS = [
         query: "redis_memory_used_bytes / redis_memory_max_bytes * 100",
       },
     ],
-    fix: "maxmemory erh\u00f6hen oder Redis-Cluster skalieren. TTL-Strategie reviewen (k\u00fcrzere TTLs f\u00fcr volatile Daten). Cache-Key-Namespace pro Produktsparte. Stale-while-revalidate Pattern: abgelaufene Keys weiter ausliefern, im Hintergrund refreshen.",
+    fix: "maxmemory erh\u00f6hen oder Redis-Cluster skalieren. TTL-Strategie reviewen (k\u00fcrzere TTLs f\u00fcr volatile Daten). Cache-Key-Namespace pro Produktsparte. Stale-while-revalidate-Pattern: abgelaufene Keys weiter ausliefern, im Hintergrund refreshen.",
     dashboardLevel: 2,
   },
   {
@@ -655,7 +655,7 @@ const SCENARIOS = [
     description:
       "Das Redo-Log/WAL ist ein zirkulärer Puffer fester Größe. Steigt die Checkpoint Age (Abstand zwischen neuen Writes und geflushtem Schwanz) über die Schwellen, eskaliert InnoDB das Flushing: Adaptive-Flushing → Async-Point (7/8) → Sync-Point (15/16) → Voll-Pause aller User-Threads. Flush Storms frieren die Schreiboperationen ein.",
     trigger:
-      "Write-Burst (Batch-Import, Massen-Update einer Produktsparte) übersteigt die provisionierte IOPS; das Redo-Log ist zu klein, um den Burst zu absorbieren.",
+      "Write-Burst (Batch-Import, Massen-Update einer Produktsparte) übersteigt die provisionierten IOPS; das Redo-Log ist zu klein, um den Burst zu absorbieren.",
     phases: [
       {
         t: 0,
@@ -737,7 +737,7 @@ const SCENARIOS = [
       },
       { label: "Pending Connections", query: "hikaricp_connections_pending" },
     ],
-    fix: "innodb_redo_log_capacity vergrößern, damit Write-Bursts absorbiert werden, ohne in Sync-Flushing zu kippen. PV mit Provisioned IOPS (gp3). Writes gleichmäßig verteilen (Jitter, Leaky Bucket) statt Batch-Peaks. Innodb_checkpoint_age überwachen — Nähe zum Async-Point = erschöpfte IO-Kapazität.",
+    fix: "innodb_redo_log_capacity vergrößern, damit Write-Bursts absorbiert werden, ohne in Sync-Flushing zu kippen. PV mit Provisioned IOPS (gp3). Writes gleichmäßig verteilen (Jitter, Leaky Bucket) statt Batch-Peaks. Innodb_checkpoint_age überwachen. Nähe zum Async-Point = erschöpfte IO-Kapazität.",
     dashboardLevel: 3,
   },
   {
@@ -834,7 +834,7 @@ const SCENARIOS = [
           "kafka_producer_buffer_available_bytes\n  / kafka_producer_buffer_total_bytes * 100",
       },
     ],
-    fix: "RabbitMQ: BlockedListener registrieren, Publishing über eigene Queue + dedizierten Thread entkoppeln, bei handleBlocked aufhören nachzuschieben. Kafka: buffer-available-bytes überwachen (→0 = Sättigung), linger.ms/batch.size tunen, Partitionen/Broker skalieren. Generell: Back-Pressure bis an die Quelle weiterreichen statt unbounded Buffer.",
+    fix: "RabbitMQ: BlockedListener registrieren, Publishing über eigene Queue + dedizierten Thread entkoppeln, bei handleBlocked aufhören nachzuschieben. Kafka: buffer-available-bytes überwachen (→0 = Sättigung), linger.ms/batch.size tunen, Partitionen/Broker skalieren. Generell: Back-Pressure bis an die Quelle weiterreichen statt unbegrenzter Puffer.",
     dashboardLevel: 3,
   },
   {
@@ -877,7 +877,7 @@ const SCENARIOS = [
         t: 0.8,
         severity: "critical",
         label: "Systemausfall",
-        desc: "503 f\u00fcr ALLE Requests, nicht nur Provider-A. Kompletter Stillstand.",
+        desc: "503 f\u00fcr alle Requests, nicht nur Provider-A. Das System steht.",
       },
     ],
     metrics: [

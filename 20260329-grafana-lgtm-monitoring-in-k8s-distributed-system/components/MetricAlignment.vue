@@ -30,7 +30,7 @@ const pairs = [
     key: "usable",
     goal: "Dienst ist benutzbar",
     metric: "Pod „Ready“, Liveness-Probe grün",
-    miss: "Der Prozess lebt, aber Redis oder die Provider-Anbindung ist tot. Spring Boot nimmt in die Readiness-Gruppe standardmäßig nur den eigenen Zustand auf — keine externen Abhängigkeiten.",
+    miss: "Der Prozess lebt, aber Redis oder die Provider-Anbindung ist tot. Spring Boot nimmt in die Readiness-Gruppe standardmäßig nur den eigenen Zustand auf: keine externen Abhängigkeiten.",
     better:
       "RED auf dem echten Endpoint und Quote-Completeness; die Probe entscheidet nur, ob ein Pod Traffic bekommt.",
     counter: "Quote-Completeness pro Request",
@@ -40,7 +40,7 @@ const pairs = [
     key: "quotes",
     goal: "Kunden bekommen vollständige Quotes",
     metric: "Anteil HTTP-200-Antworten",
-    miss: "200 OK, aber nur 7 von 10 Providern haben geantwortet. Die Partielle Degradation aus der Errors-Folie ist für die Statuscode-Quote unsichtbar.",
+    miss: "200 OK, aber nur 7 von 10 Providern (70 %) haben geantwortet. Die partielle Degradation aus der Errors-Folie ist für die Statuscode-Quote unsichtbar.",
     better:
       "Business-Fehler mitzählen: Completeness je Request statt Statuscode allein.",
     counter: "Conversion-Rate",

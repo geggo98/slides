@@ -23,7 +23,7 @@ hideInToc: true
 Loki · Grafana · Tempo · Mimir · OpenTelemetry
 
 <div class="text-slate-500" style="margin-top: 2em; font-size: 0.85em;">
-B2C-Versicherungsintegrator · Spring Boot Microservices · Percona PostgreSQL · Redis · Traefik Gateway API
+B2C-Versicherungsintegrator · Spring-Boot-Microservices · Percona PostgreSQL · Redis · Traefik Gateway API
 </div>
 
 ---
@@ -125,7 +125,7 @@ hideInToc: true
 
 # Latency
 
-Misst die Zeit bis zur Beantwortung eines Requests. **Verteilung** (p50, p90, p99) entscheidend, nicht der Durchschnitt.
+Misst, wie lange ein Request bis zur Antwort braucht. Entscheidend ist die **Verteilung** (p50, p90, p99), nicht der Durchschnitt.
 
 Drei Latenz-Ebenen im Versicherungsintegrator:
 
@@ -147,7 +147,7 @@ hideInToc: true
 
 # Traffic
 
-Quantifiziert die Last. Im Versicherungskontext ist der **Fan-out-Multiplikator** zentral: ein Kundenrequest auf `/api/v1/quotes` löst 5–15 parallele Provider-Calls aus.
+Quantifiziert die Last. Zentral ist der **Fan-out-Multiplikator**: Ein Kundenrequest auf `/api/v1/quotes` löst 5–15 parallele Provider-Calls aus.
 
 ```promql
 # Gesamte Request-Rate über alle Services
@@ -168,11 +168,11 @@ hideInToc: true
 
 # Errors
 
-Drei Kategorien im Integrator-Kontext:
+Drei Fehlerkategorien:
 
-- **Interne 5xx** — Bugs, DB-Fehler
-- **Upstream-Provider-Fehler** — 500er, Timeouts, 429 Rate-Limiting
-- **Partielle Degradation** — 3 von 10 Anbietern fallen aus → Quote unvollständig, aber nicht komplett fehlerhaft
+- **Interne 5xx**: Bugs, DB-Fehler
+- **Upstream-Provider-Fehler**: 500er, Timeouts, 429 Rate-Limiting
+- **Partielle Degradation**: 3 von 10 Anbietern (30 %) fallen aus → Quote unvollständig, aber nutzbar
 
 ```promql
 # Interne Error-Rate als Prozentsatz
@@ -193,7 +193,7 @@ Misst, wie nahe das System an seinen Kapazitätsgrenzen ist.
 
 _"Many systems degrade in performance before achieving 100% utilization."_ — SRE Book
 
-Beste Indikatoren: **Queuing** — Arbeit, die auf Verarbeitung wartet.
+Bester Indikator: **Queuing**, also Arbeit, die auf Bearbeitung wartet.
 
 ```promql
 # Tomcat Thread-Pool-Auslastung
@@ -228,12 +228,12 @@ hideInToc: true
 | **Errors**   | Fehlgeschlagene Requests/s — User-Sicht     | HTTP 5xx, Timeouts, Business-Logik-Fehler          |
 | **Duration** | Latenz-Verteilung (p50, p95, p99)           | Steigt als Symptom von Saturation                  |
 
-**Kausalität einseitig**: Saturation → Duration↑, aber Duration↑ ⇏ immer Saturation.
+**Kausalität einseitig**: Saturation → Duration↑, aber Duration↑ ⇏ Saturation.
 
 ### Wann RED, wann Golden Signals?
 
-- **RED** für jedes Service-Dashboard — konsistent, vergleichbar
-- **Golden Signals** zusätzlich für die kritischsten Pfade, wo Saturation als Frühwarnung entscheidend ist — z.B. Vertragswechselsaison (November/Dezember)
+- **RED** für jedes Service-Dashboard: konsistent, vergleichbar
+- **Golden Signals** zusätzlich für die kritischsten Pfade, wo Saturation als Frühwarnung entscheidend ist, z. B. Vertragswechselsaison (November/Dezember)
 
 ---
 layout: section
@@ -251,7 +251,7 @@ hideInToc: true
 # USE: Utilization, Saturation, Errors
 
 Für **jede Ressource** (CPU, Memory, Disk, Network, Pools).
-Beantwortet: „Ist die Infrastruktur der Engpass?“
+Frage: „Ist die Infrastruktur der Engpass?“
 
 ### CPU in Kubernetes
 
@@ -291,9 +291,9 @@ hideInToc: true
 
 # CPU-Throttling: Der versteckte JVM-Killer
 
-CFS (Completely Fair Scheduler) arbeitet in **100ms-Perioden**. Container, der sein Quota aufbraucht, wird pausiert.
+CFS (Completely Fair Scheduler) arbeitet in **100-ms-Perioden**. Ein Container, der sein Quota aufbraucht, pausiert bis zur nächsten Periode.
 
-Für JVM: **Bereits 15% Throttling kann GC-Pausen verstärken** — Stop-the-World-Pausen werden durch CFS-Pausen zusätzlich verstärkt.
+Für die JVM: **Schon 15 % Throttling können Stop-the-World-Pausen verlängern.**
 
 ```promql
 # CPU-Throttling-Prozentsatz
@@ -301,7 +301,7 @@ sum(rate(container_cpu_cfs_throttled_periods_total[5m])) by (pod, container)
   / sum(rate(container_cpu_cfs_periods_total[5m])) by (pod, container) * 100
 ```
 
-Schwellwerte: **>25% über 15min = Warning**, **>50% = Critical**
+Schwellwerte: **Warning ab 25 % über 15 min**, **Critical ab 50 %**
 
 ---
 hideInToc: true
@@ -322,7 +322,7 @@ Sizing: `(core_count × 2) + effective_spindle_count` → 4-Core SSD: **(4×2)+1
 
 ### Tomcat Thread-Pool
 
-Default: max 200 Threads, Accept-Queue: 100. Alle busy + Queue voll → HTTP 503.
+Default: max 200 Threads, Accept-Queue: 100. Sind alle Threads belegt und die Queue voll → HTTP 503.
 
 ```promql
 tomcat_threads_busy_threads / tomcat_threads_config_max_threads * 100
@@ -369,13 +369,13 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="satu
 
 <!--
 - Bedienung: links Szenario wählen (Filter-Pills: Alle, Compute, Pools,
-  Infra-Komponente, Extern, Kaskade), dann ▶ drücken — der Fortschritts-Slider
+  Infra-Komponente, Extern, Kaskade), dann ▶ drücken. Der Fortschritts-Slider
   fährt das Szenario von HEALTHY über DEGRADED/WARNING bis CRITICAL, die vier
   Gauges laufen mit. Slider auch manuell ziehbar.
 - Zeigen: „CPU-Throttling“ komplett durchspielen (GC-Verstärkung beim
   JVM-Killer von eben!), danach „DB Checkpoint-Sättigung“ oder „Broker
   Back-Pressure“ als Infra-Komponente, „Kaskaden-Failure“ als Eskalation.
-- Unten „PromQL-Queries anzeigen“ aufklappen — die Queries entsprechen
+- Unten „PromQL-Queries anzeigen“ aufklappen. Die Queries entsprechen
   den Schwellwerten der vorigen Folien; Gegenmaßnahmen-Box mitgeben.
 -->
 
@@ -400,7 +400,7 @@ routeAlias: mm1-80-prozent
 
 <MM1Chart />
 
-Faustregel: **T = S / (1 − ρ)** — bei 80%: **5×** Service-Time, bei 90%: **10×**.
+Faustregel: **T = S / (1 − ρ)**. Bei 80 % ist T fünfmal so groß wie S, bei 90 % zehnmal.
 
 </div>
 <div v-click>
@@ -462,13 +462,13 @@ h3 {
 | Memory (Container) | 80%     | 90%+     | `container_memory_working_set_bytes` |
 | HikariCP Pool      | 80%     | 95%+     | Pending > 0 ist bereits Saturation   |
 | Tomcat Threads     | 75%     | 90%+     | Gepaart mit Upstream-Timeout-Check   |
-| Redis Memory       | 80%     | 95%+     | Evictions = aktive Sättigung         |
-| Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Sättigung beginnt  |
+| Redis Memory       | 80%     | 95%+     | Evictions = aktive Saturation        |
+| Disk I/O           | 70%     | 85%+     | Queue-Depth > 1 = Saturation beginnt |
 
 ### Einschränkungen der 80%-Faustregel
 
-- **M/M/1 vs. M/M/c** — bursty Traffic verschiebt den Knick nach links, viele Threads nach rechts (~90–95%)
-- **CFS-Throttling ist binär** — 80% CPU können bei Bursts in 40% Throttling kippen
+- **M/M/1 vs. M/M/c**: Stoßartiger Traffic verschiebt den Knick nach links, viele Threads nach rechts (ca. 90–95 %)
+- **CFS-Throttling ist binär**: Schon bei 80 % CPU kann ein Burst 40 % Throttling auslösen
 
 ---
 layout: section
@@ -513,8 +513,8 @@ hideInToc: true
 - Zeigen: Der Zwillings-Rennbalken (mittig) misst id-gekoppelt, wer zuerst fertig
   ist: Pool gewinnt P(warten)/Wq (Pooling-Effekt), der schnelle Koch gewinnt T.
 - Dann Modus „Pooling“ (c getrennte Schlangen vs. Pool): der Pool gewinnt alles —
-  Head-of-Line-Blocking in den getrennten Spuren. Rechtfertigt eine gemeinsame
-  Queue / einen Work-Stealing-Pool gegenüber Sharding per Hash.
+  Head-of-Line-Blocking in den getrennten Spuren. Das spricht für eine gemeinsame
+  Queue oder einen Work-Stealing-Pool statt Sharding per Hash.
 -->
 
 ---
@@ -525,11 +525,11 @@ hideInToc: true
 
 In einer Kette abhängiger Services wandert der Engpass (Goldratt, Theory of Constraints).
 
-Ohne Überschusskapazität kann der Puffer nicht wieder aufgefüllt werden, bevor die nächste Schwankung kommt → **Starvation kaskadiert downstream**.
+Ohne Überschusskapazität füllt sich der Puffer nicht wieder, bevor die nächste Schwankung kommt. **Starvation kaskadiert downstream.**
 
 <PipelineViz />
 
-**Excess Capacity (~20% Headroom) ist keine Verschwendung, sondern Systemanforderung.**
+**Excess Capacity (~20 % Headroom) ist eine Systemanforderung, keine Verschwendung.**
 
 ---
 hideInToc: true
@@ -539,30 +539,30 @@ hideInToc: true
 
 Mit Backpressure verhalten sich Queues wie Federn: komprimierbar, mit Rückstellkraft.
 
-**Zentrale Asymmetrie**: Oszillation kann nicht über 100% Kapazität hinaus ausgleichen, aber beliebig weit darunter fallen → reduzierter effektiver Durchsatz.
+**Asymmetrie**: Oszillation gleicht nicht über 100 % Kapazität hinaus aus, fällt aber beliebig weit darunter. Der effektive Durchsatz sinkt.
 
 ### Steady Flow statt Batch-Peaks
 
-| Anti-Pattern                                  | Pattern                                       |
-| --------------------------------------------- | --------------------------------------------- |
-| Cronjob refresht alle Cache-Keys gleichzeitig | Cache-Refresh mit Jitter (TTL + random 0–60s) |
-| Batch-Import: 10.000 Quotes auf einmal        | Rate-Limiter: Leaky Bucket                    |
-| HPA skaliert 10 Pods gleichzeitig hoch        | Staggered Rollout (maxSurge: 1)               |
-| Retry-Storm nach Upstream-Recovery            | Exponential Backoff mit Jitter                |
+| Anti-Pattern                                  | Pattern                                        |
+| --------------------------------------------- | ---------------------------------------------- |
+| Cronjob refresht alle Cache-Keys gleichzeitig | Cache-Refresh mit Jitter (TTL + random 0–60 s) |
+| Batch-Import: 10.000 Quotes auf einmal        | Rate-Limiter: Leaky Bucket                     |
+| HPA skaliert 10 Pods gleichzeitig hoch        | Staggered Rollout (maxSurge: 1)                |
+| Retry-Storm nach Upstream-Recovery            | Exponential Backoff mit Jitter                 |
 
 ---
 hideInToc: true
 routeAlias: hysterese
 ---
 
-# Hysterese: Warum Systeme nach Überlast „kleben“
+# Hysterese: warum Systeme nach Überlast „kleben“
 
 <style>
 table { font-size: 0.8em; }
 table td, table th { padding-top: 0.28em; padding-bottom: 0.28em; }
 </style>
 
-Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden wenn die externe Last sinkt:
+Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden, wenn die externe Last sinkt:
 
 | Mechanismus                      | Feedback-Loop                                                                                                                |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -607,13 +607,13 @@ hideInToc: true
 
 # Back-Pressure als Regelkreise
 
-Zwei Achsen entscheiden über Monitorbarkeit und Hysterese — **Gedächtnis** (Pegel vs. Momentanrate) und **Bremsform** (binär vs. proportional):
+Zwei Achsen bestimmen Monitorbarkeit und Hysterese: **Gedächtnis** (Pegel vs. Momentanrate) und **Bremsform** (binär vs. proportional):
 
 <div class="bpq-layout">
 <div class="bpq-diagram"><BackpressureQuadrant /></div>
 <div class="bpq-explain">
 <Callout tone="info" dense>
-<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger) — gewollt als Anti-Flattern (Galera <code>fc_factor</code> &lt; 1, Grafana Recovery Threshold).
+<strong>Hysterese = Integrator + Doppelschwelle.</strong> Entsteht dort, wo ein gedächtnisbehafteter Mechanismus getrennte Set-/Reset-Schwellen hat (Schmitt-Trigger), gewollt gegen Flapping (Galera <code>fc_factor</code> &lt; 1, Grafana Recovery Threshold).
 </Callout>
 <Callout tone="danger" dense>
 <strong>Metastabiler Fehler.</strong> Wird die „Bremse“ eine positive Rückkopplung (super-linear), bleibt das System nach der Lastspitze überlastet — effektiv unendliche Hysterese. Rückkehr nur via Load-Shedding/Drain/Restart.
@@ -710,11 +710,11 @@ hideInToc: true
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
 <Callout tone="danger">
 <h4 style="color: #ef4444; margin: 0 0 8px;">Naiver Alert</h4>
-<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">"P99 > 500ms" feuert beim Hinaufgehen und resolved beim Heruntergehen. Bei 500ms auf dem Rückweg ist das System noch degradiert. Erzeugt Flapping.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">"P99 > 500ms" feuert beim Anstieg und resolved beim Absinken. Bei 500 ms ist das System noch degradiert. Folge: Flapping.</p>
 </Callout>
 <Callout tone="success">
 <h4 style="color: #22c55e; margin: 0 0 8px;">Mit Recovery Threshold</h4>
-<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Feuert bei P99 > 500ms, resolved erst bei P99 < 200ms. Asymmetrische Schwellen verhindern Flapping und stellen sicher, dass das System wirklich erholt ist.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Feuert bei P99 > 500 ms, resolved erst bei P99 < 200 ms. Asymmetrische Schwellen verhindern Flapping und belegen die Erholung.</p>
 </Callout>
 </div>
 
@@ -741,7 +741,7 @@ hideInToc: true
 
 # Phasenraum-Diagnose: XY Chart
 
-Statt zwei Metriken gegen die Zeit zu plotten, plottet man sie **gegeneinander** (X-Y). Die Trajektorie zeigt die Hysterese-Schleife.
+Plotte zwei Metriken **gegeneinander** (X-Y) statt gegen die Zeit. Die Trajektorie zeigt die Hysterese-Schleife.
 
 | Kombination        | X-Achse      | Y-Achse          | Erkenntnis                                      |
 | ------------------ | ------------ | ---------------- | ----------------------------------------------- |
@@ -749,7 +749,7 @@ Statt zwei Metriken gegen die Zeit zu plotten, plottet man sie **gegeneinander**
 | Rate vs. Errors    | Request-Rate | Error-Rate       | Ab welcher Rate beginnen Errors?                |
 | Cache vs. Upstream | Hit-Ratio    | Upstream-Calls/s | Cache-Miss-Amplification sichtbar               |
 
-**Praxis-Tipp**: XY Charts sind für Post-Incident-Reviews. Zeitbereich auf die Incident-Dauer setzen. Die eingeschlossene Fläche quantifiziert den Recovery-Verlust.
+**Praxis-Tipp**: XY Charts eignen sich für Post-Incident-Reviews. Setze den Zeitbereich auf die Incident-Dauer. Die eingeschlossene Fläche quantifiziert den Recovery-Verlust.
 
 ---
 layout: section
@@ -780,7 +780,7 @@ hideInToc: true
       — Lew Tolstoi, <em>Anna Karenina</em> (1878), Teil I, Kap. 1 · Übers. R. Tietze (2009) · Begriff „Anna-Karenina-Prinzip“: J. Diamond, <em>Guns, Germs, and Steel</em> (1997)
     </p>
     <p style="margin: 0; line-height: 1.4;">
-      <strong>Glück hat eine Form, Unglück viele.</strong> Auf dem Haupt-Dashboard nicht alle Fehlerklassen auflisten — zeige <em>einen</em> Indikator: Ist der Service glücklich aus Sicht von End-Nutzern und SLOs?
+      <strong>Glück hat eine Form, Unglück viele.</strong> Liste auf dem Haupt-Dashboard nicht alle Fehlerklassen auf. Zeige <em>einen</em> Indikator: Ist der Service aus Sicht der Endnutzer und SLOs glücklich?
     </p>
   </Callout>
 
@@ -813,11 +813,11 @@ hideInToc: true
 - Bedienung: links Ebene L1–L4 anklicken — rechts erscheint das
   Beispiel-Layout der Ebene (Panels, Dashboard-Links, Methoden-Badge).
   Alternativ unten der „Drill-Down“-Button für die nächste Ebene.
-- Zeigen: L1 Platform Overview — genau eine Ampel (Anna-Karenina /
+- Zeigen: L1 Platform Overview — genau eine Ampel (Anna Karenina und
   Segal's Law von eben), dann L2 → L3 als Drill-Down-Pfad durchklicken.
 - Hinweis: pro Ebene wechselt die Methode — L1/L2 RED bzw. Golden
   Signals (User-Sicht), L3/L4 USE (Ressourcen-Sicht). Links unten der
-  Sizing-Spickzettel fürs 24-Spalten-Grid.
+  Sizing-Spickzettel für das 24-Spalten-Grid.
 -->
 
 ---
@@ -895,7 +895,7 @@ hideInToc: true
 
 # Loki für Logs (LogQL)
 
-Labels beschreiben die **Quelle**, nicht den Inhalt. `trace_id`, `user_id` → Structured Metadata (Loki 3.0+).
+Labels beschreiben die **Quelle**, nicht den Inhalt. `trace_id` und `user_id` gehören in Structured Metadata (Loki 3.0+).
 
 ```logql
 # Fehler-Logs eines Services
@@ -908,7 +908,7 @@ sum by (app) (rate({namespace="production"} |= "error" [5m]))
 {app="quote-service"} |~ "(?i)(NullPointerException|OutOfMemoryError|TimeoutException)"
 ```
 
-**Performance**: Von links nach rechts filtern. String-Filter (`|=`) > Regex (`|~`) > Parser (`| json`).
+**Performance**: Schnellste Filter zuerst: String-Filter (`|=`), dann Regex (`|~`), dann Parser (`| json`).
 
 ---
 hideInToc: true
@@ -938,7 +938,7 @@ Erzeugt automatisch RED-Metriken aus Spans:
 hideInToc: true
 ---
 
-# Korrelation: Der Drill-Down-Workflow
+# Korrelation: der Drill-Down-Workflow
 
 <DrillDownWorkflow />
 
@@ -958,9 +958,9 @@ prometheus.remote_write "default" {
 hideInToc: true
 ---
 
-# OpenTelemetry Instrumentierung
+# OpenTelemetry-Instrumentierung
 
-### Zero-Code mit Java Agent
+### Zero-Code mit Java-Agent
 
 ```bash
 java -javaagent:opentelemetry-javaagent.jar \
@@ -1069,7 +1069,7 @@ Begriff: Nassim N. Taleb, <i>Antifragile</i> (2012) · Selbstverbessernde Agente
   dass Software ihren eigenen Lernschritt (Analyse → Fix) automatisieren
   kann. Chaos Engineering war die menschliche Vorstufe.
 - Das Gate ist der kritische Teil: ohne Review, Tests und SLO-Prüfung
-  macht der Agent aus einer Lernschleife eine Verstärkung von Fehlern.
+  verstärkt der Agent Fehler, statt zu lernen.
 - Brücke zur nächsten Sektion: Der Agent optimiert, was wir ihm als Signal
   geben. Was, wenn das Signal nicht das Ziel ist?
 -->
@@ -1093,16 +1093,16 @@ hideInToc: true
 >
 > — Marilyn Strathern (1997), nach Charles Goodhart (1975)
 
-Ein Agent optimiert extrem gut: Er findet die Lücke zwischen **A** (Metrik) und **B** (Ziel) schneller als ein Team. Vier Varianten nach Manheim & Garrabrant (2018):
+Ein Agent findet die Lücke zwischen **A** (Metrik) und **B** (Ziel) schneller als ein Team. Vier Varianten nach Manheim & Garrabrant (2018):
 
 <div style="font-size: 0.78em;">
 
-| Variante         | Mechanismus                             | Beispiel aus dem Monitoring                            |
-| ---------------- | --------------------------------------- | ------------------------------------------------------ |
-| **Regressional** | Auswahl nach Proxy wählt auch Rauschen  | „Bester“ Provider im Messfenster: oft nur Glück        |
-| **Extremal**     | Zusammenhang trägt nur im Normalbereich | Hit-Ratio 99 % per langer TTL, dafür alte Tarife       |
-| **Kausal**       | Eingriff am Proxy statt an der Ursache  | Schwellwert anheben: weniger Alarme, gleiche Störungen |
-| **Adversarial**  | Optimierer hat Anreiz zur Manipulation  | Agent entfernt das Logging seiner Prüffunktion         |
+| Variante         | Mechanismus                              | Beispiel aus dem Monitoring                            |
+| ---------------- | ---------------------------------------- | ------------------------------------------------------ |
+| **Regressional** | Auswahl nach Proxy belohnt auch Rauschen | „Bester“ Provider im Messfenster: oft nur Glück        |
+| **Extremal**     | Zusammenhang trägt nur im Normalbereich  | Hit-Ratio 99 % per langer TTL, dafür alte Tarife       |
+| **Kausal**       | Eingriff am Proxy statt an der Ursache   | Schwellwert anheben: weniger Alarme, gleiche Störungen |
+| **Adversarial**  | Optimierer hat Anreiz zur Manipulation   | Agent entfernt das Logging seiner Prüffunktion         |
 
 </div>
 
@@ -1159,8 +1159,8 @@ hideInToc: true
   Listfield (2017): 0,5 % der kleinen, 1,6 % der mittleren, 14 % der großen
   Tests. Das sind verschiedene Einheiten, nicht eine Rate. Luo et al.
   (FSE 2014): flaky heißt nicht automatisch „kein Produktfehler“.
-- Ehrlich dazu: Dass ein Coverage-Ziel Flaky-Rate oder CI-Dauer erhöht,
-  hat keine Studie gemessen. Das ist die Befürchtung, nicht der Befund.
+- Offen: Keine Studie hat gemessen, ob ein Coverage-Ziel Flaky-Rate oder
+  CI-Dauer erhöht. Das ist die Befürchtung, nicht der Befund.
 - Produktionsregressionen: Kaner & Bond (METRICS 2004) zu Bug-Zahlen als
   Maß; Chillarege et al., ODC (IEEE TSE 1992): Felddefekte kommen „so
   late in the development cycle“, Ursachenanalyse ist der Nutzen. Normiert:
@@ -1218,7 +1218,7 @@ hideInToc: true
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; font-size: 0.85em;">
 <Callout tone="info">
-<b>Gegenmetrik koppeln.</b> Jede Metrik, die optimiert wird, bekommt ein Gegengewicht: Hit-Ratio ↔ Alter der Daten, weniger Alerts ↔ unentdeckte Störungen, niedrigere Limits ↔ CPU-Throttling. (Idee: Andy Grove, <i>High Output Management</i>)
+<b>Gegenmetrik koppeln.</b> Jede Zielmetrik bekommt ein Gegengewicht: Hit-Ratio ↔ Alter der Daten, weniger Alerts ↔ unentdeckte Störungen, niedrigere Limits ↔ CPU-Throttling. (Idee: Andy Grove, <i>High Output Management</i>)
 </Callout>
 <Callout tone="success">
 <b>Am Nutzerpfad messen.</b> Vollständige Quotes und Conversion-Rate statt Probe und Statuscode — die Perspektive aus „Errors ≠ Errors“.
@@ -1227,7 +1227,7 @@ hideInToc: true
 <b>Verteilung statt Mittelwert, Aufschlüsselung statt Summe.</b> P99 statt Durchschnitt, <code>by (clientName)</code> statt globaler Rate.
 </Callout>
 <Callout tone="danger">
-<b>Holdout und Schreibschutz.</b> Prüffunktionen und Musterlösungen vor dem Agenten verbergen, Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar. Auf SWE-Bench Pro las der Agent die Musterlösung aus der sichtbaren Git-Historie.
+<b>Holdout und Schreibschutz.</b> Prüffunktionen und Musterlösungen vor dem Agenten verbergen. Alert-Regeln, Tests und Metrikdefinitionen nur per Review ändern. Auf SWE-Bench Pro las der Agent die Musterlösung aus der sichtbaren Git-Historie.
 </Callout>
 </div>
 
@@ -1257,9 +1257,9 @@ hideInToc: true
 
 ### Drei Regeln aus der Systemdynamik
 
-1. **Excess Capacity ist Pflicht** — ~20% Headroom für Puffer-Recovery
+1. **Excess Capacity ist Pflicht** — ca. 20 % Headroom für Puffer-Recovery
 2. **Gleichmäßiger Flow statt Batches** — TTL+Jitter, Leaky Bucket, Staggered Rollout
-3. **Hysterese einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Backing-Service-Flow-Control (Galera/RabbitMQ/InnoDB) ist Symptom fehlender Kapazität — metastabilen Kollaps via Load-Shedding _vor_ der Komponente brechen
+3. **Hysterese einplanen** — Recovery Threshold (Set ≠ Reset), XY Charts für Post-Incident; Flow-Control im Backing Service (Galera, RabbitMQ, InnoDB) signalisiert fehlende Kapazität; Load-Shedding _vor_ der Komponente bricht den metastabilen Kollaps
 
 </div>
 <div>
@@ -1295,7 +1295,7 @@ hideInToc: true
 
 # Pyroscope: Continuous Profiling für LGTM
 
-Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tempo. **Mimir/Loki/Tempo zeigen WAS und WO — Pyroscope zeigt WELCHE Funktion** mit Hilfe von Flame Graphs.
+Multi-tenant, horizontal skalierbar — gleiche Architektur wie Mimir, Loki, Tempo. **Mimir, Loki und Tempo zeigen, was und wo. Pyroscope zeigt, welche Funktion** – im Flame Graph.
 
 <ProfilingMethods />
 
@@ -1309,7 +1309,7 @@ hideInToc: true
 
 # Flame Graphs lesen — vom Sample zur Hot Function
 
-Pyroscope visualisiert die gesammelten Daten als _Flame Graph_, wie im folgenden **interaktiven** Beispiel:
+Pyroscope zeigt die Daten als _Flame Graph_ (**interaktives** Beispiel):
 
 <div style="display: grid; grid-template-columns: 1.25fr 1fr; gap: 14px; margin-top: 0.3em; font-size: 0.82em; line-height: 1.4;">
 
@@ -1318,7 +1318,7 @@ Pyroscope visualisiert die gesammelten Daten als _Flame Graph_, wie im folgenden
 <div>
 
 - **Y**: Stack-Tiefe (unten Einstieg, oben Leaf auf der CPU)
-- **X**: Samples alphabetisch — **keine Zeit-Achse**
+- **X**: Samples alphabetisch — **keine Zeitachse**
 - **Breite**: Anteil der CPU-Samples → der Hot Path
 - **Farben**: bewusst zufällig, keine Semantik
 - „Breit = teuer“ stimmt, „schmal = unwichtig“ stimmt **nicht**
@@ -1353,17 +1353,17 @@ java -javaagent:pyroscope.jar \
   -jar quote-service.jar
 ```
 
-JFR aktiviert CPU + Allocation + Lock gleichzeitig (async-profiler unter der Haube). Alternative ohne Code-Änderung: eBPF-Auto-Instrumentation via Grafana Alloy.
+JFR aktiviert CPU + Allocation + Lock gleichzeitig (async-profiler unter der Haube). Alternative ohne Änderung am Startkommando: eBPF-Auto-Instrumentation via Grafana Alloy.
 
 </div>
 
 <div>
 
-### Span Profiles: Drill-Down erweitert auf 4 Schritte
+### Span Profiles: Drill-Down mit vier Schritten
 
 <DrillDownWorkflow variant="pyroscope" />
 
-Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die Samples, die _während_ dieses Spans gesammelt wurden.
+Verlinkung über OTel-Span-Attribut `pyroscope.profile.id` — pro Span nur die Samples aus seiner Laufzeit.
 
 </div>
 
@@ -1409,10 +1409,10 @@ Stand Mitte 2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ Ope
 - Kernbotschaft: kein Entweder-oder. Sentry schaut aus der App heraus
   (Exceptions, Releases, User-Sessions), LGTM auf die Plattform
   (Metriken, SLOs, Cluster).
-- Klick-Demo 1: Sentry × „Metriken & SLO/Burn-Rate" — Custom-Metrics-Beta
+- Klick-Demo 1: Sentry × „Metriken & SLO/Burn-Rate“ — Custom-Metrics-Beta
   10/2024 eingestellt, neue Application Metrics erst Open Beta, kein
   OTLP-Metrics-Ingest, kein natives Burn-Rate-Alerting.
-- Klick-Demo 2: Sentry × „K8s" — sentry-kubernetes (Beta) macht aus
+- Klick-Demo 2: Sentry × „K8s“ — sentry-kubernetes (Beta) macht aus
   K8s-Events Sentry-Errors, mehr nicht.
 -->
 
@@ -1425,15 +1425,15 @@ hideInToc: true
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 1em 0;">
 <Callout tone="info">
 <h4 style="color: #3b82f6; margin: 0 0 8px;">Offiziell komplementär</h4>
-<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Grafana Labs pflegt die <b>Sentry-Datasource</b> (v2.x): Issues, Events, Spans und Stats direkt neben Mimir-Metriken im Dashboard. Sentry wirbt selbst für die Kopplung mit Prometheus-Infrastrukturdaten — „You don't need to pick one".</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Grafana Labs pflegt die <b>Sentry-Datasource</b> (v2.x): Issues, Events, Spans und Stats direkt neben Mimir-Metriken im Dashboard. Sentry wirbt selbst für die Kopplung mit Prometheus-Infrastrukturdaten: „You don't need to pick one“.</p>
 </Callout>
 <Callout tone="success">
 <h4 style="color: #22c55e; margin: 0 0 8px;">Arbeitsteilung bei Tickets</h4>
-<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Sentry</b>: Alert Rules legen pro Issue automatisch Jira-/GitHub-Tickets an — mit Stacktrace, Release, Two-Way-Sync. <b>LGTM</b>: Die Burn-Rate-Policy liefert die „Aufgabe (Ticket)“-Lane — SLO-getrieben statt exception-getrieben.</p>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;"><b>Sentry</b>: Alert Rules legen pro Issue automatisch Jira-/GitHub-Tickets an, mit Stacktrace, Release, Two-Way-Sync. <b>LGTM</b>: Die Burn-Rate-Policy liefert die „Aufgabe (Ticket)“-Lane: SLO-getrieben statt exception-getrieben.</p>
 </Callout>
 </div>
 
-**Faustregel**: LGTM alarmiert auf Symptom & SLO — Sentry gruppiert die Ursache im Code und hängt das Ticket dran. Natives SLO-/Burn-Rate-Alerting hat Sentry nicht; diese Lücke schließt der LGTM-Stack.
+**Faustregel:** LGTM alarmiert auf Symptom und SLO; Sentry gruppiert die Ursache im Code und hängt das Ticket dran.
 
 <div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
 Burn-Rate-Policy zum Ausprobieren: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref>
@@ -1458,7 +1458,7 @@ hideInToc: true
 
 Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs · Sentry Docs · Strathern (1997) · Manheim & Garrabrant (2018) · Taleb (2012) · Darwin Gödel Machine (2025)
 
-Alle Simulationen zum Selbst-Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
+Alle Simulationen zum Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
 
 ---
 layout: default
@@ -1471,9 +1471,9 @@ hideInToc: true
 <GrafanaQuiz />
 
 <!--
-- Hinter der End-Slide: Selbststudium nach dem Vortrag. Adaptiv — startet
+- Hinter der End-Folie: Selbststudium nach dem Vortrag. Adaptiv — startet
   mittel, passt sich der Antwortqualität an.
 - Fragenpool via Web-Recherche + Fable-Generierung + adversariale Auswahl;
   steht thematisch allein (keine Transfer-Sektion, dafür „Dashboard-
-  Architektur"), Schwellwert-Fragen sind bewusst depends-lastig.
+  Architektur“), Schwellwert-Fragen sind bewusst kontextabhängig.
 -->

@@ -6,7 +6,7 @@
 // erhöht — keine Studie misst das, es ist die Befürchtung. „Viele Tests je
 // Änderung“ bei Agenten ist Praxiserfahrung; in GitHub-Daten fassen Agenten nur
 // in etwa 40–50 % ihrer PRs Tests an (arXiv 2601.21194, 2607.18057). Belegt ist
-// das schwache Signal „grün“: rund die Hälfte der test-bestandenen SWE-bench-
+// das schwache Signal „grün“: rund die Hälfte der testbestandenen SWE-bench-
 // PRs hätten Maintainer nicht gemergt (METR, 10.03.2026; die Tests stammen dort
 // von Menschen). „Eigenes Beispiel“ ist die Berechtigungsprüfung, nicht Google.
 import { computed } from "vue";
@@ -50,14 +50,14 @@ const rows = [
   },
   {
     agent: true,
-    fear: "Viele neue Tests je Änderung, alle grün — und das Ergebnis fällt trotzdem durch die QA",
+    fear: "Viele neue Tests je Änderung, alle grün, und das Ergebnis fällt trotzdem durch die QA",
     counter: "Abnahme außerhalb des Agenten-Loops",
     detail:
       "fachliche Prüfung, Mutation Score auf dem Diff, Tests nur per Review änderbar",
     info: {
       id: "agent",
       title: "Grün ist ein schwaches Signal",
-      text: "Rund die Hälfte der test-bestandenen SWE-bench-PRs hätten Maintainer nicht gemergt (METR, 2026; die Tests stammen dort von Menschen). Agenten passen Tests auch an: Claude 3.7 Sonnet System Card (2025) beschreibt Special-Casing; in ImpossibleBench (2025) brachte GPT-5 unlösbare Aufgaben in 54 % der Fälle auf Grün. „Viele Tests je Änderung“ ist unsere Erfahrung, keine Studienlage.",
+      text: "Rund die Hälfte der testbestandenen SWE-bench-PRs hätten Maintainer nicht gemergt (METR, 2026; die Tests stammen dort von Menschen). Agenten passen Tests auch an: Claude 3.7 Sonnet System Card (2025) beschreibt Special-Casing; in ImpossibleBench (2025) brachte GPT-5 unlösbare Aufgaben in 54 % der Fälle auf Grün. „Viele Tests je Änderung“ ist unsere Erfahrung, keine Studienlage.",
     },
   },
 ];

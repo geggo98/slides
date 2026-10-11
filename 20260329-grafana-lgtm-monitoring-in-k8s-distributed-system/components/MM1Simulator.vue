@@ -104,19 +104,19 @@ const HELP = {
   kantine:
     "Gäste kommen links an (Rate λ), warten in der Schlange, werden vom einen 🧑‍🍳 bedient (Rate μ) und gehen rechts. Essen-Emoji = Bedienlänge (🍎 kurz … 🍱 lang), „Xs“ = Restzeit am Koch, „+N“ = zusätzlich Wartende über die gezeichneten hinaus. Die cyan gestrichelte Marke „Lq≈“ ist die theoretische mittlere Schlangenlänge ρ²/(1−ρ).",
   scope:
-    "Wartezeit Wq über der Auslastung ρ. Cyan Kurve = Theorie ρ/(1−ρ) (glatt — keine Klippe bei 80 %!), leuchtender Punkt = aktueller Messwert bei deinem ρ, mit nachleuchtender Spur. Bei ρ≥1 verlässt er das Feld nach oben — kein Gleichgewicht.",
+    "Wartezeit Wq über der Auslastung ρ. Cyan Kurve = Theorie ρ/(1−ρ) (glatt, keine Klippe bei 80 %), leuchtender Punkt = aktueller Messwert bei deinem ρ, mit nachleuchtender Spur. Bei ρ≥1 verlässt er das Feld nach oben: kein Gleichgewicht.",
   settle:
-    "Wie weit das System seit der letzten Parameteränderung eingependelt ist, gemessen in bedienten Kunden gegen ~3τ (Relaxationszeit). τ wächst dramatisch nahe ρ=1: ρ=0,9 ≈ 340 Kunden, 0,95 ≈ 1500. Voller Balken ≈ praktisch eingeschwungen; die Amber-Marke ist 1τ (≈63 %).",
+    "Wie weit das System seit der letzten Parameteränderung eingependelt ist, gemessen in bedienten Gästen gegen ~3τ (Relaxationszeit). τ wächst dramatisch nahe ρ=1: ρ=0,9 ≈ 340 Kunden, 0,95 ≈ 1500. Voller Balken ≈ praktisch eingependelt; die Amber-Marke ist 1τ (≈63 %).",
   "g-rho":
     "Anteil der Zeit, in der der Koch beschäftigt ist (gemessen). Bogen = Messung, cyan Strich = Sollwert ρ = λ/μ. Bei ρ<1 pendelt sich der Bogen auf den Strich ein.",
   "g-thr":
-    "Tatsächlich bediente Gäste pro Sekunde (gemessen). Im Gleichgewicht (ρ<1) gleich der Ankunftsrate λ — der Koch schafft genau das, was reinkommt. Strich = ρ als Anteil der Kapazität μ.",
+    "Tatsächlich bediente Gäste pro Sekunde (gemessen). Im Gleichgewicht (ρ<1) gleich der Ankunftsrate λ. Der Koch schafft genau das, was ankommt. Strich = ρ als Anteil der Kapazität μ.",
   "g-wq":
     "Mittlere reine Wartezeit vor der Bedienung, in Vielfachen einer Bedienzeit (×Bed.). Strich = Theorie ρ/(1−ρ). Hyperbolisch: ρ=0,8 → 4×, 0,9 → 9×, 0,95 → 19×. Bei hohem ρ schwankt der Messwert stark.",
   "g-n":
     "Momentane Anzahl Gäste im System (wartend + in Bedienung). Strich = Theorie-Mittelwert L = ρ/(1−ρ) (Little). Die Zahl springt; der Strich ist der Langzeitschnitt.",
   "g-little":
-    "Konsistenztest λ·W / L. Muss gegen 1,0 gehen, wenn die Simulation korrekt misst — Abweichung heißt nur: noch nicht genug Daten (oder ρ≥1, kein Gleichgewicht). Kein Parameter, sondern ein Selbsttest.",
+    "Konsistenztest λ·W / L. Muss gegen 1,0 gehen, wenn die Simulation korrekt misst. Abweichung heißt nur: noch nicht genug Daten (oder ρ≥1, kein Gleichgewicht). Kein Parameter, sondern ein Selbsttest.",
 };
 
 const gauges = computed(() => {
@@ -170,7 +170,7 @@ const gauges = computed(() => {
       frac: 1,
       markFrac: 1,
       color: littleOk.value ? C.value.phosphor : C.value.amber,
-      sub: "→ 1.0 ✓",
+      sub: "→ 1,0 ✓",
     },
   ];
 });
@@ -667,7 +667,7 @@ onUnmounted(() => {
       >
         <div class="panel-head">
           <span class="panel-title" :style="{ color: C.textMid }">
-            Phosphor-Scope · Wq(ρ) —
+            Phosphor-Scope · Wq(ρ):
             <span :style="{ color: C.theory }">Theorie</span> +
             <span :style="{ color: C.phosphor }">Live</span>
           </span>
@@ -705,7 +705,7 @@ onUnmounted(() => {
             <div class="settle-row">
               <span class="settle-left">
                 Einschwingen {{ settle.done ? "✓" : "" }} ·
-                {{ settle.served }} / ~{{ settle.target }} Kunden (3τ)
+                {{ settle.served }} / ~{{ settle.target }} Gäste (3τ)
                 <InfoPopover
                   id="settle"
                   :active-id="info"
@@ -739,9 +739,9 @@ onUnmounted(() => {
     </div>
 
     <div class="footnote" :style="{ color: C.textLow }">
-      Kantine = Illustration; Scope, Gauges &amp; Balken = quantitative
-      Wahrheit. λ bewegen: der Punkt springt seitlich (neues ρ) und
-      <em>klettert</em> zur Kurve. Erst ab ρ≥1 verlässt er das Feld nach oben —
+      Die Kantine illustriert nur. Scope, Gauges und Balken zeigen die
+      Messwerte. λ bewegen: der Punkt springt seitlich (neues ρ) und
+      <em>klettert</em> zur Kurve. Erst ab ρ≥1 verlässt er das Feld nach oben:
       kein Gleichgewicht.
     </div>
   </div>

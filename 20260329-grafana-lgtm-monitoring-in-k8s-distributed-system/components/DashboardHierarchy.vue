@@ -414,7 +414,7 @@ const LEVELS = [
 const METHOD_MAPPING = {
   1: {
     methods: ["RED"],
-    note: "Alle 3 Signale aggregiert: Rate, Errors, Durations. Saturation kommt meist erst auf der nächsten Detailstufe.",
+    note: "Alle 3 Signale aggregiert: Rate, Errors, Duration. Saturation kommt meist erst auf der nächsten Detailstufe.",
   },
   2: {
     methods: ["RED", "Golden Signals"],
@@ -693,7 +693,9 @@ const heatmapCells = Array.from({ length: 30 }, (_, i) => {
                         GESUND
                       </div>
                       <div class="hero-slo">
-                        99.92%<span class="hero-slo-target"> / 99.9% Ziel</span>
+                        99,92 %<span class="hero-slo-target">
+                          / 99,9 % Ziel</span
+                        >
                       </div>
                     </div>
                   </div>

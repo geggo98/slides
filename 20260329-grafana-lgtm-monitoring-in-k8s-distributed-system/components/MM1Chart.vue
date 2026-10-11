@@ -242,8 +242,8 @@ const gridFracs = [2, 5, 10];
       />
     </svg>
     <div class="mm1-caption" :style="{ color: C.muted }">
-      Response-Time = Service-Time / (1 - Utilization). Bei 50%: 2x, bei 80%:
-      5x, bei 90%: 10x. Die Kurve biegt ab ~70% merklich, wird ab 80% steil.
+      Response-Time = Service-Time / (1 - Utilization). Bei 50%: 2×, bei 80%:
+      5×, bei 90%: 10×. Die Kurve biegt ab ~70% merklich, wird ab 80% steil.
       Hover für Werte.
     </div>
   </div>

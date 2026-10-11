@@ -89,7 +89,7 @@ const useSignals = computed(() => [
     name: "Saturation",
     desc: "Grad der Warteschlange. Arbeit, die auf Verarbeitung wartet: CPU-Runqueue, HikariCP-Pending, Disk-I/O-Queue.",
     detail:
-      "Warteschlangentheorie (M/M/1): Ab ~70\u201380% Utilization steigt Wartezeit \u00FCberproportional. Bei 90%: Response-Time = 10\u00D7 Service-Time.",
+      "Warteschlangentheorie (M/M/1): Ab ~70\u201380% Utilization steigt die Wartezeit \u00FCberproportional. Bei 90%: Response-Time = 10\u00D7 Service-Time.",
     accent: C.value.yellow,
     color: C.value.yellowDim,
   },
@@ -187,7 +187,7 @@ const xyCharts = computed(() => [
     x: 'avg(rate(container_cpu_usage_seconds_total{pod=~"quote.*"}[5m]))',
     y: "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))",
     insight:
-      "Zeigt den Knickpunkt, ab dem CPU die Latenz \u00FCberproportional treibt. Hysterese sichtbar wenn Latenz nach Last-Reduktion nicht auf den gleichen Pfad zur\u00FCckkehrt.",
+      "Zeigt den Knickpunkt, ab dem CPU die Latenz \u00FCberproportional treibt. Hysterese sichtbar, wenn Latenz nach Last-Reduktion nicht auf den gleichen Pfad zur\u00FCckkehrt.",
     color: C.value.orange,
   },
   {
@@ -300,7 +300,7 @@ data:
             margin: 0,
           }"
         >
-          Drei komplement&auml;re Methoden, ihre Zusammenh&auml;nge, und die
+          Drei komplement&auml;re Methoden, ihre Zusammenh&auml;nge und die
           Monitoring-Praxis: Schwellwerte, Hysterese-Alerting und
           Phasenraum-Diagnose.
         </p>
@@ -313,7 +313,7 @@ data:
         v-model="activeTab"
         class="mm-tabs"
         :tabs="tabs"
-        aria-label="Monitoring-Methodologien — Ansichten"
+        aria-label="Monitoring-Methodologien: Ansichten"
       />
 
       <!-- Overview Tab -->
@@ -496,10 +496,9 @@ data:
               <div
                 :style="{ fontSize: '7.7px', color: C.muted, lineHeight: 1.5 }"
               >
-                RED beantwortet: &lsquo;Sind meine User happy?&rsquo; Kein Blick
+                RED beantwortet: &bdquo;Sind meine User happy?&ldquo; Kein Blick
                 auf Infrastruktur. Wenn alle RED-Signale gut sind, aber CPU bei
-                95% liegt, sieht RED das nicht &mdash; daf&uuml;r braucht man
-                USE.
+                95% liegt, sieht RED das nicht, daf&uuml;r braucht man USE.
               </div>
             </div>
           </MethodBox>
@@ -538,7 +537,7 @@ data:
               >
                 USE beantwortet: &bdquo;Ist die Infrastruktur der
                 Engpass?&ldquo; Kein Blick auf User-Experience. Wenn CPU bei 20%
-                liegt aber Error-Rate bei 30%, sieht USE kein Problem &mdash;
+                liegt, aber Error-Rate bei 30%, sieht USE kein Problem,
                 daf&uuml;r braucht man RED.
               </div>
             </div>
@@ -626,8 +625,8 @@ data:
             }"
           >
             Faustregel aus der Warteschlangentheorie (M/M/1): ab ~80%
-            Utilization steigt die Wartezeit &uuml;berproportional. Bei 80%: 5x
-            Service-Time, bei 90%: 10x. Details und interaktive Simulation im
+            Utilization steigt die Wartezeit &uuml;berproportional. Bei 80%: 5×
+            Service-Time, bei 90%: 10×. Details und interaktive Simulation im
             Systemdynamik-Simulator.
           </div>
           <div
@@ -757,10 +756,10 @@ data:
               <div
                 :style="{ fontSize: '7.7px', color: C.muted, lineHeight: 1.5 }"
               >
-                &ldquo;P99 Latenz &gt; 500ms&rdquo; feuert beim Hinaufgehen und
+                &bdquo;P99 Latenz &gt; 500ms&ldquo; feuert beim Hinaufgehen und
                 resolved beim Heruntergehen. Ignoriert, dass das System bei
-                500ms auf dem R&uuml;ckweg noch degradiert ist. Erzeugt Flapping
-                wenn die Metrik um die Schwelle pendelt.
+                500ms auf dem R&uuml;ckweg noch degradiert ist. Erzeugt
+                Flapping, wenn die Metrik um die Schwelle pendelt.
               </div>
             </div>
             <div
@@ -786,7 +785,7 @@ data:
               >
                 Feuert bei P99 &gt; 500ms, resolved erst bei P99 &lt; 200ms.
                 Asymmetrische Schwellen verhindern Flapping und stellen sicher,
-                dass das System wirklich erholt ist bevor der Alert resolved.
+                dass das System wirklich erholt ist, bevor der Alert resolved.
               </div>
             </div>
           </div>
@@ -812,10 +811,10 @@ data:
                 :style="{ fontSize: '8.4px', color: C.text, lineHeight: 1.6 }"
               >
                 Alert Rule Editor &rarr; Threshold Expression &rarr; Toggle
-                &ldquo;Custom recovery threshold&rdquo; &rarr; Wert eingeben.
-                Der Alert wechselt in den Zustand &ldquo;Recovering&rdquo; und
+                &bdquo;Custom recovery threshold&ldquo; &rarr; Wert eingeben.
+                Der Alert wechselt in den Zustand &bdquo;Recovering&ldquo; und
                 resolved erst, wenn der Recovery-Wert unterschritten wird.
-                Zus&auml;tzlich: &ldquo;Keep firing for&rdquo; h&auml;lt den
+                Zus&auml;tzlich: &bdquo;Keep firing for&ldquo; h&auml;lt den
                 Alert f&uuml;r eine konfigurierbare Dauer aktiv nach
                 Unterschreitung.
               </div>

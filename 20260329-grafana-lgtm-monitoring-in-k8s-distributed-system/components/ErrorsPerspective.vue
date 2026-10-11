@@ -73,7 +73,7 @@ const useErrors = [
             fontFamily: 'var(--slidev-code-font-family)',
           }"
         >
-          RED / Golden Signals — Errors
+          RED / Golden Signals – Errors
         </div>
         <div
           :style="{
@@ -120,7 +120,7 @@ const useErrors = [
             fontFamily: 'var(--slidev-code-font-family)',
           }"
         >
-          USE — Errors
+          USE – Errors
         </div>
         <div
           :style="{

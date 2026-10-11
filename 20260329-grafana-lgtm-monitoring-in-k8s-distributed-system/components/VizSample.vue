@@ -166,7 +166,7 @@ const label = computed(() => props.label || props.type);
       <text x="10" y="13" class="s-xs" :fill="palette.textMuted">
         SLO-Compliance
       </text>
-      <text x="10" y="38" class="s-big" :fill="color">99.7%</text>
+      <text x="10" y="38" class="s-big" :fill="color">99,7 %</text>
       <polyline
         points="10,58 30,56 50,57 70,53 90,55 110,50 130,52 150,47 170,49"
         fill="none"
@@ -387,7 +387,7 @@ const label = computed(() => props.label || props.type);
       </text>
       <line x1="8" y1="19" x2="172" y2="19" :stroke="palette.border" />
       <text x="8" y="31" class="s-sm" :fill="palette.text">
-        SLO 99.9 % · Owner: Team Orders
+        SLO 99,9 % · Owner: Team Orders
       </text>
       <text x="8" y="43" class="s-sm underline" :fill="palette.accent">
         → Eskalationspfad &amp; Runbook

@@ -25,19 +25,19 @@ const steps = computed(() => [
   {
     from: "RED",
     to: "Duration\u2191",
-    label: "P99 springt auf 2s \u2014 Problem erkannt",
+    label: "P99 springt auf 2 s: Problem erkannt",
     color: C.value.red,
   },
   {
     from: "Golden",
     to: "Saturation\u2191",
-    label: "Thread-Pool bei 95% \u2014 Engpass lokalisiert",
+    label: "Thread-Pool bei 95 %: Engpass lokalisiert",
     color: C.value.yellow,
   },
   {
     from: "USE",
     to: "CPU Throttle",
-    label: "CFS-Throttling 40% \u2014 Root Cause gefunden",
+    label: "CFS-Throttling 40 %: Root Cause gefunden",
     color: C.value.purple,
   },
 ]);

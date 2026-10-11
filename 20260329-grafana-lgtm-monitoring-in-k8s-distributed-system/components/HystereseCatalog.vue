@@ -57,7 +57,7 @@ const HYSTERESES = computed(() => [
   {
     id: "cache-stampede",
     short:
-      "Unter Last evicten/expiren Cache-Entries; sinkt die Last, ist der Cache kalt.",
+      "Unter Last gehen Cache-Einträge verloren; sinkt die Last, ist der Cache kalt.",
     name: "Cache-Stampede",
     icon: "\u26A1",
     category: "app",
@@ -85,11 +85,11 @@ const HYSTERESES = computed(() => [
       [0.08, 0.1],
     ],
     mechanism:
-      "Unter Überlast werden Cache-Entries evicted oder expiren. Wenn Last sinkt, ist der Cache kalt: jeder Request triggert einen Upstream-Call.",
+      "Unter Überlast werden Cache-Einträge verdrängt oder laufen ab. Wenn die Last sinkt, ist der Cache kalt: jeder Request triggert einen Upstream-Call.",
     whyStick:
       "Cache-Warm-Up dauert Minuten. Hit-Ratio bei 40% statt 96% hält Upstream-Last hoch, was wiederum Rate-Limiting provoziert.",
     recovery:
-      "Stale-while-revalidate Pattern. Cache-Prewarming nach Incidents. TTL-Jitter gegen synchrone Expiration.",
+      "Stale-while-revalidate-Pattern. Cache-Prewarming nach Incidents. TTL-Jitter gegen synchrone Expiration.",
     severity: "hoch",
     metrics: "cache_hit_ratio, rate(http_client_requests_seconds_count[5m])",
     brakeForm: "super-linear",
@@ -129,7 +129,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "In jeder Runtime mit Tracing-GC (JVM, V8/Node, Go, .NET) erzwingt Heap-Druck nahe dem Limit häufigere GC. GC und Anwendungscode teilen sich die CPU → Requests langsamer → Objekte leben länger und stauen → noch mehr GC.",
     whyStick:
-      "Selbstverstärkend bis CPU-Sättigung oder OOM. Bremsen unterscheiden sich: Go (mutator-assist + ~50%-CPU-Limiter) und Shenandoah (Pacer) drosseln graceful, ZGC stallt binär, V8/.NET haben kein Ventil. Python: Refcounting recycelt synchron, nur der zyklische GC brennt CPU (Asterisk).",
+      "Selbstverstärkend bis CPU-Sättigung oder OOM. Bremsen unterscheiden sich: Go (mutator-assist + ~50%-CPU-Limiter) und Shenandoah (Pacer) drosseln sanft, ZGC stallt binär, V8/.NET haben kein Ventil. Python: Refcounting recycelt synchron, nur der zyklische GC brennt CPU (Einschränkung).",
     recovery:
       "Heap/CPU-Headroom schaffen, Allokationsrate senken, Limits korrekt setzen (JVM -XX:MaxRAMPercentage, Go GOMEMLIMIT, .NET GCHeapHardLimit). Oft hilft nur Pod-Restart (Heap-Reset).",
     severity: "kritisch",
@@ -145,7 +145,7 @@ const HYSTERESES = computed(() => [
     icon: "\uD83E\uDDE9",
     category: "gc",
     color: C.value.orange,
-    x: "Allocation Rate",
+    x: "Allokationsrate",
     y: "Full-GC Frequenz",
     upPath: [
       [0.08, 0.02],
@@ -168,7 +168,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Hohe Allocation-Rate erzeugt kurzlebige Objekte in der Young Gen. Survivor-Spaces laufen über → Fragmentierung.",
     whyStick:
-      "Old-Gen-Fragmentierung bleibt nach Last-Reduktion. G1 muss viele Mixed-GC-Zyklen fahren um zu compacten.",
+      "Old-Gen-Fragmentierung bleibt nach Last-Reduktion. G1 muss viele Mixed-GC-Zyklen fahren, um zu verdichten.",
     recovery:
       "G1 statt CMS. -XX:G1HeapRegionSize tunen. Allocation-Rate reduzieren (Object Pooling für heiße Pfade).",
     severity: "mittel",
@@ -209,9 +209,9 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Alle Connections belegt. Threads blockieren auf getConnection() bis connectionTimeout (Default 30s).",
     whyStick:
-      "Drain-Time = Backlog / (Kapazität − Ankunftsrate). Connections durch Timeouts beschädigt, müssen neu aufgebaut werden.",
+      "Drain-Time = Backlog / (Kapazität − Ankunftsrate). Timeouts beschädigen Connections, sie müssen neu aufgebaut werden.",
     recovery:
-      "connectionTimeout auf 10s (Fail-Fast). leakDetectionThreshold=60000. hikaricp_connections_pending monitoren.",
+      "connectionTimeout auf 10s (Fail-Fast). leakDetectionThreshold=60000. hikaricp_connections_pending überwachen.",
     severity: "kritisch",
     metrics: "hikaricp_connections_pending, hikaricp_connections_timeout_total",
     brakeForm: "binär",
@@ -366,9 +366,9 @@ const HYSTERESES = computed(() => [
       [0.2, 0.01],
     ],
     mechanism:
-      "Container verbraucht CPU-Quota in der 100ms CFS-Periode. Wird pausiert bis zur nächsten Periode.",
+      "Container verbraucht CPU-Quota in der 100-ms-CFS-Periode. Wird pausiert bis zur nächsten Periode.",
     whyStick:
-      "Throttling erzeugt Request-Backlog. Backlog erhöht CPU-Bedarf. Erst wenn Backlog leer UND Last unter Quota.",
+      "Throttling erzeugt Request-Backlog. Backlog erhöht CPU-Bedarf. Erst wenn der Backlog leer und die Last unter der Quota ist.",
     recovery:
       "CPU-Limit erhöhen. Burstable QoS (kein Limit, nur Request). GC-Tuning: -XX:MaxGCPauseMillis=100.",
     severity: "hoch",
@@ -572,7 +572,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Paketverluste triggern TCP Congestion Control. Window wird auf 1 MSS reduziert. Throughput bricht ein.",
     whyStick:
-      "Slow-Start braucht viele RTTs um das Window wieder hochzufahren. Bei hohem BDP: Recovery dauert Sekunden.",
+      "Slow-Start braucht viele RTTs, um das Window wieder hochzufahren. Bei hohem BDP: Recovery dauert Sekunden.",
     recovery:
       "TCP BBR statt Cubic. Keep-Alive Connections (HTTP/2, Connection-Pooling). Retransmit-Timeouts tunen.",
     severity: "mittel",
@@ -693,9 +693,9 @@ const HYSTERESES = computed(() => [
       [0.22, 0.04],
     ],
     mechanism:
-      "Hält die GC mit der aggregierten Allokationsrate nicht Schritt, blockiert der jeweils allokierende Thread (irgendeiner) in einem Allocation Stall, bis Speicher frei wird — generisch, nicht threadselektiv.",
+      "Hält die GC mit der aggregierten Allokationsrate nicht Schritt, blockiert der jeweils allokierende Thread (irgendeiner) in einem Allocation Stall, bis Speicher frei wird: generisch, nicht threadselektiv.",
     whyStick:
-      "Reiner Heap-Pegel: solange die Allokation über der Reclaim-Rate liegt, stallen Threads wiederholt. Ein gesundes ZGC stallt praktisch nie — ein Stall heißt, CPU-/Heap-Headroom fehlt.",
+      "Reiner Heap-Pegel: solange die Allokation über der Reclaim-Rate liegt, stallen Threads wiederholt. Ein gesundes ZGC stallt praktisch nie. Ein Stall heißt, CPU-/Heap-Headroom fehlt.",
     recovery:
       "ConcGCThreads / CPU erhöhen, -Xmx anheben, auf Generational ZGC (JDK 21+) wechseln. Stalls als Alarm behandeln, nicht als Feature.",
     severity: "hoch",
@@ -735,11 +735,11 @@ const HYSTERESES = computed(() => [
       [0.12, 0.03],
     ],
     mechanism:
-      "Der Pacer drosselt allokierende Threads proaktiv und proportional zur Allokationsmenge, während der nebenläufige Zyklus läuft — ein Budget-Modell, das den Thread kurz warten lässt, bevor der Heap erschöpft ist.",
+      "Der Pacer drosselt allokierende Threads proaktiv und proportional zur Allokationsmenge, während der nebenläufige Zyklus läuft: ein Budget-Modell, das den Thread kurz warten lässt, bevor der Heap erschöpft ist.",
     whyStick:
       "Das Budget leitet sich aus Heap-Ständen ab und setzt pro Zyklus zurück, ein langsamer Pegel entsteht nicht. Reicht Pacing nicht, eskaliert es: Pacing → Degenerated GC → Full GC. Das Verfahren gibt es bis JDK 25, JDK-8350050 entfernt es für JDK 26.",
     recovery:
-      "Heuristik 'compact' für Latenz, mehr CPU/Heap statt ShenandoahPacingMaxDelay hochzusetzen. Pacing nur im GC-Log sichtbar — kein JFR-Event, unsichtbar in Profilern.",
+      "Heuristik 'compact' für Latenz, mehr CPU/Heap statt ShenandoahPacingMaxDelay hochzusetzen. Pacing nur im GC-Log sichtbar, kein JFR-Event, unsichtbar in Profilern.",
     severity: "mittel",
     metrics: "-Xlog:gc (Pacing-Delays), Häufung von Degenerated/Full GC",
     brakeForm: "proportional",
@@ -777,7 +777,7 @@ const HYSTERESES = computed(() => [
       [0.16, 0.06],
     ],
     mechanism:
-      "Das Redo-Log ist ein zirkulärer Puffer. Mit wachsender Checkpoint Age rampt InnoDB das Flushing über Stufen hoch — Adaptive-Flushing-LWM → Async-Point (7/8) → Sync-Point (15/16) → Soft-Limit (Voll-Pause).",
+      "Das Redo-Log ist ein zirkulärer Puffer. Mit wachsender Checkpoint Age rampt InnoDB das Flushing über Stufen hoch: Adaptive-Flushing-LWM → Async-Point (7/8) → Sync-Point (15/16) → Soft-Limit (Voll-Pause).",
     whyStick:
       "Der Akkumulator (Checkpoint Age) füllt über Minuten und leert nur so schnell wie die IO-Kapazität. 'Flush Storms' frieren Schreiboperationen ein, bis die Age unter die Schwelle fällt.",
     recovery:
@@ -819,7 +819,7 @@ const HYSTERESES = computed(() => [
       [0.3, 0.01],
     ],
     mechanism:
-      "Wächst die Receive-Queue eines Nodes über gcs.fc_limit, broadcastet er FC_PAUSE und der ganze Cluster stoppt temporär die Replikation neuer Transaktionen — ein einziger langsamer Node drosselt alle.",
+      "Wächst die Receive-Queue eines Nodes über gcs.fc_limit, broadcastet er FC_PAUSE und der ganze Cluster stoppt temporär die Replikation neuer Transaktionen. Ein einziger langsamer Node drosselt alle.",
     whyStick:
       "Doppelschwelle nur bei gcs.fc_factor < 1: dann wird erst bei gcs.fc_limit · gcs.fc_factor gelockert. Der Standard 1,0 setzt Pause und Resume auf dieselbe Schwelle. Solange der langsame Node nicht aufholt, bleibt der Cluster pausiert.",
     recovery:
@@ -835,7 +835,7 @@ const HYSTERESES = computed(() => [
   {
     id: "mongodb-flow-control",
     short:
-      "Nähert sich der Majority-Lag dem Ziel, brauchen Writes Tickets — drosselt die Schreibrate.",
+      "Nähert sich der Majority-Lag dem Ziel, brauchen Writes Tickets. Das drosselt die Schreibrate.",
     name: "MongoDB Flow Control",
     icon: "🍃",
     category: "component",
@@ -863,7 +863,7 @@ const HYSTERESES = computed(() => [
       [0.13, 0.05],
     ],
     mechanism:
-      "Nähert sich der Majority-Committed-Lag dem flowControlTargetLagSeconds (10 s), müssen Writes auf dem Primary erst Tickets erwerben — die Tickets/s begrenzen die Schreibrate, um den Lag unter dem Ziel zu halten.",
+      "Nähert sich der Majority-Committed-Lag dem flowControlTargetLagSeconds (10 s), müssen Writes auf dem Primary erst Tickets erwerben. Die Tickets/s begrenzen die Schreibrate, um den Lag unter dem Ziel zu halten.",
     whyStick:
       "Credit-/Ticket-basiert auf dem Primary, gesteuert über die Lag-Einschätzung. Bei PSA (Primary-Secondary-Arbiter: zwei Datenknoten plus ein Arbiter ohne Daten) rückt der Majority-Commit-Punkt bei ausgefallenem Secondary nicht mehr vor, der Lag wächst ohne Lastproblem, und es drohen unnötiges Throttling oder Stalls.",
     recovery:
@@ -905,7 +905,7 @@ const HYSTERESES = computed(() => [
       [0.14, 0.05],
     ],
     mechanism:
-      "Admission Control sortiert wartende Arbeit nach (Tenant, Priorität, Txn-Startzeit) und vergibt IO-Tokens dynamisch aus der LSM-L0-Bandbreite — lock-haltende Transaktionen werden priorisiert.",
+      "Admission Control sortiert wartende Arbeit nach (Tenant, Priorität, Txn-Startzeit) und vergibt IO-Tokens dynamisch aus der LSM-L0-Bandbreite. Lock-haltende Transaktionen werden priorisiert.",
     whyStick:
       "Token-Bucket über den L0-Druck: steigt der Sublevel-Count, sinken die Tokens. Designt als Kollaps-Schutz, aber kein Ersatz für einen korrekt dimensionierten Cluster.",
     recovery:
@@ -919,7 +919,7 @@ const HYSTERESES = computed(() => [
   {
     id: "rabbitmq-conn-block",
     short:
-      "Über dem Memory-Watermark stoppt der Broker das Socket-Lesen → Publisher blockieren (TCP-Back-Pressure).",
+      "Über der Memory-Watermark stoppt der Broker das Socket-Lesen → Publisher blockieren (TCP-Back-Pressure).",
     name: "RabbitMQ Connection-Blocking",
     icon: "🐰",
     category: "component",
@@ -993,7 +993,7 @@ const HYSTERESES = computed(() => [
     mechanism:
       "Intern fließen Nachrichten reader → channel → queue → msg_store; jeder Prozess gewährt Credits (200 init, +50 / 50 verarbeitet). Verarbeitet der Channel langsamer, blockt er den Reader → Producer werden gedrosselt.",
     whyStick:
-      "Nicht ressourcengetrieben und mit Millisekunden-Gedächtnis: das Credit-Fenster toggelt mehrmals pro Sekunde. Die Credits sind ein Zähler (Pegel mit kleinem Reset-Band), für den Operator aber nur als Flow-Zustand sichtbar, kein Pegel zum Hochrechnen.",
+      "Nicht ressourcengetrieben und mit Millisekunden-Gedächtnis: das Credit-Fenster wechselt mehrmals pro Sekunde. Die Credits sind ein Zähler (Pegel mit kleinem Reset-Band), für den Operator aber nur als Flow-Zustand sichtbar, kein Pegel zum Hochrechnen.",
     recovery:
       "Verkettung (queue → channel → reader) entzerren. Interne Flow-Control-Metriken / Channel-Block-Events beobachten.",
     severity: "mittel",

@@ -210,7 +210,7 @@ function onFrameClick(f) {
       }"
     >
       <template v-if="hovered">
-        <strong>{{ hovered.name }}</strong> —
+        <strong>{{ hovered.name }}</strong> –
         {{ (hovered.pct * 100).toFixed(1) }} % Samples
       </template>
       <template v-else-if="isZoomed">

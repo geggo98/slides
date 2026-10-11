@@ -113,7 +113,7 @@ const VIZ_TYPES = [
     colorDim: DARK_PALETTE.greenDim,
     useFor: "Einzelne aktuelle KPIs als gro\u00dfe Zahlen",
     examples: [
-      "SLO-Compliance (99.7%)",
+      "SLO-Compliance (99,7 %)",
       "Aktuelle Error-Rate",
       "Aktive Pods",
       "Request-Rate aktuell",
@@ -135,7 +135,7 @@ const VIZ_TYPES = [
       "Connection-Pool-Nutzung",
       "JVM Heap %",
     ],
-    tips: "Gelb ab 70%, rot ab 90%. Nur f\u00fcr bounded Werte, nicht f\u00fcr unbounded Metriken wie Request-Count.",
+    tips: "Gelb ab 70%, rot ab 90%. Nur f\u00fcr begrenzte Werte, nicht f\u00fcr unbegrenzte Metriken wie Request-Count.",
     levels: [2, 3],
     sizing: "4\u20136 Spalten, 4\u20135 H\u00f6he",
   },
@@ -212,7 +212,7 @@ const VIZ_TYPES = [
     colorDim: DARK_PALETTE.greenDim,
     useFor: "Diskrete Zustands\u00e4nderungen als farbige B\u00e4nder",
     examples: [
-      "Service-Verf\u00fcgbarkeit (24h)",
+      "Service-Verf\u00fcgbarkeit (24 h)",
       "Deployment-Rollout-Status",
       "Carrier-API-Verf\u00fcgbarkeit",
     ],

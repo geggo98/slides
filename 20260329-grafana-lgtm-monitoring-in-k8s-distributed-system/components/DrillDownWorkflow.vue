@@ -49,7 +49,7 @@ const PRESETS = {
     { name: "Logs", desc: "Fehlermeldung lesen", tool: "Loki" },
     {
       name: "Root Cause",
-      desc: "dieser PostgreSQL-Query ist der Bottleneck",
+      desc: "diese PostgreSQL-Query ist der Bottleneck",
       result: true,
     },
   ],

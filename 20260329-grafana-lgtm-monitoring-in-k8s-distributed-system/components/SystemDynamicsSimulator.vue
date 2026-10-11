@@ -129,7 +129,7 @@ const SIMS = [
     icon: "\u{1F300}",
     subtitle: "Backpressure, Dämpfung und Clipping bei 100%",
     description:
-      "Drei Services in Serie. Jeder hat begrenzte Kapazität und einen Puffer. Wenn ein Puffer voll ist, wird der Überschuss verworfen (Clipping = HTTP 503). Beobachte wie Backpressure sich verzögert durch die Kette ausbreitet und die Oszillation asymmetrisch gedämpft wird.",
+      "Drei Services in Serie. Jeder hat begrenzte Kapazität und einen Puffer. Wenn ein Puffer voll ist, wird der Überschuss verworfen (Clipping = HTTP 503). Beobachte, wie Backpressure sich verzögert durch die Kette ausbreitet und die Oszillation asymmetrisch gedämpft wird.",
     stages: [
       { name: "API Gateway", capacity: 100, bufferMax: 50, damping: 0.3 },
       { name: "Quote-Service", capacity: 80, bufferMax: 30, damping: 0.2 },
@@ -140,7 +140,7 @@ const SIMS = [
     duration: 30,
     steps: 300,
     insight:
-      "Die Oszillation wird an jedem Stage gedämpft und verzögert (Phasenverschiebung). Bei 100% Kapazität wird die Spitze abgeschnitten (Clipping). Die Ausgabe ist asymmetrisch: Peaks werden gekappt, Täler nicht — der effektive Durchsatz sinkt.",
+      "Die Oszillation wird an jeder Station gedämpft und verzögert (Phasenverschiebung). Bei 100% Kapazität wird die Spitze abgeschnitten (Clipping). Die Ausgabe ist asymmetrisch: Peaks werden gekappt, Täler nicht. Der effektive Durchsatz sinkt.",
   },
   {
     id: "dirac",
@@ -148,7 +148,7 @@ const SIMS = [
     icon: "\u26A1",
     subtitle: "Ein Burst rauscht durch die Service-Kette",
     description:
-      "Ein kurzer Last-Peak (z.B. Cache-Flush, Marketing-Push) trifft das System. Der Impuls breitet sich durch die Kette aus, wird an jeder Station verbreitert und gedämpft. Die Puffer füllen und leeren sich mit Verzögerung.",
+      "Ein kurzer Last-Peak (z. B. Cache-Flush, Marketing-Push) trifft das System. Der Impuls breitet sich durch die Kette aus, wird an jeder Station verbreitert und gedämpft. Die Puffer füllen und leeren sich mit Verzögerung.",
     stages: [
       { name: "API Gateway", capacity: 100, bufferMax: 80, damping: 0.25 },
       { name: "Quote-Service", capacity: 80, bufferMax: 40, damping: 0.18 },
@@ -159,13 +159,13 @@ const SIMS = [
     duration: 25,
     steps: 250,
     insight:
-      "Der scharfe Impuls wird an jedem Stage breiter und flacher (Tiefpassfilter-Effekt). Aber: die Puffer brauchen Zeit zum Leeren. Wenn die Kapazität eng ist (Provider-Adapter: 60 req/s), staut sich der Impuls und die Drain-Time verlängert sich — das System braucht länger zurück zum Normalzustand als der Impuls gedauert hat (Hysterese).",
+      "Der scharfe Impuls wird an jeder Station breiter und flacher (Tiefpassfilter-Effekt). Aber: Die Puffer brauchen Zeit zum Leeren. Wenn die Kapazität eng ist (Provider-Adapter: 60 req/s), staut sich der Impuls und die Drain-Time verlängert sich. Das System braucht länger zurück zum Normalzustand als der Impuls gedauert hat (Hysterese).",
   },
   {
     id: "step",
     name: "Überlast + Recovery",
     icon: "\u{1F4C8}",
-    subtitle: "Last steigt, bleibt, sinkt — Hysterese sichtbar",
+    subtitle: "Last steigt, bleibt, sinkt: Hysterese sichtbar",
     description:
       "Last steigt für 10 Sekunden über die Kapazität, dann zurück auf Normal. Im Phasenraum-Diagramm (Throughput vs. Latenz-Proxy) wird die Hysterese-Schleife sichtbar: der Rückweg folgt einem anderen Pfad als der Hinweg.",
     stages: [
@@ -197,7 +197,7 @@ const SIMS = [
     duration: 25,
     steps: 250,
     insight:
-      "Bei 90%+ Auslastung wandert der Engpass. Puffer können sich nicht mehr rechtzeitig leeren bevor die nächste Schwankung kommt. Ergebnis: Starvation kaskadiert. Bei ~80% Auslastung (baseRate 60 statt 72) verschwinden die Probleme.",
+      "Bei 90%+ Auslastung wandert der Engpass. Puffer können sich nicht mehr rechtzeitig leeren, bevor die nächste Schwankung kommt. Ergebnis: Starvation kaskadiert. Bei ~80% Auslastung (baseRate 60 statt 72) verschwinden die Probleme.",
   },
 ];
 

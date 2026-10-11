@@ -111,7 +111,7 @@ const SCENARIOS = [
     subtitle: "DB-Connection-Pool leer \u2192 Thread-Blockade",
     category: "pool",
     trigger:
-      "Langsame SQL-Query (fehlender Index auf Datenbank-Join) h\u00e4lt Connections 5x l\u00e4nger als normal \u2192 Pool l\u00e4uft leer",
+      "Langsame SQL-Query (fehlender Index auf Datenbank-Join) h\u00e4lt Connections 5\u00d7 l\u00e4nger als normal \u2192 Pool l\u00e4uft leer",
     phases: [
       {
         t: 0,
@@ -273,7 +273,7 @@ const SCENARIOS = [
         t: 0.75,
         severity: "critical",
         label: "Ersch\u00f6pft",
-        desc: "200/200 busy, Queue \u00fcerl\u00e4uft, HTTP 503",
+        desc: "200/200 busy, Queue \u00fcberl\u00e4uft, HTTP 503",
       },
     ],
     metrics: [
@@ -318,7 +318,7 @@ const SCENARIOS = [
     subtitle: "Working-Set \u00fcberschreitet Limit \u2192 Pod-Restart",
     category: "compute",
     trigger:
-      "Memory-Leak im JSON-Parsing (gro\u00dfe Provider-Responses nicht gestreamt), oder Metaspace-Wachstum durch dynamische Proxy-Klassen",
+      "Memory-Leak im JSON-Parsing (gro\u00dfe Provider-Responses nicht gestreamt) oder Metaspace-Wachstum durch dynamische Proxy-Klassen",
     phases: [
       {
         t: 0,
@@ -388,7 +388,7 @@ const SCENARIOS = [
       "Cache voll \u2192 Evictions \u2192 Miss-Rate steigt \u2192 API-Flut",
     category: "external",
     trigger:
-      "Neue Produktsparte mit vielen Tarifen ongeboardet, Cache-Keys explodieren.",
+      "Neue Produktsparte mit vielen Tarifen aufgenommen, Cache-Keys wachsen stark an.",
     phases: [
       {
         t: 0,
@@ -488,7 +488,7 @@ const SCENARIOS = [
         t: 0.8,
         severity: "critical",
         label: "Systemausfall",
-        desc: "503 f\u00fcr ALLE Requests. Kompletter Stillstand.",
+        desc: "503 f\u00fcr alle Requests. Das System steht.",
       },
     ],
     metrics: [
