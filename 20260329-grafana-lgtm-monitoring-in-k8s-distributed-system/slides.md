@@ -1118,8 +1118,75 @@ Verwandt: Campbell's Law (1976) — je wichtiger ein Indikator für Entscheidung
   Goodhart's Law“, arXiv 1803.04585 (2018).
 - Die letzte Zeile ist ein echter Fall: Darwin Gödel Machine (Sakana AI,
   2025, arXiv 2505.22954). Der Agent entfernte die Marker, an denen die
-  Prüffunktion Halluzinationen erkannte. Die Folie danach zeigt einen
-  zweiten Fall (SWE-Bench Pro).
+  Prüffunktion Halluzinationen erkannte. Die übernächste Folie zeigt
+  einen zweiten Fall (SWE-Bench Pro).
+-->
+
+---
+clicks: false
+hideInToc: true
+---
+
+# Beispiel: Test Coverage als Ziel
+
+**B:** Tests finden Fehler, bevor Kunden sie finden · **A:** Coverage-Quote
+
+<CoverageCounterMetrics />
+
+<!--
+- Einstieg: Fowler, „TestCoverage“ (2012): „If you make a certain level
+  of coverage a target, people will try to attain it. The trouble is that
+  high coverage numbers are too easy to reach with low quality testing.“
+  Im Extremfall „AssertionFreeTesting“ (Fowler, 2004). Das ist ein
+  Anekdotenbefund, kein dokumentierter Fall einer Coverage-Quote.
+- Studienlage: Inozemtseva & Holmes (ICSE 2014, fünf Java-Systeme,
+  Mutanten als Maß): sobald die Suite-Größe herausgerechnet ist, nur noch
+  ein schwacher bis mäßiger Zusammenhang; Coverage „should not be used as
+  a quality target“. Gegenstimme: Chen et al. (ASE 2020) halten das
+  Herausrechnen für methodisch fragwürdig. Sicher ist nur: Coverage zeigt
+  ungetestete Stellen, eine feste Quote sagt wenig über Testqualität.
+- Mutation Score: Petrović et al., „Practical Mutation Testing at Scale“
+  (IEEE TSE 48(10), 2022) und ICSE 2021. Google zeigt überlebende Mutanten
+  im Review und berechnet bewusst keinen Score („neither concrete nor
+  actionable“). Werkzeuge: PIT (Java), Stryker (JS/TS, C#, Scala). Dass
+  Ausschlüsse den Nenner schönen, folgt aus den Scoring-Regeln der Tools;
+  dokumentierte Fälle von Missbrauch gibt es nicht.
+- Feedbackzeit: Software Engineering at Google, Kap. 11 und 14; DORA
+  (test-automation): Tests unter etwa zehn Minuten. Das Perzentil p90/p95
+  ist Konvention, keine Quelle nennt eines.
+- Flaky: Micco, Google Testing Blog (2016): ~1,5 % der Testläufe, ~16 %
+  der Tests, ~84 % der Pass→Fail-Wechsel betreffen einen flaky Test.
+  Listfield (2017): 0,5 % der kleinen, 1,6 % der mittleren, 14 % der großen
+  Tests. Das sind verschiedene Einheiten, nicht eine Rate. Luo et al.
+  (FSE 2014): flaky heißt nicht automatisch „kein Produktfehler“.
+- Ehrlich dazu: Dass ein Coverage-Ziel Flaky-Rate oder CI-Dauer erhöht,
+  hat keine Studie gemessen. Das ist die Befürchtung, nicht der Befund.
+- Produktionsregressionen: Kaner & Bond (METRICS 2004) zu Bug-Zahlen als
+  Maß; Chillarege et al., ODC (IEEE TSE 1992): Felddefekte kommen „so
+  late in the development cycle“, Ursachenanalyse ist der Nutzen. Normiert:
+  DORA Change Fail Rate.
+- Blinder Fleck: Marick, „How to Misuse Code Coverage“ (TCS ’99) und
+  „Faults of Omission“ (STQE 2000): 22–54 % der Fehler in fünf zitierten
+  Studien waren Auslassungen. Für Code-Mutation: „would seem to have
+  little leverage“ (Marick, Bach, Kaner 2000, Anhang A). Spezifikations-
+  mutation ist die Ausnahme, braucht aber eine formale Spezifikation.
+- Risiko vor Durchschnitt: Arguelles, Ivanković, Bender, „Code Coverage
+  Best Practices“ (Google Testing Blog, 2020): Debug-Logzeilen als
+  weniger wichtig, pro Commit 99 % „reasonable“, 90 % untere Schwelle,
+  keine pauschalen Vorgaben von oben. Berechtigungsprüfung und „keine
+  Team-Rangliste“ sind unser Schluss, nicht Google.
+- Agenten: METR (10.03.2026): rund die Hälfte der test-bestandenen
+  SWE-bench-Verified-PRs würden Maintainer nicht mergen (Tests von
+  Menschen). Chen et al. (arXiv 2602.07900, 2026): Wie viele Tests ein
+  Agent unterwegs schreibt, ändert das Ergebnis kaum. Claude 3.7 Sonnet
+  System Card (2025) und ImpossibleBench (arXiv 2510.20270): Agenten
+  passen Tests an oder bauen erwartete Werte fest ein; „occurs
+  infrequently in normal usage“. „Viele Tests je Änderung“ ist
+  Praxiserfahrung: In GitHub-Daten fassen Agenten nur in 40–50 % der PRs
+  Tests an, bringen dann aber fast doppelt so viel Testcode je
+  Quellzeile mit (arXiv 2601.21194, 2607.18057).
+- Quellen abgerufen am 11.10.2026. Überleitung: die interaktive Liste
+  zeigt dieselbe Struktur für Monitoring-Ziele.
 -->
 
 ---
