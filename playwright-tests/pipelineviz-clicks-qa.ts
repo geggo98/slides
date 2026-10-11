@@ -47,7 +47,9 @@ for (const theme of ["light", "dark"] as const) {
       const nodes = [...root.querySelectorAll(".pipeline-viz .node:not(.input-node)")];
       // Unterkante des letzten Inhalts (Schlusssatz) — nicht aller Elemente:
       // ein Wrapper reicht immer bis 720 und machte die Messung wirkungslos.
+      // (.sim-xref ist absolut unten rechts positioniert und zählt nicht zum Fluss.)
       const bottoms = [...root.querySelectorAll("p")]
+        .filter((e) => !e.closest(".sim-xref"))
         .map((e) => e.getBoundingClientRect().bottom)
         .filter((v) => Number.isFinite(v));
       return {

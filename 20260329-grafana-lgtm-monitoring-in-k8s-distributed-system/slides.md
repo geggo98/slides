@@ -534,6 +534,12 @@ Ohne Reserve baut sich der Rückstau nicht ab, bevor die nächste Schwankung kom
 
 **Schutzkapazität (Protective Capacity, Faustregel ~20 % Headroom) ist eine Systemanforderung, keine Verschwendung.**
 
+<div class="sim-xref">
+
+Zum Ausprobieren (Szenario „Wandernder Engpass“): <TalkXref slug="20260711-sre-simulations" anchor="systemdynamik">SRE-Simulationen</TalkXref>
+
+</div>
+
 <!--
 - Lesen: links die Last (62 req/s), rechts die drei Stationen. Große Zahl =
   aktuelle Kapazität in req/s (durchgestrichen: der Nennwert), „Reserve“ =
