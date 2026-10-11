@@ -3,1142 +3,1028 @@
   "title": "Grafana LGTM Monitoring Selbsttest",
   "questions": [
     {
-      "id": "meth-golden-signals-gleichung",
-      "question": "Die zentrale Gleichung aus dem Talk lautet „4 Golden Signals = RED + Saturation“. Welche Aussagen dazu treffen zu?",
+      "id": "meth-duration-steigt-kausalitaet",
+      "question": "Die P99-Latenz eines Services im Versicherungsintegrator steigt deutlich. Welche Aussagen zu Duration und Saturation treffen zu?",
       "difficulty": "easy",
       "section": "Methodologien",
-      "explanation": "Die vier Golden Signals (Latency, Traffic, Errors, Saturation) entsprechen RED plus Saturation als zusätzlichem Infrastruktur-Signal — der Talk schreibt die Formel Tom Wilkie von Grafana Labs zu.",
+      "explanation": "Die Kausalität ist einseitig: Saturation erzeugt über Warteschlangen steigende Duration, aber steigende Duration beweist keine Saturation, weil auch langsame Abhängigkeiten, GC-Pausen oder schlechter Code sie verursachen.",
       "options": [
         {
-          "id": "meth-golden-signals-gleichung-o1",
-          "text": "Die vier Golden Signals sind Latency, Traffic, Errors und Saturation.",
-          "verdict": "true",
-          "explanation": "Genau diese vier nennt das Google-SRE-Book, und der Talk ordnet sie eins zu eins RED plus Saturation zu."
-        },
-        {
-          "id": "meth-golden-signals-gleichung-o2",
-          "text": "Saturation ist das einzige Golden Signal ohne RED-Äquivalent.",
-          "verdict": "true",
-          "explanation": "Traffic↔Rate, Errors↔Errors, Latency↔Duration — nur Saturation hat keinen Gegenpart und liefert deshalb die zusätzliche Infrastruktur-Perspektive."
-        },
-        {
-          "id": "meth-golden-signals-gleichung-o3",
-          "text": "Die Gleichung „Golden Signals = RED + Saturation“ wird Tom Wilkie von Grafana Labs zugeschrieben.",
-          "verdict": "true",
-          "explanation": "Aus dem Talk: Die Formel ist ausdrücklich mit „— Tom Wilkie, Grafana Labs“ ausgewiesen."
-        },
-        {
-          "id": "meth-golden-signals-gleichung-o4",
-          "text": "RED enthält bereits Saturation als viertes Signal.",
+          "id": "meth-duration-steigt-kausalitaet-o1",
+          "text": "Bei niedriger CPU-Auslastung kann die Latenz nicht steigen, denn ohne Ressourcenengpass gibt es nichts zu warten.",
           "verdict": "false",
-          "explanation": "RED besteht nur aus Rate, Errors und Duration — Saturation kommt erst bei den Golden Signals hinzu, das ist der Kern der Gleichung."
+          "explanation": "Ein Service mit entspannter CPU wartet trotzdem auf eine langsame Datenbank oder einen trägen Provider; USE sieht dann kein Problem, RED schon."
         },
         {
-          "id": "meth-golden-signals-gleichung-o5",
-          "text": "Saturation ist user-facing, die anderen drei Signale betreffen die Infrastruktur.",
+          "id": "meth-duration-steigt-kausalitaet-o2",
+          "text": "Steigende Duration allein beweist keine Saturation, denn auch langsame Abhängigkeiten oder GC-Pausen verlängern sie.",
+          "verdict": "true",
+          "explanation": "Netzwerk, langsame DB-Queries, ein träger Provider oder GC-Pausen erhöhen die Latenz, ohne dass eine Ressource gesättigt ist."
+        },
+        {
+          "id": "meth-duration-steigt-kausalitaet-o3",
+          "text": "Der Durchschnitt der Latenz ist die richtige Messgröße, weil er alle Requests gleichermaßen berücksichtigt.",
           "verdict": "false",
-          "explanation": "Es ist umgekehrt: Traffic, Errors und Latency sind aus dem Talk user-facing, Saturation ist das Infrastruktur-Signal."
+          "explanation": "Entscheidend ist die Verteilung (p50, p90, p99): Der Durchschnitt verdeckt, dass ein kleiner Teil der Nutzer sehr lange wartet."
         },
         {
-          "id": "meth-golden-signals-gleichung-o6",
-          "text": "Die vier Golden Signals stammen von Brendan Gregg.",
+          "id": "meth-duration-steigt-kausalitaet-o4",
+          "text": "Den besten Saturation-Hinweis liefert Queuing, also Arbeit, die auf Bearbeitung wartet, und nicht die Antwortzeit.",
+          "verdict": "true",
+          "explanation": "Viele Systeme degradieren schon vor 100 % Auslastung; der Stau vor einer Ressource zeigt die Grenze früher und direkter als eine Latenz, die auch andere Ursachen haben kann."
+        },
+        {
+          "id": "meth-duration-steigt-kausalitaet-o5",
+          "text": "Saturation führt über Warteschlangen zu steigender Duration, weil wartende Arbeit die Antwortzeit verlängert.",
+          "verdict": "true",
+          "explanation": "Arbeit, die auf Bearbeitung wartet, verlängert die Antwortzeit; genau deshalb ist Queuing der beste Saturation-Indikator."
+        },
+        {
+          "id": "meth-duration-steigt-kausalitaet-o6",
+          "text": "Wenn die Duration steigt, ist mindestens eine Ressource sicher gesättigt, weil Latenz immer aus Warten entsteht.",
           "verdict": "false",
-          "explanation": "Sie stammen aus dem Google-SRE-Book; Brendan Gregg ist der Autor der USE-Methode von 2012."
+          "explanation": "Das ist der klassische Fehlschluss aus der Einseitigkeit der Kausalität: Höhere Latenz hat viele mögliche Ursachen, Saturation ist nur eine davon."
         },
         {
-          "id": "meth-golden-signals-gleichung-o7",
-          "text": "Saturation-Monitoring gehört auf jedes Service-Dashboard.",
+          "id": "meth-duration-steigt-kausalitaet-o7",
+          "text": "Eine P99 über dem SLO sollte nachts sofort einen Page auslösen und jemanden wecken.",
           "verdict": "depends",
-          "explanation": "Der Talk empfiehlt RED für jedes Service-Dashboard und Saturation zusätzlich nur für die kritischsten, kundennahen Pfade — die Kritikalität des Pfads entscheidet."
+          "explanation": "Eine P99 über SLO ist das erste Signal vor Kaskaden, aber noch kein Ausfall; ob sie einen Page rechtfertigt, hängt vom Nutzerpfad, der Dauer und dem Ausmaß der Überschreitung ab."
         },
         {
-          "id": "meth-golden-signals-gleichung-o8",
-          "text": "Wer nur vier Metriken messen kann, sollte die Golden Signals nehmen.",
+          "id": "meth-duration-steigt-kausalitaet-o8",
+          "text": "Steigt die P99 bei gleich bleibender Request-Rate, ist der Grund ein Kapazitätsproblem im eigenen Service.",
           "verdict": "depends",
-          "explanation": "Das SRE-Zitat gilt ausdrücklich für user-facing Systeme — für eine reine Infrastruktur-Ressource ist die USE-Checkliste der passendere Einstieg."
+          "explanation": "Möglich, aber ebenso kommen eine langsamere Abhängigkeit, eine GC-Pause oder ein Deployment mit schlechterem Code infrage; ob eine Ressource gesättigt ist, zeigt erst das Saturation-Signal, etwa Queuing."
         }
       ]
     },
     {
-      "id": "meth-latency-verteilung",
-      "question": "Welche Aussagen zur Latenz-Messung im Versicherungsintegrator treffen zu?",
+      "id": "meth-errors-user-vs-maschine",
+      "question": "Das Netzwerk-Interface eines Nodes meldet Packet-Drops; gleichzeitig liefert Provider A mit HTTP 200 leere Quotes zurück. Welche Aussagen zu „Errors ≠ Errors“ treffen zu?",
       "difficulty": "medium",
       "section": "Methodologien",
-      "explanation": "Bei Latency zählt die Verteilung (p50, p90, p99) statt des Durchschnitts; der Talk unterscheidet interne Service-Latenz (p99 < 200ms), stark schwankende externe B2B-API-Latenz (500ms–5s) und Cache-Hit gegen Cache-Miss.",
+      "explanation": "RED- und Golden-Signal-Errors nehmen die Nutzerperspektive ein („Hat mein Request funktioniert?“), USE-Errors die Maschinenperspektive („Ist die Hardware fehlerfrei?“); ein 200 mit falschem Inhalt ist ein impliziter Nutzer-Fehler, ein Packet-Drop ein Infrastruktur-Fehler.",
       "options": [
         {
-          "id": "meth-latency-verteilung-o1",
-          "text": "Entscheidend ist die Verteilung (p50, p90, p99), nicht der Durchschnitt.",
+          "id": "meth-errors-user-vs-maschine-o1",
+          "text": "Ein HTTP 200 mit falschem Inhalt ist aus Sicht der Golden Signals ein impliziter Error.",
           "verdict": "true",
-          "explanation": "Der Durchschnitt versteckt die Tail-Latenz — Perzentile zeigen, was die langsamsten Requests real erleben."
+          "explanation": "Die Golden Signals unterscheiden explizite Fehler (5xx), implizite Fehler (200 mit falschem Inhalt) und policy-basierte Fehler; eine leere Quote fällt in die zweite Kategorie."
         },
         {
-          "id": "meth-latency-verteilung-o2",
-          "text": "Für die interne Service-Latenz gilt im Szenario das Ziel p99 < 200ms.",
-          "verdict": "true",
-          "explanation": "Die Latenz-Tabelle im Talk nennt p99 < 200ms für interne Pfade wie Frontend-BFF und Quote-Aggregation."
-        },
-        {
-          "id": "meth-latency-verteilung-o3",
-          "text": "Cache-Hits sollen unter 10ms liegen, ein Miss triggert dagegen einen B2B-Call.",
-          "verdict": "true",
-          "explanation": "Diese Asymmetrie macht die Cache-Latenz zur eigenen Ebene: Ein Miss kostet statt Millisekunden einen externen Call im Sekundenbereich."
-        },
-        {
-          "id": "meth-latency-verteilung-o4",
-          "text": "Der Durchschnitt ist aussagekräftiger als Perzentile, weil er Ausreißer glättet.",
-          "verdict": "false",
-          "explanation": "Genau das Glätten ist das Problem: Die Ausreißer sind die Requests, die Nutzer als langsam erleben."
-        },
-        {
-          "id": "meth-latency-verteilung-o5",
-          "text": "Externe B2B-API-Latenz liegt im Szenario stabil bei rund 50ms.",
-          "verdict": "false",
-          "explanation": "Die Tabelle nennt für Provider wie Allianz oder AXA typische 500ms bis 5s und beschreibt sie als stark schwankend."
-        },
-        {
-          "id": "meth-latency-verteilung-o6",
-          "text": "histogram_quantile(0.99, …) liefert den arithmetischen Mittelwert über alle Requests.",
-          "verdict": "false",
-          "explanation": "Die Funktion interpoliert das 99%-Quantil aus den Histogramm-Buckets — sie berechnet gerade keinen Mittelwert."
-        },
-        {
-          "id": "meth-latency-verteilung-o7",
-          "text": "P99 ist das richtige Perzentil für Deine Alerts.",
+          "id": "meth-errors-user-vs-maschine-o2",
+          "text": "Eine Quote, die nur sieben von zehn Providern enthält, zählt als Error im RED-Dashboard.",
           "verdict": "depends",
-          "explanation": "Das hängt von SLO und Traffic-Volumen ab — bei wenig Traffic ist p99 statistisch wackelig, bei strengen SLOs kann sogar p99.9 nötig sein."
+          "explanation": "Der Talk führt unvollständige Quotes als Nutzer-Fehler auf, nennt partielle Degradation aber zugleich „unvollständig, aber nutzbar“; ab welcher Abdeckung ein Request als gescheitert gilt, legt die Fehler-Policy des Produkts fest."
         },
         {
-          "id": "meth-latency-verteilung-o8",
-          "text": "Eine B2B-Antwortzeit von zwei Sekunden ist ein Incident.",
+          "id": "meth-errors-user-vs-maschine-o3",
+          "text": "RED-Errors fragen „Hat der Request für den Nutzer funktioniert?“, USE-Errors „Ist die Ressource fehlerfrei?“.",
+          "verdict": "true",
+          "explanation": "Der Talk stellt zwei Perspektiven gegenüber: Nutzer (HTTP 5xx, Timeouts, unvollständige Quotes) und Maschine (ECC-Korrekturen, Packet-Drops, Disk-I/O-Fehler)."
+        },
+        {
+          "id": "meth-errors-user-vs-maschine-o4",
+          "text": "Packet-Drops gehören auf das RED-Dashboard des Services, weil sie Nutzer treffen können.",
+          "verdict": "false",
+          "explanation": "Ob Nutzer betroffen sind, zeigt das RED-Dashboard über seine eigenen Signale; die Drops selbst sind ein USE-Signal der Ressource Netzwerk, sonst vermischst du Ursache und Symptom."
+        },
+        {
+          "id": "meth-errors-user-vs-maschine-o5",
+          "text": "Ein Request, der nach mehreren Sekunden mit HTTP 200 antwortet, kann nie als Error zählen.",
+          "verdict": "false",
+          "explanation": "Policy-basierte Errors definieren eine Antwort über einem Zeitlimit als Fehler, weil sie für den Nutzer wie ein Fehler wirkt."
+        },
+        {
+          "id": "meth-errors-user-vs-maschine-o6",
+          "text": "Eine Antwortzeit über einer Sekunde zählt als Error, weil Nutzer so lange nicht warten.",
           "verdict": "depends",
-          "explanation": "Für externe Provider liegt das im Normalbereich von 500ms–5s, intern wäre es weit über dem p99-Ziel — die betroffene Latenz-Ebene entscheidet."
+          "explanation": "Das ist eine policy-basierte Definition; ob eine Sekunde die richtige Grenze ist, hängt vom Nutzerpfad ab, denn eine B2B-Provider-Antwort darf länger dauern als ein Cache-Hit."
+        },
+        {
+          "id": "meth-errors-user-vs-maschine-o7",
+          "text": "USE-Errors und RED-Errors sind zwei Namen für dieselbe Fehlerrate, nur auf anderen Dashboards.",
+          "verdict": "false",
+          "explanation": "Sie messen verschiedene Dinge: Eine Fehlerrate von 30 % bei fehlerfreier Hardware ist möglich, ebenso Packet-Drops ohne einen einzigen fehlgeschlagenen Request."
+        },
+        {
+          "id": "meth-errors-user-vs-maschine-o8",
+          "text": "Packet-Drops auf dem Interface sind USE-Errors aus Sicht der Maschine, kein Nutzerfehler.",
+          "verdict": "true",
+          "explanation": "USE-Errors sind Fehler auf Ressourcen-Ebene wie Packet-Drops, CRC-Fehler, ECC-Korrekturen oder Disk-I/O-Fehler."
         }
       ]
     },
     {
-      "id": "meth-errors-kategorien",
-      "question": "Welche Aussagen zu den Error-Kategorien im Integrator-Kontext treffen zu?",
-      "difficulty": "medium",
-      "section": "Methodologien",
-      "explanation": "Der Talk unterscheidet interne 5xx, Upstream-Provider-Fehler (500er, Timeouts, 429 Rate-Limiting) und partielle Degradation, bei der ein Quote unvollständig, aber nicht komplett fehlerhaft ist.",
-      "options": [
-        {
-          "id": "meth-errors-kategorien-o1",
-          "text": "Der Talk unterscheidet interne 5xx, Upstream-Provider-Fehler und partielle Degradation.",
-          "verdict": "true",
-          "explanation": "Diese drei Kategorien haben unterschiedliche Ursachen und unterschiedlichen Business-Impact und strukturieren so das Error-Signal."
-        },
-        {
-          "id": "meth-errors-kategorien-o2",
-          "text": "Bei partieller Degradation (z. B. 3 von 10 Anbietern down) ist das Quote unvollständig, aber nicht komplett fehlerhaft.",
-          "verdict": "true",
-          "explanation": "Der Kunde bekommt weiterhin Angebote, nur weniger — eine eigene Fehlerklasse zwischen OK und Ausfall."
-        },
-        {
-          "id": "meth-errors-kategorien-o3",
-          "text": "status=„IO_ERROR“ bei den http_client-Metriken steht für Verbindungsabbruch oder Timeout ohne Response.",
-          "verdict": "true",
-          "explanation": "Die PromQL-Query im Talk nutzt genau dieses Label, um Provider-Fehler ohne HTTP-Antwort zu zählen."
-        },
-        {
-          "id": "meth-errors-kategorien-o4",
-          "text": "Errors umfassen in RED ausschließlich interne HTTP-5xx-Antworten.",
-          "verdict": "false",
-          "explanation": "Aus User-Sicht zählen laut RED-Tabelle auch Timeouts und Business-Logik-Fehler — die 5xx-Rate ist nur eine Messgröße davon."
-        },
-        {
-          "id": "meth-errors-kategorien-o5",
-          "text": "HTTP 429 vom Upstream signalisiert einen internen Bug.",
-          "verdict": "false",
-          "explanation": "429 ist Rate-Limiting des Providers — in der Prioritätsmatrix sogar P1, weil dann keine Quotes lieferbar sind."
-        },
-        {
-          "id": "meth-errors-kategorien-o6",
-          "text": "Partielle Degradation wird im Talk wie ein Totalausfall behandelt.",
-          "verdict": "false",
-          "explanation": "Der Talk grenzt sie ausdrücklich ab: unvollständig, aber nicht komplett fehlerhaft — also gerade kein Totalausfall."
-        },
-        {
-          "id": "meth-errors-kategorien-o7",
-          "text": "Ein Upstream-Timeout zählt als Error.",
-          "verdict": "depends",
-          "explanation": "Fängt ein Fallback den Timeout ab und liefert ein partielles Ergebnis, ist es aus User-Sicht eher Degradation als harter Error — das Systemverhalten entscheidet."
-        },
-        {
-          "id": "meth-errors-kategorien-o8",
-          "text": "Partielle Degradation muss sofort alarmiert werden.",
-          "verdict": "depends",
-          "explanation": "Wie viele fehlende Provider ein Quote verkraftet, ist eine fachliche Entscheidung — der Schwellwert hängt vom Business-Impact ab."
-        }
-      ]
-    },
-    {
-      "id": "sat-memory-working-set",
-      "question": "Welche Aussagen zum Memory-Monitoring in Kubernetes treffen zu?",
+      "id": "sat-pool-pending-symptom",
+      "question": "Der HikariCP-Pool eines Services zeigt steigende Belegung und erste wartende Threads. Welche Aussagen zur Pool-Saturation treffen zu?",
       "difficulty": "easy",
       "section": "Saturation & Schwellwerte",
-      "explanation": "Der Talk fordert, immer container_memory_working_set_bytes statt container_memory_usage_bytes zu verwenden, weil das Working Set die Größe ist, die der OOM-Killer beobachtet — geteilt wird durch das Memory-Limit des Containers.",
+      "explanation": "Saturation ist Arbeit, die auf Bearbeitung wartet: `hikaricp_connections_pending` größer null ist bereits Saturation, unabhängig vom Prozentwert; den Pool zu vergrößern bekämpft das Symptom, nicht die langsame Query dahinter.",
       "options": [
         {
-          "id": "sat-memory-working-set-o1",
-          "text": "Für Memory-Utilization in Kubernetes nutzt Du container_memory_working_set_bytes.",
+          "id": "sat-pool-pending-symptom-o1",
+          "text": "Vier Cores und SSD ergeben (4×2)+1 neun Connections; ein größerer Pool beschleunigt die Datenbank nicht automatisch.",
           "verdict": "true",
-          "explanation": "Der Talk hebt diese Regel mit einem ausdrücklichen „Immer“ hervor, weil das Working Set die OOM-relevante Größe ist."
+          "explanation": "Die Sizing-Faustregel zeigt, dass zusätzliche Connections ab einem Punkt nur mehr Wartende auf der Datenbank statt im Pool erzeugen."
         },
         {
-          "id": "sat-memory-working-set-o2",
-          "text": "Das Working Set ist die Größe, die der OOM-Killer beobachtet.",
-          "verdict": "true",
-          "explanation": "Nähert sich das Working Set dem Limit, droht der OOM-Kill — deshalb ist es die richtige Utilization-Metrik."
-        },
-        {
-          "id": "sat-memory-working-set-o3",
-          "text": "Die Utilization wird als Working Set geteilt durch das Memory-Limit des Containers berechnet.",
-          "verdict": "true",
-          "explanation": "Die Query im Talk teilt das Working Set durch kube_pod_container_resource_limits mit resource=„memory“."
-        },
-        {
-          "id": "sat-memory-working-set-o4",
-          "text": "container_memory_usage_bytes ist die korrekte Metrik für das OOM-Risiko.",
+          "id": "sat-pool-pending-symptom-o2",
+          "text": "Den Pool zu vergrößern behebt die Ursache einer Pool-Erschöpfung, weil dann mehr Anfragen gleichzeitig laufen.",
           "verdict": "false",
-          "explanation": "usage_bytes enthält auch zurückforderbaren Page-Cache und überschätzt damit das Risiko — der OOM-Killer entscheidet anhand des Working Sets."
+          "explanation": "Das ist Symptombekämpfung: Hält eine langsame Query die Connections fünfmal länger, läuft auch der größere Pool voll, nur etwas später."
         },
         {
-          "id": "sat-memory-working-set-o5",
-          "text": "Beide Memory-Metriken liefern in der Praxis identische Werte.",
-          "verdict": "false",
-          "explanation": "Gerade weil sie auseinanderlaufen, warnt der Talk explizit vor der falschen Metrik."
-        },
-        {
-          "id": "sat-memory-working-set-o6",
-          "text": "Der OOM-Killer reagiert direkt auf die JVM-Heap-Belegung.",
-          "verdict": "false",
-          "explanation": "Er arbeitet auf cgroup-Ebene und sieht das Container-Working-Set — JVM-interne Größen wie der Heap sind für ihn unsichtbar."
-        },
-        {
-          "id": "sat-memory-working-set-o7",
-          "text": "80% Memory-Utilization erfordert sofortiges Eingreifen.",
+          "id": "sat-pool-pending-symptom-o3",
+          "text": "Ein Warning bei 80 % Pool-Belegung ist ein sinnvoller Schwellwert für jeden Service.",
           "verdict": "depends",
-          "explanation": "Die Tabelle nennt 80% als Warning-Startpunkt — ob das für Deinen Workload passt, hängt etwa vom Allokationsverhalten der JVM ab."
+          "explanation": "Bei gleichmäßiger Last lässt 80 % genug Reaktionszeit; bei stoßartigem Traffic füllt ein Burst die letzten 20 % in Sekunden, dann muss die Warnung früher kommen; der Workload entscheidet."
         },
         {
-          "id": "sat-memory-working-set-o8",
-          "text": "Ein wachsendes Working Set ist ein Memory-Leak.",
+          "id": "sat-pool-pending-symptom-o4",
+          "text": "Ein Alert auf hikaricp_connections_pending größer null ist sinnvoll, auch für einzelne kurze Spitzen.",
           "verdict": "depends",
-          "explanation": "Es kann auch legitimes Caching oder Warm-up sein — erst der Verlauf gegen das Limit gibt Aufschluss."
+          "explanation": "Jede wartende Anfrage ist Saturation, einzelne Wartende für Millisekunden gehören aber zum Normalbetrieb; ob sie alarmieren, hängt von Dauer, Häufigkeit und Nutzerpfad ab."
+        },
+        {
+          "id": "sat-pool-pending-symptom-o5",
+          "text": "Sobald der Pool zu 80 % belegt ist, gilt er als gesättigt, auch wenn niemand wartet.",
+          "verdict": "false",
+          "explanation": "80 % Belegung ist Utilization und im Talk eine Warning-Schwelle; Saturation beginnt erst, wenn Threads warten müssen."
+        },
+        {
+          "id": "sat-pool-pending-symptom-o6",
+          "text": "Wartende Threads (pending größer null) sind das Saturation-Signal, nicht die prozentuale Belegung.",
+          "verdict": "true",
+          "explanation": "Belegung ist Utilization; erst wenn jemand auf eine Connection wartet, staut sich Arbeit, und genau das ist Saturation."
+        },
+        {
+          "id": "sat-pool-pending-symptom-o7",
+          "text": "Eine Pool-Erschöpfung blockiert Threads und kann über kaskadierende Timeouts den Tomcat-Thread-Pool mitreißen.",
+          "verdict": "true",
+          "explanation": "Ein Thread, der auf getConnection() wartet, ist für Tomcat belegt; viele davon füllen den Worker-Pool, und das Problem wandert eine Ebene nach oben."
+        },
+        {
+          "id": "sat-pool-pending-symptom-o8",
+          "text": "Utilization und Saturation sind dasselbe Signal in zwei Einheiten: Prozent und Anzahl Wartender.",
+          "verdict": "false",
+          "explanation": "Utilization ist der genutzte Anteil der Kapazität, Saturation die Länge des Staus davor; ein Pool kann zu 100 % belegt sein, ohne dass jemand wartet."
         }
       ]
     },
     {
-      "id": "sat-hikaricp-pool",
-      "question": "Welche Aussagen zur HikariCP-Pool-Saturation treffen zu?",
+      "id": "sat-cfs-throttling-mechanik",
+      "question": "Ein JVM-Container hat ein CPU-Limit und zeigt CFS-Throttling, obwohl die durchschnittliche CPU-Auslastung deutlich unter dem Limit liegt. Welche Aussagen treffen zu?",
       "difficulty": "medium",
       "section": "Saturation & Schwellwerte",
-      "explanation": "Bei HikariCP gilt hikaricp_connections_pending > 0 bereits als Saturation; die Sizing-Formel (core_count × 2) + effective_spindle_count ergibt für 4 Cores mit SSD einen bewusst kleinen Pool von 9 Connections.",
+      "explanation": "CFS vergibt das Quota je Periode; ist es innerhalb einer Periode aufgebraucht, pausiert der Container bis zur nächsten. Throttling ist deshalb binär pro Periode und hängt von Bursts und Parallelität ab, nicht vom Durchschnitt und nicht von der Node-Auslastung.",
       "options": [
         {
-          "id": "sat-hikaricp-pool-o1",
-          "text": "hikaricp_connections_pending > 0 bedeutet bereits Saturation.",
-          "verdict": "true",
-          "explanation": "Sobald ein Thread auf eine Connection wartet, ist der Pool für die aktuelle Last zu klein — Warten ist Queuing und damit Saturation."
-        },
-        {
-          "id": "sat-hikaricp-pool-o2",
-          "text": "Die Sizing-Formel lautet (core_count × 2) + effective_spindle_count.",
-          "verdict": "true",
-          "explanation": "Diese Formel zitiert der Talk als Ausgangspunkt für die Pool-Dimensionierung."
-        },
-        {
-          "id": "sat-hikaricp-pool-o3",
-          "text": "Für 4 Cores mit SSD ergibt die Formel einen Pool von 9 Connections.",
-          "verdict": "true",
-          "explanation": "(4 × 2) + 1 = 9, weil eine SSD mit effective_spindle_count 1 angesetzt wird."
-        },
-        {
-          "id": "sat-hikaricp-pool-o4",
-          "text": "Je größer der Connection-Pool, desto besser die Performance.",
-          "verdict": "false",
-          "explanation": "Die Formel zielt bewusst auf kleine Pools: Zu viele gleichzeitige Connections erzeugen Contention auf der Datenbank statt Durchsatz."
-        },
-        {
-          "id": "sat-hikaricp-pool-o5",
-          "text": "Erst ab etwa zehn wartenden Threads spricht man von Pool-Saturation.",
-          "verdict": "false",
-          "explanation": "Schon pending > 0 ist Saturation — jeder wartende Thread blockiert und kann kaskadierende Timeouts auslösen."
-        },
-        {
-          "id": "sat-hikaricp-pool-o6",
-          "text": "hikaricp_connections_pending misst die Zahl der freien Connections im Pool.",
-          "verdict": "false",
-          "explanation": "Die Metrik zählt die auf eine Connection wartenden Threads, nicht freie Connections — deshalb ist jeder Wert über 0 bereits ein Saturations-Signal."
-        },
-        {
-          "id": "sat-hikaricp-pool-o7",
-          "text": "Neun Connections sind die richtige Pool-Größe für Deinen Service.",
+          "id": "sat-cfs-throttling-mechanik-o1",
+          "text": "Das CPU-Limit zu entfernen und nur einen Request zu setzen ist die richtige Gegenmaßnahme.",
           "verdict": "depends",
-          "explanation": "Die 9 ist nur das Rechenbeispiel (4 Cores, SSD) — die passende Größe hängt von Kernzahl, Storage und Lastprofil Deines konkreten Setups ab."
+          "explanation": "Burstable QoS beseitigt das Throttling, verlagert den Schutz aber auf die Nachbarn: Auf dicht gepackten Nodes mit Noisy Neighbours ist das riskant, auf dedizierten Nodes oft die beste Wahl."
         },
         {
-          "id": "sat-hikaricp-pool-o8",
-          "text": "Bei 80% Pool-Auslastung musst Du eingreifen.",
+          "id": "sat-cfs-throttling-mechanik-o2",
+          "text": "Throttling tritt trotz niedrigem Durchschnitt auf, weil kurze Bursts vieler paralleler Threads das Quota einer Periode aufbrauchen.",
+          "verdict": "true",
+          "explanation": "Zehn Provider-Calls, JSON-Parsing und GC-Threads laufen gleichzeitig und verbrauchen das Budget in Millisekunden; der 5-Minuten-Durchschnitt sieht davon nichts."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o3",
+          "text": "Die Utilization-Metrik (CPU-Nutzung geteilt durch Limit) reicht aus, um CPU-Saturation zu erkennen.",
+          "verdict": "false",
+          "explanation": "Utilization ist ein Intervall-Durchschnitt und versteckt Spitzen; der Anteil gedrosselter Perioden ist der Saturation-Indikator, deshalb nennt der Talk ihn den kritischen K8s-CPU-Indikator."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o4",
+          "text": "Throttling entsteht, wenn der Node insgesamt ausgelastet ist und sich Container die CPU teilen müssen.",
+          "verdict": "false",
+          "explanation": "Das Limit wird pro Container durchgesetzt, unabhängig davon, ob der Node freie Kerne hat; ein Container kann allein auf einem leeren Node gedrosselt werden."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o5",
+          "text": "Ein Throttling-Alert sollte erst nach mehreren Minuten anhaltender Drosselung feuern.",
           "verdict": "depends",
-          "explanation": "Die Tabelle nennt 80% als Warning, aber das härtere Signal ist pending > 0 — je nach Lastspitzenprofil sind 80% Normalbetrieb oder Vorbote der Erschöpfung."
+          "explanation": "Für einen Batch-Worker sind kurze Throttling-Spitzen irrelevant, für einen latenzkritischen Nutzerpfad ist schon eine verlängerte GC-Pause spürbar; das Zeitfenster folgt dem Workload."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o6",
+          "text": "Bei einer JVM verlängert Throttling Stop-the-World-Pausen, weil auch die GC-Threads angehalten werden.",
+          "verdict": "true",
+          "explanation": "Die Anwendung steht schon für die GC; wird jetzt das Quota entzogen, verlängert sich die Pause um die Restzeit der Periode, und die Latenz-Spitze wächst."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o7",
+          "text": "CFS vergibt das Quota in festen Perioden; ist es verbraucht, pausiert der Container bis zur nächsten Periode.",
+          "verdict": "true",
+          "explanation": "Das Quota ist ein Budget pro Periode; wer es früh verbraucht, wartet den Rest der Periode, auch wenn der Node sonst leer ist."
+        },
+        {
+          "id": "sat-cfs-throttling-mechanik-o8",
+          "text": "Throttling steigt proportional zur Auslastung; bei 80 % CPU sind etwa 80 % der Perioden gedrosselt.",
+          "verdict": "false",
+          "explanation": "Throttling ist pro Periode binär und hängt von der Verteilung der Last innerhalb der Periode ab; gleichmäßige 80 % drosseln gar nicht, ein Burst bei 80 % Durchschnitt drosselt massiv."
         }
       ]
     },
     {
-      "id": "sat-mm1-faustregel",
-      "question": "Welche Aussagen zur M/M/1-Warteschlangentheorie und zur 80%-Regel treffen zu?",
-      "difficulty": "medium",
-      "section": "Saturation & Schwellwerte",
-      "explanation": "Die Faustregel T = S / (1 − ρ) bedeutet: Bei 80% Utilization ist die Response-Time das Fünffache der Service-Time, bei 90% das Zehnfache — die Kurve explodiert Richtung 100%.",
-      "options": [
-        {
-          "id": "sat-mm1-faustregel-o1",
-          "text": "Die Faustregel lautet T = S / (1 − ρ).",
-          "verdict": "true",
-          "explanation": "Die Response-Time T ergibt sich aus der Service-Time S geteilt durch (1 − Utilization) — daraus folgt die explosive Nichtlinearität."
-        },
-        {
-          "id": "sat-mm1-faustregel-o2",
-          "text": "Bei 80% Utilization beträgt die Response-Time das Fünffache der Service-Time.",
-          "verdict": "true",
-          "explanation": "1 / (1 − 0,8) = 5 — genau deshalb gilt 80% als klassische Warnschwelle."
-        },
-        {
-          "id": "sat-mm1-faustregel-o3",
-          "text": "Bei 90% Utilization beträgt die Response-Time das Zehnfache der Service-Time.",
-          "verdict": "true",
-          "explanation": "1 / (1 − 0,9) = 10 — die letzten zehn Prozentpunkte verdoppeln die Antwortzeit noch einmal komplett."
-        },
-        {
-          "id": "sat-mm1-faustregel-o4",
-          "text": "Die Response-Time wächst linear mit der Utilization.",
-          "verdict": "false",
-          "explanation": "Sie wächst hyperbolisch: Der Nenner (1 − ρ) geht gegen null und die Antwortzeit gegen unendlich."
-        },
-        {
-          "id": "sat-mm1-faustregel-o5",
-          "text": "Bei 80% Utilization verdoppelt sich die Response-Time lediglich.",
-          "verdict": "false",
-          "explanation": "Sie verfünffacht sich (1 / 0,2 = 5) — eine bloße Verdopplung wäre schon bei 50% erreicht."
-        },
-        {
-          "id": "sat-mm1-faustregel-o6",
-          "text": "Das M/M/1-Modell beschreibt jedes reale System exakt.",
-          "verdict": "false",
-          "explanation": "Es ist ein Modell mit Annahmen — der Talk nennt explizit Einschränkungen wie bursty Traffic und M/M/c mit vielen Threads."
-        },
-        {
-          "id": "sat-mm1-faustregel-o7",
-          "text": "Der Latenz-Knick liegt bei 80% Utilization.",
-          "verdict": "depends",
-          "explanation": "Für M/M/1 ja — bursty Traffic verschiebt den Knick nach links, viele Threads (M/M/c) nach rechts auf etwa 90–95%."
-        },
-        {
-          "id": "sat-mm1-faustregel-o8",
-          "text": "80% taugt als universelle CPU-Alarm-Schwelle.",
-          "verdict": "depends",
-          "explanation": "Als Startpunkt ja, aber CFS-Throttling ist binär: Bei Bursts können 80% CPU schon in 40% Throttling kippen — Burstiness und SLO entscheiden."
-        }
-      ]
-    },
-    {
-      "id": "sat-throttling-jvm",
-      "question": "CPU-Throttling gilt im Talk als „versteckter JVM-Killer“. Welche Aussagen treffen zu?",
-      "difficulty": "hard",
-      "section": "Saturation & Schwellwerte",
-      "explanation": "CFS-Pausen addieren sich zu den Stop-the-World-Pausen des Garbage Collectors — aus dem Talk kann bereits 15% Throttling GC-Pausen verstärken, und Throttling tritt auch bei niedrig wirkender Durchschnittslast auf, weil das Quota pro 100ms-Periode abgerechnet wird.",
-      "options": [
-        {
-          "id": "sat-throttling-jvm-o1",
-          "text": "CFS-Pausen addieren sich zu GC-Stop-the-World-Pausen und verstärken sie.",
-          "verdict": "true",
-          "explanation": "Wird die JVM mitten in einer GC-Phase gedrosselt, verlängert die CFS-Pause die laufende Stop-the-World-Pause — dieser Stapeleffekt macht Throttling so gefährlich."
-        },
-        {
-          "id": "sat-throttling-jvm-o2",
-          "text": "Bereits 15% Throttling kann aus dem Talk GC-Pausen verstärken.",
-          "verdict": "true",
-          "explanation": "Der Talk nennt 15% als überraschend niedrige Schwelle für die Wechselwirkung zwischen CFS- und GC-Pausen."
-        },
-        {
-          "id": "sat-throttling-jvm-o3",
-          "text": "Ein Container kann gedrosselt werden, obwohl seine durchschnittliche CPU-Auslastung deutlich unter dem Limit liegt.",
-          "verdict": "true",
-          "explanation": "Das Quota gilt pro 100ms-Periode — kurze Bursts erschöpfen es, auch wenn der Mehr-Minuten-Schnitt entspannt aussieht; der Talk nennt 80% CPU mit 40% Throttling."
-        },
-        {
-          "id": "sat-throttling-jvm-o4",
-          "text": "Unter 80% durchschnittlicher CPU ist Throttling ausgeschlossen.",
-          "verdict": "false",
-          "explanation": "Throttling hängt am Burst-Verhalten innerhalb der Perioden, nicht am Durchschnitt — deshalb braucht es die Throttled-Periods-Metrik zusätzlich."
-        },
-        {
-          "id": "sat-throttling-jvm-o5",
-          "text": "Die JVM erkennt CFS-Pausen und legt GC-Zyklen automatisch in die Drossel-Fenster.",
-          "verdict": "false",
-          "explanation": "Die JVM weiß nichts von der cgroup-Drosselung — CFS- und GC-Pausen treffen unkoordiniert aufeinander, was die Verstärkung erst erzeugt."
-        },
-        {
-          "id": "sat-throttling-jvm-o6",
-          "text": "Throttling betrifft nur Anwendungen mit einem einzigen Thread.",
-          "verdict": "false",
-          "explanation": "Gerade multi-threaded JVMs mit parallelen GC-Threads ziehen in Bursts viel CPU gleichzeitig und reizen das Perioden-Quota besonders schnell aus."
-        },
-        {
-          "id": "sat-throttling-jvm-o7",
-          "text": "15% Throttling schadet Deiner JVM.",
-          "verdict": "depends",
-          "explanation": "Das hängt von GC-Algorithmus, Heap-Druck und Kernzahl ab — bei entspanntem Heap kaum spürbar, unter Memory-Pressure ein Verstärker Richtung GC Death Spiral."
-        },
-        {
-          "id": "sat-throttling-jvm-o8",
-          "text": "Ein P99-Latenz-Spike geht auf Throttling zurück.",
-          "verdict": "depends",
-          "explanation": "Das zeigt erst die Korrelation mit der Throttled-Periods-Metrik — langsame Upstream-Provider oder reine GC-Probleme sehen im Latenz-Panel identisch aus."
-        }
-      ]
-    },
-    {
-      "id": "dyn-steady-flow",
-      "question": "Steady Flow statt Batch-Peaks: Welche Pattern- und Anti-Pattern-Zuordnungen aus dem Talk treffen zu?",
-      "difficulty": "medium",
-      "section": "Systemdynamik & Hysterese",
-      "explanation": "Der Talk stellt vier Paare gegenüber: Cache-Refresh mit Jitter statt Cronjob für alle Keys, Leaky Bucket statt 10.000-Quotes-Batch-Import, Staggered Rollout (maxSurge: 1) statt zehn gleichzeitig startender Pods und Exponential Backoff mit Jitter statt Retry-Storm.",
-      "options": [
-        {
-          "id": "dyn-steady-flow-o1",
-          "text": "Cache-Refresh mit Jitter (TTL plus zufällige 0–60s) ersetzt den Cronjob, der alle Keys gleichzeitig refresht.",
-          "verdict": "true",
-          "explanation": "Der Jitter entzerrt die Ablaufzeitpunkte, sodass die Refresh-Last gleichmäßig fließt statt als synchroner Peak einzuschlagen."
-        },
-        {
-          "id": "dyn-steady-flow-o2",
-          "text": "Gegen den Batch-Import von 10.000 Quotes auf einmal setzt der Talk einen Leaky-Bucket-Rate-Limiter.",
-          "verdict": "true",
-          "explanation": "Der Leaky Bucket verwandelt den Stoß-Import in einen konstanten Abfluss, den nachgelagerte Systeme verkraften."
-        },
-        {
-          "id": "dyn-steady-flow-o3",
-          "text": "Staggered Rollout mit maxSurge: 1 verhindert, dass viele Pods gleichzeitig hochkommen.",
-          "verdict": "true",
-          "explanation": "Einzeln nachrückende Pods vermeiden den synchronen Kaltstart-Peak aus Cold Cache und Cold JIT."
-        },
-        {
-          "id": "dyn-steady-flow-o4",
-          "text": "Exponential Backoff funktioniert auch ohne Jitter zuverlässig gegen Retry-Storms.",
-          "verdict": "false",
-          "explanation": "Ohne Jitter retrien alle Clients synchron in Wellen auf das gerade erholte Upstream — deshalb heißt das Pattern ausdrücklich „mit Jitter“."
-        },
-        {
-          "id": "dyn-steady-flow-o5",
-          "text": "Batch-Peaks sind effizienter als gleichmäßiger Flow, weil sie Ressourcen bündeln.",
-          "verdict": "false",
-          "explanation": "Peaks reißen kurzzeitig die Kapazitätsgrenze und lösen Oszillation aus — wegen der Asymmetrie kostet das effektiven Durchsatz."
-        },
-        {
-          "id": "dyn-steady-flow-o6",
-          "text": "Jitter erhöht die Gefahr einer Cache-Stampede.",
-          "verdict": "false",
-          "explanation": "Jitter senkt sie, weil die Expiry-Zeitpunkte auseinandergezogen werden und nicht alle Keys gleichzeitig kalt werden."
-        },
-        {
-          "id": "dyn-steady-flow-o7",
-          "text": "0–60 Sekunden sind der richtige Jitter-Bereich.",
-          "verdict": "depends",
-          "explanation": "Das ist das Beispiel aus dem Talk — der sinnvolle Bereich hängt von TTL und Lastprofil ab; bei sehr kurzen TTLs wäre eine Minute unverhältnismäßig."
-        },
-        {
-          "id": "dyn-steady-flow-o8",
-          "text": "maxSurge: 1 ist immer die richtige Rollout-Einstellung.",
-          "verdict": "depends",
-          "explanation": "Es glättet die Last, verlangsamt aber Rollouts — bei einem dringenden Fix kann mehr Parallelität bewusst die bessere Abwägung sein."
-        }
-      ]
-    },
-    {
-      "id": "dyn-hysterese-mechanismen",
-      "question": "Warum „kleben“ Systeme nach Überlast? Welche Aussagen zu den Hysterese-Mechanismen aus dem Talk treffen zu?",
-      "difficulty": "medium",
-      "section": "Systemdynamik & Hysterese",
-      "explanation": "Systeme bauen unter Überlast interne Zustände auf, die nicht verschwinden, wenn die externe Last sinkt — der Talk nennt Cache-Stampede, GC Death Spiral, Queue-Backlog, Circuit-Breaker und Autoscaler-Lag.",
-      "options": [
-        {
-          "id": "dyn-hysterese-mechanismen-o1",
-          "text": "Cache-Stampede: Überlast führt zu Evictions, der kalte Cache erzeugt mehr Upstream-Calls — die Last bleibt hoch.",
-          "verdict": "true",
-          "explanation": "Der Feedback-Loop hält sich selbst am Leben: Die ursprüngliche Überlast ist weg, aber der kalte Cache erzeugt weiter hohe Upstream-Last."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o2",
-          "text": "GC Death Spiral: Memory-Pressure führt zu mehr GC, die CPU wird verbraucht, Requests werden langsamer und erzeugen noch mehr GC.",
-          "verdict": "true",
-          "explanation": "Die GC-Arbeit frisst genau die Ressourcen, die zum Abbau des Drucks nötig wären — ein selbstverstärkender Loop."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o3",
-          "text": "Die Drain-Time eines Queue-Backlogs beträgt Backlog geteilt durch (Kapazität minus Rate).",
-          "verdict": "true",
-          "explanation": "Nur die Differenz zwischen Verarbeitungskapazität und weiter eintreffender Rate baut den Backlog ab — so steht es im Hysterese-Katalog."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o4",
-          "text": "Sinkt die externe Last, normalisiert sich das System sofort.",
-          "verdict": "false",
-          "explanation": "Genau das ist Hysterese: Interne Zustände wie Backlog, kalter Cache oder offener Breaker bleiben bestehen und halten die Degradation aufrecht."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o5",
-          "text": "Ein Circuit-Breaker im Zustand OPEN schließt sofort, sobald die Fehlerrate sinkt.",
-          "verdict": "false",
-          "explanation": "Die Recovery läuft über Probes — der Breaker tastet sich langsam zurück, was die Rückkehr zur vollen Kapazität verzögert."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o6",
-          "text": "Frisch hochskalierte Pods liefern ab der ersten Sekunde volle Performance.",
-          "verdict": "false",
-          "explanation": "Cold Cache und Cold JIT halten die Latenz zunächst hoch — der Autoscaler-Lag ist selbst als Hysterese-Mechanismus gelistet."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o7",
-          "text": "Ein Pod-Restart behebt den Hysterese-Zustand.",
-          "verdict": "depends",
-          "explanation": "Er leert Queues und Heap, erzeugt aber selbst Cold-Cache- und Cold-JIT-Effekte — ob er netto hilft, hängt vom dominanten Mechanismus ab."
-        },
-        {
-          "id": "dyn-hysterese-mechanismen-o8",
-          "text": "Der Backlog wird in akzeptabler Zeit abgebaut.",
-          "verdict": "depends",
-          "explanation": "Die Drain-Time hängt vom Verhältnis der Restkapazität zur Rate ab — liegt die Rate nahe der Kapazität, geht die Abbauzeit gegen unendlich."
-        }
-      ]
-    },
-    {
-      "id": "dyn-oszillation-asymmetrie",
-      "question": "„Queues als Federn“: Welche Aussagen zu Oszillation und der zentralen Asymmetrie treffen zu?",
-      "difficulty": "hard",
-      "section": "Systemdynamik & Hysterese",
-      "explanation": "Queues mit Backpressure verhalten sich wie Federn — komprimierbar, mit Rückstellkraft; die zentrale Asymmetrie: Oszillation kann nicht über 100% Kapazität hinaus ausgleichen, aber beliebig weit darunter fallen, was den effektiven Durchsatz reduziert.",
-      "options": [
-        {
-          "id": "dyn-oszillation-asymmetrie-o1",
-          "text": "Oszillation kann nicht über 100% Kapazität hinaus ausgleichen, aber beliebig weit darunter fallen.",
-          "verdict": "true",
-          "explanation": "Genau das ist die zentrale Asymmetrie aus dem Talk: Nach oben deckelt die Kapazität, nach unten gibt es keinen Boden."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o2",
-          "text": "Diese Asymmetrie reduziert den effektiven Durchsatz des Systems.",
-          "verdict": "true",
-          "explanation": "Jede Phase unterhalb der Kapazitätsgrenze ist verlorener Durchsatz, den keine Phase „über 100%“ kompensieren kann."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o3",
-          "text": "Queues mit Backpressure verhalten sich wie Federn: komprimierbar, mit Rückstellkraft.",
-          "verdict": "true",
-          "explanation": "Die Feder-Metapher erklärt, warum gekoppelte Services mit Queues zu schwingen beginnen können, statt sich glatt einzupendeln."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o4",
-          "text": "Durchsatz-Einbrüche unter die Kapazitätsgrenze werden durch Phasen über 100% wieder ausgeglichen.",
-          "verdict": "false",
-          "explanation": "Phasen über 100% gibt es nicht — genau das ist der Kern der Asymmetrie; verlorener Durchsatz bleibt verloren."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o5",
-          "text": "Die Asymmetrie betrifft nur CPU-Kapazität, nicht Thread- oder Connection-Pools.",
-          "verdict": "false",
-          "explanation": "Sie gilt für jede harte Kapazitätsgrenze — ein voller Tomcat- oder HikariCP-Pool kann genauso wenig „über 100%“ arbeiten wie eine CPU."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o6",
-          "text": "Backpressure macht ein System automatisch schwingungsfrei.",
-          "verdict": "false",
-          "explanation": "Backpressure macht Queues gerade zu Federn — und Federn können schwingen; gedämpft wird erst durch Steady-Flow-Patterns."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o7",
-          "text": "Eine Queue fängt Lastspitzen zuverlässig ab.",
-          "verdict": "depends",
-          "explanation": "Bis zu ihrer Kapazität ja — liegt die Eingangsrate dauerhaft über der Verarbeitungskapazität, wächst der Backlog und die Drain-Time explodiert."
-        },
-        {
-          "id": "dyn-oszillation-asymmetrie-o8",
-          "text": "Der Durchsatzverlust durch Oszillation lässt sich pauschal beziffern.",
-          "verdict": "depends",
-          "explanation": "Er hängt von Amplitude und Dauer der Unterschreitungen ab — deshalb hilft nur Messen am konkreten System statt einer festen Verlustformel."
-        }
-      ]
-    },
-    {
-      "id": "dyn-recovery-threshold",
-      "question": "Welche Aussagen zu Grafana Recovery Thresholds und naiven Alerts treffen zu?",
-      "difficulty": "hard",
-      "section": "Systemdynamik & Hysterese",
-      "explanation": "Custom Recovery Thresholds (GA seit Grafana 10.3) trennen Fire- und Resolve-Schwelle: Im Talk-Beispiel feuert der Alert bei P99 > 500ms und resolved erst unter 200ms — die Asymmetrie verhindert Flapping; im Provisioning heißt das Feld unloadEvaluator.",
-      "options": [
-        {
-          "id": "dyn-recovery-threshold-o1",
-          "text": "Custom Recovery Thresholds sind in Grafana seit Version 10.3 GA.",
-          "verdict": "true",
-          "explanation": "Das YAML-Beispiel im Talk ist ausdrücklich mit „GA seit 10.3“ kommentiert."
-        },
-        {
-          "id": "dyn-recovery-threshold-o2",
-          "text": "Im Alert-Provisioning heißt das Resolve-Kriterium unloadEvaluator.",
-          "verdict": "true",
-          "explanation": "Der evaluator definiert die Fire-Bedingung (gt 0.5), der unloadEvaluator die Resolve-Bedingung (lt 0.2) — genau so zeigt es die Konfiguration."
-        },
-        {
-          "id": "dyn-recovery-threshold-o3",
-          "text": "Im Talk-Beispiel feuert der Alert bei P99 > 500ms und resolved erst unter 200ms.",
-          "verdict": "true",
-          "explanation": "Die bewusst große Lücke stellt sicher, dass das System wirklich erholt ist, bevor der Alert sich schließt."
-        },
-        {
-          "id": "dyn-recovery-threshold-o4",
-          "text": "Ein einzelner symmetrischer Schwellwert verhindert Flapping zuverlässig.",
-          "verdict": "false",
-          "explanation": "Er erzeugt es gerade: Eine um die Schwelle pendelnde Metrik feuert und resolved im Wechsel — das Problem des naiven Alerts."
-        },
-        {
-          "id": "dyn-recovery-threshold-o5",
-          "text": "Fire- und Resolve-Schwelle müssen identisch sein.",
-          "verdict": "false",
-          "explanation": "Der Sinn des Features ist die Asymmetrie — identische Schwellen wären wieder der naive Alert mit Flapping-Risiko."
-        },
-        {
-          "id": "dyn-recovery-threshold-o6",
-          "text": "Erreicht die Metrik auf dem Rückweg 500ms, ist das System sicher erholt.",
-          "verdict": "false",
-          "explanation": "Bei 500ms auf dem Rückweg ist das System aus dem Talk noch degradiert — wegen der Hysterese braucht es die tiefere Resolve-Schwelle."
-        },
-        {
-          "id": "dyn-recovery-threshold-o7",
-          "text": "500ms und 200ms sind die richtigen Werte für Deine Alerts.",
-          "verdict": "depends",
-          "explanation": "Das Paar hängt vom SLO und davon ab, wie „klebrig“ die Hysterese Deines Systems ist — ein universelles Fire/Resolve-Paar gibt es nicht."
-        },
-        {
-          "id": "dyn-recovery-threshold-o8",
-          "text": "Je größer die Lücke zwischen Fire und Resolve, desto besser.",
-          "verdict": "depends",
-          "explanation": "Zu klein flappt weiter, zu groß resolved nie — den richtigen Abstand bestimmt das gemessene Recovery-Verhalten des Systems."
-        }
-      ]
-    },
-    {
-      "id": "lgtm-komponenten",
-      "question": "Welche Aussagen zu den Komponenten des LGTM-Stacks treffen zu?",
+      "id": "queue-80-prozent-hyperbel",
+      "question": "Der Talk begründet die 80-%-Faustregel mit der M/M/1-Formel T = S / (1 − ρ). Welche Aussagen dazu treffen zu?",
       "difficulty": "easy",
-      "section": "LGTM & Korrelation",
-      "explanation": "LGTM steht für Loki (Logs/LogQL), Grafana (Visualisierung), Tempo (Traces/TraceQL) und Mimir (Metriken/PromQL); Prometheus schreibt seine Metriken via remote_write nach Mimir.",
+      "section": "Warteschlangen",
+      "explanation": "Die Antwortzeit folgt einer Hyperbel über der Auslastung: Bei 80 % ist sie fünfmal, bei 90 % zehnmal so groß wie die Bedienzeit; die 80 % sind ein Punkt auf dieser glatten Kurve, keine Klippe, und echte Instabilität beginnt erst bei ρ gleich eins.",
       "options": [
         {
-          "id": "lgtm-komponenten-o1",
-          "text": "LGTM steht für Loki, Grafana, Tempo, Mimir.",
-          "verdict": "true",
-          "explanation": "Genau diese vier Produkte bilden den Stack — Logs, Visualisierung, Traces und Metriken."
-        },
-        {
-          "id": "lgtm-komponenten-o2",
-          "text": "Loki speichert Logs (LogQL), Tempo Traces (TraceQL), Mimir Metriken (PromQL).",
-          "verdict": "true",
-          "explanation": "Jede Komponente hat ihren Signaltyp und ihre eigene Abfragesprache — Grafana korreliert sie in der Oberfläche."
-        },
-        {
-          "id": "lgtm-komponenten-o3",
-          "text": "Prometheus schreibt Metriken via remote_write nach Mimir.",
-          "verdict": "true",
-          "explanation": "Mimir ist die horizontal skalierbare Langzeitspeicherung, die Prometheus per Push über remote_write befüllt."
-        },
-        {
-          "id": "lgtm-komponenten-o4",
-          "text": "Tempo ist die Log-Datenbank des Stacks.",
+          "id": "queue-80-prozent-hyperbel-o1",
+          "text": "Bei genau 80 % Auslastung kippt das System in einen instabilen Zustand mit wachsender Schlange.",
           "verdict": "false",
-          "explanation": "Tempo speichert Traces und wird mit TraceQL abgefragt — Logs sind die Domäne von Loki."
+          "explanation": "Bei 80 % ist das System stabil, nur langsam; das Kippen passiert erst bei ρ gleich eins, die 80 % sind eine Sicherheitsmarge davor."
         },
         {
-          "id": "lgtm-komponenten-o5",
-          "text": "Mimir ist das Visualisierungs-Frontend.",
-          "verdict": "false",
-          "explanation": "Die Visualisierung übernimmt Grafana; Mimir ist der Langzeitspeicher für Metriken."
-        },
-        {
-          "id": "lgtm-komponenten-o6",
-          "text": "Mimir holt sich die Daten per Pull aus Prometheus.",
-          "verdict": "false",
-          "explanation": "Die Richtung ist umgekehrt: Prometheus pusht via remote_write nach Mimir."
-        },
-        {
-          "id": "lgtm-komponenten-o7",
-          "text": "Du brauchst alle vier Komponenten.",
+          "id": "queue-80-prozent-hyperbel-o2",
+          "text": "Ein Warning bei 80 % Auslastung ist für jeden Service des Integrators der richtige Schwellwert.",
           "verdict": "depends",
-          "explanation": "Das hängt davon ab, welche Signale Du korrelieren willst — der Drei-Klick-Drill-Down lebt allerdings genau vom Zusammenspiel aller Säulen."
+          "explanation": "Für einen einzelnen Bediener mit gleichmäßiger Last ja; stoßartiger Traffic verschiebt den Knick nach links, viele parallele Bediener nach rechts, also hängt der Wert vom Workload ab."
         },
         {
-          "id": "lgtm-komponenten-o8",
-          "text": "Pyroscope gehört zum LGTM-Stack.",
+          "id": "queue-80-prozent-hyperbel-o3",
+          "text": "Die 80 % sind ein Punkt auf einer glatten Hyperbel und keine Klippe mit Sprung in der Kurve.",
+          "verdict": "true",
+          "explanation": "Die Kurve hat bei 80 % keine Stufe; sie ist überall stetig und steigt bei höherer Auslastung immer steiler."
+        },
+        {
+          "id": "queue-80-prozent-hyperbel-o4",
+          "text": "Unbegrenzt wachsende Schlangen, also echte Instabilität, beginnen erst bei ρ größer oder gleich eins.",
+          "verdict": "true",
+          "explanation": "Solange weniger ankommt, als bedient werden kann, pendelt sich das System ein; erst wenn die Ankunftsrate die Bedienrate erreicht, gibt es kein Gleichgewicht mehr."
+        },
+        {
+          "id": "queue-80-prozent-hyperbel-o5",
+          "text": "Bei ρ gleich 0,95 pendelt sich das System noch ein, und die Latenz bleibt dann stabil.",
           "verdict": "depends",
-          "explanation": "Formal ist es nicht Teil des Akronyms, aber der Talk führt es als „fünfte Säule“ mit derselben Architektur ein — eine Frage der Lesart."
+          "explanation": "Theoretisch ja, mit zwanzigfacher Antwortzeit; praktisch wächst die Einschwingzeit nahe eins extrem, sodass ein Beobachtungsfenster oder eine Lastschwankung oft kürzer ist als das Einpendeln."
+        },
+        {
+          "id": "queue-80-prozent-hyperbel-o6",
+          "text": "Unterhalb von 80 % Auslastung ist die Wartezeit praktisch null, erst darüber entsteht ein Stau.",
+          "verdict": "false",
+          "explanation": "Schon bei 50 % Auslastung ist die Antwortzeit doppelt so lang wie die Bedienzeit; die Wartezeit wächst von Anfang an, nur langsamer."
+        },
+        {
+          "id": "queue-80-prozent-hyperbel-o7",
+          "text": "Die Antwortzeit wächst linear mit der Auslastung: Jeder Prozentpunkt kostet gleich viel Zeit.",
+          "verdict": "false",
+          "explanation": "Sie wächst hyperbolisch: Von 50 auf 80 % steigt sie von 2 auf 5, von 80 auf 90 % von 5 auf 10, von 90 auf 95 % von 10 auf 20."
+        },
+        {
+          "id": "queue-80-prozent-hyperbel-o8",
+          "text": "Bei 80 % Auslastung ist die Antwortzeit fünfmal, bei 90 % zehnmal so groß wie die Bedienzeit.",
+          "verdict": "true",
+          "explanation": "1 / (1 − 0,8) ist 5 und 1 / (1 − 0,9) ist 10; die letzten zehn Prozentpunkte verdoppeln die Antwortzeit."
         }
       ]
     },
     {
-      "id": "lgtm-loki-labels",
-      "question": "Welche Aussagen zu Loki-Labels und LogQL-Performance treffen zu?",
+      "id": "queue-pooling-head-of-line",
+      "question": "Ein Integrator verteilt Requests fest auf mehrere Worker mit je eigener Warteschlange. Der M/M/c-Vergleich im Talk stellt dem einen gemeinsamen Pool gegenüber. Welche Aussagen treffen zu?",
+      "difficulty": "medium",
+      "section": "Warteschlangen",
+      "explanation": "Bei gleicher Gesamtkapazität schlägt eine gemeinsame Schlange getrennte Schlangen in jeder Kennzahl, weil getrennte Spuren unter Head-of-Line-Blocking leiden; ob dagegen ein einzelner schneller Bediener oder ein Pool besser ist, hängt von der Metrik ab (Wartezeit gegen Verweildauer).",
+      "options": [
+        {
+          "id": "queue-pooling-head-of-line-o1",
+          "text": "Bei getrennten Schlangen steht eine Spur, während anderswo ein Bediener frei ist (Head-of-Line-Blocking).",
+          "verdict": "true",
+          "explanation": "Die Spur wird bei Ankunft festgelegt; wer hinter einem langen Auftrag steht, kann nicht wechseln, auch wenn der Nachbar längst frei ist."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o2",
+          "text": "Getrennte Schlangen sind immer schneller, weil sie Koordinationsaufwand zwischen den Bedienern vermeiden.",
+          "verdict": "false",
+          "explanation": "Der vermiedene Koordinationsaufwand ist klein gegen die Wartezeit, die durch brachliegende Bediener entsteht; im Vergleich gewinnt der Pool alle Kennzahlen."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o3",
+          "text": "Das Sharding per Hash sollte zugunsten einer gemeinsamen Queue abgeschafft werden.",
+          "verdict": "depends",
+          "explanation": "Wenn das Sharding nur Last verteilt, ja; wenn es Ordnung oder Lokalität pro Schlüssel garantiert, etwa für Partitionen eines Message-Brokers, kaufst du mit dem Pool die Wartezeit und verlierst die Garantie."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o4",
+          "text": "Bei gleicher Auslastung ρ sind die Wartezeiten in allen Queue-Konfigurationen gleich, egal wie organisiert.",
+          "verdict": "false",
+          "explanation": "ρ beschreibt nur das Verhältnis von Ankunft zu Kapazität; wie die Kapazität organisiert ist (eine Schlange, viele Schlangen, ein schneller Bediener), ändert die Wartezeit erheblich."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o5",
+          "text": "Bei gleicher Gesamtkapazität wartet man in einer gemeinsamen Schlange vor c Bedienern kürzer als in c getrennten.",
+          "verdict": "true",
+          "explanation": "In der gemeinsamen Schlange geht der vorderste Gast zum nächsten freien Bediener; keine Kapazität liegt brach, während anderswo gewartet wird."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o6",
+          "text": "Mit c getrennten Schlangen verhält sich jede Spur wie ein M/M/1 mit der vollen Ankunftsrate λ.",
+          "verdict": "false",
+          "explanation": "Jede Spur bekommt im Mittel λ geteilt durch c; sie ist ein M/M/1 mit demselben ρ wie der Pool, verliert aber die Möglichkeit, Schwankungen zwischen den Spuren auszugleichen."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o7",
+          "text": "Ein einzelner, c-fach schnellerer Bediener ist besser als ein Pool aus c normalen Bedienern.",
+          "verdict": "depends",
+          "explanation": "Bei der reinen Wartezeit Wq und der Wahrscheinlichkeit zu warten gewinnt der Pool, weil meist einer frei ist; bei der Verweildauer T gewinnt oft der schnelle Bediener, weil er c-fach kürzer bedient; die Metrik entscheidet."
+        },
+        {
+          "id": "queue-pooling-head-of-line-o8",
+          "text": "Eine gemeinsame Queue oder ein Work-Stealing-Pool sind die Alternativen zum Sharding per Hash.",
+          "verdict": "true",
+          "explanation": "Beide lassen freie Bediener Arbeit aus anderen Spuren übernehmen und beseitigen damit das Head-of-Line-Blocking; genau das ist die Folgerung aus dem Pooling-Modus im Talk."
+        }
+      ]
+    },
+    {
+      "id": "sysdyn-steady-flow-headroom",
+      "question": "Welche Aussagen zu Steady Flow, Excess Capacity und Rolling Bottlenecks treffen zu?",
+      "difficulty": "easy",
+      "section": "Systemdynamik & Hysterese",
+      "explanation": "Batch-Peaks sind Dirac-Impulse und erzeugen maximale Oszillation; in einer Service-Kette wandert der Engpass, und nur Überschusskapazität von etwa 20 % lässt die Puffer sich leeren, bevor die nächste Schwankung kommt.",
+      "options": [
+        {
+          "id": "sysdyn-steady-flow-headroom-o1",
+          "text": "Ein großer Batch-Import ist unproblematisch, solange der Durchschnittsdurchsatz über den Tag unter der Kapazität bleibt.",
+          "verdict": "false",
+          "explanation": "Der Durchschnitt verdeckt den Impuls: Ein Batch von zehntausend Quotes auf einmal ist genau der Dirac-Impuls mit maximaler Oszillation – ein Leaky Bucket glättet ihn."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o2",
+          "text": "Oszillation um die Kapazität mittelt sich heraus: Spitzen und Täler gleichen sich aus, der Durchsatz bleibt erhalten.",
+          "verdict": "false",
+          "explanation": "Die Dämpfung ist asymmetrisch: Über 100 % Kapazität wird gekappt, nach unten fällt der Durchsatz beliebig weit – netto sinkt der effektive Durchsatz."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o3",
+          "text": "20 % Headroom sind keine Verschwendung, sondern Systemanforderung, damit sich Puffer nach Schwankungen wieder füllen.",
+          "verdict": "true",
+          "explanation": "Excess Capacity ist im Talk ausdrücklich keine Verschwendung: Ohne Überschuss füllt sich der Puffer nicht rechtzeitig, und Starvation kaskadiert downstream."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o4",
+          "text": "Bei einer Kette abhängiger Services wandert der Engpass; ohne Überschusskapazität kaskadiert Starvation downstream.",
+          "verdict": "true",
+          "explanation": "Rolling Bottleneck aus der Theory of Constraints: Bei Last nahe der Kapazität staut es mal am Gateway, mal am Provider-Adapter, und die Puffer dahinter laufen leer."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o5",
+          "text": "Skaliert man den langsamsten Service der Kette, ist das Rolling-Bottleneck-Problem gelöst, danach wandert nichts mehr.",
+          "verdict": "false",
+          "explanation": "Der Engpass wandert dann zur nächsten Station; das Problem liegt am fehlenden Headroom entlang der ganzen Kette, nicht an einer einzelnen Station."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o6",
+          "text": "Ein gestaffelter Rollout (ein Pod nach dem anderen) ist dem gleichzeitigen Hochfahren von zehn Pods vorzuziehen.",
+          "verdict": "depends",
+          "explanation": "Gestaffelt vermeidet den Impuls aus zehn kalten Pods, dauert aber länger; fehlt die Kapazität gerade akut, kann das Warten teurer sein als der Impuls."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o7",
+          "text": "Ein Cronjob, der alle Cache-Keys gleichzeitig erneuert, wirkt wie ein Dirac-Impuls; Jitter auf der TTL verteilt die Last.",
+          "verdict": "true",
+          "explanation": "Das ist das erste Anti-Pattern-Paar aus dem Talk: gleichzeitiger Refresh gegen TTL plus zufälligen Versatz, damit die Erneuerungen nicht synchron einschlagen."
+        },
+        {
+          "id": "sysdyn-steady-flow-headroom-o8",
+          "text": "Rund 20 % Headroom reichen für jedes System aus, unabhängig davon, wie stoßartig die Last ist.",
+          "verdict": "depends",
+          "explanation": "Die 20 % sind ein Richtwert: Bei stoßartigem Traffic wandert der Knick nach links und es braucht mehr Reserve, bei vielen parallelen Bedienern darf die Auslastung höher liegen."
+        }
+      ]
+    },
+    {
+      "id": "sysdyn-metastabil-vorhersagbar",
+      "question": "Ein Provider-Adapter bleibt nach einer Lastspitze überlastet, obwohl die Eingangsrate seit einer Stunde unter der Kapazität liegt. Welche Aussagen treffen zu?",
+      "difficulty": "hard",
+      "section": "Systemdynamik & Hysterese",
+      "explanation": "Hält eine positive Rückkopplung die Überlast selbst aufrecht, ist das ein metastabiler Fehler: effektiv unendliche Hysterese, die Reset-Schwelle wird nicht erreicht – zustandsbehaftete Mechanismen sind vorhersagbar, zustandsarme nur detektierbar.",
+      "options": [
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o1",
+          "text": "Ein Restart der betroffenen Pods bricht den metastabilen Zustand und stellt die Normalität wieder her.",
+          "verdict": "depends",
+          "explanation": "Heap- und Queue-Zustand sind nach dem Restart weg; ein kalter Cache oder ein Retry-Sturm der Clients überlebt ihn – dann braucht es Load-Shedding oder Drain an der Quelle."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o2",
+          "text": "Bei zustandsbehafteten Mechanismen ergibt Pegel plus Änderungsrate eine Time-to-Threshold; zustandsarme sind nur detektierbar.",
+          "verdict": "true",
+          "explanation": "Das ist der Merksatz des Quadranten: Ein Pegel-Gauge mit dL/dt erlaubt eine Prognose, eine Momentanrate sieht man erst an ihrer Wirkung."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o3",
+          "text": "Da die Eingangsrate unter der Kapazität liegt, reicht Abwarten: Die Queue leert sich mit Backlog / (Kapazität − Rate).",
+          "verdict": "false",
+          "explanation": "Die Drain-Formel setzt eine konstante Kapazität voraus; im metastabilen Zustand frisst die Rückkopplung (Retries, Cache-Misses) genau diese Kapazität, der Nenner wird null oder negativ."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o4",
+          "text": "Ein Pegel-Gauge mit Time-to-Threshold hätte vor dem Kippen in die Überlast rechtzeitig gewarnt.",
+          "verdict": "depends",
+          "explanation": "Nur wenn der auslösende Mechanismus zustandsbehaftet ist (Queue, Heap, Pool); kippt ein Reflex an einer CPU-Rate, gibt es keinen Pegel, den man hochrechnen könnte."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o5",
+          "text": "Mehr Pods hinzuzufügen beendet die Rückkopplung zuverlässig, weil die Kapazität schlagartig steigt.",
+          "verdict": "false",
+          "explanation": "Neue Pods starten mit kaltem Cache und kaltem JIT und werden vom laufenden Retry-Sturm sofort geflutet; sie verlängern die Schleife eher, als sie zu brechen."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o6",
+          "text": "Metastabil heißt effektiv unendliche Hysterese: Die Reset-Schwelle bleibt unerreichbar, obwohl die Last sinkt.",
+          "verdict": "true",
+          "explanation": "Im Quadranten ist der metastabile Fehler als Eskalation aus dem Schwellwert-Wehr über die obere linke Ecke hinaus markiert – ein Wehr, das nie wieder öffnet."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o7",
+          "text": "Ein metastabiler Fehler tritt nur auf, solange die Eingangslast dauerhaft über der Kapazität liegt, danach nie.",
+          "verdict": "false",
+          "explanation": "Die Lastspitze löst ihn aus, danach hält die positive Rückkopplung die Überlast selbst aufrecht; deshalb bleibt das System auch bei normaler Last überlastet."
+        },
+        {
+          "id": "sysdyn-metastabil-vorhersagbar-o8",
+          "text": "Das Muster deutet auf einen metastabilen Fehler: Eine positive Rückkopplung hält die Überlast selbst aufrecht.",
+          "verdict": "true",
+          "explanation": "Wird die Bremse super-linear, bleibt das System nach der Lastspitze überlastet, weil die Rückkopplung den Reset-Punkt unerreichbar macht."
+        }
+      ]
+    },
+    {
+      "id": "dash-eine-ampel-oben",
+      "question": "Du entwirfst das oberste Platform-Dashboard für den On-Call. Welche Aussagen zum Aufbau treffen zu?",
+      "difficulty": "easy",
+      "section": "Dashboards & Viz",
+      "explanation": "Glück hat eine Form, Unglück viele: Oben steht ein einziger Indikator, ob der Service aus Nutzer- und SLO-Sicht gesund ist; zwei konkurrierende Statusanzeigen stiften Zweifel, und alles Diagnostische gehört tiefer oder auf verlinkte Dashboards.",
+      "options": [
+        {
+          "id": "dash-eine-ampel-oben-o1",
+          "text": "Die Übersicht beantwortet die Frage „Welcher Pod ist betroffen?“, damit der On-Call sofort handeln kann.",
+          "verdict": "false",
+          "explanation": "Das ist die Leitfrage von Level 3; die Übersicht fragt nur, ob gerade gepaged wird, und Level 2, welcher Service das Problem hat."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o2",
+          "text": "Ganz oben steht genau ein Indikator: Ist der Service aus Sicht der Endnutzer und SLOs gesund?",
+          "verdict": "true",
+          "explanation": "Das Anna-Karenina-Prinzip aus dem Talk: Gesund sieht immer gleich aus, also reicht eine Ampel – die vielen Formen des Unglücks gehören nicht nach oben."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o3",
+          "text": "Eine zweite Ampel auf der Übersicht ist in Ordnung, wenn sie einen anderen Aspekt zeigt.",
+          "verdict": "depends",
+          "explanation": "Für ein zweites Produkt oder einen anderen Mandanten mit eigenem SLO ja – das ist eine andere Frage; für denselben Service ist es die zweite Uhr."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o4",
+          "text": "Je mehr Panels auf der Übersicht, desto schneller gelingt dem On-Call die Diagnose.",
+          "verdict": "false",
+          "explanation": "Der Sizing-Spickzettel nennt maximal zehn bis zwanzig Panels pro Dashboard; die Diagnose läuft über die Hierarchie, nicht über ein überladenes Overview."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o5",
+          "text": "Einzelne Fehlerklassen und andere Diagnostik gehören tiefer ins Dashboard oder auf Detail-Dashboards.",
+          "verdict": "true",
+          "explanation": "Die Übersicht beantwortet nur „Werde ich gerade gepaged?“; die Frage nach der Ursache wird über Drill-Down-Links auf der nächsten Ebene beantwortet."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o6",
+          "text": "Die Ampel sollte auf der SLO-Compliance des Service basieren statt auf einzelnen Metriken.",
+          "verdict": "depends",
+          "explanation": "Mit definierten SLOs ist Compliance beziehungsweise Error-Budget der natürliche Indikator; ohne SLO bleibt nur eine aggregierte RED-Sicht aus Nutzerperspektive – Hauptsache, es ist ein Wert."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o7",
+          "text": "Zwei konkurrierende Top-Level-Statusanzeigen stiften Zweifel statt Klarheit, wie zwei Uhren.",
+          "verdict": "true",
+          "explanation": "Wer zwei Uhren hat, weiß nie, wie spät es ist – zeigen die beiden Ampeln Verschiedenes, beginnt die Diskussion, welcher man glaubt."
+        },
+        {
+          "id": "dash-eine-ampel-oben-o8",
+          "text": "Das Platform-Dashboard listet alle bekannten Fehlerklassen auf, damit der On-Call die Ursache sofort sieht.",
+          "verdict": "false",
+          "explanation": "Genau das verwirft der Talk: Unglück hat viele Formen, eine vollständige Liste ist nie vollständig und verdeckt die eine Frage, ob gerade jemand handeln muss."
+        }
+      ]
+    },
+    {
+      "id": "dash-panel-wahl-service",
+      "question": "Du baust das Service-Dashboard für den Quote-Service. Welche Panel-Entscheidungen treffen zu?",
+      "difficulty": "medium",
+      "section": "Dashboards & Viz",
+      "explanation": "Die Entscheidungsmatrix aus dem Talk: Heatmap für Verteilungen, Stat für aktuelle KPIs, Table für Top-N, Gauge nur für begrenzte Werte, Time Series mit wenigen Serien, State Timeline nur auf der Übersicht.",
+      "options": [
+        {
+          "id": "dash-panel-wahl-service-o1",
+          "text": "Die CPU-Auslastung eines Pods ist als Gauge mit Skala von 0 bis 100 % richtig dargestellt.",
+          "verdict": "depends",
+          "explanation": "Mit CPU-Limit ja, dann ist „100 %“ definiert; ohne Limit (nur Request) fehlt die Obergrenze, und eine Time Series gegen Request und Node-Kapazität ist ehrlicher."
+        },
+        {
+          "id": "dash-panel-wahl-service-o2",
+          "text": "Ein Time-Series-Panel mit allen zwanzig Endpoints als Serien ist die beste Übersicht.",
+          "verdict": "false",
+          "explanation": "Der Talk empfiehlt höchstens vier bis fünf Serien pro Panel; zwanzig Linien sind nicht lesbar – die Top-N gehören in die Table."
+        },
+        {
+          "id": "dash-panel-wahl-service-o3",
+          "text": "Für die Latenz-Verteilung nimmst du eine Heatmap über die Histogramm-Buckets, weil sie Ausreißer und Cluster zeigt.",
+          "verdict": "true",
+          "explanation": "Eine p99-Linie sagt nicht, ob dahinter zwei Cluster (Cache-Hit und Cache-Miss) liegen; die Heatmap macht die Form der Verteilung sichtbar."
+        },
+        {
+          "id": "dash-panel-wahl-service-o4",
+          "text": "Die zehn langsamsten Endpoints gehören in eine sortierbare Table, nicht in ein Liniendiagramm.",
+          "verdict": "true",
+          "explanation": "Vergleiche und Top-N-Listen sind der Einsatzzweck der Table; mit Field Overrides lassen sich Zellen farbig hinterlegen und als Data Link nutzen."
+        },
+        {
+          "id": "dash-panel-wahl-service-o5",
+          "text": "Für die Latenz reicht ein Time-Series-Panel mit den Linien p50, p95 und p99 vollständig aus.",
+          "verdict": "depends",
+          "explanation": "Für Trend und SLO-Grenze genügt das; die Linien verbergen aber, ob dahinter zwei Cluster (Cache-Hit und Cache-Miss) liegen, dann braucht es zusätzlich die Heatmap."
+        },
+        {
+          "id": "dash-panel-wahl-service-o6",
+          "text": "Die aktuelle SLO-Compliance kommt als Stat-Panel mit Sparkline in die Kopfzeile des Service-Dashboards.",
+          "verdict": "true",
+          "explanation": "Stat beantwortet „Wie ist der aktuelle Wert eines KPIs?“; die Sparkline liefert den Trend, die Schwellwertfarbe die Ampel."
+        },
+        {
+          "id": "dash-panel-wahl-service-o7",
+          "text": "Die State Timeline mit der Verfügbarkeit gehört auf jedes Service- und Pod-Dashboard.",
+          "verdict": "false",
+          "explanation": "Die State Timeline ist die Status-Historie für die Platform-Übersicht (Level 1); auf den unteren Ebenen zählen Zeitreihen und Ressourcen-Gauges."
+        },
+        {
+          "id": "dash-panel-wahl-service-o8",
+          "text": "Die Request-Rate (req/s) zeigst du als Gauge, damit die Auslastung auf einen Blick erkennbar ist.",
+          "verdict": "false",
+          "explanation": "Eine Gauge braucht einen Min-Max-Rahmen; eine Request-Rate ist unbegrenzt, es gibt kein sinnvolles „100 %“ – dafür ist Time Series oder Stat gedacht."
+        }
+      ]
+    },
+    {
+      "id": "lgtm-flamegraph-lesen",
+      "question": "Du siehst im Flame Graph des Quote-Services einen breiten Block JSON-Serialisierung und einen schmalen Block HttpClient. Welche Aussagen zum Lesen treffen zu?",
       "difficulty": "medium",
       "section": "LGTM & Korrelation",
-      "explanation": "Loki-Labels beschreiben die Quelle, nicht den Inhalt; High-Cardinality-Felder wie trace_id oder user_id gehören in Structured Metadata (Loki 3.0+), und in LogQL filterst Du von links nach rechts: String-Filter vor Regex vor Parser.",
+      "explanation": "Breite ist der Anteil an den Samples und zeigt den Hot Path; die X-Achse ist keine Zeitachse, die Y-Achse die Stack-Tiefe, Farben sind zufällig – breit heißt teuer, schmal heißt nicht unwichtig.",
       "options": [
         {
-          "id": "lgtm-loki-labels-o1",
-          "text": "Loki-Labels beschreiben die Quelle der Logs, nicht ihren Inhalt.",
+          "id": "lgtm-flamegraph-lesen-o1",
+          "text": "Die Breite eines Frames ist sein Anteil an den Samples; der breiteste Pfad von unten nach oben ist der Hot Path.",
           "verdict": "true",
-          "explanation": "Labels wie namespace oder app identifizieren den Stream — Inhalte werden über Filter und Parser in der Pipeline verarbeitet."
+          "explanation": "Jeder Frame ist so breit wie die Summe seiner Samples; die Serialisierung mit einem Drittel der Samples ist damit der CPU-Schwerpunkt."
         },
         {
-          "id": "lgtm-loki-labels-o2",
-          "text": "High-Cardinality-Felder wie trace_id oder user_id gehören in Structured Metadata (Loki 3.0+).",
-          "verdict": "true",
-          "explanation": "Als Labels würden sie die Stream-Anzahl explodieren lassen — Structured Metadata speichert sie, ohne neue Streams zu erzeugen."
-        },
-        {
-          "id": "lgtm-loki-labels-o3",
-          "text": "Die Performance-Reihenfolge in LogQL lautet: String-Filter |= vor Regex |~ vor Parser | json.",
-          "verdict": "true",
-          "explanation": "Billige Filter zuerst reduzieren die Datenmenge, bevor teure Regex- und Parser-Stufen laufen — von links nach rechts filtern."
-        },
-        {
-          "id": "lgtm-loki-labels-o4",
-          "text": "user_id als Label beschleunigt Abfragen und ist Best Practice.",
-          "verdict": "false",
-          "explanation": "Eine User-ID als Label erzeugt pro Nutzer einen eigenen Stream — die Kardinalitätsexplosion ruiniert die Performance, statt sie zu verbessern."
-        },
-        {
-          "id": "lgtm-loki-labels-o5",
-          "text": "| json gehört möglichst an den Anfang der Pipeline.",
-          "verdict": "false",
-          "explanation": "Der Parser ist die teuerste Stufe — erst mit billigen String-Filtern die Menge reduzieren, dann parsen."
-        },
-        {
-          "id": "lgtm-loki-labels-o6",
-          "text": "Regex-Filter sind schneller als einfache String-Filter.",
-          "verdict": "false",
-          "explanation": "Es ist umgekehrt: |= ist schneller als |~, weshalb der String-Filter in der Pipeline zuerst stehen soll."
-        },
-        {
-          "id": "lgtm-loki-labels-o7",
-          "text": "Nach trace_id kannst Du in Loki sauber filtern.",
+          "id": "lgtm-flamegraph-lesen-o2",
+          "text": "Ein Health-Check-Frame mit einem Achtel der Samples ist ein Problem, das du beheben solltest.",
           "verdict": "depends",
-          "explanation": "Das hängt von der Loki-Version ab — ab 3.0 über Structured Metadata, davor nur über teure Inhalts-Filter."
+          "explanation": "Anteile sind relativ: Bei einem fast untätigen Service dominieren Health-Checks die Samples, ohne Last zu erzeugen; bei hoher Last wäre derselbe Anteil ein echter Kostenfaktor."
         },
         {
-          "id": "lgtm-loki-labels-o8",
-          "text": "Den Regex-Filter |~ solltest Du vermeiden.",
+          "id": "lgtm-flamegraph-lesen-o3",
+          "text": "Ein Frame links neben einem anderen wurde zeitlich vor ihm aufgerufen, die X-Achse ist die Zeit.",
+          "verdict": "false",
+          "explanation": "Die horizontale Position ergibt sich aus alphabetischer Sortierung der zusammengefassten Stacks, nicht aus der Reihenfolge der Aufrufe."
+        },
+        {
+          "id": "lgtm-flamegraph-lesen-o4",
+          "text": "Der breiteste Leaf-Frame ist die Funktion, die du optimieren solltest, um die Latenz zu senken.",
           "verdict": "depends",
-          "explanation": "Für Pattern wie Exception-Klassennamen ist er das richtige Werkzeug — nur sollte vorher ein billigerer Filter die Datenmenge reduzieren."
+          "explanation": "Wenn CPU der Engpass ist, ja; ist das Problem Wartezeit auf Locks oder I/O, zeigt der CPU-Flame-Graph die Ursache gar nicht, dann braucht es ein Off-CPU- oder Lock-Profil."
+        },
+        {
+          "id": "lgtm-flamegraph-lesen-o5",
+          "text": "Die Y-Achse ist die Stack-Tiefe: unten der Einstieg, oben der Leaf, der gerade auf der CPU lief.",
+          "verdict": "true",
+          "explanation": "Von Tomcat-Endpoint über Controller bis StringBuilder.append wächst der Stack nach oben; der Leaf ist die Funktion, die beim Sample wirklich rechnete."
+        },
+        {
+          "id": "lgtm-flamegraph-lesen-o6",
+          "text": "Ein roter Frame ist heißer als ein gelber, denn die Farbe kodiert den Anteil an der CPU-Zeit.",
+          "verdict": "false",
+          "explanation": "Die Farben sind bewusst zufällig und tragen keine Semantik; nur die Breite zählt."
+        },
+        {
+          "id": "lgtm-flamegraph-lesen-o7",
+          "text": "Der schmale HttpClient-Block ist unwichtig, weil er wenig CPU-Zeit verbraucht, und kann ignoriert werden.",
+          "verdict": "false",
+          "explanation": "Schmal heißt nur: wenig CPU-Samples. Ein Aufruf, der die meiste Zeit wartet, ist im CPU-Profil schmal und kann trotzdem die Latenz dominieren."
+        },
+        {
+          "id": "lgtm-flamegraph-lesen-o8",
+          "text": "Die X-Achse ist keine Zeitachse: Frames sind alphabetisch sortiert, Nachbarn stehen nicht in Aufrufreihenfolge.",
+          "verdict": "true",
+          "explanation": "Das ist die häufigste Fehllesung: Dass ein Block links von einem anderen steht, sagt nichts darüber, was zuerst lief."
         }
       ]
     },
     {
-      "id": "lgtm-tempo-spanmetrics",
-      "question": "Welche Aussagen zu Tempo, TraceQL und dem Metrics-Generator treffen zu?",
-      "difficulty": "medium",
-      "section": "LGTM & Korrelation",
-      "explanation": "Der Tempo Metrics-Generator erzeugt automatisch RED-Metriken aus Spans (traces_spanmetrics_calls_total, traces_spanmetrics_latency_bucket); TraceQL filtert Spans nach Attributen und Dauer.",
-      "options": [
-        {
-          "id": "lgtm-tempo-spanmetrics-o1",
-          "text": "Der Metrics-Generator erzeugt automatisch RED-Metriken aus Spans.",
-          "verdict": "true",
-          "explanation": "Aus den Trace-Daten entstehen ohne zusätzliche Instrumentierung Rate-, Error- und Latenz-Metriken pro Service."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o2",
-          "text": "Beispiele dafür sind traces_spanmetrics_calls_total und traces_spanmetrics_latency_bucket.",
-          "verdict": "true",
-          "explanation": "Genau diese beiden Metriknamen nennt der Talk als Output des Metrics-Generators."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o3",
-          "text": "TraceQL filtert Spans nach Attributen und Dauer, z. B. { span.db.system = „postgresql“ && duration > 500ms }.",
-          "verdict": "true",
-          "explanation": "Die Abfrage kombiniert Span-Attribute mit Dauer-Bedingungen und findet so etwa langsame DB-Calls."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o4",
-          "text": "RED-Metriken aus Traces musst Du manuell im Anwendungscode pflegen.",
-          "verdict": "false",
-          "explanation": "Der Metrics-Generator erledigt das automatisch aus den Spans — das ist sein Hauptzweck."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o5",
-          "text": "TraceQL ist nur ein anderer Name für PromQL.",
-          "verdict": "false",
-          "explanation": "TraceQL ist eine eigene Abfragesprache über Spans und Span-Attribute; PromQL arbeitet auf Zeitreihen."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o6",
-          "text": "{ duration > 2s } ist eine LogQL-Query.",
-          "verdict": "false",
-          "explanation": "Das ist TraceQL — LogQL-Queries beginnen mit Stream-Selektoren wie {app=„quote-service“} und nutzen Pipelines."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o7",
-          "text": "Span-Metriken ersetzen Deine Micrometer-HTTP-Metriken.",
-          "verdict": "depends",
-          "explanation": "Das hängt von Sampling und Instrumentierungs-Abdeckung ab — gesampelte Traces können Raten verzerren, direkte Metriken bleiben oft die Referenz."
-        },
-        {
-          "id": "lgtm-tempo-spanmetrics-o8",
-          "text": "duration > 2s ist ein sinnvoller Slow-Span-Filter.",
-          "verdict": "depends",
-          "explanation": "Das hängt vom Latenz-Profil ab — bei B2B-Calls mit typischen 500ms–5s fängt der Filter auch völlig normales Verhalten."
-        }
-      ]
-    },
-    {
-      "id": "lgtm-flame-graphs",
-      "question": "Wie liest Du einen Flame Graph richtig? Welche Aussagen treffen zu?",
+      "id": "lgtm-exemplar-drilldown-leer",
+      "question": "Der Drill-Down Metrik → Trace → Log funktioniert nicht: Auf dem Latenz-Panel erscheinen keine Exemplar-Diamonds, und wo sie erscheinen, ist der Trace leer. Welche Aussagen treffen zu?",
       "difficulty": "hard",
       "section": "LGTM & Korrelation",
-      "explanation": "In einem Flame Graph (Brendan Gregg, 2011) zeigt die Y-Achse die Stack-Tiefe und die X-Achse alphabetisch sortierte Samples — keine Zeit-Achse; die Breite eines Frames entspricht seinem Anteil an den CPU-Samples, die Farben sind bewusst zufällig.",
+      "explanation": "Exemplars müssen die ganze Kette mitgehen: OpenMetrics-Format bei der Exposition, send_exemplars beim Weiterleiten, Speicherung in Mimir – und ob der verlinkte Trace existiert, entscheidet das Sampling, ob die Logs passen, die trace_id in Structured Metadata.",
       "options": [
         {
-          "id": "lgtm-flame-graphs-o1",
-          "text": "Die X-Achse sortiert Samples alphabetisch — sie ist keine Zeit-Achse.",
+          "id": "lgtm-exemplar-drilldown-leer-o1",
+          "text": "Alloy oder Prometheus muss send_exemplars aktivieren, sonst erreichen Exemplars Mimir nie.",
           "verdict": "true",
-          "explanation": "Die alphabetische Sortierung fasst gleiche Stacks zusammen — eine zeitliche Abfolge lässt sich aus der Position nicht ablesen."
+          "explanation": "Im Talk steht genau dieser Schalter in der remote_write-Konfiguration; ohne ihn werden die Samples geschrieben, die Exemplars aber verworfen."
         },
         {
-          "id": "lgtm-flame-graphs-o2",
-          "text": "Die Breite eines Frames entspricht seinem Anteil an den CPU-Samples — der Hot Path.",
+          "id": "lgtm-exemplar-drilldown-leer-o2",
+          "text": "Exemplars setzen das OpenMetrics-Format voraus; das klassische Prometheus-Textformat transportiert sie nicht.",
           "verdict": "true",
-          "explanation": "Je breiter ein Frame, desto mehr Samples entfielen auf diesen Pfad — „breit = teuer“ stimmt aus dem Talk."
+          "explanation": "Der Scraper kann nur einsammeln, was der Endpunkt ausgibt; ein Client, der im alten Textformat exponiert, liefert Histogramme ohne Exemplars."
         },
         {
-          "id": "lgtm-flame-graphs-o3",
-          "text": "Die Farben sind bewusst zufällig und tragen keine Semantik.",
+          "id": "lgtm-exemplar-drilldown-leer-o3",
+          "text": "Ein Log-Eintrag lässt sich nur über den Zeitstempel dem Trace zuordnen, nicht über eine ID.",
+          "verdict": "false",
+          "explanation": "Trace-to-Logs sucht über die trace_id, die als Structured Metadata an der Logzeile hängt – der Zeitstempel allein würde bei tausend Requests pro Sekunde nichts eingrenzen."
+        },
+        {
+          "id": "lgtm-exemplar-drilldown-leer-o4",
+          "text": "Trotz Exemplar kann der Sprung ins Leere führen, weil Tempo den Trace nur kennt, wenn er gesampelt wurde.",
           "verdict": "true",
-          "explanation": "Die Färbung dient nur der visuellen Unterscheidung benachbarter Frames — sie codiert weder Kosten noch Modul-Zugehörigkeit."
+          "explanation": "Der Exemplar trägt eine Trace-ID, aber wenn der Sampler diesen Trace nicht behalten hat, findet Tempo nichts – die Kette ist nur so stark wie das Sampling."
         },
         {
-          "id": "lgtm-flame-graphs-o4",
-          "text": "Nebeneinanderliegende Frames stehen in Aufrufreihenfolge.",
+          "id": "lgtm-exemplar-drilldown-leer-o5",
+          "text": "Die Trace-ID steht als Label auf der Zeitreihe, deshalb findet Grafana den Trace über die Metrik-Labels.",
           "verdict": "false",
-          "explanation": "Die X-Achse ist alphabetisch sortiert — Nachbarschaft sagt nichts über die zeitliche oder kausale Reihenfolge der Aufrufe."
+          "explanation": "Eine Trace-ID als Label wäre eine Zeitreihe pro Request und würde Mimir sprengen; genau deshalb werden Exemplars getrennt von den Samples gespeichert."
         },
         {
-          "id": "lgtm-flame-graphs-o5",
-          "text": "Schmale Frames sind unwichtig.",
+          "id": "lgtm-exemplar-drilldown-leer-o6",
+          "text": "Exemplars hängen an jeder Metrik, auch an Gauges wie der CPU-Auslastung, solange der Scrape sie liefert.",
           "verdict": "false",
-          "explanation": "Der Talk stellt klar: „schmal = unwichtig“ stimmt nicht — auch ein schmaler Pfad kann kritisch sein, etwa ein seltener, aber blockierender Aufruf."
+          "explanation": "Ein Exemplar ist eine Beobachtung mit Trace-Kontext und gehört zu Histogramm-Buckets und Zählern; eine CPU-Gauge hat keinen Request, auf den sie zeigen könnte."
         },
         {
-          "id": "lgtm-flame-graphs-o6",
-          "text": "Die Y-Achse zeigt die Ausführungsdauer eines Aufrufs.",
-          "verdict": "false",
-          "explanation": "Die Y-Achse ist die Stack-Tiefe: unten der Einstieg, oben das Leaf, das gerade auf der CPU lief."
-        },
-        {
-          "id": "lgtm-flame-graphs-o7",
-          "text": "Der breiteste Frame ist Dein Optimierungsziel.",
+          "id": "lgtm-exemplar-drilldown-leer-o7",
+          "text": "Der Trace-to-Logs-Sprung in Grafana zeigt automatisch die Logzeilen des betroffenen Requests.",
           "verdict": "depends",
-          "explanation": "„Breit = teuer“ stimmt, aber ob sich die Optimierung lohnt, hängt davon ab, ob der Pfad auf Deinem kritischen Request-Weg liegt."
+          "explanation": "Nur wenn die Logs die trace_id tragen und das Datasource-Mapping Labels wie app und namespace sowie den Zeitbereich korrekt überträgt – fehlt eines davon, ist das Logs-Panel leer."
         },
         {
-          "id": "lgtm-flame-graphs-o8",
-          "text": "Ein On-CPU-Flame-Graph beantwortet Deine Frage.",
+          "id": "lgtm-exemplar-drilldown-leer-o8",
+          "text": "Die Speicherung von Exemplars muss im Backend eigens eingeschaltet werden, sonst sind sie unsichtbar.",
           "verdict": "depends",
-          "explanation": "Das hängt von der Fragestellung ab — für Wartezeiten gibt es Off-CPU-, für Speicher Memory- und für Vergleiche Differential-Varianten."
+          "explanation": "Je nach Version und Betriebsart kann das ein Feature-Flag oder ein Konfigurationswert sein; ob der Schalter nötig ist, musst du für deine Version prüfen."
         }
       ]
     },
     {
-      "id": "dash-was-gehoert-nach-oben",
-      "question": "„Was gehört nach oben?“ — Welche Aussagen zu den beiden Dashboard-Prinzipien aus dem Talk treffen zu?",
-      "difficulty": "easy",
-      "section": "Dashboard-Architektur",
-      "explanation": "Das Anna-Karenina-Prinzip (Glück hat eine Form, Unglück viele) fordert einen einzigen Top-Level-Indikator für den SLO-Zustand, und Segal's Law (wer zwei Uhren hat, ist sich nie sicher) fordert eine einzige Status-Ampel — Diagnostik gehört tiefer.",
-      "options": [
-        {
-          "id": "dash-was-gehoert-nach-oben-o1",
-          "text": "Anna-Karenina-Prinzip: Auf das Haupt-Dashboard gehört ein Indikator — ist der Service aus Sicht von Endnutzern und SLOs glücklich?",
-          "verdict": "true",
-          "explanation": "Glück hat eine Form, Unglück viele — deshalb ein einziger Happiness-Indikator oben statt aller Fehlerklassen."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o2",
-          "text": "Der Begriff „Anna-Karenina-Prinzip“ stammt von Jared Diamond, das Zitat von Tolstoi.",
-          "verdict": "true",
-          "explanation": "Das Zitat eröffnet Tolstois Anna Karenina (1878); den Begriff prägte Diamond in Guns, Germs, and Steel (1997) — so weist es der Talk aus."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o3",
-          "text": "Segal's Law lehrt: ein Status, eine Ampel — Diagnostisches gehört tiefer oder auf verlinkte Detail-Dashboards.",
-          "verdict": "true",
-          "explanation": "Wer zwei „Uhren“ hat, ist sich nie sicher — zwei Top-Level-Statusanzeigen stiften Zweifel statt Klarheit."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o4",
-          "text": "Auf das Haupt-Dashboard gehören alle Fehlerklassen einzeln aufgelistet.",
-          "verdict": "false",
-          "explanation": "Genau das verhindert das Anna-Karenina-Prinzip: Unglück hat viele Formen, die gehören in tiefere Dashboard-Ebenen."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o5",
-          "text": "Zwei redundante Top-Level-Ampeln erhöhen das Vertrauen in den Status.",
-          "verdict": "false",
-          "explanation": "Nach Segal's Law stiften sie Zweifel, sobald sie sich widersprechen — deshalb genau eine Ampel."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o6",
-          "text": "Segal's Law ist zweifelsfrei von Lee Segall.",
-          "verdict": "false",
-          "explanation": "Der Talk kennzeichnet es als apokryph — Segall wird es nur „häufig zugeschrieben“."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o7",
-          "text": "Der eine Top-Indikator ist die Error-Rate.",
-          "verdict": "depends",
-          "explanation": "Was den Happiness-Status speist, hängt vom SLO ab — Error-Budget, P99 gegen Ziel oder eine kombinierte SLO-Ampel können richtig sein."
-        },
-        {
-          "id": "dash-was-gehoert-nach-oben-o8",
-          "text": "Mehrere Ampeln sind grundsätzlich falsch.",
-          "verdict": "depends",
-          "explanation": "Auf demselben Top-Level für dasselbe System ja — aber eine eigene Ampel pro Service-Dashboard ist normal; die Ebene entscheidet."
-        }
-      ]
-    },
-    {
-      "id": "evo-goodhart-grundidee",
-      "question": "Der Talk stellt Goodharts Gesetz in den Mittelpunkt des Alignment-Problems („Wir messen A und hoffen auf B“). Welche Aussagen dazu treffen zu?",
+      "id": "goodhart-gegenmittel",
+      "question": "Welche Aussagen zu den Gegenmitteln gegen Goodhart-Effekte aus dem Talk treffen zu?",
       "difficulty": "easy",
       "section": "Evolution & Goodhart",
-      "explanation": "Sobald eine Metrik zum Ziel wird und jemand oder etwas auf sie optimiert, löst sie sich vom eigentlichen Ziel. Ein Agent als Optimierer verschärft das, weil er die Lücke zwischen Metrik und Ziel schneller findet als ein Team.",
+      "explanation": "Vier Gegenmittel: Gegenmetrik koppeln, am Nutzerpfad messen, Verteilung statt Mittelwert und Aufschlüsselung statt Summe, Holdout und Schreibschutz. Faustregel: Wer ein Signal als Ziel vorgibt, braucht ein zweites, das der Optimierer nicht beeinflusst.",
       "options": [
         {
-          "id": "evo-goodhart-grundidee-o1",
-          "text": "Wird eine Messgröße zum Ziel, taugt sie nicht mehr als verlässliches Maß.",
-          "verdict": "true",
-          "explanation": "Das ist die Kurzfassung des Gesetzes: Der Optimierungsdruck verändert den Zusammenhang zwischen Metrik und eigentlichem Ziel."
-        },
-        {
-          "id": "evo-goodhart-grundidee-o2",
-          "text": "Ein Agent findet die Lücke zwischen Metrik und eigentlichem Ziel oft schneller als ein Team.",
-          "verdict": "true",
-          "explanation": "Ein Agent ist ein sehr guter Optimierer; genau deshalb braucht er Gegenmetriken und ein Gate, das er nicht selbst ändern kann."
-        },
-        {
-          "id": "evo-goodhart-grundidee-o3",
-          "text": "Die bekannte Kurzfassung stammt von Marilyn Strathern (1997) und verdichtet Charles Goodharts Beobachtung von 1975.",
-          "verdict": "true",
-          "explanation": "Goodhart schrieb 1975 über Geldpolitik; die Formulierung „When a measure becomes a target, it ceases to be a good measure“ prägte Strathern 1997."
-        },
-        {
-          "id": "evo-goodhart-grundidee-o4",
-          "text": "Das Gesetz gilt nur für Menschen, automatisierte Optimierer sind davon nicht betroffen.",
+          "id": "goodhart-gegenmittel-o1",
+          "text": "Eine Gegenmetrik ersetzt die Zielmetrik, damit der Optimierer nur noch eine Zahl im Blick hat.",
           "verdict": "false",
-          "explanation": "Es gilt für jeden Optimierer. Die Darwin Gödel Machine ist ein Beispiel für einen Agenten, der die Metrik statt der Aufgabe optimiert hat."
+          "explanation": "Die Gegenmetrik wird gekoppelt, nicht ausgetauscht; eine einzelne Metrik wäre wieder ein Ziel ohne Gegengewicht und damit genauso anfällig."
         },
         {
-          "id": "evo-goodhart-grundidee-o5",
-          "text": "Das Gesetz bedeutet, dass Metriken grundsätzlich nutzlos sind und man auf sie verzichten sollte.",
-          "verdict": "false",
-          "explanation": "Metriken bleiben das Werkzeug des Monitorings. Das Gesetz warnt vor blindem Optimieren einer einzelnen Metrik, nicht vor dem Messen."
-        },
-        {
-          "id": "evo-goodhart-grundidee-o6",
-          "text": "Eine einmal eingeführte Gegenmetrik beseitigt das Problem endgültig.",
-          "verdict": "false",
-          "explanation": "Auch eine Gegenmetrik kann zum Ziel werden und umgangen werden. Sie erschwert die Manipulation, schließt sie aber nicht für immer aus."
-        },
-        {
-          "id": "evo-goodhart-grundidee-o7",
-          "text": "Eine Metrik als Ziel vorzugeben ist immer ein Fehler.",
+          "id": "goodhart-gegenmittel-o2",
+          "text": "Eine zusätzlich gemessene Gegenmetrik reicht aus, um Goodhart-Effekte zu verhindern.",
           "verdict": "depends",
-          "explanation": "Als Orientierung ist ein Ziel hilfreich. Kritisch wird es bei starkem Optimierungsdruck ohne Gegenmetrik, besonders wenn ein Agent optimiert."
+          "explanation": "Sie wirkt nur, wenn der Optimierer sie nicht beeinflussen kann; darf ein Agent auch ihre Definition oder Messung ändern, optimiert er beide. Deshalb gehören Holdout und Schreibschutz dazu."
         },
         {
-          "id": "evo-goodhart-grundidee-o8",
-          "text": "Ein Alert-Schwellwert ist ein Ziel im Sinne des Gesetzes.",
+          "id": "goodhart-gegenmittel-o3",
+          "text": "Vollständige Quotes und Conversion-Rate statt Probe und Statuscode sind das Gegenmittel „Am Nutzerpfad messen“.",
+          "verdict": "true",
+          "explanation": "Das greift die Perspektive aus „Errors ≠ Errors“ auf: Gemessen wird, was der Kunde erlebt, nicht was die Maschine meldet."
+        },
+        {
+          "id": "goodhart-gegenmittel-o4",
+          "text": "Holdout bedeutet, dem Agenten einen Teil der Produktionsdaten vorzuenthalten, damit er weniger Kontext hat.",
+          "verdict": "false",
+          "explanation": "Holdout betrifft die Messung, nicht den Arbeitskontext: Verborgen wird die Prüffunktion oder Musterlösung, damit der Optimierer sie nicht direkt bedienen kann."
+        },
+        {
+          "id": "goodhart-gegenmittel-o5",
+          "text": "Die Cache-Hit-Ratio ist eine gute Zielmetrik für den Quote-Cache, die ein Team als Ziel vorgeben darf.",
           "verdict": "depends",
-          "explanation": "Das hängt davon ab, woran jemand gemessen wird: Zählt ein Team oder Agent die Zahl der Alerts als Erfolg, lädt das zum Anheben der Schwellwerte ein."
+          "explanation": "Gekoppelt mit dem Alter der ausgelieferten Daten ja; allein ist sie durch eine lange TTL trivial zu verbessern und verfehlt dann das Ziel, dass Kunden abschließbare Preise sehen."
+        },
+        {
+          "id": "goodhart-gegenmittel-o6",
+          "text": "Jede Zielmetrik bekommt ein Gegengewicht, etwa Hit-Ratio gegen Alter der Daten oder Limits gegen Throttling.",
+          "verdict": "true",
+          "explanation": "Das ist das Gegenmittel „Gegenmetrik koppeln“: Die Optimierung der einen Größe darf die andere nicht stillschweigend opfern."
+        },
+        {
+          "id": "goodhart-gegenmittel-o7",
+          "text": "Prüffunktionen und Musterlösungen bleiben vor dem Agenten verborgen; Alert-Regeln und Tests ändern sich nur per Review.",
+          "verdict": "true",
+          "explanation": "Holdout und Schreibschutz verhindern, dass der Optimierer die Messung selbst anfasst; der Talk nennt den Fall, in dem ein Agent die Musterlösung aus der sichtbaren Git-Historie las."
+        },
+        {
+          "id": "goodhart-gegenmittel-o8",
+          "text": "Verteilung statt Mittelwert heißt, zusätzlich zum Durchschnitt auch den Median zu zeigen.",
+          "verdict": "false",
+          "explanation": "Der Talk meint P99 statt Durchschnitt und Aufschlüsselung „by (clientName)“ statt globaler Rate; der Median ist ebenfalls ein Lagemaß und zeigt den Tail nicht."
         }
       ]
     },
     {
-      "id": "evo-probe-200-provider",
-      "question": "Im Versicherungsintegrator sind alle Pods „Ready“, 99,9 % der Antworten sind HTTP 200 und die interne Error-Rate ist niedrig, trotzdem melden Kunden unvollständige Quotes. Welche Aussagen treffen zu?",
+      "id": "goodhart-coverage-ergaenzungen",
+      "question": "Der Talk nimmt Test Coverage als Ziel (A) für „Tests finden Fehler vor den Kunden“ (B) auseinander. Welche Aussagen zu den befürchteten Folgen und den passenden Ergänzungen treffen zu?",
       "difficulty": "medium",
       "section": "Evolution & Goodhart",
-      "explanation": "Pod-Status, Statuscode und globale Raten messen den Prozess, nicht den Nutzerpfad. Vollständige Quotes und die Fehlerrate je Provider zeigen, ob das Ziel erreicht wird.",
+      "explanation": "Jeder befürchteten Folge des Coverage-Ziels steht eine Ergänzung gegenüber: Mutation Score gegen Tests ohne Prüfkraft, Feedbackzeit gegen langsame Suites, Flaky-Rate gegen wechselnde Ergebnisse, Produktionsregressionen gegen entgangene Fehler. Gemeinsamer blinder Fleck ist fehlender Code; Risiko zählt vor Durchschnitt.",
       "options": [
         {
-          "id": "evo-probe-200-provider-o1",
-          "text": "Eine 200-Antwort kann unvollständig sein, etwa wenn nur 7 von 10 Providern geantwortet haben.",
-          "verdict": "true",
-          "explanation": "Das ist die Partielle Degradation von der Errors-Folie: technisch erfolgreich, fachlich unvollständig."
-        },
-        {
-          "id": "evo-probe-200-provider-o2",
-          "text": "Fällt ein Provider aus und der Service liefert trotzdem 200, bleibt die interne Error-Rate niedrig.",
-          "verdict": "true",
-          "explanation": "Die interne Rate zählt 5xx des eigenen Services. Der Provider-Ausfall steckt in den Client-Metriken, nicht in den Server-Statuscodes."
-        },
-        {
-          "id": "evo-probe-200-provider-o3",
-          "text": "Die Fehlerrate je Provider (by clientName) macht den Ausfall sichtbar.",
-          "verdict": "true",
-          "explanation": "Die Aufschlüsselung verhindert, dass ein einzelner Anbieter in der Summe aller Provider-Calls untergeht."
-        },
-        {
-          "id": "evo-probe-200-provider-o4",
-          "text": "Sind alle Pods „Ready“, funktionieren auch alle Abhängigkeiten.",
-          "verdict": "false",
-          "explanation": "Ready sagt, dass ein Pod Traffic annehmen kann, nicht, dass Redis oder die Provider erreichbar sind."
-        },
-        {
-          "id": "evo-probe-200-provider-o5",
-          "text": "Spring Boot nimmt standardmäßig Datenbank- und Redis-Checks in die Readiness-Gruppe auf.",
-          "verdict": "false",
-          "explanation": "Laut Spring-Boot-Dokumentation fügt Spring Boot der Readiness- und der Liveness-Gruppe standardmäßig keine weiteren Health-Indikatoren hinzu."
-        },
-        {
-          "id": "evo-probe-200-provider-o6",
-          "text": "Mehr Pods zu starten behebt den Ausfall des Providers.",
-          "verdict": "false",
-          "explanation": "Zusätzliche Pods ändern nichts daran, dass der Anbieter nicht antwortet; sie erhöhen höchstens die Last auf ihn."
-        },
-        {
-          "id": "evo-probe-200-provider-o7",
-          "text": "Die Readiness-Probe sollte immer alle externen Abhängigkeiten prüfen.",
+          "id": "goodhart-coverage-ergaenzungen-o1",
+          "text": "Der Mutation Score eignet sich als hartes Merge-Gate für jede Änderung im Repository.",
           "verdict": "depends",
-          "explanation": "Prüft jeder Pod alle Provider, nimmt der Ausfall eines Anbieters alle Pods aus dem Traffic und macht aus einer Teildegradation einen Totalausfall. Die Probe entscheidet nur über den Traffic."
+          "explanation": "Er zeigt Prüfkraft statt reiner Ausführung, lässt sich aber über Ausschlüsse und ignorierte Mutanten schönen und kostet Laufzeit; als Gate taugt er nur mit stabilen, sichtbaren Operatoren und Ausschlüssen."
         },
         {
-          "id": "evo-probe-200-provider-o8",
-          "text": "Quote-Completeness ist die beste Metrik für den Dienst.",
+          "id": "goodhart-coverage-ergaenzungen-o2",
+          "text": "Ein Mutation Score von 100 % schließt aus, dass relevante Fehler unentdeckt bleiben, weil jede Änderung auffliegt.",
+          "verdict": "false",
+          "explanation": "Auch ein perfekter Score prüft nur vorhandenen Code: Fehlt eine Anforderung ganz, gibt es nichts zu mutieren, und Tests, die nur die Implementierung festnageln, töten Mutanten, ohne das Produkt sicherer zu machen."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o3",
+          "text": "Die Studienlage belegt, dass ein Coverage-Ziel Flaky-Rate und CI-Dauer erhöht und die Suite verlangsamt.",
+          "verdict": "false",
+          "explanation": "Der Talk sagt ausdrücklich, dass keine Studie das gemessen hat; es ist die Befürchtung, nicht der Befund, und genau deshalb werden Feedbackzeit und Flaky-Rate als Ergänzungen mitgemessen."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o4",
+          "text": "Eine ganz fehlende Anforderung bleibt für Coverage und Mutation Score unsichtbar, denn es gibt keinen Code dafür.",
+          "verdict": "true",
+          "explanation": "Das ist der gemeinsame blinde Fleck aus dem Talk: Fachliche Szenarien, Integration und reale Fehlerbilder brauchen eigene Aufmerksamkeit, weil weder Coverage noch Mutation Score sie sehen."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o5",
+          "text": "Eine ungetestete Berechtigungsprüfung wiegt schwerer als ungetestete Logzeilen; Coverage gehört nach Risiko gewichtet.",
+          "verdict": "true",
+          "explanation": "Das ist „Risiko vor Durchschnitt“: Je Komponente und je Änderung ansehen, keine Rangliste zwischen Teams aus einer Durchschnittsquote bauen."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o6",
+          "text": "Flaky Tests, die mal grün und mal rot sind, sollten sofort aus der Suite entfernt werden.",
           "verdict": "depends",
-          "explanation": "Sie bildet den Nutzerpfad gut ab, braucht aber eine Gegenmetrik wie die Conversion-Rate, sonst wird auch sie zum Ziel, das sich gezielt verbessern lässt."
+          "explanation": "Ein Test mit wechselndem Ergebnis kann ein echtes Nebenläufigkeits- oder Produktproblem anzeigen; Quarantäne mit Analyse ist oft besser als Löschen, bei reinem Testrauschen darf er jedoch schnell raus."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o7",
+          "text": "Der Mutation Score ergänzt die Coverage, weil er misst, ob Tests künstliche Fehler erkennen, nicht nur Code ausführen.",
+          "verdict": "true",
+          "explanation": "Die befürchtete Folge „Tests führen Code aus, prüfen aber wenig“ wird mit dem Anteil erkannter Mutanten beantwortet; Ausführung allein sagt nichts über Prüfkraft."
+        },
+        {
+          "id": "goodhart-coverage-ergaenzungen-o8",
+          "text": "Die Anzahl der Produktionsbugs eignet sich als unmittelbares Ziel für das Testteam, weil sie B direkt misst.",
+          "verdict": "false",
+          "explanation": "Der Talk nennt Produktionsregressionen eine Rückkopplung, kein Testziel: Sie kommen spät, hängen von Nutzung und Änderungsumfang ab, und der Nutzen liegt in der Auswertung nach Schwere und Ursache."
         }
       ]
     },
     {
-      "id": "evo-gegenmetrik-paare",
-      "question": "Eine Metrik wird optimiert, vielleicht sogar von einem Agenten. Welche Metrik-Gegenmetrik-Paare aus dem Talk sind sinnvoll?",
-      "difficulty": "medium",
-      "section": "Evolution & Goodhart",
-      "explanation": "Eine Gegenmetrik misst das, was die optimierte Metrik opfern könnte. Sie muss einen anderen blinden Fleck haben als die Metrik selbst.",
-      "options": [
-        {
-          "id": "evo-gegenmetrik-paare-o1",
-          "text": "Cache-Hit-Ratio und Alter der ausgelieferten Tarife.",
-          "verdict": "true",
-          "explanation": "Eine längere TTL treibt die Hit-Ratio hoch, macht die Daten aber älter. Das Alter fängt genau diesen Tausch auf."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o2",
-          "text": "Niedrigere CPU-Limits und CPU-Throttling-Prozentsatz samt P99.",
-          "verdict": "true",
-          "explanation": "Weniger Ressourcen senken Kosten, bis das Throttling steigt und GC-Pausen den P99 verschlechtern. Throttling und P99 sind das Gate."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o3",
-          "text": "Weniger Alerts und Störungen, die Kunden vor dem Alert melden.",
-          "verdict": "true",
-          "explanation": "Stille Alarme sind nur gut, wenn nicht gleichzeitig mehr Störungen unbemerkt bleiben. Kundenmeldungen vor dem Alert zeigen diese Lücke."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o4",
-          "text": "Durchschnittliche Antwortzeit und derselbe Durchschnitt über ein längeres Zeitfenster.",
-          "verdict": "false",
-          "explanation": "Beide Werte teilen denselben blinden Fleck: Der Mittelwert verdeckt langsame Requests. Ein Perzentil wäre die ergänzende Sicht."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o5",
-          "text": "Anteil der HTTP-200-Antworten und Anteil der HTTP-2xx-Antworten.",
-          "verdict": "false",
-          "explanation": "Beide zählen Statuscodes und übersehen unvollständige Quotes im gleichen Maß. Eine Gegenmetrik braucht eine andere Perspektive."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o6",
-          "text": "Cache-Hit-Ratio und Anzahl der Cache-Keys.",
-          "verdict": "false",
-          "explanation": "Die Zahl der Keys sagt nichts darüber, ob die ausgelieferten Daten noch aktuell sind. Das Risiko der längeren TTL bleibt unsichtbar."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o7",
-          "text": "P99 und P50 als Paar.",
-          "verdict": "depends",
-          "explanation": "Zusammen zeigen sie die Form der Verteilung. Beide sagen aber nichts über Korrektheit oder Vollständigkeit der Antwort."
-        },
-        {
-          "id": "evo-gegenmetrik-paare-o8",
-          "text": "Conversion-Rate als Gegenmetrik zur Quote-Completeness.",
-          "verdict": "depends",
-          "explanation": "Sie misst den Geschäftserfolg, schwankt aber mit Saison und Preisen. Als Gegenmetrik taugt sie nur, wenn sich diese Einflüsse herausrechnen lassen."
-        }
-      ]
-    },
-    {
-      "id": "evo-dgm-objective-hacking",
-      "question": "Die Darwin Gödel Machine erreichte in einem Lauf den Höchstwert der Prüffunktion gegen Halluzinationen bei Tool-Aufrufen, ohne das Problem zu lösen. Welche Aussagen zu diesem Fall und seinen Lehren für Produktionsmetriken treffen zu?",
+      "id": "transfer-histogram-vs-summary-p99",
+      "question": "Der Talk berechnet P99 mit histogram_quantile über die „by (le, uri)“ summierten Buckets und warnt: „P99-Werte einzelner Pods nie mitteln.“ Welche Aussagen zu Prometheus-Histogrammen und -Summaries treffen zu?",
       "difficulty": "hard",
-      "section": "Evolution & Goodhart",
-      "explanation": "Der Agent entfernte das Logging der Spezial-Tokens, auf das die Prüffunktion angewiesen war. Das ist Objective Hacking: Er optimierte den messbaren Wert statt der Aufgabe, und eine Anweisung allein verhinderte das nicht.",
+      "section": "transfer",
+      "explanation": "Histogramm-Buckets sind Zähler und damit additiv: Man kann sie über Instanzen summieren und erst danach das Quantil schätzen. Eine Summary liefert bereits fertige Quantile pro Instanz, und Quantile lassen sich weder mitteln noch sonst sinnvoll aggregieren. Der Preis des Histogramms ist die Genauigkeit, die von den Bucket-Grenzen abhängt.",
       "options": [
         {
-          "id": "evo-dgm-objective-hacking-o1",
-          "text": "Der Agent entfernte das Logging der Spezial-Tokens und umging so die Prüffunktion.",
+          "id": "transfer-histogram-vs-summary-p99-o1",
+          "text": "Histogramm-Buckets lassen sich über Pods summieren, weil jeder Bucket ein kumulativer Zähler ist.",
           "verdict": "true",
-          "explanation": "Ohne die Tokens im Log fand die Prüfung keine Halluzination mehr; der Score stieg, das zugrunde liegende Problem blieb."
+          "explanation": "Genau das tut „sum by (le, uri)“ in der Query des Talks: Die Zähler je Grenze werden addiert, und histogram_quantile schätzt daraus das Quantil der Gesamtverteilung."
         },
         {
-          "id": "evo-dgm-objective-hacking-o2",
-          "text": "Die Anweisung, die Spezial-Tokens nicht zu ändern, hielt den Agenten nicht ab.",
+          "id": "transfer-histogram-vs-summary-p99-o2",
+          "text": "Ein Histogramm liefert den P99 unabhängig von den Bucket-Grenzen exakt, weil es alle Beobachtungen zählt.",
+          "verdict": "false",
+          "explanation": "Es zählt Beobachtungen nur je Bucket; wo innerhalb des Buckets die Werte liegen, ist unbekannt, und die Interpolation kann vom wahren Quantil deutlich abweichen."
+        },
+        {
+          "id": "transfer-histogram-vs-summary-p99-o3",
+          "text": "Der Durchschnitt der P99-Werte einzelner Pods ist im Allgemeinen nicht das P99 des Gesamtsystems.",
           "verdict": "true",
-          "explanation": "Eine Regel im Prompt ist kein Schutz. Was ein Agent nicht ändern darf, muss technisch schreibgeschützt sein."
+          "explanation": "Quantile sind nicht additiv: Ein Pod mit wenigen, sehr langsamen Requests und einer mit vielen schnellen ergeben gemittelt eine Zahl, die kein Quantil der Gesamtverteilung ist."
         },
         {
-          "id": "evo-dgm-objective-hacking-o3",
-          "text": "Objective Hacking trat im Paper häufiger auf, wenn die Prüffunktionen für den Agenten nicht verborgen waren.",
-          "verdict": "true",
-          "explanation": "Deshalb empfiehlt der Talk, Prüffunktionen vor dem Optimierer zu verbergen und eine zweite Messung zu führen, die er nicht sieht."
-        },
-        {
-          "id": "evo-dgm-objective-hacking-o4",
-          "text": "Der Agent hat das Halluzinationsproblem gelöst, der hohe Score war berechtigt.",
-          "verdict": "false",
-          "explanation": "Der Score stieg, weil die Messung umgangen wurde, nicht weil weniger halluziniert wurde."
-        },
-        {
-          "id": "evo-dgm-objective-hacking-o5",
-          "text": "Eine ausdrückliche Anweisung im Prompt schließt solches Verhalten vollständig aus.",
-          "verdict": "false",
-          "explanation": "Der Fall zeigt das Gegenteil: Trotz der Anweisung wurde der Eingriff vorgenommen."
-        },
-        {
-          "id": "evo-dgm-objective-hacking-o6",
-          "text": "Verborgene Prüffunktionen schließen Objective Hacking vollständig aus.",
-          "verdict": "false",
-          "explanation": "Im beschriebenen Lauf waren die Prüffunktionen vor dem Agenten verborgen, und er hat dennoch den Weg über das Logging gefunden. Verbergen senkt die Häufigkeit, es eliminiert sie nicht."
-        },
-        {
-          "id": "evo-dgm-objective-hacking-o7",
-          "text": "Eine Holdout-Messung, die der Agent nie sieht, löst das Problem.",
+          "id": "transfer-histogram-vs-summary-p99-o4",
+          "text": "Die Default-Buckets der Instrumentierung genügen, um ein SLO von p99 unter 200 ms zu prüfen.",
           "verdict": "depends",
-          "explanation": "Sie erschwert die Manipulation erheblich. Sie hilft aber nur, wenn der Agent weder die Daten noch die Infrastruktur der Messung beeinflussen kann."
+          "explanation": "Das hängt davon ab, ob eine Grenze nahe an 200 ms liegt; fällt die SLO-Schwelle mitten in einen breiten Bucket, kann histogram_quantile das Quantil weder sauber über noch unter die Schwelle legen."
         },
         {
-          "id": "evo-dgm-objective-hacking-o8",
-          "text": "Ein Agent mit Schreibrechten kann auch Alert-Regeln in Produktion umgehen.",
+          "id": "transfer-histogram-vs-summary-p99-o5",
+          "text": "Ein avg by (uri) über die Summary-Quantile aller Pods liefert eine brauchbare Näherung des Gesamt-P99.",
+          "verdict": "false",
+          "explanation": "Das ist genau das Mitteln von Quantilen, vor dem der Talk warnt: Der Durchschnitt zweier P99-Werte ist nicht das P99 der zusammengelegten Anfragen."
+        },
+        {
+          "id": "transfer-histogram-vs-summary-p99-o6",
+          "text": "Für ein serviceweites P99 über mehrere Pods ist eine Summary besser, weil sie das Quantil fertig liefert.",
+          "verdict": "false",
+          "explanation": "Die Quantile einer Summary entstehen pro Instanz und lassen sich nicht über Instanzen aggregieren; für ein serviceweites P99 bleibt nur das Histogramm, dessen Buckets man summieren kann."
+        },
+        {
+          "id": "transfer-histogram-vs-summary-p99-o7",
+          "text": "Für die Latenzmetrik des Quote-Endpoints ist ein Histogramm der richtige Metriktyp.",
           "verdict": "depends",
-          "explanation": "Das hängt davon ab, was er ändern darf. Alert-Regeln, Tests und Metrikdefinitionen nur per Review änderbar zu machen, nimmt dem Agenten diese Möglichkeit."
+          "explanation": "Wenn das P99 über Pods oder Endpoints aggregiert werden soll, ja; braucht man nur das Quantil einer einzelnen Instanz und kennt keine sinnvollen Bucket-Grenzen, kann eine Summary reichen."
+        },
+        {
+          "id": "transfer-histogram-vs-summary-p99-o8",
+          "text": "Die Genauigkeit eines per histogram_quantile geschätzten P99 hängt von den gewählten Bucket-Grenzen ab.",
+          "verdict": "true",
+          "explanation": "Innerhalb eines Buckets interpoliert Prometheus linear; liegt der P99 in einem breiten Bucket, etwa zwischen 1 s und 5 s, ist die Schätzung entsprechend grob."
+        }
+      ]
+    },
+    {
+      "id": "transfer-retry-sturm-jitter-budget",
+      "question": "Der Talk fordert gleichmäßigen Flow statt Batches (TTL mit Jitter, Leaky Bucket). Das Nachbar-Deck zu SRE-Simulationen zeigt den Retry-Sturm: Ein Service mit μ = 100 req/s und λ = 70 req/s kollabiert nach einem kurzen Burst, wenn Clients bis zu zweimal wiederholen. Welche Aussagen zu Retries als Verstärker treffen zu?",
+      "difficulty": "hard",
+      "section": "transfer",
+      "explanation": "Retries koppeln die Clients an die Queue: Jeder Timeout erzeugt einen weiteren Request, die effektive Ankunftsrate wird λ · (R + 1) und kann die Kapazität dauerhaft übersteigen, obwohl die Grundlast längst wieder normal ist. Gegenmittel aus dem SRE Book: Backoff mit zufälligem Jitter, eine Obergrenze an Retries je Request und ein serverweites Retry-Budget; Load-Shedding bricht die Selbsterhaltung.",
+      "options": [
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o1",
+          "text": "Nach dem Burst kehrt der Goodput von selbst zur Normalität zurück, weil die Grundlast unter der Kapazität liegt.",
+          "verdict": "false",
+          "explanation": "Genau das ist die Pointe des Retry-Sturms: Die Queue aus dem Burst erzeugt Timeouts, die Timeouts erzeugen Retries, und die Retries halten die Queue voll; der Mittelwert der Grundlast verschweigt die Gefahr."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o2",
+          "text": "Exponentielles Backoff ohne Zufallsanteil lässt gleichzeitig gescheiterte Clients ihre Wiederholungen weiter synchron senden.",
+          "verdict": "true",
+          "explanation": "Alle Clients, die denselben Ausfall gesehen haben, berechnen dieselben Wartezeiten und treffen als Welle wieder ein; erst der zufällige Jitter verteilt die Wiederholungen über die Zeit, so wie TTL-Jitter die Cache-Refreshes verteilt."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o3",
+          "text": "Ein Circuit Breaker vor dem überlasteten Service rettet den Goodput während des Bursts.",
+          "verdict": "depends",
+          "explanation": "Er kappt die Retry-Kopplung, opfert dafür aber kurz und kontrolliert einen Teil des Goodputs, solange er offen ist; ob das netto besser ist als der Kollaps, hängt von Schwelle, Cooldown und der Dauer des Bursts ab."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o4",
+          "text": "Weil Retries die Last vervielfachen, sollten verteilte Systeme sie grundsätzlich abschalten.",
+          "verdict": "false",
+          "explanation": "Gegen vereinzelte, kurzlebige Fehler sind Retries das richtige Mittel; schädlich werden sie, wenn sie bei Überlast ohne Begrenzung und ohne Jitter die Last vervielfachen."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o5",
+          "text": "Ein serverweites Retry-Budget begrenzt den Anteil der Wiederholungen, unabhängig vom Retry-Limit des einzelnen Clients.",
+          "verdict": "true",
+          "explanation": "Das Budget wirkt auf der Ebene des Dienstes: Übersteigen die Wiederholungen den erlaubten Anteil, werden weitere Retries verworfen, auch wenn jeder Client für sich innerhalb seines Limits bleibt."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o6",
+          "text": "Bei 70 req/s Grundlast und bis zu zwei Retries kann die effektive Rate die Kapazität von 100 req/s übersteigen.",
+          "verdict": "true",
+          "explanation": "Wenn alle Requests in Timeouts laufen, wird aus 70 req/s bis zu 70 · 3 = 210 req/s; das übersteigt μ, die Queue wächst weiter, noch mehr Requests laufen in den Timeout, und der Sturm erhält sich selbst."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o7",
+          "text": "Längere Client-Timeouts beenden den Retry-Sturm, weil weniger Requests in den Timeout laufen.",
+          "verdict": "false",
+          "explanation": "Längere Timeouts verschieben nur den Punkt, an dem die Wiederholungen beginnen, und binden mehr Threads und Verbindungen in der Wartezeit; die Kopplung zwischen Queue und Retries bleibt bestehen."
+        },
+        {
+          "id": "transfer-retry-sturm-jitter-budget-o8",
+          "text": "Ein Retry nach einem Timeout ist bei einem Request, der die Provider-Quote anstößt, unbedenklich.",
+          "verdict": "depends",
+          "explanation": "Nur wenn der Request idempotent ist und der Provider nicht selbst überlastet ist; bei einem Fan-out auf fünf bis fünfzehn Provider vervielfacht ein Retry am Eingang die Last nach außen und kann dort Rate-Limits auslösen."
+        }
+      ]
+    },
+    {
+      "id": "transfer-kingman-variabilitaet",
+      "question": "Der Talk zeigt mit T = S / (1 − ρ) die M/M/1-Hyperbel und sagt, stoßartiger Traffic verschiebe den Knick nach links. Welche Aussagen zur Warteschlangentheorie dahinter treffen zu?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Little’s Law L = λ · W gilt verteilungsfrei. Die Kingman-Näherung erklärt den Knick: Die Wartezeit wächst mit ρ/(1 − ρ) und zusätzlich mit der Variabilität von Ankünften und Bedienzeiten; M/M/1 ist der Spezialfall mit Variationskoeffizienten von eins. Deshalb wartet man bei gleicher Auslastung länger, wenn der Traffic stoßartig ist.",
+      "options": [
+        {
+          "id": "transfer-kingman-variabilitaet-o1",
+          "text": "Wenn die Auslastung konstant bei 70 % bleibt, kann die Wartezeit nicht steigen, egal wie die Last ankommt.",
+          "verdict": "false",
+          "explanation": "Bei gleichem ρ entscheidet die Variabilität: Gleichmäßige Ankünfte warten kaum, stoßartige Ankünfte warten deutlich länger; der Mittelwert der Last verschweigt das."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o2",
+          "text": "Little’s Law L = λ · W setzt weder Poisson-Ankünfte noch exponentielle Bedienzeiten voraus.",
+          "verdict": "true",
+          "explanation": "Es gilt verteilungsfrei für jedes stabile System und taugt deshalb als Konsistenz-Check, während die Hyperbel T = S / (1 − ρ) den M/M/1-Fall beschreibt."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o3",
+          "text": "Bei gleicher Auslastung ρ ist die mittlere Wartezeit umso höher, je stoßartiger die Ankünfte sind.",
+          "verdict": "true",
+          "explanation": "Die Variabilität der Ankünfte geht als eigener Faktor in die Wartezeit ein; genau das meint der Talk mit dem nach links verschobenen Knick bei bursty Traffic."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o4",
+          "text": "Aus Ankunftsrate λ und gemessener Verweilzeit lässt sich die nötige Pool-Größe ableiten.",
+          "verdict": "depends",
+          "explanation": "Little’s Law liefert die mittlere Zahl gleichzeitiger Requests L = λ · W, also eine Untergrenze für den Pool; ob sie reicht, hängt davon ab, wie viel Headroom für Stöße über dem Mittel eingeplant wird."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o5",
+          "text": "Stark schwankende Bedienzeiten, etwa durch langsame Provider, verlängern die Wartezeit aller Requests in der Queue.",
+          "verdict": "true",
+          "explanation": "Die Variabilität der Bedienzeit geht neben der der Ankünfte in die Wartezeit ein; ein langsamer Auftrag hält alle dahinter Wartenden auf (Head-of-Line)."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o6",
+          "text": "Jitter auf den Cache-TTLs senkt die Wartezeit im nachgelagerten Service des Integrators.",
+          "verdict": "depends",
+          "explanation": "Wenn die TTL-Ablaufzeiten die Quelle der Stöße sind, senkt Jitter die Ankunftsvariabilität und damit die Wartezeit; kommen die Stöße aus dem Kundenverhalten, ändert TTL-Jitter daran nichts."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o7",
+          "text": "Die Hyperbel T = S / (1 − ρ) gilt unabhängig von der Verteilung der Ankünfte, weil sie nur von ρ abhängt.",
+          "verdict": "false",
+          "explanation": "Sie ist das M/M/1-Ergebnis für exponentielle Ankünfte und Bedienzeiten; bei anderer Variabilität ändert sich der Faktor, und genau deshalb verschiebt sich der Knick."
+        },
+        {
+          "id": "transfer-kingman-variabilitaet-o8",
+          "text": "Die Verweilzeit T aus der Hyperbel des Talks ist dasselbe wie die reine Wartezeit in der Queue.",
+          "verdict": "false",
+          "explanation": "T enthält die Bedienzeit S; die reine Wartezeit ist T − S. Wer bei ρ = 0,8 „fünfmal S“ als Wartezeit liest, überschätzt die Queue um eine Bedienzeit."
+        }
+      ]
+    },
+    {
+      "id": "transfer-symptom-vor-ursache-alerts",
+      "question": "Der Diagnostische Trichter des Talks führt von RED über Golden Signals zu USE. Die Prometheus-Alerting-Philosophie empfiehlt, auf Symptome statt auf Ursachen zu alarmieren. Welche Aussagen dazu treffen zu?",
+      "difficulty": "medium",
+      "section": "transfer",
+      "explanation": "Pages sollen auf Nutzerschmerz feuern (Fehler, Latenz am Nutzerpfad), weil jede Ursache sich dort zeigt und nur dort zählt. Ursachenmetriken wie CPU-Throttling oder Pool-Auslastung gehören in Dashboards, mit denen die Page eingegrenzt wird. So wenige Alerts wie möglich, und keine Page ohne mögliche Handlung.",
+      "options": [
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o1",
+          "text": "Ein Page auf die P99-Latenz des Quote-Endpoints deckt viele Ursachen ab, vom CPU-Throttling bis zum langsamen Provider.",
+          "verdict": "true",
+          "explanation": "Das ist der Kern von Symptom-Alerting: Jede Ursache, die Kunden trifft, zeigt sich am Nutzerpfad; der Trichter des Talks grenzt sie danach über Golden Signals und USE ein."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o2",
+          "text": "Auf CPU-Throttling über einem Schwellwert sollte der Bereitschaftsdienst gepagt werden.",
+          "verdict": "depends",
+          "explanation": "Als Frühwarnung vor einer Kaskade kann es sinnvoll sein, wenn eine klare Handlung existiert; ohne Nutzerschmerz ist es eher ein Ticket, und der Talk setzt es deshalb in die Prioritätsmatrix als P2 statt als direkten User-Facing-Failure."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o3",
+          "text": "Ein Alert auf eine hohe Pool-Auslastung ist ein Symptom-Alert, weil der Pool das ist, was Kunden spüren.",
+          "verdict": "false",
+          "explanation": "Kunden spüren Latenz und Fehler, nicht die Auslastung; der Pool ist eine Ursache. Erst die Timeouts, die daraus folgen, sind das Symptom."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o4",
+          "text": "Auf jede Ursache sollte ein eigener Page existieren, damit der Bereitschaftsdienst sofort weiß, wo er ansetzen muss.",
+          "verdict": "false",
+          "explanation": "Das führt zu vielen gleichzeitig feuernden Pages für dieselbe Störung und zu Pages für Ursachen, die Kunden gar nicht spüren; die Empfehlung lautet, so wenige Alerts wie möglich."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o5",
+          "text": "Ein Alert auf das Scheitern des Cache-Refresh-Jobs ist überflüssig, solange die Latenz des Endpoints überwacht wird.",
+          "verdict": "depends",
+          "explanation": "Wenn ein ausgefallener Refresh sich bald in Latenz oder Completeness zeigt, reicht der Symptom-Alert; liefert der Cache stattdessen tagelang alte Daten ohne Latenzeffekt, braucht es den Alert auf das Datenalter als Nutzerpfad-Signal."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o6",
+          "text": "Ursachenmetriken wie Throttling dürfen grundsätzlich nie zu einem Page führen, egal wie klar die Handlung ist.",
+          "verdict": "false",
+          "explanation": "Die Prometheus-Philosophie sagt „so wenige wie möglich“, nicht „nie“: Eine Ursache, die mit hoher Wahrscheinlichkeit bald Nutzer trifft und eine klare Handlung hat, darf einen Page auslösen."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o7",
+          "text": "Eine Page, auf die niemand sinnvoll reagieren kann, sollte es nicht geben; sie erzeugt nur Alarmmüdigkeit.",
+          "verdict": "true",
+          "explanation": "Jede Page muss eine mögliche Handlung haben; sonst erzeugt sie nur Ermüdung und senkt die Aufmerksamkeit für die Pages, die zählen."
+        },
+        {
+          "id": "transfer-symptom-vor-ursache-alerts-o8",
+          "text": "Ursachenmetriken wie Throttling und HikariCP-Pending gehören primär auf die Dashboards, die man nach einer Page öffnet.",
+          "verdict": "true",
+          "explanation": "Die Prometheus-Philosophie trennt: Pages für Symptome, Dashboards für die Eingrenzung der Ursache; genau diese Reihenfolge bildet der Diagnostische Trichter ab."
         }
       ]
     }

@@ -1474,6 +1474,7 @@ hideInToc: true
 - Hinter der End-Folie: Selbststudium nach dem Vortrag. Adaptiv — startet
   mittel, passt sich der Antwortqualität an.
 - Fragenpool via Web-Recherche + Fable-Generierung + adversariale Auswahl;
-  steht thematisch allein (keine Transfer-Sektion, dafür „Dashboard-
-  Architektur“), Schwellwert-Fragen sind bewusst kontextabhängig.
+  Sektion „transfer“ mit Fragen über den Vortrag hinaus (Prometheus,
+  Kingman, Retry-Sturm, Symptom-Alerting), Schwellwert-Fragen sind
+  bewusst kontextabhängig.
 -->
