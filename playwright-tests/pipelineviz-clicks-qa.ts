@@ -1,23 +1,37 @@
-// QA für die Folie „Wandernde Engpässe und Schutzkapazität“ (PipelineViz):
-// klickt per ArrowRight durch die fünf Zustände, liest Engpass-Badge, Reserve
+// QA für die Folien „Wandernde Engpässe“ und „… Gegenmaßnahmen“ (PipelineViz):
+// klickt per ArrowRight durch alle Zustände einer Variante, liest Engpass-Badge, Reserve
 // und Füllgrad aus dem DOM, misst die Unterkante aller Elemente gegen den
 // 720-px-Viewport und legt Screenshots unter playwright-tests/qa ab.
 //
-//   bun run playwright-tests/pipelineviz-clicks-qa.ts [port] [slide]
+//   bun run playwright-tests/pipelineviz-clicks-qa.ts [port] [slide] [cause|remedies]
+//   (Folie 28 = cause, Folie 29 = remedies)
 import { chromium } from "playwright";
 
 const PORT = process.argv.find((a) => /^\d+$/.test(a)) ?? "3030";
 const N = Number(process.argv.filter((a) => /^\d+$/.test(a))[1] ?? 28);
+const VARIANT = process.argv.includes("remedies") ? "remedies" : "cause";
 const OUT = "playwright-tests/qa";
-const STEPS = 4;
-// erwartet je Klick: Station mit Engpass-Badge (null = keine) und volle Puffer
-const EXPECT: { bottleneck: string | null; full: string[] }[] = [
-  { bottleneck: null, full: [] },
-  { bottleneck: "Quote-Service", full: ["Quote-Service"] },
-  { bottleneck: "Provider-Adapter", full: ["Provider-Adapter"] },
-  { bottleneck: "API Gateway", full: [] },
-  { bottleneck: null, full: [] },
-];
+const EXPECT_BY_VARIANT: Record<
+  string,
+  { bottleneck: string | null; full: string[] }[]
+> = {
+  // erwartet je Klick: Station mit Engpass-Badge (null = keine) und volle Puffer
+  cause: [
+    { bottleneck: null, full: [] },
+    { bottleneck: "Provider-Adapter", full: [] },
+    { bottleneck: "Quote-Service", full: ["Quote-Service"] },
+    { bottleneck: "Provider-Adapter", full: ["Provider-Adapter"] },
+    { bottleneck: "API Gateway", full: [] },
+  ],
+  remedies: [
+    { bottleneck: "Quote-Service", full: ["Quote-Service"] },
+    { bottleneck: "Quote-Service", full: [] },
+    { bottleneck: null, full: [] },
+    { bottleneck: null, full: [] },
+  ],
+};
+const EXPECT = EXPECT_BY_VARIANT[VARIANT]!;
+const STEPS = EXPECT.length - 1;
 
 const b = await chromium.launch();
 let schlecht = 0;
@@ -52,6 +66,9 @@ for (const theme of ["light", "dark"] as const) {
         .filter((e) => !e.closest(".sim-xref"))
         .map((e) => e.getBoundingClientRect().bottom)
         .filter((v) => Number.isFinite(v));
+      // Folie 28 hat nach der Animation keinen Absatz mehr: ihre eigene
+      // Unterkante (Legende) zählt mit.
+      bottoms.push(root.querySelector(".pipeline-viz").getBoundingClientRect().bottom);
       return {
         title: root.querySelector(".state-title")?.textContent?.trim(),
         clicks: window.__slidev__.nav.clicks,
@@ -88,7 +105,9 @@ for (const theme of ["light", "dark"] as const) {
     console.log(
       `[${theme}] Klick ${step}: ${JSON.stringify(r)}${bad ? "  <-- ABWEICHUNG" : ""}`,
     );
-    await page.screenshot({ path: `${OUT}/pipelineviz-${theme}-${step}.png` });
+    await page.screenshot({
+      path: `${OUT}/pipelineviz-${VARIANT}-${theme}-${step}.png`,
+    });
   }
   await ctx.close();
 }

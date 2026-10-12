@@ -524,15 +524,13 @@ hideInToc: true
 clicks: 4
 ---
 
-# Wandernde Engpässe und Schutzkapazität
+# Wandernde Engpässe
 
-Die langsamste Station begrenzt den Durchsatz der Kette (Goldratt, Theory of Constraints). Liegen die Kapazitäten nah beieinander und schwanken, wechselt der Engpass: Er **wandert** (Lawrence & Buss, 1994).
+Die langsamste Station begrenzt den Durchsatz der Kette (Goldratt, Theory of Constraints). Liegen die Kapazitäten nah beieinander, **wandert** der Engpass (Lawrence & Buss, 1994).
 
-Ohne Reserve baut sich der Rückstau nicht ab, bevor die nächste Schwankung kommt: **Vor dem Engpass staut es, dahinter laufen Stationen leer (Starvation).**
+**Ein Auslöser ist nicht nötig: Abhängige Stationen plus zufällige Schwankungen genügen.** Vor dem Engpass staut es, dahinter laufen Stationen leer (Starvation).
 
 <PipelineViz />
-
-**Schutzkapazität (Protective Capacity, Faustregel ~20 % Headroom) ist eine Systemanforderung, keine Verschwendung.**
 
 <div class="sim-xref">
 
@@ -543,50 +541,124 @@ Zum Ausprobieren (Szenario „Wandernder Engpass“): <TalkXref slug="20260711-s
 <!--
 - Lesen: links die Last (62 req/s), rechts die drei Stationen. Große Zahl =
   aktuelle Kapazität in req/s (durchgestrichen: der Nennwert), „Reserve“ =
-  Kapazität / Last − 1, Balken = Warteschlange vor der Station („buf“; rot und
+  Kapazität / Last - 1, Balken = Warteschlange vor der Station („buf“; rot und
   „voll, 503“ = Puffer voll, Requests werden verworfen). Rote Umrandung mit
   Badge „Engpass“ = die Kapazität liegt gerade unter der Last.
 - Klick für Klick:
   0 Normalbetrieb — alle über der Last, aber die Reserve ist schmal (13–29 %).
-  1 GC-Pause im Quote-Service — 75 → 53 req/s, unter der Last: davor staut es,
+  1 Nur Schwankung, kein Ereignis — Last +8 % (67), Provider-Adapter -10 %
+    (63). Jede Abweichung für sich ist unauffällig; zusammen liegt der
+    Provider unter der Last (Reserve -6 %), der Puffer füllt sich (Defizit
+    4 req/s, Puffer 15: nach knapp 2 s halb voll). Kein GC, kein Neustart.
+  2 GC-Pause im Quote-Service — 75 → 53 req/s, unter der Last: davor staut es,
     der Puffer läuft voll (503); dahinter kommen nur noch 53 req/s an.
-  2 Provider wird langsam — der Engpass wandert nach hinten (70 → 53); der
+  3 Provider wird langsam — der Engpass wandert nach hinten (70 → 53); der
     Quote-Service ist frei.
-  3 Pod-Neustart am Gateway — 80 → 56; dahinter laufen Quote-Service und
+  4 Pod-Neustart am Gateway — 80 → 56; dahinter laufen Quote-Service und
     Provider-Adapter leer (Starvation downstream).
-  4 Dieselben drei Einbrüche gleichzeitig, aber mit ~20 % mehr Kapazität
-    (96/90/84): 67/63/63 req/s, jede Station bleibt über der Last. Kein
-    Rückstau, kein 503.
 - Kernaussage: Der Engpass ist keine feste Station, sondern dort, wo die
-  Kapazität gerade unter die Last fällt. Goldratt sieht das Wandern selbst
-  als Fehlwahrnehmung: „the problem was not wandering bottlenecks. It was
-  insufficient protection for the existing bottlenecks“ (The Goal,
-  überarbeitete Ausgabe 1992). Ursache nach Goldratt: abhängige Ereignisse
-  plus statistische Schwankungen.
-- Zwei Sichten auf denselben Effekt. ToC: Die Schutzkapazität der
+  Kapazität gerade unter die Last fällt. Ein Ereignis (GC-Pause, Ausfall) ist
+  eine mögliche Ursache, aber keine Voraussetzung: Roser, Nakano & Tanaka
+  (2003) zeigen es an einem Flow Shop mit Auslastungen von 80/80/88/80 %,
+  rein exponentiellen Bedienzeiten und ohne Ausfälle: „the bottleneck shifts
+  between different machines, depending on the preceding random events“.
+  Dort ist Maschine 3 nur etwa ein Drittel der Zeit der alleinige Engpass —
+  der mittlere Engpass (Maschine 3) und der momentane sind zweierlei.
+- Goldratt nennt als Ursache abhängige Ereignisse plus statistische
+  Schwankungen und sieht das Wandern selbst als Fehlwahrnehmung: „the problem
+  was not wandering bottlenecks. It was insufficient protection for the
+  existing bottlenecks“ (The Goal, überarbeitete Ausgabe 1992). Lawrence &
+  Buss (1994) messen: Mehr Kapazität an den Nicht-Engpässen senkt die
+  Wanderneigung („shiftiness declines when the capacity of nonbottleneck
+  resources is increased“) — das leitet zur nächsten Folie über.
+- Begriffe: „Rolling Bottleneck“ ist kein Fachbegriff, etabliert sind
+  shifting bzw. wandering bottleneck (Lawrence & Buss 1994; das APICS
+  Dictionary nennt sie „pseudo-constraints“).
+- Praxis: GC-Pausen; ein langsamer Provider bindet Threads im Adapter; ein
+  Pod-Neustart nimmt Kapazität am Gateway. Klick 1 ist der häufigste Fall in
+  Produktion: kein Ereignis im Log, trotzdem Latenzspitzen.
+- Zum Selbstausprobieren: Folie „Systemdynamik — Interaktiv“, Szenario
+  „Wandernder Engpass“.
+-->
+
+---
+hideInToc: true
+clicks: 3
+---
+
+# Wandernde Engpässe: Gegenmaßnahmen
+
+- **Back Pressure:** Die überlastete Station bremst ihre Vorstufen, der Stau wandert zum Eingang.
+- **Load Shedding:** Früh und nach Priorität gezielt abweisen, der Rest kommt durch.
+- **(Auto-)Scaling:** Mehr Instanzen, manuell oder nach Metrik. Für Sekunden-Einbrüche zu langsam.
+
+<PipelineViz variant="remedies" />
+
+**Schutzkapazität (~20 % Headroom) ist Systemanforderung, keine Verschwendung.**
+
+<!--
+- Gleiche Kette, gleiche GC-Pause im Quote-Service (75 → 53 req/s, Last 62);
+  jeder Klick zeigt eine Gegenmaßnahme. Die drei Begriffe tauchen in der Praxis
+  und auf den folgenden Folien ständig auf (Hysterese-Tabelle,
+  Back-Pressure-Quadrant, Zusammenfassung) — hier einmal sauber einführen.
+- Klick für Klick:
+  0 Ohne Gegenmaßnahme — der Quote-Service verwirft (503). Die Arbeit, die
+    das Gateway schon in diese Requests gesteckt hat, ist verloren.
+  1 Back Pressure — der Quote-Service bremst das Gateway (orange Badge, ◀).
+    Der Stau wandert an den Rand: Das Gateway puffert 9 req/s zu viel (Puffer
+    25: in knapp 3 s voll), danach muss es den Client warten lassen oder
+    abweisen (HTTP 429). Der Verlust ist nicht weg, er sitzt jetzt am Eingang
+    und ist eine bewusste Entscheidung.
+  2 Load Shedding — das Gateway weist früh 10 req/s mit niedriger Priorität
+    ab. Dann erreichen nur 52 req/s die Kette, der Quote-Service (53) hält
+    mit; kein Puffer läuft voll. Das Modell zeigt nur die Menge; wen man
+    abweist (Priorität), entscheidet die Anwendung.
+  3 (Auto-)Scaling — mit ~20 % Kapazitätsreserve (96/90/84) bleibt jede
+    Station über der Last, selbst wenn alle drei Einbrüche zusammenfallen.
+    Das ist Schutzkapazität im Voraus; ein Autoscaler liefert sie nur, wenn er
+    schnell genug reagiert.
+- Belege zu den Begriffen:
+  Back Pressure — Reactive Streams: „Since back-pressure is mandatory the use
+  of unbounded buffers can be avoided“. Hebert („Queues Don't Fix Overload“):
+  „pushing it back to the edge of your system, to the user“; man muss wählen
+  zwischen „blocking on input (back-pressure), or dropping data on the floor
+  (load-shedding)“. Back Pressure allein schafft also keine Kapazität, es
+  verschiebt die Warteschlange.
+  Load Shedding — AWS Builders' Library (Yanacek): „start rejecting excess
+  requests so that it can focus on the requests it decides to let in“, und
+  möglichst früh („as early as possible“). SRE Book (Addressing Cascading
+  Failures): Requests mit niedriger Priorität zuerst verwerfen. Auch
+  Abweisen kostet Ressourcen (SRE Book, Handling Overload): Der Check muss
+  billiger sein als die Arbeit.
+  (Auto-)Scaling — Kubernetes-HPA: Abgleich alle 15 s
+  (--horizontal-pod-autoscaler-sync-period), danach starten Pods; die Doku
+  nennt außerdem 30 s Initial-Readiness-Delay und 5 min CPU-Initialisierung.
+  Dass das für Einbrüche von Sekunden zu langsam ist, ist ein Schluss aus
+  diesen Zahlen, kein Zitat; Pod-Startzeiten nennt keine Quelle. Eine
+  Gefahr bleibt: Skaliert man nur die engste Stufe, rutscht der Engpass zur
+  nächsten (SRE Workbook, Managing Load, Niantic: „moved the capacity
+  bottleneck from GFE to the Niantic stack“).
+- Wechselwirkung: Das SRE Workbook warnt vor Rückkopplungen zwischen
+  Load Balancing, Load Shedding und Autoscaling, wenn sie isoliert
+  konfiguriert sind. Die Liste ist nicht vollständig: Rate Limiting am Eingang
+  (Admission Control) und Retry-Budgets mit Backoff und Jitter gehören
+  dazu; die Steady-Flow-Folie davor zeigt die Muster.
+- Zwei Sichten auf die Schutzkapazität. ToC: Die Schutzkapazität der
   Nicht-Engpässe füllt den Puffer vor dem Engpass nach einer Störung wieder
   auf (TOCICO Dictionary). Warteschlange: Ein Rückstau Q baut sich nur mit
-  μ − λ ab, Abbauzeit = Q / (μ − λ). Provider-Adapter (μ = 70, buf 15): bei
+  μ - λ ab, Abbauzeit = Q / (μ - λ). Provider-Adapter (μ = 70, buf 15): bei
   λ = 62 gut 1,9 s, bei λ = 67 schon 5 s — und die nächste Schwankung kommt
   vorher.
 - Begriffe: „Excess Capacity“ heißt in der ToC der Teil, der weder
   produziert noch schützt (also echte Verschwendung); gemeint ist
-  Protective Capacity. „Rolling Bottleneck“ ist kein Fachbegriff, etabliert
-  sind shifting bzw. wandering bottleneck (Lawrence & Buss 1994; das APICS
-  Dictionary nennt sie „pseudo-constraints“).
+  Protective Capacity.
 - 20 % sind eine Praktiker-Faustregel, keine Norm (andere Quellen nennen
   25–30 %): mehr bei Bursts, vielen Abhängigkeiten und langen Ketten.
-  Verwandt mit der M/M/1-Folie: 80 % Auslastung ist ein Punkt auf 1/(1−ρ),
+  Verwandt mit der M/M/1-Folie: 80 % Auslastung ist ein Punkt auf 1/(1-ρ),
   keine Klippe.
-- Praxis: Ein Autoscaler skaliert eine Stufe hoch, der Engpass rutscht zur
-  nächsten (SRE Workbook, Managing Load, Niantic: „moved the capacity
-  bottleneck from GFE to the Niantic stack“); GC-Pausen; ein langsamer
-  Provider bindet Threads im Adapter.
 - Vereinfachung des Modells: Ein voller Puffer verwirft Requests, statt die
-  Vorstufe zu blockieren. In echten Systemen läuft der Rückstau zusätzlich
-  upstream (Backpressure, erschöpfte Pools).
-- Zum Selbstausprobieren: Folie „Systemdynamik — Interaktiv“, Szenario
-  „Wandernder Engpass“.
+  Vorstufe zu blockieren; Back Pressure ist nur als Zustand gezeigt, nicht
+  als Regelkreis (dazu die Quadranten-Folie „Back-Pressure als Regelkreise“).
 -->
 
 ---

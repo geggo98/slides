@@ -373,7 +373,7 @@
           "id": "sysdyn-steady-flow-headroom-o4",
           "text": "In einer Kette abhängiger Services mit fast gleichen Kapazitäten kann der Engpass wandern; ohne Reserve staut es sich vor dem Engpass, und dahinter laufen die Stationen leer.",
           "verdict": "true",
-          "explanation": "Das ist der Shifting Bottleneck der Theory of Constraints (Lawrence & Buss 1994): Der Engpass sitzt dort, wo die Kapazität gerade unter die Last fällt, etwa durch GC-Pause, langsamen Provider oder Pod-Neustart. Goldratt sieht darin meist einen schlecht geschützten alten Engpass."
+          "explanation": "Das ist der Shifting Bottleneck der Theory of Constraints (Lawrence & Buss 1994): Der Engpass sitzt dort, wo die Kapazität gerade unter die Last fällt. Ein Ereignis wie GC-Pause, langsamer Provider oder Pod-Neustart ist dafür nicht nötig; abhängige Stationen plus zufällige Schwankungen genügen. Goldratt sieht darin meist einen schlecht geschützten alten Engpass."
         },
         {
           "id": "sysdyn-steady-flow-headroom-o5",
@@ -398,6 +398,63 @@
           "text": "Rund 20 % Headroom reichen für jedes System aus, unabhängig davon, wie stoßartig die Last ist.",
           "verdict": "depends",
           "explanation": "Die 20 % sind ein Richtwert: Bei stoßartigem Traffic wandert der Knick nach links und es braucht mehr Reserve, bei vielen parallelen Bedienern darf die Auslastung höher liegen."
+        }
+      ]
+    },
+    {
+      "id": "sysdyn-gegenmassnahmen-engpass",
+      "question": "Eine Kette abhängiger Services mit fast gleichen Kapazitäten läuft knapp unter der Last. Welche Aussagen zu Gegenmaßnahmen gegen wandernde Engpässe treffen zu?",
+      "difficulty": "medium",
+      "section": "Systemdynamik & Hysterese",
+      "explanation": "Back Pressure verschiebt den Stau an den Rand, Load Shedding weist früh und nach Priorität ab, damit der Rest bedient wird, und Autoscaling schafft Kapazität nur mit Verzögerung; kurze Einbrüche fängt allein die Schutzkapazität ab.",
+      "options": [
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o1",
+          "text": "Back Pressure reicht das Drosselsignal einer überlasteten Station stromaufwärts weiter; der Stau wandert in Richtung Eingang.",
+          "verdict": "true",
+          "explanation": "Die Vorstufen nehmen weniger an, statt in einen vollen Puffer zu liefern; die Warteschlange sitzt dann am Rand der Kette, wo sich entscheiden lässt, ob der Client wartet oder abgewiesen wird."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o2",
+          "text": "Load Shedding weist früh und nach Priorität einzelne Anfragen ab, damit die übrigen bedient werden.",
+          "verdict": "true",
+          "explanation": "Wer früh abweist, spart die Arbeit, die weiter hinten in der Kette verloren ginge, und hält die Latenz der angenommenen Requests niedrig; weniger wichtige Requests gehen zuerst."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o3",
+          "text": "Ein wandernder Engpass braucht kein Ereignis wie eine GC-Pause: Abhängigkeiten plus zufällige Schwankungen genügen.",
+          "verdict": "true",
+          "explanation": "Liegen die Kapazitäten nah beieinander, kann schon eine Laststeigerung von 8 % zusammen mit einer um 10 % langsameren Station den Engpass verschieben, ohne dass ein einzelnes Ereignis im Log steht."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o4",
+          "text": "Back Pressure allein beseitigt die Überlast, ohne dass irgendwo gewartet oder abgewiesen werden muss.",
+          "verdict": "false",
+          "explanation": "Back Pressure schafft keine Kapazität, es verschiebt die Warteschlange: Am Ende steht der Client, der warten muss oder eine Ablehnung (etwa HTTP 429) bekommt."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o5",
+          "text": "Load Shedding sollte erst an der Station greifen, deren Puffer überläuft.",
+          "verdict": "false",
+          "explanation": "Dann haben die Vorstufen die Arbeit an den verworfenen Requests schon geleistet. Abweisen funktioniert am besten früh, möglichst am Eingang."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o6",
+          "text": "Der Horizontal Pod Autoscaler fängt eine GC-Pause von vier Sekunden zuverlässig ab.",
+          "verdict": "false",
+          "explanation": "Der HPA gleicht standardmäßig alle 15 Sekunden ab, und neue Pods brauchen Zeit bis zur Readiness; für Einbrüche von Sekunden ist er zu langsam."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o7",
+          "text": "Autoscaling ersetzt die Schutzkapazität.",
+          "verdict": "depends",
+          "explanation": "Bei langsam steigender Dauerlast ersetzt es sie weitgehend. Bei Sekunden-Einbrüchen und Bursts reagiert es zu spät; dort bleibt die Reserve nötig."
+        },
+        {
+          "id": "sysdyn-gegenmassnahmen-engpass-o8",
+          "text": "Load Shedding ist die bessere Wahl als Back Pressure.",
+          "verdict": "depends",
+          "explanation": "Es kommt darauf an, ob der Client warten kann: Wer blockieren darf, nimmt Back Pressure und verliert nichts; wer nicht warten kann oder Prioritäten hat, weist ab. Man muss sich für das eine oder das andere entscheiden, wenn die Kapazität fehlt."
         }
       ]
     },
