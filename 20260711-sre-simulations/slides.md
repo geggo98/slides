@@ -2047,7 +2047,8 @@ Online-Anfragen haben eine **Deadline**: die Geduld des Kunden, den Timeout der 
   nimmt die Verstärkung heraus (×1,1).
 - Im Monitoring-Talk steht dieselbe Grafik mit Metrik-Sichten: welche
   Metriken und Labels welches Bild ergeben – jede Sicht technisch korrekt,
-  aber verschieden hilfreich (Link unten rechts).
+  aber verschieden hilfreich (Link unten rechts). Die Jitter-Zeile fehlt
+  dort, denn den Jitter sieht kein Kunde; hier gehört sie zur Sim davor.
 - Überleitung: Den Nachbarn der Ursachen-Folie diagnostizieren wir im
   nächsten Kapitel — mit %steal als Schlüssel-Kanal.
 -->

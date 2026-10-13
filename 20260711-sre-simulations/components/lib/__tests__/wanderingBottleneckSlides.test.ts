@@ -22,8 +22,9 @@
  *     Kopie der Monitoring-Folie). Ihre Bezüge auf die Sim (Drehbuch,
  *     Ursachen-Folie) laufen durch die Allow-List und gegen das Drehbuch
  *     der Rabattaktion. Die übrigen Sim-Zahlen der kopierten Notizen
- *     (Retry-Sturm, Zahlungsdienst, Webserver zu Beginn, Kapazität ohne
- *     Empfehlungen) prüft der Test wörtlich in BEIDEN Decks; der Rest der
+ *     (Zahlungsdienst, Webserver zu Beginn, Kapazität ohne Empfehlungen)
+ *     prüft der Test wörtlich in BEIDEN Decks, den Retry-Sturm nur im
+ *     SRE-Deck (nur dort gibt es die Jitter-Zeile); der Rest der
  *     Notizen zitiert Quellen, die Zahlen der Grafik selbst prüft
  *     shared/__tests__/deadlineOutcomes.test.ts.
  *  5. „IO-Steal“ gibt es nicht: IO-Konkurrenz zeigt sich im Gast als
@@ -493,10 +494,8 @@ describe("Kundensicht ↔ Drehbuch der Rabattaktion", () => {
     );
   });
 
-  it.each([
-    { deck: "SRE", f: kunden },
-    { deck: "Monitoring", f: monKunden ?? LEER },
-  ])(
+  // Nur im SRE-Deck: Die Monitoring-Fassung zeigt keine Jitter-Zeile.
+  it.each([{ deck: "SRE", f: kunden }])(
     "$deck: Jitter-Punkt zitiert die aktuellen Zahlen des Retry-Sturms",
     ({ f }) => {
       const b = fig("retry", "backoff");

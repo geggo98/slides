@@ -679,15 +679,15 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
 
 ---
 hideInToc: true
-clicks: 12
+clicks: 11
 routeAlias: kundensicht-deadline
 ---
 
 # Gegenmaßnahmen aus Kundensicht: die Deadline
 
-Online-Anfragen haben eine **Deadline** (Kunde, App, spätestens der Load Balancer: etwa 20 s bis 2 min).
+Online-Anfragen haben eine **Deadline**: die Geduld des Kunden, den Timeout der App – und spätestens bricht ein Load Balancer oder Proxy ab (Defaults etwa 20 s bis 2 min).
 
-<DeadlineOutcomeViz :step="$clicks" lenses />
+<DeadlineOutcomeViz :step="$clicks" lenses :jitter="false" />
 
 <div class="sim-xref">
 
@@ -726,7 +726,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     Überlast wird die Mehrheit abgewiesen; bei leichter Überlast käme die
     Mehrheit durch. Entscheidend ist, dass niemand im Timeout landet.
   2 Feature Shedding (auf der Folie nur so benannt; Cache und Scaling
-    wirken für den Kunden genauso, sind aber nicht degradiert, Klick 11) —
+    wirken für den Kunden genauso, sind aber nicht degradiert, Klick 10) —
     Seiten ohne Empfehlungen kosten die DB ein Fünftel, sie schafft 1.500
     statt 300: alle 1.000 rechtzeitig.
     Nur, wenn es reicht und rechtzeitig greift. Dritter Weg: Andere Last
@@ -745,11 +745,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
   5 Workload Separation — Online zuerst: 200 rechtzeitig. Batch bekommt die
     restlichen 100, die übrigen 100 werden gedrosselt oder abgewiesen und
     später wiederholt.
-  6 Jitter — zwölf Jobs à 5 min. Mit „0 0 * * *“ laufen alle gleichzeitig
-    (Spitze 12), mit gehashter Startminute höchstens zwei. Gleiche Arbeit
-    (60 Job-Minuten), kleinere Spitze. Die Grafik hasht mit FNV-1a; Jenkins
-    rechnet anders, das Prinzip ist dasselbe.
-- Ab Klick 7: dieselben Zeilen, gesehen durch ein Dashboard. Jede Sicht
+- Ab Klick 6: dieselben Zeilen, gesehen durch ein Dashboard. Jede Sicht
   ist technisch korrekt; sie unterscheiden sich darin, was als Fehler
   gilt, wo gezählt wird und welche Metriken und Labels es gibt. Die Farbe
   eines Segments ist das Urteil des Panels, rechts steht der Wert eines
@@ -758,7 +754,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
   eigenem Ziel. Violett markiert: Zeilen, in denen das Panel anders
   alarmiert als die Kundensicht. Die Leiste oben springt zu einer Sicht
   (wie ein Klick, also auch im Publikumsfenster).
-  7 Fehler = 5xx: So zählen das SRE Workbook („5XX responses count
+  6 Fehler = 5xx: So zählen das SRE Workbook („5XX responses count
     against SLO, while all other requests are considered successful“) und
     das Grafana-SLO-Beispiel. Ohne Maßnahme 100 % ohne 5xx — grün. Der
     Server zählt eine Anfrage erst beim Abschluss (promhttp, otelhttp und
@@ -769,7 +765,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     rot. Batch-Drosselung antwortet 429, wie Kubernetes API Priority and
     Fairness, wenn eine Prioritätsstufe ihr Limit überschreitet, und gilt
     hier als Erfolg.
-  8 Fehler = alles außer 2xx: So rechnet das PromQL-Beispiel zur
+  7 Fehler = alles außer 2xx: So rechnet das PromQL-Beispiel zur
     RED-Methode (GrafanaCon EU 2018: status_code!~"2.."); der RED-Text
     selbst sagt nur „failing“, die RED-Folie dieses Talks zählt 5xx. Jetzt
     ist jede Absage rot, auch Back Pressure per 429, und Workload
@@ -778,7 +774,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     zählt 429 als Fehler, das Workbook nicht, Google Cloud nimmt 4xx im
     Beispiel aus dem Nenner. OpenTelemetry markiert am Server 4xx nicht
     als Fehler, 5xx schon.
-  9 + Dauer: gut = 2xx und schneller als die Schwelle, hier die Deadline,
+  8 + Dauer: gut = 2xx und schneller als die Schwelle, hier die Deadline,
     als Anteil per Histogramm: Bucket le=Schwelle mit status=~"2.."
     geteilt durch _count. Ohne Statusfilter zählen die schnellen 503 als
     gut, Back Pressure stünde bei 100 %. Die Zeile ohne Maßnahme ist jetzt
@@ -788,7 +784,7 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     (http.server.request.duration) enden bei 10 s. Antworten nach 20 s bis
     2 min landen im +Inf-Bucket, ein p99-Panel zeigt dann flach 10 s. Den
     Bucket an der Schwelle selbst definieren.
-  10 + Eingang: am Load Balancer gezählt (SRE Workbook: „measure it at
+  9 + Eingang: am Load Balancer gezählt (SRE Workbook: „measure it at
     the load balancer or on the client“). Er sieht auch, was der Server
     nie beantwortet: 504, wenn er selbst aufgibt. Gibt der Client zuerst
     auf, protokolliert nginx 499, der AWS ALB 460 (zählt unter
@@ -797,14 +793,14 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     von 300/s. Die Dauer am LB enthält auch die Wartezeit vor dem Handler
     (Accept-Backlog, Thread-Pool-Queue), die Spring (ab dem Servlet-Filter)
     und die Go-Middlewares nicht mitmessen.
-  11 + degradiert: Feature Shedding antwortet schnell mit 200, nur ohne
+  10 + degradiert: Feature Shedding antwortet schnell mit 200, nur ohne
     Empfehlungen; ohne eigene Metrik sieht es aus wie Scaling. Einen
     Standard gibt es nicht, OpenTelemetry hat kein Attribut dafür. Muster:
     Hystrix zählte Fallbacks getrennt (FALLBACK_SUCCESS), das SRE Workbook
     nennt es Quality-SLI („the proportion of responses that were served in
     an undegraded state“). Umsetzung: eigener Zähler oder eigenes Attribut
     am Request-Histogramm.
-  12 + Label workload (online/batch): Erst damit bekommt Batch ein eigenes
+  11 + Label workload (online/batch): Erst damit bekommt Batch ein eigenes
     Ziel (SRE Book, Kap. 4: getrennte Ziele für „a bulk processing
     pipeline“ und „an interactive client“). Gedrosselter oder langsamer
     Batch ist dann toleriert, Workload Separation zeigt Online 100 %. Zwei
@@ -833,10 +829,6 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
 - Ampel: grün ab 99 % gut. Grafanas Default-Schwellen sind „80 = red /
   Base = green“: Ein Fehlerquoten-Panel ohne eigene Schwellen zeigt 25 %
   und 70 % grün. Auch das ist technisch korrekt.
-- Jitter-Zeile in den Sichten: Gleiche Arbeit heißt gleiches Tagesmittel,
-  nur max_over_time zeigt 12 gegen 2. Über genau die erste Stunde sind es
-  1,0 gegen 0,93 (der letzte Job läuft bis 1:04); je gröber das Fenster,
-  desto flacher die Spitze.
 - LGTM-Bausteine: Statuscode und Dauer kommen aus der App-Metrik (Mimir),
   der Eingang aus LB-Metriken oder Access-Logs (Mimir oder Loki),
   degradiert und workload sind eigene Metriken bzw. Labels (Mimir). Tempo
@@ -916,27 +908,11 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
   multi-tenant systems“). Im Beispiel ist die gemeinsame Abhängigkeit die
   Bestands-DB: Getrennte Web-Instanzen allein helfen hier nicht, die
   Limits je Workload müssen vor der DB greifen.
-- Jitter verschiebt nur den Startzeitpunkt. AWS: „the same amount of work
-  with less server capacity“ – weniger Spitzenkapazität, nicht mehr
-  Gesamtkapazität. Jenkins warnt: „0 0 * * * for a dozen daily jobs will
-  cause a large spike at midnight.“ Sein H ist ein Hash des Jobnamens,
-  stabil je Job; systemd bietet RandomizedDelaySec= und, stabil je Timer,
-  FixedRandomDelay=. Online wählt der Kunde den ersten Zeitpunkt; Jitter
-  bleibt dort für Wiederholungen (Backoff mit Jitter, nächste Folie) und
-  für Arbeit, auf die er nicht wartet. AWS Builders' Library („Timeouts,
-  retries, and backoff with jitter“): „even for customer-triggered tasks,
-  it's a good idea to add jitter where it doesn't impact the customer
-  experience.“
-- Dass Jitter nur glättet, zeigt die SRE-Simulation für Retries (Preset
-  „Retry-Sturm“):
-  Jitter glättet die Retry-Wellen (Spitze/Mittel etwa 2 → 1,3), der
-  Zahlungsdienst bleibt trotzdem unten, denn die Menge bleibt (etwa 2,6
-  Versuche je Zahlung mit Backoff, 2,5 mit Jitter). Erst das Retry-Budget
-  nimmt die Verstärkung heraus (×1,1).
 - Zum Selbstausprobieren: SRE-Simulationen, Folie „Wandernde Engpässe:
   Gegenmaßnahmen“ (Rabattaktion: Back Pressure, Load und Feature Shedding,
-  Scaling mit Startzeit; Preset „Retry-Sturm“ für Backoff, Jitter und
-  Retry-Budget).
+  Scaling mit Startzeit). Direkt danach steht dort dieselbe Kundensicht
+  ohne Metrik-Sichten, dafür mit einer Zeile zu Jitter für Batch-Starts:
+  Den Jitter sieht kein Kunde, deshalb fehlt die Zeile hier.
 -->
 
 ---
