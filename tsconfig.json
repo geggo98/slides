@@ -67,6 +67,7 @@
     "playwright-tests/sweep-svg-fonts.ts",
     "playwright-tests/v1-bonus-qa.ts",
     "playwright-tests/verify-deploy.ts",
+    "playwright-tests/wandering-bottleneck-qa.ts",
     "playwright-tests/zstd-delta-built-check.ts",
     "playwright-tests/zstd-delta-interactive-check.ts",
     "playwright-tests/zstd-delta-shots.ts"

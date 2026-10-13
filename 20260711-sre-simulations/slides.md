@@ -192,6 +192,7 @@ Jede Simulation macht **eine unsichtbare Kopplung** sichtbar:
 </div>
 <div class="map-col">
 <div class="map-head">🚿 Geteilte Ressource</div>
+<div class="map-item">✏️ Wandernde Engpässe <span class="map-tag">Sandbox + Drehbuch</span></div>
 <div class="map-item">🖱️ Sättigungs-Szenarien</div>
 <div class="map-item">🔍 Noisy Neighbor</div>
 <div class="map-item">🔍 Latenz: Loss vs. App</div>
@@ -791,6 +792,9 @@ routeAlias: systemdynamik
   der Sektion live.
 - Die drei Regeln (Schutzkapazität, Steady Flow, Hysterese) stehen auf der
   M/M/1-Folie.
+- Mit Zufall, verdeckter Nachbar-VM und Gegenmaßnahmen als Schaltern:
+  Folie „Wandernde Engpässe“ (wandernde-engpaesse) im Kapitel
+  Gegenmaßnahmen.
 -->
 
 ---
@@ -1193,11 +1197,13 @@ layout: section
 
 # Gegenmaßnahmen
 
-Die Verstärker entschärfen — der Load Balancer als Verstärker, der Breaker als gewollte Hysterese
+Die Verstärker entschärfen — der Load Balancer als Verstärker, der Breaker als gewollte Hysterese, die Kette mit dem wandernden Engpass
 
 <!--
-- Zwei Predict-first-Sims: Health-Check-Spirale (Kaskade + Panic-Mode)
-  und Circuit Breaker (Opfer kauft Erholung).
+- Drei Sims: Health-Check-Spirale (Kaskade + Panic-Mode), Circuit Breaker
+  (Opfer kauft Erholung) und Wandernde Engpässe (Sandbox + Drehbuch:
+  Beseitigen legt den nächsten Engpass frei, Abfangen schafft keine
+  Kapazität — ein Modell, zwei Folien).
 -->
 
 ---
@@ -1353,6 +1359,520 @@ routeAlias: circuit-breaker
   beide Kurven identisch.
 - Tab „Erklärung & Modell": FSM, gewollte Hysterese (Brücke Kapitel 3),
   der Handel (billig verworfen kauft Erholung).
+-->
+
+---
+hideInToc: true
+---
+
+# Setup: Der wandernde Engpass im Online-Shop
+
+Produktseiten brauchen Webserver und Bestandsprüfung, Checkouts zusätzlich den Zahlungsdienst (**Zahlen illustrativ**):
+
+<div class="chain mt-4 mb-4" style="font-size: 0.8em">
+<span class="chain-node"><b>Webserver</b>&ensp;100 req/s je Instanz</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Bestandsprüfung</b>&ensp;eine DB, 300 Produktseiten/s</span>
+<span class="chain-arrow">→</span>
+<span class="chain-node"><b>Zahlungsdienst</b>&ensp;extern, 70 req/s</span>
+</div>
+
+- **Ruhiger Nachmittag:** konstant **270 req/s**, **3 Webserver**, nichts im Log — nebenan auf dem Host eine **fremde VM**
+- **Rabattaktion:** **100 → 1.000 req/s** bei **2 Webservern**; Funnel: 10 % der Produktseiten → Checkout (illustrativ)
+- Bestand und **personalisierte Empfehlungen** jeder Produktseite fragen **dieselbe DB**
+
+<div v-click class="mt-4">
+
+<Callout tone="warning" title="Die Frage">
+Bei <b>konstanter</b> Last wechselt der Engpass zwischen Webserver und Bestandsprüfung — woher kommt das? Und in der Aktion, wenn weitere Webserver starten: <b>Wohin wandert der Engpass dann</b> — und ab wann helfen mehr eigene Server nicht mehr?
+</Callout>
+
+</div>
+
+<!--
+- Setup ohne Auflösung! Eine Kette, zwei Folien: erst der ruhige
+  Nachmittag (Ursache), dann die Rabattaktion (Gegenmaßnahmen). Die
+  Zahlen sind illustrativ — es geht um Richtung und Reihenfolge, nicht
+  um Sizing.
+- Kopfrechnen Nachmittag: 3 × 100 = 300 req/s Webserver gegen 270 —
+  knapp. Die DB rechnet in Einheiten: Eine Produktseite kostet 1,5 E
+  (Bestand 0,3 + Empfehlungen 1,2), die DB schafft 450 E/s, also 300
+  Produktseiten/s. Beide Reserven sind knapp — es braucht nicht viel,
+  um eine davon aufzuzehren. Was sie aufzehrt, klärt erst die Sim.
+- Kopfrechnen Aktion: 2 × 100 = 200 req/s Webserver gegen 1.000
+  Anfragen — klar überlastet. Die Bestandsprüfung sieht nur, was die
+  Webserver durchlassen (höchstens 200 gegen 300): Sie wirkt gesund. Der
+  erste Engpass versteckt den nächsten.
+- NICHT vorrechnen, was nach dem Scaling passiert — das ist Schritt 1
+  im Drehbuch der Sim (Schritt 0 fragt nur „Wo klemmt es zuerst?“).
+  Auch den Zahlungsdienst nicht kommentieren: 10 % von 909 Produktseiten
+  ≈ 91 Checkouts/s gegen 70 ist die Pointe von Schritt 4.
+- „Konstante Last, nichts im Log“ ist der Alltag aus dem
+  Monitoring-Talk („Ein Auslöser ist nicht nötig“). Die fremde VM nur
+  erwähnen, nicht erklären — in der Sim wird sie aufgedeckt.
+- Klick: die Frage stellen, 30 s diskutieren lassen, dann zur ersten
+  Sim.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: wandernde-engpaesse
+---
+
+<WanderingBottleneckSim />
+
+<!--
+- Bedienung im PUBLIKUMSFENSTER, nicht im Presenter: Presenter- und
+  Publikumsansicht rechnen je eine eigene Sim — Schalter, Aufdecken und
+  Tempo werden nicht synchronisiert. Die Vorschau der nächsten Folie
+  steht still. Nach jedem Mausklick geht der Klicker normal weiter.
+- Startet mit dem Preset „Nachbar-VM (verdeckt)“ (Zeile „Ursache:“):
+  konstant 270 req/s, 3 Webserver, Zeitraffer ×20. Läuft beim Betreten
+  sofort los, nach 10 min Vorlauf — das Diagramm ist schon voll.
+  Transport: „⏸ Pause“ / „▶ Weiter“, Zeitraffer-Knöpfe, „⏩“ rechnet
+  Sim-Zeit sofort. „↺ Neu“ startet mit demselben Seed neu und setzt die
+  Schalter zurück.
+- Zeigen: Die Last ist flach („req/s konst.“; darunter „Ist …“ — die
+  Ankünfte schwanken leicht um den Mittelwert), trotzdem springt das
+  Engpass-Band (satt = Engpass, blass = knappste Station) zwischen
+  Webserver und Bestandsprüfung. Die Statusanzeige oben nennt „Engpass
+  jetzt … · kollabiert“ bzw. „kein Engpass · knappste Reserve …“. Die
+  Fußzeile zählt Engpass-Wechsel und Engpass-Zeit im 10-min-Fenster —
+  konstante Last, kein Deploy, kein Fehler im Log. Hinter dem Engpass
+  melden die Karten „läuft leer“; ist die Überlast vorbei, aber die
+  Queue noch voll, steht orange „Rückstau baut ab …“. Die Karten zeigen
+  Momentwerte (Reserve = Kapazität / Last − 1 der Karte), Band und
+  Statusanzeige die geglättete Reserve.
+- Tippen lassen, wer die Kapazität klaut. Schon verdeckt zeigt die
+  Hosts-Leiste die Wirkung: „je … statt … req/s — Ursache unbekannt“ an
+  den Webservern, „Disk-await ↑ … ms — Ursache unbekannt“ an der DB.
+  Dann „🔒 Nachbar-VM aufdecken“ (oder ⚙ „Alle aufdecken“): CPU-Schübe
+  der fremden VM fallen mit dem Webserver-Engpass zusammen, IO-Schübe
+  mit dem Engpass an der Bestandsprüfung (DB); im Diagramm als Streifen
+  „Nachbar“ direkt unter dem Engpass-Band, Legende „Nachbar CPU“ /
+  „Nachbar IO“. Die Fußzeile zählt jetzt, wie viele Wechsel in einen
+  Nachbar-Schub fallen. ⚙ „Wieder verdecken“ nimmt das Aufdecken zurück
+  — „↺ Neu“ tut das nicht.
+- Der Nachbar ist ein Batch-Job: erst CPU (komprimieren), dann IO
+  (schreiben), dann Pause. Deshalb wandert der Engpass im Takt Webserver
+  → Bestandsprüfung → keiner. Nicht als Zufall verkaufen — zufällig sind
+  nur Dauer und Stärke der Schübe.
+- Was der Gast sieht: CPU-Konkurrenz als %steal an den Web-VMs (st in
+  top/vmstat, aus /proc/stat; im Modell 25–40 %). IO-Konkurrenz zeigt
+  KEIN steal, sondern längere Disk-Wartezeit an der DB: await in
+  iostat -x steigt auf das 1,5- bis 2,0-Fache von 1,2 ms; %iowait gilt
+  laut Kernel-Doku als unzuverlässig. Einen Steal-Zähler für IO gibt es
+  nicht. Nach dem Aufdecken steht genau das in der Hosts-Leiste
+  („Gast: %steal …“ bzw. „Gast: Disk-await … · %steal …“).
+- Preset „Nur Zufall“: Nachbar aus, 275 req/s und deutlich stärkere
+  Eigenschwankungen in Ankünften und Kapazität als im Nachbar-Preset, bei
+  knappen Reserven — der Engpass wandert trotzdem, nur seltener. Mit den
+  Werten des Nachbar-Presets bliebe er ohne Nachbarn fast immer aus (so
+  auch bei „🏠 Eigener Host“). Das ist die strengste Lesart von „Ein
+  Auslöser ist nicht nötig“ — Roser, Nakano & Tanaka (2003): „the
+  bottleneck shifts between different machines, depending on the
+  preceding random events“ (dort zählen auch Maschinenausfälle dazu;
+  hier reichen schon Schwankungen). Dort ist „🎯 Murphy · nur Demo“
+  gesperrt und „🏠 Eigener Host“ gedimmt; die Hosts-Leiste zeigt „kein
+  Nachbar“ und die Gast-Metriken direkt, es gibt nichts aufzudecken.
+- Startfenster: Für die Ursachen-Szenarien wählt die Sim einen Start-Seed,
+  dessen erstes Fenster mindestens 2 Engpass-Wechsel zeigt — eine Auswahl,
+  keine Kalibrierung (höchstens 20 Versuche, sonst der Seed mit den
+  meisten Wechseln). Ohne sie bliebe bei „Nur Zufall“ etwa jedes siebte
+  Fenster ruhig. Dieselbe Auswahl läuft bei jedem Preset-Wechsel und bei
+  ⚙ „Neuer Seed“ — geprüft aber mit den Grundschaltern des Presets: Mit
+  🛡️, 🏠 oder anderer Schwankung ist das Startfenster nicht garantiert.
+  „↺ Neu“ und ⚙ „Gleicher Seed“ behalten den Seed („Gleicher Seed“ auch
+  die Schalter). Bleibt ein späteres Fenster ruhig: ⚙ „Neuer Seed“ oder
+  ⚙ Schwankung „stark“.
+- „🎯 Murphy · nur Demo“: Der Nachbar schlägt zu, sobald sich die letzte
+  Engpass-Station erholt hat UND das Eigenrauschen der ANDEREN Station
+  (Webserver ↔ DB) im Tief ist (z ≤ −0,3 σ) — und trifft genau diese
+  andere Station, mit voller Stärke für 35 s. Frühestens 20 s nach Ende
+  des letzten Schlags; kommt kein Tief, schlägt er spätestens 90 s nach
+  diesem Ende trotzdem zu — sobald gerade kein Engpass besteht. So
+  verschiebt jeder Schlag den Engpass. Kein realistisches
+  Verhalten, sondern der Worst Case. NICHT „trifft die Station mit der
+  kleinsten Reserve“ — das würde den Engpass nur vertiefen. Schaltbar
+  nur im Preset „Nachbar-VM (verdeckt)“.
+- „🛡️ Schutzkapazität“: Den Engpass bewusst festlegen — die DB, die
+  sich nicht horizontal skalieren lässt — und den anderen Stationen
+  Reserve geben, hier den Webservern +20 %. Damit werden die Webserver
+  zu Nicht-Engpässen, die DB zum festen Engpass. Bei „Nur Zufall“ hört
+  das Wandern auf (Lawrence & Buss 1994, Abstract: „shiftiness declines
+  when the capacity of nonbottleneck resources is increased“).
+- Gegenprobe im ⚙ „Schutzkapazität +20 % überall“, im Preset „Nur
+  Zufall“: Die Überlast verschwindet (klar, mehr Kapazität), aber die
+  knappste Station wandert weiter wie vorher — die Fußzeile zählt dann
+  deren Wechsel. Es entsteht kein fester Engpass, an dem Back Pressure
+  und Shedding ansetzen könnten. Im Preset „Nachbar-VM“ bleiben
+  Überlast und Wechsel: Ein Schub frisst auch diese Reserve auf.
+- Gegen den Nachbarn hilft Schutzkapazität nur halb: Die Überlastzeit am
+  Webserver sinkt deutlich, die Wechsel kaum — ein CPU-Schub nimmt 25–40 %
+  der Web-CPU und frisst damit auch die zusätzlichen 20 % samt der
+  normalen Reserve auf, und die IO-Schübe treffen die DB. Erst
+  „🏠 Eigener Host“ (Isolation: dedizierter Host, eigenes Storage)
+  beseitigt die Wechsel.
+- Abgrenzung: Die Systemdynamik-Folie (systemdynamik) zeigt das Wandern
+  deterministisch mit geskripteten Einbrüchen; der Noisy-Neighbor-Drill im
+  Diagnose-Kapitel (noisy-neighbor) übt %steal als Diskriminator an einer
+  einzelnen VM. Hier: dieselbe Ursache, ihre Wirkung auf eine ganze Kette —
+  und ein IO-Nachbar ganz ohne steal.
+- Tab „Erklärung & Modell“: Engpass-Definition (Reserve = Kapazität /
+  Nachfrage − 1; Engpass = knappste Station mit Reserve < 0; „kollabiert“
+  vs. „abgefangen“), %steal vs. Disk-await, Murphy, Schutzkapazität und
+  Eigener Host, das Startfenster samt aktuellem Seed, Modell und bewusste
+  Vereinfachungen; unten „Verwandte Sims“ als Sprungknöpfe. Solange der
+  Tab offen ist, steht die Sim still.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: engpass-gegenmassnahmen
+---
+
+<WanderingBottleneckSim variant="remedies" />
+
+<!--
+- Bedienung im PUBLIKUMSFENSTER (wie auf der vorigen Folie): Presenter
+  und Publikum rechnen getrennt, Drehbuch und Schalter werden nicht
+  synchronisiert.
+- Startet im Preset „Rabattaktion“ (Zeile „Szenario:“), Zeitraffer ×20,
+  angehalten auf Schritt 0 kurz vor dem Aktionsstart — kein Autoplay.
+  Die Drehbuch-Karte rechts führt: „Lage:“ → „Zug:“ → Frage (Schritt 0
+  „Wo klemmt es zuerst?“, danach „Wohin wandert der Engpass?“). Erst
+  tippen lassen: „Webserver“ / „Bestandsprüfung“ / „Zahlungsdienst“ /
+  „bleibt“ (in Schritt 0 „nirgends“), oder „ohne Tipp ▸“. VORSICHT: In
+  der Fragephase lösen ▶ und ⏩ den Zug ohne Tipp aus — nicht als Start
+  drücken, solange getippt werden soll.
+- Nach dem Tipp setzt der Zug die Schalter (sie pulsieren kurz), und die
+  Sim läuft von selbst: „⏳ Einschwingen … noch … s Sim-Zeit“; ⏩ spult
+  bis zur Auflösung. Dort hält sie an: „✓ Richtig getippt“ / „✗ Getippt:
+  …“ / „ohne Tipp“ in der Karte, die Tipp-Knöpfe markieren die richtige
+  Antwort, die Fußzeile bringt „Antwort: <Station> · <Zustand>
+  (bleibt).“ mit Erklärung. Dann „Weiter ▸“, nach dem letzten Schritt
+  „Fazit ▸“: Fazit in der Karte, die Fußzeile zieht die Bilanz in Zahlen
+  („Bilanz: rechtzeitig jetzt …“ gegen den Aktionsstart), dazu „x von N
+  Tipps richtig“ (laufend oben in der Karte als „x/N“, mit ✓ ab dem
+  ersten Treffer); „↺ Von vorn“ startet neu.
+- Diagramm: Die Anfragen/s sind gestapelt — rechtzeitig, abgewiesen,
+  verloren, „wartet“ (noch in einer Queue); die Stapelhöhe ist die
+  Nachfrage. Darunter die Checkouts/s gegen das Limit.
+- Die Knöpfe 0 … 5 im Kopf der Karte springen zu jedem Schritt und
+  rechnen mit gleichem Seed bis zu dessen Frage neu.
+- Alle Schalter lassen sich jederzeit auch einzeln umlegen (Sandbox).
+  Weicht man vom Drehbuch ab, meldet die Karte „⚠ Schalter weichen vom
+  Drehbuch ab — Tipps gesperrt.“ und bietet „Zurück zu Schritt k“ an.
+  Geschieht das während des Einschwingens, bleibt der Tipp „nicht
+  gewertet — Schalter wichen ab“. Weicht ein Seed ausnahmsweise vom
+  Drehbuch ab, sagt die Fußzeile „Diesmal anders als im Drehbuch …“.
+- Schalter-Leiste rechts unten, nach Grundrichtung gruppiert („Zufluss
+  bremsen“, „Arbeit verwerfen / reduzieren“, „Kapazität erhöhen“ …). Das
+  Drehbuch legt um: in Schritt 1 „Scaling 2→12“ (Modus „reaktiv“), in
+  Schritt 2 „BP → Bestand“, in Schritt 3 „Shed: Produktseiten“, in
+  Schritt 4 „Feature Shedding“, in Schritt 5 „BP → Zahlung“ und „Shed:
+  Checkouts“. Dazu steht dort „Schutzkap. +20 %“ zum Ausprobieren. Die
+  Leiste zeigt je Preset nur dessen Züge plus wenige Ablenker;
+  eingeschaltete Schalter bleiben immer sichtbar (gedimmt, wenn sie nicht
+  zum Preset gehören).
+- Drehbuch (rechtzeitig ausgelieferte Seiten und Bestellungen je s,
+  gemittelt über viele Seeds, illustrativ):
+  0 Aktionsstart → Webserver kollabiert: 2 × 100 = 200 req/s gegen
+    1.000. Die Eingangs-Queue wächst, Kunden geben nach 10 s auf, und was
+    die Webserver noch rechnen, kommt nach mehr als 2 s — zu spät: 0
+    Produktseiten rechtzeitig, 200/s verschwendete Arbeit. Die DB sieht
+    höchstens 200 gegen 300 und wirkt gesund.
+  1 Scaling 2 → 12, reaktiv → Bestandsprüfung kollabiert. Erkennen 30 s
+    + Kaltstart 60 s + Aufwärmen 30 s (neue Instanzen starten bei 40 %),
+    volle Kapazität nach 120 s: 12 × 100 = 1.200 req/s gegen 1.000.
+    Sobald genug Webserver laufen, trifft die volle Last die
+    Bestandsprüfung (300 Produktseiten/s). Ohne Schutz kollabiert sie:
+    wieder 0 rechtzeitig, 300/s Arbeit für den Papierkorb.
+  2 Back Pressure an der Bestandsprüfung → bleibt, abgefangen.
+    Concurrency-Limit vor der DB (höchstens 0,1 s Arbeit in der DB) plus
+    BEGRENZTE Eingangs-Queue (0,5 s); Überlauf → 503. Die DB bleibt voll
+    ausgelastet — aber keine Arbeit geht mehr verloren: 290 Produktseiten
+    und 10 Bestellungen/s rechtzeitig, 700/s abgewiesen.
+  3 Load Shedding → bleibt, abgefangen — jetzt früh und nach Priorität:
+    Produktseiten zuerst, Checkouts zuletzt. 280 Produktseiten, 28 statt
+    10 Bestellungen/s, 690/s sofort abgewiesen statt erst an der Queue.
+  4 Feature Shedding → Zahlungsdienst kollabiert. Empfehlungen aus: Eine
+    Produktseite kostet 0,3 E statt 1,5 E, die DB schafft 1.500 Seiten/s.
+    Jetzt kommen 910 Produktseiten durch, 10 % davon wollen zahlen: 91
+    Checkouts/s gegen 70 extern. 0 Bestellungen rechtzeitig, 90/s
+    verschwendet.
+  5 Kasse schützen (Back Pressure + Shedding am Zahlungsdienst) →
+    bleibt, abgefangen. Zahlungsaufrufe aufs Limit begrenzen, überzählige
+    Checkouts sofort abweisen („Kasse ausgelastet — Warenkorb bleibt“):
+    910 Produktseiten und 70 Bestellungen/s, 20/s abgewiesen. Mehr als 12
+    Webserver ändern daran nichts — die Grenze liegt außerhalb des Shops.
+- Kernsatz: Wer den Engpass beseitigt (Scaling, Feature Shedding), legt
+  den nächsten frei; wer ihn abfängt (Back Pressure, Shedding), verliert
+  weniger Arbeit, schafft aber keine Kapazität. Die ganze Kette
+  beobachten, nicht nur die Station, die gerade brennt.
+- Präzisierung Back Pressure: Sie schafft KEINE Kapazität, sie verlegt
+  den Stau an den Rand — in eine begrenzte Queue, deren Überlauf
+  abgewiesen wird. Ohne Grenze wäre es nur ein längerer Stau. SRE Book:
+  „Usually, if the queue is full, the server will reject new requests.“
+- Scaling reaktiv vs. vorgewärmt (Modus-Knopf „reaktiv“ / „vorgew.“
+  neben „Scaling 2→12“): reaktiv 30 + 60 + 30 = 120 s bis volle
+  Kapazität, vorgewärmt (Warm Pool) 10 s. Beides hilft nur, solange der
+  Engpass horizontal skalierbar ist — die Bestands-DB und der externe
+  Zahlungsdienst sind es nicht. AWS Warm Pools halten dafür
+  „pre-initialized EC2 instances“ bereit. Den Modus umschalten verlässt
+  das Drehbuch (Tipps gesperrt) — danach „Zurück zu Schritt k“.
+- Praxis zu Schritt 5: Stripe nennt einen Flash Sale ausdrücklich als
+  möglichen Auslöser seiner Rate Limits, nennt clientseitig einen Token
+  Bucket als gängiges Verfahren und bittet, vor einem absehbaren Ereignis
+  den Support zu
+  kontaktieren — große Erhöhungen mindestens sechs Wochen im Voraus. Das
+  Kontingent VOR der Aktion zu klären ist auch eine Gegenmaßnahme.
+- Wer statt Feature Shedding „einfach cachen“ vorschlägt: Das zeigt das
+  Preset „Teure Abfragen“ (oder „Cache + Coalescing“ im ⚙). Die
+  Empfehlungen bleiben, eine Seite kostet aber noch 0,54 E — in der
+  Rabattaktion bleibt die DB damit knapp der Engpass, die Kasse liegt dicht
+  dahinter. Die Reservierung im Checkout (1,0 E) kommt nie aus dem Cache —
+  sonst wird überverkauft.
+- Load Shedding ohne Back Pressure (Sandbox, nicht im Drehbuch): „Shed:
+  Produktseiten“ sieht auch die Wartezeit der DB, nicht nur die
+  Eingangs-Queue — allein eingeschaltet fängt es die DB also ebenfalls ab.
+- Neben der Rabattaktion stehen weitere Presets in der Zeile
+  „Szenario:“; jedes spielt eine Familie der Gegenmaßnahmen einzeln
+  durch. Für den Vortrag reicht die Rabattaktion.
+- Preset „Kurze Spitzen“ (Familie Spitzen zeitlich verteilen): eigenes
+  Drehbuch 0 … 2, Zeitraffer ×20 — das Diagramm zeigt 10 min. 200
+  Produktseiten/s und 20 Checkouts/s; Blitzangebote bringen alle 2 min für
+  30 s 60 Checkouts/s, im Mittel 30. Nach jeder Zahlung geht eine
+  Bestätigungsmail an den Mailversand (45 Mails/s), synchron im Checkout.
+  Die Kette bekommt eine vierte Karte „Mailversand“ (schmale Karten:
+  „Res.“ = Reserve); unten im Diagramm Checkouts und Mails gegen seine
+  Kapazität, blass hinterlegt die Blitzangebote. Schritt 0 fragt nach der
+  Station, danach eigene Fragen. Die Leiste zeigt dazu „BP → Zahlung“,
+  „Shed: Checkouts“, „Scaling 4→8“ und „Schutzkap. +20 %“ als Ablenker.
+- Drehbuch „Kurze Spitzen“ (Bestellungen und Mails je s im Mittel der
+  letzten 20 s, mitten in der Welle bzw. in der Dauerlast, gemittelt über
+  viele Seeds, illustrativ):
+  0 Blitzangebote → Mailversand, kollabiert: Im Mittel reichen 45 Mails/s,
+    in der Spitze nicht — 15 Mails/s zu viel, nach 30 s 450 im Rückstau,
+    bis zu 10 s Wartezeit. Synchron wartet jeder Kunde auf seine Mail: 6 von 60
+    Bestellungen/s kommen rechtzeitig, 54/s gehen verloren. Zwischen den
+    Wellen läuft alles.
+  1 Puffern & glätten → kein Engpass. Schritt 1 „Puffern & glätten“:
+    Bestellung sofort bestätigen, Mail aus dem Puffer — höchstens 1.000
+    Mails, keine älter als 20 s. Frage „Was passiert mit den Mails?“ —
+    Antwort „später, aber alle“: 60 Bestellungen/s, Mails mit 45/s bis zu
+    10 s später, keine verloren; in der Pause läuft der Puffer leer.
+  2 Dauerlast → Mailversand, abgefangen. Die Aktion wird verlängert:
+    dauerhaft 60 Checkouts/s gegen 45 Mails/s. Frage „Und jetzt die
+    Mails?“ — Antwort „gehen verloren“: Der Puffer läuft voll (bei 45/s
+    greift das Alter: 900 Mails), Mails, die 20 s warten, fliegen raus —
+    15 Mails/s. Die 60 Bestellungen/s kommen durch.
+- Pointe „Kurze Spitzen“: Ein Puffer verteilt Spitzen über die Zeit, er
+  schafft keine Kapazität — er hilft nur, wenn das Mittel unter der
+  Kapazität liegt. Azure, Queue-Based Load Leveling: „If your average
+  producer rate exceeds the consumer rate, the queue continues to grow and
+  latency increases.“ Darum braucht jeder Puffer Grenzen (Größe und
+  Alter). Synchron bleibt nur, was der Kunde in der Antwort braucht —
+  Azure nennt als Gegenanzeige „The caller requires a low-latency,
+  synchronous response.“ Die Zahlung bleibt deshalb im Checkout.
+- Preset „Teure Abfragen“ (Familie Arbeit verwerfen / reduzieren):
+  dieselbe Karte, eigenes Drehbuch mit den Schritten 0 … 3. Start: 12
+  Webserver, Back Pressure an DB und Kasse ist an — die Lehre der
+  Rabattaktion. Die Leiste zeigt dazu „Feature Shedding“ und
+  „Schutzkap. +20 %“ als Ablenker.
+- Drehbuch „Teure Abfragen“ (Seiten und Bestellungen je s, gemittelt
+  über viele Seeds, illustrativ):
+  0 Newsletter → Bestandsprüfung, abgefangen: 100 → 900 req/s. Eine
+    Produktseite kostet die DB 1,5 E, davon 1,2 E für personalisierte
+    Empfehlungen; 450 E/s reichen für 300 Seiten/s. Die Webserver haben
+    Reserve. 290 Seiten und 10 Bestellungen/s, 600/s abgewiesen.
+  1 Scaling → bleibt, abgefangen. Schritt 1 „Scaling 12→20“ (vorgewärmt,
+    10 s): 20 × 100 = 2.000 req/s an den Webservern, aber die DB skaliert
+    nicht horizontal — weiter 290 Seiten und 10 Bestellungen/s, 590/s
+    abgewiesen.
+  2 Batching → bleibt, abgefangen. Schritt 2 „Batching“: Die
+    Verfügbarkeitsabfragen gehen aus 50 ms als ein Bündel an die DB, der
+    Overhead (0,2 E) teilt sich, je Artikel bleiben 0,1 E. Eine Seite
+    kostet ≈ 1,3 statt 1,5 E: 330 Seiten und 12 Bestellungen/s, 550/s
+    abgewiesen — und jede Seite wartet +25 ms.
+  3 Cache → Zahlungsdienst, abgefangen. Schritt 3 „Cache + Coalescing“,
+    Schlüssel je Produkt (personalisiert wird nur sortiert): 80 % der
+    Empfehlungen ohne DB-Arbeit, 1,2 → 0,24 E; eine Seite ≈ 0,34
+    E. Die DB hat Reserve, 820 Seiten/s kommen durch. 10 % davon wollen
+    zahlen: 82 Checkouts/s gegen 70 — Back Pressure an der Kasse fängt
+    ab, 70 Bestellungen/s, 10/s abgewiesen.
+- Pointe „Teure Abfragen“: Arbeit reduzieren wirkt am teuren Teil.
+  Batching spart nur den Overhead, der Cache die Empfehlungen — und die
+  Funktion bleibt, anders als bei Feature Shedding. Batching kommt
+  bewusst vor dem Cache: Umgekehrt stünden DB und Kasse bei der
+  Auflösung fast gleichauf, der Engpass hinge am Seed. Trade-offs des
+  Batchings: Latenz (Kafka linger.ms, DataLoader), Teilfehler,
+  Blast-Radius. Coalescing gegen die „thundering herd“ beim leeren Cache
+  nennt die AWS Builders' Library („request coalescing“): viele Clients,
+  dieselbe ungecachte Ressource — im Newsletter öffnen alle dieselben
+  Produkte. Der Cache der Sim ist sofort warm; den leeren Cache zeigt die
+  Sim „Cache-Stampede“.
+- Preset „Empfehlungen hängen“ (Familie Überlast isolieren + Verstärkung
+  verhindern): eigenes Drehbuch 0 … 3, Echtzeit (×1) — ein Vorfall im
+  Sekundentakt, das Diagramm zeigt 2 min. Konstant 220 req/s, davon 20
+  Checkouts, auf 4 Webservern mit je 100 Threads. Ab Schritt 1 stellt die
+  Karte eigene Fragen statt „Wohin wandert der Engpass?“, die Tipps sind
+  deren Antworten. Die Pointe steht meist nach wenigen Sekunden im
+  Diagramm — dann spult ⏩ bis zur Auflösung. Die Leiste zeigt dazu „Feature Shedding“ und „Scaling
+  4→8“ als Ablenker. Blasses Grün im Diagramm: rechtzeitig, aber ohne
+  Empfehlungen.
+- Drehbuch „Empfehlungen hängen“ (Seiten und Bestellungen je s, gemittelt
+  über viele Seeds, illustrativ):
+  0 Hänger → Webserver, kollabiert: Der Empfehlungsdienst antwortet nach
+    3 s statt 50 ms. Jede Produktseite hält so lange ihren Web-Thread:
+    200 × 3 = 600 Threads nötig, 4 × 100 = 400 da. Der Pool läuft leer,
+    auch Checkouts finden keinen Thread — 0 Seiten und 0 Bestellungen
+    rechtzeitig, 140/s zu spät, obwohl DB und Kasse Reserve haben.
+  1 Bulkheads → bleibt, kollabiert. Schritt 1 „Bulkheads“: Checkout 25 %
+    der Threads (100), Rest 75 % (300). Frage „Was passiert mit den
+    Checkouts?“ — Antwort „laufen wieder“: 20 Bestellungen/s. Die Seiten
+    hängen weiter, 200/s verloren.
+  2 Timeouts → kein Engpass. Schritt 2 „Timeouts“: Empfehlungen nach
+    300 ms abbrechen, die Seite ohne sie ausliefern. Frage „Was zeigen die
+    Produktseiten?“ — Antwort „schnell, ohne Empf.“: 200 Seiten und 20
+    Bestellungen/s rechtzeitig, alle ohne Empfehlungen (degradiert);
+    höchstens 200 × 0,3 = 60 Threads statt 600.
+  3 Circuit Breaker → kein Engpass. Schritt 3 „Circuit Breaker“: ab 50 %
+    Fehlern 3 s offen, dann 10 % Proben. Frage „Wartezeit auf
+    Empfehlungen?“ — Antwort „gar nicht“: Die Seiten kommen sofort ohne,
+    200 Seiten und 20 Bestellungen/s; die DB spart 1,2 E je Seite.
+- Pointe „Empfehlungen hängen“: Ein Nebendienst legt über geteilte
+  Threads die Kasse lahm — kein Kapazitätsproblem, sondern Warten.
+  Bulkheads begrenzen den Schaden und verlieren den Pooling-Effekt,
+  Timeouts begrenzen das Warten, der Breaker spart den Aufruf ganz
+  (automatisches Feature Shedding). Ohne Timeouts sieht der Breaker der Sim
+  den Hänger nicht: Er zählt nur Abbrüche, langsam ist im Modell kein
+  Fehler. Nygard, Release It! (Kap. 5 „Stability Patterns“); Azure
+  „Bulkhead pattern“: „Isolate the elements of an application into pools
+  so that if one element fails, the others continue to function.“
+- Preset „Retry-Sturm“ (Familie Verstärkung verhindern): eigenes Drehbuch
+  0 … 4, Echtzeit (×1) — das Diagramm zeigt 2 min. Konstant 200 req/s,
+  davon 50 Checkouts, gegen einen Zahlungsdienst mit 70/s. Jeder Schritt
+  spielt dieselbe Störung ab: 15 s Brownout auf 35 %, dann ein Neustart —
+  alle offenen Aufrufe brechen im selben Moment ab. Timeouts (2 s) sind an,
+  Retries naiv: bis zu 3 Versuche, sofort. Eine Bestellung zählt nur, wenn
+  der ganze Checkout binnen 2 s fertig ist — ein Retry nach einem Timeout
+  kommt praktisch immer zu spät. In den Schritten 1 bis 3 läuft der schon
+  bekannte Brownout im Zeitraffer (×5) bis 2 s vor dem Neustart, die
+  Fußzeile sagt es; ⏩ spult bis zur Auflösung, sobald die Wellen im
+  Diagramm stehen. Unten im Diagramm die
+  Versuche am Zahlungsdienst gegen seine Kapazität, blass hinterlegt der
+  Brownout; die Kasse zeigt „↻ ×… · Spitze …×“. Der Retry-Modus ist ein
+  Segmentfeld „aus / naiv / Backoff / +Jitter“; dazu „BP → Zahlung“ und
+  „Scaling 4→8“ als Ablenker.
+- Drehbuch „Retry-Sturm“ (Bestellungen rechtzeitig und Versuche je
+  Zahlung im Mittel der letzten 10 s, gemittelt über viele Seeds,
+  illustrativ):
+  0 Störung → Zahlungsdienst, kollabiert: Jeder Versuch reißt den Timeout
+    und wird sofort wiederholt: 3 × 50 = 150 Versuche/s gegen 70. Der
+    Brownout ist vorbei, der Sturm bleibt (metastabil): ×2,8 Versuche je
+    Zahlung, 0 Bestellungen/s, 37/s verloren — der Anbieter rechnet für
+    Clients, die längst aufgegeben haben.
+  1 Backoff → bleibt, kollabiert. Schritt 1 „Backoff“: 2 s, dann 4 s Pause.
+    Frage „Wie kommen die Retries an?“ — Antwort „in Wellen“: Wer beim
+    Neustart gemeinsam scheitert, kommt gemeinsam wieder, Spitze ≈ 2×
+    Mittel. Die Menge bleibt: ×2,6, 2 Bestellungen/s, 41/s verloren.
+  2 Jitter → bleibt, kollabiert. Schritt 2 „+Jitter“: Pause zufällig bis
+    2 bzw. 4 s. Frage „Und jetzt die Retries?“ — Antwort „gleichmäßig“:
+    Spitze ≈ 1,3× Mittel. Glatter, aber nicht besser: ×2,5 Versuche je
+    Zahlung halten die Queue voll, 1 Bestellung/s, 35/s verloren — Backoff
+    und Jitter verteilen, sie deckeln nicht.
+  3 Retry-Budget → kein Engpass. Schritt 3 „Retry-Budget 10 %“: höchstens
+    55 statt 150 Versuche/s. Frage „Versuche je Zahlung?“ — Antwort
+    „≈ ×1,1“ (über die Störung; nach dem Neustart ×1). Im Brownout
+    scheitern Zahlungen weiter, nach dem Neustart erholt sich der Dienst
+    sofort: alle 50 Bestellungen/s, ≈ 1/s verloren.
+  4 Circuit Breaker → Zahlungsdienst, abgefangen. Schritt 4 „Circuit
+    Breaker“, aufgelöst mitten im Brownout, 8,7 s nach dem Zug (Kennzahlen
+    über den ganzen Schritt). Frage „Was sehen Kunden an der Kasse?“ —
+    Antwort „sofort abgewiesen“: 24/s „Kasse ausgelastet — Warenkorb
+    bleibt“ statt Fehler nach Timeouts, 16/s verloren (vor allem, bevor er
+    öffnet), 10 Bestellungen/s; ×1 Versuche je Zahlung. Er öffnet erst, wenn
+    der Client Timeouts erkennt (≈ 4 s), dann 3 s offen, dann Proben.
+    Gelingen sie — 35 % Kapazität reichen dafür —, schließt er, und die
+    volle Last reißt ihn wieder auf: Im Brownout flattert er. Ein Breaker
+    kennt nur auf und zu, dosieren kann er nicht.
+- Pointe „Retry-Sturm“: Retries sind „selfish“ (Brooker, AWS Builders'
+  Library). Naiv halten sie den Dienst nach der Störung unten — der
+  Auslöser ist vorbei, die Last nicht. Backoff verschiebt, Jitter verteilt
+  (SRE Book: „retry ripples“ nach einem „network blip“), erst das Budget
+  deckelt: Retries nur, solange ihr Anteil unter 10 % liegt (SRE Book:
+  „ratio of requests that correspond to retries“). Envoy nimmt 20 % der
+  aktiven Requests als Default, Finagle etwa 20 % — keine universelle Zahl. Der
+  Breaker sagt schnell ab, kostet laut Brooker aber Testbarkeit und
+  Erholungszeit. Zahlungen nur mit Idempotency Key wiederholen (Stripe),
+  und Retries nur auf einer Ebene.
+- Preset „Bot-Ansturm“ (Familie Zufluss bremsen): eigenes Drehbuch 0 … 4,
+  Zeitraffer ×20 — das Diagramm zeigt 10 min. 250 req/s Kunden (davon 20
+  Checkouts) auf 12 Webservern; ab Schritt 0 fragt ein Scraper-Bot — ein
+  einziger Client — 500 Produktseiten/s ab, jede so teuer für die DB wie
+  eine Kundenseite. Der Lastknoten zeigt den Bot („🤖“) und die 429. Unten
+  im Diagramm die Produktseiten: Kunden rechtzeitig, ihre Nachfrage, der
+  Bot, gepunktet, was die DB schafft; blass hinterlegt der IO-Schub. Ab
+  Schritt 1 eigene Fragen. Die Leiste zeigt dazu „Feature Shedding“ und
+  „Scaling 12→20“ als Ablenker; „Rate Limit 10/s“ gibt es nur hier.
+- Drehbuch „Bot-Ansturm“ (Kundenseiten und Bestellungen je s im Mittel der
+  letzten 20 s, gemittelt über viele Seeds, illustrativ):
+  0 Bot-Ansturm → Bestandsprüfung, kollabiert: 500 Bot-Seiten/s kosten je
+    1,5 E wie eine Kundenseite — 1.115 E/s gegen 450, 67 % davon vom Bot.
+    Die Webserver haben Reserve. Ohne Schutz warten Kunden wie Bot: keine
+    Kundenseite rechtzeitig, 600/s verloren.
+  1 Load Shedding → bleibt, abgefangen. Schritt 1 „Shed: Produktseiten“:
+    Der Shedder sieht die Wartezeit der DB und weist Produktseiten früh ab,
+    Checkouts zuletzt. Frage „Wen trifft das Abweisen?“ — Antwort „Kunden
+    und Bot“: nur 90 von 230 Kundenseiten/s kommen, 140 Kundenanfragen/s
+    abgewiesen; der Bot bekommt 195, 305/s abgewiesen. 20 Bestellungen/s,
+    ≈ 1/s verloren.
+  2 Rate Limit → bleibt, abgefangen. Schritt 2 „Rate Limit 10/s“, dafür
+    „Shed: Produktseiten“ aus: Token Bucket, 10 req/s je Client. Frage „Und
+    jetzt — wen trifft es?“ — Antwort „nur den Bot“: 490/s bekommen 429,
+    alle 230 Kundenseiten/s kommen, 20 Bestellungen/s. Die DB bleibt auf
+    dem Papier der Engpass — die Nachfrage des Bots bleibt —, ist aber zu
+    84 % ausgelastet.
+  3 Admission Control → bleibt, kollabiert. Schritt 3 „Admission 300/s“,
+    dazu ein IO-Schub der Nachbar-VM (Disk-await ×2): Die DB schafft nur
+    noch ≈ 171 Seiten/s, das statische Limit lässt 260 req/s durch und
+    greift gar nicht; der Bot bleibt bei 490/s 429. Frage „Was sehen Kunden
+    jetzt?“ — Antwort „warten, dann Fehler“: keine Kundenseite rechtzeitig,
+    260/s verloren.
+  4 Back Pressure → bleibt, abgefangen. Schritt 4 „BP → Bestand“, derselbe
+    IO-Schub. Frage „Und mit Back Pressure?“ — Antwort „teils sofort 503“:
+    150 von 230 Kundenseiten/s rechtzeitig, 80 Kundenanfragen/s sofort 503 statt
+    Fehler nach Warten, 18 Bestellungen/s, ≈ 1/s verloren; der Bot weiter
+    490/s 429.
+- Pointe „Bot-Ansturm“: Rate Limit (wen: je Client) ≠ Admission Control
+  (wie viel: global, statisch oder adaptiv) ≠ Load Shedding (reagiert auf
+  den Zustand) ≠ Back Pressure (Rückmeldung aus der Kette). Stripe: „A
+  load shedder makes its decisions based on the whole state of the system
+  rather than the user who is making the request.“ Netflix zu statischen
+  RPS-Limits: „in large distributed systems that auto-scale this value
+  quickly goes out of date“ — veraltet, sobald sich die Kapazität ändert;
+  dort rechnet man mit gleichzeitigen Requests nach Little's Law. Dass das Rate Limit das
+  Shedding ablöst, ist Absicht: Der Shedder hätte den IO-Schub auch
+  abgefangen. Keiner der vier schafft Kapazität.
+- ⚙ („Experimentieren“): „Tipps überspringen“ — dann steht statt der
+  Tipp-Knöpfe nur „Zug ausführen ▸“. „Alle Schalter zeigen“ klappt alle
+  Gegenmaßnahmen mit Wirkung im Modell auf, nach Grundrichtung. „Neuer Seed“, „Gleicher Seed“ und
+  „↺ Neu“ starten das Drehbuch bei Schritt 0 neu und löschen die
+  Trefferquote; nur „Neuer Seed“ wechselt den Zufall — hier ohne
+  Startfenster-Auswahl, die gilt nur auf der Ursachen-Folie. Die Zahlen
+  oben sind Mittelwerte; mit Zufalls-Seed schwanken sie leicht. Live
+  steht vor jedem Tipp in der Fußzeile „Rechtzeitig: … Produktseiten/s ·
+  … Bestellungen/s · früh abgewiesen …/s · verloren …/s“.
+- Tab „Erklärung & Modell“: die sechs Grundrichtungen (Zufluss bremsen,
+  Arbeit verwerfen/reduzieren, Kapazität erhöhen, Spitzen verteilen,
+  Überlast isolieren, Verstärkung verhindern) mit Beispielen (● = hier
+  als Schalter) und der Spalte „schafft Kapazität?“, die Präzisierungen
+  und die bewussten Vereinfachungen.
+- Überleitung: Den Nachbarn der vorigen Folie diagnostizieren wir im
+  nächsten Kapitel — mit %steal als Schlüssel-Kanal.
 -->
 
 ---
@@ -1672,6 +2192,9 @@ routeAlias: noisy-neighbor
 - ⚙: Zurücksetzen & neu mischen (neue Zuordnung + neues Rauschen) +
   Modell-Hinweis (%steal aus /proc/stat bzw. vmstat: vCPU lauffähig, aber
   keine physische CPU — der Kanal, der in Default-Dashboards oft fehlt).
+- Wirkung auf eine ganze Kette — und ein IO-Nachbar ganz ohne steal, nur
+  mit längerem Disk-await: Folie „Wandernde Engpässe“
+  (wandernde-engpaesse).
 -->
 
 ---
@@ -1928,7 +2451,7 @@ Der Sim-Zustand lebt in <b>einfachen JS-Objekten</b>, nicht im Reaktivitätssyst
   Frame → Canvas; ein paar Dutzend Formen → SVG direkt aus dem Template.
 - d3 bewusst klein gehalten: nur Skalen und Pfad-Generatoren, keine
   d3-Datenbindung — die macht Vue.
-- Die SimShell-Schale macht 23 Sims kohärent bedienbar: gleiche Preset-Zeile,
+- Die SimShell-Schale macht 24 Sims kohärent bedienbar: gleiche Preset-Zeile,
   gleiches ⚙-Overlay, gleicher Verdict-Platz.
 -->
 
@@ -1995,7 +2518,7 @@ Theorie-Kurve als Overlay über der Simulation: die Formel liefert den <b>Mittel
   Aggregationsgrad.
 - Das Motiv-Callout ist das Echo der Schlussfolie: der Mittelwert
   verschweigt die Gefahr — nahe der Schwelle entscheidet der Zufall.
-- Überleitung: „die nächste Folie plottet alle 23 Sims auf diese zwei
+- Überleitung: „die nächste Folie plottet alle 24 Sims auf diese zwei
   Achsen — und danach führen wir die Naht live vor."
 -->
 
@@ -2162,7 +2685,7 @@ routeAlias: making-of-engineering
 ### ✅ Tests (Vitest)
 
 - `bullwhipModel`, `burnRate`, `metastableModel` und `queueDynamikModel` gegen analytisch gerechnete Tabellen gepinnt (u. a. geometrisches π, MFPT ≈ 6 900)
-- Modelle sind pure JS-Module — testbar ganz ohne Browser
+- Modelle sind pure JS-Module — ohne Browser testbar, das Engpass-Drehbuch mit 50 Seeds
 
 </div>
 <div class="intro-box">
@@ -2194,14 +2717,15 @@ routeAlias: making-of-grenzen
 
 <div class="mo-limits">
 
-| Vereinfachung                                        | Warum das okay ist                                                                 |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| kein Event-Heap-DES in den Fluid-Sims                | fester Takt (Δt = 0,02–0,05 s) reicht für Flüsse und Schwellen                     |
-| kein RK4, nur Vorwärts-Euler                         | Δt ist klein gegen die Zeitkonstanten der Systeme                                  |
-| Fluid-Approximation verschweigt Tail-Latenz          | dafür gibt es die Latenz-Sim (Monte-Carlo) separat                                 |
-| keine Netzwerk-Topologie                             | ein Service, ein Pool — Mesh-Effekte wären ein eigenes Deck                        |
-| Diagnose-Familie = **skriptete Traces**              | Drill-Ziel ist das Ablesen der Diskriminatoren, nicht die Dynamik                  |
-| „Voll ODER leer": 2-Phasen-MMPP, Feedback nur linear | Korrelationszeit statt Varianz ist der Treiber — Details im Erklärungs-Tab der Sim |
+| Vereinfachung                                         | Warum das okay ist                                                                 |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| kein Event-Heap-DES in den Fluid-Sims                 | fester Takt (Δt = 0,02–0,1 s) reicht für Flüsse und Schwellen                      |
+| kein RK4, nur Vorwärts-Euler                          | Δt ist klein gegen die Zeitkonstanten der Systeme                                  |
+| Fluid-Approximation verschweigt Tail-Latenz           | dafür gibt es die Latenz-Sim (Monte-Carlo) separat                                 |
+| keine Netzwerk-Topologie                              | ein Service, ein Pool — Mesh-Effekte wären ein eigenes Deck                        |
+| Diagnose-Familie = **skriptete Traces**               | Drill-Ziel ist das Ablesen der Diskriminatoren, nicht die Dynamik                  |
+| „Voll ODER leer": 2-Phasen-MMPP, Feedback nur linear  | Korrelationszeit statt Varianz ist der Treiber — Details im Erklärungs-Tab der Sim |
+| „Wandernde Engpässe“: Fluid-Kette, Zahlen illustrativ | zeigt Reihenfolge und Richtung der Verschiebung, kein Sizing                       |
 
 </div>
 
@@ -2240,6 +2764,7 @@ routeAlias: making-of-quellen
 - Isaacs et al. — _Analyzing Metastable Failures_ (HotOS '25) · AWS nutzt ein **Ensemble**: CTMC-Modelle + diskrete Ereignissimulation + Emulation
 - Habibi et al. — _MSF-Model_ (SRDS 2024, arXiv:2309.16181) · Metastabilität warteschlangentheoretisch modelliert
 - Mor Harchol-Balter — _Performance Modeling and Design of Computer Systems_ (2013) · die Warteschlangen-Referenz
+- Roser, Nakano & Tanaka — _Constraint Management in Manufacturing Systems_ (JSME Int. J. C, 2003) · Engpässe wandern schon durch Zufall
 
 <div class="mt-6 text-xs opacity-60">
 
@@ -2264,7 +2789,7 @@ hideInToc: true
 
 Zum Nachspielen: Jede Simulations-Folie hat einen Deep-Link — Folie öffnen genügt. ⚙ = Experimentier-Regler.
 
-Quellen: Herbert Simon, _The Architecture of Complexity_ (1962) · thesoftwarefrontier.com, _How Systems Really Fail_ · Bronson et al., _Metastable Failures_ (HotOS ’21) · Lee et al., _The Bullwhip Effect_ (1997) · Google SRE Workbook (SLO/Burn-Rate)
+Quellen: Herbert Simon, _The Architecture of Complexity_ (1962) · thesoftwarefrontier.com, _How Systems Really Fail_ · Bronson et al., _Metastable Failures_ (HotOS ’21) · Lee et al., _The Bullwhip Effect_ (1997) · Google SRE Workbook (SLO/Burn-Rate) · Lawrence & Buss, _Shifting Production Bottlenecks_ (1994)
 
 <!--
 - Selbststudium-Hinweis wiederholen: Deep-Links, ⚙-Labore, „Gleicher Seed"

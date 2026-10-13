@@ -5,7 +5,7 @@
 // Skript-Trace) wandern in ein Sockel-Band unter der Ebene — dort gibt es
 // keine sinnvolle y-Position. Klick auf Punkt/Pill → Detail-Karte rechts.
 // Bewusst ohne SimShell (kein Transport, keine Presets, kein Verdict) und
-// ohne d3 (22 handplatzierte Punkte, lineare Skalen).
+// ohne d3 (handplatzierte Punkte, lineare Skalen).
 import { ref, computed } from "vue";
 import { useDarkMode, useNav } from "@slidev/client";
 
@@ -231,6 +231,23 @@ const SIMS = [
     archetyp: "✏️ Predict-first",
     slide: "circuit-breaker",
     note: "Zwei Bahnen mit gleichem Seed — Divergenz ab dem Trip.",
+  },
+  {
+    id: "wandering",
+    name: "Wandernde Engpässe",
+    label: "Engpass-Kette",
+    family: "fluid",
+    x: 0.64,
+    y: 0.46,
+    labelPos: "left",
+    engine:
+      "lib/wanderingBottleneckModel.js · Fluid-Kette aus 3 Stationen + verdeckte Nachbar-VM, Gegenmaßnahmen als Schalter",
+    takt: "Δt = 0,1 s, fester Takt (Zeitraffer)",
+    rng: "mulberry32 — drei getrennte Ströme, OU-Rauschen",
+    rendering: "Canvas + HTML-Stationskarten",
+    archetyp: "✏️ Sandbox + Drehbuch",
+    slide: "wandernde-engpaesse",
+    note: "Ein Modell, zwei Folien: verdeckter Nachbar und Rabattaktion.",
   },
   {
     id: "metastable",
