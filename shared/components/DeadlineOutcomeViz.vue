@@ -13,7 +13,11 @@
  *   5 Workload Separation        Online rechtzeitig, nur Batch gedrosselt
  *   6 Jitter für Batch-Starts    gleiche Arbeit, kleinere Spitze
  *
- * Mit `lenses` (Monitoring-Deck) folgen auf die sieben Zeilen weitere
+ * Die Jitter-Zeile lässt sich abschalten (`:jitter="false"`): Sie zeigt
+ * Last, die kein Kunde sieht. Das SRE-Deck zeigt sie (der Jitter stammt aus
+ * der Sim davor), das Monitoring-Deck nicht.
+ *
+ * Mit `lenses` (Monitoring-Deck) folgen auf die Zeilen weitere
  * Klicks, je einer pro Sicht (LENS_KEYS): Dieselben Zeilen, gesehen durch
  * ein Dashboard, das Schritt für Schritt eine Fehlerkonvention, die Dauer,
  * den Messpunkt am Load Balancer, eine Metrik für degradierte Antworten
@@ -48,10 +52,11 @@
  *
  * Aufdecken per v-show: Die Erläuterung steht unter der zuletzt
  * aufgedeckten Zeile, der Endzustand ist also der höchste — dort auf
- * Überlauf prüfen; mit `lenses` jede Sicht (Klick 6–12), weil Legende und
- * Erläuterung je Sicht wechseln. Einbinden: im Deck global registrieren (setup/main.ts,
- * Slidev auto-importiert shared/ nicht); die Folie braucht `clicks: 6`
- * (mit `lenses`: 6 + Sichten − 1) und `:step="$clicks"`, das prüft
+ * Überlauf prüfen; mit `lenses` jede Sicht, weil Legende und Erläuterung
+ * je Sicht wechseln. Einbinden: im Deck global registrieren
+ * (setup/main.ts, Slidev auto-importiert shared/ nicht); die Folie braucht
+ * `clicks:` = Zeilen − 1 (6, ohne Jitter 5), mit `lenses` zusätzlich
+ * Sichten − 1, und `:step="$clicks"`; das prüft
  * shared/__tests__/deadlineOutcomes.test.ts.
  */
 import { computed } from "vue";
@@ -87,10 +92,10 @@ import {
   type ViewSegment,
 } from "./lib/deadlineOutcomes";
 
-const props = withDefaults(defineProps<{ step?: number; lenses?: boolean }>(), {
-  step: Number.POSITIVE_INFINITY,
-  lenses: false,
-});
+const props = withDefaults(
+  defineProps<{ step?: number; lenses?: boolean; jitter?: boolean }>(),
+  { step: Number.POSITIVE_INFINITY, lenses: false, jitter: true },
+);
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
 
@@ -172,7 +177,10 @@ const TEXT: Record<RowKey, RowText> = {
 const BAR_ROWS = outcomeRows();
 const SCALE = barScale(BAR_ROWS); // req/s bei voller Balkenbreite
 const JITTER = jitterProfiles();
-const ROW_COUNT = ROW_KEYS.length; // Balkenzeilen + Jitter-Zeile
+// Balkenzeilen + Jitter-Zeile; die Jitter-Zeile ist die letzte
+const rowCount = computed(() =>
+  props.jitter ? ROW_KEYS.length : ROW_KEYS.length - 1,
+);
 
 const panelOf = (key: Exclude<RowKey, "jitter">, l: LensKey) =>
   lensPanel(rowFlows(key), l);
@@ -247,18 +255,19 @@ const LENS_TABS = LENS_KEYS.map((key) => ({
 /* ===== Klickzustand ===== */
 
 const stepNo = computed(() => Math.max(0, Math.floor(props.step)));
-const cur = computed(() => Math.min(ROW_COUNT - 1, stepNo.value));
+const cur = computed(() => Math.min(rowCount.value - 1, stepNo.value));
 // Solange sich die Zeilen aufbauen, gilt die Kundensicht. Ohne `step`
 // (Infinity) zeigt die Grafik alle Zeilen in der Kundensicht. Der
 // PDF-Export ohne Klicks klemmt $clicks auf `clicks:` der Folie, zeigt also
 // die letzte Sicht (geprüft per `slidev export --format png`).
-const LAST_STEP = ROW_COUNT - 1 + LENS_KEYS.length - 1;
-const lensIdx = computed(() =>
-  props.lenses && stepNo.value <= LAST_STEP
-    ? Math.max(0, stepNo.value - (ROW_COUNT - 1))
-    : 0,
-);
-const rowsComplete = computed(() => stepNo.value >= ROW_COUNT - 1);
+const lensIdx = computed(() => {
+  const rowsDone = rowCount.value - 1;
+  const lastStep = rowsDone + LENS_KEYS.length - 1;
+  return props.lenses && stepNo.value <= lastStep
+    ? Math.max(0, stepNo.value - rowsDone)
+    : 0;
+});
+const rowsComplete = computed(() => stepNo.value >= rowCount.value - 1);
 const lens = computed<LensKey>(() => LENS_KEYS[lensIdx.value]!);
 const metricLens = computed(() => lens.value !== "kunde");
 
@@ -273,7 +282,7 @@ const isActive = useIsSlideActive();
 function goLens(k: number) {
   const where = slideCtx.$renderContext.value;
   if (!isActive.value || !["slide", "presenter"].includes(where)) return;
-  void nav.go(slideCtx.$page.value, ROW_COUNT - 1 + k);
+  void nav.go(slideCtx.$page.value, rowCount.value - 1 + k);
   blurLater();
 }
 function blurNow() {
@@ -488,7 +497,15 @@ const rows = computed(() => {
         ...barLayout(segs, r.capacity),
       };
     }),
-    { kind: "jitter" as const, key: "jitter" as RowKey, text: TEXT.jitter },
+    ...(props.jitter
+      ? [
+          {
+            kind: "jitter" as const,
+            key: "jitter" as RowKey,
+            text: TEXT.jitter,
+          },
+        ]
+      : []),
   ];
 });
 
@@ -496,7 +513,6 @@ const rows = computed(() => {
 // ein Pfad (Einzelrechtecke zeigen Antialiasing-Nähte).
 const J_W = 650;
 const J_H = 32;
-const J_H_LENSES = 22; // mit Sichten flacher: Platz für Leiste und Panels
 const jScale = J_H / JITTER.peakFixed;
 const jColW = J_W / JITTER.fixed.length;
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -527,17 +543,6 @@ const J_TICKS = [0, 30, 60].map((m) => ({
   label: `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`,
   left: `${(m / JITTER.fixed.length) * 100}%`,
 }));
-// Panel der Jitter-Zeile: Kundensicht die Spitzen, in den Metrik-Sichten
-// die Verdichtung. Gleiche Arbeit heißt gleiches Tagesmittel; nur das
-// Maximum (max_over_time) trennt die beiden.
-const jitterPanel = computed(() =>
-  metricLens.value
-    ? {
-        val: `max ${JITTER.peakFixed} | ${JITTER.peakHashed}`,
-        sub: "Ø Tag gleich",
-      }
-    : { val: `${JITTER.peakFixed} | ${JITTER.peakHashed}`, sub: "Spitze" },
-);
 // Ampel nicht nur über die Farbe
 const TONE_MARK: Record<PanelTone, string> = {
   good: "✓",
@@ -696,7 +701,7 @@ const current = computed(() =>
             }}</code>
             <svg
               class="jsvg"
-              :style="{ height: `${lenses ? J_H_LENSES : J_H}px` }"
+              :style="{ height: `${J_H}px` }"
               :viewBox="`0 0 ${J_W} ${J_H}`"
               preserveAspectRatio="none"
               role="img"
@@ -740,17 +745,8 @@ const current = computed(() =>
             {{ fmt(r.panel.of) }}/s
           </div>
         </div>
-        <div
-          v-else-if="lenses"
-          class="panel"
-          data-tone="info"
-          :style="{ background: C.tone.info, color: C.toneText.info }"
-        >
-          <div class="p-val">
-            <b>{{ jitterPanel.val }}</b>
-          </div>
-          <div class="p-sub">{{ jitterPanel.sub }}</div>
-        </div>
+        <!-- Jitter-Zeile mit Sichten: kein Panel, nur der Platz dafür -->
+        <div v-else-if="lenses" class="panel" />
       </div>
     </div>
 

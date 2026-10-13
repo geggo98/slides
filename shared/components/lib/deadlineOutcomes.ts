@@ -244,6 +244,7 @@ export function jitterProfiles(
 
 /**
  * Zeilen in Klick-Reihenfolge; die Folie braucht `clicks: ROW_KEYS.length - 1`,
+ * ohne Jitter-Zeile (`:jitter="false"`, sie ist die letzte) eine weniger,
  * mit `lenses` zusätzlich `LENS_KEYS.length - 1`.
  */
 export const ROW_KEYS = [

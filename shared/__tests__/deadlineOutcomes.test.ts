@@ -216,16 +216,6 @@ describe("Jitter für Batch-Starts", () => {
     expect(j.workFixed).toBe(60); // 12 Jobs × 5 min
     expect(j.workHashed).toBe(j.workFixed);
   });
-
-  it("Stundenmittel nicht gleich (Panel sagt deshalb „Ø Tag gleich“)", () => {
-    const j = jitterProfiles();
-    // Über genau die erste Stunde nicht: Der Job mit Startminute 59 läuft
-    // bis 1:04, also stecken nur 56 der 60 Job-Minuten in [0, 60).
-    const hour = (p: number[]) =>
-      p.slice(0, 60).reduce((a, b) => a + b, 0) / 60;
-    expect(hour(j.fixed)).toBe(1);
-    expect(hour(j.hashed)).toBeCloseTo(56 / 60, 10);
-  });
 });
 
 /* ===== Metrik-Sichten ===== */
@@ -507,8 +497,21 @@ describe("Metrik-Sichten: die vier Punkte der Folie", () => {
 });
 
 // Jede Folie mit <DeadlineOutcomeViz> braucht so viele Klicks, wie die
-// Grafik Zeilen hat (minus der ersten), mit `lenses` dazu einen je Sicht
-// außer der Kundensicht, und reicht $clicks als step durch.
+// Grafik Zeilen hat (minus der ersten; mit :jitter="false" fehlt die letzte
+// Zeile), mit `lenses` dazu einen je Sicht außer der Kundensicht, und reicht
+// $clicks als step durch.
+const hasLenses = (tag: string) => /\slenses\b/.test(tag);
+const rowsOf = (tag: string) =>
+  ROW_KEYS.length - (/:jitter="false"/.test(tag) ? 1 : 0);
+// Kopf des Klick-Stichpunkts je Sicht in den Notizen
+const LENS_NOTE_HEAD: Record<Exclude<LensKey, "kunde">, string> = {
+  status5xx: "Fehler = 5xx:",
+  statusNot2xx: "Fehler = alles außer 2xx:",
+  dauer: "+ Dauer:",
+  eingang: "+ Eingang:",
+  degradiert: "+ degradiert:",
+  workload: "+ Label workload",
+};
 describe("Folien mit DeadlineOutcomeViz", () => {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
   const uses = readdirSync(root, { withFileTypes: true })
@@ -541,9 +544,9 @@ describe("Folien mit DeadlineOutcomeViz", () => {
   });
 
   // Die Notizen der Sichten zitieren Panel-Werte; sie kommen aus der Rechnung.
-  it.each(uses.filter((u) => /\slenses\b/.test(u.tag)))(
+  it.each(uses.filter((u) => hasLenses(u.tag)))(
     "$deck: Notizen der Sichten nennen die gerechneten Panel-Werte",
-    ({ notes }) => {
+    ({ notes, tag }) => {
       const flat = notes.replace(/\s+/g, " ");
       const p = (k: Parameters<typeof rowFlows>[0], l: LensKey) =>
         lensPanel(rowFlows(k), l);
@@ -565,17 +568,28 @@ describe("Folien mit DeadlineOutcomeViz", () => {
         `Workload Separation zeigt Online ${n(p("mixedSeparated", "workload").pct)} %`,
       );
       expect(flat).toContain(`grün ab ${PANEL_GOOD_PCT} % gut`);
-      // je Sicht ein Klick-Stichpunkt 7 … 12
-      for (let k = 1; k < LENS_KEYS.length; k++)
-        expect(notes).toMatch(
-          new RegExp(`^ {2}${ROW_KEYS.length - 1 + k} `, "m"),
-        );
+      // je Sicht ein Klick-Stichpunkt, nummeriert nach den Zeilen
+      LENS_KEYS.slice(1).forEach((lens, i) => {
+        const head = LENS_NOTE_HEAD[lens as Exclude<LensKey, "kunde">];
+        expect(notes, lens).toContain(`\n  ${rowsOf(tag) + i} ${head}`);
+      });
+    },
+  );
+
+  // Die Klick-Liste der Notizen hat genau dann einen Jitter-Punkt, wenn die
+  // Grafik die Jitter-Zeile zeigt.
+  it.each(uses)(
+    "$deck: Jitter-Punkt in den Notizen nur mit Jitter-Zeile",
+    ({ tag, notes }) => {
+      const jitterBullet = /^ {2}\d+ Jitter — /m;
+      if (rowsOf(tag) === ROW_KEYS.length) expect(notes).toMatch(jitterBullet);
+      else expect(notes).not.toMatch(jitterBullet);
     },
   );
 
   it.each(uses)("$deck: clicks und step passen", ({ tag, fm }) => {
-    const lenses = /\slenses\b/.test(tag);
-    const clicks = ROW_KEYS.length - 1 + (lenses ? LENS_KEYS.length - 1 : 0);
+    const clicks =
+      rowsOf(tag) - 1 + (hasLenses(tag) ? LENS_KEYS.length - 1 : 0);
     expect(fm).toMatch(new RegExp(`^clicks: ${clicks}$`, "m"));
     expect(tag).toContain(':step="$clicks"');
   });
