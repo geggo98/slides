@@ -13,6 +13,15 @@
  *   5 Workload Separation        Online rechtzeitig, nur Batch gedrosselt
  *   6 Jitter für Batch-Starts    gleiche Arbeit, kleinere Spitze
  *
+ * Mit `lenses` (Monitoring-Deck) folgen auf die sieben Zeilen weitere
+ * Klicks, je einer pro Sicht (LENS_KEYS): Dieselben Zeilen, gesehen durch
+ * ein Dashboard, das Schritt für Schritt eine Fehlerkonvention, die Dauer,
+ * den Messpunkt am Load Balancer, eine Metrik für degradierte Antworten
+ * und das Label workload dazubekommt. Die Farbe eines Segments ist dann,
+ * was das Panel daraus macht; rechts steht der Wert eines Stat-Panels.
+ * Die Leiste oben springt per Slidev-Navigation zur Sicht (`nav.go`),
+ * damit Presenter- und Publikumsfenster synchron bleiben.
+ *
  * Alle Zahlen kommen aus lib/deadlineOutcomes.ts (Fluid-Rechnung, getestet
  * in shared/__tests__/deadlineOutcomes.test.ts). Die Online-Zahlen sind die
  * der Rabattaktion aus der SRE-Simulation „Wandernde Engpässe“.
@@ -20,8 +29,8 @@
  * Alle Balken stehen auf einer Skala (barScale: volle Breite = 1.000
  * req/s), der Kapazitätsstrich für 300 liegt also in jeder Zeile an
  * derselben Stelle. Die gemischten Zeilen (400 req/s) sind entsprechend
- * kürzer; ihre Segmente tragen nur die Klasse, die Ausgänge stehen rechts
- * neben dem Balken.
+ * kürzer; ihre Segmente tragen nur die Klasse (ohne Label: die Menge), die
+ * Ausgänge stehen rechts neben dem Balken.
  *
  * Farbfamilien wie PipelineViz im Monitoring-Deck (grün, orange, rot,
  * blau), die Töne aber für Text auf der Füllung angepasst: hell 700er-Töne
@@ -30,18 +39,32 @@
  * ist zusätzlich schraffiert, damit Rot/Grün nicht allein über die Farbe
  * getrennt wird (Streifen gemessen: hell 5,2:1, dunkel 4,6:1). Die
  * Jitter-Spuren sind neutral grau: Blau heißt in der Legende „später“.
+ * Im Dunkelmodus ist „abgewiesen“ orange-400 statt amber: Das gelbe Panel
+ * „eingeschränkt“ wäre sonst kaum davon zu trennen (ΔE2000 5).
+ * In den Sichten kommen dazu: Fehler (rot, ohne Schraffur), degradiert
+ * (türkis), nicht gezählt (grau schraffiert, gestrichelt umrandet), und
+ * ein violetter Randbalken für Zeilen, deren Panel anders alarmiert als die
+ * Kundensicht (Violett kommt sonst nicht vor).
  *
  * Aufdecken per v-show: Die Erläuterung steht unter der zuletzt
  * aufgedeckten Zeile, der Endzustand ist also der höchste — dort auf
- * Überlauf prüfen. Einbinden: im Deck global registrieren (setup/main.ts,
- * Slidev auto-importiert shared/ nicht); die Folie braucht `clicks: 6` und
- * `:step="$clicks"`, das prüft shared/__tests__/deadlineOutcomes.test.ts.
+ * Überlauf prüfen; mit `lenses` jede Sicht (Klick 6–12), weil Legende und
+ * Erläuterung je Sicht wechseln. Einbinden: im Deck global registrieren (setup/main.ts,
+ * Slidev auto-importiert shared/ nicht); die Folie braucht `clicks: 6`
+ * (mit `lenses`: 6 + Sichten − 1) und `:step="$clicks"`, das prüft
+ * shared/__tests__/deadlineOutcomes.test.ts.
  */
 import { computed } from "vue";
-import { useDarkMode } from "@slidev/client";
+import {
+  useDarkMode,
+  useIsSlideActive,
+  useNav,
+  useSlideContext,
+} from "@slidev/client";
 import {
   JITTER_JOB_MIN,
   JITTER_JOBS,
+  LENS_KEYS,
   MIXED_BATCH,
   MIXED_CAPACITY,
   MIXED_ONLINE,
@@ -50,16 +73,23 @@ import {
   SIM_CAPACITY_FS,
   SIM_DEMAND,
   barScale,
+  deviatesFromCustomer,
   jitterProfiles,
+  lensPanel,
+  lensSegments,
   mixedShared,
   outcomeRows,
-  type Outcome,
+  rowFlows,
+  type LensKey,
+  type PanelTone,
   type RowKey,
-  type Segment,
+  type ViewKind,
+  type ViewSegment,
 } from "./lib/deadlineOutcomes";
 
-const props = withDefaults(defineProps<{ step?: number }>(), {
+const props = withDefaults(defineProps<{ step?: number; lenses?: boolean }>(), {
   step: Number.POSITIVE_INFINITY,
+  lenses: false,
 });
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
@@ -139,28 +169,124 @@ const TEXT: Record<RowKey, RowText> = {
   },
 };
 
-const OUTCOME_LABEL: Record<Outcome, string> = {
-  ontime: "rechtzeitig",
-  rejected: "abgewiesen",
-  timeout: "Timeout",
-  later: "später",
-};
-const LEGEND: { outcome: Outcome; label: string }[] = [
-  { outcome: "ontime", label: "rechtzeitig / sofort erledigt" },
-  { outcome: "rejected", label: "schnell abgewiesen (429/503)" },
-  { outcome: "timeout", label: "Timeout: Antwort zu spät" },
-  { outcome: "later", label: "später erledigt (Batch)" },
-];
-const CLASS_LABEL = { online: "Online", batch: "Batch" } as const;
-
 const BAR_ROWS = outcomeRows();
 const SCALE = barScale(BAR_ROWS); // req/s bei voller Balkenbreite
 const JITTER = jitterProfiles();
 const ROW_COUNT = ROW_KEYS.length; // Balkenzeilen + Jitter-Zeile
 
-const cur = computed(() =>
-  Math.min(ROW_COUNT - 1, Math.max(0, Math.floor(props.step))),
+const panelOf = (key: Exclude<RowKey, "jitter">, l: LensKey) =>
+  lensPanel(rowFlows(key), l);
+
+/* ===== Sichten (nur mit `lenses`) ===== */
+
+interface LensText {
+  tab: string;
+  hint: string; // Tooltip der Leiste: die Panel-Formel
+  lead: string;
+  caption: CaptionPart[];
+}
+const LENS_TEXT: Record<Exclude<LensKey, "kunde">, LensText> = {
+  status5xx: {
+    tab: "Fehler: 5xx",
+    hint: "Server, Anfragen nach Statuscode; Fehler = 5xx (SRE Workbook, Grafana SLO)",
+    lead: "Fehler = 5xx:",
+    caption: [
+      `Ohne Maßnahme ${fmt(panelOf("unprotected", "status5xx").pct)}\u00a0% ohne 5xx – grün. Ein Timeout ist kein Statuscode: Der Server zählt nur, was er beantwortet (200, nur zu spät), der Rest wartet ungezählt in der Queue. Load Shedding (503) ist rot, gedrosselter Batch (429) gilt als Erfolg.`,
+    ],
+  },
+  statusNot2xx: {
+    tab: "Fehler: ≠ 2xx",
+    hint: "Server, Anfragen nach Statuscode; Fehler = alles außer 2xx (wie im PromQL-Beispiel zur RED-Methode)",
+    lead: "Fehler = alles außer 2xx:",
+    caption: [
+      `Jetzt ist jede Absage rot, auch Back Pressure per 429 (Batch-Drosselung): Workload Separation steht mit ${fmt(panelOf("mixedSeparated", "statusNot2xx").pct)}\u00a0% schlechter da als ohne Trennung. Ob 429 ein Fehler ist, ist Konvention; die Zeile ohne Maßnahme bleibt grün.`,
+    ],
+  },
+  dauer: {
+    tab: "+ Dauer",
+    hint: "Gut = 2xx und schneller als die Deadline (Histogramm mit Bucket an der Schwelle)",
+    lead: "+ Dauer gegen die Deadline:",
+    caption: [
+      "Gut ist nur, was mit 2xx rechtzeitig kommt: Die Zeile ohne Maßnahme ist jetzt rot. Schnell abgewiesen und zu spät lassen sich trennen. Was in der Queue wartet, zählt weiter niemand.",
+    ],
+  },
+  eingang: {
+    tab: "+ Eingang",
+    hint: "Gezählt am Load Balancer / Gateway statt am Server",
+    lead: "+ gezählt am Load Balancer:",
+    caption: [
+      `Er zählt auch, was der Server nie beantwortet: 504, wenn er selbst aufgibt, 499 (nginx) oder 460 (ALB), wenn der Client geht. Ohne Maßnahme: ${fmt(panelOf("unprotected", "eingang").pct)}\u00a0% von ${fmt(panelOf("unprotected", "eingang").of)}/s statt von ${fmt(panelOf("unprotected", "dauer").of)}/s.`,
+    ],
+  },
+  degradiert: {
+    tab: "+ degradiert",
+    hint: "Eigener Zähler oder eigenes Attribut für reduzierte Antworten (kein Standard)",
+    lead: "+ Metrik für reduzierte Antworten:",
+    caption: [
+      "Feature Shedding antwortet schnell mit 200, nur ohne Empfehlungen. Ohne eigene Metrik sieht es aus wie Scaling; mit ihr ist es als eingeschränkt erkennbar: gewollt, aber kein Normalbetrieb.",
+    ],
+  },
+  workload: {
+    tab: "+ workload",
+    hint: "Label workload=online|batch: je Klasse ein eigenes Ziel",
+    lead: "+ Label workload (online/batch):",
+    caption: [
+      "Gedrosselter Batch ist gewollt; Workload Separation hält Online vollständig in der Deadline. Kein Panel alarmiert mehr anders als die Kundensicht – beim Kunden selbst misst aber nur RUM (etwa Grafana Faro).",
+    ],
+  },
+};
+const LENS_TABS = LENS_KEYS.map((key) => ({
+  key,
+  tab: key === "kunde" ? "Kunde" : LENS_TEXT[key].tab,
+  hint:
+    key === "kunde"
+      ? "Was der Kunde erlebt"
+      : LENS_TEXT[key as Exclude<LensKey, "kunde">].hint,
+}));
+
+/* ===== Klickzustand ===== */
+
+const stepNo = computed(() => Math.max(0, Math.floor(props.step)));
+const cur = computed(() => Math.min(ROW_COUNT - 1, stepNo.value));
+// Solange sich die Zeilen aufbauen, gilt die Kundensicht. Ohne `step`
+// (Infinity) zeigt die Grafik alle Zeilen in der Kundensicht. Der
+// PDF-Export ohne Klicks klemmt $clicks auf `clicks:` der Folie, zeigt also
+// die letzte Sicht (geprüft per `slidev export --format png`).
+const LAST_STEP = ROW_COUNT - 1 + LENS_KEYS.length - 1;
+const lensIdx = computed(() =>
+  props.lenses && stepNo.value <= LAST_STEP
+    ? Math.max(0, stepNo.value - (ROW_COUNT - 1))
+    : 0,
 );
+const rowsComplete = computed(() => stepNo.value >= ROW_COUNT - 1);
+const lens = computed<LensKey>(() => LENS_KEYS[lensIdx.value]!);
+const metricLens = computed(() => lens.value !== "kunde");
+
+// Sprung per Leiste: dieselbe Navigation wie ein Klick, also synchron in
+// Presenter- und Publikumsfenster. Danach den Fokus abgeben, sonst schluckt
+// der Button die Pfeiltasten des Vortrags.
+const nav = useNav();
+const slideCtx = useSlideContext();
+const isActive = useIsSlideActive();
+// Druck rendert mit Kontext "slide"; dort schützt isActive (aktiv ist im
+// Druck nur Folie 1).
+function goLens(k: number) {
+  const where = slideCtx.$renderContext.value;
+  if (!isActive.value || !["slide", "presenter"].includes(where)) return;
+  void nav.go(slideCtx.$page.value, ROW_COUNT - 1 + k);
+  blurLater();
+}
+function blurNow() {
+  const el = document.activeElement;
+  if (el instanceof HTMLElement && el.closest(".dov")) el.blur();
+}
+function blurLater() {
+  blurNow();
+  setTimeout(blurNow, 0);
+  requestAnimationFrame(blurNow);
+}
+
+/* ===== Farben ===== */
 
 const { isDark } = useDarkMode();
 const C = computed(() => {
@@ -170,15 +296,39 @@ const C = computed(() => {
     muted: d ? "#94a3b8" : "#475569",
     track: d ? "#1e2536" : "#e2e8f0",
     highlight: d ? "rgba(148,163,184,0.10)" : "rgba(100,116,139,0.08)",
+    // Zeile alarmiert anders als die Kundensicht: violetter Randbalken plus
+    // leichte Tönung. Violett kommt sonst nicht vor.
+    devMark: d ? "#a78bfa" : "#7c3aed",
+    devBand: d ? "rgba(167,139,250,0.12)" : "rgba(124,58,237,0.07)",
     capLine: d ? "#e2e8f0" : "#0f172a",
     fillText: d ? "#111827" : "#ffffff",
     jitterBar: d ? "#94a3b8" : "#475569",
+    unseenBase: d ? "#1e2536" : "#e2e8f0",
+    unseenStripe: d ? "#2b3448" : "#cbd5e1",
+    unseenText: d ? "#cbd5e1" : "#334155",
     fill: {
       ontime: d ? "#4ade80" : "#15803d",
-      rejected: d ? "#fbbf24" : "#b45309",
+      rejected: d ? "#fb923c" : "#b45309",
       timeout: d ? "#f87171" : "#b91c1c",
       later: d ? "#60a5fa" : "#1d4ed8",
-    } as Record<Outcome, string>,
+      error: d ? "#f87171" : "#b91c1c",
+      degraded: d ? "#2dd4bf" : "#0f766e",
+      unseen: d ? "#1e2536" : "#e2e8f0",
+    } as Record<ViewKind, string>,
+    // Panel-Hintergrund wie ein Grafana-Stat-Panel mit Schwellwerten; Gelb
+    // in beiden Modi mit dunkler Schrift (11:1).
+    tone: {
+      good: d ? "#4ade80" : "#15803d",
+      bad: d ? "#f87171" : "#b91c1c",
+      warn: "#facc15",
+      info: d ? "#94a3b8" : "#475569",
+    } as Record<PanelTone, string>,
+    toneText: {
+      good: d ? "#111827" : "#ffffff",
+      bad: d ? "#111827" : "#ffffff",
+      warn: "#111827",
+      info: d ? "#111827" : "#ffffff",
+    } as Record<PanelTone, string>,
   };
 });
 // Strichelung als Verlauf statt `border: dashed`: Chromium zeichnet einen
@@ -188,13 +338,76 @@ const capDash = computed(
     `repeating-linear-gradient(to bottom, ${C.value.capLine} 0 4px, transparent 4px 7px)`,
 );
 
-function fillOf(outcome: Outcome) {
-  const base = C.value.fill[outcome];
+function fillOf(kind: ViewKind) {
+  const base = C.value.fill[kind];
+  if (kind === "unseen")
+    return `repeating-linear-gradient(135deg, ${C.value.unseenBase} 0 6px, ${C.value.unseenStripe} 6px 9px)`;
   const stripe = isDark.value ? "rgba(0,0,0,0.16)" : "rgba(255,255,255,0.14)";
-  return outcome === "timeout"
+  return kind === "timeout"
     ? `repeating-linear-gradient(135deg, ${base} 0 6px, ${stripe} 6px 9px), ${base}`
     : base;
 }
+const textOf = (kind: ViewKind) =>
+  kind === "unseen" ? C.value.unseenText : C.value.fillText;
+
+/* ===== Beschriftung ===== */
+
+const CLASS_LABEL = { online: "Online", batch: "Batch" } as const;
+
+function kindLabel(kind: ViewKind, l: LensKey, cls: ViewSegment["cls"]) {
+  switch (kind) {
+    case "ontime":
+      if (cls === "batch") return "sofort";
+      if (l === "kunde") return "rechtzeitig";
+      if (l === "status5xx") return "ohne 5xx";
+      if (l === "statusNot2xx") return "2xx";
+      return "gut";
+    case "error":
+      return l === "status5xx" ? "Fehler (503)" : "Fehler (≠ 2xx)";
+    case "rejected":
+      return l === "kunde" ? "abgewiesen (429/503)" : "abgewiesen";
+    case "timeout":
+      return l === "dauer" ? "zu spät" : "Timeout";
+    // Ob Batch später erledigt wird, sieht keine Anfrage-Metrik; mit Label
+    // weiß das Panel nur, dass Batch ein eigenes Ziel hat.
+    case "later":
+      return l === "kunde" ? "später" : "toleriert";
+    case "unseen":
+      return "in der Queue";
+    case "degraded":
+      return "degradiert";
+  }
+}
+
+// Kundensicht wie ohne Sichten; in den Metrik-Sichten kurz, damit die
+// Legende auch mit fünf Einträgen einzeilig bleibt.
+function legendLabel(kind: ViewKind, l: LensKey) {
+  switch (kind) {
+    case "ontime":
+      if (l === "kunde") return "rechtzeitig / sofort erledigt";
+      if (l === "status5xx") return "ohne 5xx (auch 429)";
+      if (l === "statusNot2xx") return "2xx";
+      return "gut: 2xx, rechtzeitig";
+    case "error":
+      return l === "status5xx" ? "Fehler: 5xx" : "Fehler: alles außer 2xx";
+    case "rejected":
+      return l === "kunde" ? "schnell abgewiesen (429/503)" : "abgewiesen";
+    case "timeout":
+      if (l === "kunde") return "Timeout: Antwort zu spät";
+      if (l === "dauer") return "zu spät: 2xx nach der Deadline";
+      return "Timeout (504/499/460)";
+    case "later":
+      return l === "kunde"
+        ? "später erledigt (Batch)"
+        : "toleriert (Batch: eigenes Ziel)";
+    case "unseen":
+      return "in der Queue: nicht gezählt";
+    case "degraded":
+      return "degradiert";
+  }
+}
+
+/* ===== Balken ===== */
 
 // Balken einer Zeile: Breiten exakt proportional zu req/s auf der
 // gemeinsamen Skala. Zwischen Online und Batch steht eine Lücke von GAP px;
@@ -202,7 +415,7 @@ function fillOf(outcome: Outcome) {
 // Kapazitätsstrich genau bei ihrem Anteil liegen.
 const GAP = 3;
 const pct = (v: number) => `${(v / SCALE) * 100}%`;
-function barLayout(segs: readonly Segment[], capacity: number) {
+function barLayout(segs: readonly ViewSegment[], capacity: number) {
   const parts = segs.map((seg, k) => {
     const gap = k > 0 && segs[k - 1]!.cls !== seg.cls;
     const first = k === 0 || gap;
@@ -213,8 +426,8 @@ function barLayout(segs: readonly Segment[], capacity: number) {
       style: {
         width: gap ? `calc(${pct(seg.value)} - ${GAP}px)` : pct(seg.value),
         marginLeft: gap ? `${GAP}px` : "0",
-        background: fillOf(seg.outcome),
-        color: C.value.fillText,
+        background: fillOf(seg.kind),
+        color: textOf(seg.kind),
         borderRadius: `${r(first)} ${r(last)} ${r(last)} ${r(first)}`,
       },
     };
@@ -227,55 +440,63 @@ function barLayout(segs: readonly Segment[], capacity: number) {
   };
 }
 
-const outcomeLabel = (s: Segment) =>
-  s.outcome === "ontime" && s.cls === "batch"
-    ? "sofort"
-    : OUTCOME_LABEL[s.outcome];
-
-// Im Segment: ungemischt Menge und Ausgang; gemischt nur die Klasse, weil
-// 100 req/s auf der gemeinsamen Skala zu schmal für mehr sind.
-function segText(seg: Segment, mixed: boolean) {
-  if (mixed) return CLASS_LABEL[seg.cls];
-  const label =
-    seg.outcome === "rejected" ? "abgewiesen (429/503)" : outcomeLabel(seg);
-  return `${fmt(seg.value)} ${label}`;
+// Im Segment: auf voller Skala Menge und Einordnung; in den kürzeren
+// gemischten Zeilen nur die Klasse (ohne Label die Menge), weil 100 req/s
+// zu schmal für mehr sind.
+function segText(seg: ViewSegment, compact: boolean, l: LensKey) {
+  if (compact) return seg.cls ? CLASS_LABEL[seg.cls] : fmt(seg.value);
+  return `${fmt(seg.value)} ${kindLabel(seg.kind, l, seg.cls)}`;
 }
 
-// Rechts neben einem gemischten Balken: die Ausgänge je Klasse in Worten.
-function mixedSummary(segs: readonly Segment[]) {
-  return (["online", "batch"] as const)
+// Rechts neben einem gemischten Balken: die Einordnung in Worten, je Klasse
+// (ohne Label: alles zusammen).
+function compactSummary(segs: readonly ViewSegment[], l: LensKey) {
+  const groups: ViewSegment["cls"][] = segs.some((s) => s.cls === null)
+    ? [null]
+    : ["online", "batch"];
+  return groups
     .map((cls) => {
       const own = segs.filter((s) => s.cls === cls);
       if (own.length === 0) return "";
+      const parts = own.map(
+        (s) => `${fmt(s.value)} ${kindLabel(s.kind, l, s.cls)}`,
+      );
+      if (cls === null) return parts.join(" · ");
       if (own.length === 1)
-        return `${CLASS_LABEL[cls]} ${fmt(own[0]!.value)}: ${outcomeLabel(own[0]!)}`;
-      return `${CLASS_LABEL[cls]}: ${own.map((s) => `${fmt(s.value)} ${outcomeLabel(s)}`).join(", ")}`;
+        return `${CLASS_LABEL[cls]} ${fmt(own[0]!.value)}: ${kindLabel(own[0]!.kind, l, cls)}`;
+      return `${CLASS_LABEL[cls]}: ${parts.join(", ")}`;
     })
     .filter(Boolean)
     .join(" · ");
 }
 
-const rows = computed(() => [
-  ...BAR_ROWS.map((r) => {
-    const mixed =
-      r.segments.some((s) => s.cls === "online") &&
-      r.segments.some((s) => s.cls === "batch");
-    return {
-      kind: "bar" as const,
-      key: r.key as RowKey,
-      text: TEXT[r.key],
-      mixed,
-      summary: mixed ? mixedSummary(r.segments) : "",
-      ...barLayout(r.segments, r.capacity),
-    };
-  }),
-  { kind: "jitter" as const, key: "jitter" as RowKey, text: TEXT.jitter },
-]);
+const rows = computed(() => {
+  const l = lens.value;
+  return [
+    ...BAR_ROWS.map((r) => {
+      const flows = rowFlows(r.key);
+      const segs = lensSegments(flows, l);
+      const compact = r.total < SCALE;
+      return {
+        kind: "bar" as const,
+        key: r.key as RowKey,
+        text: TEXT[r.key],
+        compact,
+        summary: compact ? compactSummary(segs, l) : "",
+        panel: lensPanel(flows, l),
+        deviates: l !== "kunde" && deviatesFromCustomer(flows, l),
+        ...barLayout(segs, r.capacity),
+      };
+    }),
+    { kind: "jitter" as const, key: "jitter" as RowKey, text: TEXT.jitter },
+  ];
+});
 
 // Jitter-Spuren: gleiche Skala (Spitze ohne Jitter = volle Höhe), je Profil
 // ein Pfad (Einzelrechtecke zeigen Antialiasing-Nähte).
 const J_W = 650;
 const J_H = 32;
+const J_H_LENSES = 22; // mit Sichten flacher: Platz für Leiste und Panels
 const jScale = J_H / JITTER.peakFixed;
 const jColW = J_W / JITTER.fixed.length;
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -306,15 +527,111 @@ const J_TICKS = [0, 30, 60].map((m) => ({
   label: `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`,
   left: `${(m / JITTER.fixed.length) * 100}%`,
 }));
+// Panel der Jitter-Zeile: Kundensicht die Spitzen, in den Metrik-Sichten
+// die Verdichtung. Gleiche Arbeit heißt gleiches Tagesmittel; nur das
+// Maximum (max_over_time) trennt die beiden.
+const jitterPanel = computed(() =>
+  metricLens.value
+    ? {
+        val: `max ${JITTER.peakFixed} | ${JITTER.peakHashed}`,
+        sub: "Ø Tag gleich",
+      }
+    : { val: `${JITTER.peakFixed} | ${JITTER.peakHashed}`, sub: "Spitze" },
+);
+// Ampel nicht nur über die Farbe
+const TONE_MARK: Record<PanelTone, string> = {
+  good: "✓",
+  bad: "✗",
+  warn: "!",
+  info: "", // Batch mit eigenem Ziel: das Wort genügt, „~“ läse sich als „circa“
+};
 
-const current = computed(() => rows.value[cur.value]!.text);
+/* ===== Legende, Hervorhebung, Erläuterung ===== */
+
+const legend = computed(() => {
+  const l = lens.value;
+  const seen = new Set<ViewKind>();
+  rows.value.forEach((r, i) => {
+    if (r.kind === "bar" && i <= cur.value)
+      r.parts.forEach((p) => seen.add(p.seg.kind));
+  });
+  // Ohne Sichten wie bisher: die vier Ausgänge, auch bevor sie vorkommen
+  const kinds: ViewKind[] =
+    l === "kunde"
+      ? ["ontime", "rejected", "timeout", "later"]
+      : (
+          [
+            "ontime",
+            "degraded",
+            "error",
+            "rejected",
+            "timeout",
+            "later",
+            "unseen",
+          ] as ViewKind[]
+        ).filter((k) => seen.has(k));
+  return kinds.map((k) => ({ kind: k, label: legendLabel(k, l) }));
+});
+
+const titleOf = (key: RowKey, title: string) =>
+  props.lenses && key === "enough" ? "Feature Shedding" : title;
+
+const current = computed(() =>
+  metricLens.value
+    ? LENS_TEXT[lens.value as Exclude<LensKey, "kunde">]
+    : rows.value[cur.value]!.text,
+);
 </script>
 
 <template>
-  <div class="dov">
+  <div
+    class="dov"
+    :class="{ 'dov-lenses': lenses }"
+    :data-lens="lenses ? lens : undefined"
+    :data-step="stepNo"
+  >
+    <div
+      v-if="lenses"
+      class="lensbar"
+      :style="{ color: C.muted }"
+      @pointerup.capture="blurLater"
+    >
+      <span class="lb-label">Sicht:</span>
+      <button
+        v-for="(t, k) in LENS_TABS"
+        :key="t.key"
+        type="button"
+        class="lb-btn"
+        :data-lens="t.key"
+        :aria-pressed="k === lensIdx"
+        :disabled="!rowsComplete"
+        :title="t.hint"
+        :style="
+          k === lensIdx
+            ? {
+                background: C.capLine,
+                color: isDark ? '#0f172a' : '#ffffff',
+                borderColor: C.capLine,
+              }
+            : { borderColor: C.muted, color: C.muted }
+        "
+        @click="goLens(k)"
+      >
+        {{ t.tab }}
+      </button>
+      <span v-if="metricLens" class="lb-dev"
+        ><i class="lb-dev-mark" :style="{ background: C.devMark }" />≠ Kunde:
+        Panel alarmiert anders</span
+      >
+    </div>
+
     <div class="legend" :style="{ color: C.muted }">
-      <span v-for="l in LEGEND" :key="l.outcome" class="lg">
-        <i class="sw" :style="{ background: fillOf(l.outcome) }" />{{ l.label }}
+      <span v-for="l in legend" :key="l.kind" class="lg">
+        <i
+          class="sw"
+          :class="{ 'sw-unseen': l.kind === 'unseen' }"
+          :style="{ background: fillOf(l.kind), outlineColor: C.muted }"
+        />{{ l.label }}
       </span>
       <span class="lg"
         ><i class="sw-cap" :style="{ background: capDash }" />Kapazität</span
@@ -328,10 +645,20 @@ const current = computed(() => rows.value[cur.value]!.text);
         :key="r.key"
         class="row"
         :data-row="r.key"
-        :style="{ background: i === cur ? C.highlight : 'transparent' }"
+        :data-deviates="r.kind === 'bar' && r.deviates ? 'true' : undefined"
+        :style="
+          metricLens
+            ? r.kind === 'bar' && r.deviates
+              ? {
+                  background: C.devBand,
+                  boxShadow: `inset 4px 0 0 ${C.devMark}`,
+                }
+              : { background: 'transparent' }
+            : { background: i === cur ? C.highlight : 'transparent' }
+        "
       >
         <div class="label">
-          <div class="t">{{ r.text.title }}</div>
+          <div class="t">{{ titleOf(r.key, r.text.title) }}</div>
           <div class="s" :style="{ color: C.muted }">{{ r.text.sub }}</div>
         </div>
 
@@ -340,13 +667,14 @@ const current = computed(() => rows.value[cur.value]!.text);
             v-for="(p, k) in r.parts"
             :key="k"
             class="seg"
-            :data-outcome="p.seg.outcome"
-            :data-cls="p.seg.cls"
-            :style="p.style"
+            :class="{ 'seg-unseen': p.seg.kind === 'unseen' }"
+            :data-outcome="p.seg.kind"
+            :data-cls="p.seg.cls ?? 'alle'"
+            :style="[p.style, { outlineColor: C.muted }]"
           >
-            {{ segText(p.seg, r.mixed) }}
+            {{ segText(p.seg, r.compact, lens) }}
           </div>
-          <div v-if="r.mixed" class="out">{{ r.summary }}</div>
+          <div v-if="r.compact" class="out">{{ r.summary }}</div>
           <div
             v-if="r.capLeft !== null"
             class="cap"
@@ -368,7 +696,7 @@ const current = computed(() => rows.value[cur.value]!.text);
             }}</code>
             <svg
               class="jsvg"
-              :style="{ height: `${J_H}px` }"
+              :style="{ height: `${lenses ? J_H_LENSES : J_H}px` }"
               :viewBox="`0 0 ${J_W} ${J_H}`"
               preserveAspectRatio="none"
               role="img"
@@ -391,6 +719,38 @@ const current = computed(() => rows.value[cur.value]!.text);
             >
           </div>
         </div>
+
+        <div
+          v-if="lenses && r.kind === 'bar'"
+          class="panel"
+          :data-tone="r.panel.tone"
+          :style="{
+            background: C.tone[r.panel.tone],
+            color: C.toneText[r.panel.tone],
+          }"
+        >
+          <div class="p-val">
+            <template v-if="TONE_MARK[r.panel.tone]"
+              >{{ TONE_MARK[r.panel.tone] }}&nbsp;</template
+            ><b>{{ fmt(r.panel.pct) }}&nbsp;%</b>
+            {{ r.panel.label }}
+          </div>
+          <div class="p-sub">
+            <template v-if="r.deviates">≠ Kunde · </template>von
+            {{ fmt(r.panel.of) }}/s
+          </div>
+        </div>
+        <div
+          v-else-if="lenses"
+          class="panel"
+          data-tone="info"
+          :style="{ background: C.tone.info, color: C.toneText.info }"
+        >
+          <div class="p-val">
+            <b>{{ jitterPanel.val }}</b>
+          </div>
+          <div class="p-sub">{{ jitterPanel.sub }}</div>
+        </div>
       </div>
     </div>
 
@@ -411,6 +771,27 @@ const current = computed(() => rows.value[cur.value]!.text);
   gap: 4px;
   font-family: inherit;
 }
+.lensbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding-left: 6px;
+}
+.lb-label {
+  margin-right: 2px;
+}
+.lb-btn {
+  font: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  padding: 0 7px;
+  border: 1px solid;
+  border-radius: 9px;
+  background: transparent;
+  cursor: pointer;
+}
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -428,6 +809,11 @@ const current = computed(() => rows.value[cur.value]!.text);
   width: 12px;
   height: 10px;
   border-radius: 2px;
+}
+.sw-unseen,
+.seg-unseen {
+  outline: 1px dashed;
+  outline-offset: -1px;
 }
 .sw-cap {
   display: inline-block;
@@ -501,6 +887,19 @@ const current = computed(() => rows.value[cur.value]!.text);
   line-height: 26px;
   padding-left: 10px;
 }
+/* Mit Sichten ist der Balken um die Panel-Spalte schmaler: In den kurzen
+ * gemischten Zeilen rücken die Segmenttexte enger, die Zusammenfassung
+ * darf zweizeilig werden (2 × 13 px = Balkenhöhe). */
+.dov-lenses .seg {
+  padding: 0 5px;
+}
+.dov-lenses .out {
+  display: flex;
+  align-items: center;
+  white-space: normal;
+  font-size: 11px;
+  line-height: 13px;
+}
 .cap {
   position: absolute;
   top: -4px;
@@ -558,6 +957,44 @@ const current = computed(() => rows.value[cur.value]!.text);
   top: 0;
   transform: translateX(-50%);
   white-space: nowrap;
+}
+.panel {
+  flex: 0 0 124px;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 2px 7px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.p-val {
+  font-size: 10.5px;
+}
+.p-val b {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.p-sub {
+  font-size: 10px;
+}
+/* Vor Klick 6 gesperrt: sichtbar zurückgenommen, nur „Kunde“ bleibt voll */
+.lb-btn:disabled {
+  cursor: default;
+}
+.lb-btn:disabled:not([aria-pressed="true"]) {
+  opacity: 0.4;
+}
+.lb-dev {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.lb-dev-mark {
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  border-radius: 1px;
 }
 .caption {
   font-size: 13px;

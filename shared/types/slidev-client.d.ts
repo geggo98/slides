@@ -13,7 +13,12 @@
  * wenn ein Name aus dieser Datei im echten Client fehlt.
  */
 import type { ComputedRef, Ref, UnwrapNestedRefs } from "vue";
-import type { ClicksContext, SlideRoute, SlidevConfig } from "@slidev/types";
+import type {
+  ClicksContext,
+  RenderContext,
+  SlideRoute,
+  SlidevConfig,
+} from "@slidev/types";
 
 export function useDarkMode(): {
   isColorSchemaConfigured: Ref<boolean>;
@@ -49,6 +54,7 @@ export interface SlideContext {
   $clicksContext: ClicksContext;
   $clicks: Ref<number>;
   $page: Ref<number>;
+  $renderContext: Ref<RenderContext>;
   $frontmatter: Record<string, unknown>;
 }
 export function useSlideContext(): SlideContext;

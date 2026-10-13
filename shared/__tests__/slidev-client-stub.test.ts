@@ -39,8 +39,9 @@ const isExported = (name: string, sources: string[]): boolean =>
   );
 
 // matches:  currentPage: ComputedRef<number>   ->  "currentPage"
+//           $clicks: Ref<number>               ->  "$clicks"
 const memberNames = (body: string): string[] =>
-  [...body.matchAll(/^\s{2}(?<name>\w+)\??:/gm)].map((m) => m.groups!.name!);
+  [...body.matchAll(/^\s{2}(?<name>[\w$]+)\??:/gm)].map((m) => m.groups!.name!);
 
 const interfaceBody = (src: string, name: string): string => {
   const start = src.indexOf(`export interface ${name}`);
@@ -73,7 +74,16 @@ describe("slidev-client Typ-Stub ↔ echter Client", () => {
   const ctxMembers = memberNames(interfaceBody(stub, "SlideContext"));
   const realCtx = client("context.ts");
 
+  // Alle Mitglieder beginnen mit „$“; davor gibt es kein \b (beides keine
+  // Wortzeichen), deshalb ein Lookbehind.
+  it("Stub-Interface SlideContext hat Mitglieder", () => {
+    expect(ctxMembers.length).toBeGreaterThan(5);
+    expect(ctxMembers).toContain("$renderContext");
+  });
+
   it.each(ctxMembers)("useSlideContext() liefert %s", (member) => {
-    expect(realCtx).toMatch(new RegExp(`\\b${member.replace("$", "\\$")}\\b`));
+    expect(realCtx).toMatch(
+      new RegExp(`(?<![\\w$])${member.replace("$", "\\$")}\\b`),
+    );
   });
 });
