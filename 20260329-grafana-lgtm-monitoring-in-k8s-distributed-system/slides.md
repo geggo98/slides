@@ -677,15 +677,15 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
 
 ---
 hideInToc: true
-clicks: 6
+clicks: 12
 routeAlias: kundensicht-deadline
 ---
 
 # Gegenmaßnahmen aus Kundensicht: die Deadline
 
-Online-Anfragen haben eine **Deadline**: die Geduld des Kunden, den Timeout der App – und spätestens bricht ein Load Balancer oder Proxy ab (Defaults etwa 20 s bis 2 min).
+Online-Anfragen haben eine **Deadline** (Kunde, App, spätestens der Load Balancer: etwa 20 s bis 2 min).
 
-<DeadlineOutcomeViz :step="$clicks" />
+<DeadlineOutcomeViz :step="$clicks" lenses />
 
 <div class="sim-xref">
 
@@ -723,8 +723,10 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     den Kunden warten lässt, verbraucht seine Deadline. Bei gut dreifacher
     Überlast wird die Mehrheit abgewiesen; bei leichter Überlast käme die
     Mehrheit durch. Entscheidend ist, dass niemand im Timeout landet.
-  2 Feature Shedding, Cache, Scaling — Seiten ohne Empfehlungen kosten die
-    DB ein Fünftel, sie schafft 1.500 statt 300: alle 1.000 rechtzeitig.
+  2 Feature Shedding (auf der Folie nur so benannt; Cache und Scaling
+    wirken für den Kunden genauso, sind aber nicht degradiert, Klick 11) —
+    Seiten ohne Empfehlungen kosten die DB ein Fünftel, sie schafft 1.500
+    statt 300: alle 1.000 rechtzeitig.
     Nur, wenn es reicht und rechtzeitig greift. Dritter Weg: Andere Last
     weicht (Klick 5; Google SRE Book, Kap. 22: weniger wichtigen Verkehr
     zuerst abwerfen). Die 1.500 kommen aus Feature Shedding; Scaling hilft
@@ -745,6 +747,99 @@ Zum Ausprobieren (Rabattaktion im Online-Shop): <TalkXref slug="20260711-sre-sim
     (Spitze 12), mit gehashter Startminute höchstens zwei. Gleiche Arbeit
     (60 Job-Minuten), kleinere Spitze. Die Grafik hasht mit FNV-1a; Jenkins
     rechnet anders, das Prinzip ist dasselbe.
+- Ab Klick 7: dieselben Zeilen, gesehen durch ein Dashboard. Jede Sicht
+  ist technisch korrekt; sie unterscheiden sich darin, was als Fehler
+  gilt, wo gezählt wird und welche Metriken und Labels es gibt. Die Farbe
+  eines Segments ist das Urteil des Panels, rechts steht der Wert eines
+  Stat-Panels: Anteil gut, ✓ grün ab 99 %, ✗ rot darunter; ! gelb heißt
+  eingeschränkt (degradiert, gewollt), grau ohne Zeichen: Batch mit
+  eigenem Ziel. Violett markiert: Zeilen, in denen das Panel anders
+  alarmiert als die Kundensicht. Die Leiste oben springt zu einer Sicht
+  (wie ein Klick, also auch im Publikumsfenster).
+  7 Fehler = 5xx: So zählen das SRE Workbook („5XX responses count
+    against SLO, while all other requests are considered successful“) und
+    das Grafana-SLO-Beispiel. Ohne Maßnahme 100 % ohne 5xx — grün. Der
+    Server zählt eine Anfrage erst beim Abschluss (promhttp, otelhttp und
+    Spring messen nach dem Handler); die 700 req/s in der Queue stehen in
+    keinem Zähler. Und was er abschließt, ist 200, nur hört niemand mehr
+    zu. AWS: „From the server's perspective, it has returned a successful
+    response.“ Load Shedding antwortet 503 (SRE Book, Kap. 22) und ist
+    rot. Batch-Drosselung antwortet 429, wie Kubernetes API Priority and
+    Fairness, wenn eine Prioritätsstufe ihr Limit überschreitet, und gilt
+    hier als Erfolg.
+  8 Fehler = alles außer 2xx: So rechnet das PromQL-Beispiel zur
+    RED-Methode (GrafanaCon EU 2018: status_code!~"2.."); der RED-Text
+    selbst sagt nur „failing“, die RED-Folie dieses Talks zählt 5xx. Jetzt
+    ist jede Absage rot, auch Back Pressure per 429, und Workload
+    Separation (75 %) sieht schlechter aus als die gemeinsame Queue
+    (100 %). Ob 429 ein Fehler ist, ist Konvention: „The Art of SLOs“
+    zählt 429 als Fehler, das Workbook nicht, Google Cloud nimmt 4xx im
+    Beispiel aus dem Nenner. OpenTelemetry markiert am Server 4xx nicht
+    als Fehler, 5xx schon.
+  9 + Dauer: gut = 2xx und schneller als die Schwelle, hier die Deadline,
+    als Anteil per Histogramm: Bucket le=Schwelle mit status=~"2.."
+    geteilt durch _count. Ohne Statusfilter zählen die schnellen 503 als
+    gut, Back Pressure stünde bei 100 %. Die Zeile ohne Maßnahme ist jetzt
+    rot: 0 % von 300/s. Auch eine reine Latenzsicht schönen schnelle
+    Absagen (AWS: bei 60 % Shedding sieht der Median „pretty amazing“
+    aus). Falle: Die Standard-Buckets von OTel
+    (http.server.request.duration) enden bei 10 s. Antworten nach 20 s bis
+    2 min landen im +Inf-Bucket, ein p99-Panel zeigt dann flach 10 s. Den
+    Bucket an der Schwelle selbst definieren.
+  10 + Eingang: am Load Balancer gezählt (SRE Workbook: „measure it at
+    the load balancer or on the client“). Er sieht auch, was der Server
+    nie beantwortet: 504, wenn er selbst aufgibt. Gibt der Client zuerst
+    auf, protokolliert nginx 499, der AWS ALB 460 (zählt unter
+    HTTPCode_ELB_4XX_Count), Envoy Code 0 mit Flag DC — keine 5xx, eine
+    5xx-Quote am LB bliebe also grün. Ohne Maßnahme: 0 % von 1.000/s statt
+    von 300/s. Die Dauer am LB enthält auch die Wartezeit vor dem Handler
+    (Accept-Backlog, Thread-Pool-Queue), die Spring (ab dem Servlet-Filter)
+    und die Go-Middlewares nicht mitmessen.
+  11 + degradiert: Feature Shedding antwortet schnell mit 200, nur ohne
+    Empfehlungen; ohne eigene Metrik sieht es aus wie Scaling. Einen
+    Standard gibt es nicht, OpenTelemetry hat kein Attribut dafür. Muster:
+    Hystrix zählte Fallbacks getrennt (FALLBACK_SUCCESS), das SRE Workbook
+    nennt es Quality-SLI („the proportion of responses that were served in
+    an undegraded state“). Umsetzung: eigener Zähler oder eigenes Attribut
+    am Request-Histogramm.
+  12 + Label workload (online/batch): Erst damit bekommt Batch ein eigenes
+    Ziel (SRE Book, Kap. 4: getrennte Ziele für „a bulk processing
+    pipeline“ und „an interactive client“). Gedrosselter oder langsamer
+    Batch ist dann toleriert, Workload Separation zeigt Online 100 %. Zwei
+    feste Werte sind für die Kardinalität unkritisch (Prometheus warnt vor
+    unbeschränkten Werten wie User-IDs). Vorbild: Kubernetes API Priority
+    and Fairness, apiserver_flowcontrol_rejected_requests_total mit
+    priority_level und flow_schema. Wer nach Priorität abweist, hat das
+    Label ohnehin.
+- In der letzten Sicht alarmiert kein Panel mehr anders als die
+  Kundensicht, aber nur im Modell. Ob Batch später erledigt wird, sieht
+  keine Anfrage-Metrik; dafür braucht es den Rückstand beim Erzeuger
+  (Workbook: Freshness). Kunden, die aufgeben, sieht am ehesten der
+  Client: RUM, im LGTM-Stack Grafana Faro (mit TracingInstrumentation
+  zählen Status 0 und 4xx/5xx als Fehler; ein Abbruch ist Status 0, also
+  nicht von einem Netzwerkfehler zu unterscheiden; dazu Web Vitals; Daten
+  über Alloy nach Loki und Tempo). Eine degradierte Antwort ist auch für
+  Faro ein Erfolg.
+- Annahmen der Sichten: Abgewiesen wird in der Anwendung (weist der Edge
+  ab, etwa nginx limit_req oder Envoys Adaptive Concurrency, beide per
+  Default mit 503, sieht die App nur 300 × 200). Jede Anfrage zählt
+  einmal, ohne Retries. Der Server rechnet verlassene Anfragen zu Ende und
+  meldet 200 (Go bricht über den Request-Context ab, wenn der Handler ihn
+  beachtet). Eingeschwungener Zustand mit unbegrenzter Queue. Batch wird
+  serverseitig mit 429 gedrosselt; drosselt der Erzeuger selbst, sieht
+  der Server nur 300 × 200.
+- Ampel: grün ab 99 % gut. Grafanas Default-Schwellen sind „80 = red /
+  Base = green“: Ein Fehlerquoten-Panel ohne eigene Schwellen zeigt 25 %
+  und 70 % grün. Auch das ist technisch korrekt.
+- Jitter-Zeile in den Sichten: Gleiche Arbeit heißt gleiches Tagesmittel,
+  nur max_over_time zeigt 12 gegen 2. Über genau die erste Stunde sind es
+  1,0 gegen 0,93 (der letzte Job läuft bis 1:04); je gröber das Fenster,
+  desto flacher die Spitze.
+- LGTM-Bausteine: Statuscode und Dauer kommen aus der App-Metrik (Mimir),
+  der Eingang aus LB-Metriken oder Access-Logs (Mimir oder Loki),
+  degradiert und workload sind eigene Metriken bzw. Labels (Mimir). Tempo
+  sieht eine hängende Anfrage erst, wenn sie endet: Spans werden beim
+  Abschluss exportiert.
 - Jede Online-Anfrage sollte eine Deadline haben (gRPC: „Always set a
   deadline“), Backends erben sie per Deadline Propagation (Google SRE
   Book, Kap. 22). Faktisch setzt sie meist die Infrastruktur, zum Beispiel
