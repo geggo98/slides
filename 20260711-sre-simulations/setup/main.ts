@@ -2,17 +2,19 @@
 // variables (--color-text-primary, --color-background-info, etc.) without
 // needing a wrapper component. Slidev runs setup/main.ts at app boot, so
 // the side-effect import puts the tokens in the global stylesheet.
-// TalkXref/TalkXrefPanel/Callout werden zusätzlich global registriert, weil
-// sie direkt in slides.md (Markdown) verwendet werden — Slidev auto-importiert
-// nur die lokalen components/, keine shared/ ones.
+// TalkXref/TalkXrefPanel/Callout/DeadlineOutcomeViz werden zusätzlich global
+// registriert, weil sie direkt in slides.md (Markdown) verwendet werden —
+// Slidev auto-importiert nur die lokalen components/, keine shared/ ones.
 import { defineAppSetup } from "@slidev/types";
 import "@shared/components/SlidevTokens.vue";
 import TalkXref from "@shared/components/TalkXref.vue";
 import TalkXrefPanel from "@shared/components/TalkXrefPanel.vue";
 import Callout from "@shared/components/Callout.vue";
+import DeadlineOutcomeViz from "@shared/components/DeadlineOutcomeViz.vue";
 
 export default defineAppSetup(({ app }) => {
   app.component("TalkXref", TalkXref);
   app.component("TalkXrefPanel", TalkXrefPanel);
   app.component("Callout", Callout);
+  app.component("DeadlineOutcomeViz", DeadlineOutcomeViz);
 });

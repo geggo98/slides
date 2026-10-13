@@ -1204,6 +1204,8 @@ Die Verstärker entschärfen — der Load Balancer als Verstärker, der Breaker 
   (Opfer kauft Erholung) und Wandernde Engpässe (Sandbox + Drehbuch:
   Beseitigen legt den nächsten Engpass frei, Abfangen schafft keine
   Kapazität — ein Modell, zwei Folien).
+- Danach ein Debrief aus Kundensicht: was die Gegenmaßnahmen für die
+  Deadline der Kunden bedeuten (Brücke zum Monitoring-Talk).
 -->
 
 ---
@@ -1871,7 +1873,55 @@ routeAlias: engpass-gegenmassnahmen
   Überlast isolieren, Verstärkung verhindern) mit Beispielen (● = hier
   als Schalter) und der Spalte „schafft Kapazität?“, die Präzisierungen
   und die bewussten Vereinfachungen.
-- Überleitung: Den Nachbarn der vorigen Folie diagnostizieren wir im
+- Überleitung: Debrief aus Kundensicht (nächste Folie), dann das Kapitel
+  Diagnose.
+-->
+
+---
+hideInToc: true
+clicks: 6
+routeAlias: kundensicht
+---
+
+# Debrief: Gegenmaßnahmen aus Kundensicht
+
+Rabattaktion: Schritt 1 ≙ ohne Maßnahme, 2–3 ≙ Back Pressure / Load Shedding, 4 ≙ Feature Shedding
+
+<DeadlineOutcomeViz :step="$clicks" />
+
+<div class="abs-br m-3 text-xs opacity-60">
+
+Theorie & Quellen: <TalkXref slug="20260329-grafana-lgtm-monitoring-in-k8s-distributed-system" anchor="kundensicht-deadline">Monitoring-Talk</TalkXref>
+
+</div>
+
+<!--
+- Debrief der Rabattaktion: dieselben Gegenmaßnahmen, gesehen vom Kunden
+  mit Deadline (App-Timeout, Load Balancer). Online-Zeilen mit den Zahlen
+  der Sim: 1.000 req/s, die Bestands-DB schafft 300 Produktseiten/s.
+- Ohne Klick: ohne Maßnahme ≙ Schritt 1 — nach dem Scaling klemmt die DB,
+  ungeschützt: alle im Timeout, 300/s Arbeit für den Papierkorb.
+- Klick 1: Back Pressure / Load Shedding ≙ Schritte 2–3: 300 rechtzeitig,
+  700 sofort abgewiesen. Kein Timeout mehr, aber auch nicht mehr Kunden.
+- Klick 2: Feature Shedding ≙ Schritt 4: Die DB schafft 1.500, alle
+  Produktseiten kommen durch. „Wenn es reicht“ gilt für die ganze Kette:
+  91 Checkouts/s gegen 70 — der Engpass wandert zur Kasse.
+- Klick 3: Batch, gedrosselt: dieselbe Aufteilung wie Klick 1, aber nichts
+  geht verloren, solange das Fertigstellungsfenster reicht.
+- Klick 4: Online + Batch auf einer Queue: Erst Batch kippt sie, Online
+  landet im Timeout. Verwandt: Die Nachbar-VM der Ursachen-Folie ist ein
+  Batch-Job auf geteiltem Host.
+- Klick 5: Workload Separation: Gedrosselt wird nur Batch. „🏠 Eigener
+  Host“ in der Sim ist die physische Variante.
+- Klick 6: Jitter glättet, schafft keine Kapazität. Für Retries zeigt das
+  Preset „Retry-Sturm“: Jitter senkt die Spitze von ≈ 2× auf ≈ 1,3×
+  Mittel, aber die Menge bleibt (×2,6 Versuche je Zahlung mit Backoff,
+  ×2,5 mit Jitter), die Kasse kollabiert weiter. Erst das Retry-Budget
+  deckelt (≈ ×1,1).
+- Quellen, Timeout-Tabelle (Load Balancer, Proxy, Browser) und Details:
+  Monitoring-Talk, Folie „Gegenmaßnahmen aus Kundensicht: die Deadline“
+  (Link unten rechts).
+- Überleitung: Den Nachbarn der Ursachen-Folie diagnostizieren wir im
   nächsten Kapitel — mit %steal als Schlüssel-Kanal.
 -->
 

@@ -17,7 +17,10 @@
  *     (auch Mailversand, oder „kein Engpass“),
  *     Überlastzustand, die Kennzahlen aus SCRIPT_FIGURES und bei eigenen
  *     Fragen (step.ask) Frage und Antwort der Karte wörtlich.
- *  4. routeAliases und Position der drei Folien.
+ *  4. routeAliases und Position der drei Folien und des Debriefs „aus
+ *     Kundensicht“ dahinter (DeadlineOutcomeViz). Dessen Folientext und
+ *     Notizen laufen durch dieselbe Allow-List, und seine Zuordnung
+ *     „Schritt k ≙ Zeile“ muss zum Drehbuch der Rabattaktion passen.
  *  5. „IO-Steal“ gibt es nicht: IO-Konkurrenz zeigt sich im Gast als
  *     Disk-await, nie als steal (KVM: IO-Wartezeit zählt als idle).
  *
@@ -185,6 +188,7 @@ const iGegen = idx((f) =>
 const iBreaker = idx((f) =>
   /^routeAlias: circuit-breaker$/m.test(f.frontmatter),
 );
+const iKunden = idx((f) => /^routeAlias: kundensicht$/m.test(f.frontmatter));
 
 // Fehlt eine Folie, bleibt sie leer: Dann scheitern die Tests unten mit
 // klarer Meldung, statt dass schon das Einsammeln der Tests abbricht.
@@ -192,6 +196,7 @@ const LEER: Folie = { frontmatter: "", inhalt: "" };
 const setup = folien[iSetup] ?? LEER;
 const ursache = folien[iUrsache] ?? LEER;
 const gegen = folien[iGegen] ?? LEER;
+const kunden = folien[iKunden] ?? LEER;
 
 /* ===== Zahlen lesen ===== */
 
@@ -261,6 +266,14 @@ const GEPRUEFT: { wo: string; text: string }[] = [
   { wo: "Ursache (Notizen)", text: notizen(ursache) },
   { wo: "Gegenmaßnahmen (Notizen)", text: notizen(gegen) },
 ];
+// Der Debrief hat bewusst kaum Folientext (eine Zeile über der Grafik),
+// deshalb nicht in GEPRUEFT (dort ≥ 300 Zeichen), aber durch dieselbe
+// Allow-List. Die Zahlen der Grafik selbst prüft
+// shared/__tests__/deadlineOutcomes.test.ts.
+const GEPRUEFT_DEBRIEF: { wo: string; text: string }[] = [
+  { wo: "Debrief Kundensicht (Folientext)", text: folientext(kunden) },
+  { wo: "Debrief Kundensicht (Notizen)", text: notizen(kunden) },
+];
 
 describe("Folien finden: Position und routeAlias", () => {
   it("alle drei Folien gefunden, direkt hintereinander nach circuit-breaker", () => {
@@ -271,10 +284,21 @@ describe("Folien finden: Position und routeAlias", () => {
     expect(iGegen).toBe(iUrsache + 1);
   });
 
-  it("danach beginnt die Section „Diagnose“", () => {
-    const naechste = folien[iGegen + 1]!;
+  it("danach der Debrief „aus Kundensicht“, dann die Section „Diagnose“", () => {
+    expect(iKunden).toBe(iGegen + 1);
+    const naechste = folien[iKunden + 1]!;
     expect(naechste.frontmatter).toMatch(/^layout: section$/m);
     expect(naechste.inhalt).toMatch(/^# Diagnose/m);
+  });
+
+  it("Debrief: kundensicht, DeadlineOutcomeViz mit $clicks, Rücklink", () => {
+    // clicks: 6 prüft shared/__tests__/deadlineOutcomes.test.ts
+    expect(kunden.frontmatter).toMatch(/^hideInToc: true$/m);
+    expect(kunden.inhalt).toMatch(/^# Debrief: /m);
+    expect(kunden.inhalt).toContain('<DeadlineOutcomeViz :step="$clicks" />');
+    expect(kunden.inhalt).toContain('anchor="kundensicht-deadline"');
+    for (const g of GEPRUEFT_DEBRIEF)
+      expect(g.text.length, g.wo).toBeGreaterThan(80);
   });
 
   it("Ursache: wandernde-engpaesse, ohne Klicks, Komponente ohne variant", () => {
@@ -291,7 +315,7 @@ describe("Folien finden: Position und routeAlias", () => {
     );
   });
 
-  it.each(["wandernde-engpaesse", "engpass-gegenmassnahmen"])(
+  it.each(["wandernde-engpaesse", "engpass-gegenmassnahmen", "kundensicht"])(
     "routeAlias %s kommt im Deck genau einmal vor",
     (alias) => {
       const n = md.match(new RegExp(`^routeAlias: ${alias}$`, "gm"))?.length;
@@ -333,15 +357,89 @@ describe("Zahlen auf den Folien ↔ Modell", () => {
   });
 
   it("jede Zahl stammt aus dem Modell oder der Ausnahmeliste", () => {
-    const alle = GEPRUEFT.flatMap((g) =>
+    const alle = [...GEPRUEFT, ...GEPRUEFT_DEBRIEF].flatMap((g) =>
       zahlen(g.text).map((z) => ({ ...z, wo: g.wo })),
     );
+    // auch der Debrief muss Zahlen liefern, sonst prüft die Liste dort nichts
+    expect(
+      alle.filter((z) => z.wo.startsWith("Debrief")).length,
+    ).toBeGreaterThan(15);
     // Der Leser muss überhaupt etwas sehen, sonst ist „keine Abweichung“ leer.
     expect(alle.length).toBeGreaterThan(100);
     const fremd = alle
       .filter((z) => !ERLAUBT.has(norm(z.wert)))
       .map((z) => `${z.wo}: ${z.wert} in „${z.zeile}“`);
     expect(fremd).toEqual([]);
+  });
+});
+
+describe("Debrief „aus Kundensicht“ ↔ Drehbuch der Rabattaktion", () => {
+  const M = Modell;
+  const i = (k: string) => SCHRITTE.findIndex((s) => s.key === k);
+  const fig = (sc: string, k: string) => {
+    const f = FIGUREN_ALLE[sc]!.find((x) => x.key === k)!;
+    return (name: string) => f[name] as number;
+  };
+  const zeile = flach(folientext(kunden));
+  const notiz = flach(notizen(kunden));
+
+  it("Schrittnummern im Folientext und in den Notizen", () => {
+    for (const k of ["scale", "bpInv", "shedBrowse", "featureShed"])
+      expect(i(k), k).toBeGreaterThan(0);
+    expect(zeile).toContain(`Schritt ${i("scale")} ≙ ohne Maßnahme`);
+    expect(zeile).toContain(
+      `${i("bpInv")}–${i("shedBrowse")} ≙ Back Pressure / Load Shedding`,
+    );
+    expect(zeile).toContain(`${i("featureShed")} ≙ Feature Shedding`);
+    expect(notiz).toContain(`ohne Maßnahme ≙ Schritt ${i("scale")}`);
+    expect(notiz).toContain(
+      `≙ Schritte ${i("bpInv")}–${i("shedBrowse")}: ${de(M.INV_PAGES_PER_S)} rechtzeitig, ${de(fig("rabatt", "bpInv")("rejected"))} sofort abgewiesen`,
+    );
+    expect(notiz).toContain(
+      `Feature Shedding ≙ Schritt ${i("featureShed")}: Die DB schafft ${de(M.INV_PAGES_PER_S_FS)}`,
+    );
+  });
+
+  it("die Schritte zeigen, was die Zeilen der Grafik behaupten", () => {
+    // ohne Maßnahme: nichts rechtzeitig, die DB rechnet für den Papierkorb
+    const s = fig("rabatt", "scale");
+    expect(s("pages") + s("orders")).toBe(0);
+    expect(s("waste")).toBe(M.INV_PAGES_PER_S);
+    expect(notiz).toContain(`${de(s("waste"))}/s Arbeit für den Papierkorb`);
+    // Back Pressure / Shedding: ≈ Kapazität rechtzeitig, Rest abgewiesen
+    for (const k of ["bpInv", "shedBrowse"]) {
+      const f = fig("rabatt", k);
+      expect(
+        Math.abs(f("pages") + f("orders") - M.INV_PAGES_PER_S),
+        k,
+      ).toBeLessThanOrEqual(0.05 * M.INV_PAGES_PER_S);
+      expect(
+        Math.abs(f("rejected") - (M.LOAD_CAMPAIGN - M.INV_PAGES_PER_S)),
+        k,
+      ).toBeLessThanOrEqual(0.05 * M.LOAD_CAMPAIGN);
+      expect(f("waste"), k).toBe(0);
+    }
+    // Feature Shedding: alle Produktseiten kommen durch, die Kasse klemmt
+    const fs = fig("rabatt", "featureShed");
+    expect(fs("pages")).toBeGreaterThanOrEqual(M.CAMPAIGN_PAGES);
+    expect(SCHRITTE[i("featureShed")]!.expect).toBe("pay");
+    expect(notiz).toContain(
+      `${M.CAMPAIGN_CHECKOUTS} Checkouts/s gegen ${de(M.PAY_CAP)}`,
+    );
+    expect(notiz).toContain(
+      `${de(M.LOAD_CAMPAIGN)} req/s, die Bestands-DB schafft ${de(M.INV_PAGES_PER_S)} Produktseiten/s`,
+    );
+  });
+
+  it("Jitter-Punkt zitiert die aktuellen Zahlen des Retry-Sturms", () => {
+    const b = fig("retry", "backoff");
+    const j = fig("retry", "jitter");
+    expect(notiz).toContain(
+      `Spitze von ≈ ${de(b("wave"))}× auf ≈ ${de(j("wave"))}× Mittel`,
+    );
+    expect(notiz).toContain(
+      `×${de(b("amp"))} Versuche je Zahlung mit Backoff, ×${de(j("amp"))} mit Jitter`,
+    );
   });
 });
 
