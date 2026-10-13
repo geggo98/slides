@@ -483,6 +483,7 @@ Warteschlangen, Oszillation, Hysterese
 ---
 clicks: false
 hideInToc: true
+title: M/M/1 Simulator (ein Koch)
 ---
 
 <MM1Simulator />
@@ -505,6 +506,7 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mm1-
 ---
 clicks: false
 hideInToc: true
+title: M/M/c Simulator (mehrere Köche)
 ---
 
 <MMcCompare />
@@ -592,8 +594,8 @@ clicks: 3
 # Wandernde Engpässe: Gegenmaßnahmen
 
 - **Back Pressure:** Die überlastete Station bremst ihre Vorstufen, der Stau wandert zum Eingang.
-- **Load Shedding:** Früh und nach Priorität gezielt abweisen, der Rest kommt durch.
-- **(Auto-)Scaling:** Mehr Instanzen, manuell oder nach Metrik. Für Sekunden-Einbrüche zu langsam.
+- **Load Shedding / Feature Shedding:** Früh und nach Priorität gezielt abweisen oder reduziertes Ergebnis zurückliefern (z.B. veraltete Werte aus dem Cache), der Rest kommt durch.
+- **(Auto-)Scaling:** Mehr Instanzen, manuell oder nach Metrik. Für Sekunden-Einbrüche zu langsam, vor allem wenn die Pods lange zum Starten brauchen oder sich erst aufwärmen müssen.
 
 <PipelineViz variant="remedies" />
 
