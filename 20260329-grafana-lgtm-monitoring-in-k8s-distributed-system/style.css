@@ -15,7 +15,7 @@
 /* Dezenter Querverweis auf das SRE-Simulations-Deck, unten rechts auf den
  * Simulations-Folien. Absolut positioniert, damit die ohnehin höhen-knappen
  * Sim-Folien nicht reflowen; deck-global, weil Slide-<style> scoped wäre
- * und die Klasse auf sechs Folien vorkommt. */
+ * und die Klasse auf mehreren Folien vorkommt. */
 .sim-xref {
   position: absolute;
   right: 1.1rem;

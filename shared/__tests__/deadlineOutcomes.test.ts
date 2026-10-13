@@ -5,6 +5,9 @@
  * importiert das SRE-Modell bewusst nicht; dieser Test ist die Brücke.
  */
 import { describe, expect, it } from "vitest";
+import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   INV_PAGES_PER_S,
   INV_PAGES_PER_S_FS,
@@ -198,5 +201,36 @@ describe("Jitter für Batch-Starts", () => {
     expect(j.peakHashed).toBe(2);
     expect(j.workFixed).toBe(60); // 12 Jobs × 5 min
     expect(j.workHashed).toBe(j.workFixed);
+  });
+});
+
+// Jede Folie mit <DeadlineOutcomeViz> braucht so viele Klicks, wie die
+// Grafik Zeilen hat (minus der ersten), und reicht $clicks als step durch.
+describe("Folien mit DeadlineOutcomeViz", () => {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+  const uses = readdirSync(root, { withFileTypes: true })
+    .filter(
+      (d) => d.isDirectory() && existsSync(resolve(root, d.name, "slides.md")),
+    )
+    .flatMap((d) => {
+      const md = readFileSync(resolve(root, d.name, "slides.md"), "utf8");
+      return [...md.matchAll(/<DeadlineOutcomeViz\b[^>]*>/g)].map((m) => {
+        // Die letzten beiden "---"-Zeilen davor umschließen das Frontmatter
+        // der Folie (die Folie braucht ohnehin eins: clicks, routeAlias).
+        const lines = md.slice(0, m.index).split("\n");
+        const close = lines.lastIndexOf("---");
+        const open = lines.lastIndexOf("---", close - 1);
+        const fm = lines.slice(open + 1, close).join("\n");
+        return { deck: d.name, tag: m[0], fm };
+      });
+    });
+
+  it("wird mindestens einmal verwendet (Smoke)", () => {
+    expect(uses.length).toBeGreaterThan(0);
+  });
+
+  it.each(uses)("$deck: clicks und step passen", ({ tag, fm }) => {
+    expect(fm).toMatch(new RegExp(`^clicks: ${ROW_KEYS.length - 1}$`, "m"));
+    expect(tag).toContain(':step="$clicks"');
   });
 });
