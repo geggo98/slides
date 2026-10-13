@@ -1204,8 +1204,8 @@ Die Verstärker entschärfen — der Load Balancer als Verstärker, der Breaker 
   (Opfer kauft Erholung) und Wandernde Engpässe (Sandbox + Drehbuch:
   Beseitigen legt den nächsten Engpass frei, Abfangen schafft keine
   Kapazität — ein Modell, zwei Folien).
-- Danach ein Debrief aus Kundensicht: was die Gegenmaßnahmen für die
-  Deadline der Kunden bedeuten (Brücke zum Monitoring-Talk).
+- Danach die Gegenmaßnahmen aus Kundensicht: was sie für die Deadline
+  der Kunden bedeuten (Brücke zum Monitoring-Talk).
 -->
 
 ---
@@ -1873,8 +1873,8 @@ routeAlias: engpass-gegenmassnahmen
   Überlast isolieren, Verstärkung verhindern) mit Beispielen (● = hier
   als Schalter) und der Spalte „schafft Kapazität?“, die Präzisierungen
   und die bewussten Vereinfachungen.
-- Überleitung: Debrief aus Kundensicht (nächste Folie), dann das Kapitel
-  Diagnose.
+- Überleitung: Gegenmaßnahmen aus Kundensicht (nächste Folie), dann das
+  Kapitel Diagnose.
 -->
 
 ---
@@ -1883,44 +1883,171 @@ clicks: 6
 routeAlias: kundensicht
 ---
 
-# Debrief: Gegenmaßnahmen aus Kundensicht
+# Gegenmaßnahmen aus Kundensicht: die Deadline
 
-Rabattaktion: Schritt 1 ≙ ohne Maßnahme, 2–3 ≙ Back Pressure / Load Shedding, 4 ≙ Feature Shedding
+Online-Anfragen haben eine **Deadline**: die Geduld des Kunden, den Timeout der App – und spätestens bricht ein Load Balancer oder Proxy ab (Defaults etwa 20 s bis 2 min).
 
 <DeadlineOutcomeViz :step="$clicks" />
 
-<div class="abs-br m-3 text-xs opacity-60">
-
-Theorie & Quellen: <TalkXref slug="20260329-grafana-lgtm-monitoring-in-k8s-distributed-system" anchor="kundensicht-deadline">Monitoring-Talk</TalkXref>
-
-</div>
+<div class="abs-br m-3 text-xs opacity-60">Dieselbe Grafik je Metrik und Label: <TalkXref slug="20260329-grafana-lgtm-monitoring-in-k8s-distributed-system" anchor="kundensicht-deadline">Monitoring-Talk</TalkXref></div>
 
 <!--
-- Debrief der Rabattaktion: dieselben Gegenmaßnahmen, gesehen vom Kunden
-  mit Deadline (App-Timeout, Load Balancer). Online-Zeilen mit den Zahlen
-  der Sim: 1.000 req/s, die Bestands-DB schafft 300 Produktseiten/s.
-- Ohne Klick: ohne Maßnahme ≙ Schritt 1 — nach dem Scaling klemmt die DB,
-  ungeschützt: alle im Timeout, 300/s Arbeit für den Papierkorb.
-- Klick 1: Back Pressure / Load Shedding ≙ Schritte 2–3: 300 rechtzeitig,
-  700 sofort abgewiesen. Kein Timeout mehr, aber auch nicht mehr Kunden.
-- Klick 2: Feature Shedding ≙ Schritt 4: Die DB schafft 1.500, alle
+- Lesen: eine Zeile je Situation, Klick für Klick aufgedeckt. Der Balken
+  zeigt, was aus den angebotenen Anfragen wird: grün rechtzeitig (Batch:
+  sofort erledigt), gelb-orange schnell abgewiesen (429/503), rot
+  schraffiert Timeout, blau später erledigt. Gestrichelt: die Kapazität.
+  Alle Balken auf einer Skala (volle Breite = 1.000 req/s): Der Strich für
+  300 steht überall an derselben Stelle. Die gemischten Zeilen (400 req/s)
+  sind kürzer, ihre Ausgänge stehen rechts daneben.
+- Zahlen wie in der Rabattaktion (Folie „Wandernde Engpässe:
+  Gegenmaßnahmen“): 1.000 req/s, die Bestands-DB schafft 300
+  Produktseiten/s, ohne Empfehlungen 1.500.
+  Vereinfacht als Fluid-Rechnung nach der Anlaufphase; jede Anfrage zählt
+  wie eine Produktseite.
+- Klick für Klick:
+  0 Online ohne Maßnahme — die Queue wächst um 700 req/s, ihre Wartezeit
+    überholt jede Deadline: alle 1.000 im Timeout. Der Server arbeitet mit
+    300 req/s weiter, für Antworten, auf die niemand mehr wartet. „Alle“
+    gilt, sobald die Queue so lang ist, dass selbst die schnellste Antwort
+    die Deadline reißt. Mit unbegrenzter Queue passiert das bei jeder
+    anhaltenden Überlast, nur unterschiedlich schnell: bei 20 s Deadline
+    hier nach rund 9 s, bei Klick 4 nach rund einer Minute. Im AWS-Lasttest
+    (unten) liegt die Verfügbarkeit bei 50 %, wenn der Median gleich dem
+    Timeout ist. In der Simulation ist das der Stand nach dem Hochskalieren
+    der Webserver (vorher begrenzen sie bei 200 req/s); dann begrenzt die
+    Bestands-DB, und die skaliert nicht.
+  1 Back Pressure / Load Shedding — 300 rechtzeitig, 700 sofort abgewiesen,
+    kein Timeout. Back Pressure hilft Online-Kunden nur als begrenzte
+    Annahme (Concurrency-Limit, kleine Queue) mit schnellem Abweisen: Wer
+    den Kunden warten lässt, verbraucht seine Deadline. Bei gut dreifacher
+    Überlast wird die Mehrheit abgewiesen; bei leichter Überlast käme die
+    Mehrheit durch. Entscheidend ist, dass niemand im Timeout landet.
+  2 Feature Shedding, Cache, Scaling — Seiten ohne Empfehlungen kosten die
+    DB ein Fünftel, sie schafft 1.500 statt 300: alle 1.000 rechtzeitig.
+    Nur, wenn es reicht und rechtzeitig greift. Dritter Weg: Andere Last
+    weicht (Klick 5; Google SRE Book, Kap. 22: weniger wichtigen Verkehr
+    zuerst abwerfen). Die 1.500 kommen aus Feature Shedding; Scaling hilft
+    in der Simulation nur am Webserver. Danach scheitern die Checkouts am
+    Zahlungsdienst (70 req/s), bis er geschützt ist.
+  3 Batch, gedrosselt — dieselbe Menge als Import: 300 sofort, 700 warten
+    beim Erzeuger und laufen später. Gleiche Aufteilung wie bei Klick 1,
+    aber nichts geht verloren, solange das Fertigstellungsfenster reicht.
+  4 Online + Batch gemeinsam — 200 + 200 auf 300. Online allein passt, erst
+    Batch hebt die Summe über die Kapazität. Die gemeinsame Queue wächst
+    für alle: Online komplett im Timeout, 150 req/s Kapazität gehen an
+    Online-Antworten, auf die niemand mehr wartet; Batch wird mit 150 req/s
+    verspätet fertig.
+  5 Workload Separation — Online zuerst: 200 rechtzeitig. Batch bekommt die
+    restlichen 100, die übrigen 100 werden gedrosselt oder abgewiesen und
+    später wiederholt.
+  6 Jitter — zwölf Jobs à 5 min. Mit „0 0 * * *“ laufen alle gleichzeitig
+    (Spitze 12), mit gehashter Startminute höchstens zwei. Gleiche Arbeit
+    (60 Job-Minuten), kleinere Spitze. Die Grafik hasht mit FNV-1a; Jenkins
+    rechnet anders, das Prinzip ist dasselbe.
+- Bezug zum Drehbuch der Rabattaktion: ohne Maßnahme ≙ Schritt 1 — nach
+  dem Scaling klemmt die DB, ungeschützt: alle im Timeout, 300/s Arbeit
+  für den Papierkorb. Back Pressure / Load Shedding ≙ Schritte 2–3: 300
+  rechtzeitig, 700 sofort abgewiesen. Kein Timeout mehr, aber auch nicht
+  mehr Kunden. Feature Shedding ≙ Schritt 4: Die DB schafft 1.500, alle
   Produktseiten kommen durch. „Wenn es reicht“ gilt für die ganze Kette:
   91 Checkouts/s gegen 70 — der Engpass wandert zur Kasse.
-- Klick 3: Batch, gedrosselt: dieselbe Aufteilung wie Klick 1, aber nichts
-  geht verloren, solange das Fertigstellungsfenster reicht.
-- Klick 4: Online + Batch auf einer Queue: Erst Batch kippt sie, Online
-  landet im Timeout. Verwandt: Die Nachbar-VM der Ursachen-Folie ist ein
-  Batch-Job auf geteiltem Host.
-- Klick 5: Workload Separation: Gedrosselt wird nur Batch. „🏠 Eigener
-  Host“ in der Sim ist die physische Variante.
-- Klick 6: Jitter glättet, schafft keine Kapazität. Für Retries zeigt das
-  Preset „Retry-Sturm“: Jitter senkt die Spitze von ≈ 2× auf ≈ 1,3×
-  Mittel, aber die Menge bleibt (×2,6 Versuche je Zahlung mit Backoff,
-  ×2,5 mit Jitter), die Kasse kollabiert weiter. Erst das Retry-Budget
-  deckelt (≈ ×1,1).
-- Quellen, Timeout-Tabelle (Load Balancer, Proxy, Browser) und Details:
-  Monitoring-Talk, Folie „Gegenmaßnahmen aus Kundensicht: die Deadline“
-  (Link unten rechts).
+- Bezug zur Ursachen-Folie: Die Nachbar-VM ist ein Batch-Job auf
+  geteiltem Host (Klick 4); „🏠 Eigener Host“ ist die physische
+  Workload Separation (Klick 5).
+- Jede Online-Anfrage sollte eine Deadline haben (gRPC: „Always set a
+  deadline“), Backends erben sie per Deadline Propagation (Google SRE
+  Book, Kap. 22). Faktisch setzt sie meist die Infrastruktur, zum Beispiel
+  (jeweils Default):
+
+| Station                    | Default | gemessen wird          | Kunde sieht |
+| -------------------------- | ------- | ---------------------- | ----------- |
+| Azure Application Gateway  | 20 s    | Warten auf das Backend | 502 (v1)    |
+| Google Cloud Load Balancer | 30 s    | ganze Antwort          | 502/503     |
+| AWS ALB                    | 60 s    | Leerlauf (keine Daten) | 504         |
+| nginx proxy_read_timeout   | 60 s    | zwischen zwei Reads    | 504         |
+| Cloudflare                 | 125 s   | bis zur Antwort        | 524         |
+
+- Leerlauf statt Gesamtzeit: ALB und nginx messen Leerlauf. Ein Server, der
+  zwischendurch Bytes schickt, setzt sie zurück. Google Cloud misst die
+  Gesamtzeit.
+- Browser brechen von sich aus kaum ab: Chrome kennt keinen
+  Antwort-Timeout, nur Grenzen für den Verbindungsaufbau (4 min inkl. DNS)
+  und den TLS-Handshake (30 s). Firefox' Antwort-Timeout (300 s) ist per
+  Default abgeschaltet. fetch() und XMLHttpRequest haben ohne Zutun der App
+  keinen Timeout (Quelltext von Chromium und Firefox,
+  WHATWG-Spezifikationen).
+- NAT ist die äußerste Grenze, nicht die übliche. RFC 5382 verlangt
+  mindestens 2 h 4 min Leerlauf. Im Mobilfunk lagen 2011 aber 11 von 73
+  Netzen unter 10 Minuten (Messung, SIGCOMM 2011), und Chrome auf Android
+  schickt bewusst keine TCP-Keepalives.
+- Kunden sind geduldiger als gedacht: In Chrome-Felddaten von 2020 brach
+  auf Android ein Drittel der Seitenaufrufe ab, die nach 10 s noch keinen
+  Inhalt zeigten; zwei Drittel warteten bis zum ersten Inhalt. Auf Windows
+  brach nur jeder siebte ab (Web Performance Calendar 2020). Faustregeln
+  (NN/g): 0,1 s wirkt sofort, 1 s hält den Gedankenfluss, ab 10 s braucht
+  es eine Fortschrittsanzeige und eine Abbruchmöglichkeit.
+- AWS-Lasttest (AWS Builders' Library, „Using load shedding to avoid
+  overload“): Ohne Load Shedding fällt die Verfügbarkeit auf 0 %, sobald
+  selbst die schnellste Antwort länger braucht als der Client-Timeout. Mit
+  Load Shedding bleibt der Goodput auf dem Maximum, bis das Abweisen selbst
+  zu teuer wird.
+- Grenzen: Load Shedding hält den Goodput, bedient aber nicht mehr Kunden.
+  Stripe Engineering Blog: Wer seine Anfragen nicht strecken kann, braucht
+  „most of the time … more infrastructure capacity“. Auch Degradation hat
+  eine Grenze: Unter extremer Überlast kann ein Dienst selbst die
+  abgespeckte Antwort nicht mehr berechnen (Google SRE Book, Kap. 21).
+- Eine Queue hilft Online-Anfragen nicht: Sie verschiebt Wartezeit in die
+  Deadline. Azure Architecture Center (Queue-Based Load Leveling): nicht
+  geeignet, wenn der Aufrufer „a low-latency, synchronous response“
+  braucht.
+- Falsch eingestelltes Load Shedding kann das Autoscaling blind machen: Die
+  CPU bleibt niedrig, also startet keine neue Instanz (AWS Builders'
+  Library).
+- Batch: Google stuft Hintergrund-Uploads als „non-critical retryable“ ein:
+  Verzögerung um Minuten oder eine Stunde ist in Ordnung – solange die
+  Wiederholungen im Verarbeitungs-SLO fertig werden (Google Cloud Blog,
+  CRE life lessons). Fallbeispiel dort: Bei Überlast verwarf ein Dienst
+  fast die Hälfte der Hintergrund-Uploads und bediente die interaktiven
+  Anfragen weiter. Nach einigen Stunden war genug Kapazität nachgerüstet.
+- Logische Trennung: „we use separate thread pools for each workload“, dazu
+  ein Concurrency-Limit je Workload (AWS Builders' Library, „Avoiding
+  insurmountable queue backlogs“). Google SRE Book, Kap. 21: Ein
+  überlasteter Task weist Anfragen niedrigerer Kritikalität früher ab.
+  Kubernetes API Priority and Fairness gibt jeder Prioritätsstufe ein
+  eigenes Limit und kann den Überschuss sofort mit 429 abweisen.
+- Kritikalität ist nicht dasselbe wie Latenzanspruch: Suchvorschläge beim
+  Tippen sind verzichtbar, müssen aber schnell sein (Google SRE Book,
+  Kap. 21).
+- Physische Trennung: Eigene Batch-Proxy-Tasks wirken als Sicherung („the
+  batch proxy acts like a fuse“, Google SRE Book, Kap. 21); in Kubernetes
+  eigene Nodes per Taints und Tolerations (Kubernetes-Doku, „Dedicated
+  Nodes“).
+- Physische Trennung endet an der ersten gemeinsamen Abhängigkeit: Bei AWS
+  bremste ein nächtlicher Cron-Job über eine geteilte Datenbank das
+  Deployment-Werkzeug aus (AWS Builders' Library, „Fairness in
+  multi-tenant systems“). Im Beispiel ist die gemeinsame Abhängigkeit die
+  Bestands-DB: Getrennte Web-Instanzen allein helfen hier nicht, die
+  Limits je Workload müssen vor der DB greifen.
+- Jitter verschiebt nur den Startzeitpunkt. AWS: „the same amount of work
+  with less server capacity“ – weniger Spitzenkapazität, nicht mehr
+  Gesamtkapazität. Jenkins warnt: „0 0 * * * for a dozen daily jobs will
+  cause a large spike at midnight.“ Sein H ist ein Hash des Jobnamens,
+  stabil je Job; systemd bietet RandomizedDelaySec= und, stabil je Timer,
+  FixedRandomDelay=. Online wählt der Kunde den ersten Zeitpunkt; Jitter
+  bleibt dort für Wiederholungen (Backoff mit Jitter, Preset „Retry-Sturm“) und
+  für Arbeit, auf die er nicht wartet. AWS Builders' Library („Timeouts,
+  retries, and backoff with jitter“): „even for customer-triggered tasks,
+  it's a good idea to add jitter where it doesn't impact the customer
+  experience.“
+- Dass Jitter nur glättet, zeigt die Sim auf der vorigen Folie (Preset
+  „Retry-Sturm“):
+  Jitter glättet die Retry-Wellen (Spitze/Mittel etwa 2 → 1,3), der
+  Zahlungsdienst bleibt trotzdem unten, denn die Menge bleibt (etwa 2,6
+  Versuche je Zahlung mit Backoff, 2,5 mit Jitter). Erst das Retry-Budget
+  nimmt die Verstärkung heraus (×1,1).
+- Im Monitoring-Talk steht dieselbe Grafik mit Metrik-Sichten: welche
+  Metriken und Labels welches Bild ergeben – jede Sicht technisch korrekt,
+  aber verschieden hilfreich (Link unten rechts).
 - Überleitung: Den Nachbarn der Ursachen-Folie diagnostizieren wir im
   nächsten Kapitel — mit %steal als Schlüssel-Kanal.
 -->

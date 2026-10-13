@@ -17,10 +17,15 @@
  *     (auch Mailversand, oder „kein Engpass“),
  *     Überlastzustand, die Kennzahlen aus SCRIPT_FIGURES und bei eigenen
  *     Fragen (step.ask) Frage und Antwort der Karte wörtlich.
- *  4. routeAliases und Position der drei Folien und des Debriefs „aus
- *     Kundensicht“ dahinter (DeadlineOutcomeViz). Dessen Folientext und
- *     Notizen laufen durch dieselbe Allow-List, und seine Zuordnung
- *     „Schritt k ≙ Zeile“ muss zum Drehbuch der Rabattaktion passen.
+ *  4. routeAliases und Position der drei Folien und der Folie
+ *     „Gegenmaßnahmen aus Kundensicht“ dahinter (DeadlineOutcomeViz, eine
+ *     Kopie der Monitoring-Folie). Ihre Bezüge auf die Sim (Drehbuch,
+ *     Ursachen-Folie) laufen durch die Allow-List und gegen das Drehbuch
+ *     der Rabattaktion. Die übrigen Sim-Zahlen der kopierten Notizen
+ *     (Retry-Sturm, Zahlungsdienst, Webserver zu Beginn, Kapazität ohne
+ *     Empfehlungen) prüft der Test wörtlich in BEIDEN Decks; der Rest der
+ *     Notizen zitiert Quellen, die Zahlen der Grafik selbst prüft
+ *     shared/__tests__/deadlineOutcomes.test.ts.
  *  5. „IO-Steal“ gibt es nicht: IO-Konkurrenz zeigt sich im Gast als
  *     Disk-await, nie als steal (KVM: IO-Wartezeit zählt als idle).
  *
@@ -38,11 +43,21 @@ import * as Modell from "../wanderingBottleneckModel.js";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore — pures JS-Modul ohne Typdeklarationen
 import * as StepUi from "../wanderingBottleneckStepUi.js";
+import { ROW_KEYS } from "../../../../shared/components/lib/deadlineOutcomes";
 
 const hier = dirname(fileURLToPath(import.meta.url));
 const libDir = resolve(hier, "..");
 const deckDir = resolve(hier, "..", "..", "..");
 const md = readFileSync(resolve(deckDir, "slides.md"), "utf8");
+const mdMonitoring = readFileSync(
+  resolve(
+    deckDir,
+    "..",
+    "20260329-grafana-lgtm-monitoring-in-k8s-distributed-system",
+    "slides.md",
+  ),
+  "utf8",
+);
 
 type Station = "web" | "inv" | "pay" | "mail";
 type Schritt = {
@@ -174,6 +189,16 @@ function folientext(f: Folie): string {
 /** Whitespace und Notiz-Umbrüche glätten, damit Phrasen über Zeilen gehen. */
 const flach = (s: string) => s.replace(/\s+/g, " ");
 
+/** Ein Stichpunkt der Notizen (ab „- <kopf>“ bis zum nächsten „- “ am
+ * Zeilenanfang); leer, wenn es ihn nicht gibt. */
+function stichpunkt(notiz: string, kopf: string): string {
+  const z = notiz.split("\n");
+  const a = z.findIndex((x) => x.startsWith(`- ${kopf}`));
+  if (a < 0) return "";
+  const rest = z.slice(a + 1).findIndex((x) => x.startsWith("- "));
+  return z.slice(a, rest < 0 ? undefined : a + 1 + rest).join("\n");
+}
+
 const folien = zerlege(md);
 const idx = (pred: (f: Folie) => boolean) => folien.findIndex(pred);
 const iSetup = idx((f) =>
@@ -189,6 +214,11 @@ const iBreaker = idx((f) =>
   /^routeAlias: circuit-breaker$/m.test(f.frontmatter),
 );
 const iKunden = idx((f) => /^routeAlias: kundensicht$/m.test(f.frontmatter));
+const monFolien = zerlege(mdMonitoring);
+const monKunden =
+  monFolien.find((f) =>
+    /^routeAlias: kundensicht-deadline$/m.test(f.frontmatter),
+  ) ?? null;
 
 // Fehlt eine Folie, bleibt sie leer: Dann scheitern die Tests unten mit
 // klarer Meldung, statt dass schon das Einsammeln der Tests abbricht.
@@ -266,14 +296,20 @@ const GEPRUEFT: { wo: string; text: string }[] = [
   { wo: "Ursache (Notizen)", text: notizen(ursache) },
   { wo: "Gegenmaßnahmen (Notizen)", text: notizen(gegen) },
 ];
-// Der Debrief hat bewusst kaum Folientext (eine Zeile über der Grafik),
-// deshalb nicht in GEPRUEFT (dort ≥ 300 Zeichen), aber durch dieselbe
-// Allow-List. Die Zahlen der Grafik selbst prüft
+// Kundensicht-Folie: Kopie der Monitoring-Folie. Durch die Allow-List
+// gehen nur die Stichpunkte, die sich auf die Sim beziehen; der Rest zitiert
+// Quellen (Timeout-Defaults, RFC, Messungen), die Zahlen der Grafik prüft
 // shared/__tests__/deadlineOutcomes.test.ts.
-const GEPRUEFT_DEBRIEF: { wo: string; text: string }[] = [
-  { wo: "Debrief Kundensicht (Folientext)", text: folientext(kunden) },
-  { wo: "Debrief Kundensicht (Notizen)", text: notizen(kunden) },
+const KUNDEN_BEZUEGE = [
+  "Bezug zum Drehbuch der Rabattaktion",
+  "Bezug zur Ursachen-Folie",
 ];
+const GEPRUEFT_KUNDEN: { wo: string; text: string }[] = KUNDEN_BEZUEGE.map(
+  (kopf) => ({
+    wo: `Kundensicht (Notizen, „${kopf}“)`,
+    text: stichpunkt(notizen(kunden), kopf),
+  }),
+);
 
 describe("Folien finden: Position und routeAlias", () => {
   it("alle drei Folien gefunden, direkt hintereinander nach circuit-breaker", () => {
@@ -284,21 +320,28 @@ describe("Folien finden: Position und routeAlias", () => {
     expect(iGegen).toBe(iUrsache + 1);
   });
 
-  it("danach der Debrief „aus Kundensicht“, dann die Section „Diagnose“", () => {
+  it("danach „Gegenmaßnahmen aus Kundensicht“, dann die Section „Diagnose“", () => {
     expect(iKunden).toBe(iGegen + 1);
     const naechste = folien[iKunden + 1]!;
     expect(naechste.frontmatter).toMatch(/^layout: section$/m);
     expect(naechste.inhalt).toMatch(/^# Diagnose/m);
   });
 
-  it("Debrief: kundensicht, DeadlineOutcomeViz mit $clicks, Rücklink", () => {
-    // clicks: 6 prüft shared/__tests__/deadlineOutcomes.test.ts
+  it("Kundensicht: kundensicht, DeadlineOutcomeViz mit $clicks, Link zur Monitoring-Folie", () => {
+    // clicks prüft shared/__tests__/deadlineOutcomes.test.ts
     expect(kunden.frontmatter).toMatch(/^hideInToc: true$/m);
-    expect(kunden.inhalt).toMatch(/^# Debrief: /m);
+    expect(kunden.inhalt).toMatch(
+      /^# Gegenmaßnahmen aus Kundensicht: die Deadline$/m,
+    );
     expect(kunden.inhalt).toContain('<DeadlineOutcomeViz :step="$clicks" />');
     expect(kunden.inhalt).toContain('anchor="kundensicht-deadline"');
-    for (const g of GEPRUEFT_DEBRIEF)
+    for (const g of GEPRUEFT_KUNDEN)
       expect(g.text.length, g.wo).toBeGreaterThan(80);
+  });
+
+  it("die Monitoring-Folie „kundensicht-deadline“ gibt es (Linkziel)", () => {
+    expect(monFolien.length).toBeGreaterThan(30); // Zerleger sieht das Deck
+    expect(monKunden).not.toBeNull();
   });
 
   it("Ursache: wandernde-engpaesse, ohne Klicks, Komponente ohne variant", () => {
@@ -357,13 +400,14 @@ describe("Zahlen auf den Folien ↔ Modell", () => {
   });
 
   it("jede Zahl stammt aus dem Modell oder der Ausnahmeliste", () => {
-    const alle = [...GEPRUEFT, ...GEPRUEFT_DEBRIEF].flatMap((g) =>
+    const alle = [...GEPRUEFT, ...GEPRUEFT_KUNDEN].flatMap((g) =>
       zahlen(g.text).map((z) => ({ ...z, wo: g.wo })),
     );
-    // auch der Debrief muss Zahlen liefern, sonst prüft die Liste dort nichts
+    // auch die Bezüge der Kundensicht müssen Zahlen liefern, sonst prüft
+    // die Liste dort nichts
     expect(
-      alle.filter((z) => z.wo.startsWith("Debrief")).length,
-    ).toBeGreaterThan(15);
+      alle.filter((z) => z.wo.startsWith("Kundensicht")).length,
+    ).toBeGreaterThan(9);
     // Der Leser muss überhaupt etwas sehen, sonst ist „keine Abweichung“ leer.
     expect(alle.length).toBeGreaterThan(100);
     const fremd = alle
@@ -373,24 +417,19 @@ describe("Zahlen auf den Folien ↔ Modell", () => {
   });
 });
 
-describe("Debrief „aus Kundensicht“ ↔ Drehbuch der Rabattaktion", () => {
+describe("Kundensicht ↔ Drehbuch der Rabattaktion", () => {
   const M = Modell;
   const i = (k: string) => SCHRITTE.findIndex((s) => s.key === k);
   const fig = (sc: string, k: string) => {
     const f = FIGUREN_ALLE[sc]!.find((x) => x.key === k)!;
     return (name: string) => f[name] as number;
   };
-  const zeile = flach(folientext(kunden));
-  const notiz = flach(notizen(kunden));
+  const notiz = flach(stichpunkt(notizen(kunden), KUNDEN_BEZUEGE[0]!));
+  const notizAlle = flach(notizen(kunden));
 
-  it("Schrittnummern im Folientext und in den Notizen", () => {
+  it("Schrittnummern im Drehbuch-Bezug der Notizen", () => {
     for (const k of ["scale", "bpInv", "shedBrowse", "featureShed"])
       expect(i(k), k).toBeGreaterThan(0);
-    expect(zeile).toContain(`Schritt ${i("scale")} ≙ ohne Maßnahme`);
-    expect(zeile).toContain(
-      `${i("bpInv")}–${i("shedBrowse")} ≙ Back Pressure / Load Shedding`,
-    );
-    expect(zeile).toContain(`${i("featureShed")} ≙ Feature Shedding`);
     expect(notiz).toContain(`ohne Maßnahme ≙ Schritt ${i("scale")}`);
     expect(notiz).toContain(
       `≙ Schritte ${i("bpInv")}–${i("shedBrowse")}: ${de(M.INV_PAGES_PER_S)} rechtzeitig, ${de(fig("rabatt", "bpInv")("rejected"))} sofort abgewiesen`,
@@ -426,21 +465,54 @@ describe("Debrief „aus Kundensicht“ ↔ Drehbuch der Rabattaktion", () => {
     expect(notiz).toContain(
       `${M.CAMPAIGN_CHECKOUTS} Checkouts/s gegen ${de(M.PAY_CAP)}`,
     );
-    expect(notiz).toContain(
+    expect(notizAlle).toContain(
       `${de(M.LOAD_CAMPAIGN)} req/s, die Bestands-DB schafft ${de(M.INV_PAGES_PER_S)} Produktseiten/s`,
     );
   });
 
-  it("Jitter-Punkt zitiert die aktuellen Zahlen des Retry-Sturms", () => {
-    const b = fig("retry", "backoff");
-    const j = fig("retry", "jitter");
-    expect(notiz).toContain(
-      `Spitze von ≈ ${de(b("wave"))}× auf ≈ ${de(j("wave"))}× Mittel`,
-    );
-    expect(notiz).toContain(
-      `×${de(b("amp"))} Versuche je Zahlung mit Backoff, ×${de(j("amp"))} mit Jitter`,
+  it.each([
+    { deck: "SRE", f: kunden },
+    { deck: "Monitoring", f: monKunden ?? LEER },
+  ])("$deck: Klick-Notizen nennen die Sim-Konstanten", ({ f }) => {
+    const n = flach(notizen(f));
+    expect(n).toContain(`ohne Empfehlungen ${de(M.INV_PAGES_PER_S_FS)}.`);
+    expect(n).toContain(`begrenzen sie bei ${de(M.WEB_CAP_START)} req/s`);
+    expect(n).toContain(`Zahlungsdienst (${de(M.PAY_CAP)} req/s)`);
+  });
+
+  it("SRE: Bezug zur Ursachen-Folie nennt die richtigen Klicks", () => {
+    const b = flach(stichpunkt(notizen(kunden), KUNDEN_BEZUEGE[1]!));
+    expect(b).toContain(`(Klick ${ROW_KEYS.indexOf("mixedShared")})`);
+    expect(b).toContain(`(Klick ${ROW_KEYS.indexOf("mixedSeparated")})`);
+  });
+
+  it("SRE: Retry-Sturm liegt auf der vorigen Folie", () => {
+    expect(iGegen).toBe(iKunden - 1);
+    expect(notizAlle).toContain(
+      "zeigt die Sim auf der vorigen Folie (Preset „Retry-Sturm“)",
     );
   });
+
+  it.each([
+    { deck: "SRE", f: kunden },
+    { deck: "Monitoring", f: monKunden ?? LEER },
+  ])(
+    "$deck: Jitter-Punkt zitiert die aktuellen Zahlen des Retry-Sturms",
+    ({ f }) => {
+      const b = fig("retry", "backoff");
+      const j = fig("retry", "jitter");
+      const n = flach(notizen(f));
+      expect(n).toContain(
+        `Spitze/Mittel etwa ${de(b("wave"))} → ${de(j("wave"))}`,
+      );
+      expect(n).toContain(
+        `etwa ${de(b("amp"))} Versuche je Zahlung mit Backoff, ${de(j("amp"))} mit Jitter`,
+      );
+      expect(n).toContain(
+        `Retry-Budget nimmt die Verstärkung heraus (×${de(M.RETRY_BUDGET_AMP)})`,
+      );
+    },
+  );
 });
 
 describe("Schlüsselstellen nennen die richtige Konstante", () => {
