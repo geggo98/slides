@@ -6,6 +6,9 @@
  * und Gesamtzeit T verschiedene Sieger (T = Wq + Bedienzeit; 1/(cμ) gegen 1/μ),
  * die Latency-Leiste hebt das hervor. Metriken nach Golden Signals wählbar,
  * Zeitreihen mit je einer Serie für Alternative und Pool.
+ * Szenario-Modus (Default): nur die Kantinen und ihre Steuerung sind aktiv,
+ * Rennen, Latency-Leiste und Dashboard stehen als Skelett da. Gemessen wird
+ * trotzdem, beim Aufdecken sind Zeitreihen und Sieger schon da.
  */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted } from "vue";
 import { expo } from "./lib/queueing.js";
@@ -26,6 +29,8 @@ import GrafanaTimeSeries from "./GrafanaTimeSeries.vue";
 
 const props = defineProps({
   initialMetrics: { type: Array, default: () => ["wq", "t"] },
+  /** Start im Szenario-Modus: Dashboard als Skelett, nur die Kantinen aktiv. */
+  initialScenario: { type: Boolean, default: true },
 });
 
 const C = useGrafanaPalette();
@@ -60,6 +65,7 @@ const xyMetric = ref("T");
 const controlsOpen = ref(false);
 const xyZoomed = ref(false);
 const active = ref(AVAILABLE.filter((k) => props.initialMetrics.includes(k)));
+const scenario = ref(props.initialScenario);
 const rangeKey = ref("since");
 const logY = ref(false);
 
@@ -233,13 +239,15 @@ const dash = computed(() => {
   void sampleTick.value;
   const now = history.lastT;
   const [t0, t1] = history.window(rangeKey.value, now);
+  // Im Szenario-Modus zeigen die Panels nur das Skelett — nichts zu rechnen.
+  const series = (k, n) => (scenario.value ? [] : history.series(k, t0, t1, n));
   const panels = {};
   for (const key of AVAILABLE) {
     panels[key] = {
-      altSpark: history.series(`${key}_alt`, t0, t1, 40),
-      poolSpark: history.series(`${key}_pool`, t0, t1, 40),
-      altRows: history.series(`${key}_alt`, t0, t1, 200),
-      poolRows: history.series(`${key}_pool`, t0, t1, 200),
+      altSpark: series(`${key}_alt`, 40),
+      poolSpark: series(`${key}_pool`, 40),
+      altRows: series(`${key}_alt`, 200),
+      poolRows: series(`${key}_pool`, 200),
     };
   }
   return { t0, t1, now, panels };
@@ -439,7 +447,7 @@ function loop(now) {
     layout: layR,
   };
 
-  if (ctx) {
+  if (ctx && !scenario.value) {
     drawXY(
       ctx,
       C.value,
@@ -511,6 +519,7 @@ onUnmounted(() => {
     :style="{
       '--c-bg': C.bg,
       '--c-panel': C.panel,
+      '--c-panelHi': C.panelHi,
       '--c-border': C.border,
       '--c-textHi': C.textHi,
       '--c-textMid': C.textMid,
@@ -522,11 +531,25 @@ onUnmounted(() => {
       <div class="header-left">
         <div class="title">M/M/c · Welche Latenz kürt den Sieger?</div>
         <div class="subtitle">
-          Gleiche Kapazität cμ, gleicher Ankunftsstrom — Wartezeit und
-          Gesamtzeit können verschiedene Sieger küren.
+          Gleiche Kapazität cμ, gleicher Ankunftsstrom — Wq und T küren
+          verschiedene Sieger.
         </div>
       </div>
       <div class="header-btns">
+        <button
+          class="btn"
+          data-scenario
+          :aria-pressed="scenario"
+          :style="btnStyle(scenario ? C.accent : C.border)"
+          :title="
+            scenario
+              ? 'Graphen und Kennzahlen einblenden'
+              : 'Nur die Kantinen zeigen, Dashboard als Skelett'
+          "
+          @click="scenario = !scenario"
+        >
+          {{ scenario ? "📊 Dashboard" : "🎬 Szenario" }}
+        </button>
         <span class="rho-badge"
           >ρ=<b :style="{ color: rhoColor }">{{ rho.toFixed(2) }}</b> · cμ={{
             (c * mu).toFixed(1)
@@ -595,7 +618,13 @@ onUnmounted(() => {
           </button>
         </div>
       </div>
-      <MetricPicker v-model="active" :available="AVAILABLE" />
+      <div
+        class="picker-wrap"
+        :class="{ 'psk psk-flat': scenario }"
+        :inert="scenario || undefined"
+      >
+        <MetricPicker v-model="active" :available="AVAILABLE" />
+      </div>
     </div>
 
     <!-- Regler hinter 🛠️ (Overlay) -->
@@ -696,6 +725,8 @@ onUnmounted(() => {
 
         <div
           class="race"
+          :class="{ 'race-skel': scenario }"
+          :inert="scenario || undefined"
           :style="{ background: C.panel, borderColor: C.border }"
         >
           <div class="race-head">
@@ -731,6 +762,8 @@ onUnmounted(() => {
         <!-- Latency: Sieger je Metrik + Zerlegung -->
         <div
           class="panel latency"
+          :class="{ psk: scenario }"
+          :inert="scenario || undefined"
           data-panel="latency"
           :style="{ background: C.panel, borderColor: C.border }"
         >
@@ -825,7 +858,8 @@ onUnmounted(() => {
         <!-- rechts: XY-Chart (Phasenraum) -->
         <div
           class="panel xy-panel"
-          :class="{ zoomed: xyZoomed }"
+          :class="{ psk: scenario, zoomed: xyZoomed && !scenario }"
+          :inert="scenario || undefined"
           :style="{ background: C.panel, borderColor: C.border }"
         >
           <div class="panel-head">
@@ -869,7 +903,7 @@ onUnmounted(() => {
           </button>
         </div>
         <!-- übrige Metriken -->
-        <div class="stats">
+        <div class="stats" :inert="scenario || undefined">
           <GrafanaGauge
             data-panel="rho"
             :title="METRICS.rho.label"
@@ -879,6 +913,7 @@ onUnmounted(() => {
             :mark="Math.min(1, rho)"
             :sub="`Alt ${(vals.alt.rho * 100).toFixed(0)} · Pool ${(vals.pool.rho * 100).toFixed(0)} %`"
             :dim="!active.includes('rho')"
+            :skeleton="scenario"
           >
             <template #info>
               <InfoPopover
@@ -901,6 +936,7 @@ onUnmounted(() => {
             :range="[dash.t0, dash.t1]"
             :sub="p.sub"
             :dim="p.dim"
+            :skeleton="scenario"
           >
             <template #info>
               <InfoPopover
@@ -917,6 +953,8 @@ onUnmounted(() => {
     </div>
 
     <GrafanaTimeSeries
+      :skeleton="scenario"
+      :inert="scenario || undefined"
       title="Time Series · Alt vs. Pool"
       :rows="tsRows"
       :range="[dash.t0, dash.t1]"
@@ -1305,6 +1343,34 @@ onUnmounted(() => {
   font-size: 10px;
   font-weight: 600;
   line-height: 1.3;
+}
+/* Szenario-Modus: Größe bleibt, Inhalt unsichtbar, grauer Platzhalter. */
+.psk {
+  position: relative;
+}
+.psk > :not(.panel-head) {
+  visibility: hidden;
+}
+.psk::after {
+  content: "";
+  position: absolute;
+  inset: 20px 6px 5px;
+  border-radius: 3px;
+  background: var(--c-panelHi);
+}
+.psk.psk-flat::after {
+  inset: 0;
+}
+.psk .panel-head :deep(.ip),
+.psk .xy-toggle,
+.psk .lat-caption {
+  visibility: hidden;
+}
+/* Rennen: Titel bleibt, der Balken ist leer. */
+.race-skel .race-seg,
+.race-skel .race-n,
+.race-skel :deep(.ip) {
+  visibility: hidden;
 }
 .lat-agree {
   margin-top: 4px;

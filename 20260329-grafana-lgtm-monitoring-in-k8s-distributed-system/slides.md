@@ -495,8 +495,11 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mm1-
 </div>
 
 <!--
-- Bedienung: ▶ startet die Kantine, ρ und Zeitraffer sind immer sichtbar,
-  λ/μ hinter 🛠️. Aktiv sind anfangs nur Durchsatz und Auslastung.
+- Start im Szenario-Modus: nur die Kantine ist aktiv, das Dashboard steht als
+  Skelett da. Erst Ankunft, Schlange, Koch erklären — ▶, ρ und Zeitraffer
+  gehen schon, gemessen wird im Hintergrund. Dann „📊 Dashboard“.
+- Bedienung: ρ und Zeitraffer sind immer sichtbar, λ/μ hinter 🛠️. Aktiv
+  sind anfangs nur Durchsatz und Auslastung.
 - Ablauf: ρ = 0,95 und 50× wählen. Auslastung (Gauge) und Durchsatz stehen
   ruhig bei ~95 % bzw. λ — das Dashboard sieht gesund aus.
 - Dann Wartezeit Wq und Gesamtzeit T dazuschalten: Sie klettern auf ein
@@ -518,8 +521,10 @@ title: M/M/c Simulator (mehrere Köche)
 <MMcCompare />
 
 <!--
-- Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool aus 3 Köchen, gleiche
-  Gesamtkapazität) ist Default, ρ = 0,5. ▶ und 20× bzw. 100×.
+- Start im Szenario-Modus: nur die beiden Kantinen sind aktiv. Erst den
+  Vergleich erklären (1 schneller Koch vs. Pool aus 3 Köchen, gleiche
+  Gesamtkapazität), ▶ und 20× bzw. 100× laufen lassen, dann „📊 Dashboard“.
+- Bedienung: Modus „Tempo“ ist Default, ρ = 0,5.
 - Zeigen: Die Latency-Leiste kürt zwei verschiedene Sieger — Wartezeit Wq:
   Pool, Gesamtzeit T: schneller Koch. Der Warnhinweis erscheint. Der Grund
   steht in der Zerlegung T = Wq + Bedienzeit: Der Pool wartet kürzer

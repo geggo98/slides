@@ -4,6 +4,7 @@
  * Threshold-Band außen (grün/gelb/rot), Wertbogen in der Farbe der aktuellen
  * Schwelle, große Zahl. Wie im Katalog (VizGuide, Folie „Visualisierungstypen“):
  * nur für begrenzte Werte wie Auslastung. Optional eine Theorie-Marke.
+ * `skeleton`: nur Rahmen + Titel, Inhalt als grauer Platzhalter (Szenario-Modus).
  */
 import { computed } from "vue";
 import { useGrafanaPalette } from "./lib/grafanaPalette";
@@ -21,6 +22,7 @@ const props = withDefaults(
     mark?: number | null;
     sub?: string;
     dim?: boolean;
+    skeleton?: boolean;
   }>(),
   {
     unit: "",
@@ -32,6 +34,7 @@ const props = withDefaults(
     mark: null,
     sub: "",
     dim: false,
+    skeleton: false,
   },
 );
 const C = useGrafanaPalette();
@@ -74,12 +77,18 @@ const tick = computed(() => {
 <template>
   <div
     class="gp"
-    :class="{ 'gp-dim': dim }"
-    :style="{ background: C.panel, borderColor: C.border }"
+    :class="{ 'gp-dim': dim && !skeleton, skel: skeleton }"
+    :style="{
+      background: C.panel,
+      borderColor: C.border,
+      '--skel-bg': C.panelHi,
+    }"
   >
     <div class="gp-head">
       <span class="gp-title" :style="{ color: C.textMid }">{{ title }}</span>
-      <slot name="info" />
+      <span class="info-slot" :class="{ hidden: skeleton }"
+        ><slot name="info"
+      /></span>
     </div>
     <svg viewBox="0 0 100 58" class="gp-svg" role="img" :aria-label="title">
       <path
@@ -140,6 +149,26 @@ const tick = computed(() => {
 }
 .gp-dim {
   opacity: 0.32;
+}
+.info-slot {
+  display: inline-flex;
+}
+.info-slot.hidden {
+  visibility: hidden;
+}
+/* Skelett: Größe bleibt, Inhalt unsichtbar, grauer Platzhalter darüber. */
+.skel {
+  position: relative;
+}
+.skel > :not(.gp-head) {
+  visibility: hidden;
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 18px 6px 5px;
+  border-radius: 3px;
+  background: var(--skel-bg);
 }
 .gp-head {
   display: flex;

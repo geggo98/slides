@@ -7,6 +7,9 @@
  * Einschwingen sichtbar, die Marke „3τ“ zeigt, wie weit es noch ist.
  * Engine bleibt außerhalb der Vue-Reaktivität; eine RAF-Loop liest
  * paused/speed live und schreibt alle 140 ms eine Probe in die MetricHistory.
+ * Szenario-Modus (Default): nur die Kantine und ihre Steuerung sind aktiv, das
+ * Dashboard steht als Skelett da — erst das Szenario erklären, dann aufdecken.
+ * Gemessen wird trotzdem, beim Aufdecken sind die Zeitreihen schon gefüllt.
  */
 import { ref, shallowRef, computed, watch, onMounted, onUnmounted } from "vue";
 import { foodFor } from "./lib/queueing.js";
@@ -33,6 +36,8 @@ import GrafanaTimeSeries from "./GrafanaTimeSeries.vue";
 const props = defineProps({
   /** Beim Laden aktive Metriken: Auslastung und Durchsatz sehen harmlos aus. */
   initialMetrics: { type: Array, default: () => ["thr", "rho"] },
+  /** Start im Szenario-Modus: Dashboard als Skelett, nur die Kantine aktiv. */
+  initialScenario: { type: Boolean, default: true },
 });
 
 const C = useGrafanaPalette();
@@ -53,6 +58,7 @@ const speed = ref(2);
 const paused = ref(true);
 const controlsOpen = ref(false);
 const active = ref(AVAILABLE.filter((k) => props.initialMetrics.includes(k)));
+const scenario = ref(props.initialScenario);
 const rangeKey = ref("since");
 const logY = ref(false);
 
@@ -179,14 +185,16 @@ const dash = computed(() => {
     t1 = Math.max(t1, tm);
     markers.push({ t: tm, label: "3τ ≈ eingeschwungen" });
   }
+  // Im Szenario-Modus zeigen die Panels nur das Skelett — nichts zu rechnen.
+  const skip = scenario.value;
   const panels = {};
   for (const key of AVAILABLE) {
     const th = theoryOf(key, rho, lam, m);
     panels[key] = {
       key,
       theory: th,
-      spark: history.series(key, t0, Math.min(t1, now), 40),
-      rows: history.series(key, t0, t1, 200),
+      spark: skip ? [] : history.series(key, t0, Math.min(t1, now), 40),
+      rows: skip ? [] : history.series(key, t0, t1, 200),
     };
   }
   return { t0, t1, now, markers, panels };
@@ -388,7 +396,8 @@ function loop(now) {
   for (let i = trail.length - 1; i >= 0; i--)
     trail[i].alpha = Math.max(0, 1 - (now - trail[i].ts) / 2200);
   while (trail.length && now - trail[0].ts > 2200) trail.shift();
-  if (ctx) drawXY(ctx, C.value, FONTS, trail, rhoSet, yMeas, over);
+  if (ctx && !scenario.value)
+    drawXY(ctx, C.value, FONTS, trail, rhoSet, yMeas, over);
 
   const lqTheory = rhoSet < 1 ? (rhoSet * rhoSet) / (1 - rhoSet) : Infinity;
   entities.value = out;
@@ -467,6 +476,7 @@ onUnmounted(() => {
     :style="{
       '--c-bg': C.bg,
       '--c-panel': C.panel,
+      '--c-panelHi': C.panelHi,
       '--c-border': C.border,
       '--c-textHi': C.textHi,
       '--c-textMid': C.textMid,
@@ -483,6 +493,20 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="header-btns">
+        <button
+          class="btn"
+          data-scenario
+          :aria-pressed="scenario"
+          :style="btnStyle(scenario ? C.accent : C.border)"
+          :title="
+            scenario
+              ? 'Graphen und Kennzahlen einblenden'
+              : 'Nur die Kantine zeigen, Dashboard als Skelett'
+          "
+          @click="scenario = !scenario"
+        >
+          {{ scenario ? "📊 Dashboard" : "🎬 Szenario" }}
+        </button>
         <button
           class="btn"
           :style="btnStyle(paused ? C.accent : C.border)"
@@ -532,7 +556,13 @@ onUnmounted(() => {
           {{ s }}×
         </button>
       </div>
-      <MetricPicker v-model="active" :available="AVAILABLE" />
+      <div
+        class="picker-wrap"
+        :class="{ 'psk psk-flat': scenario }"
+        :inert="scenario || undefined"
+      >
+        <MetricPicker v-model="active" :available="AVAILABLE" />
+      </div>
     </div>
 
     <!-- Regler hinter 🛠️ (Overlay, verschiebt nichts) -->
@@ -630,7 +660,7 @@ onUnmounted(() => {
 
             <!-- Lq-Marker -->
             <text
-              v-if="lqMarker && lqMarker.inf"
+              v-if="!scenario && lqMarker && lqMarker.inf"
               x="320"
               y="146"
               style="font-size: 15px"
@@ -639,7 +669,7 @@ onUnmounted(() => {
             >
               Lq → ∞
             </text>
-            <g v-else-if="lqMarker">
+            <g v-else-if="!scenario && lqMarker">
               <line
                 :x1="lqMarker.x"
                 y1="150"
@@ -723,7 +753,7 @@ onUnmounted(() => {
         </div>
 
         <!-- aktuelle Werte: Gauge (begrenzt) + Stat (unbegrenzt) -->
-        <div class="stats">
+        <div class="stats" :inert="scenario || undefined">
           <GrafanaStat
             v-for="p in statPanels.filter((x) => x.key !== 'queue')"
             :key="p.key"
@@ -736,6 +766,7 @@ onUnmounted(() => {
             :theory="p.theory"
             :sub="p.sub"
             :dim="p.dim"
+            :skeleton="scenario"
           >
             <template #info>
               <InfoPopover
@@ -756,6 +787,7 @@ onUnmounted(() => {
             :mark="Math.min(1, readout.rho)"
             :sub="`Soll ρ = ${fmtRho(readout.rho)}`"
             :dim="!active.includes('rho')"
+            :skeleton="scenario"
           >
             <template #info>
               <InfoPopover
@@ -779,6 +811,7 @@ onUnmounted(() => {
             :theory="p.theory"
             :sub="p.sub"
             :dim="p.dim"
+            :skeleton="scenario"
           >
             <template #info>
               <InfoPopover
@@ -796,6 +829,8 @@ onUnmounted(() => {
       <!-- rechts: XY-Chart (Phasenraum) -->
       <div
         class="panel"
+        :class="{ psk: scenario }"
+        :inert="scenario || undefined"
         :style="{ background: C.panel, borderColor: C.border }"
       >
         <div class="panel-head">
@@ -821,6 +856,8 @@ onUnmounted(() => {
     <GrafanaTimeSeries
       class="ts-panel"
       title="Time Series · gewählte Metriken"
+      :skeleton="scenario"
+      :inert="scenario || undefined"
       :rows="tsRows"
       :range="[dash.t0, dash.t1]"
       :now="dash.now"
@@ -1021,6 +1058,27 @@ onUnmounted(() => {
   height: auto;
   display: block;
   aspect-ratio: 440 / 236;
+}
+
+/* Szenario-Modus: Größe bleibt, Inhalt unsichtbar, grauer Platzhalter. */
+.psk {
+  position: relative;
+}
+.psk > :not(.panel-head) {
+  visibility: hidden;
+}
+.psk::after {
+  content: "";
+  position: absolute;
+  inset: 18px 6px 5px;
+  border-radius: 3px;
+  background: var(--c-panelHi);
+}
+.psk.psk-flat::after {
+  inset: 0;
+}
+.psk .panel-head :deep(.ip) {
+  visibility: hidden;
 }
 
 /* Einschwingen im Kopf des Zeitreihen-Panels */

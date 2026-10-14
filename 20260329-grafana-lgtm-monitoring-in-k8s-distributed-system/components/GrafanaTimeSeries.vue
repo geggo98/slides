@@ -11,7 +11,8 @@
  * `logAllowed` logarithmisch (wie Grafanas Axis → Scale). Parameter-
  * änderungen erscheinen als Annotation; `markers` (z. B. „3τ“) auch rechts
  * von „jetzt“, die Zukunft ist dann grau hinterlegt. Kopf: Zeitbereich-Picker
- * „1m · 5m · seit Änderung“, Slot `info` daneben.
+ * „1m · 5m · seit Änderung“, Slot `info` daneben. `skeleton`: nur Rahmen +
+ * Titel, die Plotfläche als grauer Platzhalter gleicher Größe (Szenario-Modus).
  */
 import { computed } from "vue";
 import { useGrafanaPalette } from "./lib/grafanaPalette";
@@ -57,6 +58,7 @@ const props = withDefaults(
     plotHeight?: number;
     /** Ab mehr Zeilen zweispaltig. */
     maxRows?: number;
+    skeleton?: boolean;
   }>(),
   {
     annotations: () => [],
@@ -65,6 +67,7 @@ const props = withDefaults(
     logY: false,
     plotHeight: 120,
     maxRows: 3,
+    skeleton: false,
   },
 );
 const emit = defineEmits<{
@@ -260,7 +263,7 @@ const colMarks = computed(() =>
   <div class="ts" :style="{ background: C.panel, borderColor: C.border }">
     <div class="ts-head">
       <span class="ts-title" :style="{ color: C.textMid }">{{ title }}</span>
-      <div class="ts-right">
+      <div class="ts-right" :class="{ 'ts-hidden': skeleton }">
         <slot name="info" />
         <button
           v-if="rows.some((r) => r.logAllowed)"
@@ -305,8 +308,13 @@ const colMarks = computed(() =>
       </div>
     </div>
 
+    <div
+      v-if="skeleton"
+      class="ts-skel"
+      :style="{ aspectRatio: `${W} / ${H}`, background: C.panelHi }"
+    />
     <svg
-      v-if="rows.length"
+      v-else-if="rows.length"
       :viewBox="`0 0 ${W} ${H}`"
       class="ts-svg"
       role="img"
@@ -550,6 +558,13 @@ const colMarks = computed(() =>
   font-size: 9px;
   font-family: var(--slidev-code-font-family);
   cursor: pointer;
+}
+.ts-hidden {
+  visibility: hidden;
+}
+.ts-skel {
+  width: 100%;
+  border-radius: 3px;
 }
 .ts-empty {
   display: flex;

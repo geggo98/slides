@@ -4,6 +4,7 @@
  * Flächenfüllung über das gewählte Zeitfenster. Für unbegrenzte Werte
  * (Wartezeit, Durchsatz, Queue-Länge). Ein oder zwei Werte (M/M/c:
  * Alternative | Pool); `best` markiert den besseren mit ✓.
+ * `skeleton`: nur Rahmen + Titel, Inhalt als grauer Platzhalter (Szenario-Modus).
  */
 import { computed } from "vue";
 import { useGrafanaPalette } from "./lib/grafanaPalette";
@@ -32,8 +33,16 @@ const props = withDefaults(
     theory?: number | null;
     sub?: string;
     dim?: boolean;
+    skeleton?: boolean;
   }>(),
-  { unit: "", sparks: () => [], theory: null, sub: "", dim: false },
+  {
+    unit: "",
+    sparks: () => [],
+    theory: null,
+    sub: "",
+    dim: false,
+    skeleton: false,
+  },
 );
 const C = useGrafanaPalette();
 
@@ -80,12 +89,18 @@ const theoryY = computed(() =>
 <template>
   <div
     class="sp"
-    :class="{ 'sp-dim': dim }"
-    :style="{ background: C.panel, borderColor: C.border }"
+    :class="{ 'sp-dim': dim && !skeleton, skel: skeleton }"
+    :style="{
+      background: C.panel,
+      borderColor: C.border,
+      '--skel-bg': C.panelHi,
+    }"
   >
     <div class="sp-head">
       <span class="sp-title" :style="{ color: C.textMid }">{{ title }}</span>
-      <slot name="info" />
+      <span class="info-slot" :class="{ hidden: skeleton }"
+        ><slot name="info"
+      /></span>
     </div>
     <div class="sp-vals" :class="{ 'sp-dual': values.length > 1 }">
       <span
@@ -147,6 +162,26 @@ const theoryY = computed(() =>
 }
 .sp-dim {
   opacity: 0.32;
+}
+.info-slot {
+  display: inline-flex;
+}
+.info-slot.hidden {
+  visibility: hidden;
+}
+/* Skelett: Größe bleibt, Inhalt unsichtbar, grauer Platzhalter darüber. */
+.skel {
+  position: relative;
+}
+.skel > :not(.sp-head) {
+  visibility: hidden;
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 18px 6px 5px;
+  border-radius: 3px;
+  background: var(--skel-bg);
 }
 .sp-head {
   display: flex;
