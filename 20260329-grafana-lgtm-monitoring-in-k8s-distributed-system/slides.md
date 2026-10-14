@@ -1867,6 +1867,7 @@ Alle Simulationen zum Ausprobieren: <TalkXref slug="20260711-sre-simulations">SR
 layout: default
 title: Selbsttest
 hideInToc: true
+routeAlias: selbsttest
 ---
 
 <div class="text-2xl font-semibold mb-2">Selbsttest</div>

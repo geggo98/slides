@@ -617,6 +617,7 @@ Fragen? · stefan@schwetschke.de
 layout: default
 title: Selbsttest
 hideInToc: true
+routeAlias: selbsttest
 ---
 
 <div class="text-2xl font-semibold mb-2">Selbsttest</div>
