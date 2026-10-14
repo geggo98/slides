@@ -183,8 +183,36 @@ const layout = computed(() => {
         band,
         fill: withAlpha(s.color, 0.14),
         lastText: last ? fmt(last.avg) : "–",
+        lastY: last ? y(last.avg) : null,
+        labelY: 0,
       };
     });
+    // Werte rechts auf Höhe ihrer Linie (wie Grafanas Legende am Linienende),
+    // sonst steht die orange Zahl neben der grünen Linie. Überlappungen
+    // werden mit Mindestabstand auseinandergeschoben.
+    const GAP_Y = 10;
+    const labelLo = top + 8;
+    const labelHi = bottom - 1;
+    const order = [...lines].sort(
+      (a, b) => (a.lastY ?? labelHi) - (b.lastY ?? labelHi),
+    );
+    let prev = -Infinity;
+    for (const ln of order) {
+      const want = Math.min(
+        labelHi,
+        Math.max(labelLo, (ln.lastY ?? labelHi) + 3.5),
+      );
+      ln.labelY = Math.max(want, prev + GAP_Y);
+      prev = ln.labelY;
+    }
+    for (let i = order.length - 1, next = Infinity; i >= 0; i--) {
+      const ln = order[i]!;
+      ln.labelY = Math.min(ln.labelY, labelHi, next - GAP_Y);
+      next = ln.labelY;
+    }
+    // Theorie-Text (nur bei einer Serie) unter dem Wert, am Rand darüber.
+    const first = lines[0]!.labelY;
+    const theoryY = first + 10 > bottom ? first - 11 : first + 10;
     const theory = (row.theory ?? [])
       .filter((th) => th.value != null && Number.isFinite(th.value))
       .map((th) => ({
@@ -207,6 +235,7 @@ const layout = computed(() => {
       scaleText,
       lines,
       theory,
+      theoryY,
       // Bei zwei Serien zeigen die farbigen Strichlinien die Theorie; Text nur bei einer.
       theoryText:
         row.series.length > 1
@@ -403,10 +432,10 @@ const colMarks = computed(() =>
         </text>
         <!-- rechts: aktuelle Werte + Theorie -->
         <text
-          v-for="(ln, i) in row.lines"
+          v-for="ln in row.lines"
           :key="'lv' + ln.name"
           :x="row.col.x1 + 5"
-          :y="row.top + 10 + i * 11"
+          :y="ln.labelY"
           class="ts-last"
           :fill="ln.color"
         >
@@ -414,7 +443,7 @@ const colMarks = computed(() =>
         </text>
         <text
           :x="row.col.x1 + 5"
-          :y="Math.min(row.bottom - 1, row.top + 9 + row.lines.length * 11)"
+          :y="row.theoryY"
           class="ts-tick"
           :fill="C.theory"
         >
