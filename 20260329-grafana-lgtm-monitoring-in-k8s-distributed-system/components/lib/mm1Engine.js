@@ -1,7 +1,7 @@
 /**
- * mm1Engine.js — diskreter-Ereignis-Kern (M/M/1) + Phosphor-Scope-Zeichnung.
- * Aus mm1-simulator.jsx übernommen; `drawScope` nimmt jetzt die adaptive
- * Palette `C` + Fonts entgegen (statt modul-globaler fester Farben).
+ * mm1Engine.js — diskreter-Ereignis-Kern (M/M/1) + XY-Chart (Phasenraum).
+ * Aus mm1-simulator.jsx übernommen; `drawXY` nimmt die Grafana-Palette `C`
+ * (lib/grafanaPalette.ts) + Fonts entgegen.
  */
 import { randomPerson, withAlpha } from "./queueing.js";
 
@@ -24,12 +24,10 @@ export class MM1Engine {
     this.areaN = 0;
     this.areaNq = 0;
     this.busyTime = 0;
-    this.cumW = 0;
     this.cumWq = 0;
     this.numArrivals = 0;
     this.numDepartures = 0;
     this.departures = [];
-    this.depTimes = [];
     this.settleAnchorDep = 0;
     this.overflow = 0;
   }
@@ -85,13 +83,9 @@ export class MM1Engine {
     const w = this.clock - c.arrival,
       wq = c.serviceStart - c.arrival;
     this.numDepartures++;
-    this.cumW += w;
     this.cumWq += wq;
     this.departures.push({ w, wq, st: c.serviceTime });
     if (this.departures.length > 4000) this.departures.shift();
-    this.depTimes.push(this.clock);
-    const lo = this.clock - 60;
-    while (this.depTimes.length && this.depTimes[0] < lo) this.depTimes.shift();
     if (this.queue.length) this.startService(this.queue.shift());
     else if (this.overflow > 0) {
       this.overflow--;
@@ -118,33 +112,21 @@ export class MM1Engine {
   meanSt(n) {
     return this._meanLast("st", n) ?? 1 / this.mu;
   }
-  throughput(win) {
-    const lo = this.clock - win;
-    let c = 0;
-    for (let i = this.depTimes.length - 1; i >= 0; i--) {
-      if (this.depTimes[i] >= lo) c++;
-      else break;
-    }
-    return c / win;
-  }
   Lavg() {
     return this.clock > 0 ? this.areaN / this.clock : 0;
-  }
-  littleRatio() {
-    return this.areaN > 0 ? this.cumW / this.areaN : 1;
   }
 }
 
 export { K as MM1_WINDOW };
 
 /* ---- Geometrie-Konstanten ---- */
-export const SCOPE = {
-  W: 660,
-  H: 380,
-  padL: 52,
-  padR: 18,
-  padT: 22,
-  padB: 40,
+export const XY = {
+  W: 440,
+  H: 236,
+  padL: 48,
+  padR: 10,
+  padT: 14,
+  padB: 34,
   RHO_MAX: 1.08,
   YMAX: 20,
 };
@@ -173,19 +155,21 @@ export function spawn(id) {
   };
 }
 
-/* ---- Phosphor-Scope: Wq(ρ) — Theorie-Kurve + Live-Punkt mit Nachleuchten ----
-   `C` = aufgelöste Palette (useScopeColors().value), `fonts` = {MONO, SANS}. */
-export function drawScope(ctx, C, fonts, trail, rhoSet, yMeas, over) {
+/* ---- XY-Chart (Phasenraum): Latency Wq über Saturation ρ — Theorie-Kurve +
+   aktueller Messpunkt mit verblassender Spur. Wie Grafanas XY-Chart: zwei
+   Metriken gegeneinander statt gegen die Zeit.
+   `C` = aufgelöste Palette (useGrafanaPalette().value), `fonts` = {MONO, SANS}. */
+export function drawXY(ctx, C, fonts, trail, rhoSet, yMeas, over) {
   const { MONO, SANS } = fonts;
-  const { W, H, padL, padR, padT, padB, RHO_MAX, YMAX } = SCOPE;
+  const { W, H, padL, padR, padT, padB, RHO_MAX, YMAX } = XY;
   const px = (r) => padL + (r / RHO_MAX) * (W - padL - padR);
   const py = (y) => H - padB - (Math.min(y, YMAX) / YMAX) * (H - padT - padB);
   ctx.clearRect(0, 0, W, H);
   for (const [a, b, col] of [
-    [0, 0.7, withAlpha(C.phosphor, 0.05)],
-    [0.7, 0.9, withAlpha(C.amber, 0.06)],
-    [0.9, 1.0, withAlpha(C.red, 0.07)],
-    [1.0, RHO_MAX, withAlpha(C.red, 0.16)],
+    [0, 0.7, withAlpha(C.ok, 0.06)],
+    [0.7, 0.9, withAlpha(C.warn, 0.08)],
+    [0.9, 1.0, withAlpha(C.crit, 0.08)],
+    [1.0, RHO_MAX, withAlpha(C.crit, 0.18)],
   ]) {
     ctx.fillStyle = col;
     ctx.fillRect(px(a), padT, px(b) - px(a), H - padT - padB);
@@ -193,8 +177,8 @@ export function drawScope(ctx, C, fonts, trail, rhoSet, yMeas, over) {
 
   ctx.strokeStyle = C.grid;
   ctx.lineWidth = 1;
-  ctx.font = `10px ${MONO}`;
-  ctx.fillStyle = C.textLow;
+  ctx.font = `11px ${MONO}`;
+  ctx.fillStyle = C.textMid;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   for (let r = 0; r <= 1.0001; r += 0.2) {
@@ -214,35 +198,36 @@ export function drawScope(ctx, C, fonts, trail, rhoSet, yMeas, over) {
     ctx.fillText(yv === 20 ? "≥20×" : yv + "×", padL - 6, py(yv));
   }
   ctx.fillStyle = C.textMid;
-  ctx.font = `11px ${SANS}`;
+  ctx.font = `12px ${SANS}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
-  ctx.fillText("Auslastung  ρ = λ/μ", (padL + W - padR) / 2, H - 4);
+  ctx.fillText("Saturation: Auslastung ρ = λ/μ", (padL + W - padR) / 2, H - 2);
   ctx.save();
-  ctx.translate(12, (padT + H - padB) / 2);
+  ctx.translate(14, (padT + H - padB) / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText("Wartezeit  Wq  (× Bedienzeit)", 0, 0);
+  ctx.textBaseline = "middle";
+  ctx.fillText("Latency: Wartezeit Wq (× Bed.)", 0, 0);
   ctx.restore();
 
   ctx.setLineDash([5, 4]);
-  ctx.strokeStyle = C.amber;
+  ctx.strokeStyle = C.warn;
   ctx.beginPath();
   ctx.moveTo(px(0.8), padT);
   ctx.lineTo(px(0.8), H - padB);
   ctx.stroke();
-  ctx.strokeStyle = C.red;
+  ctx.strokeStyle = C.crit;
   ctx.beginPath();
   ctx.moveTo(px(1.0), padT);
   ctx.lineTo(px(1.0), H - padB);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.fillStyle = C.amber;
-  ctx.font = `10px ${MONO}`;
-  ctx.textAlign = "left";
+  ctx.fillStyle = C.warn;
+  ctx.font = `11px ${MONO}`;
+  ctx.textAlign = "right";
   ctx.textBaseline = "top";
-  ctx.fillText("80 % → 4×", px(0.8) + 4, padT + 2);
-  ctx.fillStyle = C.red;
-  ctx.fillText("ρ=1: kein Gleichgewicht", px(1.0) + 4, padT + 16);
+  ctx.fillText("80 % → 4×", px(0.8) - 4, padT + 2);
+  ctx.fillStyle = C.crit;
+  ctx.fillText("ρ=1: kein Gleichgewicht", px(1.0) - 4, padT + 16);
 
   ctx.strokeStyle = C.theory;
   ctx.lineWidth = 2;
@@ -260,25 +245,26 @@ export function drawScope(ctx, C, fonts, trail, rhoSet, yMeas, over) {
   }
   ctx.stroke();
 
+  const live = C.series.wq;
   for (const p of trail) {
     const a = p.alpha;
-    ctx.fillStyle = withAlpha(C.phosphor, 0.05 + 0.35 * a);
+    ctx.fillStyle = withAlpha(live, 0.06 + 0.4 * a);
     ctx.beginPath();
-    ctx.arc(px(p.rho), py(p.y), 2.2 + 2 * a, 0, 2 * Math.PI);
+    ctx.arc(px(p.rho), py(p.y), 2.5 + 2 * a, 0, 2 * Math.PI);
     ctx.fill();
   }
   if (yMeas != null) {
     const X = px(rhoSet),
       Y = py(yMeas);
-    ctx.shadowColor = C.phosphor;
-    ctx.shadowBlur = 16;
-    ctx.fillStyle = C.phosphor;
+    ctx.fillStyle = live;
+    ctx.strokeStyle = C.panel;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(X, Y, 5, 0, 2 * Math.PI);
+    ctx.arc(X, Y, 6, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.stroke();
     if (over) {
-      ctx.fillStyle = C.red;
+      ctx.fillStyle = C.crit;
       ctx.font = `bold 12px ${MONO}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";

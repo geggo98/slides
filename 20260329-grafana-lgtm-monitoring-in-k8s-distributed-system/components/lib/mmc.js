@@ -1,13 +1,14 @@
 /**
- * mmc.js — diskreter-Ereignis-Kern (M/M/c-Vergleich) + Crossover-Scope.
- * Aus mmc-compare.jsx übernommen; `drawScope` nimmt jetzt Palette `C` + Fonts.
+ * mmc.js — diskreter-Ereignis-Kern (M/M/c-Vergleich) + XY-Chart (Phasenraum).
+ * Aus mmc-compare.jsx übernommen; `drawXY` nimmt die Grafana-Palette `C`
+ * (lib/grafanaPalette.ts) + Fonts.
  */
 import { expo, foodFor, randomPerson } from "./queueing.js";
 
 const K = 120; // gleitendes Fenster (Abgänge)
 const MAXQ = 4000; // Sicherheitsventil je Queue
 
-/* ---- Theorie (für Scoreboard-Striche und Scope-Kurven) ---- */
+/* ---- Theorie (für Stat-Panels, Gewinner-Leiste und XY-Kurven) ---- */
 export function erlangC(c, a) {
   const rho = a / c;
   if (rho >= 1) return 1;
@@ -60,7 +61,8 @@ export class Subsystem {
     this.cumW = 0;
     this.numDep = 0;
     this.overflow = 0;
-    this.dep = []; // {w,wq,waited}
+    this.dep = []; // {w,wq,st,waited}
+    this.busyArea = 0; // belegte Koch-Sekunden (Zähler, für die Auslastung)
   }
   N() {
     let n = this.overflow;
@@ -68,8 +70,18 @@ export class Subsystem {
     for (const q of this.queues) n += q.length;
     return n;
   }
+  /** Wartende (ohne die gerade Bedienten). */
+  Nq() {
+    let n = this.overflow;
+    for (const q of this.queues) n += q.length;
+    return n;
+  }
   integrate(dt) {
-    if (dt > 0) this.areaN += this.N() * dt;
+    if (dt <= 0) return;
+    this.areaN += this.N() * dt;
+    let busy = 0;
+    for (const s of this.servers) if (s.busy) busy++;
+    this.busyArea += busy * dt;
   }
   nextDepart() {
     let m = Infinity;
@@ -95,6 +107,7 @@ export class Subsystem {
     cust.serviceStartT = clock;
     cust.serverIdx = i;
     const t = cust.S / this.serviceDiv;
+    cust.serviceT = t;
     s.depart = clock + t;
     s.food = foodFor(t, this.meanRef());
   }
@@ -136,6 +149,7 @@ export class Subsystem {
     this.dep.push({
       w: clock - cust.arrival,
       wq: cust.serviceStartT - cust.arrival,
+      st: cust.serviceT,
       waited: cust.waited,
     });
     if (this.dep.length > 3000) this.dep.shift();
@@ -171,23 +185,33 @@ export class Subsystem {
         pw: 0,
         Wq: 0,
         T: 0,
+        S: 0,
         N: this.N(),
+        Nq: this.Nq(),
         L: this.areaN / Math.max(1e-9, this.world.clock),
+        n: 0,
       };
     let sw = 0,
       st = 0,
+      ss = 0,
       swait = 0;
     for (let i = d.length - n; i < d.length; i++) {
       sw += d[i].wq;
       st += d[i].w;
+      ss += d[i].st;
       swait += d[i].waited ? 1 : 0;
     }
     return {
       pw: swait / n,
       Wq: sw / n,
       T: st / n,
+      /** mittlere Bedienzeit (T = Wq + S) */
+      S: ss / n,
       N: this.N(),
+      Nq: this.Nq(),
       L: this.areaN / Math.max(1e-9, this.world.clock),
+      /** Abgänge seit configure() — Grundlage für das Gewinner-Urteil */
+      n: this.numDep,
     };
   }
 }
@@ -332,7 +356,9 @@ const Q_FRONT = 2;
 const Q_BACK = 2;
 const Q_MID = 2; // Lücken-Slot (zwischen Slot 1 und 3)
 
-export function reconcile(sub, vis, layout, dtReal) {
+// `instant`: bei hohem Zeitraffer springen Gäste an ihren Platz und Gehende
+// verschwinden sofort — sonst fliegen Hunderte Emojis gleichzeitig über die Bühne.
+export function reconcile(sub, vis, layout, dtReal, instant = false) {
   const present = new Set();
   const badges = [];
   for (let i = 0; i < sub.nServers; i++) {
@@ -380,12 +406,12 @@ export function reconcile(sub, vis, layout, dtReal) {
       v.tx = 520;
       v.ty = 50 + Math.random() * 260;
     }
-  const k = 1 - Math.exp(-6 * dtReal),
+  const k = instant ? 1 : 1 - Math.exp(-6 * dtReal),
     out = [];
   for (const [id, v] of vis) {
     v.x += (v.tx - v.x) * k;
     v.y += (v.ty - v.y) * k;
-    if (v.state === "leave" && v.x > 504) {
+    if (v.state === "leave" && (instant || v.x > 504)) {
       vis.delete(id);
       continue;
     }
@@ -404,17 +430,17 @@ export const spawnE = (emoji) => ({
   opacity: 1,
 });
 
-/* ---- Crossover-Scope je Metrik (Theoriekurven + Live-Punkte) ---- */
+/* ---- XY-Chart (Phasenraum) je Metrik: Theoriekurven über ρ + Messpunkte ---- */
 export const SC = {
-  W: 560,
-  H: 300,
-  padL: 46,
-  padR: 14,
-  padT: 16,
-  padB: 34,
+  W: 440,
+  H: 144,
+  padL: 40,
+  padR: 10,
+  padT: 12,
+  padB: 30,
   RHO_MAX: 0.985,
 };
-export function drawScope(
+export function drawXY(
   ctx,
   C,
   fonts,
@@ -437,8 +463,8 @@ export function drawScope(
 
   ctx.strokeStyle = C.grid;
   ctx.lineWidth = 1;
-  ctx.font = `10px ${MONO}`;
-  ctx.fillStyle = C.textLow;
+  ctx.font = `11px ${MONO}`;
+  ctx.fillStyle = C.textMid;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   for (let r = 0; r <= RHO_MAX + 1e-6; r += 0.2) {
@@ -464,10 +490,25 @@ export function drawScope(
   }
 
   ctx.fillStyle = C.textMid;
-  ctx.font = `11px ${SANS}`;
+  ctx.font = `12px ${SANS}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
-  ctx.fillText("Auslastung ρ = λ/(cμ)", (padL + W - padR) / 2, H - 2);
+  ctx.fillText(
+    "Saturation: Auslastung ρ = λ/(cμ)",
+    (padL + W - padR) / 2,
+    H - 2,
+  );
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText(
+    isP
+      ? "Saturation: P(warten)"
+      : metric === "T"
+        ? "Latency: Gesamtzeit T (× Bed.)"
+        : "Latency: Wartezeit Wq (× Bed.)",
+    padL + 6,
+    padT + 2,
+  );
 
   const leftSys = mode === "tempo" ? "tempo" : "pooling";
   const curve = (sys, color) => {
@@ -502,17 +543,17 @@ export function drawScope(
     ctx.stroke();
     ctx.setLineDash([]);
   }
-  // Live-Punkte
+  // Messpunkte
   const dot = (val, color) => {
     const y = norm(val);
     if (!Number.isFinite(y) || rhoNow <= 0 || rhoNow >= RHO_MAX) return;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 14;
     ctx.fillStyle = color;
+    ctx.strokeStyle = C.panel;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(px(rhoNow), py(y), 5, 0, 2 * Math.PI);
+    ctx.arc(px(rhoNow), py(y), 5.5, 0, 2 * Math.PI);
     ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.stroke();
   };
   const pick = (m) => (metric === "pw" ? m.pw : metric === "T" ? m.T : m.Wq);
   dot(pick(liveR), C.pool);

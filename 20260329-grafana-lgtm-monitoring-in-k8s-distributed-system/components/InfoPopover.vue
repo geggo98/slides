@@ -6,7 +6,7 @@
  * (Parent-Listener prüft `[data-info]`) — daher `data-info` auf Knopf UND Popover.
  */
 import { computed, ref, watch, nextTick } from "vue";
-import { useScopeColors } from "./lib/useScopeColors";
+import { useGrafanaPalette } from "./lib/grafanaPalette";
 
 const props = defineProps({
   id: { type: String, required: true },
@@ -14,7 +14,7 @@ const props = defineProps({
   title: { type: String, default: "" },
 });
 const emit = defineEmits(["toggle"]);
-const C = useScopeColors();
+const C = useGrafanaPalette();
 const open = computed(() => props.activeId === props.id);
 
 // Auto-Ausrichtung: das Popover öffnet sich immer zur Bildmitte hin — horizontal

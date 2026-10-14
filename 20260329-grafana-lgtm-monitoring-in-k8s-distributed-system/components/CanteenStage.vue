@@ -4,7 +4,7 @@
  * Schlange(n) → Köche → Abgang. Port des React-`Stage`. „+N“-Badges kommen
  * fertig positioniert aus reconcile() und sitzen mittig in der Schlange.
  */
-import { useScopeColors } from "./lib/useScopeColors";
+import { useGrafanaPalette } from "./lib/grafanaPalette";
 import { SV } from "./lib/mmc.js";
 
 defineProps({
@@ -16,7 +16,7 @@ defineProps({
   badges: { type: Array, default: () => [] },
   fast: { type: Boolean, default: false },
 });
-const C = useScopeColors();
+const C = useGrafanaPalette();
 </script>
 
 <template>

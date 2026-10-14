@@ -5,7 +5,7 @@
  * String). Wert-Anzeige rechts, Accent adaptiv.
  */
 import { computed } from "vue";
-import { useScopeColors } from "./lib/useScopeColors";
+import { useGrafanaPalette } from "./lib/grafanaPalette";
 
 const props = defineProps({
   label: { type: String, default: "" },
@@ -16,7 +16,7 @@ const props = defineProps({
   unit: { type: String, default: "" },
 });
 const emit = defineEmits(["update:modelValue"]);
-const C = useScopeColors();
+const C = useGrafanaPalette();
 
 const display = computed(() => {
   const v = props.modelValue;
@@ -28,7 +28,7 @@ function onInput(e) {
 </script>
 
 <template>
-  <div class="qs" :style="{ '--qs-accent': C.phosphor }">
+  <div class="qs" :style="{ '--qs-accent': C.accent }">
     <div class="qs-row">
       <span class="qs-label" :style="{ color: C.textMid }">{{ label }}</span>
       <span class="qs-val" :style="{ color: C.textHi }"

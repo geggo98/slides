@@ -495,12 +495,18 @@ Workshop & Selbststudium: <TalkXref slug="20260711-sre-simulations" anchor="mm1-
 </div>
 
 <!--
-- Bedienung: ▶ startet die Kantine. λ (Ankunft) und μ (Kapazität) hinter 🛠️;
-  die ρ-Schnellwahl ist immer sichtbar — auf 0.80, dann 0.95 springen.
-- Zeigen: Bei ρ=0,8 pendelt Wq auf ~4× Bedienzeit ein (Gauge-Strich = Theorie);
-  bei 0,95 zappelt der Phosphor-Punkt stark, der Einschwing-Balken braucht lange
-  — läuft aber nicht davon. Erst ρ≥1: der Punkt verlässt das Feld nach oben.
-- Kernaussage: „80 %“ ist ein Punkt auf 1/(1−ρ), keine Klippe.
+- Bedienung: ▶ startet die Kantine, ρ und Zeitraffer sind immer sichtbar,
+  λ/μ hinter 🛠️. Aktiv sind anfangs nur Durchsatz und Auslastung.
+- Ablauf: ρ = 0,95 und 50× wählen. Auslastung (Gauge) und Durchsatz stehen
+  ruhig bei ~95 % bzw. λ — das Dashboard sieht gesund aus.
+- Dann Wartezeit Wq und Gesamtzeit T dazuschalten: Sie klettern auf ein
+  Vielfaches der Bedienzeit (Theorie 19× bzw. 20×). Zeitbereich „seit
+  Änderung“: Die gelbe Marke 3τ liegt weit rechts — das System braucht
+  Tausende Gäste, bis die Messung stimmt. „Y: log“ zeigt den Anstieg flacher.
+- XY-Chart (Phasenraum): Wq über ρ, der Punkt klettert nach einer Änderung
+  langsam zur Kurve. Erst bei ρ ≥ 1 verlässt er das Feld nach oben.
+- Kernaussage: Auslastung und Durchsatz sagen nicht, was der Kunde spürt —
+  die Latenz tut es. „80 %“ ist ein Punkt auf 1/(1−ρ), keine Klippe.
 -->
 
 ---
@@ -512,13 +518,19 @@ title: M/M/c Simulator (mehrere Köche)
 <MMcCompare />
 
 <!--
-- Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool) ist Default. Metrik im
-  Scope zwischen Wq und T umschalten — der Gewinner dreht sich. Slider hinter 🛠️.
-- Zeigen: Der Zwillings-Rennbalken (mittig) misst id-gekoppelt, wer zuerst fertig
-  ist: Pool gewinnt P(warten)/Wq (Pooling-Effekt), der schnelle Koch gewinnt T.
-- Dann Modus „Pooling“ (c getrennte Schlangen vs. Pool): der Pool gewinnt alles —
-  Head-of-Line-Blocking in den getrennten Spuren. Das spricht für eine gemeinsame
-  Queue oder einen Work-Stealing-Pool statt Sharding per Hash.
+- Bedienung: Modus „Tempo“ (1 schneller Koch vs. Pool aus 3 Köchen, gleiche
+  Gesamtkapazität) ist Default, ρ = 0,5. ▶ und 20× bzw. 100×.
+- Zeigen: Die Latency-Leiste kürt zwei verschiedene Sieger — Wartezeit Wq:
+  Pool, Gesamtzeit T: schneller Koch. Der Warnhinweis erscheint. Der Grund
+  steht in der Zerlegung T = Wq + Bedienzeit: Der Pool wartet kürzer
+  (Pooling-Effekt), bedient aber c-mal langsamer. Gilt für jedes ρ und c
+  (Erlang C); bei hohem ρ werden die Abstände klein.
+- Zeitreihen: Bei Wq liegt Orange über Grün, bei T darunter. Das Rennen der
+  Zwillinge misst T und gibt dem schnellen Koch recht.
+- Dann Modus „Pooling“ (c getrennte Schlangen vs. Pool): Der Pool gewinnt
+  beides, der Hinweis verschwindet — Head-of-Line-Blocking in den getrennten
+  Spuren. Spricht für eine gemeinsame Queue statt Sharding per Hash.
+- Kernaussage: Welches System „besser“ ist, entscheidet die gewählte Metrik.
 -->
 
 ---
