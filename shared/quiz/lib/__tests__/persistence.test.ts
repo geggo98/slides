@@ -3,13 +3,20 @@ import {
   appendHistory,
   clearMemory,
   clearRunState,
+  isRunCompatible,
   loadMemory,
   loadRunState,
   saveMemory,
   saveRunState,
   type StorageBackend,
 } from "../persistence";
-import type { CompletedRun, QuizMemory, RunState } from "../types";
+import type {
+  AskedQuestion,
+  CompletedRun,
+  Quiz,
+  QuizMemory,
+  RunState,
+} from "../types";
 
 function makeMockStorage(): StorageBackend & {
   __dump: () => Record<string, string>;
@@ -156,5 +163,55 @@ describe("appendHistory", () => {
     expect(out.history).toHaveLength(100);
     expect(out.history[0]?.runId).toBe("r1");
     expect(out.history.at(-1)?.runId).toBe("rNEW");
+  });
+});
+
+describe("isRunCompatible", () => {
+  const quiz = {
+    id: "q",
+    title: "t",
+    questions: [
+      {
+        id: "a",
+        question: "?",
+        difficulty: "easy",
+        section: "s",
+        explanation: "e",
+        options: [
+          { id: "o1", text: "x", verdict: "true", explanation: "e" },
+          { id: "o2", text: "y", verdict: "false", explanation: "e" },
+        ],
+      },
+    ],
+  } as unknown as Quiz;
+  const run = (over: Partial<AskedQuestion>): RunState => ({
+    runId: "r",
+    startedAt: "now",
+    currentDifficulty: "medium",
+    asked: [
+      {
+        questionId: "a",
+        difficulty: "easy",
+        sampledOptionIds: ["o1", "o2"],
+        picks: [false, false],
+        submitted: false,
+        ...over,
+      },
+    ],
+  });
+
+  it("accepts a run that matches the quiz", () => {
+    expect(isRunCompatible(run({}), quiz)).toBe(true);
+  });
+  it("rejects an unknown question id", () => {
+    expect(isRunCompatible(run({ questionId: "gone" }), quiz)).toBe(false);
+  });
+  it("rejects an unknown option id", () => {
+    expect(isRunCompatible(run({ sampledOptionIds: ["o1", "zz"] }), quiz)).toBe(
+      false,
+    );
+  });
+  it("rejects a picks array of the wrong length", () => {
+    expect(isRunCompatible(run({ picks: [false] }), quiz)).toBe(false);
   });
 });

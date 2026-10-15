@@ -33,6 +33,7 @@ import {
   appendHistory,
   clearMemory,
   clearRunState,
+  isRunCompatible,
   loadMemory,
   loadRunState,
   saveMemory,
@@ -121,12 +122,17 @@ const isCompleted = computed(
 onMounted(() => {
   memory.value = loadMemory(props.quiz.id);
   const persisted = loadRunState(props.quiz.id);
-  if (persisted && persisted.asked.length > 0 && !persisted.stopReason) {
+  if (
+    persisted &&
+    persisted.asked.length > 0 &&
+    !persisted.stopReason &&
+    isRunCompatible(persisted, props.quiz)
+  ) {
     run.value = persisted;
     return;
   }
-  if (persisted?.stopReason) {
-    // Old completed-run leftovers: clear and start fresh.
+  if (persisted) {
+    // Completed or stale (question pool changed) leftovers: start fresh.
     clearRunState(props.quiz.id);
   }
   startNewRun();
@@ -438,6 +444,11 @@ function makeRunId(): string {
       @clear-all="onClearAll"
     />
 
+    <div v-if="!isCompleted && !currentQuestion" class="quiz-empty">
+      <span>Keine Frage darstellbar.</span>
+      <button type="button" @click="onRestart">Quiz neu starten</button>
+    </div>
+
     <PrivacyFooter
       v-if="!isCompleted"
       class="quiz-footer"
@@ -467,6 +478,11 @@ function makeRunId(): string {
   font-size: 16px;
   font-weight: 600;
   color: var(--qz-text);
+}
+.quiz-empty {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 .quiz-footer {
   margin-top: 1px;

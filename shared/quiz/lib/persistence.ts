@@ -11,6 +11,7 @@ import {
   EMPTY_MEMORY,
   type CompletedRun,
   type QuizMemory,
+  type Quiz,
   type RunState,
 } from "./types";
 
@@ -103,6 +104,27 @@ export function clearMemory(
 ): void {
   if (!storage) return;
   storage.removeItem(MEMORY_KEY(quizId));
+}
+
+/**
+ * True if every question and option a persisted run refers to still exists
+ * in the quiz. A regenerated question pool leaves old runs dangling; resuming
+ * one renders nothing.
+ */
+export function isRunCompatible(run: RunState, quiz: Quiz): boolean {
+  if (!Array.isArray(run.asked)) return false;
+  const byId = new Map(quiz.questions.map((q) => [q.id, q]));
+  return run.asked.every((a) => {
+    const q = byId.get(a.questionId);
+    if (!q) return false;
+    const optionIds = new Set(q.options.map((o) => o.id));
+    return (
+      Array.isArray(a.sampledOptionIds) &&
+      Array.isArray(a.picks) &&
+      a.picks.length === a.sampledOptionIds.length &&
+      a.sampledOptionIds.every((id) => optionIds.has(id))
+    );
+  });
 }
 
 /** Append a completed run to history, trimming if it exceeds the limit. */
