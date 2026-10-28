@@ -5,10 +5,15 @@
 //
 // Herkunft
 // --------
-// https://artificialanalysis.ai/leaderboards/models, Stand 01.10.2026. Die Rohdaten
-// liegen als Archiv unter `data/artificialanalysis/` (`fetch.ts` erklärt, wie
-// sie aus der Seite kommen und warum nicht aus der API). Hier steht nur, was
-// daraus wird. Attribution laut AA-Bedingungen: Link auf artificialanalysis.ai
+// https://artificialanalysis.ai/leaderboards/models, Stand `AA_STAND`. Die
+// Rohdaten liegen als Archiv unter `data/artificialanalysis/` (`fetch.ts`
+// erklärt, wie sie aus der Seite kommen und warum nicht aus der API). Hier
+// steht nur, was daraus wird.
+//
+// Snapshot wechseln: Import, `AA_BOARD` und `AA_STAND` direkt darunter — nur
+// dort. Der Ablauf steht in `data/artificialanalysis/UPDATE.md`; ein Test
+// (`paretoVariants.test.ts`) schlägt fehl, solange die drei nicht zum neuesten
+// Eintrag in `index.ndjson` passen. Attribution laut AA-Bedingungen: Link auf artificialanalysis.ai
 // — sie steht in der Fußzeile der Folie und im ⓘ-Dialog.
 //
 // Was „Kosten pro Task“ hier heißt
@@ -39,6 +44,9 @@
 import raw from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
+/** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
+export const AA_BOARD = "board-20261001-ae520e03.json";
+/** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
 export const AA_STAND = "01.10.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
@@ -106,32 +114,40 @@ const rows = raw as unknown as Row[];
 /** Alle Rohzeilen des Snapshots, auch abgekündigte und geschätzte — für `aaExtras.ts`. */
 export const AA_ROWS: readonly Row[] = rows;
 
-/** Alle gemessenen Konfigurationen der aktiven Modelle mit Index UND Kosten. */
-export const CONFIGS: readonly AaCfg[] = rows.flatMap((r) => {
-  if (
-    r.deprecated ||
-    r.intelligenceIndexIsEstimated ||
-    typeof r.intelligenceIndex !== "number" ||
-    typeof r.intelligenceIndexCostPerTask !== "number"
-  )
-    return [];
-  const model = modelSlug(r.slug, r.name);
-  return [
-    {
-      slug: r.slug,
-      model,
-      label: labelOf(model),
-      effort: effortOf(r.name),
-      creator: r.modelCreatorName ?? "",
-      index: r.intelligenceIndex,
-      usd: r.intelligenceIndexCostPerTask,
-      tps:
-        typeof r.medianOutputTokensPerSecond === "number"
-          ? r.medianOutputTokensPerSecond
-          : null,
-    },
-  ];
-});
+/**
+ * Alle gemessenen Konfigurationen der aktiven Modelle mit Index UND Kosten.
+ * Als Funktion, damit eine Folie auf einem festen Snapshot bleiben kann
+ * (`lib/codexEffortMath.ts`), während die Pareto-Folie weiterzieht.
+ */
+export const configsOf = (rows: readonly Row[]): AaCfg[] =>
+  rows.flatMap((r) => {
+    if (
+      r.deprecated ||
+      r.intelligenceIndexIsEstimated ||
+      typeof r.intelligenceIndex !== "number" ||
+      typeof r.intelligenceIndexCostPerTask !== "number"
+    )
+      return [];
+    const model = modelSlug(r.slug, r.name);
+    return [
+      {
+        slug: r.slug,
+        model,
+        label: labelOf(model),
+        effort: effortOf(r.name),
+        creator: r.modelCreatorName ?? "",
+        index: r.intelligenceIndex,
+        usd: r.intelligenceIndexCostPerTask,
+        tps:
+          typeof r.medianOutputTokensPerSecond === "number"
+            ? r.medianOutputTokensPerSecond
+            : null,
+      },
+    ];
+  });
+
+/** Die Konfigurationen des aktuellen Snapshots. */
+export const CONFIGS: readonly AaCfg[] = configsOf(rows);
 
 /**
  * Je Modell die Konfiguration mit dem höchsten Index, bei Gleichstand die

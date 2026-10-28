@@ -8,7 +8,10 @@
  * opusplan-Folie (Mediane aus 57 echten Claude-Code-Sessions mit Modellwechsel,
  * 30.08.–29.09.2026, siehe ./opusplanMath.ts), damit beide Rechnungen vergleichbar bleiben, und
  * skaliert sie je Modell mit zwei Faktoren aus dem Artificial-Analysis-
- * Snapshot der Pareto-Folie (../aaData.ts, `CONFIGS`, Stand `AA_STAND`):
+ * Snapshot vom 01.10.2026 (`configsOf` aus ../aaData.ts). Der Snapshot ist
+ * hier FEST: Die Pareto-Folie zieht wöchentlich einen neuen nach, diese
+ * Folie nicht — ihre Preise und Notizen stehen auf dem 05.10.2026, und
+ * Faktoren aus einem anderen Stand passten nicht mehr dazu:
  *
  * - capFaktor: bester Intelligence Index von Opus 5.5 ÷ bester Index des
  *   Modells — ein schwächeres Modell braucht mehr Anläufe und damit mehr
@@ -67,7 +70,8 @@
  * Alle Token-Größen in MTok, alle Kosten in USD; Umrechnung erst am Ende.
  */
 
-import { CONFIGS } from "../aaData";
+import board from "../../data/artificialanalysis/board-20261001-ae520e03.json";
+import { configsOf, type Row } from "../aaData";
 import {
   BREAK_SHARE,
   DEFAULT_TTL,
@@ -80,6 +84,9 @@ import {
   type Modell,
 } from "./opusplanMath";
 import { SZENARIO_DEFAULTS, type Szenario } from "./scenarioState";
+
+/** Fester Snapshot, siehe Kopfkommentar. */
+const CONFIGS = configsOf(board as unknown as Row[]);
 
 export { toEur };
 export type { Modell };

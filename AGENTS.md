@@ -141,6 +141,23 @@ Create a new top-level directory with a `slides.md` file. It will be automatical
 
 To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock from "@shared/components/MonacoBlock.vue"`), **copy a `vite.config.ts` from an existing talk** into the new directory. Slidev merges a `vite.config.ts` from each root — theme, addons and the deck directory — never the repo root, so a plain deck needs its own copy for the alias to resolve at build/dev time. The alias-only file is identical across talks (it points `@shared` one level up to `shared/`); a lightning deck gets the alias from the theme and needs its own file only for extra settings such as `optimizeDeps.exclude` (see Lightning-Talk-Theme).
 
+## Weekly Artificial Analysis Snapshot
+
+The slide `pareto-heute` in `20260408-agents-details` is refreshed weekly by a
+Claude Code cloud routine (`/schedule`) that follows
+`20260408-agents-details/data/artificialanalysis/UPDATE.md` and opens a PR —
+it never pushes to `main`. The runbook is the single source for that job;
+change the procedure there, not in the routine's prompt.
+
+- A snapshot switch touches one place: the board import, `AA_BOARD` and
+  `AA_STAND` in `components/aaData.ts`. `paretoVariants.test.ts` fails until
+  all three match the newest entry of `data/artificialanalysis/index.ndjson`,
+  so a bare `fetch.ts` run leaves the suite red on purpose.
+- `components/lib/codexEffortMath.ts` stays pinned to the 01.10.2026 board;
+  its prices and notes are dated, and moving factors would contradict them.
+- The cloud has no browser for the overflow check. Before merging such a PR,
+  run `check-slide-overflow.sh` for the slide locally (see below).
+
 ## Lightning-Talk-Theme
 
 Lightning Talks bekommen ein eigenes Erscheinungsbild — ein lokales Slidev-Theme

@@ -1,13 +1,15 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import raw from "../../../data/artificialanalysis/board-20261001-ae520e03.json";
 import {
+  AA_BOARD,
   AA_CFGS,
   AA_COST,
   AA_FLOOR,
   AA_NO_TPS,
+  AA_ROWS,
   AA_SPEED,
+  AA_STAND,
   bestPerModel,
   CONFIGS,
   effortOf,
@@ -36,6 +38,7 @@ import {
 } from "../../paretoChrome";
 import { labOf, paretoFront } from "../../paretoData";
 import {
+  NUR_EINGESCHRAENKT,
   VARIANT_ORDER,
   VARIANTS,
   frontSentence,
@@ -114,6 +117,42 @@ describe("aaData — Effort-Stufen und Labels", () => {
   });
 });
 
+// Ein neuer Snapshot ist ein Datenwechsel an EINER Stelle (`aaData.ts`: Import,
+// `AA_BOARD`, `AA_STAND`). Diese Tests schlagen fehl, solange er halb gemacht
+// ist — nach `fetch.ts` also so lange, bis das Deck auf dem neuen Stand steht.
+describe("aaData — Snapshot", () => {
+  const dir = join(import.meta.dirname, "../..");
+  const index = readFileSync(
+    join(dir, "../data/artificialanalysis/index.ndjson"),
+    "utf8",
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map((l) => JSON.parse(l) as { file: string; fetched_at: string });
+
+  it("liest den Snapshot, den AA_BOARD nennt", () => {
+    const src = readFileSync(join(dir, "aaData.ts"), "utf8");
+    expect(src).toContain(
+      `import raw from "../data/artificialanalysis/${AA_BOARD}";`,
+    );
+  });
+
+  it("steht auf dem neuesten archivierten Snapshot", () => {
+    expect(AA_BOARD).toBe(index.at(-1)!.file);
+  });
+
+  it("datiert den Stand auf den Abruf dieses Snapshots", () => {
+    const e = index.find((x) => x.file === AA_BOARD)!;
+    const [y, m, d] = e.fetched_at.slice(0, 10).split("-");
+    expect(AA_STAND).toBe(`${d}.${m}.${y}`);
+  });
+
+  it("markiert als eingeschränkt verfügbar nur Modelle des Charts", () => {
+    const labels = new Set(AA_COST.map((p) => p.label));
+    for (const l of NUR_EINGESCHRAENKT) expect(labels.has(l), l).toBe(true);
+  });
+});
+
 describe("aaData — die beiden Punktmengen", () => {
   it("hat eindeutige Labels und für jedes ein bekanntes Lab", () => {
     const labels = AA_COST.map((p) => p.label);
@@ -124,10 +163,7 @@ describe("aaData — die beiden Punktmengen", () => {
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
     expect(AA_COST.length).toBe(25);
-    const rows = raw as {
-      deprecated: boolean;
-      intelligenceIndexCostPerTask: unknown;
-    }[];
+    const rows = AA_ROWS;
     const mitKosten = rows.filter(
       (r) =>
         !r.deprecated && typeof r.intelligenceIndexCostPerTask === "number",

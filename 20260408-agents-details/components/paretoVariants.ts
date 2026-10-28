@@ -151,7 +151,9 @@ const AA_ATTRIBUTION = {
  * gemini-4-argon: nur im Programm „Fairwind“ für Cyber-Defender, ohne
  * Termin für die allgemeine Freigabe (Google-Blog, 30.09.2026).
  */
-const NUR_EINGESCHRAENKT = new Set(["gemini-4-argon"]);
+export const NUR_EINGESCHRAENKT: ReadonlySet<string> = new Set([
+  "gemini-4-argon",
+]);
 const kostenText = (p: Pt) =>
   `${p.eur} € (${dez1(p.y)}${NUR_EINGESCHRAENKT.has(p.label) ? ", sofern verfügbar" : ""})`;
 

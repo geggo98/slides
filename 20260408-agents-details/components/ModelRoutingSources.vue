@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { AA_STAND } from "./aaData";
 import SourcesPopover from "./SourcesPopover.vue";
 
 // Gemeinsames ⓘ-Modal von VIER Folien: ModelRoutingRoles (Rollen),
@@ -6,8 +7,8 @@ import SourcesPopover from "./SourcesPopover.vue";
 // Bonusfolie v1 gegen v1.1).
 //
 // Regel für jeden Eintrag: er muss auf allen vier Folien stimmen. Kein „hier",
-// kein „diese Folie". Fehlerbalken und der Kontingent-Schalter existieren nur im
-// Pareto-Chart, das Fadenkreuz zusätzlich im Historien-Chart (dort opt-in über
+// kein „diese Folie". Der Kontingent-Schalter existiert nur im Pareto-Chart,
+// Fehlerbalken nur in der Lupe der Historie, das Fadenkreuz in beiden Charts (dort opt-in über
 // „alle Namen + Fadenkreuz") — wer sie erwähnt, benennt die Folie dazu.
 // Folienspezifisches gehört in die jeweilige Host-Komponente, nicht hierher.
 //
@@ -44,7 +45,7 @@ const sources = [
   {
     href: "https://artificialanalysis.ai/leaderboards/models",
     label: "Artificial Analysis: LLM-Leaderboard",
-    note: "Ansichten „Intelligenz × Kosten/Tempo“, Stand 01.10.2026 — Quellenangabe laut AA-Bedingungen",
+    note: `Ansichten „Intelligenz × Kosten/Tempo“, Stand ${AA_STAND} — Quellenangabe laut AA-Bedingungen`,
   },
   {
     href: "https://ai.google.dev/gemini-api/docs/pricing",

@@ -1667,8 +1667,9 @@ API-Listenpreis. Und das jeweils eigene Modell fehlt — AA misst weder
 Cursors Composer noch Windsurfs SWE-x.
 
 Wenn jemand fragt, warum das Deck so ein Datum betont: Die Front dieser
-Folie hat sich zwischen zwei AA-Snapshots verschoben, ohne dass ein
-Modell erschienen ist (gpt-6-luna, siehe oben). Die Zahl ist ein Datum,
+Folie hat sich schon zwischen zwei AA-Snapshots verschoben, ohne dass ein
+Modell erschienen ist (gpt-6-luna am 01.10.2026: Index von 37,3 auf 38,1
+korrigiert). Die Zahl ist ein Datum,
 kein Naturgesetz — die Folie wird deshalb wöchentlich aus einem neuen
 AA-Snapshot nachgezogen.
 
