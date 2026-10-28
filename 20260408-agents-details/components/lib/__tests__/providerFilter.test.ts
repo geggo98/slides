@@ -53,28 +53,29 @@ describe("Werkzeug-Kataloge", () => {
 
 // Das hier ist der Grund für das ganze Datenmodell. Ein Preset schreibt eine
 // MODELLMENGE. Würde es stattdessen nur Lab-Häkchen setzen, bekäme JetBrains AI
-// das Google-Lab vollständig — und damit gemini-3.8-flash, das der Katalog
-// (Gemini nur bis 3.6 Flash) gar nicht führt. Seine Front wäre dann die von
-// „Alle", und die Aussage der Folie wäre still weg. Bricht dieser Test, hat
-// jemand genau das vereinfacht.
+// das Google-Lab vollständig — und damit gemini-3.5-flash, das der Katalog vom
+// 28.10. nicht führt. Bis 29.09. ging es um gemini-3.8-flash und änderte die
+// Front; seit der Katalog es führt, unterscheidet sich nur noch die Menge, die
+// Front bleibt gleich. Bricht dieser Test, hat jemand das Preset vereinfacht.
 describe("Presets schreiben Modellmengen, keine Lab-Häkchen", () => {
   const jb = vonPreset("jetbrains-ai");
   const labsVonJb = [...new Set([...jb].map(labOf))];
 
-  it("lässt gemini-3.8-flash bei JetBrains AI draußen, obwohl Google dabei ist", () => {
+  it("lässt gemini-3.5-flash bei JetBrains AI draußen, obwohl Google dabei ist", () => {
     expect(labsVonJb).toContain("Google");
-    expect(jb.has("gemini-3.8-flash")).toBe(false);
+    expect(jb.has("gemini-3.5-flash")).toBe(false);
     // Über die Labs gerechnet käme es fälschlich herein:
-    expect(front(nurLabs(...labsVonJb))).toContain("gemini-3.8-flash");
+    expect(nurLabs(...labsVonJb).has("gemini-3.5-flash")).toBe(true);
   });
 
   // OpenAI ist bei JetBrains nur teilweise abgedeckt: gpt-6-astra steht nicht
-  // in der Hilfe „Supported models“ (Stand 14.09.2026).
+  // in der Hilfe „Supported models“ (Stand 05.10.2026), bei Google fehlt
+  // gemini-3.5-flash.
   it("deckt zwei Labs bei JetBrains AI nur teilweise ab", () => {
     const teil = labRows(jb, CURRENT)
       .filter((r) => r.zustand === "teilweise")
       .map((r) => `${r.lab} ${r.drin}/${r.gesamt}`);
-    expect(teil).toStrictEqual(["OpenAI 4/5", "Google 2/4"]);
+    expect(teil).toStrictEqual(["OpenAI 4/5", "Google 3/4"]);
   });
 });
 
@@ -87,7 +88,7 @@ describe("Front je Preset", () => {
     ]);
   });
 
-  // Seit dem 29.09.2026 (Katalog-Stand) führen beide Werkzeuge alle drei
+  // Seit dem 29.09.2026 (Katalog-Stand, am 28.10. bestätigt) führen beide Werkzeuge alle drei
   // Frontpunkte: Cursor hat glm-5.3-flash hinter „Hidden by default“, Windsurf
   // hat Gemini 3.7/3.8 Flash und GPT-6. Vorher — am 03.09. — hatte Windsurf
   // noch die alte Front mit Opus 5 an der Spitze.
@@ -98,23 +99,22 @@ describe("Front je Preset", () => {
     },
   );
 
-  it("gibt einem JetBrains-Nutzer die Front mit Opus 5 an der Spitze", () => {
+  it("gibt einem JetBrains-Nutzer die Front ohne glm-5.3-flash", () => {
+    // Seit dem Katalog vom 28.10. führt JetBrains AI gemini-3.8-flash und damit
+    // die Spitze; es fehlt nur das billige Ende (glm-5.3-flash, Zhipu).
     expect(front(vonPreset("jetbrains-ai"))).toStrictEqual([
       "gpt-5.6-luna",
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
-      "claude-opus-5",
+      "gemini-3.8-flash",
     ]);
-    // Derselbe Score wie der Neuzugang, das Vier- bis Fünffache.
-    const neu = CURRENT.find((p) => p.label === "gemini-3.8-flash")!;
-    const opus = CURRENT.find((p) => p.label === "claude-opus-5")!;
-    expect(neu.y).toBe(opus.y);
-    expect(opus.x / neu.x).toBeGreaterThan(4.9);
+    expect(front(vonPreset("all"))).toStrictEqual([
+      "glm-5.3-flash",
+      ...front(vonPreset("jetbrains-ai")),
+    ]);
   });
 
   it("führt JetBrains AI je Modell, nicht mehr auf Providerebene", () => {
     const jb = vonPreset("jetbrains-ai");
-    expect(jb.size).toBe(10);
+    expect(jb.size).toBe(11);
     expect(new Set([...jb].map(labOf))).toStrictEqual(
       new Set(["OpenAI", "Anthropic", "Google"]),
     );
@@ -196,12 +196,14 @@ describe("Menü-Einträge", () => {
 
   it("kennt für jedes Werkzeug die Zugehörigkeit einzelner Modelle", () => {
     expect(toolHas("jetbrains-ai", "gemini-3.6-flash")).toBe(true);
-    expect(toolHas("jetbrains-ai", "gemini-3.8-flash")).toBe(false);
+    expect(toolHas("jetbrains-ai", "gemini-3.8-flash")).toBe(true);
+    expect(toolHas("jetbrains-ai", "gemini-3.5-flash")).toBe(false);
     expect(toolHas("windsurf", "gemini-3.8-flash")).toBe(true);
     expect(toolHas("cursor", "glm-5.3-flash")).toBe(true);
     expect(toolHas("cursor", "gpt-6-astra")).toBe(false);
     expect(toolHas("windsurf", "gpt-6-astra")).toBe(true);
     expect(toolHas("windsurf", "claude-sonnet-5.5")).toBe(false);
-    expect(toolHas("jetbrains-ai", "claude-opus-5.5")).toBe(false);
+    expect(toolHas("jetbrains-ai", "claude-opus-5.5")).toBe(true);
+    expect(toolHas("jetbrains-ai", "gpt-6-astra")).toBe(false);
   });
 });

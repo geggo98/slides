@@ -162,7 +162,7 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(26);
+    expect(AA_COST.length).toBe(27);
     const v5 = JSON.parse(
       readFileSync(
         join(import.meta.dirname, "../../../data/artificialanalysis", AA_BOARD),
@@ -179,8 +179,8 @@ describe("aaData — die beiden Punktmengen", () => {
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „272 Einträge, 73 aktive mit Kosten; 38 weitere aus v4
-    // umgerechnet“ und „26 Modelle“.
+    // Die Notiz nennt „273 Einträge, 74 aktive mit Kosten; 38 weitere aus v4
+    // umgerechnet“ und „27 Modelle“.
     expect(src).toContain(
       `${v5.length} Einträge, ${gemessen} aktive mit Kosten; ${umgerechnet} weitere aus v4 umgerechnet`,
     );
@@ -207,7 +207,7 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
+    expect(AA_NO_TPS).toStrictEqual(["gemini-4-carbon", "ling-3.1-flash-1019"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -230,7 +230,7 @@ describe("aaData — die beiden Punktmengen", () => {
       "gpt-6.1-terra",
       "gpt-6.1-sol",
       "gpt-6-astra",
-      "claude-opus-5.5",
+      "gemini-4-carbon",
     ]);
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
       "claude-haiku-5.5",
@@ -372,8 +372,15 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
     );
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
     expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
-    // JetBrains AI führt kein Modell des aktuellen Felds (Katalog 29.09.: bis
-    // GPT-5.6 und Opus 5) — sein Preset lebt ganz von den Extras.
-    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([]);
+    // JetBrains AI führt seit dem Katalog vom 28.10. auch GPT-6 und Opus 5.5
+    // des aktuellen Felds.
+    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([
+      "gpt-6-luna",
+      "gpt-6.1-sol",
+      "gemini-3.8-flash",
+      "claude-sonnet-5.5",
+      "claude-opus-5.5",
+      "claude-fable-5.1",
+    ]);
   });
 });

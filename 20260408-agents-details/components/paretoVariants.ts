@@ -109,16 +109,17 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 10 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
-// 9,54 €), der Index (v5) linear von 22 bis 62 (Punkte 25,3 bis 58,4). Ein
+// Kosten log von 0,04 € bis 22 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
+// 9,54 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
+// Index (v5) linear von 22 bis 64 (Punkte 25,3 bis 59,4). Ein
 // yMin > 0 spart die untere Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 10,
+  xMax: 22,
   xLog: { min: 0.04 },
   yMin: 22,
-  yMax: 62,
+  yMax: 64,
 });
 // x = 1000/tps: am 28.10.2026 4,2 s (241 tok/s) bis 24,5 s (41 tok/s) je 1 000 Tokens.
 const AA_SPEED_SCALE: Scale = makeScale({
@@ -129,7 +130,7 @@ const AA_SPEED_SCALE: Scale = makeScale({
   yMax: 62,
 });
 
-const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5];
+const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10];
 const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
 const TPS_TICKS = [300, 200, 100, 60, 40];
@@ -194,14 +195,15 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
-      // v5 (28.10.2026): Rechts stehen Opus, Sonnet und Fable übereinander,
-      // unten rechts glm-5.3, qwen3.8-2.4t, gemini-3.8-flash und grok-4.7. Am
-      // Rand fand sich keine Lage ohne verdeckten Marker. Per Suche über Knoten
-      // (x, y) und Ziel: Knoten bei (4 €, 34), Ziel (0,7 €, 40) — kein Marker
+      // v5 (28.10.2026): Rechts stehen Carbon, Opus, Sonnet und Fable dicht
+      // beieinander, unten rechts glm-5.3, qwen3.8-2.4t, gemini-3.8-flash und
+      // grok-4.7. Per Suche über Knoten (x, y) und Ziel (Gitter 6 × 5 × 5 × 5,
+      // dazu xMax 10 → 22 und yMax 62 → 64, sonst fanden Opus und Carbon keinen
+      // Platz): Knoten bei (3 €, 32), Ziel (0,7 €, 40) — kein Marker
       // unter einem Schaft, jedes Label hat Platz, der Text der Diagonale passt,
       // und sie bleibt unter der Front (ein höheres Ziel schnitte sie).
-      hubX: (s) => s.px(4),
-      hubY: (s) => s.py(34),
+      hubX: (s) => s.px(3),
+      hubY: (s) => s.py(32),
       target: (s) => ({ x: s.px(0.7), y: s.py(40) }),
     },
     axisTitle:
@@ -239,7 +241,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     ],
     ariaIntro:
       "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Kosten pro Task in Euro, " +
-      "x-Achse logarithmisch von 0,04 bis 10 Euro, unterteilt in vier Quadranten: " +
+      "x-Achse logarithmisch von 0,04 bis 22 Euro, unterteilt in vier Quadranten: " +
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand " +
       AA_STAND,

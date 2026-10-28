@@ -44,7 +44,7 @@
 // Index v5 und die Werte aus v4
 // -----------------------------
 // Ende Oktober 2026 hat AA auf Intelligence Index v5 umgestellt und führt Index
-// und Kosten nur noch für neu gemessene Modelle (am 28.10.: 76 mit Index, 73
+// und Kosten nur noch für neu gemessene Modelle (am 28.10.: 77 mit Index, 74
 // mit Kosten; am 01.10. hatten 175 Einträge Kosten). Die übrigen kommen aus dem letzten v4-Snapshot vom 01.10.2026,
 // UMGERECHNET auf die v5-Skala (`migrateV4`): Index und Kosten je als
 // Potenzgesetz (Gerade in log-log), bei jedem Lauf neu aus den Konfigurationen
@@ -54,12 +54,12 @@
 // keine Messung — die Punkte stehen hohl und gestrichelt („≈“), der Tooltip sagt
 // „aus v4 umgerechnet“, und `V4_MIGRATION` hält die Güte des Fits fest.
 
-import raw from "../data/artificialanalysis/board-20261028-7ba3a00a.json";
+import raw from "../data/artificialanalysis/board-20261028-27d5d75f.json";
 import rawV4 from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const AA_BOARD = "board-20261028-7ba3a00a.json";
+export const AA_BOARD = "board-20261028-27d5d75f.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
 export const AA_STAND = "28.10.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";

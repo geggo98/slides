@@ -9,7 +9,7 @@ import {
   type Cand,
 } from "../../aaExtras";
 import { catalogHas, familyKey } from "../../catalogMatch";
-import { paretoFront } from "../../paretoData";
+import { fmtEur, paretoFront } from "../../paretoData";
 import { matchingPreset, presetModels, PRESETS } from "../../providerFilter";
 import { VARIANTS } from "../../paretoVariants";
 
@@ -78,9 +78,9 @@ describe("Extras", () => {
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
-    expect(PRODUCT_FAMILIES.size).toBe(90);
-    expect(AA_EXTRAS_COST.length).toBe(34);
-    expect(AA_EXTRAS_SPEED.length).toBe(53);
+    expect(PRODUCT_FAMILIES.size).toBe(92);
+    expect(AA_EXTRAS_COST.length).toBe(32);
+    expect(AA_EXTRAS_SPEED.length).toBe(50);
   });
 
   for (const [view, kurat, extras] of [
@@ -123,9 +123,13 @@ describe("Extras", () => {
   }
 
   it("zeigt kleine Kosten nicht als 0,00 €", () => {
-    const klein = AA_EXTRAS_COST.filter((p) => p.x < 0.095);
-    expect(klein.length).toBeGreaterThan(0);
-    for (const p of klein) expect(p.eur, p.label).not.toBe("0,00");
+    // Am 28.10.2026 liegt kein Extra mehr unter 0,095 € (gemini-3.1-flash-lite
+    // flog mit dem JetBrains-Katalog raus) — die Rundung prüft deshalb der
+    // Formatierer selbst, die Extras zusätzlich, falls wieder welche dort liegen.
+    for (const x of [0.04, 0.086, 0.094])
+      expect(fmtEur(x), String(x)).not.toBe("0,00");
+    for (const p of AA_EXTRAS_COST.filter((q) => q.x < 0.095))
+      expect(p.eur, p.label).not.toBe("0,00");
   });
 
   it("gibt Claude-Extras das Kontingent ×0,8, allen anderen keines", () => {
@@ -136,7 +140,7 @@ describe("Extras", () => {
   });
 });
 
-// Die Fronten je Produkt und Ansicht, gerechnet aus Katalogen vom 29.09.2026 und
+// Die Fronten je Produkt und Ansicht, gerechnet aus Katalogen vom 28.10.2026 und
 // dem AA-Snapshot vom 28.10.2026 (v5, fehlende Werte aus v4 umgerechnet).
 // Sie sind der Kern der neuen Folienaussage: jedes Produkt an sich selbst
 // gemessen, nicht am Markt. Bricht einer dieser Werte, hat sich ein Katalog oder
@@ -157,14 +161,12 @@ describe("Front je Produkt", () => {
     ).front.map((p) => p.label);
   };
 
-  it("Kosten: JetBrains AI nur mit älteren Modellen, alle aus v4 umgerechnet", () => {
+  it("Kosten: JetBrains AI führt seit 28.10. GPT-6 und Opus 5.5 bis zur Spitze", () => {
     expect(front("aa-cost", "jetbrains-ai")).toStrictEqual([
-      "gemini-3.1-flash-lite",
       "gpt-5-mini",
-      "gpt-5.6-luna",
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
-      "claude-opus-5",
+      "gpt-6-luna",
+      "gpt-6.1-sol",
+      "claude-opus-5.5",
     ]);
   });
 
@@ -183,11 +185,11 @@ describe("Front je Produkt", () => {
     expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
   });
 
-  it("Tempo: JetBrains AI hat neun Sprossen, die älteren Gemini vorn", () => {
+  it("Tempo: JetBrains AI hat drei Sprossen, Gemini 3.7 Flash vorn", () => {
     const f = front("aa-speed", "jetbrains-ai");
-    expect(f[0]).toBe("gemini-3.5-flash-lite");
-    expect(f.at(-1)).toBe("claude-opus-5");
-    expect(f.length).toBe(9);
+    expect(f[0]).toBe("gemini-3.7-flash");
+    expect(f.at(-1)).toBe("claude-opus-5.5");
+    expect(f.length).toBe(3);
   });
 
   it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash bleibt unter dem gemessenen glm-5.3", () => {
@@ -229,7 +231,7 @@ describe("Universe und „Alle“", () => {
     const V = VARIANTS["aa-cost"];
     const uni = [...V.pts, ...V.extras];
     const jb = new Set(presetModels("jetbrains-ai", uni, V.pts));
-    expect(jb.size).toBe(21);
+    expect(jb.size).toBe(25);
     expect(matchingPreset(jb, uni, V.pts)?.id).toBe("jetbrains-ai");
     expect(
       matchingPreset(new Set(V.pts.map((p) => p.label)), uni, V.pts)?.id,

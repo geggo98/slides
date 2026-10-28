@@ -10,9 +10,10 @@
 //
 // Der Zweck der Presets: Ein Nutzer von Cursor oder Windsurf sieht mit einem
 // Klick, welche der für ihn VERFÜGBAREN Modelle auf der Front liegen — und das
-// ist nicht immer dieselbe Antwort. Am 29.09.2026 führen Cursor und Windsurf
-// alle drei Frontpunkte; bei JetBrains AI endet der Katalog bei Gemini 3.6
-// Flash, dort führt weiter Opus 5 für 10,37 €. Am 03.09. war es Windsurf, das
+// ist nicht immer dieselbe Antwort. Am 29.09.2026 führten Cursor und Windsurf
+// alle drei Frontpunkte; bei JetBrains AI endete der Katalog bei Gemini 3.6
+// Flash, dort führte weiter Opus 5 für 10,37 €. Am 28.10. führt auch JetBrains
+// AI Gemini 3.8 Flash (nur glm-5.3-flash fehlt). Am 03.09. war es Windsurf, das
 // zurücklag — Kataloge wandern, deshalb Abrufdatum je Werkzeug.
 //
 // Der Zweck der Checkboxen: Ein einzelnes Lab hat ein bis vier Punkte, seine
@@ -87,12 +88,12 @@ export const TOOLS: readonly Tool[] = [
     label: "Cursor",
     source: CATALOGS.cursor.source,
     retrieved: CATALOGS.cursor.retrieved,
-    // Rohseite `models-and-pricing.md`: 58 Modelle, 39 davon „Hidden by default“.
+    // Rohseite `models-and-pricing.md`: 63 Modelle, 42 davon „Hidden by default“ (28.10.2026).
     // Die HTML-Ansicht `/docs/models` zeigt nur die 13 Standard-Modelle; wer nur
     // sie liest, findet Kimi K3, GLM 5.x, Opus 5 und Gemini 3.5–3.7 nicht. Hier
     // zählt „wählbar“, also auch das Versteckte.
     caveat:
-      "Viele Modelle sind in Cursor „hidden by default“ und erst nach dem Einschalten wählbar; hier zählen sie mit. GPT-6 (Astra/Sol/Luna), DeepSeek, Qwen und MiMo fehlen im Katalog. Cursors eigenes Composer-Modell misst kein Board; es fehlt hier also.",
+      "Viele Modelle sind in Cursor „hidden by default“ und erst nach dem Einschalten wählbar; hier zählen sie mit. GPT-6 (Astra/Sol/Luna), Qwen und MiMo fehlen im Katalog, von DeepSeek nur V4.1 Flash. Cursors eigenes Composer-Modell misst kein Board; es fehlt hier also.",
   },
   {
     id: "windsurf",
@@ -101,8 +102,9 @@ export const TOOLS: readonly Tool[] = [
     // Cognition per 307 hierher um.
     source: CATALOGS.windsurf.source,
     retrieved: CATALOGS.windsurf.retrieved,
-    // Rohseite `models.md`, die Liste steckt als JSON darin (269 Einträge im
-    // Pro-Tarif, je Effort-Stufe einer). Ein Zusammenfassungs-Abruf hatte am
+    // Rohseite `models.md`, die Liste steckt als JSON darin (272 Einträge, je Effort-Stufe
+    // einer; seit 28.10. steht die Preistabelle erst im Browser, der Katalog ist
+    // von Hand nachgeführt, `fetch.ts --manual`). Ein Zusammenfassungs-Abruf hatte am
     // 29.09. GLM 5.3, DeepSeek V4 Flash und Gemini 3.7/3.8 Flash verloren.
     caveat:
       "Die Seite trägt kein Änderungsdatum und verweist auf die Modellauswahl in der App als aktuellen Stand. Sonnet 5.5, Grok 4.7, Muse Spark, Qwen und MiMo fehlen im Katalog. Windsurfs eigenes SWE-x misst kein Board; es fehlt hier also.",
@@ -114,11 +116,11 @@ export const TOOLS: readonly Tool[] = [
     retrieved: CATALOGS["jetbrains-ai"].retrieved,
     // Bis 29.09. stand hier eine Obergrenze auf Providerebene (OpenAI,
     // Anthropic, Google, xAI), weil nur die Preisseite geprüft war. Die Hilfe
-    // „Supported models“ (AI Assistant 2026.2, Seitenstand 14.09.2026, zuletzt
-    // geändert 06.08.2026) führt 41 Modelle einzeln — und deutlich weniger, als
-    // die vier Labs hergäben: Gemini nur bis 3.6 Flash, von xAI nur Grok-4.3, von
-    // Anthropic Opus/Sonnet/Fable 5, aber weder 5.5 noch 5.1.
-    caveat: `Gilt für das JetBrains-AI-Abo (Hilfeseite vom 06.08./14.09.2026, seit IDE 2026.1 ohne Neuzugang). ${BYOK} Lokale Modelle (Ollama, LM Studio) stehen ebenfalls nicht in der Liste.`,
+    // „Supported models“ (Seitenstand 05.10.2026) führt 42 Modelle einzeln und
+    // weniger, als die Labs hergäben: Gemini nur Flash 3.6–3.8 und 3.1/2.5 Pro,
+    // von xAI nichts mehr, von OpenAI GPT-6 Luna/Sol und 6.1 Sol, aber kein
+    // gpt-6-astra. Anthropic: auch Opus 5.5, Sonnet 5.5 und Fable 5.1.
+    caveat: `Gilt für das JetBrains-AI-Abo (Hilfeseite, Seitenstand 05.10.2026). ${BYOK} Lokale Modelle (Ollama, LM Studio) stehen ebenfalls nicht in der Liste.`,
   },
   {
     id: "junie",
