@@ -31,6 +31,20 @@
 //
 // Attribution: AA verlangt bei jeder Nutzung den Link auf
 // https://artificialanalysis.ai/ — sie steht in der Folie und im ⓘ-Dialog.
+//
+// Seit Ende Oktober 2026 (Intelligence Index v5)
+// ----------------------------------------------
+// Die Seite heißt die Liste mit Kennzahlen jetzt `initialModels` und trägt nur
+// noch AKTUELLE Modelle (am 28.10.2026: 272, davon 77 mit Index, 74 mit
+// Kosten). Abgekündigte stehen nur noch in einer client-seitig verschlüsselten
+// Datei, die dieses Skript bewusst NICHT liest — die Verschlüsselung ist eine
+// Sperre gegen automatisches Auslesen. Mehr Index- und Kostenwerte stecken
+// darin ohnehin nicht: Modelle ohne v5-Messung haben auch dort keine.
+//
+// Die Website-Nutzungsbedingungen (3.3(b)(vi)) untersagen Skripte, die Daten
+// von der Seite „strip, scrape, or mine“. Das Deck liest trotzdem einmal pro
+// Woche diese eine öffentliche Seite — eine bewusste Entscheidung des
+// Repo-Inhabers vom 28.10.2026, mit Attribution und ohne die Sperre zu umgehen.
 
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -119,22 +133,26 @@ const entsentinel = (v: unknown): unknown => (v === "$undefined" ? null : v);
 /**
  * Die Modell-Liste einer Seite, auf `FELDER` reduziert, nach Slug sortiert.
  *
- * Die Payload trägt ZWEI `"models":[{"slug"…`-Arrays: eine Stub-Liste (Slug,
- * Name, `deprecated`, `releaseDate`, `creator` — für Suche und Filter) und die
- * Voll-Liste mit den Kennzahlen. Die erste zu nehmen liefert 679 Modelle ohne
- * einen einzigen Messwert und sieht bis auf die Nullen vollständig aus — der
- * Größencheck in `hole()` fängt genau das ab. Voll-Liste ist die, deren
- * Datensätze `intelligenceIndex` tragen.
+ * Die Payload trägt mehrere Arrays aus `{"slug"…}`-Objekten: eine Stub-Liste
+ * (`models`: Slug, Name und wenig mehr — für Suche und Filter) und die Liste mit
+ * den Kennzahlen (bis Oktober 2026 ebenfalls `models`, seither
+ * `initialModels`). Die Stub-Liste zu nehmen liefert Hunderte Modelle ohne einen
+ * einzigen Messwert und sieht bis auf die Nullen vollständig aus — der
+ * Größencheck in `hole()` fängt genau das ab. Gewählt wird deshalb nicht nach
+ * Namen, sondern nach Inhalt: die Liste mit den meisten Datensätzen, die
+ * `intelligenceIndex` tragen.
  */
 export function parseModels(html: string): AaRecord[] {
   const p = payload(html);
-  const listen = [...p.matchAll(/"models":\[\{"slug"/g)].map(
+  const listen = [...p.matchAll(/"(?:initialModels|models)":\[\{"slug"/g)].map(
     (m) =>
-      JSON.parse(
-        feld(p, p.indexOf("[", m.index + '"models":'.length)),
-      ) as Record<string, unknown>[],
+      JSON.parse(feld(p, p.indexOf("[", m.index))) as Record<string, unknown>[],
   );
-  const voll = listen.find((l) => l.some((r) => "intelligenceIndex" in r));
+  const mitIndex = (l: Record<string, unknown>[]) =>
+    l.filter((r) => "intelligenceIndex" in r).length;
+  const voll = listen
+    .filter((l) => mitIndex(l) > 0)
+    .sort((a, b) => mitIndex(b) - mitIndex(a))[0];
   if (!voll) return [];
   return voll
     .map((r) => {
