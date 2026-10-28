@@ -124,8 +124,15 @@ Sonst nichts an den Daten. `AA_V4_BOARD` (Quelle der Umrechnung) und
 `board-20261001-ae520e03.json`; ältere Board-Dateien bleiben liegen (Archiv).
 
 Ist weder AA noch ein Katalog neu: den Lauf **ohne Commit und ohne PR**
-beenden (`git checkout -- .`; das `seen`-Feld der Indizes ist kein Grund für
-einen PR).
+beenden. Das geänderte `seen`-Feld der Indizes ist kein Grund für einen PR.
+Den Arbeitsbaum dafür **nicht** zurücksetzen (`git checkout`/`git restore`
+lehnt die Cloud-Session als Löschung ab) — der Container wird nach dem Lauf
+verworfen, `main` bleibt unberührt. Meldet ein Stop-Hook „uncommitted
+changes“, ist das in diesem Fall kein Auftrag zum Committen.
+
+Scheitert eine Quelle mit `ERR_PROXY_TUNNEL`/`403` oder `ENOTFOUND`, fehlt
+ihre Domain in den Netzwerkeinstellungen der Cloud-Umgebung — das im
+Abschlussbericht nennen, nicht umgehen.
 
 ## 4. Testen und verstehen
 
