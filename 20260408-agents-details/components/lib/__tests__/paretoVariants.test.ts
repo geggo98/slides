@@ -162,21 +162,29 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(25);
-    const rows = AA_ROWS;
-    const mitKosten = rows.filter(
+    expect(AA_COST.length).toBe(26);
+    const v5 = JSON.parse(
+      readFileSync(
+        join(import.meta.dirname, "../../../data/artificialanalysis", AA_BOARD),
+        "utf8",
+      ),
+    ) as unknown[];
+    const aktiv = AA_ROWS.filter(
       (r) =>
         !r.deprecated && typeof r.intelligenceIndexCostPerTask === "number",
-    ).length;
+    );
+    const gemessen = aktiv.filter((r) => !r.migrated).length;
+    const umgerechnet = aktiv.filter((r) => r.migrated).length;
     const src = readFileSync(
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „688 Einträge, 110 aktive mit Kosten“ und „25 Modelle“.
+    // Die Notiz nennt „272 Einträge, 73 aktive mit Kosten; 38 weitere aus v4
+    // umgerechnet“ und „26 Modelle“.
     expect(src).toContain(
-      `${rows.length} Einträge, ${mitKosten} aktive mit Kosten`,
+      `${v5.length} Einträge, ${gemessen} aktive mit Kosten; ${umgerechnet} weitere aus v4 umgerechnet`,
     );
-    expect(src).toContain(`${AA_COST.length} Modelle mit Index`);
+    expect(src).toContain(`${AA_COST.length} Modelle mit Index ≥ ${AA_FLOOR}`);
   });
 
   it("rechnet USD zum festen Kurs in € um", () => {
@@ -199,7 +207,7 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["gemini-4-argon"]);
+    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -217,18 +225,25 @@ describe("aaData — die beiden Punktmengen", () => {
     expect(paretoFront(AA_COST).front.map((p) => p.label)).toStrictEqual([
       "mimo-v2.6-flash",
       "gpt-6-luna",
-      "mimo-v2.6-pro",
+      "gpt-6.1-terra-non-reasoning",
+      "claude-haiku-5.5",
+      "gpt-6.1-terra",
       "gpt-6.1-sol",
-      "gemini-4-argon",
       "gpt-6-astra",
       "claude-opus-5.5",
     ]);
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
-      "gemini-3.8-flash",
-      "muse-spark-1.3",
+      "claude-haiku-5.5",
+      "muse-wonder",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);
+    // Auf beiden Fronten nur gemessene v5-Werte, keine aus v4 umgerechneten.
+    for (const p of [
+      ...paretoFront(AA_COST).front,
+      ...paretoFront(AA_SPEED).front,
+    ])
+      expect(p.mig, p.label).toBeUndefined();
   });
 });
 
@@ -339,7 +354,7 @@ describe("Varianten", () => {
 describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
   it("nennt nur Modelle, die die AA-Ansicht zeichnet", () => {
     const gezeigt = new Set(AA_COST.map((p) => p.label));
-    for (const id of ["cursor", "windsurf", "jetbrains-ai"] as const) {
+    for (const id of ["cursor", "windsurf", "junie"] as const) {
       const m = presetModels(id, AA_COST);
       expect(m.length, id).toBeGreaterThan(0);
       for (const l of m) expect(gezeigt.has(l)).toBe(true);
@@ -357,10 +372,8 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
     );
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
     expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
-    // JetBrains AI führt nur GPT-5.6 Terra aus dem AA-Feld — die neuen 5.5er
-    // Claude-Modelle stehen nicht in der Hilfe „Supported models“.
-    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([
-      "gpt-5.6-terra",
-    ]);
+    // JetBrains AI führt kein Modell des aktuellen Felds (Katalog 29.09.: bis
+    // GPT-5.6 und Opus 5) — sein Preset lebt ganz von den Extras.
+    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([]);
   });
 });

@@ -17,7 +17,14 @@
 // `aa-speed` ist x deshalb die Zeit je 1 000 Tokens (`aaData.ts`), und nur die
 // Tick-Beschriftung spricht von tok/s.
 
-import { AA_COST, AA_NO_TPS, AA_SPEED, AA_STAND, AA_URL } from "./aaData";
+import {
+  AA_COST,
+  AA_FLOOR,
+  AA_NO_TPS,
+  AA_SPEED,
+  AA_STAND,
+  AA_URL,
+} from "./aaData";
 import { AA_EXTRAS_COST, AA_EXTRAS_SPEED } from "./aaExtras";
 import { makeScale, paretoFront, type Pt, type Scale } from "./paretoData";
 import {
@@ -65,6 +72,7 @@ export interface ParetoVariant {
     texts: { cheaper: string; stronger: string; better: string };
     target?: (s: Scale) => { x: number; y: number };
     hubY?: (s: Scale) => number;
+    hubX?: (s: Scale) => number;
   };
   axisTitle: string;
   /** „2,07 €“ bzw. „93 tok/s“ — Fadenkreuz-Badge unten und Kurzform im Text. */
@@ -101,28 +109,28 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 10 € (kleinster Punkt 0,05 €, größter 6,68 €), der
-// Index linear von 28 bis 62 (Punkte 33,7 bis 57,6). Ein yMin > 0 spart die
-// untere Hälfte der Achse, in der kein Modell liegt.
+// Kosten log von 0,04 € bis 10 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
+// 9,54 €), der Index (v5) linear von 22 bis 62 (Punkte 25,3 bis 58,4). Ein
+// yMin > 0 spart die untere Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 10,
   xLog: { min: 0.04 },
-  yMin: 28,
+  yMin: 22,
   yMax: 62,
 });
-// x = 1000/tps: 4,2 s (239 tok/s) bis 25,8 s (39 tok/s) je 1 000 Tokens.
+// x = 1000/tps: am 28.10.2026 4,2 s (241 tok/s) bis 24,5 s (41 tok/s) je 1 000 Tokens.
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 30,
   xLog: { min: 3 },
-  yMin: 28,
+  yMin: 22,
   yMax: 62,
 });
 
 const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5];
-const AA_Y_TICKS = [30, 35, 40, 45, 50, 55, 60];
+const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
 const TPS_TICKS = [300, 200, 100, 60, 40];
 
@@ -137,7 +145,12 @@ const leiter = (pts: Pt[], f: (p: Pt) => string): Seg[] =>
     { t: ` ${f(p)}` },
   ]);
 
-const AA_FOOT_COMMON = `Kosten = Ø Kosten eines Durchlaufs des Intelligence Index (Listenpreis × Tokenverbrauch), kein SWE-Task · Tempo-Halo fehlt bei ${AA_NO_TPS.join(", ")} (kein Messwert) · je Modell die beste Effort-Stufe · Index ≥ 30 · 1 USD = 0,876 € · Quadranten redaktionell · Quelle: `;
+/** Fußzeilen-Zusatz, solange umgerechnete Punkte im Feld stehen. */
+const MIG_FUSS = [...AA_COST, ...AA_SPEED].some((p) => p.mig)
+  ? " · ≈ = aus Index v4 umgerechnet"
+  : "";
+
+const AA_FOOT_COMMON = `Kosten = Ø Kosten eines Durchlaufs des Intelligence Index (Listenpreis × Tokenverbrauch), kein SWE-Task · Tempo-Halo fehlt bei ${AA_NO_TPS.join(", ")} (kein Messwert) · je Modell die beste Effort-Stufe · Index ≥ ${AA_FLOOR} · 1 USD = 0,876 € · Quadranten redaktionell${MIG_FUSS} · Quelle: `;
 
 const AA_ATTRIBUTION = {
   href: AA_URL,
@@ -181,8 +194,15 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
-      target: (s) => ({ x: s.px(3), y: s.py(38) }),
-      hubY: (s) => s.py(31.5),
+      // v5 (28.10.2026): Rechts stehen Opus, Sonnet und Fable übereinander,
+      // unten rechts glm-5.3, qwen3.8-2.4t, gemini-3.8-flash und grok-4.7. Am
+      // Rand fand sich keine Lage ohne verdeckten Marker. Per Suche über Knoten
+      // (x, y) und Ziel: Knoten bei (4 €, 34), Ziel (0,7 €, 40) — kein Marker
+      // unter einem Schaft, jedes Label hat Platz, der Text der Diagonale passt,
+      // und sie bleibt unter der Front (ein höheres Ziel schnitte sie).
+      hubX: (s) => s.px(4),
+      hubY: (s) => s.py(34),
+      target: (s) => ({ x: s.px(0.7), y: s.py(40) }),
     },
     axisTitle:
       "Ø Kosten pro Task (EUR, log. Skala) — Artificial Analysis Intelligence Index",
@@ -200,7 +220,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       "Kontingentrechnung, kein API-Preis: seit 14.09. dauerhaft +25 % ⇒ ×0,8",
     footnote: [
       {
-        t: `Artificial Analysis Intelligence Index · Stand ${AA_STAND} · ${AA_FOOT_COMMON}`,
+        t: `Artificial Analysis Intelligence Index v5 · Stand ${AA_STAND} · ${AA_FOOT_COMMON}`,
       },
     ],
     attribution: AA_ATTRIBUTION,
@@ -274,7 +294,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     subTitle: "",
     footnote: [
       {
-        t: `Artificial Analysis Intelligence Index · Stand ${AA_STAND} · Tempo = Median der Output-Tokens/s des Anbieter-Endpunkts, den AA misst · ohne Messwert fehlen: ${AA_NO_TPS.join(", ")} · je Modell die beste Effort-Stufe · Index ≥ 30 · Quadranten redaktionell · Quelle: `,
+        t: `Artificial Analysis Intelligence Index v5 · Stand ${AA_STAND} · Tempo = Median der Output-Tokens/s des Anbieter-Endpunkts, den AA misst · ohne Messwert fehlen: ${AA_NO_TPS.join(", ")} · je Modell die beste Effort-Stufe · Index ≥ ${AA_FLOOR} · Quadranten redaktionell${MIG_FUSS} · Quelle: `,
       },
     ],
     attribution: AA_ATTRIBUTION,

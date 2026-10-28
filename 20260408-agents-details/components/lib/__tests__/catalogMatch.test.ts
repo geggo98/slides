@@ -96,7 +96,6 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "grok-4.6",
       "grok-4.7",
       "kimi-k3",
-      "muse-spark-1.3",
     ],
     windsurf: [
       "claude-fable-5",
@@ -120,7 +119,6 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gpt-5.6-terra",
       "gpt-6-astra",
       "gpt-6-luna",
-      "gpt-6-sol",
       "grok-4.6",
       "kimi-k3",
     ],
@@ -147,9 +145,11 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
 
   it("Junie führt die neueren Modelle, die die AI-Assistant-Hilfe noch nicht kennt", () => {
     const j = labels.filter((l) => catalogHas("junie", l));
+    // gpt-6-sol fehlt seit dem v5-Stand im Chart (AA führt es als abgekündigt);
+    // Junie führt es weiter, es kommt über die Extras ins Preset.
+    expect(catalogHas("junie", "gpt-6-sol")).toBe(true);
     for (const l of [
       "gpt-6-astra",
-      "gpt-6-sol",
       "gpt-6-luna",
       "claude-opus-5.5",
       "claude-sonnet-5.5",

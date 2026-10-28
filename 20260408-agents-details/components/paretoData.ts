@@ -195,6 +195,10 @@ export interface Pt {
   tps?: number;
   /** Der Index dieses Punkts ist von AA geschätzt, nicht gemessen (nur Extras). */
   est?: true;
+  /** Index und Kosten aus AA-Index v4 umgerechnet (`migrateV4`, nur AA). */
+  mig?: true;
+  /** … und schon der v4-Index war von AA geschätzt, nicht gemessen. */
+  v4est?: true;
 }
 
 export interface Snapshot {
@@ -278,6 +282,8 @@ export function P(
     sub25?: number;
     tps?: number;
     est?: true;
+    mig?: true;
+    v4est?: true;
   } = {},
 ): Pt {
   return {
@@ -291,6 +297,8 @@ export function P(
     sub25: extra.sub25,
     tps: extra.tps,
     est: extra.est,
+    mig: extra.mig,
+    v4est: extra.v4est,
     old: extra.old ? { ...extra.old, eur: fmt(extra.old.x) } : undefined,
   };
 }
@@ -1208,6 +1216,7 @@ export type Lab =
   | "Xiaomi"
   | "MiniMax"
   | "StepFun"
+  | "InclusionAI"
   | "Cursor"
   | "Andere";
 
@@ -1227,6 +1236,7 @@ const LAB_PREFIXES: ReadonlyArray<readonly [string, Lab]> = [
   ["mimo-", "Xiaomi"],
   ["minimax", "MiniMax"],
   ["step-", "StepFun"],
+  ["ling-", "InclusionAI"],
   ["qwen", "Alibaba"],
   ["composer-", "Cursor"],
 ];

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
+import { MIG_HINWEIS } from "./aaData";
 import ProviderPicker from "./ProviderPicker.vue";
 import { matchingPreset } from "./providerFilter";
 import { dominators, fmt, paretoFront, type Pt } from "./paretoData";
@@ -136,7 +137,14 @@ const frontSet = computed(() => new Set(front.value.map((p) => p.label)));
 // gibt es ein besseres?“. Genannt werden der billigste und der stärkste Übertreffer
 // der SICHTBAREN Auswahl, also bei einem Produkt nur Modelle desselben Produkts.
 const tipFor = (p: Pt): string => {
-  const s = V.tip(p) + (p.est ? " · Index von AA geschätzt" : "");
+  const s =
+    V.tip(p) +
+    (p.mig
+      ? ` · ${MIG_HINWEIS}` +
+        (p.v4est ? "; schon der v4-Index war von AA geschätzt" : "")
+      : p.est
+        ? " · Index von AA geschätzt"
+        : "");
   if (frontSet.value.has(p.label)) return s + " · liegt auf der Front";
   const d = dominators(p, pts.value);
   if (!d.length) return s;
@@ -781,7 +789,8 @@ const chartLabel = computed(
   dominant-baseline: central;
   pointer-events: none;
 }
-/* Index von AA geschätzt: hohl und gestrichelt — der Wert ist eine Näherung. */
+/* Index von AA geschätzt oder aus v4 umgerechnet: hohl und gestrichelt — der
+   Wert ist eine Näherung. */
 .mp-front-pt.mp-est {
   fill: var(--deck-surface, var(--color-background-primary));
   stroke: var(--slidev-theme-primary);

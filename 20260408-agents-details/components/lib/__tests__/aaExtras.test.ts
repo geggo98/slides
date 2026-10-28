@@ -19,6 +19,7 @@ const cand = (over: Partial<Cand>): Cand => ({
   creator: "X",
   index: 30,
   estimated: false,
+  migrated: false,
   deprecated: false,
   usd: 1,
   tps: 100,
@@ -66,20 +67,20 @@ describe("bestCand — welche Zeile eine Familie vertritt", () => {
 });
 
 describe("Extras", () => {
-  it("kein von AA geschätzter Index hat Kosten — deshalb gibt es „geschätzt“ nur beim Tempo", () => {
+  it("kein von AA geschätzter Index hat Kosten; „≈“ in der Kostenansicht heißt also: aus v4 umgerechnet", () => {
     const schaetz = AA_ROWS.filter((r) => r.intelligenceIndexIsEstimated);
     expect(schaetz.length).toBeGreaterThan(400);
     expect(
       schaetz.filter((r) => typeof r.intelligenceIndexCostPerTask === "number"),
     ).toStrictEqual([]);
-    expect(AA_EXTRAS_COST.filter((p) => p.est)).toStrictEqual([]);
-    expect(AA_EXTRAS_SPEED.filter((p) => p.est).length).toBe(18);
+    for (const p of AA_EXTRAS_COST.filter((q) => q.est))
+      expect(p.mig, p.label).toBe(true);
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
     expect(PRODUCT_FAMILIES.size).toBe(90);
-    expect(AA_EXTRAS_COST.length).toBe(28);
-    expect(AA_EXTRAS_SPEED.length).toBe(48);
+    expect(AA_EXTRAS_COST.length).toBe(34);
+    expect(AA_EXTRAS_SPEED.length).toBe(53);
   });
 
   for (const [view, kurat, extras] of [
@@ -135,7 +136,8 @@ describe("Extras", () => {
   });
 });
 
-// Die Fronten je Produkt und Ansicht, gerechnet aus den Daten vom 29.09.2026.
+// Die Fronten je Produkt und Ansicht, gerechnet aus Katalogen vom 29.09.2026 und
+// dem AA-Snapshot vom 28.10.2026 (v5, fehlende Werte aus v4 umgerechnet).
 // Sie sind der Kern der neuen Folienaussage: jedes Produkt an sich selbst
 // gemessen, nicht am Markt. Bricht einer dieser Werte, hat sich ein Katalog oder
 // der AA-Snapshot bewegt und die Sprechernotizen müssen mit.
@@ -155,11 +157,10 @@ describe("Front je Produkt", () => {
     ).front.map((p) => p.label);
   };
 
-  it("Kosten: JetBrains AI an den eigenen, älteren Modellen gemessen", () => {
+  it("Kosten: JetBrains AI nur mit älteren Modellen, alle aus v4 umgerechnet", () => {
     expect(front("aa-cost", "jetbrains-ai")).toStrictEqual([
       "gemini-3.1-flash-lite",
       "gpt-5-mini",
-      "gemini-3.5-flash-lite",
       "gpt-5.6-luna",
       "gpt-5.6-terra",
       "gpt-5.6-sol",
@@ -177,21 +178,35 @@ describe("Front je Produkt", () => {
     expect(front("aa-cost", "windsurf").at(-1)).toBe("claude-opus-5.5");
   });
 
-  it("Kosten: Cursor kommt mit Opus 5 und Opus 5.5 auf die Front — Opus 5 kostet dort noch kaum weniger", () => {
+  it("Kosten: Cursor endet mit Sonnet 5.5 und Opus 5.5", () => {
     const f = front("aa-cost", "cursor");
-    expect(f.slice(-2)).toStrictEqual(["claude-opus-5", "claude-opus-5.5"]);
+    expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
   });
 
-  it("Tempo: JetBrains AI hat elf Sprossen, die älteren Gemini vorn", () => {
+  it("Tempo: JetBrains AI hat neun Sprossen, die älteren Gemini vorn", () => {
     const f = front("aa-speed", "jetbrains-ai");
-    expect(f[0]).toBe("gemini-2.5-flash-lite"); // geschätzter Index, hohes Tempo
+    expect(f[0]).toBe("gemini-3.5-flash-lite");
     expect(f.at(-1)).toBe("claude-opus-5");
-    expect(f.length).toBe(11);
+    expect(f.length).toBe(9);
+  });
+
+  it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash bleibt unter dem gemessenen glm-5.3", () => {
+    const y = (l: string) => AA_COST.find((p) => p.label === l)!.y;
+    expect(AA_COST.find((p) => p.label === "glm-5.3-flash")!.mig).toBe(true);
+    expect(y("glm-5.3-flash")).toBeLessThan(y("glm-5.3"));
+  });
+
+  it("nimmt in beiden Ansichten dieselbe Stufe, wo es eine gemessene gibt", () => {
+    const kosten = new Map(AA_EXTRAS_COST.map((p) => [p.label, p.y]));
+    // Die Kostenansicht kann nur gemessene Stufen nehmen (geschätzte haben
+    // keine Kosten); die Tempoansicht muss dieselbe nehmen.
+    for (const p of AA_EXTRAS_SPEED)
+      if (kosten.has(p.label)) expect(p.y, p.label).toBe(kosten.get(p.label));
   });
 
   it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
     expect(front("aa-speed", "junie")).toStrictEqual([
-      "gemini-3.8-flash",
+      "gemini-3.1-pro",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);

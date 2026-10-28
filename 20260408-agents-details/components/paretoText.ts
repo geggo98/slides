@@ -70,14 +70,16 @@ export function leadFor(V: ParetoVariant, s: SelectionSummary): Seg[] {
 /** Fußzeile bei angepassten Achsen; `attribution` hängt die Komponente an. */
 const FIT: Record<VariantId, string> = {
   "aa-cost":
-    "AA Intelligence Index · Kosten = Ø Kosten eines Index-Durchlaufs, kein SWE-Task · beste Effort-Stufe je Modell · 1 USD = 0,876 € · Achsen und Quadranten-Linien (Median) folgen der Auswahl · Werte abgekündigter Modelle: letzter AA-Lauf",
+    "AA Intelligence Index v5 · Kosten = Ø Kosten eines Index-Durchlaufs, kein SWE-Task · beste Effort-Stufe je Modell · 1 USD = 0,876 € · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
   "aa-speed":
-    "AA Intelligence Index · Tempo = Median der Output-Tokens/s · beste Effort-Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl · Werte abgekündigter Modelle: letzter AA-Lauf",
+    "AA Intelligence Index v5 · Tempo = Median der Output-Tokens/s · beste Effort-Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
 };
 
 export function footnoteFor(V: ParetoVariant, s: SelectionSummary): Seg[] {
   const out: Seg[] = [{ t: FIT[V.id] }];
-  if (s.base.some((p) => p.est))
+  if (s.base.some((p) => p.mig))
+    out.push({ t: " · ≈ = geschätzt oder aus Index v4 umgerechnet" });
+  else if (s.base.some((p) => p.est))
     out.push({ t: " · ≈ = Index von AA geschätzt" });
   const c = s.coverage;
   if (s.tool && c) {

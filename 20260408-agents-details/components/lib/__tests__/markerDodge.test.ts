@@ -263,17 +263,11 @@ describe("Marker-Entzerrung", () => {
           "mimo-v2.5-pro",
         ],
         "Bonus v11-vs-v1": [],
-        "Hauptfolie aa-cost": [
-          "glm-5.3",
-          "kimi-k3",
-        ],
-        "Hauptfolie aa-cost mit Kontingent": [
-          "glm-5.3",
-          "kimi-k3",
-        ],
+        "Hauptfolie aa-cost": [],
+        "Hauptfolie aa-cost mit Kontingent": [],
         "Hauptfolie aa-speed": [
-          "gpt-6-sol",
-          "grok-4.7",
+          "mimo-v2.6-flash",
+          "qwen3.8-flash-next",
         ],
         "Historie 0710": [],
         "Historie 0722": [

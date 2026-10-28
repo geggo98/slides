@@ -55,14 +55,15 @@ describe("dominators", () => {
 });
 
 // Die Zahlen, die in der Fußzeile stehen: „21 von 41 Modellen mit Messwert“. Sie
-// werden hier aus Katalogen (29.09.2026) und AA-Snapshot (01.10.2026)
+// werden hier aus Katalogen (29.09.2026) und AA-Snapshot (28.10.2026, v5 plus
+// umgerechnete v4-Werte)
 // nachgerechnet; bewegt sich einer der beiden, stimmt die Fußzeile nicht mehr, und dieser Test sagt es.
 describe("coverage", () => {
   const erwartet: Record<VariantId, Record<ToolId, [number, number]>> = {
     // [Familien des Produkts, davon gezeichnet]
     "aa-cost": {
       cursor: [49, 31],
-      windsurf: [64, 33],
+      windsurf: [64, 34],
       "jetbrains-ai": [41, 21],
       junie: [11, 11],
     },
@@ -123,8 +124,8 @@ describe("summarize", () => {
     expect(s.isDefault).toBe(false);
     expect(s.tool?.id).toBe("jetbrains-ai");
     expect(s.base.length).toBe(21);
-    expect(s.front.length).toBe(7);
-    expect(s.dominated).toBe(14);
+    expect(s.front.length).toBe(6);
+    expect(s.dominated).toBe(15);
     expect(s.coverage?.plotted).toBe(21);
   });
 
@@ -146,9 +147,9 @@ describe("Texte für eine Auswahl", () => {
 
   it("der Absatz nennt die berechnete Leiter des Produkts, billigste zuerst, und die Zahlen", () => {
     const t = text(leadFor(cost, jb));
-    expect(t).toContain("gemini-3.1-flash-lite 0,035 € (15,6) → gpt-5-mini");
-    expect(t).toContain("claude-opus-5 5,13 € (50,8)");
-    expect(t).toContain("JetBrains AI: 7 von 21 auf der Front, die übrigen 14");
+    expect(t).toContain("gemini-3.1-flash-lite 0,086 € (≈ 6,0) → gpt-5-mini");
+    expect(t).toContain("claude-opus-5 9,91 € (≈ 46,3)");
+    expect(t).toContain("JetBrains AI: 6 von 21 auf der Front, die übrigen 15");
   });
 
   it("die Tempo-Ansicht beginnt beim Langsamsten und kennzeichnet geschätzte Werte", () => {
@@ -159,11 +160,11 @@ describe("Texte für eine Auswahl", () => {
     expect(t).toContain("Wo Du wartest");
     // elf Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
     expect(t).toContain(
-      "gemini-3.5-flash-lite 326 tok/s → gemini-2.5-flash-lite 333 tok/s",
+      "gpt-5.4-mini 216 tok/s → gemini-3.5-flash-lite 454 tok/s",
     );
     expect(t).not.toContain("(≈");
     expect(t.indexOf("claude-opus-5")).toBeLessThan(
-      t.indexOf("gemini-2.5-flash-lite"),
+      t.indexOf("gemini-3.5-flash-lite"),
     );
   });
 
@@ -200,12 +201,13 @@ describe("Texte für eine Auswahl", () => {
     expect(liste).toContain("GPT-5.4");
   });
 
-  it("die Fußzeile erklärt „≈“ nur, wenn ein Punkt geschätzt ist", () => {
-    const V = VARIANTS["aa-speed"];
-    const u = [...V.pts, ...V.extras];
-    const est = summarize(V, new Set(presetModels("jetbrains-ai", u, V.pts)));
-    expect(text(footnoteFor(V, est))).toContain("≈ = Index von AA geschätzt");
-    expect(text(footnoteFor(cost, jb))).not.toContain("≈");
+  it("die Fußzeile erklärt „≈“ nur, wenn ein Punkt geschätzt oder umgerechnet ist", () => {
+    expect(text(footnoteFor(cost, jb))).toContain(
+      "≈ = geschätzt oder aus Index v4 umgerechnet",
+    );
+    const gemessen = cost.pts.filter((p) => !p.est).slice(0, 3);
+    const nur = summarize(cost, new Set(gemessen.map((p) => p.label)));
+    expect(text(footnoteFor(cost, nur))).not.toContain("≈");
   });
 });
 

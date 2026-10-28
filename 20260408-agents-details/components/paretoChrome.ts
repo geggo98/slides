@@ -252,6 +252,12 @@ export interface ArrowClusterOpts {
   target?: (s: Scale) => { x: number; y: number };
   /** Hub-Höhe in Pixeln. Default: py(9 %). */
   hubY?: (s: Scale) => number;
+  /**
+   * Hub-Lage waagerecht in Pixeln. Default: 26 px vor dem rechten Rand. Die
+   * AA-Kostenansicht (v5) braucht mehr Abstand, weil rechts Opus, Sonnet und
+   * Fable übereinander stehen.
+   */
+  hubX?: (s: Scale) => number;
   /** Beschriftung der drei Pfeile. Default: Preis-Leistung wie auf der DeepSWE-Folie. */
   texts?: { cheaper: string; stronger: string; better: string };
 }
@@ -265,7 +271,7 @@ export function arrowCluster(
   // senkrechte Pfeil liefe in claude-sonnet-5 (23 €/54 %). Frei ist rechts von
   // 4 € unterhalb von 45 % in jedem Stand der Hauptfolie — der niedrigste Punkt
   // dort ist claude-sonnet-5 bei 54 %, auch mit Kontingent-Overlay.
-  const hx = s.W - s.R - 26;
+  const hx = opts.hubX ? opts.hubX(s) : s.W - s.R - 26;
   const hy = opts.hubY ? opts.hubY(s) : s.py(9);
   const txt = opts.texts ?? {
     cheaper: "Billiger",

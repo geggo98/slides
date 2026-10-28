@@ -1565,8 +1565,8 @@ routeAlias: pareto-heute
 
 <!--
 ZWEI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
-„Intelligenz × Kosten“ (Artificial Analysis, Stand 01.10.2026). Die Regel
-ist in beiden dieselbe, nur die x-Achse wechselt.
+„Intelligenz × Kosten“ (Artificial Analysis, Intelligence Index v5, Stand
+28.10.2026). Die Regel ist in beiden dieselbe, nur die x-Achse wechselt.
 
 Die Handlungsanweisung zuerst aussprechen, alles andere ist Begründung:
 Nimm den billigsten Punkt der Front, von dem Du glaubst, dass er Deine
@@ -1580,7 +1580,7 @@ mischt Wissen, Logik und Agenten-Aufgaben —, keinen Coding-Agenten auf
 echten Repos. „Kosten pro Task“ heißt bei AA: Ø Kosten eines Durchlaufs
 des Index, kein SWE-Task; mit den DeepSWE-Werten der Historie ist das
 NICHT vergleichbar. AA liefert Preise in USD, umgerechnet mit 0,876. Je
-Modell die beste Effort-Stufe, Index ≥ 30.
+Modell die beste Effort-Stufe, Index ≥ 25.
 
 Warum kein DeepSWE mehr auf dieser Folie: Das Board misst keine neuen
 Modelle mehr — unser letzter Abruf (23.09.) zeigte noch den Stand vom
@@ -1589,65 +1589,68 @@ datacurve-ai/deep-swe#117 („Is this repo dead?“, 16.10.2026, offen):
 „no new tests are on the website“. AA führt es nicht mehr als Referenz.
 Die Historie bis 03.09. bleibt auf den folgenden Folien.
 
-Die AA-Kostenleiter hat sieben Sprossen: mimo-v2.6-flash 0,05 € (37,9) →
-gpt-6-luna 0,06 € (38,1) → mimo-v2.6-pro 0,12 € (46,3) → gpt-6.1-sol
-0,63 € (51,8) → gemini-4-argon 1,74 € (52,6) → gpt-6-astra 2,85 € (52,7)
-→ claude-opus-5.5 5,24 € (57,6). Opus 5.5 führt mit 57,6, aber sein
-Vorsprung auf astra ist 4,9 Punkte für fast den doppelten Preis — das
-ist die Eskalations-Frage der Folie.
+INDEX v5 (seit Ende Oktober 2026). AA hat den Index neu aufgesetzt und
+bisher nur einen Teil der Modelle neu gemessen: 76 mit Index, 73 mit
+Kosten — am 01.10. hatten 175 Einträge Kosten. Die Zahlen sind neu geeicht und
+NICHT mit früheren Ständen vergleichbar: Opus 5.5 hatte 57,6 bei 5,24 €,
+jetzt 58,4 bei 8,79 € — der Preis je Index-Durchlauf ist gestiegen, weil
+v5 schwerere Aufgaben stellt, nicht weil Anthropic teurer wurde.
 
-NEU AM 01.10.2026 — Gemini 4 Argon (Google, angekündigt 30.09.): AA misst
-es schon, Index 52,6 bei 1,99 $ = 1,74 € pro Index-Durchlauf. Damit ist
-es eine neue Sprosse zwischen gpt-6.1-sol und astra und dominiert
-glm-5.3, grok-4.7, kimi-k3, qwen3.8-2.4t und qwen3.8-max. Zu astra: 0,1
-Punkte Abstand, also gleichauf, bei 61 % der Kosten — AA selbst schreibt,
-Argon gleiche astra auf dem Index bei 60 % der Kosten. Drei Vorbehalte,
-alle gehören dazu. Erstens rechnet AA mit dem EINFÜHRUNGSPREIS (2 / 10 $
-je Million Tokens); ab 4 / 20 $ läge Argon bei rund 3,5 € und wäre von
-astra dominiert — ein Einführungspreis ist kein Dauerpreis. Zweitens ist Argon nicht allgemein verfügbar, sondern bisher nur
-im Programm „Fairwind“ für Cyber-Defender, ohne Release-Termin; keiner
-der vier Produktkataloge führt es, die Anbieter-Presets sind deshalb
-unverändert. Drittens fehlt bei AA noch der Tempo-Wert — Argon steht nur
-in der Kostenansicht (und nicht in der Tempo-Ansicht).
+Wo ein v5-Wert fehlt, steht der v4-Wert vom 01.10. auf v5 umgerechnet:
+ein Potenzgesetz, gefittet an den 52 Konfigurationen, die in beiden Ständen
+gemessen sind (R² 0,95, typisch ±4 Punkte; Kosten log-linear, ×/÷ 1,5).
+Danach wird jeder Wert zwischen den gemessenen Modellen desselben
+Herstellers verankert, damit die v4-Reihenfolge im eigenen Haus bleibt —
+ohne das stand glm-5.3-flash (≈ 33,0) über dem gemessenen glm-5.3 (31,7).
+Diese Punkte stehen hohl und gestrichelt, der Tooltip sagt „aus Index v4
+umgerechnet“. Für die Folie reicht das — es ist eine Präsentation, keine
+Analyse, und die Marker sind ohnehin nur so genau wie ein Pixel. Im
+Kostenchart sind es drei: glm-5.3-flash 0,50 € (≈ 29,2),
+qwen3.8-flash-next 0,72 € (≈ 27,1), qwen3.8-2.4t 3,83 € (≈ 27,2). Auf
+keiner der beiden Fronten steht ein umgerechneter Punkt.
 
-Ebenfalls neu auf der Front, aber NICHT wegen Argon: gpt-6-luna. AA hat
-mit dem neuen Snapshot den Index von 37,3 auf 38,1 korrigiert; damit
-schlägt es mimo-v2.6-flash (37,9) für einen Cent mehr (0,06 € gegen
-0,05 €). Die Leiter hat eine Sprosse mehr, weil sich eine Messung bewegt hat, nicht
-weil ein Modell erschienen ist — dasselbe Thema wie bei der Historie. Sonnet 5.5 und Fable 5.1
-sind dominiert: Opus 5.5 ist besser UND billiger als beide.
+Die AA-Kostenleiter hat acht Sprossen: mimo-v2.6-flash 0,11 € (26,7) →
+gpt-6-luna 0,13 € (27,8) → gpt-6.1-terra-non-reasoning 0,20 € (30,4) →
+claude-haiku-5.5 0,36 € (36,2) → gpt-6.1-terra 0,84 € (51,0) →
+gpt-6.1-sol 1,11 € (54,5) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5
+8,79 € (58,4). Der große Sprung liegt zwischen Haiku 5.5 und
+gpt-6.1-terra: 15 Punkte für gut das Doppelte. Oben kosten die letzten
+vier Punkte (54,5 → 58,4) fast das Achtfache — das ist die
+Eskalations-Frage der Folie.
 
-Ansicht „Tempo“: Front nach Output-Tokens/s — gemini-3.8-flash 221 →
-muse-spark-1.3 163 → sonnet-5.5 139 → opus-5.5 90. Dieselben vier wie am
-29.09., nur die Zahlen sind gesunken (AA misst den Median laufend).
-gemini-4-argon fehlt dort, AA führt für das neue Modell noch keine
-Geschwindigkeit; gpt-6.1-sol und kimi-k3 haben seit dem neuen Snapshot einen
-Wert und stehen jetzt in der Ansicht. Der Schalter „Tempo
-als Größe“ legt die Geschwindigkeit als Halo um die Marker der
-Kostenansicht. Attribution: AA verlangt den Link, er steht in der
-Fußzeile.
+gemini-4-argon (50,4 bei 3,37 €) ist in v5 von gpt-6.1-terra und
+gpt-6.1-sol dominiert und nicht mehr auf der Front. Am 01.10. war es nur
+im Programm „Fairwind“ für Cyber-Defender verfügbar und in keinem
+Produktkatalog; ob sich das geändert hat, ist nicht nachgeprüft.
 
-PRODUKT-AUSWAHL (Anbieter-Menü; Katalog- und AA-Stand 29.09.2026).
-Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER Modelle sich
-lohnen und wann es ein strikt besseres gibt. Ein Produkt zeigt deshalb
-alle seine Modelle mit Messwert — auch ältere und von AA abgekündigte —
-und rechnet die Front nur über diese, selbst wenn andere Produkte neuere
-Modelle haben. Achsen und Quadranten-Linien (Median) folgen der Auswahl;
-„Alle“ und die Labs bleiben beim aktuellen Feld. Der Tooltip eines grauen
-Punkts nennt das Modell, das ihn strikt übertrifft. Hohle, gestrichelte
-Marker (nur Tempo-Ansicht) haben einen von AA geschätzten Index.
+Ansicht „Tempo“: Front nach Output-Tokens/s — claude-haiku-5.5 241 →
+muse-wonder 197 → claude-sonnet-5.5 138 → claude-opus-5.5 98. Ohne
+Tempo-Wert fehlt ling-3.1-flash-1019. Der Schalter „Tempo als Größe“
+legt die Geschwindigkeit als Halo um die Marker der Kostenansicht.
+Attribution: AA verlangt den Link, er steht in der Fußzeile.
 
-Kostenansicht, die vier Produkte (Argon steht in keinem Katalog):
-- JetBrains AI (21 von 41 Modellen mit Kostenwert): gemini-3.1-flash-lite 0,035 € (15,6) → gpt-5-mini 0,047 € (16,8) → gemini-3.5-flash-lite 0,11 € (22,2) → gpt-5.6-luna 0,16 € (37,3) → gpt-5.6-terra 1,23 € (42,1) → gpt-5.6-sol 1,74 € (47,0) → claude-opus-5 5,13 € (50,8). Kein Opus 5.5, kein GPT-6: Der Katalog stammt von der Hilfeseite vom 06.08./14.09. und hat seit IDE 2026.1 keinen Neuzugang.
-- Junie (11 von 11): gpt-6-luna 0,06 € (38,1) → gpt-6-sol 0,92 € (47,6) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6). Eine Modellgeneration vor dem AI Assistant.
-- Windsurf (33 von 64): gpt-6-luna 0,06 € (38,1) → glm-5.3-flash 0,22 € (41,8) → gpt-6-sol 0,92 € (47,6) → gpt-6-astra 2,85 € (52,7) → claude-opus-5.5 5,24 € (57,6).
-- Cursor (31 von 49): gpt-5-mini 0,047 € (16,8) → gpt-5.6-luna 0,16 € (37,3) → glm-5.3-flash 0,22 € (41,8) → gpt-5.6-terra 1,23 € (42,1) → muse-spark-1.3 1,41 € (48,1) → claude-opus-5 5,13 € (50,8) → claude-opus-5.5 5,24 € (57,6). Opus 5 und 5.5 stehen beide auf der Front: für 11 Cent mehr gibt es 6,8 Punkte.
+PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 29.09.2026, AA-Stand
+28.10.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
+Modelle sich lohnen und wann es ein strikt besseres gibt. Ein Produkt
+zeigt deshalb alle seine Modelle mit Wert — auch ältere, die AA nicht mehr
+führt — und rechnet die Front nur über diese, selbst wenn andere Produkte
+neuere Modelle haben. Achsen und Quadranten-Linien (Median) folgen der
+Auswahl; „Alle“ und die Labs bleiben beim aktuellen Feld. Der Tooltip
+eines grauen Punkts nennt das Modell, das ihn strikt übertrifft. Ältere
+Modelle hat AA in v5 kaum neu gemessen: In den Presets sind deshalb die
+meisten Punkte aus v4 umgerechnet (≈).
 
-Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten; ≈ = Index geschätzt):
-- JetBrains AI (40 von 41, elf Sprossen; Scores bei langen Leitern nur im Tooltip): claude-opus-5 52 tok/s → claude-fable-5 63 tok/s → gpt-5.6-sol 79 tok/s → gpt-5.6-terra 89 tok/s → gpt-5.4 92 tok/s → gpt-5.6-luna 112 tok/s → gemini-3.6-flash 177 tok/s → gemini-3.5-flash 190 tok/s → gpt-5.4-mini 216 tok/s → gemini-3.5-flash-lite 326 tok/s → gemini-2.5-flash-lite 333 tok/s.
-- Junie (11 von 11): claude-opus-5.5 90 tok/s (57,6) → claude-sonnet-5.5 139 tok/s (56,0) → gemini-3.8-flash 221 tok/s (40,9).
-- Cursor (40 von 49): claude-opus-5.5 90 tok/s (57,6) → claude-sonnet-5.5 139 tok/s (56,0) → muse-spark-1.3 163 tok/s (48,1) → gemini-3.8-flash 221 tok/s (40,9) → gemini-3.7-flash 291 tok/s (39,1).
-- Windsurf (46 von 64): claude-opus-5.5 90 tok/s (57,6) → gemini-3.8-flash 221 tok/s (40,9) → gemini-3.7-flash 291 tok/s (39,1). gpt-5.6-terra (jetzt 89 tok/s, Index 42,1) ist von opus-5.5 dominiert — 90 tok/s bei 57,6 — und fällt heraus; am 29.09. war es mit 98 tok/s noch schneller.
+Kostenansicht, die vier Produkte:
+- JetBrains AI (21 von 41, sechs Sprossen, alle umgerechnet): gemini-3.1-flash-lite 0,086 € (≈ 6,0) → gpt-5-mini 0,11 € (≈ 6,9) → gpt-5.6-luna 0,36 € (≈ 26,8) → gpt-5.6-terra 2,54 € (≈ 34,5) → gpt-5.6-sol 3,55 € (≈ 44,9) → claude-opus-5 9,91 € (≈ 46,3). Kein Opus 5.5, kein GPT-6: Der Katalog stammt von der Hilfeseite vom 06.08./14.09.
+- Junie (11 von 11): gpt-6-luna 0,13 € (27,8) → gpt-6-sol 1,93 € (≈ 45,9) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4).
+- Windsurf (34 von 64): gpt-6-luna 0,13 € (27,8) → glm-5.3-flash 0,50 € (≈ 29,2) → gpt-6-sol 1,93 € (≈ 45,9) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4).
+- Cursor (31 von 49): gpt-5-mini 0,11 € (≈ 6,9) → gpt-5.6-luna 0,36 € (≈ 26,8) → glm-5.3-flash 0,50 € (≈ 29,2) → gpt-5.6-terra 2,54 € (≈ 34,5) → muse-spark-1.3 2,90 € (≈ 41,9) → gpt-5.6-sol 3,55 € (≈ 44,9) → claude-sonnet-5.5 8,78 € (54,2) → claude-opus-5.5 8,79 € (58,4). Sonnet 5.5 und Opus 5.5 kosten fast dasselbe, Opus hat 4,2 Punkte mehr.
+
+Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten; ≈ = umgerechnet):
+- JetBrains AI (40 von 41, neun Sprossen; Scores bei langen Leitern nur im Tooltip): claude-opus-5 52 tok/s → gpt-5.6-sol 79 tok/s → gpt-5.6-terra 89 tok/s → gpt-5.4 92 tok/s → gpt-5.6-luna 112 tok/s → gemini-3.6-flash 177 tok/s → gemini-3.5-flash 190 tok/s → gpt-5.4-mini 216 tok/s → gemini-3.5-flash-lite 454 tok/s.
+- Junie (11 von 11): claude-opus-5.5 98 tok/s (58,4) → claude-sonnet-5.5 138 tok/s (54,2) → gemini-3.1-pro 145 tok/s (≈ 18,8).
+- Cursor (40 von 49): claude-opus-5.5 98 tok/s (58,4) → claude-sonnet-5.5 138 tok/s (54,2) → muse-spark-1.3 163 tok/s (≈ 41,9) → gemini-3.7-flash 291 tok/s (≈ 29,1).
+- Windsurf (46 von 64): claude-opus-5.5 98 tok/s (58,4) → gemini-3.8-flash 133 tok/s (30,5) → gemini-3.7-flash 291 tok/s (≈ 29,1).
 
 Die Frage aus dem Publikum, was mit dem eigenen API-Schlüssel ist: JetBrains
 AI und Junie erlauben BYOK. Dann das Lab des Schlüssels anhaken (OpenAI,
@@ -1722,10 +1725,9 @@ Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
 Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
 Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
-Entzerrte Marker: bis 1,9 px verschoben, höchstens 0,2 Indexpunkte
-senkrecht oder 0,0 % im Preis bzw. Tempo waagerecht. Betroffen in der
-Kostenansicht glm-5.3 und kimi-k3, in der Tempoansicht gpt-6-sol und
-grok-4.7. Frontpunkte rücken nur waagerecht, kein dominierter Punkt rückt
+Entzerrte Marker: bis 5,2 px verschoben, höchstens 0,8 Indexpunkte
+senkrecht oder 0,0 % im Preis bzw. Tempo waagerecht. Betroffen ist nur die
+Tempoansicht: mimo-v2.6-flash und qwen3.8-flash-next. Frontpunkte rücken nur waagerecht, kein dominierter Punkt rückt
 über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
 rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
