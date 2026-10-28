@@ -206,14 +206,7 @@ export type GeometryVariant = Pick<
   | "arrows"
   | "features"
   | "xKind"
-> & {
-  /**
-   * Punkte, aus denen die Front-Wächter der Entzerrung stammen (`frontUnion`).
-   * Default: das kuratierte Feld. Die geschätzten Punkte der DeepSWE-Ansicht
-   * gehören zum Feld, bekommen die Wächter-Eigenschaft aber nicht.
-   */
-  frontGuard?: readonly Pt[];
-};
+>;
 
 export function chartGeometry(
   V: GeometryVariant,
@@ -221,7 +214,8 @@ export function chartGeometry(
   sel: ReadonlySet<string>,
   subOn: boolean,
 ): ChartGeometry {
-  const ghost = V.features.priceGhost;
+  // Die AA-Daten kennen keine künftigen Preise, also auch keine Geisterringe.
+  const ghost = false;
   const curated = V.pts;
   const isDefault =
     sel.size === curated.length && curated.every((p) => sel.has(p.label));
@@ -262,7 +256,7 @@ export function chartGeometry(
     (p) => p.sub !== undefined,
     {
       horizontalOnly: isDefault
-        ? frontUnion([...(V.frontGuard ?? curated)])
+        ? frontUnion([...curated])
         : new Set(paretoFront(base).front.map((p) => p.label)),
     },
   );

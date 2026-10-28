@@ -40,7 +40,7 @@ describe("dominators", () => {
   });
 
   it("stimmt mit `paretoFront` überein: dominiert genau dann, wenn ein Dominator existiert", () => {
-    for (const id of ["aa-cost", "aa-speed", "deepswe"] as const) {
+    for (const id of ["aa-cost", "aa-speed"] as const) {
       const V = VARIANTS[id];
       const uni = [...V.pts, ...V.extras];
       const { front, dom } = paretoFront(uni);
@@ -72,12 +72,6 @@ describe("coverage", () => {
       "jetbrains-ai": [41, 40],
       junie: [11, 11],
     },
-    deepswe: {
-      cursor: [49, 17],
-      windsurf: [64, 20],
-      "jetbrains-ai": [41, 10],
-      junie: [11, 4],
-    },
   };
 
   for (const view of Object.keys(erwartet) as VariantId[])
@@ -89,7 +83,7 @@ describe("coverage", () => {
       });
 
   it("zeichnet genau so viele Punkte, wie das Preset auswählt", () => {
-    for (const view of ["aa-cost", "aa-speed", "deepswe"] as const) {
+    for (const view of ["aa-cost", "aa-speed"] as const) {
       const V = VARIANTS[view];
       const uni = [...V.pts, ...V.extras];
       for (const id of ["cursor", "windsurf", "jetbrains-ai", "junie"] as const)
@@ -99,7 +93,7 @@ describe("coverage", () => {
     }
   });
 
-  it("nennt je Ansicht den Grund: Kosten, Tempo, Index oder Board", () => {
+  it("nennt je Ansicht den Grund: Kosten, Tempo oder Index", () => {
     const jb = coverage("jetbrains-ai", VARIANTS["aa-cost"]);
     expect(missingByReason(jb)).toStrictEqual([
       [
@@ -110,11 +104,6 @@ describe("coverage", () => {
     const cur = coverage("cursor", VARIANTS["aa-cost"]);
     const gruende = new Map(missingByReason(cur));
     expect(gruende.get("kein Index bei AA")).toContain("Composer 2.5");
-    expect(
-      coverage("cursor", VARIANTS.deepswe).missing.every(
-        (m) => m.reason === "nicht auf dem Board",
-      ),
-    ).toBe(true);
   });
 });
 

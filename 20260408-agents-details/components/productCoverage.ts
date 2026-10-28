@@ -25,7 +25,6 @@ export interface Coverage {
 
 /** Warum ein Modell in dieser Ansicht fehlt. */
 function reasonFor(key: string, view: ParetoVariant["id"]): string {
-  if (view === "deepswe") return "nicht auf dem Board";
   if (aaFamily(key).length === 0) return "kein Index bei AA";
   return view === "aa-cost"
     ? "kein Kostenwert bei AA"

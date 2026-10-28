@@ -1556,25 +1556,38 @@ Muster nach: <a href="https://quesma.com/blog/custom-deep-research-pipeline/" ta
 
 ---
 hideInToc: true
-clicks: 1
 routeAlias: pareto-heute
 ---
 
 # Welches Modell wofür? Die Datenlage
 
-<ModelRoutingPareto :preliminary="$clicks >= 1" />
+<ModelRoutingPareto />
 
 <!--
-DREI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
+ZWEI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
 „Intelligenz × Kosten“ (Artificial Analysis, Stand 01.10.2026). Die Regel
-ist in allen dreien dieselbe, nur die Daten wechseln.
+ist in beiden dieselbe, nur die x-Achse wechselt.
+
+Die Handlungsanweisung zuerst aussprechen, alles andere ist Begründung:
+Nimm den billigsten Punkt der Front, von dem Du glaubst, dass er Deine
+Aufgaben löst. Weißt Du es nicht — und das ist der Normalfall —, fang
+unten an und geh bei einem Fehlschlag eine Sprosse höher. Wo ein
+Fehlschlag teuer ist — Produktionsdaten, ein Review, das jemand lesen
+muss —, steigt man weiter oben ein.
 
 Artificial Analysis (AA) misst breite Fähigkeit — der Intelligence Index
-mischt Wissen, Logik und Agenten-Aufgaben —, DeepSWE misst Coding-Agenten
-auf 113 echten Repo-Tasks. „Kosten pro Task“ heißt bei AA: Ø Kosten eines
-Durchlaufs des Index, kein SWE-Task. Die €-Werte der beiden Datenquellen
-sind deshalb NICHT vergleichbar. AA liefert Preise in USD, umgerechnet
-mit 0,876 wie bei DeepSWE. Je Modell die beste Effort-Stufe, Index ≥ 30.
+mischt Wissen, Logik und Agenten-Aufgaben —, keinen Coding-Agenten auf
+echten Repos. „Kosten pro Task“ heißt bei AA: Ø Kosten eines Durchlaufs
+des Index, kein SWE-Task; mit den DeepSWE-Werten der Historie ist das
+NICHT vergleichbar. AA liefert Preise in USD, umgerechnet mit 0,876. Je
+Modell die beste Effort-Stufe, Index ≥ 30.
+
+Warum kein DeepSWE mehr auf dieser Folie: Das Board misst keine neuen
+Modelle mehr — unser letzter Abruf (23.09.) zeigte noch den Stand vom
+03.09., Opus 5.5, GPT-6 Sol/Luna und Gemini 4 Argon fehlen. Issue
+datacurve-ai/deep-swe#117 („Is this repo dead?“, 16.10.2026, offen):
+„no new tests are on the website“. AA führt es nicht mehr als Referenz.
+Die Historie bis 03.09. bleibt auf den folgenden Folien.
 
 Die AA-Kostenleiter hat sieben Sprossen: mimo-v2.6-flash 0,05 € (37,9) →
 gpt-6-luna 0,06 € (38,1) → mimo-v2.6-pro 0,12 € (46,3) → gpt-6.1-sol
@@ -1591,8 +1604,7 @@ Punkte Abstand, also gleichauf, bei 61 % der Kosten — AA selbst schreibt,
 Argon gleiche astra auf dem Index bei 60 % der Kosten. Drei Vorbehalte,
 alle gehören dazu. Erstens rechnet AA mit dem EINFÜHRUNGSPREIS (2 / 10 $
 je Million Tokens); ab 4 / 20 $ läge Argon bei rund 3,5 € und wäre von
-astra dominiert — dieselbe Pointe wie beim Gemini-Listenpreis weiter
-unten. Zweitens ist Argon nicht allgemein verfügbar, sondern bisher nur
+astra dominiert — ein Einführungspreis ist kein Dauerpreis. Zweitens ist Argon nicht allgemein verfügbar, sondern bisher nur
 im Programm „Fairwind“ für Cyber-Defender, ohne Release-Termin; keiner
 der vier Produktkataloge führt es, die Anbieter-Presets sind deshalb
 unverändert. Drittens fehlt bei AA noch der Tempo-Wert — Argon steht nur
@@ -1644,193 +1656,28 @@ zeigen nur, was das JetBrains-Abo mitbringt. Und Junie veröffentlicht keine
 vollständige Modellliste: elf Modelle sind belegt (Landingpage, datierte
 Release-Notes), das Produkt selbst zeigt mit /model mehr.
 
-Ab hier die Notiz zur DeepSWE-Ansicht (Menü „DeepSWE × Kosten“).
-
-Diese Folie hat eine Handlungsanweisung, keinen Befund. Sie zuerst
-aussprechen, alles andere ist Begründung: Nimm den billigsten Punkt der
-Front, von dem Du glaubst, dass er Deine Aufgaben löst. Weißt Du es
-nicht — und das ist der Normalfall —, fang unten an und geh bei einem
-Fehlschlag eine Sprosse höher.
-
-Die Leiter hat heute drei Sprossen, und die Zahl darunter ist das
-Argument: 0,21 + 0,53 + 2,07 = 2,81 €. Wer die ganze Leiter hochsteigt,
-also zweimal scheitert und beim dritten Versuch durchkommt, zahlt gut
-ein Viertel dessen, was ein einziger Lauf mit Opus 5 kostet (10,37 €) —
-und Opus 5 löst nach diesem Board nicht mehr als Sprosse 3. Deshalb ist
-Eskalieren nicht die vorsichtige Variante, sondern die billige.
-
-Die Einschränkung ehrlich dazusagen: Das gilt für Aufgaben vom Zuschnitt
-dieses Benchmarks. Wo ein Fehlschlag teuer ist — Produktionsdaten, ein
-Review, das jemand lesen muss —, zahlst Du für den Fehlversuch mehr als
-die 21 Cent. Dann steigt man weiter oben ein.
-
-Die Spitze der Leiter vorsichtig formulieren: gemini-3.8-flash hat mit
-73,8 % den höchsten Score, den das Board ausweist, Opus 5 hat 73,7 %.
-Nach unserem eigenen Kriterium — weniger als 5 Punkte Abstand heißt
-gleichauf — ist das KEIN Qualitätsunterschied. Die Folie sagt deshalb
-nicht „Gemini ist besser", sondern: derselbe Score kostet ein Fünftel.
-Was sich geändert hat, ist der Preis.
-
-Seit dem 03.09. steht gpt-6-astra daneben — der teuerste Punkt der
-Folie, und trotzdem nicht auf der Front. Wenn jemand fragt, warum das
-beste Modell des Boards nicht empfohlen wird: Weil „bestes" hier 74,12 %
-gegen 73,83 % heißt, bei Fehlerbalken von ±2,9 und ±1,4. Auf ganze
-Prozent gerundet — so zeichnet dieses Chart — sind beide 74 %. Und der
-eine kostet 5,71 €, der andere 2,07 €.
-
-Das Chart nimmt je Modell die BESTE gemessene Konfiguration, das Board
-die höchste Effort-Stufe. Bei astra fallen die beiden weit auseinander:
-
-  high    73,23 %   331/452    5,01 €
-  xhigh   74,12 %   335/452    5,71 €   <- hier geplottet
-  max     73,23 %   331/452   10,84 €   <- das Board zeigt DIESE Zeile
-
-high und max lösen dieselben 331 von 452 Aufgaben; die höchste Stufe
-kostet das Doppelte für keine einzige zusätzlich gelöste Aufgabe. Diese
-Frage kommt selten von selbst — wenn doch, ist die kurze Antwort: Die
-alte Regel unterstellte, dass mehr Aufwand mehr Ergebnis heißt. Das
-stimmt bei vier von 22 Modellen nicht mehr. Details im ⓘ.
-
-Zwei Vorbehalte, beide gehören dazu. Erstens ist astras Preis der
-einzige auf dem Board, den Datacurve als „expected launch pricing"
-ausweist: angekündigt, nicht abgerechnet, mit einer Position „compute
-units", die es sonst nirgends gibt. Zweitens stand astra
-am 04.09. in keinem Werkzeug-Katalog — bei Cursor und Windsurf nachgesehen,
-null Treffer. Am 29.09. führt Windsurf es (GPT-6 Astra), Cursor und
-JetBrains AI noch nicht: Das teuerste Modell dieser Folie kann man nur in
-einem der drei Werkzeuge wählen.
-
-Nachtrag (23.09.2026): Der erste Vorbehalt ist überholt. Zwischen dem
-17. und dem 22.09.2026 hat das Board astras `cost_basis` von „expected
-launch pricing" (inkl. der compute-units-Klausel) auf „current pricing"
-umgestellt — 27–39 % billiger, Score und Konfidenzintervall unverändert.
-Diese Folie zeigt bewusst weiter den 03.09.-Stand (explizit datiert),
-die heutigen Zahlen und die Lupe auf astras Effort-Stufen stehen auf der
-eigenen `effort-falle`-Folie gleich nach der Historie.
-
-Nebenbei zu den Fehlerbalken: den engsten hat jetzt astra mit ±0,83,
-davor gemini-3.8-flash mit ±1,4. Opus 5 hat ±3,9.
-
-Der Geisterring rechts davon ist der Listenpreis: Googles
-Einführungspreis läuft am 31.12.2026 aus, danach verdoppelt sich der
-Punkt auf 4,14 €. Auch dann bliebe er auf der Front — dann hinter
-terra, das zurückkäme.
-
-Vier Klicks im Anbieter-Filter, die sich lohnen (DeepSWE-Ansicht):
-- Anthropic: ein einziger Punkt, keine Kurve. Wer an einen Anbieter
-  gebunden ist, hat keine Preis-Leistungs-Wahl mehr, nur noch eine
-  Entscheidung.
-- JetBrains AI: vier Frontpunkte mit Opus 5 für 10,37 € an der Spitze —
-  also genau die Front von letzter Woche. Der Katalog (Hilfeseite vom
-  06.08./14.09.) endet bei Gemini 3.6 Flash und führt kein astra. Für
-  diese Nutzer ist der Befund dieser Folie noch gar nicht passiert.
-- Junie: nur vier der elf Modelle misst das Board (Opus 5, Sonnet 5, Gemini
-  3.8 Flash, GPT-6 Astra). Die Front ist gemini-3.8-flash allein, die drei
-  anderen sind dominiert. Junies neueste Modelle (Opus 5.5, Sonnet 5.5,
-  Fable 5.1, GPT-6 Sol und Luna, Grok 4.7) kennt DeepSWE nicht — diese
-  Ansicht sagt über Junie wenig, die Artificial-Analysis-Ansichten mehr.
-- Cursor und Windsurf: dieselbe Leiter wie „Alle“, Spitze der Neuzugang
-  für 2,07 €. Am 03.09. war das bei Windsurf noch anders — dessen Katalog
-  endete damals bei Gemini 3.6 Flash. Kataloge wandern, das Datum im
-  ⓘ gehört dazu. Bei Cursor zählen auch die Modelle, die dort „hidden by
-  default“ sind; wählbar sind sie nach dem Einschalten.
-
-Wenn aus dem Publikum „bei uns ist nur X freigegeben" kommt: Die Labs
-darunter sind Checkboxen, mehrere gehen gleichzeitig. Anthropic allein
-ist ein einziger Punkt, OpenAI allein sind vier — und zusammen sind es
-immer noch dieselben vier: Opus 5 fällt heraus, weil astra denselben
-gerundeten Score für 5,71 € statt 10,37 € liefert. Das ist im ganzen
-Filter der einzige Fall, in dem ein zusätzliches Lab die Front NICHT
-verbessert, und ein gutes Beispiel dafür, dass „mehr Auswahl" und
-„bessere Auswahl" verschiedene Dinge sind. Ein Werkzeug-Preset setzt
-dabei Modelle, keine Lab-Häkchen: Deshalb steht Google nach „JetBrains AI"
-auf 2/4 und nicht auf 4/4.
+Wenn aus dem Publikum „bei uns ist nur X freigegeben“ kommt: Die Labs
+im Anbieter-Menü sind Checkboxen, mehrere gehen gleichzeitig. Ein
+Werkzeug-Preset setzt dabei Modelle, keine Lab-Häkchen — deshalb kann ein
+Lab nach einem Preset auf „teilweise“ stehen.
 
 Was der Filter NICHT sagt: Er zeigt Verfügbarkeit, nicht Preis. Cursor
 und Windsurf rechnen nach eigenen Tarifen ab; geplottet ist der
-API-Listenpreis. Und das jeweils eigene Modell fehlt — DeepSWE misst
-weder Cursors Composer noch Windsurfs SWE-1.x.
+API-Listenpreis. Und das jeweils eigene Modell fehlt — AA misst weder
+Cursors Composer noch Windsurfs SWE-x.
 
-Nachtrag (01.10.2026), Gemini 4 Argon: Das DeepSWE-Board führt es NICHT,
-und datacurve-ai/deep-swe hat noch kein Tracking-Issue dafür (offen sind
-u. a. #102 GPT 6.1 Sol und #104 dessen unabhängige Verifikation). Es gibt
-nur Googles eigene Angabe: 77,9 % auf DeepSWE v1.1, vor Opus 5.5 mit
-74,2 % und GPT-6 Astra mit 74,1 % (Vergleichstabelle des Herstellers,
-zitiert nach MarkTechPost vom 30.09.2026; ein Primärdokument von Google
-war am 01.10. nicht abrufbar). Weil selbstberichtet und von Datacurve
-nicht nachgerechnet, steht Argon weder im Chart noch in
-`PreliminaryBox` — dieselbe Logik wie bei Opus 5.5 und GPT-6 Sol: erst
-das Board, dann die Front. Sollte die Zahl sich bestätigen, wäre Argon
-der erste Punkt über 75 % auf diesem Board, und die Frage dieser Folie
-(„lohnt sich die oberste Sprosse?“) stellte sich neu.
-
-Wenn jemand fragt, warum das Deck so ein Datum betont: Diese Folie
-sagte Ende August „Opus 5 führt mit 74 %". Ein einziger Board-Eintrag
-hat das widerlegt — und eine Woche später hat der nächste Neuzugang
-gar nichts bewegt. Beides ist das Thema des Kapitels: Die Zahl ist ein
-Datum, kein Naturgesetz.
-
-Zweiter Klick, `<PreliminaryBox />`: ERSETZT die Empfehlung, statt sie
-darunterzustapeln — beides zusammen sprengt die 720px-Slide-Grenze
-(gemessen 23.09.2026, `.pb-box` landete bei 817 px). Gleiches Muster wie
-in `EffortFalle.vue`. Inhaltlich: Am 22./23.09.2026 sind Claude
-Opus 5.5 und GPT-6 Sol + Luna erschienen — keins davon steht auf dem
-DeepSWE-Board (Live-Fetch 23.09.2026: dieselben 70 Datensätze/28
-Modelle wie am 03.09.). Die drei in der Box gezeigten Zahlen sind
-selbstberichtet von den Herstellern selbst (Opus 5.5 74,2 % über 5
-Durchläufe, Anthropics System Card §8.3; GPT-6 Sol 68,8 % und GPT-6 Luna
-66,6 %, beide bei max effort, aus OpenAIs eigenem Ankündigungs-Chart) —
-nicht von Datacurve nachgerechnet, deshalb der Badge und kein Eingang in
-`SNAPSHOTS`/`CURRENT`. Datacurves eigene Tracking-Issues
-(datacurve-ai/deep-swe#98 für Opus 5.5, #99 für Sol/Luna, beide 22.09.,
-offen) enden mit „Please test". Dieselbe Box läuft auf der
-`effort-falle`-Folie; Details, Quellen und die astra-Preiskorrektur
-dort.
-
-Nachtrag (24.09.2026): Derselbe Klick blendet jetzt zusätzlich drei
-geschätzte CHART-Punkte ein (`preliminary`-Prop auf
-`<ModelRoutingPareto />`, Daten in `lib/preliminaryParetoPoints.ts`) —
-eine ANDERE Schätzung als die selbstberichteten Scores oben, mit
-anderer Herkunft: nicht „was der Hersteller behauptet", sondern „was
-DeepSWE mutmaßlich messen würde, unter einer expliziten Annahme".
-Angenommen ist derselbe Score wie beim Vorgängermodell (Opus 5.5 ←
-Opus 5, GPT-6 Sol ← GPT-5.6 Sol, GPT-6 Luna ← GPT-5.6 Luna — Namens-
-kontinuität, die OpenAI selbst für Sol/Luna zieht), der Preis ist per
-Zwei-Bucket-Skalierung auf die neue Preisliste umgerechnet — dieselbe
-Methode, mit der diese Datei schon die reale gpt-5.6-sol-Preissenkung
-vom 21.08. nachgerechnet hat (Output-Anteil über den bekannten
-`mean_output_tokens`, Rest über den Input-Preis skaliert). Ergebnis:
-Opus 5.5 8,30 €, GPT-6 Sol 2,83 €, GPT-6 Luna 0,26 € (Herleitung und
-Quellen im Kopfkommentar von `preliminaryParetoPoints.ts`). Sichtbar
-als hohle, gestrichelte Marker in derselben Warnfarbe wie die Box —
-bewusst NICHT über den Anbieter-Filter gesteuert, der fragt „was bietet
-mein Werkzeug an", und dafür gibt es bei unveröffentlichten Modellen
-noch keine Antwort.
-
-Einzige Auswirkung auf die Front: GPT-6 Luna (0,26 €, 67 %) dominiert
-GPT-5.6 Luna (gleicher Score, billiger) und ersetzt es als zweite
-Sprosse — die Leiter fällt von 2,81 € auf 2,54 € (−9,6 %). GPT-6 Sol
-und Opus 5.5 bleiben dominiert, dieselbe Pointe wie zuvor bei Opus 5
-und gpt-6-astra: gemini-3.8-flash liefert denselben gerundeten Score
-für weniger Geld.
-
-Ein Vorbehalt ausdrücklich dazu, falls gefragt: Bei Opus 5.5 ist
-8,30 € eher eine OBERE Schätzung. Anthropics Cache-Lese-Multiplikator
-sinkt bei Opus 5.5 zusätzlich (0,1× → 0,05× Base-Input), stärker als
-der Input/Output-Preis selbst (×0,8) — die Zwei-Bucket-Methode fasst
-Cache-Reads in den „Rest"-Anteil und erfasst diesen Zusatzrabatt nicht.
-Bei einem cache-lastigen Agenten-Workload wie DeepSWEs mini-swe-agent
-(Opus 5 max laut Board: ~98 % der Input-Tokens vermutlich Cache-
-Treffer) dürfte der reale Preis darunter liegen.
+Wenn jemand fragt, warum das Deck so ein Datum betont: Die Front dieser
+Folie hat sich zwischen zwei AA-Snapshots verschoben, ohne dass ein
+Modell erschienen ist (gpt-6-luna, siehe oben). Die Zahl ist ein Datum,
+kein Naturgesetz — die Folie wird deshalb wöchentlich aus einem neuen
+AA-Snapshot nachgezogen.
 
 Zum Harness-Vorbehalt im ⓘ („±2 bis ±5 Prozentpunkte im Mittel, Kosten
 bis 5×"): Das ist ein Mittelwert über Modelle, kein Maximum — einzelne
 Paare weichen stärker ab (HarnessTax, Kapitel 7). Der schärfste
 vermutete Hebel dahinter ist die Abbruch-Option — das Zitat dazu (RLVR-
 Task-Designer, HN, 01.09.2026) steht zwei Folien weiter auf „Harness +
-Modell: Wer trägt was?". Kurz vorweg, was das für DIESE Folie bedeutet:
-DeepSWE fährt mini-swe-agent, und dessen Abbruchverhalten steckt in
-jedem Punkt dieser Front mit drin. Der Score ist nie das Modell allein.
+Modell: Wer trägt was?". Der Score ist nie das Modell allein.
 
 Seit dem 16.09.2026 gibt es zu der Anekdote eine Messung: HarnessTax
 (UC Berkeley Sky Lab + Arena, Kapitel 7 „Der Harness als zweite
@@ -1845,26 +1692,13 @@ Fable 5 — bei Opus, Sonnet und Haiku gewinnt auf beiden Benchmarks ein
 fremder Harness. Details, Zahlen und Einschränkungen: auf der Folie
 „Der Harness als zweite Achse" selbst.
 
-Der Widerspruch zum eigenen Deck ist damit nicht mehr offen, sondern
-gemessen entschieden: Kapitel 10 schließt mit „die Community
-konvergiert auf dünne Harnesses", Kernaussage 4 mit „die
-Harness-Schicht wird austauschbar" — und HarnessTax stützt genau das,
-auch für die hier getesteten Aufgaben. Was bleibt, ist eine engere
-These: Persistenz kann helfen (Luna), ist aber weder notwendig (Fable
-5) noch hinreichend (Haiku bricht in Claude Code sogar FRÜHER ab als in
-Pi und Codex) für den Aufpreis.
-
-Kontingent-Toggle im Chart, die Limits im Detail:
+Kontingent-Toggle (nur Kostenansicht), die Limits im Detail:
 
 1) Was der Toggle rechnet. Der Abo-Preis ist fix, begrenzt wird über
-das Wochenlimit, also €/Task ∝ 1/Kontingent. Bis 13.09.2026 läuft die
-+50-%-Aktion (×2/3, der volle Punkt); ab 14.09. ersetzt Anthropic sie
-durch dauerhafte +25 % über der Basis (×0,8, der Geisterring) — Pro,
-Max, Team und seat-basiertes Enterprise. Von der Basis aus gerechnet
-ist das ein Plus, von heute aus ein Minus von 17 % (1,25/1,50 = 0,83).
-Beide Rechnungen stimmen, sie haben nur verschiedene Nullpunkte. Eine
-Rückkehr auf das Basislimit gibt es nicht. Quelle in ⓘ; NICHT aus dem
-Support-Artikel zitieren, der stand am 01.09. noch auf „bis 31.08.".
+das Wochenlimit, also €/Task ∝ 1/Kontingent. Seit 14.09.2026 gelten
+dauerhaft +25 % über der Basis (×0,8) — Pro, Max, Team und
+seat-basiertes Enterprise; davor lief bis 13.09. eine +50-%-Aktion.
+Eine Rückkehr auf das Basislimit gibt es nicht. Quelle in ⓘ.
 
 2) Warum „20x" nicht das Vierfache von „5x" ist. Max 5x kostet 100 $,
 Max 20x kostet 200 $ — das liest sich wie vierfaches Kontingent für
@@ -1887,15 +1721,12 @@ Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
 Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
 Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
-Entzerrte Marker: bis 5,9 px verschoben, höchstens 1,2 Prozentpunkte
-senkrecht oder 4,0 % im Preis waagerecht. Betroffen: sol und astra sowie
-terra und glm-5.3 (waagerecht auseinander), muse-spark-1.2 und qwen3.8-max
-(senkrecht). Mit Kontingent-Overlay rückt zusätzlich claude-fable-5 um
-1,7 px. Frontpunkte rücken in jeder Ansicht nur waagerecht, auch im
-JetBrains-Preset, wo terra Sprosse 2 ist. Kein dominierter Punkt rückt über
-die Front oder links an seinen Dominator vorbei. Fadenkreuz und Tooltip
-zeigen den wahren Wert. Die Zahlen rechnet markerDodge.test.ts nach und hält
-sie gegen diese Notiz.
+Entzerrte Marker: bis 1,9 px verschoben, höchstens 0,2 Indexpunkte
+senkrecht oder 0,0 % im Preis bzw. Tempo waagerecht. Betroffen in der
+Kostenansicht glm-5.3 und kimi-k3, in der Tempoansicht gpt-6-sol und
+grok-4.7. Frontpunkte rücken nur waagerecht, kein dominierter Punkt rückt
+über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
+rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
 
 ---
@@ -2128,7 +1959,7 @@ Modellen den höchsten Erfolg, auf SWE-bench Lite nur bei einem.
 HarnessTax (UC Berkeley Sky Lab + Arena) · 21 Modell×Harness-Paare ·
 30 Tasks × 3 Läufe · 95-%-CI · Preisliste eingefroren 01.09.2026 · 1
 USD = 0,876 € · **nicht vergleichbar mit der DeepSWE-Front aus
-„Welches Modell wofür?“**
+„Zwei Monate Pareto-Front“**
 
 </div>
 
@@ -2142,7 +1973,7 @@ dreifach wiederholt. Vergleichbarkeit: Zwischen den beiden Benchmarks
 ist die Methode gleich (Harness-Vergleiche je Benchmark konsistent),
 die absoluten Raten nicht mischbar (Fable 97,8 % auf Lite ist nahe der
 Sättigung; die Autoren nennen mögliche Kontamination). Mit der DeepSWE-
-Front aus „Welches Modell wofür?" ist NICHTS davon vergleichbar: anderer
+Front aus „Zwei Monate Pareto-Front" ist NICHTS davon vergleichbar: anderer
 Benchmark, anderes Harness (mini-swe-agent), andere Metrik (pass@1 je
 Task dort, Mittel über drei Versuche hier), 113 gegen 30 Tasks.
 

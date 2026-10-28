@@ -3,13 +3,7 @@ import { computed, ref } from "vue";
 import ModelRoutingSources from "./ModelRoutingSources.vue";
 import ProviderPicker from "./ProviderPicker.vue";
 import { matchingPreset } from "./providerFilter";
-import {
-  dominators,
-  fmt,
-  movedSegments,
-  paretoFront,
-  type Pt,
-} from "./paretoData";
+import { dominators, fmt, paretoFront, type Pt } from "./paretoData";
 import { frontSentence, type ParetoVariant } from "./paretoVariants";
 import {
   labelBox,
@@ -18,12 +12,11 @@ import {
   type Placed,
   type XY,
 } from "./labelLayout";
-import { PRELIMINARY_PARETO_POINTS } from "./lib/preliminaryParetoPoints";
 import { HIT_R, LABEL_FONT, visiblePoints } from "./paretoChrome";
 import { chartGeometry } from "./paretoGeometry";
 import { useCrosshairs } from "./useCrosshairs";
 
-// DeepSWE-Score vs. €/Task als statisches Inline-SVG — kein Chart.js/echarts
+// AA-Index vs. €/Task bzw. Tempo als statisches Inline-SVG — kein Chart.js/echarts
 // nötig. Farben über die Deck-Tokens. Bewusst ohne <defs>: keine IDs, die
 // zwischen Nachbar-Slides kollidieren könnten.
 //
@@ -36,36 +29,11 @@ import { useCrosshairs } from "./useCrosshairs";
 // diese Komponente pro Variante neu (`:key`). Was sich mit der AUSWAHL ändert —
 // Skala, Ticks, Quadranten, Entzerrung, Beschriftung —, rechnet `chartGeometry`
 // (`paretoGeometry.ts`) in einem einzigen `computed`.
-// `preliminary` kommt aus `slides.md` synchron mit der `PreliminaryBox` (Klick 1)
-// und betrifft nur die DeepSWE-Ansicht: drei GESCHÄTZTE DeepSWE-Punkte
-// (`lib/preliminaryParetoPoints.ts`: Score wie der Vorgänger, Preis re-skaliert,
-// noch nicht gemessen). In den AA-Ansichten sind Opus 5.5 und GPT-6 Sol/Luna
-// gemessen, dort gibt es nichts Vorläufiges.
-const props = defineProps<{ variant: ParetoVariant; preliminary?: boolean }>();
+const props = defineProps<{ variant: ParetoVariant }>();
 const V = props.variant;
 const pts0 = V.pts; // kuratiertes Feld: „Alle“ und die Lab-Zeilen
 // Alles, was ein Produkt einbringen kann; nur ein Produkt-Preset wählt Extras.
 const universe = [...V.pts, ...V.extras];
-
-// Die geschätzten Punkte hängen nur an `preliminary`, nicht an der Auswahl: Sie
-// laufen am Anbieter-Filter vorbei (dessen Zweck ist „was bietet mein Werkzeug
-// real an“, und für unveröffentlichte Modelle gibt es noch keine Antwort) und
-// zählen für die Geometrie zum Feld. So behält der Standard seine redaktionelle
-// Skala, und beim Ein- und Ausschalten wandern die 22 echten Punkte nicht.
-const prelim = computed<readonly Pt[]>(() =>
-  V.id === "deepswe" && props.preliminary ? PRELIMINARY_PARETO_POINTS : [],
-);
-const Veff = computed(() =>
-  prelim.value.length
-    ? { ...V, pts: [...V.pts, ...prelim.value], frontGuard: V.pts }
-    : V,
-);
-const universeEff = computed(() => [...Veff.value.pts, ...V.extras]);
-const selEff = computed<ReadonlySet<string>>(() =>
-  prelim.value.length
-    ? new Set([...sel.value, ...prelim.value.map((p) => p.label)])
-    : sel.value,
-);
 
 // Die Auswahl gehört dem Wrapper: Er rendert Fußzeile und Menü und setzt sie beim
 // Wechsel der Ansicht zurück.
@@ -76,10 +44,7 @@ const sourcesOpen = ref(false);
 // Optionales Overlay auf das Claude-Code-Wochenkontingent. Kein API-Preis,
 // sondern eine Kontingentrechnung (Abo-Preis fix, Wochenlimit bindend ⇒
 // €/Task ∝ 1/Kontingent), deshalb Default aus. An: die Claude-Punkte stehen auf
-// den Kosten unter der +50-%-Aktion (×2/3, läuft bis 13.09.2026), der
-// Geisterring auf denen ab 14.09., wenn Anthropic sie durch dauerhafte +25 %
-// ersetzt (×0,8). Eine Rückkehr auf das Basislimit gibt es nicht — der Ring
-// zeigt deshalb einen künftigen Stand, nicht den API-Preis.
+// den Kosten mit den dauerhaften +25 % seit 14.09.2026 (×0,8).
 const subOn = ref(false);
 
 // „Tempo als Größe“ (nur aa-cost): ein Halo hinter jedem Marker, Radius wächst mit der
@@ -87,8 +52,6 @@ const subOn = ref(false);
 // den Platzierer noch Klickziel — Layout und Entzerrung bleiben, wie sie sind.
 const sizeOn = ref(false);
 const haloR = (tps: number) => Math.min(22, 6 + 0.9 * Math.sqrt(tps));
-
-const ghost = V.features.priceGhost;
 
 // Anbieter-Filter. Der Zustand ist eine Modellmenge (warum, steht in
 // `providerFilter.ts`); Default ist das kuratierte Feld. Jede Teilmenge blendet
@@ -99,16 +62,14 @@ const ghost = V.features.priceGhost;
 // lassen: nur Anthropic plus Overlay zeigt die Claude-Kurve zum Abo-Preis.
 const preset = computed(() => matchingPreset(sel.value, universe, pts0));
 const pts = computed<readonly Pt[]>(() =>
-  visiblePoints(universeEff.value, selEff.value, subOn.value, { ghost }),
+  visiblePoints(universe, sel.value, subOn.value, { ghost: false }),
 );
 
 // Alles, was von der Auswahl abhängt, in einem Aufruf. Im Standard („Alle“) ist
 // das exakt die bisherige Rechnung mit der redaktionellen Skala; sonst liegen
 // Skala, Quadranten-Linien, Entzerrung und Beschriftung auf den sichtbaren
 // Punkten.
-const geo = computed(() =>
-  chartGeometry(Veff.value, universeEff.value, selEff.value, subOn.value),
-);
+const geo = computed(() => chartGeometry(V, universe, sel.value, subOn.value));
 const S = computed(() => geo.value.scale);
 const { W, H, L, R, T, B } = V.scale; // die Bühne ist fest, nur Achsen wandern
 const px = (v: number) => S.value.px(v);
@@ -127,9 +88,8 @@ const allPts = computed(() => pts.value);
 // muse-spark-1.2/qwen3.8-max), rücken bis 8 px auseinander. Im Standard auf dem
 // VOLLEN Feld gerechnet, damit ein Schalter nur ausblendet und nichts verschiebt;
 // bei jeder anderen Auswahl auf den sichtbaren Punkten. `at()` ist die angezeigte
-// Lage für Marker, Sprossennummer, Front-Polyline, Klickziele, Fadenkreuz-Ring und
-// Pfeilende. Fadenkreuz-Linien, Badges, Fehlerbalken und Geisterringe bleiben am
-// wahren Wert.
+// Lage für Marker, Sprossennummer, Front-Polyline, Klickziele und Fadenkreuz-Ring.
+// Fadenkreuz-Linien und Badges bleiben am wahren Wert.
 const dodge = computed(() => geo.value.dodge);
 const at = (p: Pt): XY =>
   dodge.value.pos.get(p.label) ?? { px: px(p.x), py: py(p.y) };
@@ -140,11 +100,6 @@ const dodgedMax = computed(() =>
 const frontPath = computed(() =>
   front.value.map((p) => `${at(p).px},${at(p).py}`).join(" "),
 );
-
-// Wanderungen: die gemini-Preiserhöhung zum 01.01. immer, die Kontingent-
-// Rechnung nur bei eingeschaltetem Overlay (sie hängt am injizierten `old`).
-// Der Pfeil endet an der angezeigten Lage, der Ring bleibt an der wahren.
-const moved = computed(() => movedSegments(pts.value, S.value, undefined, at));
 
 // Beschriftung: was das im Detail heißt, steht in `labelLayout.ts`; Hindernisse
 // sind die Quadranten-Überschriften und (nur im Standard) der Pfeilcluster.
@@ -181,12 +136,7 @@ const frontSet = computed(() => new Set(front.value.map((p) => p.label)));
 // gibt es ein besseres?“. Genannt werden der billigste und der stärkste Übertreffer
 // der SICHTBAREN Auswahl, also bei einem Produkt nur Modelle desselben Produkts.
 const tipFor = (p: Pt): string => {
-  let s =
-    V.tip(p) +
-    (p.est ? " · Index von AA geschätzt" : "") +
-    (p.provisional
-      ? " · geschätzt: Score wie Vorgänger, Preis auf neue Preisliste re-skaliert — noch nicht von DeepSWE gemessen"
-      : "");
+  const s = V.tip(p) + (p.est ? " · Index von AA geschätzt" : "");
   if (frontSet.value.has(p.label)) return s + " · liegt auf der Front";
   const d = dominators(p, pts.value);
   if (!d.length) return s;
@@ -194,16 +144,7 @@ const tipFor = (p: Pt): string => {
   const namen = [...new Set([d[0]!, staerkster])]
     .map((q) => `${q.label} (${V.yText(q.y)} · ${V.xText(q)})`)
     .join(" bzw. ");
-  const naheUeberlappung =
-    V.features.ci &&
-    p.ci &&
-    staerkster.ci &&
-    staerkster.y - p.y < p.ci + staerkster.ci;
-  return (
-    s +
-    ` · strikt besser: ${namen}` +
-    (naheUeberlappung ? " (Abstand innerhalb der Fehlerbalken)" : "")
-  );
+  return s + ` · strikt besser: ${namen}`;
 };
 const hasEst = computed(() => pts.value.some((p) => p.est));
 const labels = computed<LabelView[]>(() =>
@@ -226,18 +167,9 @@ const unnamed = computed(() =>
 
 // Fadenkreuz-Vergleichsmodus: Hover zeigt temporär, Klick pinnt permanent
 // (erneuter Klick löst). Mechanik im Composable, weil die Historien-Folie
-// dasselbe kann; `ciBadge` schaltet die zweizeilige Badge-Entzerrung ein, die
-// nur hier gebraucht wird (Fehlerbalken sind Sache dieser Folie).
-const {
-  byLabel,
-  hovered,
-  pinned,
-  togglePin,
-  activeCls,
-  crosshairs,
-  movedCls,
-  pinCls,
-} = useCrosshairs(pts, S, { ciBadge: V.features.ci });
+// dasselbe kann.
+const { byLabel, hovered, pinned, togglePin, activeCls, crosshairs, pinCls } =
+  useCrosshairs(pts, S);
 
 // Hover-Name: Ein namenloser Punkt zeigt seinen Namen, solange er gehovt oder
 // gepinnt ist — mit demselben Platzierer gegen die gesetzten Labels gerechnet,
@@ -294,35 +226,13 @@ const chartLabel = computed(
       ? ` ${dodge.value.moved.length} Marker sind bis ${dodgedMax.value.toFixed(1).replace(".", ",")} Pixel auseinandergerückt, damit sie sich nicht verdecken; Fadenkreuz und Tooltip zeigen den wahren Wert.`
       : "") +
     (subOn.value
-      ? V.id === "deepswe"
-        ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
-          "zwei Dritteln ihrer API-Kosten, wie es die Aktion bis 13.09.2026 hergibt; die " +
-          "Geisterringe zeigen mit vier Fünfteln die Position ab 14.09.2026."
-        : " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
-          "vier Fünfteln ihrer API-Kosten, wie es die dauerhaften +25 % seit 14.09.2026 hergeben."
-      : "") +
-    (prelim.value.length
-      ? " Zusätzlich sind drei geschätzte Punkte eingeblendet, hohl und in Warnfarbe: " +
-        "Claude Opus 5.5, GPT-6 Sol und GPT-6 Luna, noch nicht von DeepSWE gemessen. " +
-        "Angenommen ist derselbe Score wie beim jeweiligen Vorgängermodell, der Preis ist " +
-        "auf die neue Preisliste re-skaliert. GPT-6 Luna für 0,26 Euro ersetzt dadurch " +
-        "GPT-5.6 Luna als zweite Sprosse der Front — die Leiter kostet jetzt 2,54 statt " +
-        "2,81 Euro. GPT-6 Sol und Claude Opus 5.5 bleiben dominiert."
+      ? " Das Claude-Code-Kontingent-Overlay ist eingeschaltet: die Claude-Punkte stehen auf " +
+        "vier Fünfteln ihrer API-Kosten, wie es die dauerhaften +25 % seit 14.09.2026 hergeben."
       : "") +
     (sizeOn.value
       ? " Ein Halo um jeden Marker zeigt die Output-Geschwindigkeit; je größer, desto schneller."
       : "") +
     V.ariaTail,
-);
-
-// Fehlerbalken nur an gepinnten Punkten — beim bloßen Hover wäre das Flackern.
-// Kernaussage der Folie: opus-5 74 ± 3,9 und sol 73 ± 2,8 überlappen deutlich,
-// die Rangfolge an der Spitze ist Rauschen.
-const whiskers = computed(() =>
-  pinned.value.flatMap((label, i) => {
-    const p = byLabel.value.get(label);
-    return p?.ci ? [{ p, ci: p.ci, cls: `mp-ch-${i % 4}` }] : [];
-  }),
 );
 </script>
 
@@ -332,18 +242,6 @@ const whiskers = computed(() =>
       <span><i class="mp-sw mp-sw-front" />Pareto-Front</span>
       <span><i class="mp-sw mp-sw-dom" />dominiert</span>
       <span v-if="hasEst"><i class="mp-sw mp-sw-est" />≈ geschätzt</span>
-      <!-- Seit Stand 8 zeigt der Ring ausschließlich KÜNFTIGE Preise, nie mehr
-           vergangene: ohne Overlay den Listenpreis von gemini-3.8-flash ab
-           01.01.2027, mit Overlay zusätzlich den Kontingent-Stand der
-           Claude-Punkte ab 14.09. Der Sol-Ring („vorher 7,35 €") ist mit dem
-           Stand vom 02.09. weggefallen und lebt nur noch auf der
-           Historien-Folie. Der Text wird getauscht statt ergänzt, sonst bricht
-           die Legendenzeile um; ausführlich steht es im Tooltip und im ⓘ. -->
-      <span v-if="ghost">
-        <i class="mp-sw mp-sw-old" />{{
-          subOn ? V.ghostLegend[1] : V.ghostLegend[0]
-        }}
-      </span>
       <button
         v-if="V.features.subOverlay"
         class="mp-tg"
@@ -545,25 +443,6 @@ const whiskers = computed(() =>
         />
       </g>
 
-      <!-- Preisanpassungen: Geisterpunkt an der alten Position, gestrichelte
-           Wanderungslinie zur neuen. Vor den Front-Punkten gerendert, damit
-           deren Kreise oben liegen. Pfeilspitze als <polygon> statt <marker> —
-           die Komponente kommt bewusst ohne <defs> aus. -->
-      <g
-        v-for="m in moved"
-        :key="`old-${m.label}`"
-        class="mp-moved"
-        :class="movedCls(m.label)"
-      >
-        <line :x1="m.x1" :y1="m.y1" :x2="m.x2" :y2="m.y2" />
-        <polygon :points="m.head" />
-        <circle :cx="m.gx" :cy="m.gy" r="5" class="mp-old-pt">
-          <title>
-            {{ m.label }}: {{ m.pre }} {{ m.eur }} €/Task — {{ m.why }}
-          </title>
-        </circle>
-      </g>
-
       <!-- Führungslinien vor den Markern, damit deren Kreise oben liegen -->
       <line
         v-for="l in leaders"
@@ -639,7 +518,6 @@ const whiskers = computed(() =>
         :class="[
           l.front ? 'mp-label-front' : 'mp-label-dom',
           pinCls(l.p.label),
-          { 'mp-provisional': l.p.provisional },
         ]"
         :data-model="l.p.label"
         :data-box="l.box"
@@ -649,62 +527,6 @@ const whiskers = computed(() =>
       >
         {{ l.p.label }}
       </text>
-
-      <!-- Fehlerbalken der gepinnten Punkte: senkrechter Whisker am Punkt plus
-           zwei waagerechte Grenzlinien quer durch den Plot. Erst die Grenzlinien
-           machen sichtbar, dass zwei Intervalle einander überlappen. -->
-      <g
-        v-for="w in whiskers"
-        :key="`ci-${w.p.label}`"
-        class="mp-ci"
-        :class="w.cls"
-      >
-        <!-- Transluzentes Band zwischen den Intervallgrenzen: zwei gepinnte
-             Punkte zeigen ihre Überlappung als dunklere Schnittfläche, ohne dass
-             man Linien abzählen muss. -->
-        <rect
-          :x="L"
-          :y="py(w.p.y + w.ci)"
-          :width="W - R - L"
-          :height="py(w.p.y - w.ci) - py(w.p.y + w.ci)"
-          class="mp-ci-band"
-        />
-        <line
-          :x1="L"
-          :y1="py(w.p.y + w.ci)"
-          :x2="W - R"
-          :y2="py(w.p.y + w.ci)"
-          class="mp-ci-bound"
-        />
-        <line
-          :x1="L"
-          :y1="py(w.p.y - w.ci)"
-          :x2="W - R"
-          :y2="py(w.p.y - w.ci)"
-          class="mp-ci-bound"
-        />
-        <line
-          :x1="px(w.p.x)"
-          :y1="py(w.p.y - w.ci)"
-          :x2="px(w.p.x)"
-          :y2="py(w.p.y + w.ci)"
-          class="mp-ci-bar"
-        />
-        <line
-          :x1="px(w.p.x) - 5"
-          :y1="py(w.p.y + w.ci)"
-          :x2="px(w.p.x) + 5"
-          :y2="py(w.p.y + w.ci)"
-          class="mp-ci-bar"
-        />
-        <line
-          :x1="px(w.p.x) - 5"
-          :y1="py(w.p.y - w.ci)"
-          :x2="px(w.p.x) + 5"
-          :y2="py(w.p.y - w.ci)"
-          class="mp-ci-bar"
-        />
-      </g>
 
       <!-- Fadenkreuze: Hover temporär, Klick fixiert (Vergleichsmodus) -->
       <g
@@ -727,17 +549,6 @@ const whiskers = computed(() =>
         <text :x="L - 7" :y="c.badgeY" text-anchor="end" class="mp-ch-badge">
           {{ V.yText(c.p.y) }}
         </text>
-        <!-- Das Konfidenzintervall in den linken Rand statt an den Whisker: im
-             Chart selbst ist um die Spitzenmodelle herum keine Zeile mehr frei. -->
-        <text
-          v-if="c.p.ci && pinned.includes(c.p.label)"
-          :x="L - 7"
-          :y="c.badgeY + 10"
-          text-anchor="end"
-          class="mp-ch-badge mp-ci-badge"
-        >
-          ± {{ String(c.p.ci).replace(".", ",") }}
-        </text>
       </g>
 
       <!-- Hover-Name für Punkte ohne Beschriftung: transient, zuoberst. -->
@@ -748,7 +559,7 @@ const whiskers = computed(() =>
         :y="l.pl.y"
         :text-anchor="l.pl.ax"
         class="mp-label mp-label-hover"
-        :class="[pinCls(l.p.label), { 'mp-provisional': l.p.provisional }]"
+        :class="pinCls(l.p.label)"
         :data-model="l.p.label"
         :data-box="l.box"
       >
@@ -817,13 +628,6 @@ const whiskers = computed(() =>
   border: 1.4px dashed var(--color-text-tertiary);
   border-radius: 2px;
   background: none;
-}
-.mp-sw-old {
-  box-sizing: border-box;
-  border: 1.4px solid var(--color-text-tertiary);
-  border-radius: 50%;
-  background: none;
-  opacity: 0.75;
 }
 /* Opt-in-Overlay, deshalb als Schalter und nicht als Legenden-Swatch: der
    Kontingent-Wert ist eine Rechnung, kein gemessener Preis. */
@@ -952,44 +756,6 @@ const whiskers = computed(() =>
   font-size: 12px;
 }
 
-/* Wanderung durch eine Preisanpassung: Geisterpunkt, Linie und Spitze in der
-   „dominiert"-Farbe — die alte Position soll klar als überholt lesen und dem
-   Front-Ton (Primary) nicht die Aufmerksamkeit wegnehmen. */
-.mp-moved {
-  opacity: 0.75;
-  transition: opacity 120ms ease;
-}
-.mp-moved line {
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1.2;
-  stroke-dasharray: 3 3;
-}
-.mp-moved polygon {
-  fill: var(--color-text-tertiary);
-}
-.mp-old-pt {
-  fill: none;
-  stroke: var(--color-text-tertiary);
-  stroke-width: 1.4;
-}
-/* Punkt gehovt oder gepinnt → seine Herkunft leuchtet mit, im selben --ch-Ton
-   wie das Fadenkreuz. Macht bei mehreren Pins zuordenbar, welcher Geisterpunkt
-   zu welchem Modell gehört. */
-.mp-moved-on {
-  opacity: 1;
-}
-.mp-moved-on line {
-  stroke: var(--ch);
-  stroke-width: 1.6;
-}
-.mp-moved-on polygon {
-  fill: var(--ch);
-}
-.mp-moved-on .mp-old-pt {
-  stroke: var(--ch);
-  stroke-width: 2;
-}
-
 .mp-leer {
   font-size: 12px;
   fill: var(--color-text-tertiary);
@@ -1016,26 +782,6 @@ const whiskers = computed(() =>
   pointer-events: none;
 }
 /* Index von AA geschätzt: hohl und gestrichelt — der Wert ist eine Näherung. */
-/* Geschätzt statt gemessen (Opus 5.5, GPT-6 Sol/Luna — noch kein DeepSWE-Wert):
-   gestrichelter Rand in derselben Warnfarbe wie das Badge von `PreliminaryBox.vue`,
-   damit „vorläufig“ auf der Folie einheitlich aussieht. Ersetzt Front-Blau bzw.
-   Dominiert-Grau vollständig, nicht additiv — zwei Farben auf einem Punkt wären
-   mehrdeutig. Der Front-Marker bleibt VOLL gefüllt (nicht hohl): `.mp-front-num`
-   braucht einen dunklen Untergrund, sonst ist die weiße Sprossennummer unlesbar
-   (gemessen 24.09.2026). Nur der dominierte Marker ist hohl, der trägt keine Zahl. */
-.mp-front-pt.mp-provisional {
-  fill: var(--color-text-warning);
-  stroke: var(--color-text-warning);
-  stroke-width: 1.6;
-  stroke-dasharray: 2 1.5;
-}
-.mp-dom-pt.mp-provisional {
-  fill: var(--deck-surface, var(--color-background-primary));
-  stroke: var(--color-text-warning);
-  stroke-width: 1.4;
-  stroke-dasharray: 2 1.5;
-  opacity: 1;
-}
 .mp-front-pt.mp-est {
   fill: var(--deck-surface, var(--color-background-primary));
   stroke: var(--slidev-theme-primary);
@@ -1077,11 +823,6 @@ const whiskers = computed(() =>
 .mp-label-dom {
   fill: var(--color-text-tertiary);
 }
-/* Geschätzt statt gemessen — Beschriftung folgt derselben Warnfarbe wie der Marker.
-   Zwei Klassen Spezifität schlagen `.mp-label-front`/`.mp-label-dom` zuverlässig. */
-.mp-label.mp-provisional {
-  fill: var(--color-text-warning);
-}
 .mp-label-hover {
   fill: var(--color-text-primary);
   font-weight: 700;
@@ -1095,27 +836,6 @@ const whiskers = computed(() =>
 .mp-label.mp-ch-2,
 .mp-label.mp-ch-3 {
   fill: var(--ch);
-}
-
-/* Fehlerbalken: Whisker kräftig am Punkt, Grenzlinien quer durch den Plot nur
-   angedeutet — zwei gepinnte Punkte zeigen so auf einen Blick, ob sich ihre
-   Intervalle schneiden. */
-.mp-ci {
-  pointer-events: none;
-}
-.mp-ci-bar {
-  stroke: var(--ch);
-  stroke-width: 1.8;
-}
-.mp-ci-band {
-  fill: var(--ch);
-  opacity: 0.09;
-}
-.mp-ci-bound {
-  stroke: var(--ch);
-  stroke-width: 0.8;
-  stroke-dasharray: 1 4;
-  opacity: 0.55;
 }
 
 /* Fadenkreuze: --ch trägt die Farbe pro Pin (Cycle) bzw. neutral beim Hover. */

@@ -73,8 +73,6 @@ const FIT: Record<VariantId, string> = {
     "AA Intelligence Index · Kosten = Ø Kosten eines Index-Durchlaufs, kein SWE-Task · beste Effort-Stufe je Modell · 1 USD = 0,876 € · Achsen und Quadranten-Linien (Median) folgen der Auswahl · Werte abgekündigter Modelle: letzter AA-Lauf",
   "aa-speed":
     "AA Intelligence Index · Tempo = Median der Output-Tokens/s · beste Effort-Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl · Werte abgekündigter Modelle: letzter AA-Lauf",
-  deepswe:
-    "DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 03.09. · 1 USD = 0,876 € · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
 };
 
 export function footnoteFor(V: ParetoVariant, s: SelectionSummary): Seg[] {

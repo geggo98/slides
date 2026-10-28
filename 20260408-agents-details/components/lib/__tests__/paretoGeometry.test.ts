@@ -140,8 +140,8 @@ describe("fitScale", () => {
 });
 
 // Der wichtigste Test dieser Datei: Im Standard rechnet `chartGeometry` exakt das,
-// was die Komponente bisher von Hand rechnete. Steht das, bleiben die DeepSWE-
-// Skala, alle Schnappschüsse und die Sprechernotizen unberührt.
+// was die Komponente bisher von Hand rechnete. Steht das, bleiben die
+// redaktionellen Skalen, alle Schnappschüsse und die Sprechernotizen unberührt.
 describe("chartGeometry — Standard = bisherige Pipeline", () => {
   for (const id of VARIANT_ORDER) {
     const V = VARIANTS[id];
@@ -156,7 +156,7 @@ describe("chartGeometry — Standard = bisherige Pipeline", () => {
         expect(g.cluster).not.toBeNull();
 
         // die alte Rechnung, wörtlich
-        const ghost = V.features.priceGhost;
+        const ghost = false;
         const pos = dodgeMarkers(
           visiblePoints(V.pts, all, subOn, { ghost }),
           V.scale,
@@ -222,9 +222,7 @@ describe("chartGeometry — jede andere Auswahl", () => {
           expect(g.isDefault).toBe(false);
           expect(g.cluster).toBeNull();
           const b = plotBounds(g.scale);
-          const sichtbar = visiblePoints(g.base, sel, subOn, {
-            ghost: V.features.priceGhost,
-          });
+          const sichtbar = visiblePoints(g.base, sel, subOn, { ghost: false });
           for (const p of sichtbar) {
             const at = g.dodge.pos.get(p.label);
             expect(at, p.label).toBeDefined();

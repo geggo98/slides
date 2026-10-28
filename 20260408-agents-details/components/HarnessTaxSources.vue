@@ -43,7 +43,7 @@ const sources = [
 
 const caveats = [
   {
-    lead: "Nicht vergleichbar mit „Welches Modell wofür?“:",
+    lead: "Nicht vergleichbar mit der DeepSWE-Front:",
     text: "Gleiche Achsenbeschriftung (€/Task, log. Skala), andere Welt: anderer Benchmark (SWE-bench Lite / Terminal-Bench 2.0 statt DeepSWE v1.1), andere Harnesse (Pi/Codex CLI/Claude Code statt mini-swe-agent), andere Metrik (Mittel über drei Versuche je Task statt pass@1), 30 statt 113 Tasks, andere Preisliste (eingefroren zum 01.09.2026). Die beiden Fronten nebeneinanderzulegen wäre ein Kategorienfehler. Innerhalb von HarnessTax sind die Harness-Vergleiche je Benchmark konsistent (gleiche Methode), die absoluten Raten der beiden Benchmarks aber nicht mischbar.",
   },
   {

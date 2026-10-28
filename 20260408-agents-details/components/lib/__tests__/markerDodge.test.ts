@@ -9,18 +9,17 @@ import {
   HIT_R,
   HIT_R_HISTORY,
   MARKER,
-  PARETO_SCALE,
   visiblePoints,
   type DodgeOpts,
 } from "../../paretoChrome";
 import {
-  CURRENT,
   paretoFront,
   SNAPSHOTS,
   V1_COMPARE,
   type Pt,
+  type Scale,
 } from "../../paretoData";
-import { PRESETS, presetModels } from "../../providerFilter";
+import { VARIANTS, type VariantId } from "../../paretoVariants";
 
 // Die Entzerrung ist eine bewusste Abweichung vom Wert, damit die Folie auf
 // einen Blick lesbar bleibt. Diese Tests halten fest, was sie darf und was
@@ -35,17 +34,32 @@ interface Zustand {
   kind: Kind;
   movable: (p: Pt) => boolean;
   opts?: DodgeOpts;
+  /** Eigene Skala (AA-Ansichten); sonst die der Marker-Art. */
+  s?: Scale;
 }
 
-const ALL = new Set(presetModels("all", CURRENT));
 const none = () => false;
 const claude = (p: Pt) => p.sub !== undefined;
-const scale = (k: Kind) => (k === "history" ? HISTORY_SCALE : PARETO_SCALE);
-// Wie die Hauptfolie: Front-Vereinigung über alle Presets bewegt sich nur
-// waagerecht.
-const MAIN_OPTS: DodgeOpts = { horizontalOnly: frontUnion(CURRENT) };
+const scale = (z: Zustand) => z.s ?? HISTORY_SCALE;
 const run = (z: Zustand) =>
-  dodgeDetailed(z.pts, scale(z.kind), z.kind, z.movable, z.opts);
+  dodgeDetailed(z.pts, scale(z), z.kind, z.movable, z.opts);
+
+// Die Hauptfolie zeigt die beiden AA-Ansichten. Wie in `chartGeometry`: im
+// Standard das volle Feld, Front-Vereinigung über alle Presets nur waagerecht,
+// Geisterringe gibt es nicht.
+const haupt = (id: VariantId, subOn: boolean): Zustand => {
+  const V = VARIANTS[id];
+  return {
+    name: `Hauptfolie ${id}${subOn ? " mit Kontingent" : ""}`,
+    pts: visiblePoints(V.pts, new Set(V.pts.map((p) => p.label)), subOn, {
+      ghost: false,
+    }),
+    kind: "pareto",
+    movable: claude,
+    opts: { horizontalOnly: frontUnion(V.pts) },
+    s: V.scale,
+  };
+};
 
 const ZUSTAENDE: Zustand[] = [
   ...SNAPSHOTS.map((s) => ({
@@ -60,20 +74,9 @@ const ZUSTAENDE: Zustand[] = [
     kind: "history" as Kind,
     movable: none,
   })),
-  {
-    name: "Hauptfolie",
-    pts: visiblePoints(CURRENT, ALL, false),
-    kind: "pareto",
-    movable: claude,
-    opts: MAIN_OPTS,
-  },
-  {
-    name: "Hauptfolie mit Kontingent",
-    pts: visiblePoints(CURRENT, ALL, true),
-    kind: "pareto",
-    movable: claude,
-    opts: MAIN_OPTS,
-  },
+  haupt("aa-cost", false),
+  haupt("aa-cost", true),
+  haupt("aa-speed", false),
 ];
 
 const half = (pts: Pt[], kind: Kind) => {
@@ -89,7 +92,7 @@ describe("Marker-Entzerrung", () => {
       const r = run(z);
       expect(r.residual).toBeLessThanOrEqual(DODGE.tol);
       expect(r.sweeps).toBeLessThanOrEqual(5);
-      const s = scale(z.kind);
+      const s = scale(z);
       for (const p of z.pts) {
         const c = r.pos.get(p.label)!;
         expect(c, p.label).toBeDefined();
@@ -103,7 +106,7 @@ describe("Marker-Entzerrung", () => {
   it.each(ZUSTAENDE.map((z) => [z.name, z] as const))(
     "%s: ist deterministisch, auch bei umgekehrter Eingabe",
     (_name, z) => {
-      const s = scale(z.kind);
+      const s = scale(z);
       const a = run(z).pos;
       const b = dodgeDetailed(
         [...z.pts].reverse(),
@@ -123,7 +126,7 @@ describe("Marker-Entzerrung", () => {
   it.each(ZUSTAENDE.map((z) => [z.name, z] as const))(
     "%s: lässt keinen dominierten Punkt über die Front",
     (_name, z) => {
-      const s = scale(z.kind);
+      const s = scale(z);
       const { front, dom } = paretoFront(z.pts);
       const pos = run(z).pos;
       for (const d of dom) {
@@ -148,7 +151,7 @@ describe("Marker-Entzerrung", () => {
   it.each(ZUSTAENDE.map((z) => [z.name, z] as const))(
     "%s: hält jede Markermitte außerhalb fremder Klickziele",
     (_name, z) => {
-      const s = scale(z.kind);
+      const s = scale(z);
       const hitR = z.kind === "history" ? HIT_R_HISTORY : HIT_R;
       const pos = run(z).pos;
       const list = [...pos.entries()];
@@ -179,31 +182,19 @@ describe("Marker-Entzerrung", () => {
   // Zusage der Hauptfolie: kein Schalter verschiebt einen festen Marker. Das
   // Overlay darf nur die Claude-Punkte bewegen.
   it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich", () => {
-    const aus = dodgeDetailed(
-      visiblePoints(CURRENT, ALL, false),
-      PARETO_SCALE,
-      "pareto",
-      claude,
-      MAIN_OPTS,
-    ).pos;
-    const an = dodgeDetailed(
-      visiblePoints(CURRENT, ALL, true),
-      PARETO_SCALE,
-      "pareto",
-      claude,
-      MAIN_OPTS,
-    ).pos;
-    for (const p of CURRENT) {
+    const aus = run(haupt("aa-cost", false)).pos;
+    const an = run(haupt("aa-cost", true)).pos;
+    for (const p of VARIANTS["aa-cost"].pts) {
       if (claude(p)) continue;
       expect(an.get(p.label), p.label).toStrictEqual(aus.get(p.label));
     }
   });
 
   // Der y-Versatz eines Punkts liegt unter seinem eigenen Fehlerbalken, wo es
-  // einen gibt (Stände ab 26.08. und Hauptfolie).
+  // einen gibt (Stände ab 26.08.; AA führt keinen).
   it("verschiebt senkrecht nie weiter als den eigenen Fehlerbalken", () => {
     for (const z of ZUSTAENDE) {
-      const s = scale(z.kind);
+      const s = scale(z);
       const r = run(z);
       for (const m of r.moved) {
         const p = z.pts.find((q) => q.label === m.label)!;
@@ -217,48 +208,9 @@ describe("Marker-Entzerrung", () => {
     }
   });
 
-  // Der Anbieter-Filter blendet nur aus, die Lagen bleiben die des vollen
-  // Satzes. Was im vollen Satz dominiert ist, kann im Preset auf der Front
-  // stehen (terra bei JetBrains AI) — dann darf es nicht in der Höhe verschoben
-  // sein, und die Front des Presets muss weiter über jedem dominierten Punkt
-  // liegen. Befund der Prüfung vom 05.09.2026, seither Front-Vereinigung.
-  it.each(
-    PRESETS.flatMap((pr) =>
-      [false, true].map(
-        (on) => [`${pr.id}${on ? " + Kontingent" : ""}`, pr.id, on] as const,
-      ),
-    ),
-  )("Preset %s: Front in der Höhe exakt, Wächter hält", (_name, id, on) => {
-    const s = PARETO_SCALE;
-    const pos = dodgeDetailed(
-      visiblePoints(CURRENT, ALL, on),
-      s,
-      "pareto",
-      claude,
-      MAIN_OPTS,
-    ).pos;
-    const pts = visiblePoints(CURRENT, new Set(presetModels(id, CURRENT)), on);
-    const { front, dom } = paretoFront(pts);
-    for (const f of front) {
-      expect(pos.get(f.label)!.py, f.label).toBeCloseTo(s.py(f.y), 6);
-    }
-    for (const d of dom) {
-      const lvl = Math.min(
-        ...front
-          .filter((f) => s.px(f.x) <= s.px(d.x) + DODGE.eps)
-          .map((f) => s.py(f.y)),
-      );
-      expect(pos.get(d.label)!.py, `${id}: ${d.label}`).toBeGreaterThanOrEqual(
-        lvl - DODGE.eps,
-      );
-    }
-    const xs = front.map((f) => pos.get(f.label)!.px);
-    for (let i = 1; i < xs.length; i++)
-      expect(xs[i]).toBeGreaterThan(xs[i - 1]!);
-  });
-
   // Die Halbmaße müssen zu dem passen, was die Komponenten zeichnen: Front-
-  // kreis r plus 1 px Surface-Strich, halbe Quadratkante, Ring r plus 0,7.
+  // kreis r plus 1 px Surface-Strich, halbe Quadratkante, Ring r plus 0,7
+  // (nur Historie).
   // Gelesen aus den Templates, damit eine geänderte Markergröße hier auffällt.
   it.each([
     ["history", "ModelRoutingHistory.vue", "mh"],
@@ -276,10 +228,14 @@ describe("Marker-Entzerrung", () => {
         `width="([\\d.]+)"\\s+height="[\\d.]+"\\s+class="${cls}-dom-pt"`,
       ),
     );
-    const ghostR = num(/r="([\d.]+)"\s+class="mp-old-pt"/);
     expect(MARKER[kind].front).toBe(frontR + 1);
     expect(MARKER[kind].dom).toBe(domW / 2);
-    expect(MARKER[kind].ghost).toBeCloseTo(ghostR + 0.7, 6);
+    // Geisterringe zeichnet nur noch die Historie; die AA-Ansichten kennen
+    // keine künftigen Preise.
+    if (kind === "history") {
+      const ghostR = num(/r="([\d.]+)"\s+class="mp-old-pt"/);
+      expect(MARKER[kind].ghost).toBeCloseTo(ghostR + 0.7, 6);
+    }
     expect(half(SNAPSHOTS[0]!.pts, kind)(SNAPSHOTS[0]!.pts[0]!)).toBe(
       MARKER[kind].front,
     );
@@ -307,22 +263,17 @@ describe("Marker-Entzerrung", () => {
           "mimo-v2.5-pro",
         ],
         "Bonus v11-vs-v1": [],
-        "Hauptfolie": [
+        "Hauptfolie aa-cost": [
           "glm-5.3",
-          "gpt-5.6-sol",
-          "gpt-5.6-terra",
-          "gpt-6-astra",
-          "muse-spark-1.2",
-          "qwen3.8-max",
+          "kimi-k3",
         ],
-        "Hauptfolie mit Kontingent": [
-          "claude-fable-5",
+        "Hauptfolie aa-cost mit Kontingent": [
           "glm-5.3",
-          "gpt-5.6-sol",
-          "gpt-5.6-terra",
-          "gpt-6-astra",
-          "muse-spark-1.2",
-          "qwen3.8-max",
+          "kimi-k3",
+        ],
+        "Hauptfolie aa-speed": [
+          "gpt-6-sol",
+          "grok-4.7",
         ],
         "Historie 0710": [],
         "Historie 0722": [
@@ -404,7 +355,7 @@ describe("Abweichung in den Speaker Notes", () => {
     let pp = 0;
     let pct = 0;
     for (const z of zs) {
-      const s = scale(z.kind);
+      const s = scale(z);
       const perPp = Math.abs(s.py(1) - s.py(0));
       const perDecade = s.px(10) - s.px(1);
       for (const m of run(z).moved) {
@@ -419,29 +370,52 @@ describe("Abweichung in den Speaker Notes", () => {
     return { px, pp, pct };
   };
 
+  // Auf der Hauptfolie ist y der AA-Index und x Preis bzw. Zeit je 1 000
+  // Tokens — deshalb Indexpunkte und „Preis bzw. Tempo“.
   it.each([
-    ["Hauptfolie", "# Welches Modell wofür? Die Datenlage", "Hauptfolie"],
-    ["Historie", "routeAlias: pareto-historie", "Historie "],
-    ["Bonusfolie", "routeAlias: pareto-v1-bonus", "Bonus "],
-  ])("%s: nennt das gemessene Maximum", (_name, anchor, prefix) => {
-    const zs = ZUSTAENDE.filter((z) => z.name.startsWith(prefix));
-    expect(zs.length).toBeGreaterThan(0);
-    const m = maximum(zs);
-    const satz =
-      `Entzerrte Marker: bis ${fmt1(m.px)} px verschoben, höchstens ` +
-      `${fmt1(m.pp)} Prozentpunkte senkrecht oder ${fmt1(m.pct)} % im Preis waagerecht`;
-    expect(notesAfter(anchor)).toContain(satz);
-    expect(m.px).toBeLessThanOrEqual(DODGE.cap);
-  });
+    [
+      "Hauptfolie",
+      "# Welches Modell wofür? Die Datenlage",
+      "Hauptfolie",
+      "Indexpunkte",
+      "im Preis bzw. Tempo",
+    ],
+    [
+      "Historie",
+      "routeAlias: pareto-historie",
+      "Historie ",
+      "Prozentpunkte",
+      "im Preis",
+    ],
+    [
+      "Bonusfolie",
+      "routeAlias: pareto-v1-bonus",
+      "Bonus ",
+      "Prozentpunkte",
+      "im Preis",
+    ],
+  ])(
+    "%s: nennt das gemessene Maximum",
+    (_name, anchor, prefix, yUnit, xWas) => {
+      const zs = ZUSTAENDE.filter((z) => z.name.startsWith(prefix));
+      expect(zs.length).toBeGreaterThan(0);
+      const m = maximum(zs);
+      const satz =
+        `Entzerrte Marker: bis ${fmt1(m.px)} px verschoben, höchstens ` +
+        `${fmt1(m.pp)} ${yUnit} senkrecht oder ${fmt1(m.pct)} % ${xWas} waagerecht`;
+      expect(notesAfter(anchor)).toContain(satz);
+      expect(m.px).toBeLessThanOrEqual(DODGE.cap);
+    },
+  );
 
-  // Der ⓘ-Caveat gilt für alle Chart-Folien und nennt das Maximum über alle
-  // Zustände plus die Kappe.
-  it("ⓘ-Caveat nennt Kappe und Maximum über alle Folien", () => {
+  // Der ⓘ-Caveat spricht von Prozentpunkten und Fehlerbalken, gilt also für die
+  // DeepSWE-Charts (Historie, Bonus); er nennt ihr Maximum plus die Kappe.
+  it("ⓘ-Caveat nennt Kappe und Maximum über die DeepSWE-Folien", () => {
     const src = readFileSync(
       join(import.meta.dirname, "../../ModelRoutingSources.vue"),
       "utf8",
     );
-    const m = maximum(ZUSTAENDE);
+    const m = maximum(ZUSTAENDE.filter((z) => z.kind === "history"));
     expect(src).toContain(`stehen bis ${DODGE.cap} px auseinandergerückt`);
     expect(src).toContain(
       `höchstens ${fmt1(m.pp)} Prozentpunkte senkrecht oder ${fmt1(m.pct)} % im Preis waagerecht`,

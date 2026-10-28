@@ -197,8 +197,8 @@ describe("aaData — die beiden Punktmengen", () => {
 });
 
 describe("Varianten", () => {
-  it("führt genau die drei Ansichten, AA-Kosten zuerst", () => {
-    expect(VARIANT_ORDER).toStrictEqual(["aa-cost", "aa-speed", "deepswe"]);
+  it("führt genau die beiden AA-Ansichten, Kosten zuerst", () => {
+    expect(VARIANT_ORDER).toStrictEqual(["aa-cost", "aa-speed"]);
   });
 
   for (const id of VARIANT_ORDER) {
@@ -220,7 +220,6 @@ describe("Varianten", () => {
           expect(x).toBeLessThan(b.x + b.w);
         }
         for (const t of V.yTicks) {
-          // Der 0-%-Tick der DeepSWE-Achse liegt exakt auf der Plot-Kante.
           const y = V.scale.py(t);
           expect(y).toBeGreaterThanOrEqual(b.y);
           expect(y).toBeLessThanOrEqual(b.y + b.h);
@@ -230,7 +229,7 @@ describe("Varianten", () => {
       it("beschriftet die Front und überschneidet nichts (Default, Overlay aus/an)", () => {
         for (const subOn of V.features.subOverlay ? [false, true] : [false]) {
           const S = V.scale;
-          const ghost = V.features.priceGhost;
+          const ghost = false;
           const all = new Set(presetModels("all", V.pts));
           const pos = dodgeMarkers(
             visiblePoints(V.pts, all, subOn, { ghost }),
@@ -290,9 +289,7 @@ describe("Varianten", () => {
     expect([...px].sort((a, b) => a - b)).toStrictEqual(px);
   });
 
-  it("gibt Ghost nur der DeepSWE-Ansicht: nach dem 14.09. gibt es keinen künftigen Kontingent-Stand mehr", () => {
-    expect(VARIANTS.deepswe.features.priceGhost).toBe(true);
-    expect(VARIANTS["aa-cost"].features.priceGhost).toBe(false);
+  it("zeigt keinen Geisterring: nach dem 14.09. gibt es keinen künftigen Kontingent-Stand mehr", () => {
     const on = visiblePoints(
       AA_COST,
       new Set(AA_COST.map((p) => p.label)),
@@ -315,7 +312,7 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
 
   // Ein Katalog je Werkzeug, für beide Datenquellen: was Windsurf führt, gilt
   // in jeder Ansicht.
-  it("liest dieselbe Liste wie die DeepSWE-Ansicht", () => {
+  it("liest dieselbe Liste wie die Historien-Folie", () => {
     expect(toolHas("windsurf", "gemini-3.8-flash")).toBe(true);
     expect(presetModels("windsurf", AA_COST)).toContain("gemini-3.8-flash");
     expect(presetModels("windsurf", AA_COST)).toContain("gpt-6-astra");

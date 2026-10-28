@@ -1,4 +1,4 @@
-// Die drei Ansichten der Folie „Welches Modell wofür?“. Jede Variante bündelt
+// Die beiden Ansichten der Folie „Welches Modell wofür?“. Jede Variante bündelt
 // alles, was sich zwischen ihnen unterscheidet — Punkte, Skala, Ticks,
 // Quadranten, Pfeiltexte, Legenden- und Tooltip-Formate, Fußzeile und den
 // Empfehlungsabsatz. `ParetoChart.vue` zeichnet nur noch, was hier steht, und
@@ -7,35 +7,28 @@
 //
 //   aa-cost   Artificial-Analysis-Intelligence-Index × €/Task   (Default)
 //   aa-speed  derselbe Index × Output-Tokens/s
-//   deepswe   DeepSWE Pass@1 × €/Task                          (der bisherige Stand)
 //
-// Alle drei folgen „kleiner x ist besser, größerer y ist besser“ — `paretoFront`,
+// DeepSWE war bis Oktober 2026 die dritte Ansicht. Das Board wird nicht mehr
+// gepflegt; seine Daten leben nur noch auf der Historien-Folie
+// (`ModelRoutingHistory.vue`, `paretoData.ts`).
+//
+// Beide folgen „kleiner x ist besser, größerer y ist besser“ — `paretoFront`,
 // Quadranten und Pfeile brauchen dadurch keinen Richtungsparameter. Bei
 // `aa-speed` ist x deshalb die Zeit je 1 000 Tokens (`aaData.ts`), und nur die
 // Tick-Beschriftung spricht von tok/s.
 
 import { AA_COST, AA_NO_TPS, AA_SPEED, AA_STAND, AA_URL } from "./aaData";
 import { AA_EXTRAS_COST, AA_EXTRAS_SPEED } from "./aaExtras";
+import { makeScale, paretoFront, type Pt, type Scale } from "./paretoData";
 import {
-  CURRENT,
-  makeScale,
-  paretoFront,
-  tip,
-  type Pt,
-  type Scale,
-} from "./paretoData";
-import {
-  PARETO_SCALE,
   quadrantsWith,
   QUADRANTS,
   tickLabel,
-  X_TICKS_LOG,
-  Y_TICKS,
   type Quadrant,
 } from "./paretoChrome";
 import type { XY } from "./labelLayout";
 
-export type VariantId = "aa-cost" | "aa-speed" | "deepswe";
+export type VariantId = "aa-cost" | "aa-speed";
 
 /** Ein Stück Fließtext; `b` = fett. Die Komponente setzt daraus <strong>. */
 export interface Seg {
@@ -54,8 +47,7 @@ export interface ParetoVariant {
   pts: Pt[];
   /**
    * Modelle, die nur ein Produkt-Preset einblendet: ältere, abgekündigte, mit
-   * geschätztem Index (`aaExtras.ts`). Leer bei DeepSWE — das Board misst nur sein
-   * eigenes Feld.
+   * geschätztem Index (`aaExtras.ts`).
    */
   extras: Pt[];
   /** Bedeutung der x-Achse für das Anpassen der Skala (`paretoGeometry.ts`). */
@@ -83,19 +75,13 @@ export interface ParetoVariant {
   /** Name der y-Größe im aria-Label. */
   yName: string;
   features: {
-    /** Fehlerbalken und ±-Badges (nur DeepSWE führt ein Konfidenzintervall). */
-    ci: boolean;
     /** Claude-Code-Kontingent-Schalter (Claude-Punkte × Faktor). */
     subOverlay: boolean;
-    /** Geisterring für die künftigen Preise (Gemini-Listenpreis, Kontingent). */
-    priceGhost: boolean;
     /** Schalter „Tempo als Größe“. */
     sizeBySpeed: boolean;
   };
   /** Beschriftung des Kontingent-Schalters (Tooltip). */
   subTitle: string;
-  /** Legende-Eintrag für den Geisterring ohne / mit Kontingent-Overlay. */
-  ghostLegend: [string, string];
   /** Was die Fußzeile über der Folie sagt. */
   footnote: Seg[];
   /** Ziel der Quellenangabe in der Fußzeile, falls die Quelle Attribution verlangt. */
@@ -114,7 +100,7 @@ const eurT = (p: Pt) => `${p.eur} €`;
 const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
-// Dieselbe Bühne wie die DeepSWE-Folie (932 × 306), nur andere Achsen:
+// Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
 // Kosten log von 0,04 € bis 10 € (kleinster Punkt 0,05 €, größter 6,68 €), der
 // Index linear von 28 bis 62 (Punkte 33,7 bis 57,6). Ein yMin > 0 spart die
 // untere Hälfte der Achse, in der kein Modell liegt.
@@ -205,14 +191,11 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       (p.tps ? ` · ${p.tps} tok/s` : ""),
     yName: "Artificial-Analysis-Intelligence-Index",
     features: {
-      ci: false,
       subOverlay: true,
-      priceGhost: false,
       sizeBySpeed: true,
     },
     subTitle:
       "Kontingentrechnung, kein API-Preis: seit 14.09. dauerhaft +25 % ⇒ ×0,8",
-    ghostLegend: ["", ""],
     footnote: [
       {
         t: `Artificial Analysis Intelligence Index · Stand ${AA_STAND} · ${AA_FOOT_COMMON}`,
@@ -229,7 +212,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       },
       ...leiter(costFront, kostenText),
       {
-        t: `. Der Index misst breite Fähigkeit, nicht Coding-Agenten — die DeepSWE-Ansicht ordnet die Spitze deshalb anders.`,
+        t: `. Der Index misst breite Fähigkeit, nicht Coding-Agenten — für Deine Aufgaben kann die Spitze anders aussehen.`,
       },
     ],
     ariaIntro:
@@ -283,13 +266,10 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       `${p.label}: Index ${dez1(p.y)} · ${p.tps} tok/s · ${p.eur} s/1k Tok.`,
     yName: "Artificial-Analysis-Intelligence-Index",
     features: {
-      ci: false,
       subOverlay: false,
-      priceGhost: false,
       sizeBySpeed: false,
     },
     subTitle: "",
-    ghostLegend: ["", ""],
     footnote: [
       {
         t: `Artificial Analysis Intelligence Index · Stand ${AA_STAND} · Tempo = Median der Output-Tokens/s des Anbieter-Endpunkts, den AA misst · ohne Messwert fehlen: ${AA_NO_TPS.join(", ")} · je Modell die beste Effort-Stufe · Index ≥ 30 · Quadranten redaktionell · Quelle: `,
@@ -317,84 +297,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       AA_STAND,
     ariaTail: ` Ohne Geschwindigkeitswert fehlen ${AA_NO_TPS.join(" und ")}.`,
   },
-
-  deepswe: {
-    id: "deepswe",
-    menu: "DeepSWE × Kosten",
-    menuNote: "Coding-Benchmark · Stand 03.09.",
-    pts: CURRENT,
-    extras: [],
-    xKind: "cost",
-    scale: PARETO_SCALE,
-    xTicks: X_TICKS_LOG,
-    xTickLabel: tickLabel,
-    yTicks: Y_TICKS,
-    yTickLabel: (y) => `${y} %`,
-    split: { x: 8, y: 50 },
-    quadrants: QUADRANTS as Quadrant[],
-    arrows: {
-      texts: {
-        cheaper: "Billiger",
-        stronger: "Leistungsfähiger",
-        better: "Besseres Preis-Leistungs-Verhältnis",
-      },
-    },
-    axisTitle: "Ø Kosten pro Task (EUR, log. Skala) — DeepSWE Pass@1 (%)",
-    xText: eurT,
-    yText: (y) => `${y} %`,
-    tip,
-    yName: "DeepSWE-Score",
-    features: {
-      ci: true,
-      subOverlay: true,
-      priceGhost: true,
-      sizeBySpeed: false,
-    },
-    subTitle:
-      "Kontingentrechnung, kein API-Preis: ×2/3 bis 13.09., ab 14.09. ×0,8",
-    ghostLegend: ["Preis ab 01.01.2027", "künftig: ab 01.01. / 14.09."],
-    footnote: [
-      {
-        t: "DeepSWE v1.1 · 113 Tasks · mini-swe-agent · pass@1 · Datacurve 03.09. · 1 USD = 0,876 € · Board-Default + terra · Quadranten redaktionell",
-      },
-    ],
-    lead: [
-      {
-        t: "Nimm den billigsten Punkt der Front, der Deine Aufgaben löst",
-        b: true,
-      },
-      {
-        t: " — im Zweifel unten anfangen, bei Fehlschlag eine Sprosse höher. ",
-      },
-      { t: "glm-5.3-flash", b: true },
-      { t: " 0,21 € (63 %) → " },
-      { t: "gpt-5.6-luna", b: true },
-      { t: " 0,53 € (67 %) → " },
-      { t: "gemini-3.8-flash", b: true },
-      {
-        t: " 2,07 € (74 %). Alle drei zusammen: 2,81 €, gut ein Viertel eines Laufs mit Opus 5 (10,37 €) — der nicht mehr löst als Sprosse 3. Was Du wählen kannst, hängt am Werkzeug (Filter oben): bei JetBrains AI sind es vier Sprossen bis 10,37 €.",
-      },
-    ],
-    ariaIntro:
-      "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, x-Achse logarithmisch " +
-      "von 0,1 bis 30 Euro, unterteilt in vier Quadranten: " +
-      "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
-      "(billig und schwach), Geldverbrennung (teuer und schwach). Stand 03.09.2026",
-    ariaFit:
-      "Streudiagramm DeepSWE-Score gegen Kosten pro Task in Euro, x-Achse logarithmisch, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand 03.09.2026",
-    ariaTail:
-      " gpt-6-astra mit 5,71 Euro hat mit 74,12 Prozent den höchsten Rohwert des Boards und liegt " +
-      "trotzdem nicht auf der Front — gemini-3.8-flash erreicht denselben gerundeten Wert für 2,07 Euro." +
-      " Der Geisterring an gemini-3.8-flash markiert 4,14 Euro — den Listenpreis ab dem " +
-      "1. Januar 2027, wenn Googles Einführungspreis ausläuft.",
-  },
 };
 
-export const VARIANT_ORDER: readonly VariantId[] = [
-  "aa-cost",
-  "aa-speed",
-  "deepswe",
-];
+export const VARIANT_ORDER: readonly VariantId[] = ["aa-cost", "aa-speed"];
 export const DEFAULT_VARIANT: VariantId = "aa-cost";
 
 /** Die Front einer Variante als Text — für die aria-Beschreibung. */
