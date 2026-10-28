@@ -143,8 +143,8 @@ To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock fro
 
 ## Weekly Artificial Analysis Snapshot
 
-The slide `pareto-heute` in `20260408-agents-details` is refreshed weekly by a
-Claude Code cloud routine (`/schedule`) that follows
+The slide `pareto-heute` in `20260408-agents-details` (AA data and the product
+catalogs behind its presets) is refreshed weekly by a Claude Code cloud routine (`/schedule`) that follows
 `20260408-agents-details/data/artificialanalysis/UPDATE.md` and opens a PR —
 it never pushes to `main`. The runbook is the single source for that job;
 change the procedure there, not in the routine's prompt.
@@ -155,6 +155,17 @@ change the procedure there, not in the routine's prompt.
   so a bare `fetch.ts` run leaves the suite red on purpose.
 - `components/lib/codexEffortMath.ts` stays pinned to the 01.10.2026 board;
   its prices and notes are dated, and moving factors would contradict them.
+- Since late October 2026 AA reports Intelligence Index **v5** for only part
+  of the models. `migrateV4` in `aaData.ts` fills the gaps from the last v4
+  board (01.10.2026) via a power-law fit refitted on every run; those points
+  render hollow with „≈“. Never mix raw v4 and v5 numbers on one chart.
+- The same run refreshes the product catalogs (`data/toolcatalogs/fetch.ts`).
+  A source that no longer parses is researched by hand and archived with
+  `fetch.ts --manual <tool> <list.json>` (evidence per model); Junie is
+  hand-maintained in `junie.json`.
+- The scraper reads only the page's public `initialModels`. The page also
+  ships an encrypted data file; it is deliberately not read — the encryption
+  is an anti-scraping measure.
 - The cloud has no browser for the overflow check. Before merging such a PR,
   run `check-slide-overflow.sh` for the slide locally (see below).
 

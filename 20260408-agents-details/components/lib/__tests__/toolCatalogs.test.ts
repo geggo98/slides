@@ -111,7 +111,15 @@ describe("Schnappschüsse", () => {
       );
       expect(e, `${id} fehlt im Index`).toBeDefined();
       expect(c.models.length).toBe(e!.models);
-      expect(c.models.length).toBeGreaterThanOrEqual(MIN_MODELS[id]);
+      // Von Hand recherchiert (`fetch.ts --manual`): keine Mindestzahl, dafür
+      // ein Beleg je Modell.
+      if (c.source.startsWith("manuell:"))
+        for (const m of c.models)
+          expect(
+            (m as { evidence?: string[] }).evidence?.length,
+            m.name,
+          ).toBeGreaterThan(0);
+      else expect(c.models.length).toBeGreaterThanOrEqual(MIN_MODELS[id]);
       const roh = readFileSync(join(DATA, e!.file), "utf8");
       expect(createHash("sha256").update(roh).digest("hex")).toBe(e!.sha256);
     });

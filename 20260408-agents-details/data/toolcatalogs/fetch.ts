@@ -27,6 +27,18 @@
 // Junie hat keine maschinenlesbare Liste und steht von Hand in `junie.json`
 // (mit Beleg je Eintrag), nicht hier.
 //
+// Fällt eine Quelle aus (Windsurf/Devin Desktop liefert seit Ende Oktober 2026
+// seine Tabellen leer aus und füllt sie erst im Browser), wird von Hand
+// recherchiert und die Liste mit Belegen archiviert:
+//
+//   bun run 20260408-agents-details/data/toolcatalogs/fetch.ts \
+//     --manual windsurf <liste.json>
+//
+// `liste.json` ist `{"source": "<url(s)>", "models": [{"name": "…",
+// "evidence": ["<url>: <Zitat>"]}, …]}`. Archiviert wird wie bei einem Abruf —
+// Datei mit Inhalts-Hash, Index-Eintrag —, die Mindestzahl gilt nicht, weil
+// eine Recherche selten den ganzen Katalog findet.
+//
 // Jeder Abruf wird gegen eine Mindestzahl geprüft, bevor etwas geschrieben wird:
 // eine Seite, die ihre Tabelle nicht mehr ausliefert, meldet sonst „0 Modelle“
 // und sieht aus wie ein leerer Katalog. Schlüssel des Archivs ist der INHALT
@@ -48,6 +60,8 @@ export interface CatalogModel {
   hidden?: boolean;
   /** Nur Windsurf: Anbieter laut Katalog. */
   provider?: string;
+  /** Nur bei `--manual`: woher der Eintrag stammt (URL und Zitat). */
+  evidence?: string[];
 }
 
 export interface Catalog {
@@ -243,37 +257,83 @@ const lesIndex = (): Eintrag[] => {
 
 const jetzt = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 
-async function main() {
-  const index = lesIndex();
-  const t = jetzt();
-  for (const tool of Object.keys(SOURCES) as ToolKey[]) {
-    const catalog: Catalog = {
-      tool,
-      source: SOURCES[tool],
-      models: await hole(tool),
-    };
-    const inhalt = JSON.stringify(catalog, null, 2) + "\n";
-    const sha = createHash("sha256").update(inhalt).digest("hex");
-    const da = index.find((e) => e.sha256 === sha);
-    if (da) {
-      da.seen.push(t);
-      console.log(`${tool}: unverändert (${da.file})`);
-      continue;
-    }
-    const datei = `${tool}-${t.replace(/\D/g, "").slice(0, 8)}-${sha.slice(0, 8)}.json`;
-    writeFileSync(join(HIER, datei), inhalt);
-    index.push({
-      tool,
-      fetched_at: t,
-      file: datei,
-      models: catalog.models.length,
-      sha256: sha,
-      seen: [],
-    });
-    console.log(`${tool}: neu ${datei} — ${catalog.models.length} Modelle`);
+/** Archiviert einen Katalog: Datei mit Inhalts-Hash, Eintrag im Index. */
+function archiviere(index: Eintrag[], t: string, catalog: Catalog): void {
+  const { tool } = catalog;
+  const inhalt = JSON.stringify(catalog, null, 2) + "\n";
+  const sha = createHash("sha256").update(inhalt).digest("hex");
+  const da = index.find((e) => e.sha256 === sha);
+  if (da) {
+    da.seen.push(t);
+    console.log(`${tool}: unverändert (${da.file})`);
+    return;
   }
+  const datei = `${tool}-${t.replace(/\D/g, "").slice(0, 8)}-${sha.slice(0, 8)}.json`;
+  writeFileSync(join(HIER, datei), inhalt);
+  index.push({
+    tool,
+    fetched_at: t,
+    file: datei,
+    models: catalog.models.length,
+    sha256: sha,
+    seen: [],
+  });
+  console.log(`${tool}: neu ${datei} — ${catalog.models.length} Modelle`);
+}
+
+/** `--manual <tool> <liste.json>`: von Hand recherchierte Liste archivieren. */
+function manuell(tool: string, pfad: string): void {
+  if (!(tool in SOURCES)) throw new Error(`unbekanntes Werkzeug: ${tool}`);
+  const roh = JSON.parse(readFileSync(pfad, "utf8")) as {
+    source?: string;
+    models?: CatalogModel[];
+  };
+  const models = roh.models ?? [];
+  if (!roh.source || !models.length)
+    throw new Error(`${pfad}: \`source\` und mindestens ein Modell nötig`);
+  for (const m of models)
+    if (!m.name || !m.evidence?.length)
+      throw new Error(`${pfad}: ${m.name || "?"} ohne Name oder Beleg`);
+  const index = lesIndex();
+  archiviere(index, jetzt(), {
+    tool: tool as ToolKey,
+    source: `manuell: ${roh.source}`,
+    models,
+  });
   writeFileSync(INDEX, index.map((e) => JSON.stringify(e)).join("\n") + "\n");
 }
 
+async function main() {
+  const index = lesIndex();
+  const t = jetzt();
+  // Eine Quelle, die scheitert, hält die anderen nicht auf und hinterlässt
+  // nichts: jede Datei wird mit ihrem Index-Eintrag zusammen geschrieben, der
+  // Index am Ende einmal. Vorher schrieb ein Abbruch bei Windsurf schon die
+  // Cursor-Datei, aber keinen Index-Eintrag dazu (28.10.2026).
+  const fehler: string[] = [];
+  for (const tool of Object.keys(SOURCES) as ToolKey[]) {
+    let models: CatalogModel[];
+    try {
+      models = await hole(tool);
+    } catch (e) {
+      fehler.push(`${tool}: ${e instanceof Error ? e.message : String(e)}`);
+      console.error(`${tool}: FEHLER — Katalog bleibt auf dem alten Stand`);
+      continue;
+    }
+    archiviere(index, t, { tool, source: SOURCES[tool], models });
+  }
+  writeFileSync(INDEX, index.map((e) => JSON.stringify(e)).join("\n") + "\n");
+  if (fehler.length) {
+    console.error(
+      `\n${fehler.length} Quelle(n) gescheitert:\n${fehler.join("\n")}`,
+    );
+    process.exit(1);
+  }
+}
+
 // Nur als Programm, nicht beim Import: der Test benutzt die Parser.
-if (import.meta.main) await main();
+if (import.meta.main) {
+  const [flag, tool, pfad] = process.argv.slice(2);
+  if (flag === "--manual") manuell(tool ?? "", pfad ?? "");
+  else await main();
+}
