@@ -56,7 +56,7 @@ const haupt = (id: VariantId, subOn: boolean): Zustand => {
     }),
     kind: "pareto",
     movable: claude,
-    opts: { horizontalOnly: frontUnion(V.pts) },
+    opts: { horizontalOnly: frontUnion(V.pts), yieldFixed: true },
     s: V.scale,
   };
 };
@@ -181,13 +181,20 @@ describe("Marker-Entzerrung", () => {
 
   // Zusage der Hauptfolie: kein Schalter verschiebt einen festen Marker. Das
   // Overlay darf nur die Claude-Punkte bewegen.
-  it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich", () => {
+  it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich — außer dem, den ein Claude-Punkt verdeckt", () => {
+    // Seit 31.10.2026 weicht ein fester Marker mit aus, wenn ein verschiebbarer
+    // ihn verdeckt (`yieldFixed`): claude-opus-5.5 liegt mit Kontingent fast auf
+    // gemini-4-carbon. Jeder andere feste Marker bleibt, wo er war.
     const aus = run(haupt("aa-cost", false)).pos;
     const an = run(haupt("aa-cost", true)).pos;
-    for (const p of VARIANTS["aa-cost"].pts) {
-      if (claude(p)) continue;
-      expect(an.get(p.label), p.label).toStrictEqual(aus.get(p.label));
-    }
+    const bewegt = VARIANTS["aa-cost"].pts
+      .filter((p) => !claude(p))
+      .filter(
+        (p) =>
+          JSON.stringify(an.get(p.label)) !== JSON.stringify(aus.get(p.label)),
+      )
+      .map((p) => p.label);
+    expect(bewegt).toStrictEqual(["gemini-4-carbon"]);
   });
 
   // Der y-Versatz eines Punkts liegt unter seinem eigenen Fehlerbalken, wo es
@@ -266,6 +273,7 @@ describe("Marker-Entzerrung", () => {
         "Hauptfolie aa-cost": [],
         "Hauptfolie aa-cost mit Kontingent": [
           "claude-opus-5.5",
+          "gemini-4-carbon",
         ],
         "Hauptfolie aa-speed": [
           "gemini-3.8-flash",

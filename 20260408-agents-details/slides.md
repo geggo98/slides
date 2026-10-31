@@ -1765,12 +1765,12 @@ Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
 Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
 Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
-Entzerrte Marker: bis 8,0 px verschoben, höchstens 0,4 Indexpunkte
-senkrecht oder 5,9 % im Preis bzw. Tempo waagerecht. Betroffen sind die
+Entzerrte Marker: bis 5,6 px verschoben, höchstens 0,4 Indexpunkte
+senkrecht oder 4,1 % im Preis bzw. Tempo waagerecht. Betroffen sind die
 Tempoansicht (gemini-3.8-flash, gpt-6-luna: 120 und 118 tok/s) und der
 Kontingent-Schalter der Kostenansicht: claude-opus-5.5 liegt mit ×0,8 fast
-auf gemini-4-carbon und behält trotz Verschiebung bis zur Kappe 3,2 px
-Überlappung. Frontpunkte rücken nur waagerecht, kein dominierter Punkt
+auf gemini-4-carbon, deshalb weichen dort beide waagerecht aus — der
+einzige Fall, in dem der Schalter einen festen Marker bewegt. Frontpunkte rücken nur waagerecht, kein dominierter Punkt
 rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
 rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->

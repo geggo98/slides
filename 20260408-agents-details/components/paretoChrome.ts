@@ -386,7 +386,9 @@ export function visiblePoints(
 //     besser aus als gemini-3.8-flash. Dann weicht er waagerecht aus.
 //   * Zwei Stufen, damit kein Schalter einen festen Marker bewegt: erst die
 //     festen Punkte gegeneinander und gegen ihre Geisterringe, dann die
-//     verschiebbaren (Kontingent-Overlay) gegen das fertige Bild.
+//     verschiebbaren (Kontingent-Overlay) gegen das fertige Bild. Einzige
+//     Ausnahme (`yieldFixed`, nur Hauptfolie): Ein fester Punkt, den ein
+//     verschiebbarer verdeckt, weicht in Stufe 2 mit aus (31.10.2026).
 //   * Deterministisch: Reihenfolge nach Label, nie nach Array.
 // Wahre Lagen behalten Fadenkreuz-Linien, Badges, Fehlerbalken und
 // Geisterringe; die angezeigte Lage bekommen Marker, Front-Polyline,
@@ -443,6 +445,12 @@ export interface DodgeOpts {
    * weichen ihnen aus wie Geisterringen.
    */
   fixed?: readonly { px: number; py: number; h: number }[];
+  /**
+   * Feste Punkte, die ein verschiebbarer verdeckt, weichen mit aus (nur die
+   * Hauptfolie). Die Lupe lässt es aus: Dort bleibt die Leiter an der wahren
+   * Lage, und nur die Nachbarn rücken.
+   */
+  yieldFixed?: boolean;
 }
 
 export function dodgeDetailed(
@@ -645,12 +653,30 @@ export function dodgeDetailed(
       const g = ghostOf(p);
       return g ? [g] : [];
     });
-    const fixedObs: Ob[] = fixed.map((p) => ({
-      ...cur.get(p.label)!,
-      h: half(p),
-      owner: p.label,
-    }));
-    relax(mov, [...allGhosts, ...fixedObs, ...extra]);
+    // Ausnahme von „kein Schalter bewegt einen festen Marker“: Ein fester
+    // Punkt, den ein verschiebbarer in dessen Lage verdeckt, weicht mit aus.
+    // Sonst bliebe allein der verschiebbare mit seiner Kappe — am 31.10.2026
+    // lag claude-opus-5.5 mit Kontingent (7,03 €, 58,4) fast auf
+    // gemini-4-carbon (6,79 €, 59,4), beide Frontpunkte, also nur waagerecht,
+    // und 8 px reichten nicht. Beide zusammen haben 16 px.
+    const overlaps = (p: Pt, q: Pt) => {
+      const a = cur.get(p.label)!;
+      const b = cur.get(q.label)!;
+      const S = half(p) + half(q) + gap;
+      return Math.abs(a.px - b.px) < S - tol && Math.abs(a.py - b.py) < S - tol;
+    };
+    const yielding = opts.yieldFixed
+      ? fixed.filter((f) => mov.some((m) => overlaps(f, m)))
+      : [];
+    const group = order.filter((p) => movable(p) || yielding.includes(p));
+    const fixedObs: Ob[] = fixed
+      .filter((p) => !yielding.includes(p))
+      .map((p) => ({
+        ...cur.get(p.label)!,
+        h: half(p),
+        owner: p.label,
+      }));
+    relax(group, [...allGhosts, ...fixedObs, ...extra]);
   }
 
   // Restverletzung über alle Paare, Ringe und festen Hindernisse.

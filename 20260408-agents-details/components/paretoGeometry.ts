@@ -258,6 +258,7 @@ export function chartGeometry(
       horizontalOnly: isDefault
         ? frontUnion([...curated])
         : new Set(paretoFront(base).front.map((p) => p.label)),
+      yieldFixed: true,
     },
   );
   const layoutPts = toLayoutPoints(base, scale, {

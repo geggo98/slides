@@ -162,7 +162,7 @@ describe("chartGeometry — Standard = bisherige Pipeline", () => {
           V.scale,
           "pareto",
           (p) => p.sub !== undefined,
-          { horizontalOnly: frontUnion(V.pts) },
+          { horizontalOnly: frontUnion(V.pts), yieldFixed: true },
         );
         expect([...g.dodge.pos]).toStrictEqual([...pos]);
         const lp = toLayoutPoints(V.pts, V.scale, {

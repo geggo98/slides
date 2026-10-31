@@ -309,7 +309,7 @@ describe("Varianten", () => {
             S,
             "pareto",
             (p) => p.sub !== undefined,
-            { horizontalOnly: frontUnion(V.pts) },
+            { horizontalOnly: frontUnion(V.pts), yieldFixed: true },
           );
           const lp = toLayoutPoints(V.pts, S, {
             overlay: V.features.subOverlay,
@@ -351,7 +351,7 @@ describe("Varianten", () => {
           S,
           "pareto",
           (p) => p.sub !== undefined,
-          { horizontalOnly: frontUnion(V.pts) },
+          { horizontalOnly: frontUnion(V.pts), yieldFixed: true },
         );
         const lp = toLayoutPoints(V.pts, S, {
           overlay: V.features.subOverlay,
