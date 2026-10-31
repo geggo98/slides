@@ -1,16 +1,20 @@
 # Wöchentlicher Lauf für „Welches Modell wofür?“
 
 Ablauf für die Cloud-Routine (und für jeden, der es von Hand macht). Ziel:
-Die Folie `pareto-heute` steht auf dem neuesten Snapshot von
-<https://artificialanalysis.ai/leaderboards/models> und auf den neuesten
-Modellkatalogen der Produkte (Cursor, Windsurf, JetBrains AI, Junie), und alles,
-was dort an Zahlen und Texten hängt, stimmt dazu. Ergebnis ist **ein PR**, nie
+Die Folie `pareto-heute` steht auf dem neuesten Snapshot **beider Quellen** —
+<https://artificialanalysis.ai/leaderboards/models> und
+<https://www.designarena.ai/leaderboard?section=overall&board=overall-agentic>
+— und auf den neuesten Modellkatalogen der Produkte (Cursor, Windsurf,
+JetBrains AI, Junie), und alles, was dort an Zahlen und Texten hängt, stimmt
+dazu. Jeder neue Stand wird archiviert und nie gelöscht: Die Indizes
+(`data/artificialanalysis/index.ndjson`, `data/designarena/index.ndjson`) sind
+die Grundlage einer späteren Zeitreihe wie der DeepSWE-Historie. Ergebnis ist **ein PR**, nie
 ein Push auf `main` — gemergt wird von Hand, das Deployment folgt dann von
 selbst.
 
 Arbeitsverzeichnis ist die Repo-Wurzel. Alle Pfade unten sind relativ zu ihr.
 
-## Hintergrund in drei Sätzen
+## Hintergrund
 
 AA rechnet seit Ende Oktober 2026 mit **Intelligence Index v5** und misst nur
 einen Teil der Modelle neu. Was in v5 fehlt, rechnet `components/aaData.ts`
@@ -18,6 +22,11 @@ einen Teil der Modelle neu. Was in v5 fehlt, rechnet `components/aaData.ts`
 wird bei jedem Lauf neu bestimmt; diese Punkte stehen hohl mit „≈“. Je mehr AA
 neu misst, desto weniger umgerechnete Punkte gibt es; daran ist nichts von Hand
 zu tun.
+
+DesignArena ist die zweite, unabhängige Achse: Elo aus Blind-Duellen statt
+Benchmark. Ihr Elo bewegt sich mit jeder Stimme, ein neuer Stand ist dort also
+fast jede Woche zu erwarten. Generierungszeiten führt die Seite nur für ältere
+Modelle; daran ist ebenfalls nichts von Hand zu tun.
 
 ## 0. Werkzeuge
 
@@ -35,10 +44,12 @@ Hand. `bunfig.toml` nicht anfassen, keine Lifecycle-Scripts einschalten.
 bun run 20260408-agents-details/data/artificialanalysis/fetch.ts
 ```
 
-- `unverändert: …` — AA hat nichts geändert. Weiter mit Schritt 2 (Kataloge).
+- `unverändert: …` — AA hat nichts geändert. Weiter mit Schritt 1b
+  (DesignArena).
 - `neu: board-JJJJMMTT-xxxxxxxx.json — N Modelle, M mit Kosten` — weiter.
 - Fehler (Seite nicht erreichbar, zu wenige Modelle, Format geändert):
-  **keine** halben AA-Daten committen, die AA-Schritte überspringen und den
+  **keine** halben AA-Daten committen, die AA-Schritte überspringen (weiter mit
+  Schritt 1b) und den
   Fehler im PR bzw. Abschlussbericht nennen. Endet der ganze Lauf ohne
   Änderung, ein GitHub-Issue `Wochenlauf pareto-heute: Abruf fehlgeschlagen
 (TT.MM.JJJJ)` mit der Fehlermeldung öffnen (`gh issue create` oder das
@@ -46,6 +57,24 @@ bun run 20260408-agents-details/data/artificialanalysis/fetch.ts
   dann dort kommentieren statt ein neues anzulegen. Den Parser nicht umbauen,
   und die verschlüsselte Datendatei der Seite (`/data/<hash>.txt`) **nie**
   lesen oder entschlüsseln.
+
+## 1b. DesignArena abrufen
+
+```sh
+bun run 20260408-agents-details/data/designarena/fetch.ts
+```
+
+- `unverändert: …` — weiter mit Schritt 2.
+- `neu: board-JJJJMMTT-xxxxxxxx.json — N Modelle, M mit Zeit, K mit Preis` —
+  weiter.
+- Fehler: wie bei AA. **Keine** halben Daten committen, die DesignArena-Schritte
+  überspringen, im PR bzw. Abschlussbericht nennen; endet der ganze Lauf ohne
+  Änderung, dasselbe Issue `Wochenlauf pareto-heute: Abruf fehlgeschlagen
+(TT.MM.JJJJ)` öffnen oder kommentieren. Ein Fehler hier hält AA und die
+  Kataloge nicht auf, und umgekehrt.
+
+Das Skript liest nur die öffentliche Leaderboard-Seite. **Nie** `/api/` der
+Seite abrufen — die `robots.txt` sperrt es.
 
 ## 2. Produktkataloge abrufen
 
@@ -109,10 +138,10 @@ await Bun.write("20260408-agents-details/components/lib/__tests__/__fixtures__/c
 git diff --no-ext-diff --no-color -- '*catalog-keys.json'
 ```
 
-## 3. AA umstellen — eine Stelle
+## 3. AA und DesignArena umstellen — je eine Stelle
 
-Nur wenn Schritt 1 `neu` meldete. In `20260408-agents-details/components/aaData.ts`
-direkt unter dem Kopf:
+**AA**, nur wenn Schritt 1 `neu` meldete. In
+`20260408-agents-details/components/aaData.ts` direkt unter dem Kopf:
 
 - den Import `../data/artificialanalysis/board-….json` auf die neue Datei,
 - `AA_BOARD` auf denselben Dateinamen,
@@ -123,7 +152,12 @@ Sonst nichts an den Daten. `AA_V4_BOARD` (Quelle der Umrechnung) und
 `lib/codexEffortMath.ts` bleiben **absichtlich** auf
 `board-20261001-ae520e03.json`; ältere Board-Dateien bleiben liegen (Archiv).
 
-Ist weder AA noch ein Katalog neu: den Lauf **ohne Commit und ohne PR**
+**DesignArena**, nur wenn Schritt 1b `neu` meldete. In
+`20260408-agents-details/components/daData.ts` direkt unter dem Kopf dasselbe:
+der Import `../data/designarena/board-….json`, `DA_BOARD` und `DA_STAND`.
+Die Elo-Böden (`DA_FLOOR`) nicht anfassen, außer ein Test verlangt es.
+
+Ist weder AA noch DesignArena noch ein Katalog neu: den Lauf **ohne Commit und ohne PR**
 beenden. Das geänderte `seen`-Feld der Indizes ist kein Grund für einen PR.
 Den Arbeitsbaum dafür **nicht** zurücksetzen (`git checkout`/`git restore`
 lehnt die Cloud-Session als Löschung ab) — der Container wird nach dem Lauf
@@ -159,6 +193,11 @@ Typische Fälle:
 | `markerDodge.test.ts` „bewegt je Zustand genau diese Marker“                                        | `bunx vitest run 20260408-agents-details/components/lib/__tests__/markerDodge.test.ts -u` aktualisiert den Inline-Snapshot; danach den Satz „Entzerrte Marker: …“ in den Notizen von `pareto-heute` an die Fehlermeldung von „Hauptfolie: nennt das gemessene Maximum“ anpassen und die betroffenen Modelle nennen. |
 | „markiert als eingeschränkt verfügbar nur Modelle des Charts“                                       | `NUR_EINGESCHRAENKT` in `paretoVariants.ts`: Modell entfernen, das nicht mehr im Chart steht.                                                                                                                                                                                                                       |
 | „hat eindeutige Labels und für jedes ein bekanntes Lab“                                             | Neues Lab: in `paretoData.ts` den Typ `Lab` und `LAB_PREFIXES` ergänzen (Präfix des Labels → Lab).                                                                                                                                                                                                                  |
+| `daData.test.ts` „Fronten“, „die Sprechernotizen nennen dieselben Fronten und Zahlen“               | DesignArena-Fronten im Test und im Absatz `DESIGNARENA` der Notizen nachziehen (Schritt 5). Die richtige Front steht in der Fehlermeldung.                                                                                                                                                                          |
+| DesignArena „legt jeden Punkt … in den Plot“ / „überschneidet nichts“ (`da-cost`, `da-speed`)       | Wie bei AA: `DA_COST_SCALE`/`DA_SPEED_SCALE` in `paretoVariants.ts` (0,15–40 $, Elo 1140–1430; 80–1 000 s, Elo 900–1300) bzw. `arrows.hubY`/`target` der DA-Ansicht anpassen.                                                                                                                                       |
+| `productCoverage.test.ts` „coverage“ für `da-cost`/`da-speed`                                       | Erwartete „N von M“ je Produkt auf die Werte der Fehlermeldung setzen; im PR sagen, was sich bewegt hat (neues Modell bei DesignArena, neue Zeitangabe, Katalog).                                                                                                                                                   |
+| `daData.test.ts` „Archive — Index und Dateien“                                                      | Eine Archivdatei fehlt oder ihr Inhalt passt nicht mehr zur sha256 im Index — **nie** den Index anpassen. Die Datei aus `git` wiederherstellen; Archivdateien formatiert niemand um (`.prettierignore`).                                                                                                            |
+| „legt den Pfeilcluster über keine Quadranten-Überschrift und keinen Marker“                         | Ein Punkt ist unter einen Pfeilschaft gerutscht. `arrows.hubX`/`hubY`/`target` der Ansicht neu suchen (Gitter wie oben). `PFEIL_BEKANNT` im Test darf nur kürzer werden, nie länger.                                                                                                                                |
 
 **Niemals** einen Wächter löschen, lockern oder `skip`pen, um grün zu
 werden. Geht es ohne das nicht, PR trotzdem öffnen, den Test rot lassen und
@@ -183,6 +222,12 @@ selbst):
 - „Ansicht ‚Tempo‘: Front nach Output-Tokens/s — …“ und welche Modelle ohne
   Tempo-Wert fehlen (`AA_NO_TPS`).
 - `PRODUKT-AUSWAHL`: Katalog- und AA-Datum.
+- Absatz `DESIGNARENA`: Stand, Stimmenzahl (`totalVotes` im Board, gerundet),
+  Zahl der Modelle der Preisansicht (`DA_COST`), die Fronten beider
+  DesignArena-Ansichten wie bisher formatiert (`0,26 $ (1234)`, `1,9 min
+(1040)`) und „N der M Modelle der Preisansicht haben keine“ (`DA_NO_TIME`).
+  Was sich gegenüber dem Vorgänger-Stand an der Front geändert hat, gehört in
+  den PR.
 - Eingeschränkt verfügbare Modelle (`NUR_EINGESCHRAENKT`): Ist ein neues
   Front-Modell nicht allgemein verfügbar (Preview, Programm auf Einladung), es
   aufnehmen und die Quelle im Kommentar darüber nennen; ist eines dort
@@ -219,7 +264,7 @@ gh pr create --base main --head claude/pareto-weekly-JJJJMMTT --fill-first
 Commit-Nachricht nach `AGENTS.md`:
 
 ```text
-feat(agents-details): update AA snapshot and catalogs to TT.MM.JJJJ
+feat(agents-details): update AA, DesignArena and catalogs to TT.MM.JJJJ
 
 <deutscher Body, ≤ 72 Zeichen je Zeile: was sich an Front, Leitern und
 Katalogen geändert hat, und warum>
@@ -231,13 +276,14 @@ PR-Beschreibung, mit TL;DR oben:
 
 - **TL;DR**: eine Zeile, was sich an der Front geändert hat (oder „nur Zahlen
   bewegt, Front unverändert“).
-- Front vorher → nachher, Kosten- und Tempoansicht.
+- Front vorher → nachher, Kosten- und Tempoansicht, je Quelle (AA,
+  DesignArena); bei einer unveränderten Quelle „unverändert“.
 - Neu in v5 gemessen, neue, abgekündigte und korrigierte Modelle.
 - Katalogänderungen je Produkt; bei `--manual` die Belege.
 - Offene Fragen (Verfügbarkeit, rote Tests, gescheiterte Quellen).
 - **Vor dem Merge lokal prüfen**: Overflow-Check der Folie in drei Engines
   (`check-slide-overflow.sh <nr> <port>`, siehe `AGENTS.md`) und ein Blick
-  auf Label-Überlappungen in beiden Ansichten und in den vier Presets — die
+  auf Label-Überlappungen in allen vier Ansichten und in den vier Presets — die
   Cloud hat dafür keinen Browser.
 
 Nicht mergen, nicht auf `main` pushen. Lässt sich kein PR anlegen, den Branch

@@ -141,10 +141,10 @@ Create a new top-level directory with a `slides.md` file. It will be automatical
 
 To use shared components via the `@shared/*` alias (e.g. `import MonacoBlock from "@shared/components/MonacoBlock.vue"`), **copy a `vite.config.ts` from an existing talk** into the new directory. Slidev merges a `vite.config.ts` from each root — theme, addons and the deck directory — never the repo root, so a plain deck needs its own copy for the alias to resolve at build/dev time. The alias-only file is identical across talks (it points `@shared` one level up to `shared/`); a lightning deck gets the alias from the theme and needs its own file only for extra settings such as `optimizeDeps.exclude` (see Lightning-Talk-Theme).
 
-## Weekly Artificial Analysis Snapshot
+## Weekly Leaderboard Snapshots (Artificial Analysis, DesignArena)
 
-The slide `pareto-heute` in `20260408-agents-details` (AA data and the product
-catalogs behind its presets) is refreshed weekly by a Claude Code cloud routine (`/schedule`) that follows
+The slide `pareto-heute` in `20260408-agents-details` (Artificial Analysis and
+DesignArena data, and the product catalogs behind its presets) is refreshed weekly by a Claude Code cloud routine (`/schedule`) that follows
 `20260408-agents-details/data/artificialanalysis/UPDATE.md` and opens a PR —
 it never pushes to `main`. The runbook is the single source for that job;
 change the procedure there, not in the routine's prompt.
@@ -166,6 +166,17 @@ change the procedure there, not in the routine's prompt.
 - The scraper reads only the page's public `initialModels`. The page also
   ships an encrypted data file; it is deliberately not read — the encryption
   is an anti-scraping measure.
+- DesignArena (board „Overall Agentic“, Elo from blind votes) is the second
+  source, views `da-cost` and `da-speed`. `data/designarena/fetch.ts` reads
+  the leaderboard page's RSC payload — never `/api/`, which `robots.txt`
+  disallows. A snapshot switch is the same one-place edit in
+  `components/daData.ts` (import, `DA_BOARD`, `DA_STAND`), guarded by
+  `daData.test.ts`. The time axis exists only for older models; that is the
+  source, not a bug.
+- Every fetched state of both boards is kept: `index.ndjson` keyed by content
+  sha256, files listed in `.prettierignore`, and `daData.test.ts` checks that
+  each indexed file still hashes to its entry. That archive is what a later
+  time series (like the DeepSWE history slide) will be built from.
 - The cloud has no browser for the overflow check. Before merging such a PR,
   run `check-slide-overflow.sh` for the slide locally (see below).
 
