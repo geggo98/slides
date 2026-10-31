@@ -202,15 +202,32 @@ interface Eintrag {
   seen: string[];
 }
 
+/**
+ * Nur eine FEHLENDE Datei ist ein leerer Index. Jeder andere Fehler (eine
+ * kaputte Zeile, ein Konfliktmarker) bricht ab — sonst schriebe `main()` den
+ * Index mit nur dem neuen Eintrag neu, und das Archiv verlöre wortlos seine
+ * Geschichte.
+ */
 const lesIndex = (): Eintrag[] => {
+  let text: string;
   try {
-    return readFileSync(INDEX, "utf8")
-      .split("\n")
-      .filter(Boolean)
-      .map((l) => JSON.parse(l) as Eintrag);
-  } catch {
-    return [];
+    text = readFileSync(INDEX, "utf8");
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw e;
   }
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((l, i) => {
+      try {
+        return JSON.parse(l) as Eintrag;
+      } catch {
+        throw new Error(
+          `${INDEX}:${i + 1}: keine JSON-Zeile — Index von Hand prüfen`,
+        );
+      }
+    });
 };
 
 const jetzt = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
