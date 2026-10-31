@@ -192,11 +192,12 @@ describe("Front je Produkt", () => {
     expect(f.length).toBe(3);
   });
 
-  it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash bleibt unter dem gemessenen glm-5.3", () => {
+  it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash steigt nicht über das gemessene glm-5.3", () => {
     // Der Fall vom 28.10.2026 nachgebaut: Seit 31.10. misst AA glm-5.3-flash in
     // v5 selbst (27,8), am Board ist die Verankerung also nicht mehr zu sehen.
     // Ein globaler Fit, der 41,8 auf ≈ 33 hebt, darf das kleinere Modell nicht
     // über das gemessene größere (44,8 → 31,7) desselben Herstellers setzen.
+    // Die Kappe ist `Math.min(f, oben)`: Gleichstand ist erlaubt, Überholen nicht.
     const row = (slug: string, creator: string, index: number | null): Row => ({
       slug,
       name: slug,

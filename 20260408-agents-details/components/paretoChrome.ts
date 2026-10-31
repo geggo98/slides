@@ -653,12 +653,22 @@ export function dodgeDetailed(
       const g = ghostOf(p);
       return g ? [g] : [];
     });
-    // Ausnahme von „kein Schalter bewegt einen festen Marker“: Ein fester
-    // Punkt, den ein verschiebbarer in dessen Lage verdeckt, weicht mit aus.
-    // Sonst bliebe allein der verschiebbare mit seiner Kappe — am 31.10.2026
-    // lag claude-opus-5.5 mit Kontingent (7,03 €, 58,4) fast auf
-    // gemini-4-carbon (6,79 €, 59,4), beide Frontpunkte, also nur waagerecht,
-    // und 8 px reichten nicht. Beide zusammen haben 16 px.
+    const obsOf = (ps: readonly Pt[]): Ob[] =>
+      ps.map((p) => ({ ...cur.get(p.label)!, h: half(p), owner: p.label }));
+    // Probelauf ohne Ausweichen der festen; sein Ergebnis gilt nur, wenn
+    // danach nichts mehr auf einem festen Marker liegt.
+    const vorher = new Map([...cur].map(([k, v]) => [k, { ...v }]));
+    const sweeps0 = sweeps;
+    relax(mov, [...allGhosts, ...obsOf(fixed), ...extra]);
+    // Ausnahme von „kein Schalter bewegt einen festen Marker“ (`yieldFixed`):
+    // Bleibt ein verschiebbarer Punkt nach seinem eigenen Ausweichen auf einem
+    // festen liegen, weicht der feste mit aus — von der Ausgangslage aus, der
+    // Probelauf wird verworfen. Erst dann, damit kein Marker
+    // rückt, wo der verschiebbare allein Platz fand. Am 31.10.2026 lag
+    // claude-opus-5.5 mit Kontingent (7,03 €, 58,4) fast auf gemini-4-carbon
+    // (6,79 €, 59,4): carbon auf der Front, opus auf der Front eines Presets
+    // (`horizontalOnly`), also beide nur waagerecht. Opus allein hätte 11,2 px
+    // gebraucht und darf 8; beide zusammen dürfen 16.
     const overlaps = (p: Pt, q: Pt) => {
       const a = cur.get(p.label)!;
       const b = cur.get(q.label)!;
@@ -668,15 +678,13 @@ export function dodgeDetailed(
     const yielding = opts.yieldFixed
       ? fixed.filter((f) => mov.some((m) => overlaps(f, m)))
       : [];
-    const group = order.filter((p) => movable(p) || yielding.includes(p));
-    const fixedObs: Ob[] = fixed
-      .filter((p) => !yielding.includes(p))
-      .map((p) => ({
-        ...cur.get(p.label)!,
-        h: half(p),
-        owner: p.label,
-      }));
-    relax(group, [...allGhosts, ...fixedObs, ...extra]);
+    if (yielding.length) {
+      for (const [k, v] of vorher) cur.set(k, v);
+      sweeps = sweeps0;
+      const group = order.filter((p) => movable(p) || yielding.includes(p));
+      const rest = fixed.filter((p) => !yielding.includes(p));
+      relax(group, [...allGhosts, ...obsOf(rest), ...extra]);
+    }
   }
 
   // Restverletzung über alle Paare, Ringe und festen Hindernisse.

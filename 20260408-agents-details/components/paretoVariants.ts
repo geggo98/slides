@@ -140,9 +140,9 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 22 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
-// 9,54 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
-// Index (v5) linear von 22 bis 64 (Punkte 25,3 bis 59,4). Ein
+// Kosten log von 0,04 € bis 22 € (am 31.10.2026 kleinster Punkt 0,11 €, größter
+// 9,50 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
+// Index (v5) linear von 22 bis 64 (Punkte 26,0 bis 59,4). Ein
 // yMin > 0 spart die untere Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({

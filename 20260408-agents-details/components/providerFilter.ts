@@ -48,10 +48,10 @@ export type PresetId = "all" | ToolId;
 /**
  * Der Zustand des Filters ist eine MODELLMENGE, keine Lab-Menge — und das ist
  * kein Geschmack, sondern Rechnung. Ein Werkzeug deckt Labs oft nur teilweise
- * ab: JetBrains AI führt von Google nur 3.5 und 3.6 Flash. Schriebe ein Preset auf
- * Lab-Häkchen, bekäme JetBrains das ganze Google-Lab und damit gemini-3.8-flash,
- * das es gar nicht anbietet — 13 statt 10 Modelle, und mit gemini-3.8-flash auf
- * der Front die Leiter von „Alle" statt der eines JetBrains-Nutzers. Die Aussage,
+ * ab: JetBrains AI führt von Google nur Flash 3.6 bis 3.8 (Katalog vom 28.10.).
+ * Schriebe ein Preset auf Lab-Häkchen, bekäme JetBrains das ganze Google-Lab und
+ * damit gemini-3.5-flash, das es gar nicht anbietet — ein Modell zu viel, und die
+ * Leiter nennte etwas, das ein JetBrains-Nutzer nicht wählen kann. Die Aussage,
  * für die es diesen Filter gibt, wäre weg. Von OpenAI fehlt dort gpt-6-astra.
  *
  * Deshalb: Presets schreiben Modellmengen, die Lab-Checkboxen arbeiten auf

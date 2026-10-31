@@ -1619,7 +1619,7 @@ gpt-6.1-sol 1,11 € (54,5) → gpt-6-astra 5,47 € (56,9) → gemini-4-carbon
 6,79 €) ersetzt claude-opus-5.5 (58,4 bei 8,79 €) als oberste Sprosse —
 Opus 5.5 ist jetzt dominiert, es kostet mehr und liefert einen Punkt
 weniger. Der große Sprung liegt zwischen Haiku 5.5 und gpt-6.1-terra: 15
-Punkte für gut das Doppelte. Oben kosten die letzten vier Punkte
+Punkte für gut das Doppelte. Oben kosten die letzten knapp fünf Punkte
 (54,5 → 59,4) gut das Sechsfache — das ist die Eskalations-Frage der Folie.
 
 gemini-4-carbon hat seit 31.10. auch einen Tempo-Wert (85 tok/s) und steht
@@ -1630,8 +1630,8 @@ NUR_EINGESCHRAENKT gehört, sobald es einen datierten Herstellerbeleg gibt.
 
 gemini-4-argon (50,4 bei 6,73 €) ist in v5 von gpt-6.1-terra und
 gpt-6.1-sol dominiert und nicht mehr auf der Front. Seine Kosten je
-Durchlauf setzt AA seit 31.10. doppelt so hoch an wie am 28.10. (7,68
-statt 3,84 USD), bei gleichem Index; einen Grund nennt die Seite nicht. Es steht jetzt in den
+Durchlauf setzt AA seit dem Abruf vom 28.10. abends doppelt so hoch an
+wie am Nachmittag (7,68 statt 3,84 USD), bei gleichem Index; einen Grund nennt die Seite nicht. Es steht jetzt in den
 Katalogen von Cursor und Windsurf (Windsurf: Low/Medium/High); ob es
 allgemein verfügbar ist, ist nicht nachgeprüft.
 
@@ -1670,7 +1670,7 @@ Ein Stand der Generation davor, keine Empfehlung für heute — so auch
 sagen.
 
 PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 28.10.2026, AA-Stand
-28.10.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
+31.10.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
 Modelle sich lohnen und wann es ein strikt besseres gibt. Ein Produkt
 zeigt deshalb alle seine Modelle mit Wert — auch ältere, die AA nicht mehr
 führt — und rechnet die Front nur über diese, selbst wenn andere Produkte
@@ -1681,7 +1681,7 @@ Modelle hat AA in v5 kaum neu gemessen: In den Presets sind deshalb die
 meisten Punkte aus v4 umgerechnet (≈).
 
 Kostenansicht, die vier Produkte:
-- JetBrains AI (25 von 42, vier Sprossen): gpt-5-mini 0,12 € (≈ 7,8) → gpt-6-luna 0,13 € (27,8) → gpt-6.1-sol 1,11 € (54,5) → claude-opus-5.5 8,79 € (58,4). Der Katalog vom 28.10. führt jetzt GPT-6 und Opus 5.5; das Preset reicht damit bis zur Spitze der gemessenen Modelle.
+- JetBrains AI (25 von 42, vier Sprossen): gpt-5-mini 0,12 € (≈ 7,8) → gpt-6-luna 0,13 € (27,8) → gpt-6.1-sol 1,11 € (54,5) → claude-opus-5.5 8,79 € (58,4). Der Katalog vom 28.10. führt jetzt GPT-6 und Opus 5.5; das Preset reicht damit bis Opus 5.5, dem besten Modell seines Katalogs; die Spitze gemini-4-carbon führt JetBrains nicht.
 - Junie (11 von 11): gpt-6-luna 0,13 € (27,8) → gpt-6-sol 1,94 € (≈ 45,9) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4).
 - Windsurf (35 von 65): gpt-6-luna 0,13 € (27,8) → gemini-3.7-flash 1,73 € (≈ 29,1) → grok-4.5 1,93 € (≈ 29,3) → gpt-6-sol 1,94 € (≈ 45,9) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4). glm-5.3-flash ist seit 31.10. in v5 gemessen (27,8 bei 0,51 €) und von gpt-6-luna dominiert; die beiden Umgerechneten dahinter rücken nach.
 - Cursor (36 von 54): gpt-5-mini 0,12 € (≈ 7,8) → claude-haiku-5.5 0,36 € (36,2) → muse-spark-1.3 2,92 € (≈ 41,1) → gpt-5.6-sol 3,57 € (≈ 44,9) → gemini-4-argon 6,73 € (50,4) → claude-sonnet-5.5 8,78 € (54,2) → claude-opus-5.5 8,79 € (58,4). Sonnet 5.5 und Opus 5.5 kosten fast dasselbe, Opus hat 4,2 Punkte mehr.
@@ -1767,7 +1767,8 @@ Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
 Entzerrte Marker: bis 5,6 px verschoben, höchstens 0,4 Indexpunkte
 senkrecht oder 4,1 % im Preis bzw. Tempo waagerecht. Betroffen sind die
-Tempoansicht (gemini-3.8-flash, gpt-6-luna: 120 und 118 tok/s) und der
+Tempoansicht (gemini-3.8-flash, gpt-6-luna, minimax-m3.1-flash: 120, 118
+und 119 tok/s) und der
 Kontingent-Schalter der Kostenansicht: claude-opus-5.5 liegt mit ×0,8 fast
 auf gemini-4-carbon, deshalb weichen dort beide waagerecht aus — der
 einzige Fall, in dem der Schalter einen festen Marker bewegt. Frontpunkte rücken nur waagerecht, kein dominierter Punkt
