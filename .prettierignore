@@ -2,4 +2,5 @@
 # Prettier würde kurze Arrays auf eine Zeile ziehen und damit den Hash brechen
 # (toolCatalogs.test.ts prüft ihn). Geschrieben werden sie nur von fetch.ts.
 20260408-agents-details/data/artificialanalysis/board-*.json
+20260408-agents-details/data/designarena/board-*.json
 20260408-agents-details/data/toolcatalogs/*-*.json
