@@ -163,7 +163,7 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(26);
+    expect(AA_COST.length).toBe(27);
     const v5 = JSON.parse(
       readFileSync(
         join(import.meta.dirname, "../../../data/artificialanalysis", AA_BOARD),
@@ -180,8 +180,8 @@ describe("aaData — die beiden Punktmengen", () => {
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „272 Einträge, 73 aktive mit Kosten; 38 weitere aus v4
-    // umgerechnet“ und „26 Modelle“.
+    // Die Notiz nennt „273 Einträge, 74 aktive mit Kosten; 38 weitere aus v4
+    // umgerechnet“ und „27 Modelle“.
     expect(src).toContain(
       `${v5.length} Einträge, ${gemessen} aktive mit Kosten; ${umgerechnet} weitere aus v4 umgerechnet`,
     );
@@ -231,13 +231,14 @@ describe("aaData — die beiden Punktmengen", () => {
       "gpt-6.1-terra",
       "gpt-6.1-sol",
       "gpt-6-astra",
-      "claude-opus-5.5",
+      "gemini-4-carbon",
     ]);
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
       "claude-haiku-5.5",
       "muse-wonder",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
+      "gemini-4-carbon",
     ]);
     // Auf beiden Fronten nur gemessene v5-Werte, keine aus v4 umgerechneten.
     for (const p of [
@@ -250,18 +251,11 @@ describe("aaData — die beiden Punktmengen", () => {
 
 /**
  * Bekannte Pfeil-Überdeckungen, als Sperrklinke: Die Liste darf nur kürzer
- * werden. `aa-speed` (Stand 28.10.2026) lag schon so, bevor der Test sie sah —
- * im Screenshot sitzt ein Marker unter dem Schaft „Schneller“. Beheben heißt
- * `arrows.target`/`hubY` der Ansicht neu suchen und den Eintrag löschen.
+ * werden. Seit 31.10.2026 leer: `aa-speed` hatte vier Überdeckungen, die der
+ * neue Knoten links über der Front behebt. Ein neuer Eintrag ist kein
+ * Ausweg — `arrows.hubX`/`hubY`/`target` der Ansicht neu suchen.
  */
-const PFEIL_BEKANNT: Partial<Record<string, string[]>> = {
-  "aa-speed": [
-    'Pfeil „Schneller" × mimo-v2.6-pro',
-    'Pfeil „Schneller" × qwen3.8-flash-next',
-    'Pfeil „Schneller" × qwen3.8-max',
-    'Pfeil „Schneller & stärker" × qwen3.8-max',
-  ],
-};
+const PFEIL_BEKANNT: Partial<Record<string, string[]>> = {};
 
 describe("Varianten", () => {
   it("führt die AA- und die DesignArena-Ansichten, je Kosten zuerst", () => {
@@ -382,6 +376,18 @@ describe("Varianten", () => {
         expect(treffer).toStrictEqual(PFEIL_BEKANNT[id] ?? []);
       });
 
+      it("legt den Pfeilcluster ganz in den Plot", () => {
+        // „Billiger“ ist fest 250 px lang: Ein Knoten nah am linken Rand schob
+        // ihn am 31.10.2026 über die Achsenbeschriftung — kein anderer Test sah es.
+        const b = plotBounds(V.scale);
+        for (const c of arrowCluster(V.scale, V.arrows).boxes) {
+          expect(c.x, c.name).toBeGreaterThanOrEqual(b.x);
+          expect(c.y, c.name).toBeGreaterThanOrEqual(b.y);
+          expect(c.x + c.w, c.name).toBeLessThanOrEqual(b.x + b.w);
+          expect(c.y + c.h, c.name).toBeLessThanOrEqual(b.y + b.h);
+        }
+      });
+
       it("hat aria-Text für jede Sprosse", () => {
         const front = paretoFront(V.pts).front;
         const s = frontSentence(V, front);
@@ -398,6 +404,7 @@ describe("Varianten", () => {
       "100",
       "60",
       "40",
+      "30",
     ]);
     const px = V.xTicks.map((t) => V.scale.px(t));
     expect([...px].sort((a, b) => a - b)).toStrictEqual(px);
@@ -435,8 +442,15 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
     );
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
     expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
-    // JetBrains AI führt kein Modell des aktuellen Felds (Katalog 29.09.: bis
-    // GPT-5.6 und Opus 5) — sein Preset lebt ganz von den Extras.
-    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([]);
+    // JetBrains AI führt seit dem Katalog vom 28.10. auch GPT-6 und Opus 5.5
+    // des aktuellen Felds.
+    expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([
+      "gpt-6-luna",
+      "gpt-6.1-sol",
+      "gemini-3.8-flash",
+      "claude-sonnet-5.5",
+      "claude-opus-5.5",
+      "claude-fable-5.1",
+    ]);
   });
 });

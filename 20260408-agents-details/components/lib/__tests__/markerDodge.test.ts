@@ -264,10 +264,13 @@ describe("Marker-Entzerrung", () => {
         ],
         "Bonus v11-vs-v1": [],
         "Hauptfolie aa-cost": [],
-        "Hauptfolie aa-cost mit Kontingent": [],
+        "Hauptfolie aa-cost mit Kontingent": [
+          "claude-opus-5.5",
+        ],
         "Hauptfolie aa-speed": [
-          "mimo-v2.6-flash",
-          "qwen3.8-flash-next",
+          "gemini-3.8-flash",
+          "gpt-6-luna",
+          "minimax-m3.1-flash",
         ],
         "Historie 0710": [],
         "Historie 0722": [

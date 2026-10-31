@@ -8,10 +8,10 @@
 // die Dateinamen unten nachziehen, `retrieved` setzen — `toolCatalogs.test.ts`
 // hält beides gegen den Index.
 
-import cursor from "../data/toolcatalogs/cursor-20260929-e63cb420.json";
-import jetbrains from "../data/toolcatalogs/jetbrains-ai-20260929-6a5537e8.json";
+import cursor from "../data/toolcatalogs/cursor-20261028-b34fbe3e.json";
+import jetbrains from "../data/toolcatalogs/jetbrains-ai-20261028-7c050e8d.json";
 import junie from "../data/toolcatalogs/junie.json";
-import windsurf from "../data/toolcatalogs/windsurf-20260929-1ef22504.json";
+import windsurf from "../data/toolcatalogs/windsurf-20261028-c06820a4.json";
 
 export type CatalogId = "cursor" | "windsurf" | "jetbrains-ai" | "junie";
 
@@ -35,19 +35,20 @@ export const CATALOGS: Readonly<Record<CatalogId, ToolCatalog>> = {
   cursor: {
     id: "cursor",
     source: cursor.source,
-    retrieved: "2026-09-29",
+    retrieved: "2026-10-28",
     models: cursor.models,
   },
   windsurf: {
     id: "windsurf",
-    source: windsurf.source,
-    retrieved: "2026-09-29",
+    // `fetch.ts --manual` stellt „manuell: “ vor die URL; angezeigt wird die URL.
+    source: windsurf.source.replace(/^manuell: /, ""),
+    retrieved: "2026-10-28",
     models: windsurf.models,
   },
   "jetbrains-ai": {
     id: "jetbrains-ai",
     source: jetbrains.source,
-    retrieved: "2026-09-29",
+    retrieved: "2026-10-28",
     models: jetbrains.models,
   },
   junie: {

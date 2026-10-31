@@ -251,16 +251,16 @@ describe("Folie 42 — Default ohne Überschneidung", () => {
     }
   });
 
-  // Die Entzerrung rückt terra und glm-5.3 waagerecht auseinander (terra ist
-  // im JetBrains-Preset Frontpunkt, darf also nicht in der Höhe wandern);
-  // glm-5.3 behält seinen Nahplatz, kimi-k3 bleibt namenlos.
+  // Stand 28.10.2026: Seit JetBrains AI gemini-3.8-flash führt, ist terra in
+  // keinem Preset mehr Frontpunkt (Rang 2); es und glm-5.3 bleiben deshalb
+  // namenlos, dafür haben kimi-k3 und gpt-5.5 im Default einen Nahplatz.
   it("lässt im Default nur diese Punkte namenlos", () => {
     const { layout } = pareto(false);
     expect(layout.dropped).toMatchInlineSnapshot(`
       [
         "gpt-6-astra",
-        "kimi-k3",
-        "gpt-5.5",
+        "gpt-5.6-terra",
+        "glm-5.3",
         "gemini-3.7-flash",
       ]
     `);

@@ -140,30 +140,32 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 10 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
-// 9,54 €), der Index (v5) linear von 22 bis 62 (Punkte 25,3 bis 58,4). Ein
+// Kosten log von 0,04 € bis 22 € (am 28.10.2026 kleinster Punkt 0,11 €, größter
+// 9,54 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
+// Index (v5) linear von 22 bis 64 (Punkte 25,3 bis 59,4). Ein
 // yMin > 0 spart die untere Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 10,
+  xMax: 22,
   xLog: { min: 0.04 },
   yMin: 22,
-  yMax: 62,
+  yMax: 64,
 });
-// x = 1000/tps: am 28.10.2026 4,2 s (241 tok/s) bis 24,5 s (41 tok/s) je 1 000 Tokens.
+// x = 1000/tps: am 31.10.2026 4,3 s (235 tok/s) bis 32,4 s (31 tok/s,
+// kimi-k3.1-pro) je 1 000 Tokens.
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 30,
+  xMax: 40,
   xLog: { min: 3 },
   yMin: 22,
   yMax: 62,
 });
 
-const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5];
+const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10];
 const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
-const TPS_TICKS = [300, 200, 100, 60, 40];
+const TPS_TICKS = [300, 200, 100, 60, 40, 30];
 
 /** Vorderste Sprossen einer Variante — für Lead-Text und Tests. */
 export const frontOf = (v: Pick<ParetoVariant, "pts">) =>
@@ -206,23 +208,23 @@ const speedFront = paretoFront(AA_SPEED).front;
 
 // --- DesignArena-Skalen ----------------------------------------------------
 // Dieselbe Bühne wie AA. Kosten: Mischpreis log von 0,15 $ bis 40 $ (am
-// 31.10.2026 0,26 $ bis 20 $), Elo linear von 1140 bis 1430 (Punkte 1202 bis
+// 31.10.2026 0,26 $ bis 20 $), Elo linear von 1125 bis 1430 (Punkte 1202 bis
 // 1408). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
-// Elo 900 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
+// Elo 880 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
 // nur ältere Modelle eine Zeit tragen (`daData.ts`). Unter den Punkten bleibt
 // jeweils ein freier Streifen für den Pfeilcluster.
 const DA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
   xLog: { min: 0.15 },
-  yMin: 1140,
+  yMin: 1125,
   yMax: 1430,
 });
 const DA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 1000,
   xLog: { min: 80 },
-  yMin: 900,
+  yMin: 880,
   yMax: 1300,
 });
 const DA_COST_TICKS = [0.2, 0.5, 1, 2, 5, 10, 20];
@@ -262,15 +264,18 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
-      // v5 (28.10.2026): Rechts stehen Opus, Sonnet und Fable übereinander,
-      // unten rechts glm-5.3, qwen3.8-2.4t, gemini-3.8-flash und grok-4.7. Am
-      // Rand fand sich keine Lage ohne verdeckten Marker. Per Suche über Knoten
-      // (x, y) und Ziel: Knoten bei (4 €, 34), Ziel (0,7 €, 40) — kein Marker
-      // unter einem Schaft, jedes Label hat Platz, der Text der Diagonale passt,
-      // und sie bleibt unter der Front (ein höheres Ziel schnitte sie).
-      hubX: (s) => s.px(4),
-      hubY: (s) => s.py(34),
-      target: (s) => ({ x: s.px(0.7), y: s.py(40) }),
+      // v5 (31.10.2026): Unter dem Knoten vom 28.10. (3 €, 32) liegen jetzt
+      // glm-5.3-flash, deepseek-v4.1-flash-1017, step-5 und ling-3.1-flash-1019,
+      // unter dem Schaft „Leistungsfähiger“ kimi-k3.1-pro. Gitter 17 × 11 × 17 × 11
+      // über Knoten und Ziel (`playwright-tests/pareto-arrow-grid.ts`, dieselben
+      // Prüfungen wie die Tests, dazu „ganz im Plot“: „Billiger“ ist fest 250 px
+      // lang). Rechts der Front schneidet „Billiger“ die Front zwischen Haiku und
+      // Terra; frei ist die leere Ecke links über ihr — Knoten (0,33 €, 43),
+      // Ziel (0,08 €, 53,5). Dort zeigen die Pfeile in den Bereich, den kein
+      // Modell erreicht, und kreuzen die Front nicht.
+      hubX: (s) => s.px(0.33),
+      hubY: (s) => s.py(43),
+      target: (s) => ({ x: s.px(0.08), y: s.py(53.5) }),
     },
     axisTitle:
       "Ø Kosten pro Task (EUR, log. Skala) — Artificial Analysis Intelligence Index",
@@ -307,7 +312,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     ],
     ariaIntro:
       "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Kosten pro Task in Euro, " +
-      "x-Achse logarithmisch von 0,04 bis 10 Euro, unterteilt in vier Quadranten: " +
+      "x-Achse logarithmisch von 0,04 bis 22 Euro, unterteilt in vier Quadranten: " +
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand " +
       AA_STAND,
@@ -345,10 +350,14 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Schneller & stärker",
       },
-      // In Pixeln vom Hub aus: eine Lücke zwischen qwen3.8-27b (43 tok/s, 33,7) und
-      // mimo-v2.6-pro (41 tok/s, 46,3); ein Datenziel läge quer über einem von beiden.
-      target: (s) => ({ x: s.W - s.R - 26 - 150, y: s.py(31.5) - 60 }),
-      hubY: (s) => s.py(31.5),
+      // 31.10.2026: Der Knoten rechts bei Index 31,5 lag unter mimo-v2.6-pro,
+      // qwen3.8-max und glm-5.3-flash. Dieselbe Gittersuche wie bei aa-cost
+      // (xMax 40 für kimi-k3.1-pro): Knoten (19,45 s ≈ 51 tok/s, 42) rechts
+      // unter der Front, Ziel (16,85 s ≈ 59 tok/s, 52); „Schneller“ endet bei
+      // ≈ 9 s, rechts von allen Frontpunkten unter Index 45.
+      hubX: (s) => s.px(19.45),
+      hubY: (s) => s.py(42),
+      target: (s) => ({ x: s.px(16.85), y: s.py(52) }),
     },
     axisTitle:
       "Ø Output-Tokens/s (Median, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",
@@ -413,9 +422,11 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       },
       // Unter allen Punkten (tiefster 1202) und links der Quadranten-Überschrift
       // „Geldverbrennung“: per Gitter aus Knoten × Ziel gesucht, kein Label,
-      // kein Marker und keine Überschrift unter einem Schaft (31.10.2026).
+      // kein Marker und keine Überschrift unter einem Schaft (31.10.2026). yMin
+      // 1125 statt 1140, Knoten 1145: Beim alten Knoten 1150 ragte die Spitze von
+      // „Billiger“ 8 px unter den Plot, ein höherer legte die Diagonale auf ihn.
       hubX: (s) => s.px(8),
-      hubY: (s) => s.py(1150),
+      hubY: (s) => s.py(1145),
       target: (s) => ({ x: s.px(2), y: s.py(1172) }),
     },
     axisTitle: `Listenpreis je 1M Token (USD, ${DA_MIX_TEXT} gemischt, log. Skala) — DesignArena-Elo`,
@@ -482,9 +493,10 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         better: "Schneller & beliebter",
       },
       // Ebenso unter allen Punkten (tiefster 1011) und mittig, weil rechts unten
-      // Punkte und die Überschrift „Langsam & unbeliebt“ stehen.
+      // Punkte und die Überschrift „Langsam & unbeliebt“ stehen. yMin 880 statt
+      // 900 und Knoten 910, aus demselben Grund wie bei da-cost.
       hubX: (s) => s.px(350),
-      hubY: (s) => s.py(915),
+      hubY: (s) => s.py(910),
       target: (s) => ({ x: s.px(160), y: s.py(945) }),
     },
     axisTitle:
