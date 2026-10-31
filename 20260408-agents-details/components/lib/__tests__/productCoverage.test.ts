@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { AA_ROWS } from "../../aaData";
 import { dominators, paretoFront, type Pt } from "../../paretoData";
 import { footnoteFor, leadFor } from "../../paretoText";
-import { VARIANTS, type VariantId } from "../../paretoVariants";
+import { VARIANT_ORDER, VARIANTS, type VariantId } from "../../paretoVariants";
 import { coverage, missingByReason, summarize } from "../../productCoverage";
 import { presetModels, type ToolId } from "../../providerFilter";
 
@@ -40,7 +40,7 @@ describe("dominators", () => {
   });
 
   it("stimmt mit `paretoFront` überein: dominiert genau dann, wenn ein Dominator existiert", () => {
-    for (const id of ["aa-cost", "aa-speed"] as const) {
+    for (const id of VARIANT_ORDER) {
       const V = VARIANTS[id];
       const uni = [...V.pts, ...V.extras];
       const { front, dom } = paretoFront(uni);
@@ -73,6 +73,20 @@ describe("coverage", () => {
       "jetbrains-ai": [41, 40],
       junie: [11, 11],
     },
+    // DesignArena (31.10.2026): Preise hat jedes Modell des Boards, Zeiten nur
+    // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
+    "da-cost": {
+      cursor: [49, 36],
+      windsurf: [64, 37],
+      "jetbrains-ai": [41, 22],
+      junie: [11, 11],
+    },
+    "da-speed": {
+      cursor: [49, 17],
+      windsurf: [64, 16],
+      "jetbrains-ai": [41, 14],
+      junie: [11, 1],
+    },
   };
 
   for (const view of Object.keys(erwartet) as VariantId[])
@@ -84,7 +98,7 @@ describe("coverage", () => {
       });
 
   it("zeichnet genau so viele Punkte, wie das Preset auswählt", () => {
-    for (const view of ["aa-cost", "aa-speed"] as const) {
+    for (const view of VARIANT_ORDER) {
       const V = VARIANTS[view];
       const uni = [...V.pts, ...V.extras];
       for (const id of ["cursor", "windsurf", "jetbrains-ai", "junie"] as const)
@@ -105,6 +119,16 @@ describe("coverage", () => {
     const cur = coverage("cursor", VARIANTS["aa-cost"]);
     const gruende = new Map(missingByReason(cur));
     expect(gruende.get("kein Index bei AA")).toContain("Composer 2.5");
+  });
+
+  it("nennt bei DesignArena, ob das Modell fehlt oder nur seine Zeit", () => {
+    const cur = new Map(
+      missingByReason(coverage("cursor", VARIANTS["da-speed"])),
+    );
+    expect(cur.get("nicht bei DesignArena")).toContain("Composer 2.5");
+    expect(cur.get("keine Zeitangabe bei DesignArena")).toEqual(
+      expect.arrayContaining([expect.stringMatching(/Opus 5\.5/)]),
+    );
   });
 });
 

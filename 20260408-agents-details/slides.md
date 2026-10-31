@@ -1564,9 +1564,11 @@ routeAlias: pareto-heute
 <ModelRoutingPareto />
 
 <!--
-ZWEI ANSICHTEN, Menü „Ansicht“ oben rechts. Beim Öffnen steht
-„Intelligenz × Kosten“ (Artificial Analysis, Intelligence Index v5, Stand
-28.10.2026). Die Regel ist in beiden dieselbe, nur die x-Achse wechselt.
+VIER ANSICHTEN aus zwei Quellen, Menü „Ansicht“ oben rechts: Artificial
+Analysis (Intelligenz × Kosten, × Tempo) und DesignArena (Design-Elo ×
+Preis, × Tempo). Beim Öffnen steht „Intelligenz × Kosten“ (Artificial
+Analysis, Intelligence Index v5, Stand 28.10.2026). Die Regel ist in allen
+dieselbe, nur die Achsen wechseln.
 
 Die Handlungsanweisung zuerst aussprechen, alles andere ist Begründung:
 Nimm den billigsten Punkt der Front, von dem Du glaubst, dass er Deine
@@ -1628,6 +1630,32 @@ muse-wonder 197 → claude-sonnet-5.5 138 → claude-opus-5.5 98. Ohne
 Tempo-Wert fehlt ling-3.1-flash-1019. Der Schalter „Tempo als Größe“
 legt die Geschwindigkeit als Halo um die Marker der Kostenansicht.
 Attribution: AA verlangt den Link, er steht in der Fußzeile.
+
+DESIGNARENA (Board „Overall Agentic“, Stand 31.10.2026) ist die zweite
+Meinung: keine Benchmark-Aufgaben, sondern Blind-Duelle. Menschen sehen
+zwei Ergebnisse derselben Design- bzw. Agentic-Aufgabe (Website, App,
+Spiel) und wählen das bessere; daraus ein Bradley-Terry-Elo, Start 1200,
+330 000 Stimmen. Das misst Gefallen und Gesamteindruck, nicht
+Korrektheit — wo AA und DesignArena sich einig sind, ist die Aussage
+belastbarer als jede für sich.
+
+Ansicht „Design-Elo × Preis“: x ist der LISTENPREIS je 1M Token, 3 Teile
+Input zu 1 Teil Output gemischt, wie DesignArena selbst rechnet — in USD,
+nicht umgerechnet. Das ist ein Preisschild, kein Verbrauch pro Aufgabe:
+ein gesprächiges Modell steht hier zu billig. Elo ≥ 1200, 24 Modelle.
+Front: minimax-m3.1-flash 0,26 $ (1234) → mimo-v2.6-pro 0,54 $ (1268) →
+muse-spark-1.3-max 2 $ (1281) → gemini-4-argon 4 $ (1291) →
+claude-opus-5.5 8 $ (1333) → gpt-6-astra 20 $ (1408). Auffällig gegen AA:
+die billigen chinesischen Modelle (MiniMax, MiMo) stehen hier weit vorn,
+und gpt-6-astra (max) führt mit Abstand.
+
+Ansicht „Design-Elo × Tempo“: Ø Zeit einer Generierung. DesignArena führt
+sie nur für ältere Modelle — 22 der 24 Modelle der Preisansicht haben
+keine, darunter Opus 5.5, GPT-6 und Gemini 4 (Hover in der Fußzeile).
+Deshalb Elo ≥ 1000. Front: grok-4.3 1,9 min (1040) →
+gemini-3.1-pro-preview 3,5 min (1085) → claude-fable-5 4,0 min (1271).
+Ein Stand der Generation davor, keine Empfehlung für heute — so auch
+sagen.
 
 PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 29.09.2026, AA-Stand
 28.10.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER

@@ -7,12 +7,18 @@
 //
 //   aa-cost   Artificial-Analysis-Intelligence-Index × €/Task   (Default)
 //   aa-speed  derselbe Index × Output-Tokens/s
+//   da-cost   DesignArena-Elo (Overall Agentic) × Listenpreis je 1M Token
+//   da-speed  derselbe Elo × Ø Generierungszeit
+//
+// Die DesignArena-Ansichten sind eine zweite, von AA unabhängige
+// Qualitätsachse: Menschen stimmen blind über Design- und Agentic-Ergebnisse ab
+// (`daData.ts`).
 //
 // DeepSWE war bis Oktober 2026 die dritte Ansicht. Das Board wird nicht mehr
 // gepflegt; seine Daten leben nur noch auf der Historien-Folie
 // (`ModelRoutingHistory.vue`, `paretoData.ts`).
 //
-// Beide folgen „kleiner x ist besser, größerer y ist besser“ — `paretoFront`,
+// Alle folgen „kleiner x ist besser, größerer y ist besser“ — `paretoFront`,
 // Quadranten und Pfeile brauchen dadurch keinen Richtungsparameter. Bei
 // `aa-speed` ist x deshalb die Zeit je 1 000 Tokens (`aaData.ts`), und nur die
 // Tick-Beschriftung spricht von tok/s.
@@ -26,6 +32,17 @@ import {
   AA_URL,
 } from "./aaData";
 import { AA_EXTRAS_COST, AA_EXTRAS_SPEED } from "./aaExtras";
+import {
+  DA_COST,
+  DA_EXTRAS_COST,
+  DA_EXTRAS_SPEED,
+  DA_FLOOR,
+  DA_NO_TIME,
+  DA_SPEED,
+  DA_STAND,
+  DA_URL,
+  MIX,
+} from "./daData";
 import { makeScale, paretoFront, type Pt, type Scale } from "./paretoData";
 import {
   quadrantsWith,
@@ -35,7 +52,14 @@ import {
 } from "./paretoChrome";
 import type { XY } from "./labelLayout";
 
-export type VariantId = "aa-cost" | "aa-speed";
+export type VariantId = "aa-cost" | "aa-speed" | "da-cost" | "da-speed";
+
+/** Datenquelle einer Ansicht — das Menü gruppiert danach. */
+export type Source = "aa" | "da";
+export const SOURCE_LABEL: Record<Source, string> = {
+  aa: "Artificial Analysis",
+  da: "DesignArena · Design-Duelle",
+};
 
 /** Ein Stück Fließtext; `b` = fett. Die Komponente setzt daraus <strong>. */
 export interface Seg {
@@ -47,6 +71,7 @@ export interface Seg {
 
 export interface ParetoVariant {
   id: VariantId;
+  source: Source;
   /** Menüzeile. */
   menu: string;
   /** Zweite Menüzeile, klein. */
@@ -57,8 +82,14 @@ export interface ParetoVariant {
    * geschätztem Index (`aaExtras.ts`).
    */
   extras: Pt[];
-  /** Bedeutung der x-Achse für das Anpassen der Skala (`paretoGeometry.ts`). */
+  /** Was die x-Achse misst — Texte („billigste“ oder „schnellste Sprosse“). */
   xKind: "cost" | "speed";
+  /**
+   * x ist der Kehrwert der beschrifteten Größe (`aa-speed`: x = 1000/tps, die
+   * Ticks sprechen von tok/s). Steuert das Anpassen der Skala
+   * (`paretoGeometry.ts`).
+   */
+  xInverse: boolean;
   scale: Scale;
   /** Tick-POSITIONEN in Datenkoordinaten (x) — bei `aa-speed` also Sekunden. */
   xTicks: number[];
@@ -173,14 +204,51 @@ const kostenText = (p: Pt) =>
 const costFront = paretoFront(AA_COST).front;
 const speedFront = paretoFront(AA_SPEED).front;
 
+// --- DesignArena-Skalen ----------------------------------------------------
+// Dieselbe Bühne wie AA. Kosten: Mischpreis log von 0,15 $ bis 40 $ (am
+// 31.10.2026 0,26 $ bis 20 $), Elo linear von 1140 bis 1430 (Punkte 1202 bis
+// 1408). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
+// Elo 900 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
+// nur ältere Modelle eine Zeit tragen (`daData.ts`). Unter den Punkten bleibt
+// jeweils ein freier Streifen für den Pfeilcluster.
+const DA_COST_SCALE: Scale = makeScale({
+  ...AA_BASE,
+  xMax: 40,
+  xLog: { min: 0.15 },
+  yMin: 1140,
+  yMax: 1430,
+});
+const DA_SPEED_SCALE: Scale = makeScale({
+  ...AA_BASE,
+  xMax: 1000,
+  xLog: { min: 80 },
+  yMin: 900,
+  yMax: 1300,
+});
+const DA_COST_TICKS = [0.2, 0.5, 1, 2, 5, 10, 20];
+/** Sekunden-Positionen, beschriftet in Minuten. */
+const DA_SPEED_TICKS = [120, 180, 300, 480, 720];
+
+const usdT = (p: Pt) => `${p.eur} $`;
+const minuten = (s: number) => `${dez1(s / 60)} min`;
+const usdTick = (t: number) => `${String(t).replace(".", ",")} $`;
+
+const DA_ATTRIBUTION = { href: DA_URL, label: "designarena.ai" } as const;
+const DA_MIX_TEXT = `${MIX.input}:${MIX.output} Input:Output`;
+
+const daCostFront = paretoFront(DA_COST).front;
+const daSpeedFront = paretoFront(DA_SPEED).front;
+
 export const VARIANTS: Record<VariantId, ParetoVariant> = {
   "aa-cost": {
     id: "aa-cost",
+    source: "aa",
     menu: "Intelligenz × Kosten",
-    menuNote: "Artificial Analysis · Default",
+    menuNote: "Intelligence Index × €/Task · Default",
     pts: AA_COST,
     extras: AA_EXTRAS_COST,
     xKind: "cost",
+    xInverse: false,
     scale: AA_COST_SCALE,
     xTicks: AA_COST_TICKS,
     xTickLabel: tickLabel,
@@ -252,11 +320,13 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
 
   "aa-speed": {
     id: "aa-speed",
+    source: "aa",
     menu: "Intelligenz × Tempo",
-    menuNote: "Artificial Analysis · Output-Tokens/s",
+    menuNote: "Intelligence Index × Output-Tokens/s",
     pts: AA_SPEED,
     extras: AA_EXTRAS_SPEED,
     xKind: "speed",
+    xInverse: true,
     scale: AA_SPEED_SCALE,
     xTicks: TPS_TICKS.map((t) => 1000 / t),
     xTickLabel: (x) => String(Math.round(1000 / x)),
@@ -319,9 +389,150 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       AA_STAND,
     ariaTail: ` Ohne Geschwindigkeitswert fehlen ${AA_NO_TPS.join(" und ")}.`,
   },
+  "da-cost": {
+    id: "da-cost",
+    source: "da",
+    menu: "Design-Elo × Preis",
+    menuNote: "Elo aus Blind-Votes × Listenpreis je 1M Token",
+    pts: DA_COST,
+    extras: DA_EXTRAS_COST,
+    xKind: "cost",
+    xInverse: false,
+    scale: DA_COST_SCALE,
+    xTicks: DA_COST_TICKS,
+    xTickLabel: usdTick,
+    yTicks: [1200, 1250, 1300, 1350, 1400],
+    yTickLabel: String,
+    split: { x: 3.5, y: 1275 },
+    quadrants: QUADRANTS as Quadrant[],
+    arrows: {
+      texts: {
+        cheaper: "Billiger",
+        stronger: "Beliebter",
+        better: "Besseres Preis-Leistungs-Verhältnis",
+      },
+      // Unter allen Punkten (tiefster 1202) und links der Quadranten-Überschrift
+      // „Geldverbrennung“: per Gitter aus Knoten × Ziel gesucht, kein Label,
+      // kein Marker und keine Überschrift unter einem Schaft (31.10.2026).
+      hubX: (s) => s.px(8),
+      hubY: (s) => s.py(1150),
+      target: (s) => ({ x: s.px(2), y: s.py(1172) }),
+    },
+    axisTitle: `Listenpreis je 1M Token (USD, ${DA_MIX_TEXT} gemischt, log. Skala) — DesignArena-Elo`,
+    xText: usdT,
+    yText: String,
+    tip: (p) => `${p.label}: Elo ${p.y} · ${p.eur} $ je 1M Token`,
+    yName: "DesignArena-Elo",
+    features: { subOverlay: false, sizeBySpeed: false },
+    subTitle: "",
+    footnote: [
+      {
+        t: `DesignArena Overall Agentic · Stand ${DA_STAND} · Elo = Bradley-Terry aus Blind-Duellen (Gefallen, nicht Korrektheit) · Preis = Listenpreis ${DA_MIX_TEXT}, kein Verbrauch pro Task · je Modell die beste Stufe · Elo ≥ ${DA_FLOOR.cost} · Quadranten redaktionell · Quelle: `,
+      },
+    ],
+    attribution: DA_ATTRIBUTION,
+    lead: [
+      { t: "Die zweite Meinung: Menschen statt Benchmark.", b: true },
+      { t: " Wer im Blind-Vergleich gewinnt, für welchen Listenpreis — " },
+      ...leiter(daCostFront, (p) => `${p.eur} $ (${p.y})`),
+      {
+        t: ". Der Preis je Token sagt nichts über den Verbrauch: ein gesprächiges Modell kostet pro Aufgabe mehr, als sein Platz hier verrät.",
+      },
+    ],
+    ariaIntro:
+      "Streudiagramm DesignArena-Elo gegen Listenpreis je Million Token in US-Dollar, " +
+      `Input und Output ${DA_MIX_TEXT} gemischt, x-Achse logarithmisch von 0,15 bis 40 Dollar, unterteilt in vier Quadranten. Stand ` +
+      DA_STAND,
+    ariaFit:
+      "Streudiagramm DesignArena-Elo gegen Listenpreis je Million Token in US-Dollar, x-Achse logarithmisch, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +
+      DA_STAND,
+    ariaTail:
+      " Der Elo stammt aus Blind-Duellen, in denen Menschen das gefälligere Ergebnis wählen; der Preis ist ein Listenpreis, kein Verbrauch pro Aufgabe.",
+  },
+
+  "da-speed": {
+    id: "da-speed",
+    source: "da",
+    menu: "Design-Elo × Tempo",
+    menuNote: "Elo aus Blind-Votes × Ø Generierungszeit",
+    pts: DA_SPEED,
+    extras: DA_EXTRAS_SPEED,
+    xKind: "speed",
+    xInverse: false,
+    scale: DA_SPEED_SCALE,
+    xTicks: DA_SPEED_TICKS,
+    // Feste Ticks sind ganze Minuten; bei angepassten Achsen wählt `fitScale`
+    // runde SEKUNDEN (100, 200, 500) — die dürfen nicht auf Minuten gerundet
+    // werden, sonst stünde „2 min“ bei 100 s.
+    xTickLabel: (x) =>
+      Number.isInteger(x / 60) ? `${x / 60} min` : minuten(x),
+    yTicks: [1000, 1050, 1100, 1150, 1200, 1250],
+    yTickLabel: String,
+    split: { x: 300, y: 1125 },
+    quadrants: quadrantsWith({
+      sweet: "Schnell & beliebt",
+      price: "Beliebt, aber langsam",
+      budget: "Schnell, aber unbeliebt",
+      burn: "Langsam & unbeliebt",
+    }),
+    arrows: {
+      texts: {
+        cheaper: "Schneller",
+        stronger: "Beliebter",
+        better: "Schneller & beliebter",
+      },
+      // Ebenso unter allen Punkten (tiefster 1011) und mittig, weil rechts unten
+      // Punkte und die Überschrift „Langsam & unbeliebt“ stehen.
+      hubX: (s) => s.px(350),
+      hubY: (s) => s.py(915),
+      target: (s) => ({ x: s.px(160), y: s.py(945) }),
+    },
+    axisTitle:
+      "Ø Generierungszeit (log. Skala, links = schneller) — DesignArena-Elo",
+    xText: (p) => minuten(p.x),
+    yText: String,
+    tip: (p) => `${p.label}: Elo ${p.y} · ${minuten(p.x)} je Generierung`,
+    yName: "DesignArena-Elo",
+    features: { subOverlay: false, sizeBySpeed: false },
+    subTitle: "",
+    footnote: [
+      {
+        t: `DesignArena Overall Agentic · Stand ${DA_STAND} · Tempo = Ø Zeit einer Generierung · `,
+      },
+      {
+        t: `${DA_NO_TIME.length} Modelle der Preisansicht ohne Zeitangabe, darunter alle neuen (Hover)`,
+        title: DA_NO_TIME.join(", "),
+      },
+      {
+        t: ` · je Modell die beste Stufe · Elo ≥ ${DA_FLOOR.speed} · Quadranten redaktionell · Quelle: `,
+      },
+    ],
+    attribution: DA_ATTRIBUTION,
+    lead: [
+      { t: "Tempo misst DesignArena nur für ältere Modelle:", b: true },
+      {
+        t: ` ${DA_NO_TIME.length} der ${DA_COST.length} Modelle der Preisansicht haben keine Zeit, die Spitze fehlt ganz. Was bleibt: `,
+      },
+      ...leiter(daSpeedFront, (p) => `${minuten(p.x)} (${p.y})`),
+      { t: ". Ein Stand der Generation davor, keine Empfehlung für heute." },
+    ],
+    ariaIntro:
+      "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, " +
+      "x-Achse logarithmisch von 80 Sekunden bis 1000 Sekunden, schnellere Modelle stehen links, unterteilt in vier Quadranten. Stand " +
+      DA_STAND,
+    ariaFit:
+      "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, x-Achse logarithmisch, schnellere Modelle links, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +
+      DA_STAND,
+    ariaTail: ` Von den ${DA_COST.length} Modellen der Preisansicht haben ${DA_NO_TIME.length} keine Zeitangabe, darunter alle neuen; sie fehlen hier.`,
+  },
 };
 
-export const VARIANT_ORDER: readonly VariantId[] = ["aa-cost", "aa-speed"];
+export const VARIANT_ORDER: readonly VariantId[] = [
+  "aa-cost",
+  "aa-speed",
+  "da-cost",
+  "da-speed",
+];
 export const DEFAULT_VARIANT: VariantId = "aa-cost";
 
 /** Die Front einer Variante als Text — für die aria-Beschreibung. */

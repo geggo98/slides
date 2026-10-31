@@ -29,7 +29,7 @@ export function leadFor(V: ParetoVariant, s: SelectionSummary): Seg[] {
       },
     ];
 
-  const schnell = V.id === "aa-speed";
+  const schnell = V.xKind === "speed";
   const leiter = schnell ? [...s.front].reverse() : s.front;
   const out: Seg[] = schnell
     ? [
@@ -73,6 +73,10 @@ const FIT: Record<VariantId, string> = {
     "AA Intelligence Index v5 · Kosten = Ø Kosten eines Index-Durchlaufs, kein SWE-Task · beste Effort-Stufe je Modell · 1 USD = 0,876 € · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
   "aa-speed":
     "AA Intelligence Index v5 · Tempo = Median der Output-Tokens/s · beste Effort-Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
+  "da-cost":
+    "DesignArena-Elo (Overall Agentic, Blind-Duelle) · Preis = Listenpreis je 1M Token, 3:1 Input:Output · beste Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
+  "da-speed":
+    "DesignArena-Elo (Overall Agentic, Blind-Duelle) · Tempo = Ø Zeit einer Generierung, nur für einen Teil der Modelle · beste Stufe je Modell · Achsen und Quadranten-Linien (Median) folgen der Auswahl",
 };
 
 export function footnoteFor(V: ParetoVariant, s: SelectionSummary): Seg[] {

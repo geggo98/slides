@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { AA_STAND } from "./aaData";
+import { DA_STAND, DA_URL } from "./daData";
 import SourcesPopover from "./SourcesPopover.vue";
 
 // Gemeinsames ⓘ-Modal von VIER Folien: ModelRoutingRoles (Rollen),
@@ -46,6 +47,11 @@ const sources = [
     href: "https://artificialanalysis.ai/leaderboards/models",
     label: "Artificial Analysis: LLM-Leaderboard",
     note: `Ansichten „Intelligenz × Kosten/Tempo“, Stand ${AA_STAND} — Quellenangabe laut AA-Bedingungen`,
+  },
+  {
+    href: DA_URL,
+    label: "DesignArena: Overall Agentic",
+    note: `Ansichten „Design-Elo × Preis/Tempo“, Stand ${DA_STAND} — Elo aus Blind-Duellen, Preis 3:1 gemischt`,
   },
   {
     href: "https://ai.google.dev/gemini-api/docs/pricing",

@@ -97,9 +97,10 @@ export interface Fit {
 }
 
 /**
- * Passt Skala und Ticks an die Punkte an. `kind` ist die Bedeutung der x-Achse:
- * Kosten (schöne Werte in €) oder Tempo (schöne Werte in tok/s, die Achse
- * trägt 1000/tps, siehe `aaData.ts`). Liefert null bei weniger als zwei
+ * Passt Skala und Ticks an die Punkte an. `inverse` sagt, ob die x-Achse den
+ * Kehrwert der beschrifteten Größe trägt: false = schöne Werte in x selbst (€,
+ * $, Sekunden), true = schöne Werte in 1000/x (`aa-speed`: die Achse trägt
+ * 1000/tps, die Ticks sprechen von tok/s, siehe `aaData.ts`). Liefert null bei weniger als zwei
  * verschiedenen Punkten — dann gibt es nichts anzupassen.
  *
  * Die Overlay-Lage `sub` zählt IMMER mit, auch bei ausgeschaltetem Overlay: sonst
@@ -108,7 +109,7 @@ export interface Fit {
 export function fitScale(
   pts: readonly FitPoint[],
   base: Scale,
-  kind: "cost" | "speed",
+  inverse: boolean,
   yLowest = 0,
 ): Fit | null {
   if (pts.length < 2) return null;
@@ -128,8 +129,8 @@ export function fitScale(
   const yTicks = niceLinearTicks(lo, hi);
 
   // x: logarithmisch, mindestens Faktor 6 breit (sonst zwei Ticks) und 25 %
-  // Luft nach beiden Seiten. Beim Tempo wird in tok/s gerechnet.
-  const wert = (x: number) => (kind === "speed" ? 1000 / x : x);
+  // Luft nach beiden Seiten. Beim Kehrwert wird in tok/s gerechnet.
+  const wert = (x: number) => (inverse ? 1000 / x : x);
   const vs = xs.map(wert);
   let a = Math.min(...vs) / 1.25;
   let b = Math.max(...vs) * 1.25;
@@ -141,11 +142,10 @@ export function fitScale(
   // Ein Tick genau auf dem Achsenrand schöbe sein Label über den SVG-Rand hinaus:
   // Ticks nur mit 3 % Abstand zu beiden Rändern.
   const ticksV = niceLogTicks(a * 1.03, b / 1.03);
-  const xTicks =
-    kind === "speed"
-      ? ticksV.map((t) => 1000 / t).sort((p, q) => p - q)
-      : ticksV;
-  const [xLo, xHi] = kind === "speed" ? [1000 / b, 1000 / a] : [a, b];
+  const xTicks = inverse
+    ? ticksV.map((t) => 1000 / t).sort((p, q) => p - q)
+    : ticksV;
+  const [xLo, xHi] = inverse ? [1000 / b, 1000 / a] : [a, b];
 
   const scale = makeScale({
     W: base.W,
@@ -205,7 +205,7 @@ export type GeometryVariant = Pick<
   | "quadrants"
   | "arrows"
   | "features"
-  | "xKind"
+  | "xInverse"
 >;
 
 export function chartGeometry(
@@ -223,7 +223,7 @@ export function chartGeometry(
   const base = isDefault
     ? [...curated]
     : universe.filter((p) => sel.has(p.label));
-  const fit = isDefault ? null : fitScale(base, V.scale, V.xKind);
+  const fit = isDefault ? null : fitScale(base, V.scale, V.xInverse);
   const scale = fit?.scale ?? V.scale;
   const xTicks = fit?.xTicks ?? V.xTicks;
   const yTicks = fit?.yTicks ?? V.yTicks;

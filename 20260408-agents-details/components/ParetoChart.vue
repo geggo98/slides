@@ -17,7 +17,7 @@ import { HIT_R, LABEL_FONT, visiblePoints } from "./paretoChrome";
 import { chartGeometry } from "./paretoGeometry";
 import { useCrosshairs } from "./useCrosshairs";
 
-// AA-Index vs. €/Task bzw. Tempo als statisches Inline-SVG — kein Chart.js/echarts
+// AA-Index bzw. DesignArena-Elo vs. Kosten oder Tempo als statisches Inline-SVG — kein Chart.js/echarts
 // nötig. Farben über die Deck-Tokens. Bewusst ohne <defs>: keine IDs, die
 // zwischen Nachbar-Slides kollidieren könnten.
 //
@@ -213,16 +213,17 @@ const chartLabel = computed(
       ? ""
       : `, gefiltert auf ${preset.value?.label ?? "eine eigene Auswahl"} mit ${pts.value.length} von ${pts0.length} Modellen`) +
     `. Die Pareto-Front ist eine Leiter mit ${front.value.length} Sprossen; ` +
-    (V.id === "aa-speed"
+    (V.xKind === "speed"
       ? "nimm die schnellste, die Deine Aufgaben löst, und geh bei einem Fehlschlag eine höher. "
       : "nimm die billigste, die Deine Aufgaben löst, und geh bei einem Fehlschlag eine höher. ") +
     frontSentence(V, front.value) +
     `. ` +
-    (V.id === "aa-speed"
-      ? ""
-      : `Zusammen kosten alle Sprossen ${fmt(front.value.reduce((s, p) => s + p.x, 0))} Euro. `) +
+    // Eine Summe ergibt nur bei Kosten pro Task Sinn, nicht bei Preisen je Token.
+    (V.id === "aa-cost"
+      ? `Zusammen kosten alle Sprossen ${fmt(front.value.reduce((s, p) => s + p.x, 0))} Euro. `
+      : "") +
     "Alles rechts der Front ist dominiert: Es gibt dort einen Punkt, der mindestens " +
-    (V.id === "aa-speed"
+    (V.xKind === "speed"
       ? "so gut und schneller ist."
       : "so gut und billiger ist.") +
     (allOn.value

@@ -46,7 +46,8 @@ import {
 } from "../../paretoVariants";
 import { presetModels, toolHas } from "../../providerFilter";
 
-// Die beiden Artificial-Analysis-Ansichten und der Rahmen, der sie zeichnet.
+// Die Artificial-Analysis-Ansichten und der Rahmen, der alle vier zeichnet
+// (die DesignArena-Daten prüft `daData.test.ts`).
 // Was hier verriegelt wird, sind die Stellen, an denen ein stiller Fehler gut
 // aussähe: eine Effort-Stufe, die als eigenes Modell durchgeht, ein
 // vertauschtes Vorzeichen bei der Tempo-Achse, ein Label ohne Lab.
@@ -247,9 +248,36 @@ describe("aaData — die beiden Punktmengen", () => {
   });
 });
 
+/**
+ * Bekannte Pfeil-Überdeckungen, als Sperrklinke: Die Liste darf nur kürzer
+ * werden. `aa-speed` (Stand 28.10.2026) lag schon so, bevor der Test sie sah —
+ * im Screenshot sitzt ein Marker unter dem Schaft „Schneller“. Beheben heißt
+ * `arrows.target`/`hubY` der Ansicht neu suchen und den Eintrag löschen.
+ */
+const PFEIL_BEKANNT: Partial<Record<string, string[]>> = {
+  "aa-speed": [
+    'Pfeil „Schneller" × mimo-v2.6-pro',
+    'Pfeil „Schneller" × qwen3.8-flash-next',
+    'Pfeil „Schneller" × qwen3.8-max',
+    'Pfeil „Schneller & stärker" × qwen3.8-max',
+  ],
+};
+
 describe("Varianten", () => {
-  it("führt genau die beiden AA-Ansichten, Kosten zuerst", () => {
-    expect(VARIANT_ORDER).toStrictEqual(["aa-cost", "aa-speed"]);
+  it("führt die AA- und die DesignArena-Ansichten, je Kosten zuerst", () => {
+    expect(VARIANT_ORDER).toStrictEqual([
+      "aa-cost",
+      "aa-speed",
+      "da-cost",
+      "da-speed",
+    ]);
+    // Das Menü gruppiert nach Quelle: dieselbe Quelle steht zusammen.
+    expect(VARIANT_ORDER.map((id) => VARIANTS[id].source)).toStrictEqual([
+      "aa",
+      "aa",
+      "da",
+      "da",
+    ]);
   });
 
   for (const id of VARIANT_ORDER) {
@@ -317,6 +345,41 @@ describe("Varianten", () => {
             [],
           );
         }
+      });
+
+      it("legt den Pfeilcluster über keine Quadranten-Überschrift und keinen Marker", () => {
+        // `collisions` oben prüft nur Labels; ein Pfeil quer über „Geldverbrennung“
+        // oder über einem Punkt fiele dort nicht auf (DesignArena, 31.10.2026).
+        const S = V.scale;
+        const all = new Set(presetModels("all", V.pts));
+        const pos = dodgeMarkers(
+          visiblePoints(V.pts, all, false, { ghost: false }),
+          S,
+          "pareto",
+          (p) => p.sub !== undefined,
+          { horizontalOnly: frontUnion(V.pts) },
+        );
+        const lp = toLayoutPoints(V.pts, S, {
+          overlay: V.features.subOverlay,
+          ghost: false,
+          subOn: false,
+          story: (p) => p.story === true,
+          presets: true,
+          pos,
+        });
+        const blocks = [
+          ...quadrantBoxes(S, undefined, V.quadrants),
+          ...markerBoxes(lp, HIT_R),
+        ];
+        const hit = (a: Obstacle, b: Obstacle) =>
+          a.x < b.x + b.w &&
+          b.x < a.x + a.w &&
+          a.y < b.y + b.h &&
+          b.y < a.y + a.h;
+        const treffer = arrowCluster(S, V.arrows).boxes.flatMap((c) =>
+          blocks.filter((b) => hit(c, b)).map((b) => `${c.name} × ${b.name}`),
+        );
+        expect(treffer).toStrictEqual(PFEIL_BEKANNT[id] ?? []);
       });
 
       it("hat aria-Text für jede Sprosse", () => {

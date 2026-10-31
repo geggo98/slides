@@ -1,7 +1,8 @@
 // Datenbasis der Varianten `aa-cost` und `aa-speed` des Modell-Routing-Charts:
 // Artificial Analysis Intelligence Index gegen Kosten pro Task bzw. gegen
-// Output-Geschwindigkeit. `paretoVariants.ts` fasst sie mit der DeepSWE-Variante
-// zusammen, `ModelRoutingPareto.vue` schaltet zwischen ihnen um.
+// Output-Geschwindigkeit. `paretoVariants.ts` stellt sie neben die
+// DesignArena-Ansichten (`daData.ts`), `ModelRoutingPareto.vue` schaltet
+// zwischen ihnen um.
 //
 // Herkunft
 // --------

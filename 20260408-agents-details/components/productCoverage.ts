@@ -4,6 +4,7 @@
 // nachrechnet, die auf der Folie stehen.
 
 import { aaFamily } from "./aaExtras";
+import { DA_MODELS } from "./daData";
 import { familyKey } from "./catalogMatch";
 import { paretoFront, type Pt } from "./paretoData";
 import type { ParetoVariant } from "./paretoVariants";
@@ -25,11 +26,27 @@ export interface Coverage {
 
 /** Warum ein Modell in dieser Ansicht fehlt. */
 function reasonFor(key: string, view: ParetoVariant["id"]): string {
-  if (aaFamily(key).length === 0) return "kein Index bei AA";
-  return view === "aa-cost"
-    ? "kein Kostenwert bei AA"
-    : "kein Tempo-Wert bei AA";
+  switch (view) {
+    case "aa-cost":
+    case "aa-speed":
+      if (aaFamily(key).length === 0) return "kein Index bei AA";
+      return view === "aa-cost"
+        ? "kein Kostenwert bei AA"
+        : "kein Tempo-Wert bei AA";
+    case "da-cost":
+    case "da-speed": {
+      if (!DA_FAMILIES.has(key)) return "nicht bei DesignArena";
+      // Alles mit Wert steht im Feld oder in den Extras (auch unter dem Boden),
+      // also fehlt ein geführtes Modell nur, wenn ihm der Wert der Achse fehlt.
+      return view === "da-cost"
+        ? "kein Preis bei DesignArena"
+        : "keine Zeitangabe bei DesignArena";
+    }
+  }
 }
+
+/** Die Familien, die DesignArena überhaupt führt. */
+const DA_FAMILIES = new Set(DA_MODELS.map((m) => familyKey(m.label)));
 
 export function coverage(
   tool: Tool["id"],

@@ -84,7 +84,7 @@ describe("fitScale", () => {
   const pts = [pt("a", 0.5, 30), pt("b", 2, 41), pt("c", 8, 55)];
 
   it("liegt jeden Punkt in den Plot, mit Luft oben für die Überschriften", () => {
-    const f = fitScale(pts, BASE, "cost")!;
+    const f = fitScale(pts, BASE, false)!;
     const b = plotBounds(f.scale);
     for (const p of pts) {
       expect(f.scale.px(p.x)).toBeGreaterThan(b.x + 10);
@@ -103,9 +103,9 @@ describe("fitScale", () => {
     const f = fitScale(
       [pt("a", 5, 50, { sub: 1 }), pt("b", 4, 40)],
       BASE,
-      "cost",
+      false,
     )!;
-    const g = fitScale([pt("a", 5, 50), pt("b", 4, 40)], BASE, "cost")!;
+    const g = fitScale([pt("a", 5, 50), pt("b", 4, 40)], BASE, false)!;
     // mit sub = 1 muss die Achse weiter nach links reichen als ohne
     expect(f.scale.px(4)).toBeGreaterThan(g.scale.px(4));
   });
@@ -117,7 +117,7 @@ describe("fitScale", () => {
       pt("mittel", 1000 / 90, 55),
       pt("langsam", 1000 / 40, 46),
     ];
-    const f = fitScale(s, BASE, "speed")!;
+    const f = fitScale(s, BASE, true)!;
     const tps = f.xTicks.map((x) => Math.round(1000 / x));
     for (const t of tps) expect([1, 2, 5]).toContain(Number(String(t)[0]));
     const px = f.xTicks.map((x) => f.scale.px(x));
@@ -126,13 +126,13 @@ describe("fitScale", () => {
   });
 
   it("liefert null, wo es nichts anzupassen gibt", () => {
-    expect(fitScale([], BASE, "cost")).toBeNull();
-    expect(fitScale([pt("a", 1, 40)], BASE, "cost")).toBeNull();
-    expect(fitScale([pt("a", 1, 40), pt("b", 1, 40)], BASE, "cost")).toBeNull();
+    expect(fitScale([], BASE, false)).toBeNull();
+    expect(fitScale([pt("a", 1, 40)], BASE, false)).toBeNull();
+    expect(fitScale([pt("a", 1, 40), pt("b", 1, 40)], BASE, false)).toBeNull();
   });
 
   it("hält die Achse nie schmaler als einen Faktor 6 und nie unter dem Boden", () => {
-    const f = fitScale([pt("a", 1, 3), pt("b", 1.1, 4)], BASE, "cost", 0)!;
+    const f = fitScale([pt("a", 1, 3), pt("b", 1.1, 4)], BASE, false, 0)!;
     expect(f.scale.px(1.1) - f.scale.px(1)).toBeGreaterThan(0);
     expect(f.yTicks.every((t) => t >= 0)).toBe(true);
     expect(f.xTicks.length).toBeGreaterThanOrEqual(2);

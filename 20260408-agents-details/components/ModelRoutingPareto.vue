@@ -5,13 +5,15 @@ import { footnoteFor, leadFor } from "./paretoText";
 import { summarize } from "./productCoverage";
 import {
   DEFAULT_VARIANT,
+  SOURCE_LABEL,
   VARIANT_ORDER,
   VARIANTS,
   type VariantId,
 } from "./paretoVariants";
 
 // Folie „Welches Modell wofür?“: Menü, Chart, Empfehlungsabsatz, Fußzeile.
-// Was sich zwischen den beiden Ansichten unterscheidet, steht in
+// Das Menü gruppiert die Ansichten nach Datenquelle (Artificial Analysis,
+// DesignArena). Was sich zwischen den Ansichten unterscheidet, steht in
 // `paretoVariants.ts`; gezeichnet wird in `ParetoChart.vue`, das pro Variante
 // neu gemountet wird (`:key`) — Skala, Pfeilcluster und Entzerrung sind dort
 // Setup-Konstanten. Filter, Pins und Schalter beginnen damit bei jedem Wechsel
@@ -48,6 +50,11 @@ function pick(id: VariantId) {
   open.value = false;
 }
 
+/** Eine Gruppenüberschrift vor der ersten Ansicht jeder Quelle. */
+const startsGroup = (i: number) =>
+  i === 0 ||
+  VARIANTS[VARIANT_ORDER[i]!].source !== VARIANTS[VARIANT_ORDER[i - 1]!].source;
+
 const close = () => (open.value = false);
 const onKey = (e: KeyboardEvent) => {
   if (e.key === "Escape") close();
@@ -79,17 +86,22 @@ onBeforeUnmount(() => {
         <span class="mpv-chev" aria-hidden="true">▾</span>
       </button>
       <ul v-if="open" class="mpv-list" role="listbox">
-        <li v-for="id in VARIANT_ORDER" :key="id" role="option">
-          <button
-            class="mpv-opt"
-            :class="{ on: id === variantId }"
-            :aria-selected="id === variantId"
-            @click="pick(id)"
-          >
-            <span class="mpv-t">{{ VARIANTS[id].menu }}</span>
-            <span class="mpv-n">{{ VARIANTS[id].menuNote }}</span>
-          </button>
-        </li>
+        <template v-for="(id, i) in VARIANT_ORDER" :key="id">
+          <li v-if="startsGroup(i)" class="mpv-group" role="presentation">
+            {{ SOURCE_LABEL[VARIANTS[id].source] }}
+          </li>
+          <li role="option">
+            <button
+              class="mpv-opt"
+              :class="{ on: id === variantId }"
+              :aria-selected="id === variantId"
+              @click="pick(id)"
+            >
+              <span class="mpv-t">{{ VARIANTS[id].menu }}</span>
+              <span class="mpv-n">{{ VARIANTS[id].menuNote }}</span>
+            </button>
+          </li>
+        </template>
       </ul>
     </div>
 
@@ -168,6 +180,17 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   background: var(--deck-surface, var(--color-background-primary));
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.18);
+}
+.mpv-group {
+  padding: 5px 8px 1px;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.mpv-group:not(:first-child) {
+  margin-top: 3px;
+  border-top: 0.5px solid var(--color-border-secondary);
 }
 .mpv-opt {
   display: flex;
