@@ -62,29 +62,29 @@ describe("coverage", () => {
   const erwartet: Record<VariantId, Record<ToolId, [number, number]>> = {
     // [Familien des Produkts, davon gezeichnet]
     "aa-cost": {
-      cursor: [49, 31],
-      windsurf: [64, 34],
-      "jetbrains-ai": [41, 21],
+      cursor: [54, 36],
+      windsurf: [65, 35],
+      "jetbrains-ai": [42, 25],
       junie: [11, 11],
     },
     "aa-speed": {
-      cursor: [49, 40],
-      windsurf: [64, 46],
-      "jetbrains-ai": [41, 40],
+      cursor: [54, 45],
+      windsurf: [65, 47],
+      "jetbrains-ai": [42, 41],
       junie: [11, 11],
     },
     // DesignArena (31.10.2026): Preise hat jedes Modell des Boards, Zeiten nur
     // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
     "da-cost": {
-      cursor: [49, 36],
-      windsurf: [64, 37],
-      "jetbrains-ai": [41, 22],
+      cursor: [54, 38],
+      windsurf: [65, 38],
+      "jetbrains-ai": [42, 27],
       junie: [11, 11],
     },
     "da-speed": {
-      cursor: [49, 17],
-      windsurf: [64, 16],
-      "jetbrains-ai": [41, 14],
+      cursor: [54, 17],
+      windsurf: [65, 16],
+      "jetbrains-ai": [42, 11],
       junie: [11, 1],
     },
   };
@@ -147,10 +147,10 @@ describe("summarize", () => {
     const s = summarize(V, new Set(presetModels("jetbrains-ai", uni, V.pts)));
     expect(s.isDefault).toBe(false);
     expect(s.tool?.id).toBe("jetbrains-ai");
-    expect(s.base.length).toBe(21);
-    expect(s.front.length).toBe(6);
-    expect(s.dominated).toBe(15);
-    expect(s.coverage?.plotted).toBe(21);
+    expect(s.base.length).toBe(25);
+    expect(s.front.length).toBe(4);
+    expect(s.dominated).toBe(21);
+    expect(s.coverage?.plotted).toBe(25);
   });
 
   it("kennt bei einer eigenen Auswahl kein Produkt", () => {
@@ -171,24 +171,28 @@ describe("Texte für eine Auswahl", () => {
 
   it("der Absatz nennt die berechnete Leiter des Produkts, billigste zuerst, und die Zahlen", () => {
     const t = text(leadFor(cost, jb));
-    expect(t).toContain("gemini-3.1-flash-lite 0,086 € (≈ 6,0) → gpt-5-mini");
-    expect(t).toContain("claude-opus-5 9,91 € (≈ 46,3)");
-    expect(t).toContain("JetBrains AI: 6 von 21 auf der Front, die übrigen 15");
+    expect(t).toContain("gpt-5-mini 0,12 € (≈ 7,8) → gpt-6-luna 0,13 € (27,8)");
+    expect(t).toContain("claude-opus-5.5 8,79 € (58,4)");
+    expect(t).toContain("JetBrains AI: 4 von 25 auf der Front, die übrigen 21");
   });
 
   it("die Tempo-Ansicht beginnt beim Langsamsten und kennzeichnet geschätzte Werte", () => {
     const V = VARIANTS["aa-speed"];
     const u = [...V.pts, ...V.extras];
-    const s = summarize(V, new Set(presetModels("jetbrains-ai", u, V.pts)));
-    const t = text(leadFor(V, s));
+    // Seit dem Katalog vom 28.10. hat kein Produkt mehr eine Leiter über acht
+    // Sprossen (JetBrains AI: drei). Die kompakte Form prüft deshalb eine
+    // Front aus neun echten Punkten des Universums.
+    const s = summarize(V, new Set(u.map((p) => p.label)));
+    const front = u.filter((p) => p.tps).slice(0, 9);
+    const t = text(leadFor(V, { ...s, front }));
     expect(t).toContain("Wo Du wartest");
-    // elf Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
+    // neun Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
     expect(t).toContain(
-      "gpt-5.4-mini 216 tok/s → gemini-3.5-flash-lite 454 tok/s",
+      "muse-wonder 143 tok/s → mistral-large-4 161 tok/s → step-5 165 tok/s",
     );
     expect(t).not.toContain("(≈");
-    expect(t.indexOf("claude-opus-5")).toBeLessThan(
-      t.indexOf("gemini-3.5-flash-lite"),
+    expect(t.indexOf("mistral-large-4")).toBeLessThan(
+      t.indexOf("claude-haiku-5.5"),
     );
   });
 
@@ -213,9 +217,9 @@ describe("Texte für eine Auswahl", () => {
     const segs = footnoteFor(cost, jb);
     const t = text(segs);
     expect(t).toContain(
-      "JetBrains AI (Katalog 29.09.2026): 21 von 41 mit Messwert",
+      "JetBrains AI (Katalog 28.10.2026): 25 von 42 mit Messwert",
     );
-    expect(t).toContain("20 ohne Wert (Hover)");
+    expect(t).toContain("17 ohne Wert (Hover)");
     expect(t).toContain(
       "Achsen und Quadranten-Linien (Median) folgen der Auswahl",
     );

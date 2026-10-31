@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AA_COST, AA_ROWS, AA_SPEED } from "../../aaData";
+import { AA_COST, AA_ROWS, AA_SPEED, migrateV4, type Row } from "../../aaData";
 import {
   AA_EXTRAS_COST,
   AA_EXTRAS_SPEED,
@@ -9,7 +9,7 @@ import {
   type Cand,
 } from "../../aaExtras";
 import { catalogHas, familyKey } from "../../catalogMatch";
-import { paretoFront } from "../../paretoData";
+import { fmtEur, paretoFront } from "../../paretoData";
 import { matchingPreset, presetModels, PRESETS } from "../../providerFilter";
 import { VARIANTS } from "../../paretoVariants";
 
@@ -78,9 +78,9 @@ describe("Extras", () => {
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
-    expect(PRODUCT_FAMILIES.size).toBe(90);
-    expect(AA_EXTRAS_COST.length).toBe(34);
-    expect(AA_EXTRAS_SPEED.length).toBe(53);
+    expect(PRODUCT_FAMILIES.size).toBe(92);
+    expect(AA_EXTRAS_COST.length).toBe(32);
+    expect(AA_EXTRAS_SPEED.length).toBe(50);
   });
 
   for (const [view, kurat, extras] of [
@@ -123,9 +123,13 @@ describe("Extras", () => {
   }
 
   it("zeigt kleine Kosten nicht als 0,00 €", () => {
-    const klein = AA_EXTRAS_COST.filter((p) => p.x < 0.095);
-    expect(klein.length).toBeGreaterThan(0);
-    for (const p of klein) expect(p.eur, p.label).not.toBe("0,00");
+    // Am 28.10.2026 liegt kein Extra mehr unter 0,095 € (gemini-3.1-flash-lite
+    // flog mit dem JetBrains-Katalog raus) — die Rundung prüft deshalb der
+    // Formatierer selbst, die Extras zusätzlich, falls wieder welche dort liegen.
+    for (const x of [0.04, 0.086, 0.094])
+      expect(fmtEur(x), String(x)).not.toBe("0,00");
+    for (const p of AA_EXTRAS_COST.filter((q) => q.x < 0.095))
+      expect(p.eur, p.label).not.toBe("0,00");
   });
 
   it("gibt Claude-Extras das Kontingent ×0,8, allen anderen keines", () => {
@@ -136,7 +140,7 @@ describe("Extras", () => {
   });
 });
 
-// Die Fronten je Produkt und Ansicht, gerechnet aus Katalogen vom 29.09.2026 und
+// Die Fronten je Produkt und Ansicht, gerechnet aus Katalogen vom 28.10.2026 und
 // dem AA-Snapshot vom 28.10.2026 (v5, fehlende Werte aus v4 umgerechnet).
 // Sie sind der Kern der neuen Folienaussage: jedes Produkt an sich selbst
 // gemessen, nicht am Markt. Bricht einer dieser Werte, hat sich ein Katalog oder
@@ -157,14 +161,12 @@ describe("Front je Produkt", () => {
     ).front.map((p) => p.label);
   };
 
-  it("Kosten: JetBrains AI nur mit älteren Modellen, alle aus v4 umgerechnet", () => {
+  it("Kosten: JetBrains AI führt seit 28.10. GPT-6 und Opus 5.5 bis zur Spitze", () => {
     expect(front("aa-cost", "jetbrains-ai")).toStrictEqual([
-      "gemini-3.1-flash-lite",
       "gpt-5-mini",
-      "gpt-5.6-luna",
-      "gpt-5.6-terra",
-      "gpt-5.6-sol",
-      "claude-opus-5",
+      "gpt-6-luna",
+      "gpt-6.1-sol",
+      "claude-opus-5.5",
     ]);
   });
 
@@ -183,17 +185,46 @@ describe("Front je Produkt", () => {
     expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
   });
 
-  it("Tempo: JetBrains AI hat neun Sprossen, die älteren Gemini vorn", () => {
+  it("Tempo: JetBrains AI hat drei Sprossen, Gemini 3.7 Flash vorn", () => {
     const f = front("aa-speed", "jetbrains-ai");
-    expect(f[0]).toBe("gemini-3.5-flash-lite");
-    expect(f.at(-1)).toBe("claude-opus-5");
-    expect(f.length).toBe(9);
+    expect(f[0]).toBe("gemini-3.7-flash");
+    expect(f.at(-1)).toBe("claude-opus-5.5");
+    expect(f.length).toBe(3);
   });
 
-  it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash bleibt unter dem gemessenen glm-5.3", () => {
-    const y = (l: string) => AA_COST.find((p) => p.label === l)!.y;
-    expect(AA_COST.find((p) => p.label === "glm-5.3-flash")!.mig).toBe(true);
-    expect(y("glm-5.3-flash")).toBeLessThan(y("glm-5.3"));
+  it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash steigt nicht über das gemessene glm-5.3", () => {
+    // Der Fall vom 28.10.2026 nachgebaut: Seit 31.10. misst AA glm-5.3-flash in
+    // v5 selbst (27,8), am Board ist die Verankerung also nicht mehr zu sehen.
+    // Ein globaler Fit, der 41,8 auf ≈ 33 hebt, darf das kleinere Modell nicht
+    // über das gemessene größere (44,8 → 31,7) desselben Herstellers setzen.
+    // Die Kappe ist `Math.min(f, oben)`: Gleichstand ist erlaubt, Überholen nicht.
+    const row = (slug: string, creator: string, index: number | null): Row => ({
+      slug,
+      name: slug,
+      deprecated: false,
+      modelCreatorName: creator,
+      intelligenceIndex: index,
+      intelligenceIndexIsEstimated: false,
+      intelligenceIndexCostPerTask: index === null ? null : 1,
+      medianOutputTokensPerSecond: null,
+    });
+    // Zwölf Paare eines anderen Herstellers tragen den Fit: v5 = 0,8 · v4.
+    const andere = Array.from({ length: 12 }, (_, i) => 30 + 2 * i);
+    const v4 = [
+      ...andere.map((x, i) => row(`m${i}`, "Other", x)),
+      row("glm-5-3", "Z AI", 44.8),
+      row("glm-5-3-flash", "Z AI", 41.8),
+    ];
+    const v5 = [
+      ...andere.map((x, i) => row(`m${i}`, "Other", 0.8 * x)),
+      row("glm-5-3", "Z AI", 31.7),
+      row("glm-5-3-flash", "Z AI", null),
+    ];
+    const { rows } = migrateV4(v5, v4);
+    const flash = rows.find((r) => r.slug === "glm-5-3-flash")!;
+    expect(flash.migrated).toBe(true);
+    expect(0.8 * 41.8).toBeGreaterThan(31.7); // ohne Verankerung läge es darüber
+    expect(flash.intelligenceIndex!).toBeLessThanOrEqual(31.7);
   });
 
   it("nimmt in beiden Ansichten dieselbe Stufe, wo es eine gemessene gibt", () => {
@@ -206,7 +237,6 @@ describe("Front je Produkt", () => {
 
   it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
     expect(front("aa-speed", "junie")).toStrictEqual([
-      "gemini-3.1-pro",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);
@@ -229,7 +259,7 @@ describe("Universe und „Alle“", () => {
     const V = VARIANTS["aa-cost"];
     const uni = [...V.pts, ...V.extras];
     const jb = new Set(presetModels("jetbrains-ai", uni, V.pts));
-    expect(jb.size).toBe(21);
+    expect(jb.size).toBe(25);
     expect(matchingPreset(jb, uni, V.pts)?.id).toBe("jetbrains-ai");
     expect(
       matchingPreset(new Set(V.pts.map((p) => p.label)), uni, V.pts)?.id,

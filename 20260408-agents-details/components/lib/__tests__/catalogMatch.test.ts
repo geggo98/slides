@@ -69,7 +69,8 @@ describe("familyKey — verschiedene Modelle bleiben verschieden", () => {
 });
 
 // Die drei Listen, die am 29.09.2026 von Hand aus den Rohseiten gelesen und von
-// zwei unabhängigen Rechercheuren bestätigt wurden. Der abgeleitete Abgleich
+// zwei unabhängigen Rechercheuren bestätigt wurden; am 28.10.2026 gegen die
+// neuen Rohseiten nachgeführt (jede Änderung einzeln im Katalog belegt). Der abgeleitete Abgleich
 // muss sie auf dem Label-Raum beider Datenquellen exakt reproduzieren — nicht
 // mehr, nicht weniger. Bricht das, hat sich Normalisierung oder Katalog bewegt.
 describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
@@ -77,15 +78,18 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
     cursor: [
       "claude-fable-5",
       "claude-fable-5.1",
+      "claude-haiku-5.5",
       "claude-opus-4.8",
       "claude-opus-5",
       "claude-opus-5.5",
       "claude-sonnet-5",
       "claude-sonnet-5.5",
+      "deepseek-v4.1-flash-1017",
       "gemini-3.5-flash",
       "gemini-3.6-flash",
       "gemini-3.7-flash",
       "gemini-3.8-flash",
+      "gemini-4-argon",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -96,6 +100,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "grok-4.6",
       "grok-4.7",
       "kimi-k3",
+      "muse-wonder",
     ],
     windsurf: [
       "claude-fable-5",
@@ -110,6 +115,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gemini-3.6-flash",
       "gemini-3.7-flash",
       "gemini-3.8-flash",
+      "gemini-4-argon",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -124,15 +130,21 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
     ],
     "jetbrains-ai": [
       "claude-fable-5",
+      "claude-fable-5.1",
       "claude-opus-4.8",
       "claude-opus-5",
+      "claude-opus-5.5",
       "claude-sonnet-5",
-      "gemini-3.5-flash",
+      "claude-sonnet-5.5",
       "gemini-3.6-flash",
+      "gemini-3.7-flash",
+      "gemini-3.8-flash",
       "gpt-5.5",
       "gpt-5.6-luna",
       "gpt-5.6-sol",
       "gpt-5.6-terra",
+      "gpt-6-luna",
+      "gpt-6.1-sol",
     ],
   };
   const labels = [...new Set([...CURRENT, ...AA_COST].map((p) => p.label))];
@@ -187,7 +199,7 @@ describe("Golden: Katalogname → Schlüssel", () => {
     // übereinstimmt. Sichtbar wird es an den Zahlen: Windsurf hat 269 Namen und
     // 64 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
-    expect(catalogKeys("jetbrains-ai").size).toBe(41); // jedes Modell einzeln
+    expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
     expect(catalogKeys("junie").size).toBe(11);
   });
 });

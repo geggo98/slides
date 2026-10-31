@@ -19,13 +19,16 @@ import {
   type Pt,
   type Scale,
 } from "../../paretoData";
+import { fitScale } from "../../paretoGeometry";
 import { VARIANTS, type VariantId } from "../../paretoVariants";
+import { PRESETS, presetModels } from "../../providerFilter";
 
 // Die Entzerrung ist eine bewusste Abweichung vom Wert, damit die Folie auf
 // einen Blick lesbar bleibt. Diese Tests halten fest, was sie darf und was
 // nicht: kein Paar bleibt überlappt, kein Marker wandert weiter als die Kappe,
 // kein dominierter Punkt rückt über die Front, kein Schalter bewegt einen
-// festen Marker, und dieselbe Eingabe ergibt bitgleich dieselbe Ausgabe.
+// festen Marker — außer einem, den ein Claude-Punkt im Overlay verdeckt
+// (`yieldFixed`) —, und dieselbe Eingabe ergibt bitgleich dieselbe Ausgabe.
 
 type Kind = keyof typeof MARKER;
 interface Zustand {
@@ -56,7 +59,7 @@ const haupt = (id: VariantId, subOn: boolean): Zustand => {
     }),
     kind: "pareto",
     movable: claude,
-    opts: { horizontalOnly: frontUnion(V.pts) },
+    opts: { horizontalOnly: frontUnion(V.pts), yieldFixed: true },
     s: V.scale,
   };
 };
@@ -180,13 +183,63 @@ describe("Marker-Entzerrung", () => {
   });
 
   // Zusage der Hauptfolie: kein Schalter verschiebt einen festen Marker. Das
-  // Overlay darf nur die Claude-Punkte bewegen.
-  it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich", () => {
+  // Overlay bewegt die Claude-Punkte und nur die festen, die sie verdecken.
+  it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich — außer dem, den ein Claude-Punkt verdeckt", () => {
+    // Seit 31.10.2026 weicht ein fester Marker mit aus, wenn ein verschiebbarer
+    // ihn verdeckt (`yieldFixed`): claude-opus-5.5 liegt mit Kontingent fast auf
+    // gemini-4-carbon. Jeder andere feste Marker bleibt, wo er war.
     const aus = run(haupt("aa-cost", false)).pos;
     const an = run(haupt("aa-cost", true)).pos;
-    for (const p of VARIANTS["aa-cost"].pts) {
-      if (claude(p)) continue;
-      expect(an.get(p.label), p.label).toStrictEqual(aus.get(p.label));
+    const bewegt = VARIANTS["aa-cost"].pts
+      .filter((p) => !claude(p))
+      .filter(
+        (p) =>
+          JSON.stringify(an.get(p.label)) !== JSON.stringify(aus.get(p.label)),
+      )
+      .map((p) => p.label);
+    expect(bewegt).toStrictEqual(["gemini-4-carbon"]);
+  });
+
+  // `yieldFixed` gilt auch, wenn ein Preset gewählt ist (`chartGeometry`
+  // ohne Default). Ein fester Marker darf dort nur rücken, wo der Claude-Punkt
+  // allein nicht freikommt — gegengeprüft am selben Zustand ohne Ausweichen.
+  it("bewegt in keinem Preset einen festen Marker, den der Claude-Punkt nicht braucht", () => {
+    const V = VARIANTS["aa-cost"];
+    const u = [...V.pts, ...V.extras];
+    for (const pr of PRESETS) {
+      const sel = new Set(presetModels(pr.id, u, V.pts));
+      const isDefault = pr.id === "all";
+      const base = isDefault ? [...V.pts] : u.filter((p) => sel.has(p.label));
+      // wie `chartGeometry`: unter zwei Punkten bleibt die Skala der Ansicht
+      const s = isDefault
+        ? V.scale
+        : (fitScale(base, V.scale, V.xInverse)?.scale ?? V.scale);
+      const opts = (yieldFixed: boolean) => ({
+        horizontalOnly: isDefault
+          ? frontUnion(V.pts)
+          : new Set(paretoFront(base).front.map((p) => p.label)),
+        yieldFixed,
+      });
+      const all = new Set(base.map((p) => p.label));
+      const d = (on: boolean, y: boolean) =>
+        dodgeDetailed(
+          visiblePoints(base, all, on, { ghost: false }),
+          s,
+          "pareto",
+          claude,
+          opts(y),
+        );
+      const aus = d(false, true).pos;
+      const an = d(true, true).pos;
+      const bewegt = base
+        .filter((p) => !claude(p))
+        .filter(
+          (p) =>
+            JSON.stringify(an.get(p.label)) !==
+            JSON.stringify(aus.get(p.label)),
+        );
+      if (bewegt.length)
+        expect(d(true, false).residual, pr.id).toBeGreaterThan(DODGE.tol);
     }
   });
 
@@ -264,10 +317,14 @@ describe("Marker-Entzerrung", () => {
         ],
         "Bonus v11-vs-v1": [],
         "Hauptfolie aa-cost": [],
-        "Hauptfolie aa-cost mit Kontingent": [],
+        "Hauptfolie aa-cost mit Kontingent": [
+          "claude-opus-5.5",
+          "gemini-4-carbon",
+        ],
         "Hauptfolie aa-speed": [
-          "mimo-v2.6-flash",
-          "qwen3.8-flash-next",
+          "gemini-3.8-flash",
+          "gpt-6-luna",
+          "minimax-m3.1-flash",
         ],
         "Historie 0710": [],
         "Historie 0722": [
@@ -363,6 +420,19 @@ describe("Abweichung in den Speaker Notes", () => {
     }
     return { px, pp, pct };
   };
+
+  // Die Notiz der Hauptfolie nennt jeden entzerrten Marker beim Namen — die
+  // Zahlen allein prüft der Test unten; am 31.10.2026 fehlte so
+  // minimax-m3.1-flash, ohne dass etwas rot wurde.
+  it("Hauptfolie: nennt jeden entzerrten Marker", () => {
+    const notiz = notesAfter("# Welches Modell wofür? Die Datenlage");
+    const i = notiz.indexOf("Entzerrte Marker:");
+    expect(i).toBeGreaterThan(-1);
+    const absatz = notiz.slice(i);
+    for (const z of ZUSTAENDE.filter((z) => z.name.startsWith("Hauptfolie")))
+      for (const m of run(z).moved)
+        expect(absatz, `${z.name}: ${m.label}`).toContain(m.label);
+  });
 
   // Auf der Hauptfolie ist y der AA-Index und x Preis bzw. Zeit je 1 000
   // Tokens — deshalb Indexpunkte und „Preis bzw. Tempo“.

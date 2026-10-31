@@ -42,12 +42,12 @@
 // Opus 5.5“ wird `claude-opus-5.5` — dieselbe Schreibweise wie bei AA, damit
 // Labs, Produkt-Presets und Kataloge ohne Sonderweg greifen.
 
-import raw from "../data/designarena/board-20261031-2def5f55.json";
+import raw from "../data/designarena/board-20261031-46d7c541.json";
 import { familyKey } from "./catalogMatch";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const DA_BOARD = "board-20261031-2def5f55.json";
+export const DA_BOARD = "board-20261031-46d7c541.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
 export const DA_STAND = "31.10.2026";
 export const DA_URL =

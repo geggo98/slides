@@ -13,29 +13,26 @@ import {
   type Placed,
 } from "../../labelLayout";
 import {
-  arrowCluster,
   dodgeMarkers,
-  frontUnion,
   HISTORY_SCALE,
   historyObstacles,
   HIT_R,
   HIT_R_HISTORY,
   LABEL_FONT,
-  PARETO_SCALE,
   plotBounds,
-  quadrantBoxes,
   toLayoutPoints,
   visiblePoints,
 } from "../../paretoChrome";
 import {
-  CURRENT,
   paretoFront,
   SNAPSHOTS,
   V1_COMPARE,
   type Pt,
   type Snapshot,
 } from "../../paretoData";
+import { chartGeometry } from "../../paretoGeometry";
 import { PRESETS, presetModels } from "../../providerFilter";
+import { VARIANTS } from "../../paretoVariants";
 
 // Der Platzierer ersetzt ~180 handgestimmte Versätze und einen zweiten
 // Algorithmus in der Historien-Komponente. Diese Tests sind die maschinelle
@@ -49,36 +46,30 @@ const story = (p: Pt) => p.story === true;
 
 const pos = (p: Placed) => [p.x, p.y, p.ax] as const;
 
-// Dieselbe Rechnung wie die Komponenten: erst die Entzerrung der Marker
-// (`dodgeMarkers`), dann der Platzierer auf den angezeigten Lagen.
-const ALL = new Set(presetModels("all", CURRENT));
+// Dieselbe Rechnung wie die Komponenten: erst die Entzerrung der Marker,
+// dann der Platzierer auf den angezeigten Lagen. Die Hauptfolie (`pareto-heute`)
+// rechnet `chartGeometry` — der Test ruft genau das auf, statt es nachzubauen.
+// Bis 31.10.2026 stand hier ein Nachbau mit den DeepSWE-Daten vom 03.09.
+// (`CURRENT`), dem Inhalt der Hauptfolie vor dem Wechsel zu Artificial
+// Analysis; ihn renderte keine Folie mehr, und weil `frontUnion` die aktuellen
+// Kataloge liest, kippte er bei jedem Katalog-Update.
+const HAUPT = VARIANTS["aa-cost"];
+const UNIVERSE = [...HAUPT.pts, ...HAUPT.extras];
+const ALL = new Set(presetModels("all", UNIVERSE, HAUPT.pts));
 
 function pareto(subOn: boolean, rank2Rings?: readonly number[]) {
-  const pts = toLayoutPoints(CURRENT, PARETO_SCALE, {
-    overlay: true,
-    subOn,
-    story,
-    presets: true,
-    pos: dodgeMarkers(
-      visiblePoints(CURRENT, ALL, subOn),
-      PARETO_SCALE,
-      "pareto",
-      (p) => p.sub !== undefined,
-      { horizontalOnly: frontUnion(CURRENT) },
-    ),
-  });
-  const obstacles = [
-    ...quadrantBoxes(PARETO_SCALE),
-    ...arrowCluster(PARETO_SCALE).boxes,
-  ];
-  const layout = layoutLabels(pts, {
-    font: LABEL_FONT.pareto,
-    bounds: plotBounds(PARETO_SCALE),
-    hitR: HIT_R,
-    obstacles,
-    rank2Rings,
-  });
-  return { pts, obstacles, layout };
+  const g = chartGeometry(HAUPT, UNIVERSE, ALL, subOn);
+  const layout =
+    rank2Rings === undefined
+      ? g.layout
+      : layoutLabels(g.layoutPts, { ...g.layoutOpts, rank2Rings });
+  return {
+    pts: g.layoutPts,
+    obstacles: g.obstacles,
+    layout,
+    bounds: g.layoutOpts.bounds,
+    pos: g.dodge.pos,
+  };
 }
 
 function history(
@@ -221,27 +212,24 @@ describe("Textmaß", () => {
   });
 });
 
-describe("Folie 42 — Default ohne Überschneidung", () => {
+describe("Hauptfolie (pareto-heute) — Default ohne Überschneidung", () => {
   for (const subOn of [false, true]) {
     it(`Overlay ${subOn ? "an" : "aus"}`, () => {
-      const { pts, obstacles, layout } = pareto(subOn);
-      expectClean(
-        `Overlay ${subOn}`,
-        pts,
-        layout,
-        obstacles,
-        plotBounds(PARETO_SCALE),
-        HIT_R,
-      );
+      const { pts, obstacles, layout, bounds } = pareto(subOn);
+      expectClean(`Overlay ${subOn}`, pts, layout, obstacles, bounds, HIT_R);
     });
   }
 
   it("beschriftet die Front jedes Presets, ohne dass der Filter das Layout kennt", () => {
     const { layout } = pareto(false);
     for (const pr of PRESETS) {
-      const sel = new Set(presetModels(pr.id, CURRENT));
+      // Im Default zählt das kuratierte Feld; wählt man ein Preset, rechnet die
+      // Komponente ein eigenes Layout (`chartGeometry`, nicht Default).
+      const sel = new Set(presetModels(pr.id, HAUPT.pts));
       for (const on of [false, true]) {
-        const front = paretoFront(visiblePoints(CURRENT, sel, on)).front;
+        const front = paretoFront(
+          visiblePoints(HAUPT.pts, sel, on, { ghost: false }),
+        ).front;
         for (const f of front) {
           expect(layout.core.has(f.label), `${pr.id}/${on}: ${f.label}`).toBe(
             true,
@@ -251,28 +239,40 @@ describe("Folie 42 — Default ohne Überschneidung", () => {
     }
   });
 
-  // Die Entzerrung rückt terra und glm-5.3 waagerecht auseinander (terra ist
-  // im JetBrains-Preset Frontpunkt, darf also nicht in der Höhe wandern);
-  // glm-5.3 behält seinen Nahplatz, kimi-k3 bleibt namenlos.
+  // Stand 31.10.2026 (aa-cost). Ändert sich die Liste mit einem neuen Board,
+  // ist das ein Befund für den PR, kein Fehler: `vitest -u` und hinsehen.
   it("lässt im Default nur diese Punkte namenlos", () => {
     const { layout } = pareto(false);
     expect(layout.dropped).toMatchInlineSnapshot(`
       [
-        "gpt-6-astra",
-        "kimi-k3",
-        "gpt-5.5",
-        "gemini-3.7-flash",
+        "mimo-v2.6-pro",
+        "ling-3.1-flash-1019",
+        "minimax-m3.1-flash",
+        "qwen3.8-flash-next",
       ]
     `);
   });
 });
 
-describe("Folie 42 — kein Schalter verschiebt ein Label", () => {
-  it("Kontingent-Overlay: nur die verschiebbaren Labels wandern", () => {
+describe("Hauptfolie (pareto-heute) — kein Schalter verschiebt ein Label", () => {
+  it("Kontingent-Overlay: nur die verschiebbaren Labels wandern — und wer ihnen ausweicht", () => {
     const aus = pareto(false);
     const an = pareto(true);
-    const movable = new Set(aus.pts.filter((p) => p.movable).map((p) => p.id));
-    expect(movable.size).toBe(4);
+    // Verschiebbar sind die Claude-Punkte; dazu jeder feste Marker, den die
+    // Entzerrung im Overlay mit ausweichen lässt (`yieldFixed`, seit
+    // 31.10.2026: gemini-4-carbon unter claude-opus-5.5). Sein Label wandert
+    // mit dem Marker — das ist die eine dokumentierte Ausnahme.
+    const claude = aus.pts.filter((p) => p.movable).map((p) => p.id);
+    expect(claude.length).toBe(4);
+    const gewichen = aus.pts
+      .filter((p) => !p.movable)
+      .map((p) => p.id)
+      .filter(
+        (id) =>
+          JSON.stringify(aus.pos.get(id)) !== JSON.stringify(an.pos.get(id)),
+      );
+    expect(gewichen).toStrictEqual(["gemini-4-carbon"]);
+    const movable = new Set([...claude, ...gewichen]);
     for (const [id, p] of aus.layout.core) {
       if (movable.has(id)) continue;
       const q = an.layout.core.get(id);
@@ -325,7 +325,7 @@ function expectStation(snap: Snapshot) {
   }
 }
 
-describe("Folie 43 — jede Station", () => {
+describe("Historie (pareto-historie) — jede Station", () => {
   for (const snap of SNAPSHOTS) {
     it(`${snap.date}: Default sauber, Detailmodus vollständig und positionsgleich`, () => {
       expectStation(snap);

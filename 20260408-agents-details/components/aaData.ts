@@ -55,14 +55,14 @@
 // keine Messung — die Punkte stehen hohl und gestrichelt („≈“), der Tooltip sagt
 // „aus v4 umgerechnet“, und `V4_MIGRATION` hält die Güte des Fits fest.
 
-import raw from "../data/artificialanalysis/board-20261028-7ba3a00a.json";
+import raw from "../data/artificialanalysis/board-20261031-9857bbbf.json";
 import rawV4 from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const AA_BOARD = "board-20261028-7ba3a00a.json";
+export const AA_BOARD = "board-20261031-9857bbbf.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const AA_STAND = "28.10.2026";
+export const AA_STAND = "31.10.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
 export const USD_EUR = 0.876;
