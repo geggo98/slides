@@ -1309,7 +1309,10 @@ export function makeScale(o: ScaleOpts): Scale {
 export function paretoFront<T extends { x: number; y: number }>(
   pts: readonly T[],
 ): { front: T[]; dom: T[] } {
-  const sorted = [...pts].sort((a, b) => a.x - b.x);
+  // Bei gleichem x zuerst der bessere: sonst landet der schwächere von zwei
+  // gleich teuren Punkten auf der Front, obwohl der andere ihn strikt übertrifft
+  // (DesignArena-Listenpreise: 4 $ für claude-sonnet-5.5 und gemini-4-argon).
+  const sorted = [...pts].sort((a, b) => a.x - b.x || b.y - a.y);
   const front: T[] = [];
   const dom: T[] = [];
   let bestY = -Infinity;
