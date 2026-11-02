@@ -322,8 +322,12 @@ describe("Marker-Entzerrung", () => {
           "gemini-4-carbon",
         ],
         "Hauptfolie aa-speed": [
+          "claude-opus-5.5",
           "gemini-3.8-flash",
+          "gemini-4-carbon",
+          "glm-5.3",
           "gpt-6-luna",
+          "gpt-6.1-terra-non-reasoning",
           "minimax-m3.1-flash",
         ],
         "Historie 0710": [],

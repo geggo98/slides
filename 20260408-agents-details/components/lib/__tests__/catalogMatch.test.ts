@@ -200,7 +200,7 @@ describe("Golden: Katalogname → Schlüssel", () => {
     // 64 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
     expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
-    expect(catalogKeys("junie").size).toBe(11);
+    expect(catalogKeys("junie").size).toBe(13);
   });
 });
 

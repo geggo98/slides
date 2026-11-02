@@ -208,7 +208,7 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
+    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019", "mistral-large-4"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -237,6 +237,7 @@ describe("aaData — die beiden Punktmengen", () => {
       "claude-haiku-5.5",
       "muse-wonder",
       "claude-sonnet-5.5",
+      "gpt-6.1-sol",
       "claude-opus-5.5",
       "gemini-4-carbon",
     ]);

@@ -78,7 +78,7 @@ describe("Extras", () => {
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
-    expect(PRODUCT_FAMILIES.size).toBe(92);
+    expect(PRODUCT_FAMILIES.size).toBe(93);
     expect(AA_EXTRAS_COST.length).toBe(32);
     expect(AA_EXTRAS_SPEED.length).toBe(50);
   });
@@ -173,7 +173,8 @@ describe("Front je Produkt", () => {
   it("Kosten: Junie führt dieselbe Spitze wie der Markt, Windsurf ebenfalls", () => {
     expect(front("aa-cost", "junie")).toStrictEqual([
       "gpt-6-luna",
-      "gpt-6-sol",
+      "gpt-6.1-terra-non-reasoning",
+      "gpt-6.1-terra",
       "gpt-6-astra",
       "claude-opus-5.5",
     ]);
@@ -185,11 +186,11 @@ describe("Front je Produkt", () => {
     expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
   });
 
-  it("Tempo: JetBrains AI hat drei Sprossen, Gemini 3.7 Flash vorn", () => {
+  it("Tempo: JetBrains AI hat vier Sprossen, Gemini 3.7 Flash vorn", () => {
     const f = front("aa-speed", "jetbrains-ai");
     expect(f[0]).toBe("gemini-3.7-flash");
     expect(f.at(-1)).toBe("claude-opus-5.5");
-    expect(f.length).toBe(3);
+    expect(f.length).toBe(4);
   });
 
   it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash steigt nicht über das gemessene glm-5.3", () => {
@@ -237,6 +238,7 @@ describe("Front je Produkt", () => {
 
   it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
     expect(front("aa-speed", "junie")).toStrictEqual([
+      "gemini-3.1-pro",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);
