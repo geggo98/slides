@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { AA_ROWS } from "../../aaData";
+import { familyKey } from "../../catalogMatch";
 import { dominators, paretoFront, type Pt } from "../../paretoData";
 import { footnoteFor, leadFor } from "../../paretoText";
 import { VARIANT_ORDER, VARIANTS, type VariantId } from "../../paretoVariants";
@@ -97,14 +98,18 @@ describe("coverage", () => {
         expect(c.missing.length).toBe(c.total - c.plotted);
       });
 
-  it("zeichnet genau so viele Punkte, wie das Preset auswählt", () => {
+  // Ein Katalogeintrag kann mehrere Chart-Punkte treffen (GPT 6.1 Terra:
+  // gpt-6.1-terra und -non-reasoning); coverage zählt Familien, also zählt der
+  // Vergleich Familien.
+  it("zeichnet genau so viele Modelle, wie das Preset auswählt", () => {
     for (const view of VARIANT_ORDER) {
       const V = VARIANTS[view];
       const uni = [...V.pts, ...V.extras];
       for (const id of ["cursor", "windsurf", "jetbrains-ai", "junie"] as const)
-        expect(presetModels(id, uni, V.pts).length, `${view} ${id}`).toBe(
-          coverage(id, V).plotted,
-        );
+        expect(
+          new Set(presetModels(id, uni, V.pts).map(familyKey)).size,
+          `${view} ${id}`,
+        ).toBe(coverage(id, V).plotted);
     }
   });
 

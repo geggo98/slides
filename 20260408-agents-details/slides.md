@@ -1615,13 +1615,13 @@ Die AA-Kostenleiter hat acht Sprossen: mimo-v2.6-flash 0,11 € (26,7) →
 gpt-6-luna 0,13 € (27,8) → gpt-6.1-terra-non-reasoning 0,20 € (30,4) →
 claude-haiku-5.5 0,36 € (36,2) → gpt-6.1-terra 0,84 € (51,0) →
 gpt-6.1-sol 1,11 € (54,5) → gpt-6-astra 5,47 € (56,9) → gemini-4-carbon
-6,79 € (59,4). Gegenüber dem Vorgänger-Stand (31.10.) unverändert. Seit
-31.10. ersetzt gemini-4-carbon (59,4 bei 6,79 €) claude-opus-5.5 (58,4 bei
-8,79 €) als oberste Sprosse — Opus 5.5 ist dominiert, es kostet mehr und
+6,79 € (59,4). Gegenüber dem Stand vom 31.10. unverändert. Dort ersetzte gemini-4-carbon
+(59,4 bei 6,79 €) claude-opus-5.5 (58,4 bei 8,79 €) als oberste Sprosse — Opus 5.5 ist dominiert, es kostet mehr und
 liefert einen Punkt weniger. Neu bei AA am 02.11.: eine High-Stufe von
 deepseek-v4.1-flash-1017 (28,5, ohne Kosten) und Kosten für dessen
 Non-Reasoning-Stufe (18,5, unter dem Boden) — am Chart ändert das nichts,
-es zeigt weiter die beste Stufe (32,5 bei 0,53 €). Der große Sprung liegt zwischen Haiku 5.5 und gpt-6.1-terra: 15
+es zeigt weiter die beste Stufe (32,5 bei 0,53 €).
+Der große Sprung liegt zwischen Haiku 5.5 und gpt-6.1-terra: 15
 Punkte für gut das Doppelte. Oben kosten die letzten knapp fünf Punkte
 (54,5 → 59,4) gut das Sechsfache — das ist die Eskalations-Frage der Folie.
 
