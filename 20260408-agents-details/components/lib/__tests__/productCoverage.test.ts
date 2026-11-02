@@ -65,13 +65,13 @@ describe("coverage", () => {
       cursor: [54, 36],
       windsurf: [65, 35],
       "jetbrains-ai": [42, 25],
-      junie: [11, 11],
+      junie: [13, 13],
     },
     "aa-speed": {
       cursor: [54, 45],
       windsurf: [65, 47],
       "jetbrains-ai": [42, 41],
-      junie: [11, 11],
+      junie: [13, 13],
     },
     // DesignArena (31.10.2026): Preise hat jedes Modell des Boards, Zeiten nur
     // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
@@ -79,13 +79,13 @@ describe("coverage", () => {
       cursor: [54, 38],
       windsurf: [65, 38],
       "jetbrains-ai": [42, 27],
-      junie: [11, 11],
+      junie: [13, 13],
     },
     "da-speed": {
       cursor: [54, 17],
       windsurf: [65, 16],
       "jetbrains-ai": [42, 11],
-      junie: [11, 1],
+      junie: [13, 1],
     },
   };
 
@@ -180,7 +180,7 @@ describe("Texte für eine Auswahl", () => {
     const V = VARIANTS["aa-speed"];
     const u = [...V.pts, ...V.extras];
     // Seit dem Katalog vom 28.10. hat kein Produkt mehr eine Leiter über acht
-    // Sprossen (JetBrains AI: drei). Die kompakte Form prüft deshalb eine
+    // Sprossen (JetBrains AI: vier). Die kompakte Form prüft deshalb eine
     // Front aus neun echten Punkten des Universums.
     const s = summarize(V, new Set(u.map((p) => p.label)));
     const front = u.filter((p) => p.tps).slice(0, 9);
@@ -188,10 +188,10 @@ describe("Texte für eine Auswahl", () => {
     expect(t).toContain("Wo Du wartest");
     // neun Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
     expect(t).toContain(
-      "muse-wonder 143 tok/s → mistral-large-4 161 tok/s → step-5 165 tok/s",
+      "step-5 146 tok/s → deepseek-v4.1-flash-1017 170 tok/s → muse-wonder 192 tok/s",
     );
     expect(t).not.toContain("(≈");
-    expect(t.indexOf("mistral-large-4")).toBeLessThan(
+    expect(t.indexOf("gpt-6.1-terra")).toBeLessThan(
       t.indexOf("claude-haiku-5.5"),
     );
   });

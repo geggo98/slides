@@ -1,7 +1,7 @@
 {
   "tool": "junie",
   "source": "https://junie.jetbrains.com/",
-  "retrieved": "2026-09-29",
+  "retrieved": "2026-11-02",
   "note": "Von Hand geführt: Junie veröffentlicht keine vollständige Modellliste („works with any model you choose“; die Auswahl hängt vom Abo ab, `/model` zeigt sie; mit BYOK nur Modelle des jeweiligen Anbieters). Belegt sind die Modelle der Landingpage („Top performing models supported“) und die datierten Einträge unter /whats-new. Die Liste ist eine Untergrenze, keine Aufzählung.",
   "models": [
     {
@@ -60,6 +60,18 @@
       "evidence": [
         "landing: Top performing models supported",
         "whats-new 22.09.2026: Grok 4.7"
+      ]
+    },
+    {
+      "name": "Gemini 4 Argon",
+      "evidence": [
+        "whats-new 16.10.2026 (Release 26.10.12 (3659.7)): Gemini 4 Argon"
+      ]
+    },
+    {
+      "name": "GPT 6.1 Terra",
+      "evidence": [
+        "whats-new 28.10.2026 (Release 26.10.27 (3893.6)): GPT 6.1 Terra support"
       ]
     }
   ]
