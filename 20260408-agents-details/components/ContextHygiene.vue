@@ -233,6 +233,7 @@ const cssVars = computed(() => {
     "--ch-bar-miss": d ? "#6b7280" : "#94a3b8",
     "--ch-box-bg": d ? "#1f2428" : "#f6f8fa",
     "--ch-box-sel": d ? "#0b4a8f" : "#0b60c4",
+    "--ch-box-wrong": d ? "#a32030" : "#b0212f",
     "--ch-warn-ink": d ? "#fbbf24" : "#92400e",
     ...Object.fromEntries(
       BUCKETS.flatMap((b, i) => [
@@ -367,8 +368,16 @@ function sync() {
       const node = document.createElement("div");
       node.className = "ch-note";
       const badge = document.createElement("span");
-      badge.className = "ch-note-badge";
-      badge.textContent = `💬 ${TEXTS.commentBadge}`;
+      badge.className = "ch-note-badge ch-noai";
+      badge.title = TEXTS.commentEmojiLabel;
+      badge.setAttribute("role", "img");
+      badge.setAttribute("aria-label", TEXTS.commentEmojiLabel);
+      const bot = document.createElement("span");
+      bot.textContent = "🤖";
+      const ban = document.createElement("span");
+      ban.className = "ch-noai-ban";
+      ban.textContent = "🚫";
+      badge.append(bot, ban);
       const text = document.createElement("div");
       text.textContent = commentProse(b).join(" ");
       node.append(badge, text);
@@ -885,6 +894,14 @@ const pct = (p: number | null | undefined): string =>
             <li v-for="(f, i) in TEXTS.info.flow" :key="i">{{ f }}</li>
           </ol>
           <p><Rich :text="TEXTS.info.flowNote" /></p>
+          <h5>Zeichen</h5>
+          <p>
+            <span class="ch-noai" role="img" aria-hidden="true"
+              ><span>🤖</span><span class="ch-noai-ban">🚫</span></span
+            >
+            <Rich :text="TEXTS.info.commentEmojiInfo" />
+          </p>
+          <p><Rich :text="TEXTS.info.missInfo" /></p>
           <h5>Zwei Leitern</h5>
           <p>
             <b>{{ LADDER_NAME.dose }}.</b>
@@ -1183,12 +1200,12 @@ const pct = (p: number | null | undefined): string =>
             v-for="(r, i) in boxRows"
             :key="i"
             class="ch-row"
-            :class="{ first: i === 0, hit: r.hit }"
+            :class="{ first: i === 0, hit: r.hit, wrong: i === 0 && !r.hit }"
           >
             <i class="ch-fill" :style="{ width: r.p * 100 + '%' }" />
             <span class="ch-ic" aria-hidden="true">abc</span>
             <span class="ch-tok">{{ showToken(r.token) }}</span>
-            <span class="ch-ok">{{ r.hit ? "✓" : "" }}</span>
+            <span class="ch-ok">{{ r.hit ? "✓" : i === 0 ? "✗" : "" }}</span>
             <span class="ch-pct">{{ pct(r.p) }}</span>
           </div>
         </template>
@@ -1200,7 +1217,7 @@ const pct = (p: number | null | undefined): string =>
         </div>
         <div class="ch-box-foot">
           Soll: <code>{{ showToken(selected.gold) }}</code> · ✓ = trifft das
-          Soll
+          Soll · ✗ = bester Vorschlag falsch
         </div>
       </div>
     </Teleport>
@@ -1703,6 +1720,21 @@ const pct = (p: number | null | undefined): string =>
   font-weight: 700;
   color: var(--ch-muted);
 }
+/* Eigenes Emoji: 🤖 mit 🚫 darüber */
+.ch-noai {
+  position: relative;
+  display: inline-block;
+  width: 1.5em;
+  text-align: center;
+  line-height: 1;
+}
+.ch-noai-ban {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1.3);
+  opacity: 0.55;
+}
 .ch-note > div {
   display: inline;
 }
@@ -1760,6 +1792,13 @@ const pct = (p: number | null | undefined): string =>
 .ch-row.first {
   background: var(--ch-box-sel);
   color: #ffffff;
+}
+.ch-row.first.wrong {
+  background: var(--ch-box-wrong);
+}
+.ch-row.first.wrong .ch-tok {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
 }
 .ch-fill {
   position: absolute;

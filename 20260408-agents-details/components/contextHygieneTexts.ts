@@ -2,8 +2,8 @@ export const TEXTS = {
   /** eine Zeile unter dem Editor, max. 140 Zeichen */
   takeaway:
     "Klare Namen und Typen sind Signal: Das Modell wählt das nächste Token sicherer. Schlechter Code ist Rauschen.",
-  /** Etikett an eingeblendeten Kommentaren, max. 50 Zeichen */
-  commentBadge: "Nur für Menschen – das Modell sieht das nicht",
+  /** Tooltip/aria-label am 🚫🤖 der Kommentar-Zone, max. 40 Zeichen */
+  commentEmojiLabel: "Das Modell sieht diesen Kommentar nicht",
   /** Beschriftung des Schalters */
   commentsToggle: "Kommentare zeigen",
   /** Tooltip, wenn der Schalter auf S1–S6 gesperrt ist */
@@ -75,6 +75,10 @@ export const TEXTS = {
       "Nur drei Modelle und sechs Fachgebiete.",
       "Eine KI schrieb den Korpus; Autor und Prüfer kannten die Hypothese.",
     ],
+    commentEmojiInfo:
+      "🚫🤖 markiert Kommentare für Menschen. Das Modell bekommt sie nie zu sehen, sie ändern seine Vorhersage nicht.",
+    missInfo:
+      "Oberste Zeile rot mit ✗: Der beste Vorschlag des Modells ist nicht das erwartete Token. Blau mit ✓: Er ist es.",
     source: "Studie 3, Daten vom 06.–08.11.2026, Bericht `REPORT.md`.",
   },
   /** HUD „Live abfragen“ */
