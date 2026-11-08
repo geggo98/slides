@@ -45,6 +45,8 @@ export interface Site {
 export interface Level {
   code: string;
   sites: Site[];
+  /** Für die Folie geschrieben (nur S1–S6), nie gemessen. */
+  comments?: CommentBlock[];
 }
 export interface CommentBlock {
   beforeLine: number;
@@ -53,6 +55,9 @@ export interface CommentBlock {
 export interface Scenario {
   dev: boolean;
   summary: string;
+  /** Wofür die Datei fachlich da ist; steht über jeder Stufe. Für die Folie geschrieben. */
+  header?: string;
+  /** Kommentare der Studie (S0k = D0k), nur diese werden live mitgesendet. */
   comments: CommentBlock[];
   levels: Record<string, Level>;
 }
@@ -190,16 +195,39 @@ export function pBucket(p: number | null | undefined): number {
 
 // --- Kommentare ------------------------------------------------------------
 
+/** Die Stufen, auf denen die Studie Kommentare kennt: S0 und damit D0–D4 (gleiche Zeilen, nur andere Namen). */
+const isMeasuredLevel = (level: string): boolean =>
+  level === "S0" || /^D[0-4]$/.test(level);
+
 /**
- * Kommentarblöcke für diese Stufe, oder `null`. Die Kommentare gehören zu S0
- * und damit zu D0–D4 (gleiche Zeilen, nur andere Namen). In S1–S6 ändern sich
- * die Zeilen, dort gibt es keine Kommentare.
+ * Kommentare der Studie für diese Stufe, oder `null`. Nur diese gehen bei der
+ * Live-Abfrage mit; auf S1–S6 gab es nie welche.
+ */
+export function measuredComments(
+  scenario: Scenario,
+  level: string,
+): CommentBlock[] | null {
+  return isMeasuredLevel(level) ? scenario.comments : null;
+}
+
+/**
+ * Kommentarblöcke zum Anzeigen, oder `null`. Vorn steht die Kopfzeile, die sagt,
+ * wofür die Datei fachlich da ist. Danach folgen auf S0/D0–D4 die Kommentare der
+ * Studie und auf S1–S6 die für die Folie geschriebenen (die Zeilen ändern sich
+ * dort, S0 passt nicht mehr).
  */
 export function commentZones(
   scenario: Scenario,
   level: string,
 ): CommentBlock[] | null {
-  return level === "S0" || /^D[0-4]$/.test(level) ? scenario.comments : null;
+  const body = isMeasuredLevel(level)
+    ? scenario.comments
+    : (scenario.levels[level]?.comments ?? null);
+  if (!body) return null;
+  const head: CommentBlock[] = scenario.header
+    ? [{ beforeLine: 0, lines: [`// ${scenario.header}`] }]
+    : [];
+  return [...head, ...body];
 }
 
 /** Kommentarzeilen ohne Zeichen: `/** Text`, ` * Text`, `// Text` werden zu `Text`; leere Zeilen entfallen. */

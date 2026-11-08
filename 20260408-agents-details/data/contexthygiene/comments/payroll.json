@@ -1,0 +1,753 @@
+{
+  "header": "Monthly payroll in euro cents: gross pay by contract and employment status, minus income tax and further deductions, gives each employee's net pay.",
+  "levels": {
+    "S1": [
+      {
+        "before": "final class Money {",
+        "text": "Amounts are whole euro cents; percentages and pro-rata shares truncate toward zero."
+      },
+      {
+        "before": "static int percent(int cents, int rate) { return cents * rate / FULL_PERCENT; }",
+        "text": "rate is a whole percentage, e.g. 125 means 125 %."
+      },
+      {
+        "before": "final class EmploymentStatus {",
+        "text": "The employment status decides how much of the contractual gross is payable this month."
+      },
+      {
+        "before": "return switch ((int) status.get(\"code\")) {",
+        "text": "Active: full gross. On leave: the agreed percentage. Terminated: pro rata up to and including the last working day."
+      },
+      {
+        "before": "final class Contract {",
+        "text": "The contract kind decides the monthly gross pay before status adjustments."
+      },
+      {
+        "before": "default -> Money.limitedTo((int) contract.get(\"agreedPay\"), EARNINGS_LIMIT);",
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "static int hourlyGross(int hourlyWage, int workedHours) {",
+        "text": "Hourly pay: hours beyond the regular 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "final class TaxTable {",
+        "text": "Two-band income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "static int afterAllowance(int gross, int allowance) { return progressive(Money.notBelowZero(Money.minus(gross, allowance))); }",
+        "text": "An allowance larger than the gross yields zero tax, never a negative one."
+      },
+      {
+        "before": "final class TaxClass {",
+        "text": "The tax class decides which tax-free allowance applies before the two-band table."
+      },
+      {
+        "before": "case \"singleParent\" -> TaxTable.afterAllowance(gross, Money.plus(TaxTable.BASIC_ALLOWANCE, Money.times(CHILD_ALLOWANCE, (int) taxClass.get(\"children\"))));",
+        "text": "Single parents get 350.00 euros extra allowance per child on top of the basic 1,000.00 euros."
+      },
+      {
+        "before": "case \"married\" -> Money.times(TaxTable.afterAllowance(Money.dividedBy(gross, SPOUSES), TaxTable.BASIC_ALLOWANCE), SPOUSES);",
+        "text": "Income splitting: each half of the gross is taxed with its own basic allowance, then the tax is doubled."
+      },
+      {
+        "before": "final class Deduction {",
+        "text": "Further deductions from pay after income tax, based on the gross or on the tax."
+      },
+      {
+        "before": "case \"insurance\" -> Money.percent(Money.limitedTo(gross, (int) deduction.get(\"ceiling\")), (int) deduction.get(\"rate\"));",
+        "text": "Social insurance: a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "case \"church\" -> Money.percent(tax, (int) deduction.get(\"rate\"));",
+        "text": "Church tax is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "default -> Money.limitedTo((int) deduction.get(\"contribution\"), gross);",
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "record PayrollRun(int daysInMonth) {",
+        "text": "One monthly payroll run; daysInMonth pro-rates the pay of terminated employees."
+      },
+      {
+        "before": "int grossFor(Map<String, Object> employee) {",
+        "text": "Contractual gross, then adjusted by the employment status (leave, termination)."
+      },
+      {
+        "before": "Map<String, Object> slipFor(Map<String, Object> employee) {",
+        "text": "Pay slip: net = gross - income tax - further deductions."
+      },
+      {
+        "before": "Map<String, Object> advanceFor(Map<String, Object> employee) {",
+        "text": "Mid-month advance of half the gross: taxed on its own, without other deductions."
+      },
+      {
+        "before": "int totalNet(List<Map<String, Object>> staff) {",
+        "text": "Total net pay of all staff for this month."
+      },
+      {
+        "before": "final class Personnel {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "static Map<String, Object> resume(Map<String, Object> status) { return (int) status.get(\"code\") == 1 ? Map.of(\"code\", 0) : status; }",
+        "text": "Return from leave: an employee on leave becomes active again; any other status stays."
+      }
+    ],
+    "S2": [
+      {
+        "before": "record PayrollRun(int daysInMonth) {",
+        "text": "One monthly payroll run; daysInMonth pro-rates the pay of terminated employees."
+      },
+      {
+        "before": "Map<String, Object> slipFor(Map<String, Object> employee, boolean isAdvance) {",
+        "text": "Pay slip: net = gross - income tax - deductions; isAdvance asks for the mid-month advance instead."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 1,
+        "text": "Salaried contract: monthly salary plus bonus."
+      },
+      {
+        "before": "int regular = Math.min((int) contract.get(\"workedHours\"), 160);",
+        "nth": 1,
+        "text": "Hourly contract: hours beyond 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "gross = (int) contract.get(\"agreedPay\");",
+        "nth": 1,
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 1,
+        "text": "On leave: the agreed percentage. Terminated: pro rata up to and including the last working day."
+      },
+      {
+        "before": "if (isAdvance) {",
+        "text": "Mid-month advance: half the gross, taxed on its own."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 1,
+        "text": "Tax-free allowance: 1,000.00 euros; single parents get 350.00 euros more per child."
+      },
+      {
+        "before": "income = gross / 2;",
+        "nth": 1,
+        "text": "Married: income splitting taxes half the gross; the tax is doubled below."
+      },
+      {
+        "before": "if (taxable < 0) {",
+        "nth": 1,
+        "text": "An allowance larger than the income yields zero tax, never a negative one."
+      },
+      {
+        "before": "int lower = taxable > 300000 ? 300000 : taxable;",
+        "nth": 1,
+        "text": "Income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "if (!isAdvance) {",
+        "text": "Further deductions apply to the regular pay slip only, not to the advance."
+      },
+      {
+        "before": "if (deduction.get(\"kind\").equals(\"insurance\")) {",
+        "nth": 1,
+        "text": "Social insurance: a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "} else if (deduction.get(\"kind\").equals(\"church\")) {",
+        "nth": 1,
+        "text": "Church tax is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "deducted = deducted + ((int) deduction.get(\"contribution\") > gross ? gross : (int) deduction.get(\"contribution\"));",
+        "nth": 1,
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "int totalNet(List<Map<String, Object>> staff) {",
+        "text": "Total net pay of all staff: the pay slip calculation per employee, without the advance."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 2,
+        "text": "Gross: salary plus bonus, hourly with 125 % overtime beyond 160 hours, or mini-job capped at 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 2,
+        "text": "Leave pays the agreed percentage; termination pays pro rata up to the last working day."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 2,
+        "text": "Income tax: allowance plus 350.00 euros per child for single parents, splitting for married, then 20 % / 35 % bands."
+      },
+      {
+        "before": "int deducted = 0;",
+        "nth": 2,
+        "text": "Deductions: capped social insurance, church tax on the income tax, pension capped at the gross."
+      },
+      {
+        "before": "total = total + gross - tax - deducted;",
+        "text": "Add this employee's net pay to the staff total."
+      },
+      {
+        "before": "final class EmploymentStatus {",
+        "text": "An employee stays on the payroll until terminated (status code 2)."
+      },
+      {
+        "before": "final class Personnel {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "if (isLeave) {",
+        "text": "Leave: status becomes on leave with the paid percentage, unless the employee is terminated."
+      },
+      {
+        "before": "if (isTermination) {",
+        "text": "Termination: record the last working day; a terminated employee cannot be terminated again."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 3,
+        "text": "Return from leave: an employee on leave becomes active again; any other status stays."
+      }
+    ],
+    "S3": [
+      {
+        "before": "final class PayrollRun {",
+        "text": "One monthly payroll run; daysInMonth pro-rates the pay of terminated employees."
+      },
+      {
+        "before": "Map<String, Object> slipFor(Map<String, Object> employee, boolean isAdvance) {",
+        "text": "Pay slip: net = gross - income tax - deductions; isAdvance asks for the mid-month advance instead."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 1,
+        "text": "Salaried contract: monthly salary plus bonus."
+      },
+      {
+        "before": "int regular = Math.min((int) contract.get(\"workedHours\"), 160);",
+        "nth": 1,
+        "text": "Hourly contract: hours beyond 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "gross = (int) contract.get(\"agreedPay\");",
+        "nth": 1,
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 1,
+        "text": "On leave: the agreed percentage. Terminated: pro rata up to and including the last working day."
+      },
+      {
+        "before": "if (isAdvance) {",
+        "text": "Mid-month advance: half the gross, taxed on its own."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 1,
+        "text": "Tax-free allowance: 1,000.00 euros; single parents get 350.00 euros more per child."
+      },
+      {
+        "before": "income = gross / 2;",
+        "nth": 1,
+        "text": "Married: income splitting taxes half the gross; the tax is doubled below."
+      },
+      {
+        "before": "if (taxable < 0) {",
+        "nth": 1,
+        "text": "An allowance larger than the income yields zero tax, never a negative one."
+      },
+      {
+        "before": "int lower = taxable > 300000 ? 300000 : taxable;",
+        "nth": 1,
+        "text": "Income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "if (!isAdvance) {",
+        "text": "Further deductions apply to the regular pay slip only, not to the advance."
+      },
+      {
+        "before": "if (deduction.get(\"kind\").equals(\"insurance\")) {",
+        "nth": 1,
+        "text": "Social insurance: a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "} else if (deduction.get(\"kind\").equals(\"church\")) {",
+        "nth": 1,
+        "text": "Church tax is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "deducted = deducted + ((int) deduction.get(\"contribution\") > gross ? gross : (int) deduction.get(\"contribution\"));",
+        "nth": 1,
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "lastNet = gross - tax - deducted;",
+        "nth": 1,
+        "text": "Net pay = gross - income tax - deductions."
+      },
+      {
+        "before": "int totalNet(List<Map<String, Object>> staff) {",
+        "text": "Total net pay of all staff: the pay slip calculation per employee, without the advance."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 2,
+        "text": "Gross: salary plus bonus, hourly with 125 % overtime beyond 160 hours, or mini-job capped at 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 2,
+        "text": "Leave pays the agreed percentage; termination pays pro rata up to the last working day."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 2,
+        "text": "Income tax: allowance plus 350.00 euros per child for single parents, splitting for married, then 20 % / 35 % bands."
+      },
+      {
+        "before": "int deducted = 0;",
+        "nth": 2,
+        "text": "Deductions: capped social insurance, church tax on the income tax, pension capped at the gross."
+      },
+      {
+        "before": "runningTotal = runningTotal + lastNet;",
+        "text": "Add this employee's net pay to the staff total."
+      },
+      {
+        "before": "final class EmploymentStatus {",
+        "text": "An employee stays on the payroll until terminated (status code 2)."
+      },
+      {
+        "before": "final class Personnel {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "if (isLeave) {",
+        "text": "Leave: status becomes on leave with the paid percentage, unless the employee is terminated."
+      },
+      {
+        "before": "if (isTermination) {",
+        "text": "Termination: record the last working day; a terminated employee cannot be terminated again."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 3,
+        "text": "Return from leave: an employee on leave becomes active again; any other status stays."
+      }
+    ],
+    "S4": [
+      {
+        "before": "final class PayrollFactory {",
+        "text": "Provides the payroll run for the month; the ledger holds the days in the month and the staff list."
+      },
+      {
+        "before": "final class PayrollRun {",
+        "text": "One monthly payroll run; daysInMonth pro-rates the pay of terminated employees."
+      },
+      {
+        "before": "Map<String, Object> slipFor(Map<String, Object> employee, boolean isAdvance) {",
+        "text": "Pay slip: net = gross - income tax - deductions; isAdvance asks for the mid-month advance instead."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 1,
+        "text": "Salaried contract: monthly salary plus bonus."
+      },
+      {
+        "before": "int regular = Math.min((int) contract.get(\"workedHours\"), 160);",
+        "nth": 1,
+        "text": "Hourly contract: hours beyond 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "gross = (int) contract.get(\"agreedPay\");",
+        "nth": 1,
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 1,
+        "text": "On leave: the agreed percentage. Terminated: pro rata up to and including the last working day."
+      },
+      {
+        "before": "if (isAdvance) {",
+        "text": "Mid-month advance: half the gross, taxed on its own."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 1,
+        "text": "Tax-free allowance: 1,000.00 euros; single parents get 350.00 euros more per child."
+      },
+      {
+        "before": "income = gross / 2;",
+        "nth": 1,
+        "text": "Married: income splitting taxes half the gross; the tax is doubled below."
+      },
+      {
+        "before": "if (taxable < 0) {",
+        "nth": 1,
+        "text": "An allowance larger than the income yields zero tax, never a negative one."
+      },
+      {
+        "before": "int lower = taxable > 300000 ? 300000 : taxable;",
+        "nth": 1,
+        "text": "Income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "if (!isAdvance) {",
+        "text": "Further deductions apply to the regular pay slip only, not to the advance."
+      },
+      {
+        "before": "if (deduction.get(\"kind\").equals(\"insurance\")) {",
+        "nth": 1,
+        "text": "Social insurance: a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "} else if (deduction.get(\"kind\").equals(\"church\")) {",
+        "nth": 1,
+        "text": "Church tax is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "deducted = deducted + ((int) deduction.get(\"contribution\") > gross ? gross : (int) deduction.get(\"contribution\"));",
+        "nth": 1,
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "lastNet = gross - tax - deducted;",
+        "nth": 1,
+        "text": "Net pay = gross - income tax - deductions; it is also written to the ledger and the printout."
+      },
+      {
+        "before": "int totalNet() {",
+        "text": "Total net pay of all staff in the ledger: the pay slip calculation per employee, without the advance."
+      },
+      {
+        "before": "if (contract.get(\"kind\").equals(\"salaried\")) {",
+        "nth": 2,
+        "text": "Gross: salary plus bonus, hourly with 125 % overtime beyond 160 hours, or mini-job capped at 556.00 euros."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 2,
+        "text": "Leave pays the agreed percentage; termination pays pro rata up to the last working day."
+      },
+      {
+        "before": "int allowance = 100000;",
+        "nth": 2,
+        "text": "Income tax: allowance plus 350.00 euros per child for single parents, splitting for married, then 20 % / 35 % bands."
+      },
+      {
+        "before": "int deducted = 0;",
+        "nth": 2,
+        "text": "Deductions: capped social insurance, church tax on the income tax, pension capped at the gross."
+      },
+      {
+        "before": "runningTotal = runningTotal + lastNet;",
+        "text": "Add this employee's net pay to the staff total."
+      },
+      {
+        "before": "final class EmploymentStatus {",
+        "text": "An employee stays on the payroll until terminated (status code 2)."
+      },
+      {
+        "before": "final class Personnel {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "lastCode = (int) status.get(\"code\");",
+        "text": "Record the status before the change in the ledger and the printout."
+      },
+      {
+        "before": "if (isLeave) {",
+        "text": "Leave: status becomes on leave with the paid percentage, unless the employee is terminated."
+      },
+      {
+        "before": "if (isTermination) {",
+        "text": "Termination: record the last working day; a terminated employee cannot be terminated again."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 1) {",
+        "nth": 3,
+        "text": "Return from leave: an employee on leave becomes active again; any other status stays."
+      }
+    ],
+    "S5": [
+      {
+        "before": "final class CoreFactory {",
+        "text": "Payroll setup: provides the payroll run; store holds the days in the month (cfg) and the staff list."
+      },
+      {
+        "before": "final class Processor {",
+        "text": "Monthly payroll run: pay slips and the total net pay of all staff; cfg is the number of days in the month."
+      },
+      {
+        "before": "Map<String, Object> execute(Map<String, Object> item, boolean flag) {",
+        "text": "Pay slip for one employee: net = gross - income tax - deductions; flag asks for the mid-month advance."
+      },
+      {
+        "before": "if (obj1.get(\"type1\").equals(\"typeA\")) {",
+        "nth": 1,
+        "text": "Contract typeA is salaried: monthly salary plus bonus."
+      },
+      {
+        "before": "int tmp1 = Math.min((int) obj1.get(\"field4\"), 160);",
+        "nth": 1,
+        "text": "Hourly contract: hours beyond 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "result = (int) obj1.get(\"field5\");",
+        "nth": 1,
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "if ((int) state.get(\"type0\") == 1) {",
+        "nth": 1,
+        "text": "Status 1 (on leave): the agreed percentage. Status 2 (terminated): pro rata up to the last working day."
+      },
+      {
+        "before": "if (flag) {",
+        "text": "Mid-month advance: half the gross, taxed on its own."
+      },
+      {
+        "before": "int tmp3 = 100000;",
+        "nth": 1,
+        "text": "Tax-free allowance: 1,000.00 euros; single parents (typeE) get 350.00 euros more per child."
+      },
+      {
+        "before": "tmp4 = result / 2;",
+        "nth": 1,
+        "text": "Married (typeF): income splitting taxes half the gross; the tax is doubled below."
+      },
+      {
+        "before": "if (tmp5 < 0) {",
+        "nth": 1,
+        "text": "An allowance larger than the income yields zero tax, never a negative one."
+      },
+      {
+        "before": "int tmp6 = tmp5 > 300000 ? 300000 : tmp5;",
+        "nth": 1,
+        "text": "Income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "if (!flag) {",
+        "text": "Further deductions apply to the regular pay slip only, not to the advance."
+      },
+      {
+        "before": "if (elem.get(\"type1\").equals(\"typeG\")) {",
+        "nth": 1,
+        "text": "Social insurance (typeG): a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "} else if (elem.get(\"type1\").equals(\"typeH\")) {",
+        "nth": 1,
+        "text": "Church tax (typeH) is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "res3 = res3 + ((int) elem.get(\"field11\") > result ? result : (int) elem.get(\"field11\"));",
+        "nth": 1,
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "lastResult = result - res2 - res3;",
+        "nth": 1,
+        "text": "Net pay = gross - income tax - deductions; it is also written to the store and the printout."
+      },
+      {
+        "before": "int perform() {",
+        "text": "Total net pay of all staff: the pay slip calculation per employee, without the advance."
+      },
+      {
+        "before": "if (obj1.get(\"type1\").equals(\"typeA\")) {",
+        "nth": 2,
+        "text": "Gross: salary plus bonus, hourly with 125 % overtime beyond 160 hours, or mini-job capped at 556.00 euros."
+      },
+      {
+        "before": "if ((int) state.get(\"type0\") == 1) {",
+        "nth": 2,
+        "text": "Leave pays the agreed percentage; termination pays pro rata up to the last working day."
+      },
+      {
+        "before": "int tmp3 = 100000;",
+        "nth": 2,
+        "text": "Income tax: allowance plus 350.00 euros per child (typeE), splitting for married (typeF), then 20 % / 35 % bands."
+      },
+      {
+        "before": "int res3 = 0;",
+        "nth": 2,
+        "text": "Deductions: capped social insurance, church tax on the income tax, pension capped at the gross."
+      },
+      {
+        "before": "counter = counter + lastResult;",
+        "text": "Add this employee's net pay to the staff total."
+      },
+      {
+        "before": "final class Flag {",
+        "text": "Payroll check: true while the employee is not terminated (status 2)."
+      },
+      {
+        "before": "final class Service {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "lastKey = (int) state.get(\"type0\");",
+        "text": "Record the status before the change in the store and the printout."
+      },
+      {
+        "before": "if (flag1) {",
+        "text": "Leave: status 1 with the paid percentage from num, unless the employee is terminated."
+      },
+      {
+        "before": "if (flag2) {",
+        "text": "Termination: status 2 with the last working day from num; a terminated employee stays unchanged."
+      },
+      {
+        "before": "if ((int) state.get(\"type0\") == 1) {",
+        "nth": 3,
+        "text": "Return from leave: status 1 becomes active (0); any other status stays."
+      }
+    ],
+    "S6": [
+      {
+        "before": "final class HarborFleet {",
+        "text": "Payroll setup: provides the payroll run; aquarium holds the days in the month (knots) and the staff list (herd)."
+      },
+      {
+        "before": "final class Voyage {",
+        "text": "Monthly payroll run: pay slips and the total net pay of all staff; knots is the number of days in the month."
+      },
+      {
+        "before": "Map<String, Object> dredge(Map<String, Object> walrus, boolean isMolting) {",
+        "text": "Pay slip for one employee: net = gross - income tax - deductions; isMolting asks for the mid-month advance."
+      },
+      {
+        "before": "if (glacier.get(\"species\").equals(\"granite\")) {",
+        "nth": 1,
+        "text": "Contract granite is salaried: monthly salary plus bonus."
+      },
+      {
+        "before": "int pebbles = Math.min((int) glacier.get(\"hullDepth\"), 160);",
+        "nth": 1,
+        "text": "Hourly contract: hours beyond 160 per month are overtime, paid at 125 % of the hourly wage."
+      },
+      {
+        "before": "sediment = (int) glacier.get(\"rudderSize\");",
+        "nth": 1,
+        "text": "Mini-job: the agreed pay is capped at the monthly earnings limit of 556.00 euros."
+      },
+      {
+        "before": "if ((int) plumage.get(\"feather\") == 1) {",
+        "nth": 1,
+        "text": "Status 1 (on leave): the agreed percentage. Status 2 (terminated): pro rata up to the last working day."
+      },
+      {
+        "before": "if (isMolting) {",
+        "text": "Mid-month advance: half the gross, taxed on its own."
+      },
+      {
+        "before": "int driftwood = 100000;",
+        "nth": 1,
+        "text": "Tax-free allowance: 1,000.00 euros; single parents (badger) get 350.00 euros more per child."
+      },
+      {
+        "before": "plankton = sediment / 2;",
+        "nth": 1,
+        "text": "Married (ferret): income splitting taxes half the gross; the tax is doubled below."
+      },
+      {
+        "before": "if (krill < 0) {",
+        "nth": 1,
+        "text": "An allowance larger than the income yields zero tax, never a negative one."
+      },
+      {
+        "before": "int shoal = krill > 300000 ? 300000 : krill;",
+        "nth": 1,
+        "text": "Income tax: the first 3,000.00 euros of taxable income at 20 %, everything above at 35 %."
+      },
+      {
+        "before": "if (!isMolting) {",
+        "text": "Further deductions apply to the regular pay slip only, not to the advance."
+      },
+      {
+        "before": "if (gambit.get(\"species\").equals(\"bishop\")) {",
+        "nth": 1,
+        "text": "Social insurance (bishop): a percentage of the gross, but only up to the contribution ceiling."
+      },
+      {
+        "before": "} else if (gambit.get(\"species\").equals(\"rook\")) {",
+        "nth": 1,
+        "text": "Church tax (rook) is a percentage of the income tax, not of the gross."
+      },
+      {
+        "before": "magma = magma + ((int) gambit.get(\"ballast\") > sediment ? sediment : (int) gambit.get(\"ballast\"));",
+        "nth": 1,
+        "text": "Pension plan: a fixed contribution, never more than the gross actually paid."
+      },
+      {
+        "before": "previousTide = sediment - lava - magma;",
+        "nth": 1,
+        "text": "Net pay = gross - income tax - deductions; it is also written to the aquarium and the logbook."
+      },
+      {
+        "before": "int predictEarthquake() {",
+        "text": "Total net pay of all staff: the pay slip calculation per employee, without the advance."
+      },
+      {
+        "before": "if (glacier.get(\"species\").equals(\"granite\")) {",
+        "nth": 2,
+        "text": "Gross: salary plus bonus, hourly with 125 % overtime beyond 160 hours, or mini-job capped at 556.00 euros."
+      },
+      {
+        "before": "if ((int) plumage.get(\"feather\") == 1) {",
+        "nth": 2,
+        "text": "Leave pays the agreed percentage; termination pays pro rata up to the last working day."
+      },
+      {
+        "before": "int driftwood = 100000;",
+        "nth": 2,
+        "text": "Income tax: allowance plus 350.00 euros per child (badger), splitting for married (ferret), then 20 % / 35 % bands."
+      },
+      {
+        "before": "int magma = 0;",
+        "nth": 2,
+        "text": "Deductions: capped social insurance, church tax on the income tax, pension capped at the gross."
+      },
+      {
+        "before": "fossilCount = fossilCount + previousTide;",
+        "text": "Add this employee's net pay to the staff total."
+      },
+      {
+        "before": "final class Molt {",
+        "text": "Payroll check: true while the employee is not terminated (status 2)."
+      },
+      {
+        "before": "final class Zoo {",
+        "text": "HR status changes: leave and termination apply only to employees who are not yet terminated."
+      },
+      {
+        "before": "lastFeather = (int) plumage.get(\"feather\");",
+        "text": "Record the status before the change in the aquarium and the logbook."
+      },
+      {
+        "before": "if (isNocturnal) {",
+        "text": "Leave: status 1 with the paid percentage from nestSize, unless the employee is terminated."
+      },
+      {
+        "before": "if (isTidal) {",
+        "text": "Termination: status 2 with the last working day from nestSize; a terminated employee stays unchanged."
+      },
+      {
+        "before": "if ((int) plumage.get(\"feather\") == 1) {",
+        "nth": 3,
+        "text": "Return from leave: status 1 becomes active (0); any other status stays."
+      }
+    ]
+  }
+}

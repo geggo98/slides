@@ -19,6 +19,7 @@
 // - `comments`: die Kommentarzeilen der Ansicht „S0 + Kommentare“ (`S0k`,
 //   gleich `D0k`). Jeder Block steht VOR einer Codezeile (`beforeLine`, 0-basiert,
 //   gezählt im Code ohne Kommentare). Nicht Teil der Studie, nie gemessen.
+// - `header` und `levels[S1–S6].comments`: für die Folie geschrieben, siehe `comments.ts`.
 //
 // Was geprüft wird (das Skript bricht sonst ab)
 // ---------------------------------------------
@@ -30,6 +31,7 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
+import { applyAuthored, type AuthoredTarget } from "./comments.ts";
 
 type Model = "luna" | "sol" | "terra";
 const MODELS: Model[] = ["luna", "sol", "terra"];
@@ -188,6 +190,11 @@ function main(): void {
       levels,
     };
   }
+
+  applyAuthored(
+    out as Record<string, AuthoredTarget>,
+    new URL("./comments/", import.meta.url),
+  );
 
   const result = {
     source: "study3/viz/index.html",

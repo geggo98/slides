@@ -1,0 +1,694 @@
+{
+  "header": "Warehouse stock: decides how many pieces may be picked, how long picking takes, and how many whole packs to reorder.",
+  "levels": {
+    "S1": [
+      {
+        "before": "final class Units {",
+        "text": "Quantities in single pieces; subtraction stops at zero, so a quantity never becomes negative."
+      },
+      {
+        "before": "static int wholePacks(int pieces, int packSize) { return pieces / packSize * packSize; }",
+        "text": "Rounds down to complete packs; leftover loose pieces are dropped."
+      },
+      {
+        "before": "static int roundedToPacks(int pieces, int packSize) { return (pieces + packSize - 1) / packSize * packSize; }",
+        "text": "Rounds up to complete packs, because orders and trips work in full packs."
+      },
+      {
+        "before": "final class Stock {",
+        "text": "Stock of one article: pieces on hand and pieces promised to orders; only the unreserved rest is available."
+      },
+      {
+        "before": "static Map<String, Object> shipping(Map<String, Object> stock, int units) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "final class StockStatus {",
+        "text": "Quarantined stock (code 2), for example damaged goods, must not be picked."
+      },
+      {
+        "before": "final class Handling {",
+        "text": "How an article must be handled; chilled and hazardous goods add extra pick time in seconds."
+      },
+      {
+        "before": "case \"chilled\" -> baseSeconds + baseSeconds / SLOWDOWN_DIVISOR + (int) handling.get(\"coldZoneSeconds\");",
+        "text": "Cold goods take a quarter longer to pick, plus a fixed time for entering the cold zone."
+      },
+      {
+        "before": "case \"hazardous\" -> {",
+        "text": "Hazardous goods travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "final class Article {",
+        "text": "An article sold in packs: a full pack takes 20 seconds to pick, a loose piece 6 seconds."
+      },
+      {
+        "before": "static int pickSeconds(Map<String, Object> article, int picked) {",
+        "text": "Pick time in seconds: full packs plus loose remainder, then adjusted for handling."
+      },
+      {
+        "before": "final class ReorderPolicy {",
+        "text": "Decides when stock is too low and how many pieces to reorder, always in whole packs."
+      },
+      {
+        "before": "final class FixedMinimum {",
+        "text": "Reorders a fixed batch as soon as available stock falls below a fixed minimum."
+      },
+      {
+        "before": "final class DemandCover {",
+        "text": "Keeps enough stock to cover daily demand during the supplier lead time plus safety days."
+      },
+      {
+        "before": "int target = Units.plus(minimumStock(policy), (int) policy.get(\"dailyDemand\") * REVIEW_DAYS);",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "record Replenishment(Map<String, Object> article, Map<String, Object> policy) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "final class StockCheck {",
+        "text": "Status transitions for an article's stock: sufficient, low, or quarantined."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 2) { return status; }",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release does."
+      },
+      {
+        "before": "int missing = Units.less(ReorderPolicy.minimumStock(policy), Stock.available(stock));",
+        "text": "Stock is low when available pieces fall short of the reorder minimum; the shortfall is recorded."
+      },
+      {
+        "before": "static Map<String, Object> blocked(Map<String, Object> status, String reason) { return (int) status.get(\"code\") == 2 ? status : Map.of(\"code\", 2, \"reason\", reason); }",
+        "text": "Blocking already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "final class Picking {",
+        "text": "Rules for how much may be picked and how long picking takes."
+      },
+      {
+        "before": "static int pickable(Map<String, Object> status, Map<String, Object> stock, Map<String, Object> article, int wanted) {",
+        "text": "Never picks more than available; low stock yields whole packs only, quarantined stock yields nothing."
+      },
+      {
+        "before": "static int totalSeconds(List<Map<String, Object>> lines) {",
+        "text": "Total pick time in seconds for the requested (not the capped) quantities."
+      }
+    ],
+    "S2": [
+      {
+        "before": "final class Picking {",
+        "text": "Picking rules: pick time per article, total time per order, and how much may be picked."
+      },
+      {
+        "before": "static int pickSeconds(Map<String, Object> article, int picked) {",
+        "text": "Pick time in seconds: 20 per full pack, 6 per loose piece, then adjusted for handling."
+      },
+      {
+        "before": "seconds = seconds + seconds / 4 + (int) handling.get(\"coldZoneSeconds\");",
+        "nth": 1,
+        "text": "Cold goods take a quarter longer to pick, plus a fixed time for entering the cold zone."
+      },
+      {
+        "before": "seconds = seconds + (picked + piecesPerTrip - 1) / piecesPerTrip * 45;",
+        "nth": 1,
+        "text": "Hazardous goods travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "static int totalSeconds(List<Map<String, Object>> lines) {",
+        "text": "Total pick time in seconds for the requested (not the capped) quantities."
+      },
+      {
+        "before": "for (Map<String, Object> line : lines) {",
+        "text": "Each order line uses the same rule: packs, loose pieces, then the handling surcharge."
+      },
+      {
+        "before": "static int pickable(Map<String, Object> status, Map<String, Object> stock, Map<String, Object> article, int wanted) {",
+        "text": "Never picks more than available; quarantined stock yields nothing."
+      },
+      {
+        "before": "int available = Math.max((int) stock.get(\"onHand\") - (int) stock.get(\"reserved\"), 0);",
+        "nth": 1,
+        "text": "Available stock: pieces on hand minus reserved pieces, never below zero."
+      },
+      {
+        "before": "return capped / (int) article.get(\"packSize\") * (int) article.get(\"packSize\");",
+        "text": "Low stock: only whole packs are picked, so no pack is opened for loose pieces."
+      },
+      {
+        "before": "final class Stock {",
+        "text": "Stock of one article: pieces on hand and pieces promised to orders."
+      },
+      {
+        "before": "onHand = onHand + units;",
+        "text": "Receiving puts new pieces on the shelf."
+      },
+      {
+        "before": "} else if (shipping) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "reserved = reserved + units;",
+        "text": "Reserving promises pieces to an order; they stay on the shelf."
+      },
+      {
+        "before": "final class StockStatus {",
+        "text": "Quarantined stock (code 2), for example damaged goods, must not be picked."
+      },
+      {
+        "before": "final class StockCheck {",
+        "text": "Status transitions: block, release, or recheck stock against the reorder minimum."
+      },
+      {
+        "before": "if (block) {",
+        "text": "Blocking already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "if (!release && (int) status.get(\"code\") == 2) {",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release does."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 1,
+        "text": "Reorder minimum: a fixed amount, or daily demand times lead days plus safety days."
+      },
+      {
+        "before": "int missing = Math.max(minimum - available, 0);",
+        "text": "Stock is low when available pieces fall short of the minimum; the shortfall is recorded."
+      },
+      {
+        "before": "record Replenishment(Map<String, Object> article, Map<String, Object> policy) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 2,
+        "text": "Fixed minimum: below it, reorder a fixed batch rounded up to whole packs."
+      },
+      {
+        "before": "int minimum = (int) policy.get(\"dailyDemand\") * ((int) policy.get(\"leadDays\") + (int) policy.get(\"safetyDays\"));",
+        "text": "Demand cover: keep enough stock for the supplier lead time plus safety days."
+      },
+      {
+        "before": "int target = minimum + (int) policy.get(\"dailyDemand\") * 7;",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "return (order + packSize - 1) / packSize * packSize;",
+        "text": "Rounds the order up to whole packs, because orders work in full packs."
+      }
+    ],
+    "S3": [
+      {
+        "before": "final class Picking {",
+        "text": "Picking rules: pick time per article, total time per order, and how much may be picked."
+      },
+      {
+        "before": "static int pickSeconds(Map<String, Object> article, int picked) {",
+        "text": "Pick time in seconds: 20 per full pack, 6 per loose piece, then adjusted for handling."
+      },
+      {
+        "before": "seconds = seconds + seconds / 4 + (int) handling.get(\"coldZoneSeconds\");",
+        "nth": 1,
+        "text": "Cold goods take a quarter longer to pick, plus a fixed time for entering the cold zone."
+      },
+      {
+        "before": "seconds = seconds + (picked + piecesPerTrip - 1) / piecesPerTrip * 45;",
+        "nth": 1,
+        "text": "Hazardous goods travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "static int totalSeconds(List<Map<String, Object>> lines) {",
+        "text": "Total pick time in seconds for the requested (not the capped) quantities."
+      },
+      {
+        "before": "for (Map<String, Object> line : lines) {",
+        "text": "Each order line uses the same rule: packs, loose pieces, then the handling surcharge."
+      },
+      {
+        "before": "total = total + seconds;",
+        "text": "Adds the line's pick time to the order total."
+      },
+      {
+        "before": "background.start();",
+        "text": "Runs the summation in a separate thread and waits for it to finish."
+      },
+      {
+        "before": "static int pickable(Map<String, Object> status, Map<String, Object> stock, Map<String, Object> article, int wanted) {",
+        "text": "Never picks more than available; quarantined stock yields nothing."
+      },
+      {
+        "before": "int available = Math.max((int) stock.get(\"onHand\") - (int) stock.get(\"reserved\"), 0);",
+        "nth": 1,
+        "text": "Available stock: pieces on hand minus reserved pieces, never below zero."
+      },
+      {
+        "before": "return capped / (int) article.get(\"packSize\") * (int) article.get(\"packSize\");",
+        "text": "Low stock: only whole packs are picked, so no pack is opened for loose pieces."
+      },
+      {
+        "before": "final class Stock {",
+        "text": "Changes an article's stock in place: receive, ship, or reserve pieces."
+      },
+      {
+        "before": "stock.put(\"onHand\", (int) stock.get(\"onHand\") + units);",
+        "text": "Receiving puts new pieces on the shelf."
+      },
+      {
+        "before": "} else if (shipping) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "stock.put(\"reserved\", (int) stock.get(\"reserved\") + units);",
+        "text": "Reserving promises pieces to an order; they stay on the shelf."
+      },
+      {
+        "before": "final class StockStatus {",
+        "text": "Quarantined stock (code 2), for example damaged goods, must not be picked."
+      },
+      {
+        "before": "final class StockCheck {",
+        "text": "Updates the status in place: block, release, or recheck stock against the reorder minimum."
+      },
+      {
+        "before": "if (block) {",
+        "text": "Blocking already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "if (!release && (int) status.get(\"code\") == 2) {",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release does."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 1,
+        "text": "Reorder minimum: a fixed amount, or daily demand times lead days plus safety days."
+      },
+      {
+        "before": "int missing = Math.max(minimum - available, 0);",
+        "text": "Stock is low when available pieces fall short of the minimum; the shortfall is recorded."
+      },
+      {
+        "before": "final class Replenishment {",
+        "text": "Suggests a reorder quantity in whole packs for one article and its reorder policy."
+      },
+      {
+        "before": "int orderFor(Map<String, Object> stock) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 2,
+        "text": "Fixed minimum: below it, reorder a fixed batch rounded up to whole packs."
+      },
+      {
+        "before": "int minimum = (int) policy.get(\"dailyDemand\") * ((int) policy.get(\"leadDays\") + (int) policy.get(\"safetyDays\"));",
+        "text": "Demand cover: keep enough stock for the supplier lead time plus safety days."
+      },
+      {
+        "before": "int target = minimum + (int) policy.get(\"dailyDemand\") * 7;",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "lastOrder = (order + packSize - 1) / packSize * packSize;",
+        "text": "Rounds the order up to whole packs, because orders work in full packs."
+      }
+    ],
+    "S4": [
+      {
+        "before": "final class StockFactory {",
+        "text": "Shared store for the current article, policy and order lines; it also collects a log of results."
+      },
+      {
+        "before": "Replenishment createReplenishment() {",
+        "text": "Hands out the replenishment for the article and reorder policy last put in the store."
+      },
+      {
+        "before": "final class Picking {",
+        "text": "Picking rules: pick time per article, total time per order, and how much may be picked."
+      },
+      {
+        "before": "static int pickSeconds(Map<String, Object> article, int picked) {",
+        "text": "Pick time in seconds: 20 per full pack, 6 per loose piece, then adjusted for handling."
+      },
+      {
+        "before": "seconds = seconds + seconds / 4 + (int) handling.get(\"coldZoneSeconds\");",
+        "nth": 1,
+        "text": "Cold goods take a quarter longer to pick, plus a fixed time for entering the cold zone."
+      },
+      {
+        "before": "seconds = seconds + (picked + piecesPerTrip - 1) / piecesPerTrip * 45;",
+        "nth": 1,
+        "text": "Hazardous goods travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "static int totalSeconds() {",
+        "text": "Total pick time in seconds for the order lines in the store, using requested (not capped) quantities."
+      },
+      {
+        "before": "for (Map<String, Object> line : lines) {",
+        "text": "Each order line uses the same rule: packs, loose pieces, then the handling surcharge."
+      },
+      {
+        "before": "total = total + seconds;",
+        "text": "Adds the line's pick time to the order total."
+      },
+      {
+        "before": "background.start();",
+        "text": "Runs the summation in a separate thread and waits for it to finish."
+      },
+      {
+        "before": "static int pickable(Map<String, Object> status, Map<String, Object> stock, Map<String, Object> article, int wanted) {",
+        "text": "Never picks more than available; quarantined stock yields nothing."
+      },
+      {
+        "before": "int available = Math.max((int) stock.get(\"onHand\") - (int) stock.get(\"reserved\"), 0);",
+        "nth": 1,
+        "text": "Available stock: pieces on hand minus reserved pieces, never below zero."
+      },
+      {
+        "before": "return capped / (int) article.get(\"packSize\") * (int) article.get(\"packSize\");",
+        "text": "Low stock: only whole packs are picked, so no pack is opened for loose pieces."
+      },
+      {
+        "before": "final class Stock {",
+        "text": "Changes an article's stock in place: receive, ship, or reserve pieces."
+      },
+      {
+        "before": "stock.put(\"onHand\", (int) stock.get(\"onHand\") + units);",
+        "text": "Receiving puts new pieces on the shelf."
+      },
+      {
+        "before": "} else if (shipping) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "stock.put(\"reserved\", (int) stock.get(\"reserved\") + units);",
+        "text": "Reserving promises pieces to an order; they stay on the shelf."
+      },
+      {
+        "before": "final class StockStatus {",
+        "text": "Quarantined stock (code 2), for example damaged goods, must not be picked."
+      },
+      {
+        "before": "final class StockCheck {",
+        "text": "Updates the status in place: block, release, or recheck stock against the reorder minimum."
+      },
+      {
+        "before": "if (block) {",
+        "text": "Blocking already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "if (!release && (int) status.get(\"code\") == 2) {",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release does."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 1,
+        "text": "Reorder minimum: a fixed amount, or daily demand times lead days plus safety days."
+      },
+      {
+        "before": "int missing = Math.max(minimum - available, 0);",
+        "text": "Stock is low when available pieces fall short of the minimum; the shortfall is recorded."
+      },
+      {
+        "before": "final class Replenishment {",
+        "text": "Suggests a reorder quantity in whole packs for one article and its reorder policy."
+      },
+      {
+        "before": "int orderFor(Map<String, Object> stock) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "if (policy.get(\"kind\").equals(\"fixed\")) {",
+        "nth": 2,
+        "text": "Fixed minimum: below it, reorder a fixed batch rounded up to whole packs."
+      },
+      {
+        "before": "int minimum = (int) policy.get(\"dailyDemand\") * ((int) policy.get(\"leadDays\") + (int) policy.get(\"safetyDays\"));",
+        "text": "Demand cover: keep enough stock for the supplier lead time plus safety days."
+      },
+      {
+        "before": "int target = minimum + (int) policy.get(\"dailyDemand\") * 7;",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "lastOrder = (order + packSize - 1) / packSize * packSize;",
+        "text": "Rounds the order up to whole packs, because orders work in full packs."
+      }
+    ],
+    "S5": [
+      {
+        "before": "// state flagCode: 0 a1, 1 a2, 2 a3",
+        "text": "Stock status in flagCode: 0 sufficient, 1 low, 2 quarantined."
+      },
+      {
+        "before": "final class ObjectFactory {",
+        "text": "Shared store for the current article, reorder policy and order lines; it also collects a log of results."
+      },
+      {
+        "before": "Manager getManager() {",
+        "text": "Hands out the reorder calculator for the article and reorder policy last put in the store."
+      },
+      {
+        "before": "final class Processor {",
+        "text": "Picking rules: pick time per article, total time per order, and how much may be picked."
+      },
+      {
+        "before": "static int calc(Map<String, Object> item, int num) {",
+        "text": "Pick time in seconds: 20 per full pack, 6 per loose piece (field1 = pack size), then handling."
+      },
+      {
+        "before": "result = result + result / 4 + (int) opts.get(\"field2\");",
+        "nth": 1,
+        "text": "Chilled goods (typeA) take a quarter longer to pick, plus a fixed time for the cold zone."
+      },
+      {
+        "before": "result = result + (num + field3 - 1) / field3 * 45;",
+        "nth": 1,
+        "text": "Hazardous goods (typeB) travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "static int perform() {",
+        "text": "Total pick time in seconds for the order lines in the store, using requested (not capped) quantities."
+      },
+      {
+        "before": "for (Map<String, Object> elem : elems) {",
+        "text": "Each order line uses the same rule: packs, loose pieces, then the handling surcharge."
+      },
+      {
+        "before": "counter = counter + result;",
+        "text": "Adds the line's pick time to the order total."
+      },
+      {
+        "before": "thread1.start();",
+        "text": "Runs the summation in a separate thread and waits for it to finish."
+      },
+      {
+        "before": "static int process(Map<String, Object> state, Map<String, Object> data, Map<String, Object> item, int input) {",
+        "text": "Pickable quantity: never more than available; quarantined stock yields nothing."
+      },
+      {
+        "before": "int tmp = Math.max((int) data.get(\"field4\") - (int) data.get(\"field5\"), 0);",
+        "nth": 1,
+        "text": "Available stock: pieces on hand (field4) minus reserved pieces (field5), never below zero."
+      },
+      {
+        "before": "return tmp3 / (int) item.get(\"field1\") * (int) item.get(\"field1\");",
+        "text": "Low stock: only whole packs are picked, so no pack is opened for loose pieces."
+      },
+      {
+        "before": "final class Helper {",
+        "text": "Changes an article's stock in place: receive, ship, or reserve pieces."
+      },
+      {
+        "before": "data.put(\"field4\", (int) data.get(\"field4\") + amt);",
+        "text": "Receiving puts new pieces on the shelf."
+      },
+      {
+        "before": "} else if (flag2) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "data.put(\"field5\", (int) data.get(\"field5\") + amt);",
+        "text": "Reserving promises pieces to an order; they stay on the shelf."
+      },
+      {
+        "before": "final class Flag {",
+        "text": "Pickable check: quarantined stock (flagCode 2), for example damaged goods, must not be picked."
+      },
+      {
+        "before": "final class Service {",
+        "text": "Stock check: block, release, or recheck stock against the reorder minimum."
+      },
+      {
+        "before": "if (flag3) {",
+        "text": "Block: quarantines the stock; already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "if (!flag4 && (int) state.get(\"flagCode\") == 2) {",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release (flag4) does."
+      },
+      {
+        "before": "if (cfg.get(\"type1\").equals(\"modeA\")) {",
+        "nth": 1,
+        "text": "Reorder minimum: a fixed amount, or daily demand times lead days plus safety days."
+      },
+      {
+        "before": "int diff = Math.max(bound - tmp, 0);",
+        "text": "Stock is low when available pieces fall short of the minimum; the shortfall is recorded."
+      },
+      {
+        "before": "final class Manager {",
+        "text": "Reorder suggestion in whole packs for one article and its reorder policy."
+      },
+      {
+        "before": "int doExecute(Map<String, Object> data) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "if (cfg.get(\"type1\").equals(\"modeA\")) {",
+        "nth": 2,
+        "text": "Fixed minimum: below it, reorder a fixed batch (field10) rounded up to whole packs."
+      },
+      {
+        "before": "int bound = (int) cfg.get(\"field7\") * ((int) cfg.get(\"field8\") + (int) cfg.get(\"field9\"));",
+        "text": "Demand cover: daily demand times supplier lead days plus safety days."
+      },
+      {
+        "before": "int tmp4 = bound + (int) cfg.get(\"field7\") * 7;",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "lastVal = (tmp5 + field1 - 1) / field1 * field1;",
+        "text": "Rounds the order up to whole packs, because orders work in full packs."
+      }
+    ],
+    "S6": [
+      {
+        "before": "// castle rhyme: 0 dragon, 1 griffin, 2 unicorn",
+        "text": "Stock status in rhyme: 0 sufficient, 1 low, 2 quarantined."
+      },
+      {
+        "before": "final class VineyardCellar {",
+        "text": "Shared store for the current article, reorder policy and order lines; it also collects a log of results."
+      },
+      {
+        "before": "Regatta sinkRegatta() {",
+        "text": "Hands out the reorder calculator for the article and reorder policy last put in the store."
+      },
+      {
+        "before": "final class Falconry {",
+        "text": "Picking rules: pick time per article, total time per order, and how much may be picked."
+      },
+      {
+        "before": "static int shearSheep(Map<String, Object> anchor, int acres) {",
+        "text": "Pick time in seconds: 20 per full pack, 6 per loose piece (mastHeight = pack size), then handling."
+      },
+      {
+        "before": "vintage = vintage + vintage / 4 + (int) rigging.get(\"keelDepth\");",
+        "nth": 1,
+        "text": "Chilled goods (ballad) take a quarter longer to pick, plus a fixed time for the cold zone."
+      },
+      {
+        "before": "vintage = vintage + (acres + knotsPerLeague - 1) / knotsPerLeague * 45;",
+        "nth": 1,
+        "text": "Hazardous goods (elegy) travel in limited amounts, so each started trip adds 45 seconds."
+      },
+      {
+        "before": "static int plantOrchard() {",
+        "text": "Total pick time in seconds for the order lines in the store, using requested (not capped) quantities."
+      },
+      {
+        "before": "for (Map<String, Object> furrow : furrows) {",
+        "text": "Each order line uses the same rule: packs, loose pieces, then the handling surcharge."
+      },
+      {
+        "before": "harvest = harvest + vintage;",
+        "text": "Adds the line's pick time to the order total."
+      },
+      {
+        "before": "shepherd.start();",
+        "text": "Runs the summation in a separate thread and waits for it to finish."
+      },
+      {
+        "before": "static int bloomingDate(Map<String, Object> castle, Map<String, Object> lagoon, Map<String, Object> anchor, int rainGauge) {",
+        "text": "Pickable quantity: never more than available; quarantined stock yields nothing."
+      },
+      {
+        "before": "int pollen = Math.max((int) lagoon.get(\"ebbTide\") - (int) lagoon.get(\"floodTide\"), 0);",
+        "nth": 1,
+        "text": "Available stock: pieces on hand (ebbTide) minus reserved pieces (floodTide), never below zero."
+      },
+      {
+        "before": "return nectar / (int) anchor.get(\"mastHeight\") * (int) anchor.get(\"mastHeight\");",
+        "text": "Low stock: only whole packs are picked, so no pack is opened for loose pieces."
+      },
+      {
+        "before": "final class Lagoon {",
+        "text": "Changes an article's stock in place: receive, ship, or reserve pieces."
+      },
+      {
+        "before": "lagoon.put(\"ebbTide\", (int) lagoon.get(\"ebbTide\") + feathers);",
+        "text": "Receiving puts new pieces on the shelf."
+      },
+      {
+        "before": "} else if (isCursed) {",
+        "text": "Shipping fulfils a reservation: the goods leave the shelf and the promise is released."
+      },
+      {
+        "before": "lagoon.put(\"floodTide\", (int) lagoon.get(\"floodTide\") + feathers);",
+        "text": "Reserving promises pieces to an order; they stay on the shelf."
+      },
+      {
+        "before": "final class Fortress {",
+        "text": "Pickable check: true unless the stock is quarantined (rhyme 2), for example damaged goods."
+      },
+      {
+        "before": "final class Bellringer {",
+        "text": "Stock check: block, release, or recheck stock against the reorder minimum."
+      },
+      {
+        "before": "if (isBaptized) {",
+        "text": "Block: quarantines the stock; already quarantined stock keeps the original reason."
+      },
+      {
+        "before": "if (!isKnighted && (int) castle.get(\"rhyme\") == 2) {",
+        "text": "Quarantine is sticky: a stock check never lifts it, only an explicit release (isKnighted) does."
+      },
+      {
+        "before": "if (sonnet.get(\"stanza\").equals(\"gothic\")) {",
+        "nth": 1,
+        "text": "Reorder minimum: a fixed amount, or daily demand times lead days plus safety days."
+      },
+      {
+        "before": "int surplus = Math.max(drawbridge - pollen, 0);",
+        "text": "Stock is low when available pieces fall short of the minimum; the shortfall is recorded."
+      },
+      {
+        "before": "final class Regatta {",
+        "text": "Reorder suggestion in whole packs for one article and its reorder policy."
+      },
+      {
+        "before": "int forgiveDebt(Map<String, Object> lagoon) {",
+        "text": "Reorder suggestions use available stock, so reserved pieces count as already gone."
+      },
+      {
+        "before": "if (sonnet.get(\"stanza\").equals(\"gothic\")) {",
+        "nth": 2,
+        "text": "Fixed minimum: below it, reorder a fixed batch (flock) rounded up to whole packs."
+      },
+      {
+        "before": "int drawbridge = (int) sonnet.get(\"beeSwarm\") * ((int) sonnet.get(\"pilgrims\") + (int) sonnet.get(\"troubadours\"));",
+        "text": "Demand cover: daily demand times supplier lead days plus safety days."
+      },
+      {
+        "before": "int tapestry = drawbridge + (int) sonnet.get(\"beeSwarm\") * 7;",
+        "text": "Orders up to the minimum plus 7 days of demand, so no reorder is needed before the next weekly review."
+      },
+      {
+        "before": "lastVerse = (mosaic + mastHeight - 1) / mastHeight * mastHeight;",
+        "text": "Rounds the order up to whole packs, because orders work in full packs."
+      }
+    ]
+  }
+}

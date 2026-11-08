@@ -11,6 +11,7 @@ import {
   SCENARIO_ORDER,
   buildBody,
   commentZones,
+  measuredComments,
   commentedOffset,
   commentProse,
   insertComments,
@@ -125,13 +126,45 @@ describe("Gebiete und Stufen", () => {
 });
 
 describe("Kommentare", () => {
-  it("nur für D0–D4 und S0", () => {
+  it("Studie-Kommentare nur für D0–D4 und S0, angezeigt werden sie auf jeder Stufe", () => {
     const sc = data.scenarios["warehouse"]!;
     for (const level of [...LADDERS.dose, "S0"]) {
-      expect(commentZones(sc, level)).not.toBeNull();
+      expect(measuredComments(sc, level), level).toBe(sc.comments);
     }
     for (const level of ["S1", "S2", "S3", "S4", "S5", "S6"]) {
-      expect(commentZones(sc, level)).toBeNull();
+      expect(measuredComments(sc, level), level).toBeNull();
+      expect(commentZones(sc, level), level).not.toBeNull();
+    }
+  });
+
+  it("Kopfzeile steht ganz oben und fachlich sinnvoll auf jeder Stufe", () => {
+    for (const [name, sc] of Object.entries(data.scenarios)) {
+      expect(sc.header, name).toBeTruthy();
+      for (const level of [...LADDERS.dose, ...LADDERS.steps]) {
+        const zones = commentZones(sc, level)!;
+        expect(zones[0]!.beforeLine, `${name}/${level}`).toBe(0);
+        expect(commentProse(zones[0]!).join(" "), name).toBe(sc.header);
+      }
+    }
+  });
+
+  it("S1–S6: eigene Kommentare, jeder in den Codezeilen, nie auf derselben Zeile", () => {
+    for (const [name, sc] of Object.entries(data.scenarios)) {
+      for (const level of ["S1", "S2", "S3", "S4", "S5", "S6"]) {
+        const lv = sc.levels[level]!;
+        const lines = lv.code.split("\n").length;
+        const blocks = lv.comments!;
+        expect(blocks.length, `${name}/${level}`).toBeGreaterThanOrEqual(
+          Math.ceil(sc.comments.length * 0.7),
+        );
+        const at = blocks.map((b) => b.beforeLine);
+        expect(new Set(at).size, `${name}/${level}`).toBe(at.length);
+        for (const b of blocks) {
+          expect(b.beforeLine).toBeGreaterThanOrEqual(0);
+          expect(b.beforeLine).toBeLessThan(lines);
+          expect(b.lines.every((l) => COMMENT_LINE.test(l))).toBe(true);
+        }
+      }
     }
   });
 

@@ -1,0 +1,641 @@
+{
+  "header": "Computes how much of an employee's travel expenses the company refunds per receipt, and runs the expense claim through approval to payment.",
+  "levels": {
+    "S1": [
+      {
+        "before": "final class Money {",
+        "text": "Money in whole cents: integer arithmetic keeps sums exact, and percentages round down."
+      },
+      {
+        "before": "static int minusFloored(int cents, int that) { return Math.max(cents - that, 0); }",
+        "text": "Subtraction never goes negative: a deduction can at most cancel the amount."
+      },
+      {
+        "before": "final class Category {",
+        "text": "Picks the refund rule by expense kind: meal, lodging, mileage; every other kind counts as hospitality."
+      },
+      {
+        "before": "final class Meal {",
+        "text": "Meals are refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "final class Lodging {",
+        "text": "Hotel stays: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "final class Mileage {",
+        "text": "Private car: paid per kilometre, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "final class Hospitality {",
+        "text": "Business entertainment: 70 % of the gross amount is refundable, independent of quantity."
+      },
+      {
+        "before": "static int refund(Map<String, Object> receipt) {",
+        "text": "Receipts older than 90 days are refunded with nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "static boolean isSettled(Map<String, Object> status) { return (int) status.get(\"code\") == 2 || (int) status.get(\"code\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean isOverdue(Map<String, Object> submitted, int today) { return today - (int) submitted.get(\"submittedOn\") > REVIEW_DAYS; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int paymentDay(Map<String, Object> approved) { return (int) approved.get(\"decidedOn\") + PAYMENT_TERM_DAYS; }",
+        "text": "An approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "final class Authority {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, a director any amount."
+      },
+      {
+        "before": "static int reimbursable(Map<String, Object> claim) {",
+        "text": "Claim total: the sum of the refunds of all receipts."
+      },
+      {
+        "before": "static int payout(Map<String, Object> claim) { return Money.minusFloored(reimbursable(claim), (int) claim.get(\"advance\")); }",
+        "text": "The advance is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "final class ApprovalDesk {",
+        "text": "State transitions of a claim. A transition not allowed in the current state returns the status unchanged."
+      },
+      {
+        "before": "static Map<String, Object> submit(Map<String, Object> status, Map<String, Object> claim, int today) {",
+        "text": "Only a draft with a positive refund can be submitted."
+      },
+      {
+        "before": "static boolean isEligible(Map<String, Object> submitted, Map<String, Object> claim, String approver, Map<String, Object> authority) {",
+        "text": "Four-eyes principle: nobody approves their own claim. The signing limit applies to the total before the advance."
+      },
+      {
+        "before": "static Map<String, Object> reject(Map<String, Object> status, String reason) {",
+        "text": "Only a submitted claim can be rejected; the reason is recorded."
+      },
+      {
+        "before": "static int payable(Map<String, Object> status, Map<String, Object> claim) {",
+        "text": "Money is paid only for approved claims, and then only the payout after the advance."
+      }
+    ],
+    "S2": [
+      {
+        "before": "final class Claim {",
+        "text": "Computes the refund of each receipt and the total of an expense claim, in whole cents."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") > 90) {",
+        "text": "Receipts older than 90 days are refunded with nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"meal\")) {",
+        "nth": 1,
+        "text": "Meals are refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lodging\")) {",
+        "nth": 1,
+        "text": "Hotel stays: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"mileage\")) {",
+        "nth": 1,
+        "text": "Private car: paid per kilometre, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "refund = gross * 70 / 100;",
+        "nth": 1,
+        "text": "Business entertainment: 70 % of the gross amount is refundable, rounded down to the cent."
+      },
+      {
+        "before": "static int reimbursable(Map<String, Object> claim, boolean afterAdvance) {",
+        "text": "Claim total: the sum of all receipt refunds; afterAdvance = true deducts the advance."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") <= 90) {",
+        "text": "Only receipts up to 90 days old count; the same category rules apply as above."
+      },
+      {
+        "before": "if (afterAdvance) {",
+        "text": "The advance is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "static boolean isSettled(Map<String, Object> status) { return (int) status.get(\"code\") == 2 || (int) status.get(\"code\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean isOverdue(Map<String, Object> submitted, int today) { return today - (int) submitted.get(\"submittedOn\") > 14; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int paymentDay(Map<String, Object> approved) { return (int) approved.get(\"decidedOn\") + 30; }",
+        "text": "An approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "static Map<String, Object> decide(Map<String, Object> status, Map<String, Object> claim, String approver, Map<String, Object> authority, String reason, int today, boolean isSubmit, boolean isApproval) {",
+        "text": "Submits, approves or rejects a claim. A step not allowed in the current state returns the status unchanged."
+      },
+      {
+        "before": "if (isSubmit) {",
+        "text": "Submit: only a draft with a positive refund becomes submitted."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") != 1) {",
+        "text": "Approval and rejection apply only to submitted claims."
+      },
+      {
+        "before": "if (!isApproval) {",
+        "text": "Reject: the claim becomes final with the given reason."
+      },
+      {
+        "before": "if (status.get(\"claimant\").equals(approver)) {",
+        "text": "Four-eyes principle: nobody approves their own claim."
+      },
+      {
+        "before": "if (authority.get(\"kind\").equals(\"teamLead\") && Claim.reimbursable(claim, false) > (int) authority.get(\"signingLimit\")) {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, before the advance; a director any amount."
+      },
+      {
+        "before": "return Map.of(\"code\", 2, \"approver\", approver, \"decidedOn\", today);",
+        "text": "All checks passed: the claim is approved today."
+      },
+      {
+        "before": "static int payable(Map<String, Object> status, Map<String, Object> claim) {",
+        "text": "Money is paid only for approved claims, and then only the total after the advance."
+      }
+    ],
+    "S3": [
+      {
+        "before": "final class Claim {",
+        "text": "Computes the refund of each receipt and the total of an expense claim, in whole cents."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") > 90) {",
+        "text": "Receipts older than 90 days are refunded with nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"meal\")) {",
+        "nth": 1,
+        "text": "Meals are refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lodging\")) {",
+        "nth": 1,
+        "text": "Hotel stays: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"mileage\")) {",
+        "nth": 1,
+        "text": "Private car: paid per kilometre, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "refund = gross * 70 / 100;",
+        "nth": 1,
+        "text": "Business entertainment: 70 % of the gross amount is refundable, rounded down to the cent."
+      },
+      {
+        "before": "int reimbursable(boolean afterAdvance) {",
+        "text": "Claim total: sums all receipt refunds in a worker thread and waits for it; afterAdvance = true deducts the advance."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") <= 90) {",
+        "text": "Only receipts up to 90 days old count."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"meal\")) {",
+        "nth": 2,
+        "text": "Meals: at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lodging\")) {",
+        "nth": 2,
+        "text": "Hotel: breakfast per night deducted, then capped at the per-night limit."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"mileage\")) {",
+        "nth": 2,
+        "text": "Private car: first 200 km at the full rate, every further km at 60 %."
+      },
+      {
+        "before": "refund = gross * 70 / 100;",
+        "nth": 2,
+        "text": "Business entertainment: 70 % of the gross amount."
+      },
+      {
+        "before": "if (afterAdvance) {",
+        "text": "The advance is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "static boolean isSettled(Map<String, Object> status) { return (int) status.get(\"code\") == 2 || (int) status.get(\"code\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean isOverdue(Map<String, Object> submitted, int today) { return today - (int) submitted.get(\"submittedOn\") > 14; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int paymentDay(Map<String, Object> approved) { return (int) approved.get(\"decidedOn\") + 30; }",
+        "text": "An approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "static void decide(Map<String, Object> status, Map<String, Object> claim, String approver, Map<String, Object> authority, String reason, int today, boolean isSubmit, boolean isApproval) {",
+        "text": "Submits, approves or rejects a claim by changing its status. A step not allowed in the current state changes nothing."
+      },
+      {
+        "before": "if (isSubmit) {",
+        "text": "Submit: only a draft with a positive refund becomes submitted, with claimant and day."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") != 1) {",
+        "text": "Approval and rejection apply only to submitted claims."
+      },
+      {
+        "before": "if (!isApproval) {",
+        "text": "Reject: the claim becomes final with the given reason."
+      },
+      {
+        "before": "if (status.get(\"claimant\").equals(approver)) {",
+        "text": "Four-eyes principle: nobody approves their own claim."
+      },
+      {
+        "before": "if (authority.get(\"kind\").equals(\"teamLead\") && new Claim(claim).reimbursable(false) > (int) authority.get(\"signingLimit\")) {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, before the advance; a director any amount."
+      },
+      {
+        "before": "status.put(\"code\", 2);",
+        "text": "All checks passed: the claim is approved today by this approver."
+      },
+      {
+        "before": "static int payable(Map<String, Object> status, Map<String, Object> claim) {",
+        "text": "Money is paid only for approved claims, and then only the total after the advance."
+      }
+    ],
+    "S4": [
+      {
+        "before": "final class ClaimFactory {",
+        "text": "Holds the one expense claim currently processed, a store of results and a printout of computed amounts."
+      },
+      {
+        "before": "Claim createClaim() {",
+        "text": "Returns the shared calculator, loaded with the claim from the archive."
+      },
+      {
+        "before": "final class Claim {",
+        "text": "Computes the refund of each receipt and the total of an expense claim, in whole cents."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") > 90) {",
+        "text": "Receipts older than 90 days are refunded with nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"meal\")) {",
+        "nth": 1,
+        "text": "Meals are refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lodging\")) {",
+        "nth": 1,
+        "text": "Hotel stays: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"mileage\")) {",
+        "nth": 1,
+        "text": "Private car: paid per kilometre, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "refund = gross * 70 / 100;",
+        "nth": 1,
+        "text": "Business entertainment: 70 % of the gross amount is refundable, rounded down to the cent."
+      },
+      {
+        "before": "int reimbursable(boolean afterAdvance) {",
+        "text": "Claim total: sums all receipt refunds in a worker thread and waits for it; afterAdvance = true deducts the advance."
+      },
+      {
+        "before": "if ((int) receipt.get(\"ageDays\") <= 90) {",
+        "text": "Only receipts up to 90 days old count."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"meal\")) {",
+        "nth": 2,
+        "text": "Meals: at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lodging\")) {",
+        "nth": 2,
+        "text": "Hotel: breakfast per night deducted, then capped at the per-night limit."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"mileage\")) {",
+        "nth": 2,
+        "text": "Private car: first 200 km at the full rate, every further km at 60 %."
+      },
+      {
+        "before": "refund = gross * 70 / 100;",
+        "nth": 2,
+        "text": "Business entertainment: 70 % of the gross amount."
+      },
+      {
+        "before": "if (afterAdvance) {",
+        "text": "The advance is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "static boolean isSettled(Map<String, Object> status) { return (int) status.get(\"code\") == 2 || (int) status.get(\"code\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean isOverdue(Map<String, Object> submitted, int today) { return today - (int) submitted.get(\"submittedOn\") > 14; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int paymentDay(Map<String, Object> approved) { return (int) approved.get(\"decidedOn\") + 30; }",
+        "text": "An approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "static void decide(Map<String, Object> status, String approver, Map<String, Object> authority, String reason, int today, boolean isSubmit, boolean isApproval) {",
+        "text": "Submits, approves or rejects the current claim by changing its status. A step not allowed in the current state changes nothing."
+      },
+      {
+        "before": "if (isSubmit) {",
+        "text": "Submit: only a draft with a positive refund becomes submitted, with claimant and day."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") != 1) {",
+        "text": "Approval and rejection apply only to submitted claims."
+      },
+      {
+        "before": "if (!isApproval) {",
+        "text": "Reject: the claim becomes final with the given reason."
+      },
+      {
+        "before": "if (status.get(\"claimant\").equals(approver)) {",
+        "text": "Four-eyes principle: nobody approves their own claim."
+      },
+      {
+        "before": "if (authority.get(\"kind\").equals(\"teamLead\") && ClaimFactory.shared.createClaim().reimbursable(false) > (int) authority.get(\"signingLimit\")) {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, before the advance; a director any amount."
+      },
+      {
+        "before": "status.put(\"code\", 2);",
+        "text": "All checks passed: the claim is approved today by this approver."
+      },
+      {
+        "before": "static int payable(Map<String, Object> status) {",
+        "text": "Money is paid only for approved claims, and then only the total after the advance."
+      }
+    ],
+    "S5": [
+      {
+        "before": "// state type1: 0 a1, 1 a2, 2 a3, 3 a4",
+        "text": "Claim status in type1: 0 = draft, 1 = submitted, 2 = approved, 3 = rejected."
+      },
+      {
+        "before": "final class DataFactory {",
+        "text": "Holds the one expense claim currently processed, a store of results and a log of computed amounts."
+      },
+      {
+        "before": "Manager getManager() {",
+        "text": "Returns the shared refund calculator, loaded with the stored expense claim."
+      },
+      {
+        "before": "final class Manager {",
+        "text": "Refund calculator: refund per receipt and total refund of an expense claim, in whole cents."
+      },
+      {
+        "before": "if ((int) item.get(\"field1\") > 90) {",
+        "text": "Receipt refund: receipts older than 90 days (field1) get nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "if (cfg.get(\"type2\").equals(\"typeA\")) {",
+        "nth": 1,
+        "text": "Meals: refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (cfg.get(\"type2\").equals(\"typeB\")) {",
+        "nth": 1,
+        "text": "Hotel: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "} else if (cfg.get(\"type2\").equals(\"typeC\")) {",
+        "nth": 1,
+        "text": "Private car: paid per km, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "result = num1 * 70 / 100;",
+        "nth": 1,
+        "text": "Business entertainment: 70 % of the gross amount is refundable, rounded down to the cent."
+      },
+      {
+        "before": "int process(boolean flag) {",
+        "text": "Claim total: sums all receipt refunds in a worker thread and waits for it; flag = true deducts the advance."
+      },
+      {
+        "before": "if ((int) item.get(\"field1\") <= 90) {",
+        "text": "Only receipts up to 90 days old count."
+      },
+      {
+        "before": "if (cfg.get(\"type2\").equals(\"typeA\")) {",
+        "nth": 2,
+        "text": "Meals: at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (cfg.get(\"type2\").equals(\"typeB\")) {",
+        "nth": 2,
+        "text": "Hotel: breakfast per night deducted, then capped at the per-night limit."
+      },
+      {
+        "before": "} else if (cfg.get(\"type2\").equals(\"typeC\")) {",
+        "nth": 2,
+        "text": "Private car: first 200 km at the full rate, every further km at 60 %."
+      },
+      {
+        "before": "result = num1 * 70 / 100;",
+        "nth": 2,
+        "text": "Business entertainment: 70 % of the gross amount."
+      },
+      {
+        "before": "if (flag) {",
+        "text": "The advance (field6) is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "final class Flag {",
+        "text": "Claim deadlines and final states."
+      },
+      {
+        "before": "static boolean check(Map<String, Object> state) { return (int) state.get(\"type1\") == 2 || (int) state.get(\"type1\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean check2(Map<String, Object> a2, int time) { return time - (int) a2.get(\"field7\") > 14; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int calc(Map<String, Object> a3) { return (int) a3.get(\"field8\") + 30; }",
+        "text": "Payment day: an approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "final class Service {",
+        "text": "Approval workflow: submit, approve or reject an expense claim, and pay it out."
+      },
+      {
+        "before": "static void handle(Map<String, Object> state, String str1, Map<String, Object> ref, String str2, int time, boolean flag2, boolean flag3) {",
+        "text": "flag2 = submit, flag3 = approve, otherwise reject. str1 is the approver, ref the signing authority, str2 the reason."
+      },
+      {
+        "before": "if (flag2) {",
+        "text": "Submit: only a draft with a positive refund becomes submitted, with claimant and day."
+      },
+      {
+        "before": "if ((int) state.get(\"type1\") != 1) {",
+        "text": "Approval and rejection apply only to submitted claims."
+      },
+      {
+        "before": "if (!flag3) {",
+        "text": "Reject: the claim becomes final with the given reason."
+      },
+      {
+        "before": "if (state.get(\"str3\").equals(str1)) {",
+        "text": "Four-eyes principle: nobody approves their own claim."
+      },
+      {
+        "before": "if (ref.get(\"type2\").equals(\"typeE\") && DataFactory.inst.getManager().process(false) > (int) ref.get(\"field9\")) {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, before the advance; a director any amount."
+      },
+      {
+        "before": "state.put(\"type1\", 2);",
+        "text": "All checks passed: the claim is approved today by this approver."
+      },
+      {
+        "before": "static int perform(Map<String, Object> state) {",
+        "text": "Payout: money only for approved claims, and then only the total after the advance."
+      }
+    ],
+    "S6": [
+      {
+        "before": "// glacier altitudeBand: 0 iceberg, 1 moraine, 2 crevasse, 3 fjord",
+        "text": "Claim status in altitudeBand: 0 = draft, 1 = submitted, 2 = approved, 3 = rejected."
+      },
+      {
+        "before": "final class HarbourMaster {",
+        "text": "Holds the one expense claim currently processed, a store of results and a log of computed amounts."
+      },
+      {
+        "before": "Vessel scuttleShip() {",
+        "text": "Returns the shared refund calculator, loaded with the stored expense claim."
+      },
+      {
+        "before": "final class Vessel {",
+        "text": "Refund calculator: refund per receipt and total refund of an expense claim, in whole cents."
+      },
+      {
+        "before": "if ((int) barnacle.get(\"wingspan\") > 90) {",
+        "text": "Receipt refund: receipts older than 90 days (wingspan) get nothing; otherwise the category rule decides."
+      },
+      {
+        "before": "if (greenhouse.get(\"species\").equals(\"tulip\")) {",
+        "nth": 1,
+        "text": "Meals: refunded as spent, but at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (greenhouse.get(\"species\").equals(\"orchid\")) {",
+        "nth": 1,
+        "text": "Hotel: the breakfast price per night is deducted first; the room price is capped at the per-night limit."
+      },
+      {
+        "before": "} else if (greenhouse.get(\"species\").equals(\"fern\")) {",
+        "nth": 1,
+        "text": "Private car: paid per km, not by receipt. The first 200 km get the full rate, every further km 60 % of it."
+      },
+      {
+        "before": "ballast = petals * 70 / 100;",
+        "nth": 1,
+        "text": "Business entertainment: 70 % of the gross amount is refundable, rounded down to the cent."
+      },
+      {
+        "before": "int dropAnchor(boolean isWilted) {",
+        "text": "Claim total: sums all receipt refunds in a worker thread and waits for it; isWilted = true deducts the advance."
+      },
+      {
+        "before": "if ((int) barnacle.get(\"wingspan\") <= 90) {",
+        "text": "Only receipts up to 90 days old count."
+      },
+      {
+        "before": "if (greenhouse.get(\"species\").equals(\"tulip\")) {",
+        "nth": 2,
+        "text": "Meals: at most the per-person limit times the number of persons."
+      },
+      {
+        "before": "} else if (greenhouse.get(\"species\").equals(\"orchid\")) {",
+        "nth": 2,
+        "text": "Hotel: breakfast per night deducted, then capped at the per-night limit."
+      },
+      {
+        "before": "} else if (greenhouse.get(\"species\").equals(\"fern\")) {",
+        "nth": 2,
+        "text": "Private car: first 200 km at the full rate, every further km at 60 %."
+      },
+      {
+        "before": "ballast = petals * 70 / 100;",
+        "nth": 2,
+        "text": "Business entertainment: 70 % of the gross amount."
+      },
+      {
+        "before": "if (isWilted) {",
+        "text": "The advance (rainGauge) is offset against the refund; an advance larger than the refund yields zero, not a debt."
+      },
+      {
+        "before": "final class Glacier {",
+        "text": "Claim deadlines and final states."
+      },
+      {
+        "before": "static boolean isEmpty(Map<String, Object> glacier) { return (int) glacier.get(\"altitudeBand\") == 2 || (int) glacier.get(\"altitudeBand\") == 3; }",
+        "text": "Approved and rejected claims are final."
+      },
+      {
+        "before": "static boolean isSunny(Map<String, Object> moraine, int nestYear) { return nestYear - (int) moraine.get(\"thawYear\") > 14; }",
+        "text": "A submitted claim should be decided within 14 days; after that it is overdue."
+      },
+      {
+        "before": "static int hatchingSeason(Map<String, Object> crevasse) { return (int) crevasse.get(\"freezeYear\") + 30; }",
+        "text": "Payment day: an approved claim is paid 30 days after the decision."
+      },
+      {
+        "before": "final class Beehive {",
+        "text": "Approval workflow: submit, approve or reject an expense claim, and pay it out."
+      },
+      {
+        "before": "static void pollinate(Map<String, Object> glacier, String queenBee, Map<String, Object> swarm, String nectar, int nestYear, boolean isRaining, boolean isSwarming) {",
+        "text": "isRaining = submit, isSwarming = approve, otherwise reject. queenBee is the approver, swarm the signing authority."
+      },
+      {
+        "before": "if (isRaining) {",
+        "text": "Submit: only a draft with a positive refund becomes submitted, with claimant and day."
+      },
+      {
+        "before": "if ((int) glacier.get(\"altitudeBand\") != 1) {",
+        "text": "Approval and rejection apply only to submitted claims."
+      },
+      {
+        "before": "if (!isSwarming) {",
+        "text": "Reject: the claim becomes final with the given reason (nectar)."
+      },
+      {
+        "before": "if (glacier.get(\"droneName\").equals(queenBee)) {",
+        "text": "Four-eyes principle: nobody approves their own claim."
+      },
+      {
+        "before": "if (swarm.get(\"species\").equals(\"rook\") && HarbourMaster.lantern.scuttleShip().dropAnchor(false) > (int) swarm.get(\"honeyYield\")) {",
+        "text": "Signing authority: a team lead approves totals up to and including the limit, before the advance; a director any amount."
+      },
+      {
+        "before": "glacier.put(\"altitudeBand\", 2);",
+        "text": "All checks passed: the claim is approved today by this approver."
+      },
+      {
+        "before": "static int harvestWax(Map<String, Object> glacier) {",
+        "text": "Payout: money only for approved claims, and then only the total after the advance."
+      }
+    ]
+  }
+}

@@ -1,0 +1,796 @@
+{
+  "header": "Bills car rentals: rent with weekly discount and season factor, extra kilometres, insurance and damage share. Tracks each rental from reservation to return or cancellation.",
+  "levels": {
+    "S1": [
+      {
+        "before": "final class Price {",
+        "text": "Money amounts in euro cents; integer arithmetic avoids rounding drift."
+      },
+      {
+        "before": "static int share(int cents, int percent) { return cents * percent / WHOLE_PERCENT; }",
+        "text": "Percentage of a price; integer division truncates fractions of a cent."
+      },
+      {
+        "before": "final class Period {",
+        "text": "Rental period between two day numbers; every rental is billed for at least one day."
+      },
+      {
+        "before": "final class Mileage {",
+        "text": "Odometer readings in kilometres at pickup and at return."
+      },
+      {
+        "before": "static boolean isOpen(Map<String, Object> state) { return (int) state.get(\"stage\") <= 1; }",
+        "text": "Only reserved and on-road rentals are open, i.e. still occupy a vehicle."
+      },
+      {
+        "before": "final class Vehicle {",
+        "text": "Vehicle class sets the daily rate and the kilometre price; only km beyond a free allowance per day cost extra."
+      },
+      {
+        "before": "default -> Compact.dailyRate();",
+        "text": "Any category other than van or electric is billed as a small car."
+      },
+      {
+        "before": "final class Compact {",
+        "text": "Small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "final class Van {",
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "final class Electric {",
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "final class Coverage {",
+        "text": "Insurance option: a premium for the period and the share of a damage the customer pays."
+      },
+      {
+        "before": "final class LiabilityOnly {",
+        "text": "No premium, but the customer pays any damage in full."
+      },
+      {
+        "before": "final class PartialCover {",
+        "text": "9.00 per day; the customer pays damage up to the agreed deductible."
+      },
+      {
+        "before": "final class FullCover {",
+        "text": "18.00 per day, billed for at most 14 days; the customer pays no damage."
+      },
+      {
+        "before": "final class Driver {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "record Invoicer(int seasonPercent) {",
+        "text": "Computes invoices; the season percentage (100 = regular price) adjusts only the rent."
+      },
+      {
+        "before": "int rent(Map<String, Object> vehicle, Map<String, Object> period) {",
+        "text": "Rent: each full week costs only five daily rates (two days free), remaining days the full rate."
+      },
+      {
+        "before": "int total(Map<String, Object> agreement) {",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "int afterDamage(Map<String, Object> agreement, int damage) { return Price.plus(total(agreement), Coverage.ownShare((Map<String, Object>) agreement.get(\"coverage\"), damage)); }",
+        "text": "Base invoice plus the part of the damage the coverage leaves to the customer."
+      },
+      {
+        "before": "int monthRevenue(List<Map<String, Object>> agreements) { return agreements.stream().map(this::total).reduce(0, Price::plus); }",
+        "text": "Sum of base invoices; driver surcharges and damages are not included."
+      },
+      {
+        "before": "final class RentalDesk {",
+        "text": "State changes at the counter; an action that does not apply leaves the state unchanged."
+      },
+      {
+        "before": "static Map<String, Object> handOver(Map<String, Object> state, String customer, int today, int kmNow) {",
+        "text": "Hand-over: an expired reservation is cancelled instead; a reservation for another customer stays as it is."
+      },
+      {
+        "before": "static Map<String, Object> takeBack(Map<String, Object> state, int today, int kmNow) {",
+        "text": "Closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "static Map<String, Object> cancel(Map<String, Object> state, int today) { return (int) state.get(\"stage\") == 0 ? Map.of(\"stage\", 3, \"cancelledOn\", today) : state; }",
+        "text": "Only a reservation can be cancelled; a vehicle already on the road cannot."
+      }
+    ],
+    "S2": [
+      {
+        "before": "record Invoicer(int seasonPercent) {",
+        "text": "Computes invoices; the season percentage (100 = regular price) adjusts only the rent."
+      },
+      {
+        "before": "int total(Map<String, Object> agreement, Map<String, Object> driver, boolean hasDriver, int damage, boolean isDamaged) {",
+        "text": "Invoice for one rental, optionally with young-driver surcharge and the customer's damage share."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 1,
+        "text": "Every rental is billed for at least one day, even when pickup and drop-off fall on the same day."
+      },
+      {
+        "before": "int driven = (int) mileage.get(\"kmIn\") - (int) mileage.get(\"kmOut\");",
+        "nth": 1,
+        "text": "Kilometres driven: odometer at return minus odometer at pickup."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 1,
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "} else if (vehicle.get(\"category\").equals(\"electric\")) {",
+        "nth": 1,
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "rate = 3900;",
+        "nth": 1,
+        "text": "Any other class is a small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 1,
+        "text": "Rent: each full week costs five daily rates (two days free); the season percentage applies to rent only."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 1,
+        "text": "Insurance premium: none for liability only, 9.00 per day for partial cover."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 1,
+        "text": "Full cover: 18.00 per day, billed for at most 14 days."
+      },
+      {
+        "before": "int due = rent + kmCharge + premium;",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "if (hasDriver && (int) driver.get(\"age\") < 25) {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "if (isDamaged) {",
+        "text": "Damage: with liability only the customer pays it in full."
+      },
+      {
+        "before": "if (damage > (int) coverage.get(\"deductible\")) {",
+        "text": "Partial cover: the customer pays the damage up to the agreed deductible."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 2,
+        "text": "Full cover: the customer pays no damage."
+      },
+      {
+        "before": "int monthRevenue(List<Map<String, Object>> agreements) {",
+        "text": "Monthly revenue: sum of base invoices; driver surcharges and damages are not included."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 2,
+        "text": "Same billing rules as a single invoice: at least one day per rental."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 2,
+        "text": "Daily rate and extra-kilometre charge per vehicle class: van, electric car, small car."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 2,
+        "text": "Rent with two free days per full week, adjusted by the season percentage."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 2,
+        "text": "Insurance premium: 9.00 per day partial, 18.00 per day full cover (at most 14 days)."
+      },
+      {
+        "before": "revenue = revenue + rent + kmCharge + premium;",
+        "text": "Revenue adds only the base invoice of each rental."
+      },
+      {
+        "before": "static boolean isOpen(Map<String, Object> state) { return (int) state.get(\"stage\") <= 1; }",
+        "text": "Only reserved and on-road rentals are open, i.e. still occupy a vehicle."
+      },
+      {
+        "before": "static Map<String, Object> passDesk(Map<String, Object> state, String customer, int today, int kmNow, boolean isReturn, boolean isCancel) {",
+        "text": "Counter action: cancel, return or hand over; an action that does not apply leaves the state unchanged."
+      },
+      {
+        "before": "if (isCancel) {",
+        "text": "Only a reservation can be cancelled; a vehicle already on the road cannot."
+      },
+      {
+        "before": "if (isReturn) {",
+        "text": "Return closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "if (today > (int) state.get(\"validUntil\")) {",
+        "text": "Hand-over: an expired reservation is cancelled instead."
+      },
+      {
+        "before": "if (state.get(\"customer\").equals(customer)) {",
+        "text": "Only the reserving customer gets the vehicle; the rental starts today at the current odometer reading."
+      }
+    ],
+    "S3": [
+      {
+        "before": "final class Invoicer {",
+        "text": "Computes invoices; the season percentage (100 = regular price) adjusts only the rent."
+      },
+      {
+        "before": "int total(Map<String, Object> agreement, Map<String, Object> driver, boolean hasDriver, int damage, boolean isDamaged) {",
+        "text": "Invoice for one rental, optionally with young-driver surcharge and the customer's damage share."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 1,
+        "text": "Every rental is billed for at least one day, even when pickup and drop-off fall on the same day."
+      },
+      {
+        "before": "int driven = (int) mileage.get(\"kmIn\") - (int) mileage.get(\"kmOut\");",
+        "nth": 1,
+        "text": "Kilometres driven: odometer at return minus odometer at pickup."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 1,
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "} else if (vehicle.get(\"category\").equals(\"electric\")) {",
+        "nth": 1,
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "rate = 3900;",
+        "nth": 1,
+        "text": "Any other class is a small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 1,
+        "text": "Rent: each full week costs five daily rates (two days free); the season percentage applies to rent only."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 1,
+        "text": "Insurance premium: none for liability only, 9.00 per day for partial cover."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 1,
+        "text": "Full cover: 18.00 per day, billed for at most 14 days."
+      },
+      {
+        "before": "int due = rent + kmCharge + premium;",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "if (hasDriver && (int) driver.get(\"age\") < 25) {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "if (isDamaged) {",
+        "text": "Damage: with liability only the customer pays it in full."
+      },
+      {
+        "before": "if (damage > (int) coverage.get(\"deductible\")) {",
+        "text": "Partial cover: the customer pays the damage up to the agreed deductible."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 2,
+        "text": "Full cover: the customer pays no damage."
+      },
+      {
+        "before": "int monthRevenue(List<Map<String, Object>> agreements) {",
+        "text": "Monthly revenue: sum of base invoices; driver surcharges and damages are not included."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 2,
+        "text": "Same billing rules as a single invoice: at least one day per rental."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 2,
+        "text": "Daily rate and extra-kilometre charge per vehicle class: van, electric car, small car."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 2,
+        "text": "Rent with two free days per full week, adjusted by the season percentage."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 2,
+        "text": "Insurance premium: 9.00 per day partial, 18.00 per day full cover (at most 14 days)."
+      },
+      {
+        "before": "lastDue = rent + kmCharge + premium;",
+        "text": "Revenue adds only the base invoice of each rental."
+      },
+      {
+        "before": "static boolean isOpen(Map<String, Object> state) { return (int) state.get(\"stage\") <= 1; }",
+        "text": "Only reserved and on-road rentals are open, i.e. still occupy a vehicle."
+      },
+      {
+        "before": "static void passDesk(Map<String, Object> state, String customer, int today, int kmNow, boolean isReturn, boolean isCancel) {",
+        "text": "Counter action: cancel, return or hand over; an action that does not apply leaves the rental unchanged."
+      },
+      {
+        "before": "if (isCancel) {",
+        "text": "Only a reservation can be cancelled; a vehicle already on the road cannot."
+      },
+      {
+        "before": "if (isReturn) {",
+        "text": "Return closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "if (today > (int) state.get(\"validUntil\")) {",
+        "text": "Hand-over: an expired reservation is cancelled instead."
+      },
+      {
+        "before": "if (state.get(\"customer\").equals(customer)) {",
+        "text": "Only the reserving customer gets the vehicle; the rental starts today at the current odometer reading."
+      }
+    ],
+    "S4": [
+      {
+        "before": "final class RentalFactory {",
+        "text": "Shared rental records and display log; hands out the invoicer."
+      },
+      {
+        "before": "invoicer.seasonPercent = (int) records.get(\"seasonPercent\");",
+        "text": "The current season percentage comes from the shared records."
+      },
+      {
+        "before": "final class Invoicer {",
+        "text": "Computes invoices; the season percentage (100 = regular price) adjusts only the rent."
+      },
+      {
+        "before": "int total(Map<String, Object> agreement, Map<String, Object> driver, boolean hasDriver, int damage, boolean isDamaged) {",
+        "text": "Invoice for one rental, optionally with young-driver surcharge and the customer's damage share."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 1,
+        "text": "Every rental is billed for at least one day, even when pickup and drop-off fall on the same day."
+      },
+      {
+        "before": "int driven = (int) mileage.get(\"kmIn\") - (int) mileage.get(\"kmOut\");",
+        "nth": 1,
+        "text": "Kilometres driven: odometer at return minus odometer at pickup."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 1,
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "} else if (vehicle.get(\"category\").equals(\"electric\")) {",
+        "nth": 1,
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "rate = 3900;",
+        "nth": 1,
+        "text": "Any other class is a small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 1,
+        "text": "Rent: each full week costs five daily rates (two days free); the season percentage applies to rent only."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 1,
+        "text": "Insurance premium: none for liability only, 9.00 per day for partial cover."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 1,
+        "text": "Full cover: 18.00 per day, billed for at most 14 days."
+      },
+      {
+        "before": "int due = rent + kmCharge + premium;",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "if (hasDriver && (int) driver.get(\"age\") < 25) {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "if (isDamaged) {",
+        "text": "Damage: with liability only the customer pays it in full."
+      },
+      {
+        "before": "if (damage > (int) coverage.get(\"deductible\")) {",
+        "text": "Partial cover: the customer pays the damage up to the agreed deductible."
+      },
+      {
+        "before": "} else if (coverage.get(\"category\").equals(\"full\")) {",
+        "nth": 2,
+        "text": "Full cover: the customer pays no damage."
+      },
+      {
+        "before": "RentalFactory.records.put(\"lastDue\", due);",
+        "text": "Stores the amount due and logs it with the last customer at the counter."
+      },
+      {
+        "before": "int monthRevenue() {",
+        "text": "Monthly revenue over the stored agreements: base invoices only, without driver surcharges or damages."
+      },
+      {
+        "before": "int days = Math.max((int) period.get(\"dropoffDay\") - (int) period.get(\"pickupDay\"), 1);",
+        "nth": 2,
+        "text": "Same billing rules as a single invoice: at least one day per rental."
+      },
+      {
+        "before": "if (vehicle.get(\"category\").equals(\"van\")) {",
+        "nth": 2,
+        "text": "Daily rate and extra-kilometre charge per vehicle class: van, electric car, small car."
+      },
+      {
+        "before": "int rent = (rate * (days / 7 * 5) + rate * (days % 7)) * seasonPercent / 100;",
+        "nth": 2,
+        "text": "Rent with two free days per full week, adjusted by the season percentage."
+      },
+      {
+        "before": "int premium = 0;",
+        "nth": 2,
+        "text": "Insurance premium: 9.00 per day partial, 18.00 per day full cover (at most 14 days)."
+      },
+      {
+        "before": "lastDue = rent + kmCharge + premium;",
+        "text": "Revenue adds only the base invoice of each rental."
+      },
+      {
+        "before": "RentalFactory.records.put(\"revenue\", revenue);",
+        "text": "Stores the monthly revenue and logs it."
+      },
+      {
+        "before": "static boolean isOpen(Map<String, Object> state) { return (int) state.get(\"stage\") <= 1; }",
+        "text": "Only reserved and on-road rentals are open, i.e. still occupy a vehicle."
+      },
+      {
+        "before": "static void passDesk(Map<String, Object> state, String customer, int today, int kmNow, boolean isReturn, boolean isCancel) {",
+        "text": "Counter action: cancel, return or hand over; an action that does not apply leaves the rental unchanged."
+      },
+      {
+        "before": "lastCustomer = customer;",
+        "text": "Remembers the customer and the rental, and logs the last amount due."
+      },
+      {
+        "before": "if (isCancel) {",
+        "text": "Only a reservation can be cancelled; a vehicle already on the road cannot."
+      },
+      {
+        "before": "if (isReturn) {",
+        "text": "Return closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "if (today > (int) state.get(\"validUntil\")) {",
+        "text": "Hand-over: an expired reservation is cancelled instead."
+      },
+      {
+        "before": "if (state.get(\"customer\").equals(customer)) {",
+        "text": "Only the reserving customer gets the vehicle; the rental starts today at the current odometer reading."
+      }
+    ],
+    "S5": [
+      {
+        "before": "// type: 0 a0, 1 a1, 2 a2, 3 a3",
+        "text": "Rental stage: 0 reserved, 1 on the road, 2 returned, 3 cancelled."
+      },
+      {
+        "before": "final class DataFactory {",
+        "text": "Shared rental records and display log; hands out the invoice calculator."
+      },
+      {
+        "before": "handler.param1 = (int) cache.get(\"param1\");",
+        "text": "param1 is the season percentage (100 = regular price), read from the shared records."
+      },
+      {
+        "before": "final class Handler {",
+        "text": "Invoice calculator: the season percentage adjusts only the rent."
+      },
+      {
+        "before": "int process(Map<String, Object> obj, Map<String, Object> obj2, boolean flag, int num, boolean flag2) {",
+        "text": "Invoice for one rental (obj), with optional young-driver surcharge (obj2, flag) and damage num (flag2)."
+      },
+      {
+        "before": "Map<String, Object> item = (Map<String, Object>) obj.get(\"item\");",
+        "nth": 1,
+        "text": "Rental parts: item = vehicle, item2 = insurance, item3 = period, item4 = odometer readings."
+      },
+      {
+        "before": "int cnt = Math.max((int) item3.get(\"field10\") - (int) item3.get(\"field9\"), 1);",
+        "nth": 1,
+        "text": "Rental days, drop-off minus pickup; every rental is billed for at least one day."
+      },
+      {
+        "before": "int cnt2 = (int) item4.get(\"field12\") - (int) item4.get(\"field11\");",
+        "nth": 1,
+        "text": "Kilometres driven: odometer at return minus odometer at pickup."
+      },
+      {
+        "before": "if (item.get(\"kind1\").equals(\"typeA\")) {",
+        "nth": 1,
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "} else if (item.get(\"kind1\").equals(\"typeB\")) {",
+        "nth": 1,
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "val1 = 3900;",
+        "nth": 1,
+        "text": "Any other class is a small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "int val3 = (val1 * (cnt / 7 * 5) + val1 * (cnt % 7)) * param1 / 100;",
+        "nth": 1,
+        "text": "Rent: each full week costs five daily rates (two days free), then the season percentage applies."
+      },
+      {
+        "before": "int val4 = 0;",
+        "nth": 1,
+        "text": "Insurance premium: none for liability only, 9.00 per day for partial cover (typeD)."
+      },
+      {
+        "before": "} else if (item2.get(\"kind1\").equals(\"typeE\")) {",
+        "nth": 1,
+        "text": "Full cover: 18.00 per day, billed for at most 14 days."
+      },
+      {
+        "before": "int tmp = val3 + val2 + val4;",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "if (flag && (int) obj2.get(\"field3\") < 25) {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "if (flag2) {",
+        "text": "Damage: with liability only the customer pays it in full."
+      },
+      {
+        "before": "if (num > (int) item2.get(\"field4\")) {",
+        "text": "Partial cover: the customer pays the damage up to the deductible (field4)."
+      },
+      {
+        "before": "} else if (item2.get(\"kind1\").equals(\"typeE\")) {",
+        "nth": 2,
+        "text": "Full cover: the customer pays no damage."
+      },
+      {
+        "before": "DataFactory.cache.put(\"lastResult\", tmp);",
+        "text": "Stores the amount due and logs it with the last customer at the counter."
+      },
+      {
+        "before": "int perform() {",
+        "text": "Monthly revenue over the stored rentals: base invoices only, without driver surcharges or damages."
+      },
+      {
+        "before": "int cnt = Math.max((int) item3.get(\"field10\") - (int) item3.get(\"field9\"), 1);",
+        "nth": 2,
+        "text": "Same billing rules as a single invoice: at least one day per rental."
+      },
+      {
+        "before": "if (item.get(\"kind1\").equals(\"typeA\")) {",
+        "nth": 2,
+        "text": "Daily rate and extra-kilometre charge per vehicle class: van, electric car, small car."
+      },
+      {
+        "before": "int val3 = (val1 * (cnt / 7 * 5) + val1 * (cnt % 7)) * param1 / 100;",
+        "nth": 2,
+        "text": "Rent with two free days per full week, adjusted by the season percentage."
+      },
+      {
+        "before": "int val4 = 0;",
+        "nth": 2,
+        "text": "Insurance premium: 9.00 per day partial, 18.00 per day full cover (at most 14 days)."
+      },
+      {
+        "before": "lastResult = val3 + val2 + val4;",
+        "text": "Revenue adds only the base invoice of each rental."
+      },
+      {
+        "before": "DataFactory.cache.put(\"accum\", accum);",
+        "text": "Stores the monthly revenue and logs it."
+      },
+      {
+        "before": "static boolean check(Map<String, Object> data) { return (int) data.get(\"type\") <= 1; }",
+        "text": "Open rental: reserved or on the road, so it still occupies a vehicle."
+      },
+      {
+        "before": "static void handle(Map<String, Object> data, String str, int time, int num2, boolean flag3, boolean flag4) {",
+        "text": "Counter action for customer str on day time at odometer num2: cancel, return or hand over."
+      },
+      {
+        "before": "lastKey = str;",
+        "text": "Remembers the customer and the rental, and logs the last amount due."
+      },
+      {
+        "before": "if (flag4) {",
+        "text": "Cancel: only a reservation can be cancelled; a vehicle already on the road cannot."
+      },
+      {
+        "before": "if (flag3) {",
+        "text": "Return closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "if (time > (int) data.get(\"field5\")) {",
+        "text": "Hand-over: a reservation past its expiry day (field5) is cancelled instead."
+      },
+      {
+        "before": "if (data.get(\"str\").equals(str)) {",
+        "text": "Only the reserving customer gets the vehicle; the rental starts today at the current odometer reading."
+      }
+    ],
+    "S6": [
+      {
+        "before": "// stratum: 0 dormant, 1 budding, 2 wilted, 3 uprooted",
+        "text": "Rental stage: 0 reserved, 1 on the road, 2 returned, 3 cancelled."
+      },
+      {
+        "before": "final class Greenhouse {",
+        "text": "Shared rental records (compost) and display log (chorus); hands out the invoice calculator."
+      },
+      {
+        "before": "soprano.mineralContent = (int) compost.get(\"mineralContent\");",
+        "text": "mineralContent is the season percentage (100 = regular price), read from the shared records."
+      },
+      {
+        "before": "final class Soprano {",
+        "text": "Invoice calculator: the season percentage adjusts only the rent."
+      },
+      {
+        "before": "int prune(Map<String, Object> sonnet, Map<String, Object> gardener, boolean isDormant, int nectar, boolean isBlooming) {",
+        "text": "Invoice for one rental (sonnet), with optional young-driver surcharge (gardener) and damage (nectar)."
+      },
+      {
+        "before": "Map<String, Object> beehive = (Map<String, Object>) sonnet.get(\"beehive\");",
+        "nth": 1,
+        "text": "Rental parts: beehive = vehicle, mulch = insurance, stanza = period, sediment = odometer readings."
+      },
+      {
+        "before": "int petals = Math.max((int) stanza.get(\"finalAct\") - (int) stanza.get(\"firstAct\"), 1);",
+        "nth": 1,
+        "text": "Rental days, drop-off minus pickup; every rental is billed for at least one day."
+      },
+      {
+        "before": "int pebbles = (int) sediment.get(\"stemHeight\") - (int) sediment.get(\"rootDepth\");",
+        "nth": 1,
+        "text": "Kilometres driven: odometer at return minus odometer at pickup."
+      },
+      {
+        "before": "if (beehive.get(\"aria\").equals(\"basalt\")) {",
+        "nth": 1,
+        "text": "Van: 69.00 per day plus 10.00 per started 500 kg payload; 100 free km per day, then 0.40 per km."
+      },
+      {
+        "before": "} else if (beehive.get(\"aria\").equals(\"shale\")) {",
+        "nth": 1,
+        "text": "Electric car: 50.00 per day plus 0.20 per kWh of battery; distance is never charged."
+      },
+      {
+        "before": "pollen = 3900;",
+        "nth": 1,
+        "text": "Any other class is a small car: 39.00 per day, 150 free km per day, 0.25 per extra km."
+      },
+      {
+        "before": "int wax = (pollen * (petals / 7 * 5) + pollen * (petals % 7)) * mineralContent / 100;",
+        "nth": 1,
+        "text": "Rent: each full week costs five daily rates (two days free), then the season percentage applies."
+      },
+      {
+        "before": "int fertilizer = 0;",
+        "nth": 1,
+        "text": "Insurance premium: none for liability only, 9.00 per day for partial cover (tulip)."
+      },
+      {
+        "before": "} else if (mulch.get(\"aria\").equals(\"orchid\")) {",
+        "nth": 1,
+        "text": "Full cover: 18.00 per day, billed for at most 14 days."
+      },
+      {
+        "before": "int seedling = wax + honeycomb + fertilizer;",
+        "text": "Base invoice: rent plus extra-kilometre charge plus insurance premium."
+      },
+      {
+        "before": "if (isDormant && (int) gardener.get(\"rosette\") < 25) {",
+        "text": "Drivers under 25 pay a young-driver surcharge of 12.00 per day."
+      },
+      {
+        "before": "if (isBlooming) {",
+        "text": "Damage: with liability only the customer pays it in full."
+      },
+      {
+        "before": "if (nectar > (int) mulch.get(\"moss\")) {",
+        "text": "Partial cover: the customer pays the damage up to the deductible (moss)."
+      },
+      {
+        "before": "} else if (mulch.get(\"aria\").equals(\"orchid\")) {",
+        "nth": 2,
+        "text": "Full cover: the customer pays no damage."
+      },
+      {
+        "before": "Greenhouse.compost.put(\"previousPollen\", seedling);",
+        "text": "Stores the amount due and logs it with the last customer at the counter."
+      },
+      {
+        "before": "int plantBulbs() {",
+        "text": "Monthly revenue over the stored rentals: base invoices only, without driver surcharges or damages."
+      },
+      {
+        "before": "int petals = Math.max((int) stanza.get(\"finalAct\") - (int) stanza.get(\"firstAct\"), 1);",
+        "nth": 2,
+        "text": "Same billing rules as a single invoice: at least one day per rental."
+      },
+      {
+        "before": "if (beehive.get(\"aria\").equals(\"basalt\")) {",
+        "nth": 2,
+        "text": "Daily rate and extra-kilometre charge per vehicle class: van, electric car, small car."
+      },
+      {
+        "before": "int wax = (pollen * (petals / 7 * 5) + pollen * (petals % 7)) * mineralContent / 100;",
+        "nth": 2,
+        "text": "Rent with two free days per full week, adjusted by the season percentage."
+      },
+      {
+        "before": "int fertilizer = 0;",
+        "nth": 2,
+        "text": "Insurance premium: 9.00 per day partial, 18.00 per day full cover (at most 14 days)."
+      },
+      {
+        "before": "previousPollen = wax + honeycomb + fertilizer;",
+        "text": "Revenue adds only the base invoice of each rental."
+      },
+      {
+        "before": "Greenhouse.compost.put(\"harvest\", harvest);",
+        "text": "Stores the monthly revenue and logs it."
+      },
+      {
+        "before": "static boolean isEmpty(Map<String, Object> mineral) { return (int) mineral.get(\"stratum\") <= 1; }",
+        "text": "Open rental: true while reserved or on the road, so it still occupies a vehicle."
+      },
+      {
+        "before": "static void erode(Map<String, Object> mineral, String tenor, int bedrock, int gravelDepth, boolean isWilting, boolean isSprouting) {",
+        "text": "Counter action for customer tenor on day bedrock at odometer gravelDepth: cancel, return or hand over."
+      },
+      {
+        "before": "lastTenor = tenor;",
+        "text": "Remembers the customer and the rental, and logs the last amount due."
+      },
+      {
+        "before": "if (isSprouting) {",
+        "text": "Cancel: only a reservation can be cancelled; a vehicle already on the road cannot."
+      },
+      {
+        "before": "if (isWilting) {",
+        "text": "Return closes a running rental and records the period and mileage that are billed later."
+      },
+      {
+        "before": "if (bedrock > (int) mineral.get(\"thawDepth\")) {",
+        "text": "Hand-over: a reservation past its expiry day (thawDepth) is cancelled instead."
+      },
+      {
+        "before": "if (mineral.get(\"tenor\").equals(tenor)) {",
+        "text": "Only the reserving customer gets the vehicle; the rental starts today at the current odometer reading."
+      }
+    ]
+  }
+}

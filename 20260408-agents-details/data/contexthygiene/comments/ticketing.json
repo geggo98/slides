@@ -1,0 +1,796 @@
+{
+  "header": "Prices tickets for one performance and runs its ticket sale from announcement through sellout or cancellation.",
+  "levels": {
+    "S1": [
+      {
+        "before": "final class Price {",
+        "text": "An amount of money in whole cents; percentage operations truncate fractions of a cent."
+      },
+      {
+        "before": "static int roundedUp(int cents, int step) { return (cents + step - 1) / step * step; }",
+        "text": "Rounds up to the next multiple of step cents, e.g. 4010 with step 50 becomes 4050."
+      },
+      {
+        "before": "final class Allotment {",
+        "text": "Seats of one performance: sold seats are paid, reserved seats are held unpaid; both count against capacity."
+      },
+      {
+        "before": "static int occupancy(Map<String, Object> allotment) { return ((int) allotment.get(\"sold\") + (int) allotment.get(\"reserved\")) * FULL_HOUSE / (int) allotment.get(\"capacity\"); }",
+        "text": "Share of capacity taken by sold and reserved seats, in whole percent (0..100)."
+      },
+      {
+        "before": "static Map<String, Object> released(Map<String, Object> allotment, int seats) {",
+        "text": "Gives held seats back to the free pool; the reserved count never drops below zero."
+      },
+      {
+        "before": "final class SaleStatus {",
+        "text": "Ticket sale lifecycle: only phase 1 (on sale) accepts bookings."
+      },
+      {
+        "before": "final class Category {",
+        "text": "Seating category: turns the event's base price into the category's list price; standing pays the base price."
+      },
+      {
+        "before": "final class Seated {",
+        "text": "A seat in a numbered row: each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "final class Lounge {",
+        "text": "Lounge access: base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "final class PriceRule {",
+        "text": "Dynamic pricing on the list price: an early-bird discount or a demand surcharge."
+      },
+      {
+        "before": "final class EarlyBird {",
+        "text": "Rewards booking at least minDaysAhead days before the performance with a percentage discount."
+      },
+      {
+        "before": "final class Demand {",
+        "text": "Surge pricing: every full 10 occupancy points above the threshold adds stepPercent."
+      },
+      {
+        "before": "return Price.atMost(Price.roundedUp(Price.surchargedBy(listPrice, steps * (int) rule.get(\"stepPercent\")), ROUNDING_CENTS), (int) rule.get(\"ceiling\"));",
+        "text": "The surge price is rounded up to 50 cents and never exceeds the ceiling."
+      },
+      {
+        "before": "final class PromoCode {",
+        "text": "A percentage discount on the tickets, valid only for orders of at least minSeats seats."
+      },
+      {
+        "before": "record BoxOffice(int basePrice, Map<String, Object> rule) {",
+        "text": "Prices orders for one performance from its base price and its pricing rule."
+      },
+      {
+        "before": "int unitPrice(Map<String, Object> booking, Map<String, Object> allotment) {",
+        "text": "Category surcharge first, then the dynamic rule on top of the list price."
+      },
+      {
+        "before": "int serviceFee(int seats) { return Price.atMost(Price.times(FEE_CENTS, seats), FEE_CAP_CENTS); }",
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order."
+      },
+      {
+        "before": "int orderTotal(Map<String, Object> booking, Map<String, Object> allotment) {",
+        "text": "Order total: unit price times seats, plus the service fee."
+      },
+      {
+        "before": "int promoTotal(Map<String, Object> booking, Map<String, Object> allotment, Map<String, Object> promo) {",
+        "text": "The promo discount reduces only the tickets; the service fee is always charged in full."
+      },
+      {
+        "before": "int nightRevenue(List<Map<String, Object>> bookings, Map<String, Object> allotment) {",
+        "text": "Sum of all order totals including fees, all priced against the same allotment snapshot."
+      },
+      {
+        "before": "final class SaleDesk {",
+        "text": "State transitions of a sale; invalid transitions leave the status unchanged."
+      },
+      {
+        "before": "static Map<String, Object> opened(Map<String, Object> status, int today) {",
+        "text": "An announced sale opens once its opening day has been reached."
+      },
+      {
+        "before": "static Map<String, Object> closedIfFull(Map<String, Object> status, Map<String, Object> allotment, int today) {",
+        "text": "An open sale becomes sold out when no free seat is left."
+      },
+      {
+        "before": "static Map<String, Object> cancelled(Map<String, Object> status, String reason) { return (int) status.get(\"phase\") == 3 ? status : Map.of(\"phase\", 3, \"reason\", reason); }",
+        "text": "An existing cancellation is kept, so the original reason is not overwritten."
+      },
+      {
+        "before": "static Map<String, Object> booked(Map<String, Object> allotment, Map<String, Object> status, int seats) {",
+        "text": "Sells seats only while on sale and only if enough seats are free; otherwise nothing is booked."
+      }
+    ],
+    "S2": [
+      {
+        "before": "record BoxOffice(int basePrice, Map<String, Object> rule) {",
+        "text": "Prices orders for one performance from its base price and its pricing rule."
+      },
+      {
+        "before": "int orderTotal(Map<String, Object> booking, Map<String, Object> allotment, Map<String, Object> promo, boolean hasPromo) {",
+        "text": "Order total for one booking: list price, pricing rule, optional promo code, service fee."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 1,
+        "text": "List price by seating category; standing pays the base price."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"seated\")) {",
+        "nth": 1,
+        "text": "Row seat: each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lounge\")) {",
+        "nth": 1,
+        "text": "Lounge: base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 1,
+        "text": "Early bird: booking at least minDaysAhead days ahead earns a percentage discount."
+      },
+      {
+        "before": "int occupancy = ((int) allotment.get(\"sold\") + (int) allotment.get(\"reserved\")) * 100 / (int) allotment.get(\"capacity\");",
+        "nth": 1,
+        "text": "Demand rule: occupancy is sold plus reserved seats, in whole percent of capacity."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 1,
+        "text": "Surge pricing: every full 10 occupancy points above the threshold adds stepPercent."
+      },
+      {
+        "before": "unit = (unit + 49) / 50 * 50;",
+        "nth": 1,
+        "text": "Rounds up to the next 50 cents, e.g. 4010 becomes 4050."
+      },
+      {
+        "before": "if (unit > (int) rule.get(\"ceiling\")) {",
+        "nth": 1,
+        "text": "The surge price never exceeds the ceiling."
+      },
+      {
+        "before": "if (hasPromo && seats >= (int) promo.get(\"minSeats\")) {",
+        "text": "Promo code: reduces only the tickets, and only for orders of at least minSeats seats."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 1,
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order and never discounted."
+      },
+      {
+        "before": "int nightRevenue(List<Map<String, Object>> bookings, Map<String, Object> allotment) {",
+        "text": "Sum of all order totals including fees, without promo codes, priced against the same allotment snapshot."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 2,
+        "text": "Per booking: list price by seating category first."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 2,
+        "text": "Then the pricing rule: early-bird discount or demand surcharge."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 2,
+        "text": "Surge: stepPercent per full 10 points above threshold, rounded up to 50 cents, capped at the ceiling."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 2,
+        "text": "Service fee: 1.50 per seat, at most 6.00 per order."
+      },
+      {
+        "before": "final class SaleStatus {",
+        "text": "Only phase 1 (on sale) accepts bookings."
+      },
+      {
+        "before": "static Map<String, Object> advance(Map<String, Object> status, Map<String, Object> allotment, int today, String reason, boolean cancelling, boolean closing) {",
+        "text": "Moves the sale through its lifecycle; invalid transitions leave the status unchanged."
+      },
+      {
+        "before": "if (cancelling) {",
+        "text": "Cancel: an existing cancellation is kept, so the original reason is not overwritten."
+      },
+      {
+        "before": "if (closing) {",
+        "text": "Close: an open sale becomes sold out when no free seat is left."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 0 && (int) status.get(\"opensOn\") <= today) {",
+        "text": "Open: an announced sale opens once its opening day has been reached."
+      },
+      {
+        "before": "static Map<String, Object> changed(Map<String, Object> allotment, Map<String, Object> status, int seats, boolean releasing) {",
+        "text": "Updates the seat allotment: releases held seats or sells new ones."
+      },
+      {
+        "before": "if (releasing) {",
+        "text": "Gives held seats back to the free pool; the reserved count never drops below zero."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 1 && seats <= (int) allotment.get(\"capacity\") - (int) allotment.get(\"sold\") - (int) allotment.get(\"reserved\")) {",
+        "text": "Sells seats only while on sale and only if enough seats are free; otherwise nothing is booked."
+      }
+    ],
+    "S3": [
+      {
+        "before": "final class BoxOffice {",
+        "text": "Prices orders for one performance from its base price and its pricing rule."
+      },
+      {
+        "before": "static int totalRevenue;",
+        "text": "Shared running totals: the night's revenue and the most recent order total."
+      },
+      {
+        "before": "int orderTotal(Map<String, Object> booking, Map<String, Object> allotment, Map<String, Object> promo, boolean hasPromo) {",
+        "text": "Order total for one booking: list price, pricing rule, optional promo code, service fee."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 1,
+        "text": "List price by seating category; standing pays the base price."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"seated\")) {",
+        "nth": 1,
+        "text": "Row seat: each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lounge\")) {",
+        "nth": 1,
+        "text": "Lounge: base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 1,
+        "text": "Early bird: booking at least minDaysAhead days ahead earns a percentage discount."
+      },
+      {
+        "before": "int occupancy = ((int) allotment.get(\"sold\") + (int) allotment.get(\"reserved\")) * 100 / (int) allotment.get(\"capacity\");",
+        "nth": 1,
+        "text": "Demand rule: occupancy is sold plus reserved seats, in whole percent of capacity."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 1,
+        "text": "Surge pricing: every full 10 occupancy points above the threshold adds stepPercent."
+      },
+      {
+        "before": "unit = (unit + 49) / 50 * 50;",
+        "nth": 1,
+        "text": "Rounds up to the next 50 cents, e.g. 4010 becomes 4050."
+      },
+      {
+        "before": "if (unit > (int) rule.get(\"ceiling\")) {",
+        "nth": 1,
+        "text": "The surge price never exceeds the ceiling."
+      },
+      {
+        "before": "if (hasPromo && seats >= (int) promo.get(\"minSeats\")) {",
+        "text": "Promo code: reduces only the tickets, and only for orders of at least minSeats seats."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 1,
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order and never discounted."
+      },
+      {
+        "before": "lastTotal = total + fee;",
+        "text": "Stores the order total in lastTotal and returns it."
+      },
+      {
+        "before": "int nightRevenue(List<Map<String, Object>> bookings, Map<String, Object> allotment) {",
+        "text": "Night revenue: sum of all order totals including fees, without promo codes, against one allotment."
+      },
+      {
+        "before": "Thread worker = new Thread(() -> {",
+        "text": "A worker thread prices every booking; the caller waits until it has finished."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 2,
+        "text": "Per booking: list price by seating category first."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 2,
+        "text": "Then the pricing rule: early-bird discount or demand surcharge."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 2,
+        "text": "Surge: stepPercent per full 10 points above threshold, rounded up to 50 cents, capped at the ceiling."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 2,
+        "text": "Service fee: 1.50 per seat, at most 6.00 per order."
+      },
+      {
+        "before": "totalRevenue = totalRevenue + lastTotal;",
+        "text": "Adds each order total, fee included, to the night's revenue."
+      },
+      {
+        "before": "final class SaleStatus {",
+        "text": "Only phase 1 (on sale) accepts bookings."
+      },
+      {
+        "before": "static void advance(Map<String, Object> status, Map<String, Object> allotment, int today, String reason, boolean cancelling, boolean closing) {",
+        "text": "Moves the sale through its lifecycle in place; invalid transitions change nothing."
+      },
+      {
+        "before": "if (cancelling) {",
+        "text": "Cancel: an existing cancellation is kept, so the original reason is not overwritten."
+      },
+      {
+        "before": "if (closing) {",
+        "text": "Close: an open sale becomes sold out when no free seat is left."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 0 && (int) status.get(\"opensOn\") <= today) {",
+        "text": "Open: an announced sale opens once its opening day has been reached."
+      },
+      {
+        "before": "static void changed(Map<String, Object> allotment, Map<String, Object> status, int seats, boolean releasing) {",
+        "text": "Updates the seat allotment in place: releases held seats or sells new ones."
+      },
+      {
+        "before": "if (releasing) {",
+        "text": "Gives held seats back to the free pool; the reserved count never drops below zero."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 1 && seats <= (int) allotment.get(\"capacity\") - (int) allotment.get(\"sold\") - (int) allotment.get(\"reserved\")) {",
+        "text": "Sells seats only while on sale and only if enough seats are free; otherwise nothing is booked."
+      }
+    ],
+    "S4": [
+      {
+        "before": "final class TicketFactory {",
+        "text": "Shared store for one performance: base price, pricing rule, allotment, bookings and status, plus a text log."
+      },
+      {
+        "before": "BoxOffice createBoxOffice() {",
+        "text": "Returns the one box office, loaded with the stored base price and pricing rule."
+      },
+      {
+        "before": "final class BoxOffice {",
+        "text": "Prices orders for one performance from its base price and its pricing rule."
+      },
+      {
+        "before": "int orderTotal(Map<String, Object> booking, Map<String, Object> promo, boolean hasPromo) {",
+        "text": "Order total for one booking against the stored allotment: list price, rule, optional promo, fee."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 1,
+        "text": "List price by seating category; standing pays the base price."
+      },
+      {
+        "before": "if (category.get(\"kind\").equals(\"seated\")) {",
+        "nth": 1,
+        "text": "Row seat: each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "} else if (category.get(\"kind\").equals(\"lounge\")) {",
+        "nth": 1,
+        "text": "Lounge: base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 1,
+        "text": "Early bird: booking at least minDaysAhead days ahead earns a percentage discount."
+      },
+      {
+        "before": "int occupancy = ((int) allotment.get(\"sold\") + (int) allotment.get(\"reserved\")) * 100 / (int) allotment.get(\"capacity\");",
+        "nth": 1,
+        "text": "Demand rule: occupancy is sold plus reserved seats, in whole percent of capacity."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 1,
+        "text": "Surge pricing: every full 10 occupancy points above the threshold adds stepPercent."
+      },
+      {
+        "before": "unit = (unit + 49) / 50 * 50;",
+        "nth": 1,
+        "text": "Rounds up to the next 50 cents, e.g. 4010 becomes 4050."
+      },
+      {
+        "before": "if (unit > (int) rule.get(\"ceiling\")) {",
+        "nth": 1,
+        "text": "The surge price never exceeds the ceiling."
+      },
+      {
+        "before": "if (hasPromo && seats >= (int) promo.get(\"minSeats\")) {",
+        "text": "Promo code: reduces only the tickets, and only for orders of at least minSeats seats."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 1,
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order and never discounted."
+      },
+      {
+        "before": "TicketFactory.db.put(\"lastTotal\", lastTotal);",
+        "text": "Stores the order total and writes it to the log with the current sale phase."
+      },
+      {
+        "before": "int nightRevenue() {",
+        "text": "Night revenue: sum of all stored bookings' order totals including fees, without promo codes."
+      },
+      {
+        "before": "Thread worker = new Thread(() -> {",
+        "text": "A worker thread prices every booking; the caller waits until it has finished."
+      },
+      {
+        "before": "int listPrice = basePrice;",
+        "nth": 2,
+        "text": "Per booking: list price by seating category first."
+      },
+      {
+        "before": "if (rule.get(\"kind\").equals(\"earlyBird\")) {",
+        "nth": 2,
+        "text": "Then the pricing rule: early-bird discount or demand surcharge."
+      },
+      {
+        "before": "int steps = Math.max(occupancy - (int) rule.get(\"threshold\"), 0) / 10;",
+        "nth": 2,
+        "text": "Surge: stepPercent per full 10 points above threshold, rounded up to 50 cents, capped at the ceiling."
+      },
+      {
+        "before": "int fee = 150 * seats;",
+        "nth": 2,
+        "text": "Service fee: 1.50 per seat, at most 6.00 per order."
+      },
+      {
+        "before": "TicketFactory.db.put(\"totalRevenue\", totalRevenue);",
+        "text": "Stores the night's revenue and writes it to the log."
+      },
+      {
+        "before": "final class SaleStatus {",
+        "text": "Only phase 1 (on sale) accepts bookings."
+      },
+      {
+        "before": "static void advance(Map<String, Object> status, Map<String, Object> allotment, int today, String reason, boolean cancelling, boolean closing) {",
+        "text": "Moves the sale through its lifecycle in place; invalid transitions change nothing."
+      },
+      {
+        "before": "lastPhase = (int) status.get(\"phase\");",
+        "text": "Records the current phase and status, and logs the day, before any transition."
+      },
+      {
+        "before": "if (cancelling) {",
+        "text": "Cancel: an existing cancellation is kept, so the original reason is not overwritten."
+      },
+      {
+        "before": "if (closing) {",
+        "text": "Close: an open sale becomes sold out when no free seat is left."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 0 && (int) status.get(\"opensOn\") <= today) {",
+        "text": "Open: an announced sale opens once its opening day has been reached."
+      },
+      {
+        "before": "static void changed(Map<String, Object> allotment, Map<String, Object> status, int seats, boolean releasing) {",
+        "text": "Updates the seat allotment in place: releases held seats or sells new ones."
+      },
+      {
+        "before": "if (releasing) {",
+        "text": "Gives held seats back to the free pool; the reserved count never drops below zero."
+      },
+      {
+        "before": "if ((int) status.get(\"phase\") == 1 && seats <= (int) allotment.get(\"capacity\") - (int) allotment.get(\"sold\") - (int) allotment.get(\"reserved\")) {",
+        "text": "Sells seats only while on sale and only if enough seats are free; otherwise nothing is booked."
+      }
+    ],
+    "S5": [
+      {
+        "before": "// type2: 0 a1, 1 a2, 2 a3, 3 a4",
+        "text": "Sale phase type2: 0 announced, 1 on sale, 2 sold out, 3 cancelled."
+      },
+      {
+        "before": "final class DataFactory {",
+        "text": "Shared store for one performance: base price cfg1, pricing rule cfg, seat allotment data, bookings list, log."
+      },
+      {
+        "before": "Manager getManager() {",
+        "text": "Returns the one box office, loaded with the stored base price and pricing rule."
+      },
+      {
+        "before": "final class Manager {",
+        "text": "Box office: prices ticket orders for one performance from its base price and pricing rule."
+      },
+      {
+        "before": "int doExecute(Map<String, Object> item, Map<String, Object> ref, boolean flag) {",
+        "text": "Order total: item is the booking, ref the promo code, flag says whether the customer has one."
+      },
+      {
+        "before": "int num = (int) item.get(\"num\");",
+        "nth": 1,
+        "text": "num is the number of seats, num2 the days booked before the performance."
+      },
+      {
+        "before": "int tmp = cfg1;",
+        "nth": 1,
+        "text": "List price by seating category, starting from the base price; standing pays the base price."
+      },
+      {
+        "before": "if (obj.get(\"type1\").equals(\"typeA\")) {",
+        "nth": 1,
+        "text": "Row seat (typeA): each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "} else if (obj.get(\"type1\").equals(\"typeB\")) {",
+        "nth": 1,
+        "text": "Lounge (typeB): base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "if (cfg.get(\"type1\").equals(\"typeC\")) {",
+        "nth": 1,
+        "text": "Early bird (typeC): booking at least field4 days ahead takes field5 percent off."
+      },
+      {
+        "before": "int tmp2 = ((int) data.get(\"field6\") + (int) data.get(\"field7\")) * 100 / (int) data.get(\"field8\");",
+        "nth": 1,
+        "text": "Otherwise demand pricing: occupancy is sold (field6) plus reserved (field7) seats, in whole percent of capacity field8."
+      },
+      {
+        "before": "int cnt = Math.max(tmp2 - (int) cfg.get(\"field1\"), 0) / 10;",
+        "nth": 1,
+        "text": "Surge pricing: every full 10 occupancy points above threshold field1 adds field2 percent."
+      },
+      {
+        "before": "result = (result + 49) / 50 * 50;",
+        "nth": 1,
+        "text": "Rounds up to the next 50 cents, e.g. 4010 becomes 4050."
+      },
+      {
+        "before": "if (result > (int) cfg.get(\"field3\")) {",
+        "nth": 1,
+        "text": "The surge price never exceeds the ceiling in field3."
+      },
+      {
+        "before": "int tmp3 = result * num;",
+        "text": "Tickets: unit price times number of seats."
+      },
+      {
+        "before": "if (flag && num >= (int) ref.get(\"field10\")) {",
+        "text": "Promo code: field9 percent off the tickets, only for orders of at least field10 seats."
+      },
+      {
+        "before": "int tmp4 = 150 * num;",
+        "nth": 1,
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order and never discounted."
+      },
+      {
+        "before": "lastResult = tmp3 + tmp4;",
+        "text": "Order total: tickets plus fee; stored and written to the log with the sale phase."
+      },
+      {
+        "before": "int perform() {",
+        "text": "Night revenue: sum of all stored bookings' order totals including fees, without promo codes."
+      },
+      {
+        "before": "Thread thread1 = new Thread(() -> {",
+        "text": "A worker thread prices every booking against the same allotment; the caller waits for it."
+      },
+      {
+        "before": "int tmp = cfg1;",
+        "nth": 2,
+        "text": "Per booking: list price by seating category first."
+      },
+      {
+        "before": "if (cfg.get(\"type1\").equals(\"typeC\")) {",
+        "nth": 2,
+        "text": "Then the pricing rule: early-bird discount or demand surcharge."
+      },
+      {
+        "before": "int cnt = Math.max(tmp2 - (int) cfg.get(\"field1\"), 0) / 10;",
+        "nth": 2,
+        "text": "Surge: field2 percent per full 10 points above field1, rounded up to 50 cents, capped at field3."
+      },
+      {
+        "before": "int tmp4 = 150 * num;",
+        "nth": 2,
+        "text": "Service fee: 1.50 per seat, at most 6.00 per order."
+      },
+      {
+        "before": "counter = counter + lastResult;",
+        "text": "counter adds up the night's revenue, fees included."
+      },
+      {
+        "before": "final class Flag {",
+        "text": "Sale check: true only while on sale (type2 1), the only phase that accepts bookings."
+      },
+      {
+        "before": "static void process(Map<String, Object> state, Map<String, Object> data, int time, String str1, boolean flag2, boolean flag3) {",
+        "text": "Sale lifecycle: flag2 cancels, flag3 closes a full sale, otherwise an announced sale may open."
+      },
+      {
+        "before": "lastKey = (int) state.get(\"type2\");",
+        "text": "Records the current phase and status, and logs the day, before any transition."
+      },
+      {
+        "before": "if (flag2) {",
+        "text": "Cancel: an existing cancellation is kept, so the original reason is not overwritten by str1."
+      },
+      {
+        "before": "if (flag3) {",
+        "text": "Close: an open sale becomes sold out when no free seat is left (field8 minus field6 minus field7)."
+      },
+      {
+        "before": "if ((int) state.get(\"type2\") == 0 && (int) state.get(\"num4\") <= time) {",
+        "text": "Open: an announced sale opens once its opening day num4 has been reached."
+      },
+      {
+        "before": "static void handle(Map<String, Object> data, Map<String, Object> state, int num, boolean flag4) {",
+        "text": "Seat allotment: field6 sold, field7 reserved, field8 capacity; num is the number of seats."
+      },
+      {
+        "before": "if (flag4) {",
+        "text": "Release (flag4): gives held seats back; the reserved count never drops below zero."
+      },
+      {
+        "before": "if ((int) state.get(\"type2\") == 1 && num <= (int) data.get(\"field8\") - (int) data.get(\"field6\") - (int) data.get(\"field7\")) {",
+        "text": "Booking: sells seats only while on sale and only if enough seats are free; otherwise nothing changes."
+      }
+    ],
+    "S6": [
+      {
+        "before": "// stratum: 0 bud, 1 sprout, 2 stump, 3 compost",
+        "text": "Sale phase stratum: 0 announced, 1 on sale, 2 sold out, 3 cancelled."
+      },
+      {
+        "before": "final class ReefAquarium {",
+        "text": "Shared store for one performance: base price, pricing rule, seat allotment, bookings, plus a text log."
+      },
+      {
+        "before": "Skipper sinkSkipper() {",
+        "text": "Returns the one box office, loaded with the stored base price and pricing rule."
+      },
+      {
+        "before": "final class Skipper {",
+        "text": "Box office: prices ticket orders; mossDepth is the base price, compass the pricing rule."
+      },
+      {
+        "before": "int bloom(Map<String, Object> trout, Map<String, Object> herbarium, boolean isDormant) {",
+        "text": "Order total: trout is the booking, herbarium the promo code, isDormant says whether one is used."
+      },
+      {
+        "before": "int petals = (int) trout.get(\"petals\");",
+        "nth": 1,
+        "text": "petals is the number of seats, fathoms the days booked before the performance."
+      },
+      {
+        "before": "int sediment = mossDepth;",
+        "nth": 1,
+        "text": "List price by seating category, starting from the base price; standing pays the base price."
+      },
+      {
+        "before": "if (pebble.get(\"genus\").equals(\"bishop\")) {",
+        "nth": 1,
+        "text": "Row seat (bishop): each row closer to the stage than row 10 adds 1.20 per seat."
+      },
+      {
+        "before": "} else if (pebble.get(\"genus\").equals(\"rook\")) {",
+        "nth": 1,
+        "text": "Lounge (rook): base price plus 80 percent, plus 4.50 for each included voucher."
+      },
+      {
+        "before": "if (compass.get(\"genus\").equals(\"pawn\")) {",
+        "nth": 1,
+        "text": "Early bird (pawn): booking at least rootDepth days ahead takes pollen percent off."
+      },
+      {
+        "before": "int salinity = ((int) glacier.get(\"basalt\") + (int) glacier.get(\"granite\")) * 100 / (int) glacier.get(\"lagoon\");",
+        "nth": 1,
+        "text": "Otherwise demand pricing: occupancy is sold (basalt) plus reserved (granite) seats, in whole percent of capacity lagoon."
+      },
+      {
+        "before": "int barnacles = Math.max(salinity - (int) compass.get(\"tidemark\"), 0) / 10;",
+        "nth": 1,
+        "text": "Surge pricing: every full 10 occupancy points above tidemark adds mossRate percent."
+      },
+      {
+        "before": "limestone = (limestone + 49) / 50 * 50;",
+        "nth": 1,
+        "text": "Rounds up to the next 50 cents, e.g. 4010 becomes 4050."
+      },
+      {
+        "before": "if (limestone > (int) compass.get(\"canopy\")) {",
+        "nth": 1,
+        "text": "The surge price never exceeds the ceiling in canopy."
+      },
+      {
+        "before": "int harvest = limestone * petals;",
+        "text": "Tickets: unit price times number of seats."
+      },
+      {
+        "before": "if (isDormant && petals >= (int) herbarium.get(\"gills\")) {",
+        "text": "Promo code: sepal percent off the tickets, only for orders of at least gills seats."
+      },
+      {
+        "before": "int lichen = 150 * petals;",
+        "nth": 1,
+        "text": "Service fee: 1.50 per seat, capped at 6.00 per order and never discounted."
+      },
+      {
+        "before": "previousCatch = harvest + lichen;",
+        "text": "Order total: tickets plus fee; stored and written to the log with the sale phase."
+      },
+      {
+        "before": "int plantSeedlings() {",
+        "text": "Night revenue: sum of all stored bookings' order totals including fees, without promo codes."
+      },
+      {
+        "before": "Thread gardener = new Thread(() -> {",
+        "text": "A worker thread prices every booking against the same allotment; the caller waits for it."
+      },
+      {
+        "before": "int sediment = mossDepth;",
+        "nth": 2,
+        "text": "Per booking: list price by seating category first."
+      },
+      {
+        "before": "if (compass.get(\"genus\").equals(\"pawn\")) {",
+        "nth": 2,
+        "text": "Then the pricing rule: early-bird discount or demand surcharge."
+      },
+      {
+        "before": "int barnacles = Math.max(salinity - (int) compass.get(\"tidemark\"), 0) / 10;",
+        "nth": 2,
+        "text": "Surge: mossRate percent per full 10 points above tidemark, rounded up to 50 cents, capped at canopy."
+      },
+      {
+        "before": "int lichen = 150 * petals;",
+        "nth": 2,
+        "text": "Service fee: 1.50 per seat, at most 6.00 per order."
+      },
+      {
+        "before": "driftwood = driftwood + previousCatch;",
+        "text": "driftwood adds up the night's revenue, fees included."
+      },
+      {
+        "before": "final class Moraine {",
+        "text": "Sale check: true only while on sale (stratum 1), the only phase that accepts bookings."
+      },
+      {
+        "before": "static void erode(Map<String, Object> moraine, Map<String, Object> glacier, int epoch, String mineral, boolean isRooted, boolean isPruned) {",
+        "text": "Sale lifecycle: isRooted cancels, isPruned closes a full sale, otherwise an announced sale may open."
+      },
+      {
+        "before": "lastFossil = (int) moraine.get(\"stratum\");",
+        "text": "Records the current phase and status, and logs the day, before any transition."
+      },
+      {
+        "before": "if (isRooted) {",
+        "text": "Cancel: an existing cancellation is kept, so the original reason is not overwritten."
+      },
+      {
+        "before": "if (isPruned) {",
+        "text": "Close: an open sale becomes sold out when no free seat is left (capacity lagoon minus sold and reserved)."
+      },
+      {
+        "before": "if ((int) moraine.get(\"stratum\") == 0 && (int) moraine.get(\"quartz\") <= epoch) {",
+        "text": "Open: an announced sale opens once its opening day quartz has been reached."
+      },
+      {
+        "before": "static void transplant(Map<String, Object> glacier, Map<String, Object> moraine, int petals, boolean isWilted) {",
+        "text": "Seat allotment glacier: basalt sold, granite reserved, lagoon capacity; petals is the number of seats."
+      },
+      {
+        "before": "if (isWilted) {",
+        "text": "Release (isWilted): gives held seats back; the reserved count never drops below zero."
+      },
+      {
+        "before": "if ((int) moraine.get(\"stratum\") == 1 && petals <= (int) glacier.get(\"lagoon\") - (int) glacier.get(\"basalt\") - (int) glacier.get(\"granite\")) {",
+        "text": "Booking: sells seats only while on sale and only if enough seats are free; otherwise nothing changes."
+      }
+    ]
+  }
+}

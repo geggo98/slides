@@ -1,0 +1,647 @@
+{
+  "header": "Computes parking fees for stays and tracks which car occupies which spot. The fee depends on stay length, tariff, spot kind and season ticket.",
+  "levels": {
+    "S1": [
+      {
+        "before": "// status code: 0 vacant, 1 taken, 2 held",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "final class Cents {",
+        "text": "Money amounts are whole cents, so rounding is always explicit: halving rounds down."
+      },
+      {
+        "before": "final class Stay {",
+        "text": "One parking stay; entry and exit are clock readings in minutes."
+      },
+      {
+        "before": "static int startedBlocks(Map<String, Object> stay, int blockMinutes) { return (minutes(stay) + blockMinutes - 1) / blockMinutes; }",
+        "text": "Every started block is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "static Map<String, Object> shortenedBy(Map<String, Object> stay, int freeMinutes) {",
+        "text": "Free minutes move the entry forward, but never past the exit, so the stay cannot become negative."
+      },
+      {
+        "before": "final class SpotStatus {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Spot {",
+        "text": "The kind of spot adjusts the tariff fee for the stay."
+      },
+      {
+        "before": "case \"charging\" -> Cents.raisedBy(fee, Cents.scaledBy((int) spot.get(\"kilowatts\") * CENTS_PER_KILOWATT, Stay.startedHours(stay)));",
+        "text": "Charging surcharge on top of the fee: 5 cents per kW of charger power for every started hour."
+      },
+      {
+        "before": "case \"accessible\" -> Cents.halved(fee);",
+        "text": "Accessible spots pay half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "default -> fee;",
+        "text": "Standard spots pay the tariff fee unchanged."
+      },
+      {
+        "before": "final class Tariff {",
+        "text": "Turns the length of a stay into a base fee, with the day or the night tariff."
+      },
+      {
+        "before": "final class DayTariff {",
+        "text": "Day tariff: free within the grace period; every full 24 started hours cost the daily cap, the other hours the hourly rate."
+      },
+      {
+        "before": "int restOfDay = Cents.cappedAt(Cents.scaledBy((int) tariff.get(\"hourlyRate\"), hours % HOURS_PER_DAY), (int) tariff.get(\"dailyCap\"));",
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "final class NightTariff {",
+        "text": "Night tariff: a flat rate for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "final class SeasonTicket {",
+        "text": "A season ticket includes free minutes per stay; only the time after them is billed."
+      },
+      {
+        "before": "record Cashier(Map<String, Object> tariff) {",
+        "text": "Computes the amount due: first the tariff prices the stay, then the spot adjusts that fee."
+      },
+      {
+        "before": "int dueForHolder(Map<String, Object> spot, Map<String, Object> stay, Map<String, Object> ticket) { return dueFor(spot, SeasonTicket.billable(ticket, stay)); }",
+        "text": "Holders pay only for the time after their included minutes; this also shortens the hours a charging surcharge counts."
+      },
+      {
+        "before": "int dayRevenue(List<Map<String, Object>> visits) {",
+        "text": "Sum of all visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "final class Gate {",
+        "text": "Entry and exit rules for a spot, as pure state transitions."
+      },
+      {
+        "before": "static Map<String, Object> arrive(Map<String, Object> status, String plate, int now) {",
+        "text": "A car may take a vacant spot or the spot held for its own plate; otherwise the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> depart(Map<String, Object> status) { return SpotStatus.isTaken(status) ? Map.of(\"code\", 0) : status; }",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "static Map<String, Object> stayUntil(Map<String, Object> taken, int now) { return Map.of(\"enteredAt\", taken.get(\"since\"), \"leftAt\", now); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ],
+    "S2": [
+      {
+        "before": "// status code: 0 vacant, 1 taken, 2 held",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "record Cashier(Map<String, Object> tariff) {",
+        "text": "Computes the amount due for one stay and the revenue of a whole day."
+      },
+      {
+        "before": "int dueFor(Map<String, Object> spot, Map<String, Object> stay, Map<String, Object> ticket, boolean isSeason) {",
+        "text": "Amount due: first the tariff prices the stay, then the spot adjusts that fee. Entry and exit are minutes."
+      },
+      {
+        "before": "if (isSeason) {",
+        "text": "Season ticket: included minutes move the entry forward, but never past the exit; only the rest is billed."
+      },
+      {
+        "before": "if (minutes <= (int) tariff.get(\"graceMinutes\")) {",
+        "nth": 1,
+        "text": "Day tariff: stays up to the grace period are free."
+      },
+      {
+        "before": "int hours = (minutes + 59) / 60;",
+        "nth": 1,
+        "text": "Every started hour is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "int fullDays = (int) tariff.get(\"dailyCap\") * (hours / 24);",
+        "nth": 1,
+        "text": "Each complete 24 started hours cost the daily cap; the remaining hours cost the hourly rate."
+      },
+      {
+        "before": "if (restOfDay > (int) tariff.get(\"dailyCap\")) {",
+        "nth": 1,
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "fee = (int) tariff.get(\"flatRate\") * ((minutes + 719) / 720);",
+        "nth": 1,
+        "text": "Night tariff: a flat rate for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 1,
+        "text": "Charging surcharge: 5 cents per kW for every started hour of the billed time, after any season ticket minutes."
+      },
+      {
+        "before": "} else if (spot.get(\"kind\").equals(\"accessible\")) {",
+        "nth": 1,
+        "text": "Accessible spots pay half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "int dayRevenue(List<Map<String, Object>> visits) {",
+        "text": "Day revenue: sum of all visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "if (tariff.get(\"kind\").equals(\"day\")) {",
+        "nth": 2,
+        "text": "Each visit gets the same tariff rules: grace period, started hours, daily cap, or the night flat rate."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 2,
+        "text": "Same spot adjustment: charging surcharge per kW and started hour, half price on accessible spots."
+      },
+      {
+        "before": "final class SpotStatus {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Gate {",
+        "text": "Entry and exit rules for a spot, as pure state transitions."
+      },
+      {
+        "before": "if (leaving) {",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 0) {",
+        "text": "Arriving: a car takes a vacant spot from this minute on."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 2 && status.get(\"holder\").equals(plate)) {",
+        "text": "A held spot opens only for its own plate; for any other car the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> stayUntil(Map<String, Object> taken, int now) { return Map.of(\"enteredAt\", taken.get(\"since\"), \"leftAt\", now); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ],
+    "S3": [
+      {
+        "before": "// status code: 0 vacant, 1 taken, 2 held",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "final class Cashier {",
+        "text": "Computes the amount due for one stay and the revenue of a whole day."
+      },
+      {
+        "before": "static int totalRevenue;",
+        "text": "The day's revenue and the last computed fee, shared by all cashiers."
+      },
+      {
+        "before": "int dueFor(Map<String, Object> spot, Map<String, Object> stay, Map<String, Object> ticket, boolean isSeason) {",
+        "text": "Amount due: first the tariff prices the stay, then the spot adjusts that fee. Entry and exit are minutes."
+      },
+      {
+        "before": "if (isSeason) {",
+        "text": "Season ticket: included minutes move the entry forward, but never past the exit; only the rest is billed."
+      },
+      {
+        "before": "if (minutes <= (int) tariff.get(\"graceMinutes\")) {",
+        "nth": 1,
+        "text": "Day tariff: stays up to the grace period are free."
+      },
+      {
+        "before": "int hours = (minutes + 59) / 60;",
+        "nth": 1,
+        "text": "Every started hour is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "int fullDays = (int) tariff.get(\"dailyCap\") * (hours / 24);",
+        "nth": 1,
+        "text": "Each complete 24 started hours cost the daily cap; the remaining hours cost the hourly rate."
+      },
+      {
+        "before": "if (restOfDay > (int) tariff.get(\"dailyCap\")) {",
+        "nth": 1,
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "fee = (int) tariff.get(\"flatRate\") * ((minutes + 719) / 720);",
+        "nth": 1,
+        "text": "Night tariff: a flat rate for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 1,
+        "text": "Charging surcharge: 5 cents per kW for every started hour of the billed time, after any season ticket minutes."
+      },
+      {
+        "before": "} else if (spot.get(\"kind\").equals(\"accessible\")) {",
+        "nth": 1,
+        "text": "Accessible spots pay half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "lastFee = fee;",
+        "nth": 1,
+        "text": "Remembers the fee of the most recent stay."
+      },
+      {
+        "before": "int dayRevenue(List<Map<String, Object>> visits) {",
+        "text": "Day revenue: sum of all visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "Thread worker = new Thread(() -> {",
+        "text": "A separate thread prices the visits one by one; the caller waits for it to finish."
+      },
+      {
+        "before": "if (tariff.get(\"kind\").equals(\"day\")) {",
+        "nth": 2,
+        "text": "Each visit gets the same tariff rules: grace period, started hours, daily cap, or the night flat rate."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 2,
+        "text": "Same spot adjustment: charging surcharge per kW and started hour, half price on accessible spots."
+      },
+      {
+        "before": "totalRevenue = totalRevenue + fee;",
+        "text": "Adds the visit's fee to the day's revenue."
+      },
+      {
+        "before": "final class SpotStatus {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Gate {",
+        "text": "Entry and exit rules for a spot; a gate pass changes the spot status in place."
+      },
+      {
+        "before": "if (leaving) {",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 0) {",
+        "text": "Arriving: a car takes a vacant spot and records its plate and arrival minute."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 2 && status.get(\"holder\").equals(plate)) {",
+        "text": "A held spot opens only for its own plate; for any other car the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> stayUntil(Map<String, Object> taken, int now) { return Map.of(\"enteredAt\", taken.get(\"since\"), \"leftAt\", now); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ],
+    "S4": [
+      {
+        "before": "// status code: 0 vacant, 1 taken, 2 held",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "final class ParkingFactory {",
+        "text": "Central store for tariff, visits and spot status, plus a display that lists fees per licence plate."
+      },
+      {
+        "before": "Cashier createCashier() {",
+        "text": "Returns the one shared cashier, loaded with the current tariff from the store."
+      },
+      {
+        "before": "final class Cashier {",
+        "text": "Computes the amount due for one stay and the revenue of a whole day."
+      },
+      {
+        "before": "int dueFor(Map<String, Object> spot, Map<String, Object> stay, Map<String, Object> ticket, boolean isSeason) {",
+        "text": "Amount due: first the tariff prices the stay, then the spot adjusts that fee. Entry and exit are minutes."
+      },
+      {
+        "before": "if (isSeason) {",
+        "text": "Season ticket: included minutes move the entry forward, but never past the exit; only the rest is billed."
+      },
+      {
+        "before": "if (minutes <= (int) tariff.get(\"graceMinutes\")) {",
+        "nth": 1,
+        "text": "Day tariff: stays up to the grace period are free."
+      },
+      {
+        "before": "int hours = (minutes + 59) / 60;",
+        "nth": 1,
+        "text": "Every started hour is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "int fullDays = (int) tariff.get(\"dailyCap\") * (hours / 24);",
+        "nth": 1,
+        "text": "Each complete 24 started hours cost the daily cap; the remaining hours cost the hourly rate."
+      },
+      {
+        "before": "if (restOfDay > (int) tariff.get(\"dailyCap\")) {",
+        "nth": 1,
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "fee = (int) tariff.get(\"flatRate\") * ((minutes + 719) / 720);",
+        "nth": 1,
+        "text": "Night tariff: a flat rate for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 1,
+        "text": "Charging surcharge: 5 cents per kW for every started hour of the billed time, after any season ticket minutes."
+      },
+      {
+        "before": "} else if (spot.get(\"kind\").equals(\"accessible\")) {",
+        "nth": 1,
+        "text": "Accessible spots pay half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "ParkingFactory.db.put(\"lastFee\", fee);",
+        "text": "Stores the fee and shows it on the display next to the last plate seen at the gate."
+      },
+      {
+        "before": "int dayRevenue() {",
+        "text": "Day revenue: sum of all stored visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "Thread worker = new Thread(() -> {",
+        "text": "A separate thread prices the visits one by one; the caller waits for it to finish."
+      },
+      {
+        "before": "if (tariff.get(\"kind\").equals(\"day\")) {",
+        "nth": 2,
+        "text": "Each visit gets the same tariff rules: grace period, started hours, daily cap, or the night flat rate."
+      },
+      {
+        "before": "if (spot.get(\"kind\").equals(\"charging\")) {",
+        "nth": 2,
+        "text": "Same spot adjustment: charging surcharge per kW and started hour, half price on accessible spots."
+      },
+      {
+        "before": "ParkingFactory.db.put(\"totalRevenue\", totalRevenue);",
+        "text": "Stores the day's revenue and shows it on the display."
+      },
+      {
+        "before": "final class SpotStatus {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Gate {",
+        "text": "Entry and exit rules for a spot; a gate pass changes the spot status in place."
+      },
+      {
+        "before": "lastPlate = plate;",
+        "text": "Every gate pass records the plate, stores the spot status and shows the latest fee on the display."
+      },
+      {
+        "before": "if (leaving) {",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 0) {",
+        "text": "Arriving: a car takes a vacant spot and records its plate and arrival minute."
+      },
+      {
+        "before": "if ((int) status.get(\"code\") == 2 && status.get(\"holder\").equals(plate)) {",
+        "text": "A held spot opens only for its own plate; for any other car the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> stayUntil(Map<String, Object> taken, int now) { return Map.of(\"enteredAt\", taken.get(\"since\"), \"leftAt\", now); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ],
+    "S5": [
+      {
+        "before": "// state type1: 0 a1, 1 a3, 2 a2",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "final class DataFactory {",
+        "text": "Central store for tariff, visits and spot status, plus a display that lists fees per licence plate."
+      },
+      {
+        "before": "Manager getManager() {",
+        "text": "Returns the one shared cashier, loaded with the current tariff from the store."
+      },
+      {
+        "before": "final class Manager {",
+        "text": "Cashier: computes the amount due for one stay and the revenue of a whole day."
+      },
+      {
+        "before": "int doExecute(Map<String, Object> item, Map<String, Object> obj, Map<String, Object> ref, boolean flag) {",
+        "text": "Amount due for a spot (item) and a stay (obj, entry and exit in minutes), with an optional season ticket (ref)."
+      },
+      {
+        "before": "if (flag) {",
+        "text": "Season ticket: included minutes move the entry forward, but never past the exit; only the rest is billed."
+      },
+      {
+        "before": "if (num <= (int) cfg.get(\"field5\")) {",
+        "nth": 1,
+        "text": "Day tariff (typeA): stays up to the grace period (field5) are free."
+      },
+      {
+        "before": "int cnt = (num + 59) / 60;",
+        "nth": 1,
+        "text": "Every started hour is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "int tmp2 = (int) cfg.get(\"field4\") * (cnt / 24);",
+        "nth": 1,
+        "text": "Each complete 24 started hours cost the daily cap (field4); the remaining hours cost the hourly rate (field3)."
+      },
+      {
+        "before": "if (tmp3 > (int) cfg.get(\"field4\")) {",
+        "nth": 1,
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "result = (int) cfg.get(\"field6\") * ((num + 719) / 720);",
+        "nth": 1,
+        "text": "Night tariff: a flat rate (field6) for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "if (item.get(\"type2\").equals(\"typeB\")) {",
+        "nth": 1,
+        "text": "Charging spot (typeB): 5 cents per kW (num2) for every started hour of the billed time."
+      },
+      {
+        "before": "} else if (item.get(\"type2\").equals(\"typeC\")) {",
+        "nth": 1,
+        "text": "Accessible spot (typeC): pays half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "DataFactory.store.put(\"lastResult\", result);",
+        "text": "Stores the fee and shows it on the display next to the last plate seen at the gate."
+      },
+      {
+        "before": "int perform() {",
+        "text": "Day revenue: sum of all stored visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "Thread thread1 = new Thread(() -> {",
+        "text": "A separate thread prices the visits one by one; the caller waits for it to finish."
+      },
+      {
+        "before": "if (cfg.get(\"type2\").equals(\"typeA\")) {",
+        "nth": 2,
+        "text": "Each visit gets the same tariff rules: grace period, started hours, daily cap, or the night flat rate."
+      },
+      {
+        "before": "if (item.get(\"type2\").equals(\"typeB\")) {",
+        "nth": 2,
+        "text": "Same spot adjustment: charging surcharge per kW and started hour, half price on accessible spots."
+      },
+      {
+        "before": "counter = counter + result;",
+        "text": "Adds the visit's fee to the day's revenue."
+      },
+      {
+        "before": "DataFactory.store.put(\"counter\", counter);",
+        "text": "Stores the day's revenue and shows it on the display."
+      },
+      {
+        "before": "final class Flag {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Service {",
+        "text": "Gate: entry and exit rules for a spot; a pass changes the spot status in place."
+      },
+      {
+        "before": "lastKey = str1;",
+        "text": "Every gate pass records the licence plate (str1), stores the spot status and shows the latest fee on the display."
+      },
+      {
+        "before": "if (flag2) {",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "if ((int) state.get(\"type1\") == 0) {",
+        "text": "Arriving: a car takes a vacant spot and records its plate and arrival minute."
+      },
+      {
+        "before": "if ((int) state.get(\"type1\") == 2 && state.get(\"str2\").equals(str1)) {",
+        "text": "A held spot opens only for its own plate (str2); for any other car the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> build(Map<String, Object> a3, int time) { return Map.of(\"field1\", a3.get(\"num1\"), \"field2\", time); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ],
+    "S6": [
+      {
+        "before": "// orbit spice: 0 comet, 1 nebula, 2 quasar",
+        "text": "Spot status code: 0 is free, 1 is occupied by a car since a minute, 2 is reserved for one licence plate."
+      },
+      {
+        "before": "final class WeatherStation {",
+        "text": "Central store for tariff, visits and spot status, plus a display that lists fees per licence plate."
+      },
+      {
+        "before": "Conductor dismissConductor() {",
+        "text": "Returns the one shared cashier, loaded with the current tariff from the store."
+      },
+      {
+        "before": "final class Conductor {",
+        "text": "Cashier: computes the amount due for one stay and the revenue of a whole day."
+      },
+      {
+        "before": "int tune(Map<String, Object> telescope, Map<String, Object> ladle, Map<String, Object> cookbook, boolean isFrozen) {",
+        "text": "Amount due for a spot (telescope) and a stay (ladle, entry and exit in minutes), with an optional season ticket."
+      },
+      {
+        "before": "if (isFrozen) {",
+        "text": "Season ticket: included minutes move the entry forward, but never past the exit; only the rest is billed."
+      },
+      {
+        "before": "if (tempo <= (int) symphony.get(\"dewPoint\")) {",
+        "nth": 1,
+        "text": "Day tariff: stays up to the grace period (dewPoint) are free."
+      },
+      {
+        "before": "int octaves = (tempo + 59) / 60;",
+        "nth": 1,
+        "text": "Every started hour is billed in full: 61 minutes count as two hours."
+      },
+      {
+        "before": "int raindrops = (int) symphony.get(\"snowDepth\") * (octaves / 24);",
+        "nth": 1,
+        "text": "Each complete 24 started hours cost the daily cap (snowDepth); the remaining hours cost the hourly rate (windSpeed)."
+      },
+      {
+        "before": "if (hailstones > (int) symphony.get(\"snowDepth\")) {",
+        "nth": 1,
+        "text": "The remaining hours never cost more than the daily cap, so a long stay is never dearer than full days."
+      },
+      {
+        "before": "rainfall = (int) symphony.get(\"pressure\") * ((tempo + 719) / 720);",
+        "nth": 1,
+        "text": "Night tariff: a flat rate (pressure) for every started 12-hour night (720 minutes), no grace period."
+      },
+      {
+        "before": "if (telescope.get(\"genre\").equals(\"jazz\")) {",
+        "nth": 1,
+        "text": "Charging spot (jazz): 5 cents per kW (decibels) for every started hour of the billed time."
+      },
+      {
+        "before": "} else if (telescope.get(\"genre\").equals(\"opera\")) {",
+        "nth": 1,
+        "text": "Accessible spot (opera): pays half the tariff fee, rounded down to the cent."
+      },
+      {
+        "before": "WeatherStation.pantry.put(\"previousRainfall\", rainfall);",
+        "text": "Stores the fee and shows it on the display next to the last plate seen at the gate."
+      },
+      {
+        "before": "int forecastTomorrow() {",
+        "text": "Day revenue: sum of all stored visits at regular prices; season tickets are not taken into account here."
+      },
+      {
+        "before": "Thread violinist = new Thread(() -> {",
+        "text": "A separate thread prices the visits one by one; the caller waits for it to finish."
+      },
+      {
+        "before": "if (symphony.get(\"genre\").equals(\"baroque\")) {",
+        "nth": 2,
+        "text": "Each visit gets the same tariff rules: grace period, started hours, daily cap, or the night flat rate."
+      },
+      {
+        "before": "if (telescope.get(\"genre\").equals(\"jazz\")) {",
+        "nth": 2,
+        "text": "Same spot adjustment: charging surcharge per kW and started hour, half price on accessible spots."
+      },
+      {
+        "before": "snowfall = snowfall + rainfall;",
+        "text": "Adds the visit's fee to the day's revenue."
+      },
+      {
+        "before": "WeatherStation.pantry.put(\"snowfall\", snowfall);",
+        "text": "Stores the day's revenue and shows it on the display."
+      },
+      {
+        "before": "final class Orbit {",
+        "text": "A spot counts as taken when a car occupies it (code 1)."
+      },
+      {
+        "before": "final class Lighthouse {",
+        "text": "Gate: entry and exit rules for a spot; a pass changes the spot status in place."
+      },
+      {
+        "before": "lastCloud = cloudName;",
+        "text": "Every gate pass records the licence plate, stores the spot status and shows the latest fee on the display."
+      },
+      {
+        "before": "if (isBoiling) {",
+        "text": "Leaving frees an occupied spot; a vacant or held spot is not affected."
+      },
+      {
+        "before": "if ((int) orbit.get(\"spice\") == 0) {",
+        "text": "Arriving: a car takes a vacant spot and records its plate and arrival minute."
+      },
+      {
+        "before": "if ((int) orbit.get(\"spice\") == 2 && orbit.get(\"chef\").equals(cloudName)) {",
+        "text": "A held spot opens only for its own plate (chef); for any other car the spot stays unchanged."
+      },
+      {
+        "before": "static Map<String, Object> brew(Map<String, Object> nebula, int eclipseYear) { return Map.of(\"sunsetAt\", nebula.get(\"altitude\"), \"sunriseAt\", eclipseYear); }",
+        "text": "The stay runs from the minute the car took the spot until now."
+      }
+    ]
+  }
+}

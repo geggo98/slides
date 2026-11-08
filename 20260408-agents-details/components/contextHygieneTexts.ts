@@ -7,7 +7,6 @@ export const TEXTS = {
   /** Beschriftung des Schalters */
   commentsToggle: "Kommentare zeigen",
   /** Tooltip, wenn der Schalter auf S1–S6 gesperrt ist */
-  commentsDisabled: "Kommentare gibt es nur auf der Ausgangsstufe S0/D0.",
   /** Warnbox bei Entwicklungsgebiet: Titel (max. 30 Zeichen) und Text (max. 150 Zeichen) */
   devWarningTitle: "Entwicklungsgebiet",
   devWarningBody:
@@ -76,7 +75,7 @@ export const TEXTS = {
       "Eine KI schrieb den Korpus; Autor und Prüfer kannten die Hypothese.",
     ],
     commentEmojiInfo:
-      "🚫🤖 markiert Kommentare für Menschen. Das Modell bekommt sie nie zu sehen, sie ändern seine Vorhersage nicht.",
+      "🚫🤖 markiert Kommentare für Menschen. Die Kommentare auf S0 und D0–D4 stammen aus der Studie. Kopfzeile und Kommentare auf S1–S6 stehen nur auf der Folie: Keine Messung nutzte sie, und „Live abfragen“ sendet sie nie mit.",
     missInfo:
       "Oberste Zeile rot mit ✗: Der beste Vorschlag des Modells ist nicht das erwartete Token. Blau mit ✓: Er ist es.",
     source: "Studie 3, Daten vom 06.–08.11.2026, Bericht `REPORT.md`.",
@@ -86,7 +85,7 @@ export const TEXTS = {
     title: "Live abfragen",
     keyNote:
       "Der Key bleibt im Speicher dieser Seite, der Browser schickt die Anfragen direkt an den Anbieter. Ein Key mit `sk-or-…` geht an OpenRouter, jeder andere `sk-…`-Key an OpenAI.",
-    withComments: "Kommentare mitsenden (nur D0/S0)",
+    withComments: "Kommentare mitsenden (nur S0 und D0–D4)",
     cost: "Jede Anfrage erzeugt höchstens 4 Ausgabe-Tokens.",
   },
 } as const;

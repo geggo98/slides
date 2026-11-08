@@ -44,6 +44,7 @@ import {
   buildBody,
   commentProse,
   commentZones,
+  measuredComments,
   commentedOffset,
   formatPercent,
   insertComments,
@@ -121,6 +122,12 @@ const zones = computed(() =>
   scenario.value ? commentZones(scenario.value, levelName.value) : null,
 );
 const commentsAvailable = computed(() => zones.value !== null);
+/** Live mitsenden darf nur, was die Studie kannte (S0/D0–D4). */
+const liveCommentsAvailable = computed(
+  () =>
+    !!scenario.value &&
+    measuredComments(scenario.value, levelName.value) !== null,
+);
 const dev = computed(() => !!scenario.value?.dev);
 
 const groups = computed(() => {
@@ -520,7 +527,7 @@ watch(kType, (t) => {
     liveModelsText.value = DEFAULT_LIVE_MODELS[t];
   }
 });
-watch(commentsAvailable, (ok) => {
+watch(liveCommentsAvailable, (ok) => {
   if (!ok) liveWithComments.value = false;
 });
 
@@ -544,7 +551,10 @@ interface Job {
 function prefixFor(sc: string, lv: string, site: Site): string {
   const level = study.value!.scenarios[sc]!.levels[lv]!;
   const cm = study.value!.scenarios[sc]!.comments;
-  if (liveWithComments.value && commentZones(study.value!.scenarios[sc]!, lv)) {
+  if (
+    liveWithComments.value &&
+    measuredComments(study.value!.scenarios[sc]!, lv)
+  ) {
     const text = insertComments(level.code, cm);
     return text.slice(0, commentedOffset(level.code, cm, site.pos));
   }
@@ -809,11 +819,7 @@ const pct = (p: number | null | undefined): string =>
           </div>
         </div>
 
-        <label
-          class="ch-toggle"
-          :class="{ off: !commentsAvailable }"
-          :title="commentsAvailable ? '' : TEXTS.commentsDisabled"
-        >
+        <label class="ch-toggle" :class="{ off: !commentsAvailable }">
           <input
             v-model="showComments"
             type="checkbox"
@@ -957,11 +963,11 @@ const pct = (p: number | null | undefined): string =>
               />
               Flex-Tier (nur OpenAI)</label
             >
-            <label :class="{ off: !commentsAvailable }">
+            <label :class="{ off: !liveCommentsAvailable }">
               <input
                 v-model="liveWithComments"
                 type="checkbox"
-                :disabled="!commentsAvailable"
+                :disabled="!liveCommentsAvailable"
               />
               {{ TEXTS.live.withComments }}
             </label>
