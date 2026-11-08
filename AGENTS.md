@@ -376,6 +376,12 @@ recalled. Two habits, both learned the hard way on the model-routing slides:
 Date every list you write down (`retrieved: "YYYY-MM-DD"`), and say what the
 source does not tell you.
 
+## Slide Text
+
+Write slide text — headings, body copy, speaker notes and the info texts inside
+components — with Opus, and apply the `technical-writing` skill. This holds for
+subagents that produce slide text too: set `model: opus` on them.
+
 ## Tooling Preferences
 
 Default to **Bun** over Node.js for all tasks (install, run, test, build).
