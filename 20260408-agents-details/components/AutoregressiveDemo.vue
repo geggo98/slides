@@ -313,8 +313,9 @@ const P = computed(() => {
     <!-- Fußzeile: Compute vs. Abrechnung -->
     <p class="foot">
       <b>Prefill</b> = ein paralleler Pass über den Prompt, <b>Decode</b> = ein
-      Pass <b>pro Token</b> — und jeder liest den wachsenden KV-Cache mit. Was
-      die Preisliste daraus macht → nächste Slide.
+      Pass <b>pro Token</b> — und jeder liest den wachsenden KV-Cache mit. Wie
+      sauberer Kontext das nächste Token sicherer macht → nächste Slide, was die
+      Preisliste für beide Pässe verlangt → danach.
       <span class="dim-foot">(KV-Cache-Details: Sektion 6)</span>
     </p>
   </div>

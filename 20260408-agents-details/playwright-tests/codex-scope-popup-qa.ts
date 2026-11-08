@@ -39,7 +39,7 @@ const ENGINES = (
   .filter(Boolean);
 const LAUNCHERS = { chromium, firefox, webkit } as const;
 const BASE = `http://localhost:${PORT}`;
-const SLIDE = 35;
+const SLIDE = 36;
 const SHOTS = "20260408-agents-details/playwright-tests/qa";
 const ROOT = `[data-slidev-no="${SLIDE}"]`;
 

@@ -14,7 +14,7 @@ import { chromium } from "playwright";
 
 const PORT = process.argv[2] ?? "3043";
 const BASE = `http://localhost:${PORT}`;
-const SLIDE = 35;
+const SLIDE = 36;
 const MAIN = `.slidev-presenter .grid-section.main [data-slidev-no="${SLIDE}"]`;
 const NEXT = `.slidev-presenter .grid-section.next [data-slidev-no="${SLIDE}"]`;
 

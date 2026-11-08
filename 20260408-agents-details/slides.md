@@ -205,6 +205,29 @@ werden vor dem Sampling auf −∞ gesetzt → gesampelt wird nur über schema-g
 
 ---
 hideInToc: true
+routeAlias: kontext-hygiene
+---
+
+# Kontext-Hygiene: Signal statt Rauschen
+
+<ContextHygiene />
+
+<!--
+Auf der letzten Folie hat das Modell eine Verteilung über das nächste Token berechnet. Diese Verteilung hängt nur vom Kontext ab. Hier messen wir, wie stark.
+
+Wir sehen Java-Code mit nummerierten Messstellen. Ich beginne mit der Kontrollgruppe, dem sauberen Code. Ein Klick auf eine Stelle zeigt die Top-5-Tokens und rechts, was Luna, Sol und Terra wählen. Mit dem Slider mache ich den Code schrittweise schlechter. Die Kommentare sind nur für uns, das Modell hat sie nie gesehen.
+
+Ein Beispiel aus `warehouse`: Mit fachlichen Namen setzt Sol `base` fort, mit P von 1,000. Mit technischen Namen wie `handle` und `input` fällt Sol auf 0,837 und Terra auf 0,589. Diese Stelle habe ich nachträglich ausgesucht, sie illustriert nur.
+
+Der Beleg steht in der Studie: Je Stufe der Namens-Leiter sinkt der logit bei Terra um 0,30 und bei Sol um 0,24. Der Effekt sitzt an Stellen, an denen ein Fachname kommt. An Boilerplate ändert sich kaum etwas. Klare Namen sind Signal, schlechte Namen sind Rauschen. Das deckt sich grob mit dem, was wir aus dem Software Engineering kennen.
+
+Nicht jeder Schritt fällt. Beim Big Ball of Mud, von S3 nach S4, wird das Modell wieder sicherer, und wir wissen nicht, warum. Dazu kommen nur drei Modelle und ein Korpus, den eine KI geschrieben hat.
+
+Kontext entscheidet also über die Qualität. Er kostet aber auch Tokens, und Tokens kosten Geld. Darum geht es auf der nächsten Folie: Hardware gegen Preisliste.
+-->
+
+---
+hideInToc: true
 ---
 
 # Hardware vs. Preisliste

@@ -13,7 +13,7 @@ import { chromium, type Page } from "playwright";
 
 const PORT = process.argv[2] ?? "3041";
 const BASE = `http://localhost:${PORT}`;
-const SLIDE = 36;
+const SLIDE = 37;
 const SHOTS = "20260408-agents-details/playwright-tests/qa";
 
 type State = {
@@ -184,7 +184,7 @@ for (const scheme of ["light", "dark"] as const) {
   }
 
   // Link von Folie 33 → Folie 35
-  await page.goto(`${BASE}/33`, { waitUntil: "networkidle" });
+  await page.goto(`${BASE}/34`, { waitUntil: "networkidle" });
   await page
     .locator('[data-slidev-no="33"] a', { hasText: "übernächste Folie" })
     .click();
