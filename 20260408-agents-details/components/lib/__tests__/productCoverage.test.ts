@@ -64,27 +64,27 @@ describe("coverage", () => {
     // [Familien des Produkts, davon gezeichnet]
     "aa-cost": {
       cursor: [54, 36],
-      windsurf: [65, 35],
+      windsurf: [74, 42],
       "jetbrains-ai": [42, 25],
       junie: [13, 13],
     },
     "aa-speed": {
       cursor: [54, 45],
-      windsurf: [65, 47],
+      windsurf: [74, 54],
       "jetbrains-ai": [42, 41],
       junie: [13, 13],
     },
-    // DesignArena (31.10.2026): Preise hat jedes Modell des Boards, Zeiten nur
+    // DesignArena (09.11.2026): Preise hat jedes Modell des Boards, Zeiten nur
     // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
     "da-cost": {
-      cursor: [54, 38],
-      windsurf: [65, 38],
+      cursor: [54, 39],
+      windsurf: [74, 44],
       "jetbrains-ai": [42, 27],
       junie: [13, 13],
     },
     "da-speed": {
       cursor: [54, 17],
-      windsurf: [65, 16],
+      windsurf: [74, 16],
       "jetbrains-ai": [42, 11],
       junie: [13, 1],
     },

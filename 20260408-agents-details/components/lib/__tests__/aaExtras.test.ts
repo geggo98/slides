@@ -78,7 +78,7 @@ describe("Extras", () => {
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
-    expect(PRODUCT_FAMILIES.size).toBe(93);
+    expect(PRODUCT_FAMILIES.size).toBe(96);
     expect(AA_EXTRAS_COST.length).toBe(32);
     expect(AA_EXTRAS_SPEED.length).toBe(50);
   });

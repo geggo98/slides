@@ -202,7 +202,7 @@ describe("Menü-Einträge", () => {
     expect(toolHas("cursor", "glm-5.3-flash")).toBe(true);
     expect(toolHas("cursor", "gpt-6-astra")).toBe(false);
     expect(toolHas("windsurf", "gpt-6-astra")).toBe(true);
-    expect(toolHas("windsurf", "claude-sonnet-5.5")).toBe(false);
+    expect(toolHas("windsurf", "muse-wonder")).toBe(false);
     expect(toolHas("jetbrains-ai", "claude-opus-5.5")).toBe(true);
     expect(toolHas("jetbrains-ai", "gpt-6-astra")).toBe(false);
   });

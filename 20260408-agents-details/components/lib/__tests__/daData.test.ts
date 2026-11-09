@@ -170,15 +170,14 @@ describe("daData — Modelle und Stufen", () => {
 
 // Die Fronten, die Lead-Text und Sprechernotizen nennen. Bewegt sich eine mit
 // einem neuen Snapshot, muss der Text nach (Runbook, Schritt 5).
-describe("daData — Fronten (Stand 31.10.2026)", () => {
+describe("daData — Fronten (Stand 09.11.2026)", () => {
   it("Preisansicht", () => {
     expect(paretoFront(DA_COST).front.map((p) => p.label)).toStrictEqual([
       "minimax-m3.1-flash",
-      "mimo-v2.6-pro",
-      "muse-spark-1.3-max",
-      "gemini-4-argon",
+      "inkling-2-small",
+      "deepseek-v4.1-flash",
+      "gpt-6.1-sol",
       "claude-opus-5.5",
-      "gpt-6-astra",
     ]);
   });
 

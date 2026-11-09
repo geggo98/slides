@@ -208,8 +208,9 @@ const speedFront = paretoFront(AA_SPEED).front;
 
 // --- DesignArena-Skalen ----------------------------------------------------
 // Dieselbe Bühne wie AA. Kosten: Mischpreis log von 0,15 $ bis 40 $ (am
-// 31.10.2026 0,26 $ bis 20 $), Elo linear von 1125 bis 1430 (Punkte 1202 bis
-// 1408). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
+// 09.11.2026 0,26 $ bis 20 $), Elo linear von 1115 bis 1470 (Punkte 1200 bis
+// 1459; bis 31.10.2026 reichte 1430, dann kam claude-opus-5.5 (high) mit
+// 1459). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
 // Elo 880 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
 // nur ältere Modelle eine Zeit tragen (`daData.ts`). Unter den Punkten bleibt
 // jeweils ein freier Streifen für den Pfeilcluster.
@@ -217,8 +218,8 @@ const DA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
   xLog: { min: 0.15 },
-  yMin: 1125,
-  yMax: 1430,
+  yMin: 1115,
+  yMax: 1470,
 });
 const DA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
@@ -410,7 +411,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     scale: DA_COST_SCALE,
     xTicks: DA_COST_TICKS,
     xTickLabel: usdTick,
-    yTicks: [1200, 1250, 1300, 1350, 1400],
+    yTicks: [1200, 1250, 1300, 1350, 1400, 1450],
     yTickLabel: String,
     split: { x: 3.5, y: 1275 },
     quadrants: QUADRANTS as Quadrant[],
@@ -420,14 +421,16 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Beliebter",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
-      // Unter allen Punkten (tiefster 1202) und links der Quadranten-Überschrift
-      // „Geldverbrennung“: per Gitter aus Knoten × Ziel gesucht, kein Label,
-      // kein Marker und keine Überschrift unter einem Schaft (31.10.2026). yMin
-      // 1125 statt 1140, Knoten 1145: Beim alten Knoten 1150 ragte die Spitze von
-      // „Billiger“ 8 px unter den Plot, ein höherer legte die Diagonale auf ihn.
-      hubX: (s) => s.px(8),
-      hubY: (s) => s.py(1145),
-      target: (s) => ({ x: s.px(2), y: s.py(1172) }),
+      // Unter allen Punkten (tiefster 1200) und links der Quadranten-Überschrift
+      // „Geldverbrennung“: per Gitter aus yMin/yMax × Knoten × Ziel gesucht, kein
+      // Label, kein Marker und keine Überschrift unter einem Schaft (09.11.2026).
+      // Der alte Knoten bei 8 $ lag mit der gestauchten Skala (yMax 1470) auf
+      // gpt-6-sol, bei 10 $ stünde der Schaft „Beliebter“ auf claude-opus-5 und
+      // claude-opus-4.8; 15 $ liegt zwischen 11,25 $ und 20 $ frei. yMin 1115:
+      // bei 1125 ragte die Spitze von „Billiger“ unter den Plot.
+      hubX: (s) => s.px(15),
+      hubY: (s) => s.py(1140),
+      target: (s) => ({ x: s.px(2), y: s.py(1160) }),
     },
     axisTitle: `Listenpreis je 1M Token (USD, ${DA_MIX_TEXT} gemischt, log. Skala) — DesignArena-Elo`,
     xText: usdT,

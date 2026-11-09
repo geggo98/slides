@@ -105,12 +105,15 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
     windsurf: [
       "claude-fable-5",
       "claude-fable-5.1",
+      "claude-haiku-5.5",
       "claude-opus-4.8",
       "claude-opus-5",
       "claude-opus-5.5",
       "claude-sonnet-5",
+      "claude-sonnet-5.5",
       "deepseek-v4-flash",
       "deepseek-v4-pro",
+      "deepseek-v4.1-flash-1017",
       "gemini-3.5-flash",
       "gemini-3.6-flash",
       "gemini-3.7-flash",
@@ -125,8 +128,13 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gpt-5.6-terra",
       "gpt-6-astra",
       "gpt-6-luna",
+      "gpt-6.1-sol",
+      "gpt-6.1-terra",
+      "gpt-6.1-terra-non-reasoning",
       "grok-4.6",
+      "grok-4.7",
       "kimi-k3",
+      "kimi-k3.1-pro",
     ],
     "jetbrains-ai": [
       "claude-fable-5",
@@ -196,8 +204,8 @@ describe("Golden: Katalogname → Schlüssel", () => {
   it("kollabiert nirgends zwei Namen, die sich in mehr als Konfigurationswörtern unterscheiden", () => {
     // Hilfsprobe: je Produkt gilt, dass ein Schlüssel höchstens Namen vereint,
     // deren Kleinbuchstaben-Anfang (bis zur ersten Ziffer nach dem Familienwort)
-    // übereinstimmt. Sichtbar wird es an den Zahlen: Windsurf hat 269 Namen und
-    // 64 Familien, weil jede Effort-Stufe ein Eintrag ist.
+    // übereinstimmt. Sichtbar wird es an den Zahlen: Windsurf hat 325 Namen und
+    // 74 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
     expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
     expect(catalogKeys("junie").size).toBe(13);

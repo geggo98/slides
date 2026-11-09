@@ -438,9 +438,7 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
     expect(toolHas("windsurf", "gemini-3.8-flash")).toBe(true);
     expect(presetModels("windsurf", AA_COST)).toContain("gemini-3.8-flash");
     expect(presetModels("windsurf", AA_COST)).toContain("gpt-6-astra");
-    expect(presetModels("windsurf", AA_COST)).not.toContain(
-      "claude-sonnet-5.5",
-    );
+    expect(presetModels("windsurf", AA_COST)).not.toContain("muse-wonder");
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
     expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
     // JetBrains AI führt seit dem Katalog vom 28.10. auch GPT-6 und Opus 5.5
