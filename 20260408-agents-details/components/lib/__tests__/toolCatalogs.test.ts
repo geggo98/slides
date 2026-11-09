@@ -4,9 +4,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   MIN_MODELS,
+  mindestzahl,
   parseCursor,
   parseJetbrains,
   parseWindsurf,
+  SOURCES,
 } from "../../../data/toolcatalogs/fetch";
 import { CATALOGS } from "../../toolCatalogs";
 
@@ -69,6 +71,82 @@ describe("parseWindsurf", () => {
   it("scheitert laut, wenn die Daten fehlen", () => {
     expect(() => parseWindsurf("# AI Models")).toThrow(/nicht gefunden/);
   });
+
+  // Die HTML-Seite ab 28.10.2026: das Feld steht im kompilierten MDX, und das
+  // wiederum als JSON-String in `"compiledSource":"…"`. Werte sind dort
+  // Template-Strings, Zahlen haben keine führende Null. Nachgebaut nach der
+  // Seite vom 09.11.2026, gekürzt.
+  const js = (tier: string, label: string, provider: string) =>
+    `{"tier":\`${tier}\`,"model_uid":\`MODEL_X\`,"label":\`${label}\`,"model_provider":\`MODEL_PROVIDER_${provider}\`,"input_cost_per_million_usd":.15,"credit_multiplier":0,"is_recommended":false}`;
+  const mdx = `"use strict";const modelCostData=[${[
+    js("TEAMS_TIER_DEVIN_ENTERPRISE", "GPT-OSS 120B Medium Thinking", "OPENAI"),
+    js("TEAMS_TIER_PRO", "GPT-OSS 120B Medium Thinking", "OPENAI"),
+    js("TEAMS_TIER_PRO", "SWE-2 Flash Low", "WINDSURF"),
+    js("TEAMS_TIER_PRO", "Label mit ] darin", "ANTHROPIC"),
+    js("TEAMS_TIER_PRO", "Penguin High", "UNSPECIFIED"),
+    js("TEAMS_TIER_PRO", "GPT-6 Sol [dev]", "OPENAI"),
+    js("TEAMS_TIER_PRO", "Grok 4.7 (Backend Only)", "XAI"),
+  ].join(",")}];const ModelCosts=({data,tier})=>null;`;
+  const html = `<html><script id="__NEXT_DATA__">{"props":{"mdx":{"compiledSource":${JSON.stringify(mdx)},"frontmatter":{}}}}</script>
+    <table><tbody></tbody></table></html>`;
+
+  it("liest die HTML-Seite: kompiliertes MDX, Template-Strings, .15", () => {
+    expect(parseWindsurf(html)).toStrictEqual([
+      { name: "GPT-OSS 120B Medium Thinking", provider: "OPENAI" },
+      { name: "SWE-2 Flash Low", provider: "WINDSURF" },
+      { name: "Label mit ] darin", provider: "ANTHROPIC" },
+    ]);
+  });
+
+  it("blendet aus, was die Seite ausblendet (UNSPECIFIED, [dev], backend only)", () => {
+    const n = parseWindsurf(html).map((m) => m.name);
+    expect(n).not.toContain("Penguin High");
+    expect(n).not.toContain("GPT-6 Sol [dev]");
+    expect(n).not.toContain("Grok 4.7 (Backend Only)");
+  });
+
+  it("scheitert laut bei einer Seite mit leerer Tabelle und ohne Feld", () => {
+    expect(() =>
+      parseWindsurf("<table><tbody /></table><p>as of November 5</p>"),
+    ).toThrow(/nicht gefunden/);
+  });
+});
+
+describe("mindestzahl", () => {
+  const m = (name: string, evidence?: string[]) => ({
+    name,
+    ...(evidence ? { evidence } : {}),
+  });
+
+  it("ohne Vorarchiv gilt die feste Untergrenze", () => {
+    expect(mindestzahl("windsurf", undefined)).toBe(MIN_MODELS.windsurf);
+  });
+
+  it("verlangt 80 % der selbst belegten Einträge des letzten Archivs", () => {
+    const vorher = Array.from({ length: 300 }, (_, i) => m(`M${i}`));
+    expect(mindestzahl("windsurf", vorher)).toBe(240);
+  });
+
+  it("zählt „übernommen aus …“ nicht mit — die Seite hat sie nicht gezeigt", () => {
+    const vorher = [
+      ...Array.from({ length: 259 }, (_, i) => m(`M${i}`, ["https://…: X"])),
+      ...Array.from({ length: 67 }, (_, i) =>
+        m(`A${i}`, ["übernommen aus windsurf-20261028-c06820a4.json"]),
+      ),
+    ];
+    // So sah das ungemergte Zwischenarchiv vom 09.11.2026 aus (326 Einträge):
+    // 0,8 × 326 = 261 hätte die 259 der Seite abgewiesen.
+    expect(mindestzahl("windsurf", vorher)).toBe(208);
+  });
+
+  it("Windsurf heute: ein Abrufarchiv, die Basis sind alle Einträge", () => {
+    // Seit 09.11.2026 gilt die Tabelle als Entfernungsbeleg; das Archiv ist
+    // die Ausgabe von `parseWindsurf`, ohne „übernommen“-Einträge.
+    const w = CATALOGS.windsurf.models;
+    expect(w.some((x) => x.evidence)).toBe(false);
+    expect(mindestzahl("windsurf", w)).toBe(Math.ceil(0.8 * w.length));
+    expect(mindestzahl("windsurf", w)).toBe(208); // ⌈0,8 × 259⌉
+  });
 });
 
 describe("parseJetbrains", () => {
@@ -110,6 +188,13 @@ describe("Schnappschüsse", () => {
         (x) => x.tool === id && x.fetched_at.startsWith(c.retrieved),
       );
       expect(e, `${id} fehlt im Index`).toBeDefined();
+      // `find` nimmt den ersten Treffer; ein zweiter Eintrag desselben Tages
+      // bliebe sonst unbemerkt.
+      expect(
+        index.filter(
+          (x) => x.tool === id && x.fetched_at.startsWith(c.retrieved),
+        ).length,
+      ).toBe(1);
       expect(c.models.length).toBe(e!.models);
       // Von Hand recherchiert (`fetch.ts --manual`): keine Mindestzahl, dafür
       // ein Beleg je Modell.
@@ -124,6 +209,19 @@ describe("Schnappschüsse", () => {
       expect(createHash("sha256").update(roh).digest("hex")).toBe(e!.sha256);
     });
   }
+
+  // Archiv im Format eines Abrufs: dann erzeugt die Routine bei unveränderter
+  // Seite denselben Inhalt, derselbe Hash hängt nur `seen` an, und es entsteht
+  // keine neue Datei. Ein `--manual`-Archiv hätte Belege und „manuell:“ und
+  // würde beim nächsten Abruf ohne echte Änderung ersetzt.
+  it("Windsurf: Abrufformat (Quelle, Anbieter je Eintrag, keine Belege), keine Dubletten", () => {
+    const w = CATALOGS.windsurf;
+    expect(w.source).toBe(SOURCES.windsurf);
+    for (const m of w.models)
+      expect((m as { provider?: string }).provider, m.name).toBeTruthy();
+    expect(new Set(w.models.map((m) => m.name)).size).toBe(w.models.length);
+    expect(w.models.map((m) => m.name)).not.toContain("GPT 5.5 Review");
+  });
 
   it("Cursor: die Hälfte der Modelle ist „hidden by default“ und zählt mit", () => {
     const hidden = CATALOGS.cursor.models.filter((m) => m.hidden).length;

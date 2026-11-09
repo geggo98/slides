@@ -316,20 +316,14 @@ describe("Marker-Entzerrung", () => {
           "mimo-v2.5-pro",
         ],
         "Bonus v11-vs-v1": [],
-        "Hauptfolie aa-cost": [],
+        "Hauptfolie aa-cost": [
+          "claude-fable-5.1",
+        ],
         "Hauptfolie aa-cost mit Kontingent": [
           "claude-opus-5.5",
           "gemini-4-carbon",
         ],
-        "Hauptfolie aa-speed": [
-          "claude-opus-5.5",
-          "gemini-3.8-flash",
-          "gemini-4-carbon",
-          "glm-5.3",
-          "gpt-6-luna",
-          "gpt-6.1-terra-non-reasoning",
-          "minimax-m3.1-flash",
-        ],
+        "Hauptfolie aa-speed": [],
         "Historie 0710": [],
         "Historie 0722": [
           "gpt-5.6-terra",
@@ -468,9 +462,13 @@ describe("Abweichung in den Speaker Notes", () => {
       const zs = ZUSTAENDE.filter((z) => z.name.startsWith(prefix));
       expect(zs.length).toBeGreaterThan(0);
       const m = maximum(zs);
+      // Rückt kein Marker senkrecht, hieße die Langform „höchstens 0,0 …
+      // senkrecht“ — dann sagt die Notiz „nur waagerecht“.
       const satz =
-        `Entzerrte Marker: bis ${fmt1(m.px)} px verschoben, höchstens ` +
-        `${fmt1(m.pp)} ${yUnit} senkrecht oder ${fmt1(m.pct)} % ${xWas} waagerecht`;
+        `Entzerrte Marker: bis ${fmt1(m.px)} px verschoben, ` +
+        (fmt1(m.pp) === "0,0"
+          ? `nur waagerecht, höchstens ${fmt1(m.pct)} % ${xWas}`
+          : `höchstens ${fmt1(m.pp)} ${yUnit} senkrecht oder ${fmt1(m.pct)} % ${xWas} waagerecht`);
       expect(notesAfter(anchor)).toContain(satz);
       expect(m.px).toBeLessThanOrEqual(DODGE.cap);
     },

@@ -26,7 +26,14 @@
 // liefert abgekündigte Modelle nicht mehr aus; ihre Werte sind der v4-Stand vom
 // 01.10.2026, auf v5 umgerechnet.
 
-import { AA_COST, AA_ROWS, AA_SPEED, SUB_FACTOR, USD_EUR } from "./aaData";
+import {
+  AA_COST,
+  AA_ROWS,
+  AA_SPEED,
+  SUB_FACTOR,
+  tpsOf,
+  USD_EUR,
+} from "./aaData";
 import { familyKey } from "./catalogMatch";
 import { P, type Pt } from "./paretoData";
 import { CATALOGS, type CatalogId } from "./toolCatalogs";
@@ -64,10 +71,7 @@ const FAMILIES: ReadonlyMap<string, Cand[]> = (() => {
         typeof r.intelligenceIndexCostPerTask === "number"
           ? r.intelligenceIndexCostPerTask
           : null,
-      tps:
-        typeof r.medianOutputTokensPerSecond === "number"
-          ? r.medianOutputTokensPerSecond
-          : null,
+      tps: tpsOf(r),
     };
     (m.get(key) ?? m.set(key, []).get(key)!).push(c);
   }

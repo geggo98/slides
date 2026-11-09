@@ -123,6 +123,20 @@ export const GHOST_R = 7;
  * verwirrt niemanden, eine durch den Punkt hindurch schon.
  */
 const LEADER_CLEAR = 7;
+/**
+ * Dasselbe für einen Marker, der in keinem Zustand als Kreis gezeichnet wird:
+ * das Quadrat der dominierten Punkte (±5 auf der Hauptfolie, ±4,5 in der
+ * Historie) plus halbe Linienbreite, aufgerundet. Das gestrichelte ≈-Quadrat
+ * (Strich 1,4) reicht bis ±5,7 und braucht 5,7 + 0,45 = 6,15, aufgerundet
+ * `LEADER_CLEAR_DOM_EST` = 6,2. Mit 7 fand
+ * gemini-4-argon im Cursor-Preset (09.11.2026) keinen Platz: In seiner Spalte
+ * stehen claude-sonnet-5.5, claude-opus-5.5, claude-fable-5.1 und
+ * claude-opus-5, jeder in zwei Lagen, und jede Linie hinaus lief 6–7 px an
+ * einem der Quadrate vorbei. `toLayoutPoints` setzt den Wert je Punkt.
+ */
+export const LEADER_CLEAR_DOM = 5.5;
+/** Wie `LEADER_CLEAR_DOM`, für das gestrichelte ≈-Quadrat (siehe oben). */
+export const LEADER_CLEAR_DOM_EST = 6.2;
 /** Ab dieser Länge (Markermitte → Boxkante) bekommt ein Label eine Linie. */
 export const LEADER_MIN = 24;
 /** Die Linie setzt so weit hinter der Markermitte an (sichtbarer Marker r 7). */
@@ -179,6 +193,11 @@ export interface LayoutPoint {
   alt: readonly XY[];
   /** Geisterring im aktuellen Zustand — Hindernis für alle, auch für sich. */
   ghost?: XY;
+  /**
+   * Halbe Kante des Kastens um diesen Marker (in jeder Lage), den eine fremde
+   * Führungslinie nicht kreuzen darf. Default `LEADER_CLEAR` (Kreis r 7).
+   */
+  clear?: number;
 }
 
 export interface LayoutOpts {
@@ -406,7 +425,7 @@ export function layoutLabels(
     for (const q of order) {
       if (q === p) continue;
       f.push(...ownBoxes(q, o.hitR));
-      n.push(...ownBoxes(q, LEADER_CLEAR));
+      n.push(...ownBoxes(q, q.clear ?? LEADER_CLEAR));
     }
     foreign.set(p.id, f);
     foreignNarrow.set(p.id, n);
@@ -429,7 +448,7 @@ export function layoutLabels(
     if (blocks.some((b) => hits(c.box, b))) return false;
     if (c.leader) {
       // Die Linie darf keine Beschriftung und keinen fremden sichtbaren Marker
-      // kreuzen (`LEADER_CLEAR`, nicht `hitR`); sie beginnt im eigenen
+      // kreuzen (`clear`, nicht `hitR`); sie beginnt im eigenen
       // Klickziel. Den eigenen Geisterring darf sie kreuzen: Er liegt auf dem
       // Wanderungspfeil dieses Punkts, und im Overlay steht er 27 px neben dem
       // Marker — mit ihm als Sperre fände claude-fable-5 dort keinen Platz.

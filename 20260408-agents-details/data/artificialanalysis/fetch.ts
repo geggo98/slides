@@ -41,6 +41,31 @@
 // Sperre gegen automatisches Auslesen. Mehr Index- und Kostenwerte stecken
 // darin ohnehin nicht: Modelle ohne v5-Messung haben auch dort keine.
 //
+// Seit 03.11.2026 (AA-Methodik „Performance Benchmarking“ 3.0.0)
+// ---------------------------------------------------------------
+// Tempo heißt auf der Seite `outputSpeed`, die Latenz `timeToFirstToken` und
+// `timeToFirstAnswerToken`; `medianOutputTokensPerSecond`,
+// `medianTimeToFirstTokenSeconds` und `intelligenceIndexIsEstimated` gibt es
+// nicht mehr (am 09.11.2026: 0 von 283 Modellen). Die neuen Tempo-Felder
+// stehen im Archiv unter IHREN Namen, nicht unter den alten, denn sie messen
+// etwas anderes. Laut <https://artificialanalysis.ai/methodology/performance-benchmarking>
+// (Version History, 3.0.0):
+//
+//   „Headline output speed: Our headline output speed now averages the
+//   workloads we measured over the past 5 days (previously the median of the
+//   10k input token workload over the past 72 hours).“
+//   „End-to-end output speed: Output speed now covers each request's full
+//   duration, including time to first token, …“
+//
+// Gemessen am 09.11.2026 an 156 Konfigurationen, die beide Stände tragen:
+// `outputSpeed` / alter Median im Median 0,80 (0,33 … 2,46); zwischen zwei
+// Ständen der alten Methodik lag der Median bei 0,96 … 1,06. Alte und neue
+// Tempo-Werte gehören deshalb nie in dasselbe Chart.
+//
+// `pruefeFelder()` bricht ab, wenn ein Feld deutlich seltener vorkommt als im
+// Vorgänger-Snapshot — so fällt die nächste Umbenennung als Fehler auf und
+// nicht als leere Tempo-Ansicht.
+//
 // Die Website-Nutzungsbedingungen (3.3(b)(vi)) untersagen Skripte, die Daten
 // von der Seite „strip, scrape, or mine“. Das Deck liest trotzdem einmal pro
 // Woche diese eine öffentliche Seite — eine bewusste Entscheidung des
@@ -61,7 +86,10 @@ const MIN_MODELS = 200;
 const MIN_WITH_COST = 50;
 const VERSUCHE = 4;
 
-/** Nur diese Felder braucht das Deck; der Rest wäre Rauschen im Diff. */
+/**
+ * Nur diese Felder braucht das Deck; der Rest wäre Rauschen im Diff. Namen wie
+ * auf der Seite. Jedes ist Pflicht im Sinn von `pruefeFelder()`.
+ */
 export const FELDER = [
   "slug",
   "name",
@@ -70,15 +98,66 @@ export const FELDER = [
   "isReasoning",
   "modelCreatorName",
   "intelligenceIndex",
-  "intelligenceIndexIsEstimated",
   "intelligenceIndexCostPerTask",
-  "medianOutputTokensPerSecond",
-  "medianTimeToFirstTokenSeconds",
+  "outputSpeed",
+  "timeToFirstToken",
+  "timeToFirstAnswerToken",
   "price1mInputTokens",
   "price1mOutputTokens",
 ] as const;
 
 export type AaRecord = Record<(typeof FELDER)[number], unknown>;
+
+/**
+ * Vorgänger-Namen für den Vergleich in `pruefeFelder()`: bis 02.11.2026 trug
+ * das Archiv die alten Tempo-Felder. Nur zum ZÄHLEN gleichgesetzt — die Werte
+ * sind nicht vergleichbar (siehe Kopf).
+ */
+const FRUEHER: Partial<Record<(typeof FELDER)[number], string>> = {
+  outputSpeed: "medianOutputTokensPerSecond",
+  timeToFirstToken: "medianTimeToFirstTokenSeconds",
+};
+
+/** Ein Feld muss mindestens so oft belegt sein wie dieser Anteil im Vorgänger. */
+export const MIN_ANTEIL = 0.5;
+
+/** Je Feld: wie viele Datensätze tragen einen Wert (nicht null). */
+export function feldZaehler(
+  ms: readonly Record<string, unknown>[],
+  felder: readonly string[] = FELDER,
+): Record<string, number> {
+  return Object.fromEntries(
+    felder.map((k) => [k, ms.filter((m) => (m[k] ?? null) !== null).length]),
+  );
+}
+
+/**
+ * Bricht LAUT ab, wenn ein Feld fehlt oder deutlich seltener belegt ist als im
+ * Vorgänger-Snapshot (`vorher`, das zuletzt archivierte Board): kein Wert in
+ * keinem Datensatz, oder weniger als `MIN_ANTEIL` der Vorgänger-Zahl. Die
+ * Meldung nennt alle Felder mit Zählern, nicht nur das erste.
+ */
+export function pruefeFelder(
+  ms: readonly AaRecord[],
+  vorher: readonly Record<string, unknown>[] | null,
+): void {
+  const neu = feldZaehler(ms);
+  const fehler: string[] = [];
+  for (const k of FELDER) {
+    const n = neu[k]!;
+    const altName = vorher?.some((r) => k in r) ? k : (FRUEHER[k] ?? k);
+    const alt = vorher ? feldZaehler(vorher, [altName])[altName]! : null;
+    if (n === 0 || (alt !== null && n < alt * MIN_ANTEIL))
+      fehler.push(
+        `  ${k}: ${n} von ${ms.length}` +
+          (alt !== null ? ` (Vorgänger: ${alt} mit ${altName})` : ""),
+      );
+  }
+  if (fehler.length)
+    throw new Error(
+      `Format geändert? Felder fehlen oder sind zu selten belegt (< ${MIN_ANTEIL * 100} % des Vorgängers):\n${fehler.join("\n")}`,
+    );
+}
 
 const schlaf = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -235,9 +314,19 @@ const jetzt = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 async function main() {
   const html = await hole();
   const ms = parseModels(html);
+  const index = lesIndex();
+  const letzter = index.at(-1);
+  pruefeFelder(
+    ms,
+    letzter
+      ? (JSON.parse(readFileSync(join(HIER, letzter.file), "utf8")) as Record<
+          string,
+          unknown
+        >[])
+      : null,
+  );
   const inhalt = JSON.stringify(ms, null, 2) + "\n";
   const sha = createHash("sha256").update(inhalt).digest("hex");
-  const index = lesIndex();
   const da = index.find((e) => e.sha256 === sha);
   const t = jetzt();
   if (da) {

@@ -245,6 +245,7 @@ describe("Hauptfolie (pareto-heute) — Default ohne Überschneidung", () => {
     const { layout } = pareto(false);
     expect(layout.dropped).toMatchInlineSnapshot(`
       [
+        "deepseek-v4.1-flash-1017",
         "mimo-v2.6-pro",
         "ling-3.1-flash-1019",
         "minimax-m3.1-flash",

@@ -4,4 +4,4 @@
 {"tool":"cursor","fetched_at":"2026-10-28T17:42:48Z","file":"cursor-20261028-b34fbe3e.json","models":63,"sha256":"b34fbe3ec0630361d3164f4aba0019f8cf930a95674116048dfa91efbb859dd2","seen":["2026-10-31T10:01:10Z","2026-11-02T06:08:28Z","2026-11-09T06:14:03Z"]}
 {"tool":"jetbrains-ai","fetched_at":"2026-10-28T17:42:48Z","file":"jetbrains-ai-20261028-7c050e8d.json","models":42,"sha256":"7c050e8db7c11b92e2beaaad9be772ad233c1d529eea6e36bc71c90a52d8e924","seen":["2026-10-31T10:01:10Z","2026-11-02T06:08:28Z","2026-11-09T06:14:03Z"]}
 {"tool":"windsurf","fetched_at":"2026-10-28T17:44:02Z","file":"windsurf-20261028-c06820a4.json","models":272,"sha256":"c06820a4386fc7a846ebc3beac31567cbdbf524bda9996587f23d0acf7de9c9d","seen":[]}
-{"tool":"windsurf","fetched_at":"2026-11-09T06:24:20Z","file":"windsurf-20261109-b341efe5.json","models":325,"sha256":"b341efe503834f7078679f8c584a0207d21977284e4555f268f806d231e44e74","seen":[]}
+{"tool":"windsurf","fetched_at":"2026-11-09T16:15:41Z","file":"windsurf-20261109-45f625c0.json","models":259,"sha256":"45f625c0ff6796dd041eedc7d6b4596e7e90ae779091fb4655e44a915500c082","seen":[]}

@@ -62,29 +62,36 @@ describe("dominators", () => {
 describe("coverage", () => {
   const erwartet: Record<VariantId, Record<ToolId, [number, number]>> = {
     // [Familien des Produkts, davon gezeichnet]
+    // Windsurf seit 09.11.2026 nur mit den 259 Einträgen der Seite: 53 statt
+    // 74 Familien. Von den 21 entfallenen waren gezeichnet: Kosten 5
+    // (claude-haiku-4.5, claude-sonnet-4.5, gemini-2.5-pro, gemini-3.1-pro,
+    // grok-4.5), Tempo 3 (o3, gemini-3.1-pro, gpt-5.3-codex), DesignArena
+    // Preis 11, Zeit 7.
     "aa-cost": {
       cursor: [54, 36],
-      windsurf: [74, 42],
+      windsurf: [53, 36],
       "jetbrains-ai": [42, 25],
       junie: [13, 13],
     },
+    // Seit 09.11.2026 ohne Tempo für Modelle, die nur der v4-Stand kennt: deren
+    // Wert stammt aus der alten AA-Methodik (`aaData.ts`, „Tempo seit 03.11.2026“).
     "aa-speed": {
-      cursor: [54, 45],
-      windsurf: [74, 54],
-      "jetbrains-ai": [42, 41],
-      junie: [13, 13],
+      cursor: [54, 15],
+      windsurf: [53, 17],
+      "jetbrains-ai": [42, 9],
+      junie: [13, 10],
     },
     // DesignArena (09.11.2026): Preise hat jedes Modell des Boards, Zeiten nur
     // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
     "da-cost": {
       cursor: [54, 39],
-      windsurf: [74, 44],
+      windsurf: [53, 33],
       "jetbrains-ai": [42, 27],
       junie: [13, 13],
     },
     "da-speed": {
       cursor: [54, 17],
-      windsurf: [74, 16],
+      windsurf: [53, 9],
       "jetbrains-ai": [42, 11],
       junie: [13, 1],
     },
@@ -176,8 +183,8 @@ describe("Texte für eine Auswahl", () => {
 
   it("der Absatz nennt die berechnete Leiter des Produkts, billigste zuerst, und die Zahlen", () => {
     const t = text(leadFor(cost, jb));
-    expect(t).toContain("gpt-5-mini 0,12 € (≈ 7,8) → gpt-6-luna 0,13 € (27,8)");
-    expect(t).toContain("claude-opus-5.5 8,79 € (58,4)");
+    expect(t).toContain("gpt-5-mini 0,11 € (≈ 7,7) → gpt-6-luna 0,13 € (27,9)");
+    expect(t).toContain("claude-opus-5.5 8,79 € (59,1)");
     expect(t).toContain("JetBrains AI: 4 von 25 auf der Front, die übrigen 21");
   });
 
@@ -193,10 +200,11 @@ describe("Texte für eine Auswahl", () => {
     expect(t).toContain("Wo Du wartest");
     // neun Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
     expect(t).toContain(
-      "step-5 146 tok/s → deepseek-v4.1-flash-1017 170 tok/s → muse-wonder 192 tok/s",
+      "muse-wonder 121 tok/s → step-5 135 tok/s → deepseek-v4.1-flash-1017 145 tok/s",
     );
     expect(t).not.toContain("(≈");
-    expect(t.indexOf("gpt-6.1-terra")).toBeLessThan(
+    expect(t.indexOf("gemini-3.8-flash")).toBeGreaterThan(-1);
+    expect(t.indexOf("gemini-3.8-flash")).toBeLessThan(
       t.indexOf("claude-haiku-5.5"),
     );
   });

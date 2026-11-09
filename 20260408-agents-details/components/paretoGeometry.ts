@@ -20,6 +20,8 @@
 
 import {
   layoutLabels,
+  LEADER_CLEAR_DOM,
+  LEADER_CLEAR_DOM_EST,
   type Layout,
   type LayoutPoint,
   type Obstacle,
@@ -268,6 +270,8 @@ export function chartGeometry(
     story: (p) => p.story === true,
     presets: isDefault,
     pos: dodge.pos,
+    domClear: LEADER_CLEAR_DOM,
+    domClearEst: LEADER_CLEAR_DOM_EST,
   });
   const layout = layoutLabels(layoutPts, layoutOpts);
 

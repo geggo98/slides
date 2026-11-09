@@ -23,6 +23,19 @@ wird bei jedem Lauf neu bestimmt; diese Punkte stehen hohl mit „≈“. Je meh
 neu misst, desto weniger umgerechnete Punkte gibt es; daran ist nichts von Hand
 zu tun.
 
+Seit 03.11.2026 misst AA **Tempo** nach der Methodik „Performance
+Benchmarking“ 3.0.0
+(<https://artificialanalysis.ai/methodology/performance-benchmarking>, Version
+History). Der Wert ist jetzt das Mittel aller Lastprofile der letzten 5 Tage,
+Ende zu Ende samt Zeit bis zum ersten Token. Vorher war es der Median des
+Profils mit 10 000 Input-Tokens über 72 Stunden. An 156 Konfigurationen mit
+beiden Werten lag neu/alt am 09.11.2026 im Median bei 0,80 (0,33 bis 2,46);
+zwischen zwei Ständen der alten Methodik lag der Median bei 0,96 bis 1,06.
+Alte und neue Tempowerte kommen deshalb nie in dasselbe Chart: Umgerechnete
+v4-Zeilen, die im aktuellen Stand fehlen, bekommen in `migrateV4` kein Tempo
+(`ohneTempo`) und fehlen in der Tempoansicht. Auch daran ist nichts von Hand zu
+tun.
+
 DesignArena ist die zweite, unabhängige Achse: Elo aus Blind-Duellen statt
 Benchmark. Ihr Elo bewegt sich mit jeder Stimme, ein neuer Stand ist dort also
 fast jede Woche zu erwarten. Generierungszeiten führt die Seite nur für ältere
@@ -58,6 +71,33 @@ bun run 20260408-agents-details/data/artificialanalysis/fetch.ts
   und die verschlüsselte Datendatei der Seite (`/data/<hash>.txt`) **nie**
   lesen oder entschlüsseln.
 
+Das Archiv übernimmt je Modell nur die Felder in `FELDER` (`fetch.ts`), unter
+den Namen der Seite. Tempo und Latenz heißen seit 03.11.2026 `outputSpeed`,
+`timeToFirstToken` und `timeToFirstAnswerToken`. Die alten Felder
+`medianOutputTokensPerSecond` und `medianTimeToFirstTokenSeconds` sowie
+`intelligenceIndexIsEstimated` führt die Seite nicht mehr (09.11.2026: in 0
+von 283 Modellen). Ältere Boards tragen noch die alten Namen; `tpsOf` in
+`aaData.ts` liest je Snapshot das Feld, das er hat.
+
+**Abbruch `Format geändert? Felder fehlen oder sind zu selten belegt (< 50 %
+des Vorgängers): …`** kommt von `pruefeFelder()`. Es zählt je Feld aus
+`FELDER` die Modelle mit Wert und vergleicht mit dem zuletzt archivierten
+Board. Es bricht ab, wenn ein Feld in keinem Modell steht oder in weniger als
+der Hälfte so vielen wie im Vorgänger (`MIN_ANTEIL`). Beim Vergleich mit einem
+Board von vor dem 03.11.2026 zählt es `outputSpeed` und `timeToFirstToken`
+unter ihrem alten Namen (`FRUEHER`).
+Die Meldung nennt jedes betroffene Feld mit beiden Zählern. Geschrieben ist zu
+diesem Zeitpunkt noch nichts. Meist hat die Seite ein Feld umbenannt, wie am
+03.11.2026. Dann:
+
+- Das Format untersuchen: im Abruf nach einem Feld suchen, das die Werte jetzt
+  trägt, und es mit Zählern im PR bzw. Abschlussbericht oder im Issue nennen.
+- **Keine** halben Daten committen und die Prüfung nicht umgehen:
+  `MIN_ANTEIL` nicht senken, kein Feld aus `FELDER` streichen. Die
+  AA-Schritte überspringen wie bei jedem anderen Fehler oben; das Umstellen
+  auf neue Feldnamen macht ein Mensch, denn neue Felder messen oft etwas
+  anderes (siehe Hintergrund).
+
 ## 1b. DesignArena abrufen
 
 ```sh
@@ -79,19 +119,74 @@ Seite abrufen — die `robots.txt` sperrt es.
 ## 2. Produktkataloge abrufen
 
 ```sh
+bun run 20260408-agents-details/data/toolcatalogs/fetch.ts --dry-run
 bun run 20260408-agents-details/data/toolcatalogs/fetch.ts
 ```
 
-Cursor, Windsurf und JetBrains AI kommen aus maschinenlesbaren Doku-Seiten.
-Je Quelle steht `unverändert`, `neu …` oder `FEHLER`; eine gescheiterte Quelle
-hält die anderen nicht auf, das Skript endet dann mit Exit 1.
+`--dry-run` holt und prüft wie ein echter Lauf, schreibt aber nichts. Je
+Quelle nennt es die Zahl der Modelle, die Schranke und die Differenz zum
+letzten Archiv (`+N −M`), darunter jedes neue (`+`) und jedes fehlende (`−`)
+Label. Diese Liste gehört in den PR. Mit einem Werkzeugnamen (`cursor`,
+`windsurf`, `jetbrains-ai`) dahinter prüft bzw. archiviert es nur diese Quelle;
+die Index-Zeilen der anderen bleiben dann unberührt.
 
-**Gescheiterte Quelle** (seit 28.10.2026 regelmäßig Windsurf, das jetzt
-„Devin Desktop“ heißt und seine Tabelle erst im Browser füllt): kurz von Hand
-recherchieren — Herstellerseite, Changelog, Release-Notes, Blog, jeweils
-datiert. Ausgangspunkt ist der **bisherige** Katalog (`components/toolCatalogs.ts`
-nennt die Datei): Modelle bleiben, solange nichts ihre Entfernung belegt; neue
-kommen nur mit Beleg dazu.
+Der echte Lauf meldet je Quelle `unverändert`, `neu …` oder `FEHLER`. Eine
+gescheiterte Quelle hält die anderen nicht auf; das Skript endet dann mit
+Exit 1, und der Katalog dieser Quelle bleibt auf dem alten Stand. Archiviert
+wird nach Inhalt (sha256): Liefert eine Seite dieselben Modelle, entsteht keine
+neue Datei, nur ein `seen`-Zeitstempel im Index.
+
+Die Quellen:
+
+- **Cursor**: `https://cursor.com/docs/models-and-pricing.md`, die
+  Markdown-Tabellen samt „Hidden by default“.
+- **Windsurf** (heißt jetzt „Devin Desktop“):
+  `https://docs.devin.ai/desktop/models`, die **gerenderte HTML-Seite**, nicht
+  `models.md` (liefert seit 28.10.2026 nur leere Tabellen). Die Tabelle füllt
+  erst der Browser, aus dem Feld `modelCostData` im eingebetteten
+  MDX-Quelltext; `parseWindsurf` in `fetch.ts` liest genau dieses Feld. Es
+  nimmt den Pro-Tarif (`TEAMS_TIER_PRO`) und lässt weg, was die Seite selbst
+  ausblendet (`isUserFacing` im Render-Code: Anbieter `UNSPECIFIED`, `[dev]`,
+  „backend only“). Am 09.11.2026 waren das 259 Einträge, dieselben wie im
+  gerenderten DOM.
+- **JetBrains AI**: die erste HTML-Tabelle von
+  `https://www.jetbrains.com/help/ai-assistant/supported-llms.html` (aktive
+  Modelle des Abos; die zweite ist die Historie).
+
+**Schranke.** Ein Abruf muss mindestens die feste Untergrenze liefern (Cursor
+50, Windsurf 200, JetBrains AI 30) und mindestens 80 % der Einträge des
+letzten Archivs, die dort einen eigenen Beleg haben (`mindestzahl` in
+`fetch.ts`; Einträge mit dem Beleg „übernommen aus …“ zählen nicht). Ein
+Archiv aus einem Abruf hat keine solchen Einträge, die Basis ist dann jeder
+Eintrag: für Windsurf ⌈0,8 × 259⌉ = 208. Liefert die Seite weniger, scheitert
+die Quelle nach vier Versuchen laut (`… Modelle (< N)`), statt den Katalog zu
+kürzen. Die Schranke nicht senken, um durchzukommen.
+
+**Entfernte Modelle.** Für **Windsurf** gilt seit 09.11.2026 (Entscheidung
+des Repo-Inhabers): Die Tabelle der Seite ist der Entfernungsbeleg. Was dort
+fehlt, fällt beim Abruf aus dem Archiv; die Seite datiert ihren Stand selbst
+(„… as of November 5, 2026“). Am 09.11.2026 entfielen so 67 ältere Einträge,
+die frühere Handrecherchen nur übernommen hatten. Die `−`-Liste aus
+`--dry-run` gehört in den PR. Für **Cursor** und **JetBrains AI** gilt
+unverändert: Muss von Hand recherchiert werden, bleiben Modelle im Katalog,
+bis eine Entfernung belegt ist.
+
+**Gescheiterte Quelle.** Die Meldung sagt, was fehlt:
+
+- `modelCostData nicht gefunden` (Windsurf): Die Seite trägt das Feld nicht
+  mehr, das Format hat sich geändert. Prüfen lässt es sich mit
+  `curl -sL -A 'Mozilla/5.0' https://docs.devin.ai/desktop/models | grep -o modelCostData | wc -l`
+  (am 09.11.2026: 4).
+- `… Modelle (< N)`: Die Seite lieferte weniger als die Schranke.
+- `HTTP …`, Netzwerkfehler: siehe Schritt 3, letzter Absatz.
+
+Dann den Parser **nicht** umbauen und keine halben Daten archivieren. Der
+Katalog bleibt auf dem letzten Archiv. Die Meldung im PR bzw.
+Abschlussbericht nennen; endet der ganze Lauf ohne Änderung, dasselbe Issue
+wie in Schritt 1 öffnen oder kommentieren. Kurz von Hand recherchieren —
+Herstellerseite, Changelog, Release-Notes, Blog, jeweils datiert.
+Ausgangspunkt ist der **bisherige** Katalog (`components/toolCatalogs.ts`
+nennt die Datei); neue Modelle kommen nur mit Beleg dazu.
 
 **Findet die Recherche nichts Neues, nichts archivieren** — der Katalog gilt
 dann als unverändert. Sonst entstünde jede Woche ein neuer Katalog und damit
@@ -105,6 +200,10 @@ Liste **außerhalb des Repos** schreiben und archivieren:
 #   sonst "evidence": ["übernommen aus windsurf-…json"]
 bun run 20260408-agents-details/data/toolcatalogs/fetch.ts --manual windsurf /tmp/liste.json
 ```
+
+Ein `--manual`-Archiv hat einen anderen Inhalt als ein Abruf (Belege,
+`manuell:` vor der Quelle). Der nächste erfolgreiche Abruf legt deshalb in
+jedem Fall eine neue Datei an. Das ist erwartet und kein Grund zur Sorge.
 
 Die archivierten Dateien (`*-JJJJMMTT-<hash>.json`) stehen in
 `.prettierignore`: ihr Inhalt ist per sha256 im Index festgehalten, eine
@@ -135,7 +234,7 @@ for (const [id, c] of Object.entries(CATALOGS))
   out[id] = Object.fromEntries(c.models.map((m) => [m.name, familyKey(m.name)]));
 await Bun.write("20260408-agents-details/components/lib/__tests__/__fixtures__/catalog-keys.json", JSON.stringify(out, null, 2) + "\n");
 '
-git diff --no-ext-diff --no-color -- '*catalog-keys.json'
+git diff --no-ext-diff --no-textconv --no-color -- '*catalog-keys.json'
 ```
 
 ## 3. AA und DesignArena umstellen — je eine Stelle
@@ -197,6 +296,7 @@ Typische Fälle:
 | DesignArena „legt jeden Punkt … in den Plot“ / „überschneidet nichts“ (`da-cost`, `da-speed`)       | Wie bei AA: `DA_COST_SCALE`/`DA_SPEED_SCALE` in `paretoVariants.ts` (0,15–40 $, Elo 1125–1430; 80–1 000 s, Elo 880–1300) bzw. `arrows.hubY`/`target` der DA-Ansicht anpassen.                                                                                                                                       |
 | `productCoverage.test.ts` „coverage“ für `da-cost`/`da-speed`                                       | Erwartete „N von M“ je Produkt auf die Werte der Fehlermeldung setzen; im PR sagen, was sich bewegt hat (neues Modell bei DesignArena, neue Zeitangabe, Katalog).                                                                                                                                                   |
 | `daData.test.ts` „Archive — Index und Dateien“                                                      | Eine Archivdatei fehlt oder ihr Inhalt passt nicht mehr zur sha256 im Index — **nie** den Index anpassen. Die Datei aus `git` wiederherstellen; Archivdateien formatiert niemand um (`.prettierignore`).                                                                                                            |
+| `toolCatalogs.test.ts` „Mindestzahl, Hash und Abrufdatum stimmen“                                   | Import oder `retrieved` in `toolCatalogs.ts` passen nicht zum Index, oder ein Werkzeug hat zwei Index-Einträge am selben Tag (etwa ein `--manual`-Archiv und ein Abruf). Import und `retrieved` nachziehen. Zwei Einträge am selben Tag im PR nennen und rot lassen; den Index **nie** von Hand anpassen.           |
 | „legt den Pfeilcluster über keine Quadranten-Überschrift und keinen Marker“                         | Ein Punkt ist unter einen Pfeilschaft gerutscht. `arrows.hubX`/`hubY`/`target` der Ansicht neu suchen (Gitter wie oben). `PFEIL_BEKANNT` im Test darf nur kürzer werden, nie länger.                                                                                                                                |
 
 **Niemals** einen Wächter löschen, lockern oder `skip`pen, um grün zu

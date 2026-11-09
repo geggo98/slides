@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { FELDER, parseModels } from "../../../data/artificialanalysis/fetch";
+import {
+  type AaRecord,
+  FELDER,
+  feldZaehler,
+  parseModels,
+  pruefeFelder,
+} from "../../../data/artificialanalysis/fetch";
 
 // `fetch.ts` liest die Modell-Liste aus der RSC-Payload der Leaderboard-Seite.
 // Die Seite hat ihre Form schon einmal geändert (Ende Oktober 2026: `models` →
@@ -22,7 +28,7 @@ const voll = (slug: string, index: number | "$undefined", cost: number) => ({
   deprecated: false,
   intelligenceIndex: index,
   intelligenceIndexCostPerTask: cost,
-  medianOutputTokensPerSecond: "$undefined",
+  outputSpeed: "$undefined",
   scores: { "frontiercode-2-0": 0.1 },
 });
 
@@ -43,7 +49,7 @@ describe("parseModels", () => {
     expect(ms.map((m) => m.slug)).toStrictEqual(["y", "z"]);
     // RSC-Sentinel wird zu null, nicht zu einem String.
     expect(ms[0]!.intelligenceIndex).toBeNull();
-    expect(ms[1]!.medianOutputTokensPerSecond).toBeNull();
+    expect(ms[1]!.outputSpeed).toBeNull();
     // Nur die Felder, die das Deck braucht.
     expect(Object.keys(ms[1]!)).toStrictEqual([...FELDER]);
   });
@@ -61,5 +67,65 @@ describe("parseModels", () => {
   it("gibt ohne Kennzahlen-Liste nichts zurück statt der Stubs", () => {
     const body = `24:{"models":${JSON.stringify([stub("a"), stub("b")])}}`;
     expect(parseModels(seite(body))).toStrictEqual([]);
+  });
+});
+
+// Am 09.11.2026 hatte AA die Tempo-Felder umbenannt (`medianOutputTokensPerSecond`
+// → `outputSpeed`). Der Abruf meldete trotzdem „neu: … 282 Modelle“ und schrieb
+// einen Snapshot ohne einen einzigen Tempo-Wert. `pruefeFelder()` macht daraus
+// einen Abbruch.
+describe("pruefeFelder", () => {
+  /** Ein vollständiger Datensatz in der Form von `parseModels()`. */
+  const rec = (slug: string, tps: number | null): AaRecord =>
+    Object.fromEntries(
+      FELDER.map((k) => [
+        k,
+        k === "slug" ? slug : k === "outputSpeed" ? tps : 1,
+      ]),
+    ) as AaRecord;
+  const zehn = (tps: (i: number) => number | null) =>
+    Array.from({ length: 10 }, (_, i) => rec(`m${i}`, tps(i)));
+
+  it("lässt einen vollständigen Stand durch, auch ohne Vorgänger", () => {
+    const ms = zehn(() => 100);
+    expect(() => pruefeFelder(ms, null)).not.toThrow();
+    expect(() => pruefeFelder(ms, ms)).not.toThrow();
+  });
+
+  it("scheitert, wenn ein Feld in keinem Datensatz steht, und nennt den Zähler", () => {
+    expect(() =>
+      pruefeFelder(
+        zehn(() => null),
+        null,
+      ),
+    ).toThrow(/outputSpeed: 0 von 10/);
+  });
+
+  it("scheitert unter der Hälfte des Vorgängers — gezählt unter dem alten Namen", () => {
+    // Vorgänger im Format bis 02.11.2026: 10 von 10 mit Median-Tempo.
+    const alt = zehn(() => 1).map(({ outputSpeed: _o, ...r }) => ({
+      ...r,
+      medianOutputTokensPerSecond: 100,
+    }));
+    expect(() =>
+      pruefeFelder(
+        zehn((i) => (i < 4 ? 100 : null)),
+        alt,
+      ),
+    ).toThrow(
+      /outputSpeed: 4 von 10 \(Vorgänger: 10 mit medianOutputTokensPerSecond\)/,
+    );
+    expect(() =>
+      pruefeFelder(
+        zehn((i) => (i < 5 ? 100 : null)),
+        alt,
+      ),
+    ).not.toThrow();
+  });
+
+  it("zählt null nicht als Wert", () => {
+    expect(feldZaehler([{ a: null }, { a: 0 }, {}], ["a"])).toStrictEqual({
+      a: 1,
+    });
   });
 });
