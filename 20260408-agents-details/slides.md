@@ -1672,34 +1672,37 @@ Tempo-Wert mehr). Der Schalter „Tempo als Größe“
 legt die Geschwindigkeit als Halo um die Marker der Kostenansicht.
 Attribution: AA verlangt den Link, er steht in der Fußzeile.
 
-DESIGNARENA (Board „Overall Agentic“, Stand 31.10.2026) ist die zweite
+DESIGNARENA (Board „Overall Agentic“, Stand 09.11.2026) ist die zweite
 Meinung: keine Benchmark-Aufgaben, sondern Blind-Duelle. Menschen sehen
 zwei Ergebnisse derselben Design- bzw. Agentic-Aufgabe (Website, App,
 Spiel) und wählen das bessere; daraus ein Bradley-Terry-Elo, Start 1200,
-330 000 Stimmen. Das misst Gefallen und Gesamteindruck, nicht
+346 000 Stimmen. Das misst Gefallen und Gesamteindruck, nicht
 Korrektheit — wo AA und DesignArena sich einig sind, ist die Aussage
 belastbarer als jede für sich.
 
 Ansicht „Design-Elo × Preis“: x ist der LISTENPREIS je 1M Token, 3 Teile
 Input zu 1 Teil Output gemischt, wie DesignArena selbst rechnet — in USD,
 nicht umgerechnet. Das ist ein Preisschild, kein Verbrauch pro Aufgabe:
-ein gesprächiges Modell steht hier zu billig. Elo ≥ 1200, 24 Modelle.
-Front: minimax-m3.1-flash 0,26 $ (1233) → mimo-v2.6-pro 0,54 $ (1268) →
-muse-spark-1.3-max 2 $ (1281) → gemini-4-argon 4 $ (1291) →
-claude-opus-5.5 8 $ (1333) → gpt-6-astra 20 $ (1408). Auffällig gegen AA:
-die billigen chinesischen Modelle (MiniMax, MiMo) stehen hier weit vorn,
-und gpt-6-astra (max) führt mit Abstand.
+ein gesprächiges Modell steht hier zu billig. Elo ≥ 1200, 27 Modelle.
+Front: minimax-m3.1-flash 0,26 $ (1243) → inkling-2-small 0,48 $ (1272) →
+deepseek-v4.1-flash 0,52 $ (1303) → gpt-6.1-sol 4 $ (1424) →
+claude-opus-5.5 8 $ (1459). Auffällig gegen AA: die billigen chinesischen
+Modelle (MiniMax, DeepSeek) stehen hier weit vorn. An der Spitze liegen
+Opus 5.5 (Stufe high) und GPT-6.1 Sol (max); beide sind seit dem
+31.10. neu auf dem Board, gpt-6-astra (1392) fällt dadurch von der Front.
+deepseek-v4.1-flash hat erst rund 250 Duelle (± 22 Elo), sein Platz ist
+also noch unsicher.
 
 Ansicht „Design-Elo × Tempo“: Ø Zeit einer Generierung. DesignArena führt
-sie nur für ältere Modelle — 22 der 24 Modelle der Preisansicht haben
+sie nur für ältere Modelle — 25 der 27 Modelle der Preisansicht haben
 keine, darunter Opus 5.5, GPT-6 und Gemini 4 (Hover in der Fußzeile).
-Deshalb Elo ≥ 1000. Front: grok-4.3 1,9 min (1040) →
-gemini-3.1-pro-preview 3,5 min (1085) → claude-fable-5 4,0 min (1271).
+Deshalb Elo ≥ 1000. Front: grok-4.3 1,9 min (1038) →
+gemini-3.1-pro-preview 3,5 min (1083) → claude-fable-5 4,0 min (1269).
 Ein Stand der Generation davor, keine Empfehlung für heute — so auch
 sagen.
 
-PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 28.10.2026, Junie vom
-02.11.2026, AA-Stand 02.11.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
+PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 28.10.2026, Windsurf vom
+09.11.2026, Junie vom 02.11.2026, AA-Stand 02.11.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
 Modelle sich lohnen und wann es ein strikt besseres gibt. Ein Produkt
 zeigt deshalb alle seine Modelle mit Wert — auch ältere, die AA nicht mehr
 führt — und rechnet die Front nur über diese, selbst wenn andere Produkte
@@ -1712,14 +1715,14 @@ meisten Punkte aus v4 umgerechnet (≈).
 Kostenansicht, die vier Produkte:
 - JetBrains AI (25 von 42, vier Sprossen): gpt-5-mini 0,12 € (≈ 7,8) → gpt-6-luna 0,13 € (27,8) → gpt-6.1-sol 1,11 € (54,5) → claude-opus-5.5 8,79 € (58,4). Der Katalog vom 28.10. führt jetzt GPT-6 und Opus 5.5; das Preset reicht damit bis Opus 5.5, dem besten Modell seines Katalogs; die Spitze gemini-4-carbon führt JetBrains nicht.
 - Junie (13 von 13): gpt-6-luna 0,13 € (27,8) → gpt-6.1-terra-non-reasoning 0,20 € (30,4) → gpt-6.1-terra 0,84 € (51,0) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4). Neu belegt sind GPT 6.1 Terra (Release-Notes 28.10.) und Gemini 4 Argon (16.10.); Terra verdrängt gpt-6-sol von der Front.
-- Windsurf (35 von 65): gpt-6-luna 0,13 € (27,8) → gemini-3.7-flash 1,73 € (≈ 29,1) → grok-4.5 1,93 € (≈ 29,3) → gpt-6-sol 1,94 € (≈ 45,9) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4). glm-5.3-flash ist seit 31.10. in v5 gemessen (27,8 bei 0,51 €) und von gpt-6-luna dominiert; die beiden Umgerechneten dahinter rücken nach.
+- Windsurf (42 von 74): gpt-6-luna 0,13 € (27,8) → gpt-6.1-terra-non-reasoning 0,20 € (30,4) → claude-haiku-5.5 0,36 € (36,2) → gpt-6.1-terra 0,84 € (51,0) → gpt-6.1-sol 1,11 € (54,5) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (58,4). Die Modellseite (Stand 05.11.) führt jetzt GPT-6.1 Sol und Terra, Haiku 5.5 und Sonnet 5.5. Gemessene Sprossen ersetzen damit die drei umgerechneten (gemini-3.7-flash, grok-4.5, gpt-6-sol); die Leiter ist jetzt ganz gemessen.
 - Cursor (36 von 54): gpt-5-mini 0,12 € (≈ 7,8) → claude-haiku-5.5 0,36 € (36,2) → muse-spark-1.3 2,92 € (≈ 41,1) → gpt-5.6-sol 3,57 € (≈ 44,9) → gemini-4-argon 6,73 € (50,4) → claude-sonnet-5.5 8,78 € (54,2) → claude-opus-5.5 8,79 € (58,4). Sonnet 5.5 und Opus 5.5 kosten fast dasselbe, Opus hat 4,2 Punkte mehr.
 
 Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten; ≈ = umgerechnet):
 - JetBrains AI (41 von 42): claude-opus-5.5 96 tok/s (58,4) → gpt-6.1-sol 98 tok/s (54,5) → claude-sonnet-5.5 138 tok/s (54,2) → gemini-3.7-flash 291 tok/s (≈ 29,1). gpt-6.1-sol ist neu dabei, weil AA es jetzt schneller misst.
 - Junie (13 von 13): claude-opus-5.5 96 tok/s (58,4) → claude-sonnet-5.5 138 tok/s (54,2) → gemini-3.1-pro 142 tok/s (≈ 18,8). gemini-3.1-pro ist zurück: AA misst es jetzt mit 142 tok/s, wieder schneller als Sonnet 5.5.
 - Cursor (45 von 54): claude-opus-5.5 96 tok/s (58,4) → claude-sonnet-5.5 138 tok/s (54,2) → muse-wonder 192 tok/s (43,3) → claude-haiku-5.5 236 tok/s (36,2) → gemini-3.7-flash 291 tok/s (≈ 29,1) → gemini-3.5-flash-lite 442 tok/s (11,7). muse-spark-1.3 (163 tok/s) fällt heraus, seit muse-wonder wieder schneller gemessen wird.
-- Windsurf (47 von 65): claude-opus-5.5 96 tok/s (58,4) → gemini-3.8-flash 131 tok/s (30,5) → gemini-3.7-flash 291 tok/s (≈ 29,1).
+- Windsurf (54 von 74): claude-opus-5.5 96 tok/s (58,4) → gpt-6.1-sol 98 tok/s (54,5) → claude-sonnet-5.5 138 tok/s (54,2) → claude-haiku-5.5 236 tok/s (36,2) → gemini-3.7-flash 291 tok/s (≈ 29,1). Seit Haiku 5.5 im Katalog steht, fällt gemini-3.8-flash heraus: Haiku ist schneller und hat mehr Punkte.
 
 Die Frage aus dem Publikum, was mit dem eigenen API-Schlüssel ist: JetBrains
 AI und Junie erlauben BYOK. Dann das Lab des Schlüssels anhaken (OpenAI,
@@ -1794,7 +1797,7 @@ Nicht überziehen: Anthropic veröffentlicht keine festen Message- oder
 Stundenzahlen. Was kursiert (~225 vs. ~900 Nachrichten pro 5 h), sind
 Community-Schätzungen — als Größenordnung erwähnen, nicht als Faktum.
 
-Entzerrte Marker: bis 5,8 px verschoben, höchstens 0,0 Indexpunkte
+Entzerrte Marker: bis 5,6 px verschoben, höchstens 0,2 Indexpunkte
 senkrecht oder 4,1 % im Preis bzw. Tempo waagerecht. Betroffen sind die
 Tempoansicht mit drei Knäueln (gpt-6-luna, gemini-3.8-flash,
 minimax-m3.1-flash: 132, 131 und 130 tok/s; claude-opus-5.5 und
@@ -1802,7 +1805,10 @@ gemini-4-carbon: 96 und 92 tok/s; gpt-6.1-terra-non-reasoning und
 glm-5.3: 91 und 88 tok/s) und der
 Kontingent-Schalter der Kostenansicht: claude-opus-5.5 liegt mit ×0,8 fast
 auf gemini-4-carbon, deshalb weichen dort beide waagerecht aus — der
-einzige Fall, in dem der Schalter einen festen Marker bewegt. Frontpunkte rücken nur waagerecht, kein dominierter Punkt
+einzige Fall, in dem der Schalter einen festen Marker bewegt. Senkrecht
+rücken nur gemini-3.8-flash und minimax-m3.1-flash (je 0,2 Punkte):
+gemini-3.8-flash steht seit dem Windsurf-Katalog vom 09.11. auf keiner
+Front mehr. Frontpunkte rücken nur waagerecht, kein dominierter Punkt
 rückt über die Front. Fadenkreuz und Tooltip zeigen den wahren Wert. Die Zahlen
 rechnet markerDodge.test.ts nach und hält sie gegen diese Notiz.
 -->
