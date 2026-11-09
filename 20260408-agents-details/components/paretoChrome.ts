@@ -553,6 +553,24 @@ export function dodgeDetailed(
     cur.set(p.label, clamp(p, { px: c.px + dx, py: c.py + dy }));
   };
 
+  // Ein Schub, den Kappe oder Front-Höhe abschneiden, trennt oft nichts: Ist
+  // das Paar senkrecht fast frei und darf nur waagerecht rücken, bleibt die
+  // Überlappung so groß wie vorher, und der Marker stünde nur woanders als
+  // sein Wert. Solch ein Schub wird zurückgenommen (09.11.2026: Im
+  // Cursor-Preset rückte claude-sonnet-5.5 so 8 px von gemini-4-argon weg,
+  // die Überlappung blieb bei 1,80 px). `p` steht danach wieder auf `prev`.
+  const useless = (p: Pt, prev: XY, o: Ob, before: number) => {
+    const c = cur.get(p.label)!;
+    const S = half(p) + o.h + gap;
+    const after = Math.min(
+      S - Math.abs(c.px - o.px),
+      S - Math.abs(c.py - o.py),
+    );
+    if (after <= before - tol) return false;
+    cur.set(p.label, prev);
+    return true;
+  };
+
   let sweeps = 0;
   const relax = (group: readonly Pt[], obs: readonly Ob[]) => {
     for (let sweep = 1; sweep <= maxSweeps; sweep++) {
@@ -566,7 +584,6 @@ export function dodgeDetailed(
           const dx = c.px - o.px;
           const dy = c.py - o.py;
           if (Math.abs(dx) >= S - tol || Math.abs(dy) >= S - tol) continue;
-          hit = true;
           const nx = S - Math.abs(dx);
           const ny = S - Math.abs(dy);
           const sx = dx >= 0 ? 1 : -1;
@@ -574,6 +591,8 @@ export function dodgeDetailed(
           const up = { px: c.px, py: c.py + sy * ny };
           if (ny < nx && canMove(p, up, obs)) shift(p, 0, sy * ny);
           else shift(p, sx * nx, 0);
+          if (useless(p, c, o, Math.min(nx, ny))) continue;
+          hit = true;
         }
       }
       // Paare innerhalb der Gruppe.
@@ -587,7 +606,6 @@ export function dodgeDetailed(
           const dx = b.px - a.px;
           const dy = b.py - a.py;
           if (Math.abs(dx) >= S - tol || Math.abs(dy) >= S - tol) continue;
-          hit = true;
           const need = { x: S - Math.abs(dx), y: S - Math.abs(dy) };
           // Gleichstand: der lexikografisch spätere (q) geht nach rechts/unten.
           const sign = { x: dx >= 0 ? 1 : -1, y: dy >= 0 ? 1 : -1 };
@@ -632,7 +650,14 @@ export function dodgeDetailed(
             // Rand schneiden ab; was bleibt, ist als `residual` messbar.
             shift(p, (-sign.x * need.x) / 2, 0);
             shift(q, (sign.x * need.x) / 2, 0);
+            const bq = cur.get(q.label)!;
+            const h = { ...bq, h: half(q) };
+            if (useless(p, a, h, Math.min(need.x, need.y))) {
+              cur.set(q.label, b);
+              continue;
+            }
           }
+          hit = true;
         }
       }
       sweeps++;
@@ -679,11 +704,25 @@ export function dodgeDetailed(
       ? fixed.filter((f) => mov.some((m) => overlaps(f, m)))
       : [];
     if (yielding.length) {
+      const probe = new Map([...cur].map(([k, v]) => [k, { ...v }]));
+      const sweeps1 = sweeps;
       for (const [k, v] of vorher) cur.set(k, v);
       sweeps = sweeps0;
       const group = order.filter((p) => movable(p) || yielding.includes(p));
       const rest = fixed.filter((p) => !yielding.includes(p));
       relax(group, [...allGhosts, ...obsOf(rest), ...extra]);
+      // Das Ausweichen gilt nur, wenn es die Paare auch trennt. Sonst rückte
+      // ein fester Marker um bis zu 8 px von seinem Wert weg, ohne dass etwas
+      // frei wird. Am 09.11.2026 im Cursor-Preset ohne Kontingent:
+      // claude-sonnet-5.5 (8,78 €, 54,5) über gemini-4-argon (8,71 €, 50,4),
+      // beide auf der Front, also nur waagerecht. Getrennt wären sie bei
+      // 17,7 px Versatz, beide zusammen dürfen 16. Mit Ausweichen blieben
+      // 1,68 px Restüberlappung statt 1,80 px, für 8 px Versatz von argon.
+      // Dann gilt der Probelauf.
+      if (yielding.some((f) => mov.some((m) => overlaps(f, m)))) {
+        for (const [k, v] of probe) cur.set(k, v);
+        sweeps = sweeps1;
+      }
     }
   }
 
@@ -779,6 +818,16 @@ export interface LayoutSource {
   presets?: boolean;
   /** false = kein Geisterring des Kontingent-Overlays (Varianten nach dem 14.09.). */
   ghost?: boolean;
+  /**
+   * Linienabstand für Marker, die in keinem Zustand als Kreis stehen (siehe
+   * `LEADER_CLEAR_DOM`). Ohne Angabe gilt für alle Marker `LEADER_CLEAR`. Die
+   * Hauptfolie setzt es; die Historie nicht, dort verdrängte der kleinere
+   * Abstand im Durchgang „alle Namen“ an Station 0902 muse-spark-1.1 auf
+   * einen erzwungenen Platz.
+   */
+  domClear?: number;
+  /** Wie `domClear`, für gestrichelte ≈-Quadrate (`Pt.est`). */
+  domClearEst?: number;
 }
 
 /** Baut aus dem VOLLEN Datensatz die Eingabe des Platzierers für einen Zustand. */
@@ -793,6 +842,19 @@ export function toLayoutPoints(
   const front = o.presets
     ? frontUnion(all)
     : new Set(paretoFront([...all]).front.map((f) => f.label));
+  // Als Kreis gezeichnet wird, wer in irgendeinem Zustand auf der Front steht;
+  // nur die übrigen sind immer Quadrate und sperren Linien mit dem kleineren
+  // Kasten (`domClear`). Die 25-%-Lage kennt kein Schalter mehr, ein Punkt mit
+  // ihr zählt vorsichtshalber als Kreis.
+  const round = new Set([
+    ...front,
+    ...paretoFront([...all]).front.map((f) => f.label),
+    ...(o.overlay
+      ? paretoFront(
+          visiblePoints(all, new Set(all.map((q) => q.label)), true),
+        ).front.map((f) => f.label)
+      : []),
+  ]);
 
   return all.map((p) => {
     const movable = o.overlay && p.sub !== undefined;
@@ -822,6 +884,14 @@ export function toLayoutPoints(
       movable,
       alt,
       ghost,
+      ...(o.domClear === undefined ||
+      round.has(p.label) ||
+      p.sub25 !== undefined
+        ? {}
+        : {
+            clear:
+              p.est && o.domClearEst !== undefined ? o.domClearEst : o.domClear,
+          }),
     };
   });
 }

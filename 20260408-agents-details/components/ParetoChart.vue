@@ -267,7 +267,7 @@ const chartLabel = computed(
         class="mp-tg"
         :class="{ on: sizeOn }"
         :aria-pressed="sizeOn"
-        title="Halo um jeden Marker: Median-Output-Tokens/s, je größer desto schneller"
+        title="Halo um jeden Marker: Ø Output-Tokens/s, je größer desto schneller"
         @click="sizeOn = !sizeOn"
       >
         Tempo als Größe

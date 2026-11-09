@@ -142,18 +142,22 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
 // Kosten log von 0,04 € bis 22 € (am 31.10.2026 kleinster Punkt 0,11 €, größter
 // 9,50 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
-// Index (v5) linear von 22 bis 64 (Punkte 26,0 bis 59,4). Ein
-// yMin > 0 spart die untere Hälfte der Achse, in der kein Modell liegt.
+// Index (v5) linear von 22 bis 66 (am 09.11.2026 Punkte 26,1 bis 60,0). Bis
+// 02.11. reichte 64; mit Carbon auf 60,0 und Opus auf 59,1 fand das Label von
+// claude-opus-5.5 darunter keinen Platz mehr (65 reichte nicht, 67 brach das
+// Overlay). Ein yMin > 0 spart die untere Hälfte der Achse, in der kein Modell
+// liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 22,
   xLog: { min: 0.04 },
   yMin: 22,
-  yMax: 64,
+  yMax: 66,
 });
 // x = 1000/tps: am 31.10.2026 4,3 s (235 tok/s) bis 32,4 s (31 tok/s,
-// kimi-k3.1-pro) je 1 000 Tokens.
+// kimi-k3.1-pro) je 1 000 Tokens; am 09.11.2026 (neue AA-Tempo-Methodik)
+// 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro.
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
@@ -218,7 +222,7 @@ const DA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
   xLog: { min: 0.15 },
-  yMin: 1115,
+  yMin: 1010,
   yMax: 1470,
 });
 const DA_SPEED_SCALE: Scale = makeScale({
@@ -361,7 +365,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       target: (s) => ({ x: s.px(16.85), y: s.py(52) }),
     },
     axisTitle:
-      "Ø Output-Tokens/s (Median, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",
+      "Ø Output-Tokens/s (Ende zu Ende, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",
     xText: (p) => `${p.tps} tok/s`,
     yText: dez1,
     tip: (p) =>
@@ -374,7 +378,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     subTitle: "",
     footnote: [
       {
-        t: `Artificial Analysis Intelligence Index v5 · Stand ${AA_STAND} · Tempo = Median der Output-Tokens/s des Anbieter-Endpunkts, den AA misst · ohne Messwert fehlen: ${AA_NO_TPS.join(", ")} · je Modell die beste Effort-Stufe · Index ≥ ${AA_FLOOR} · Quadranten redaktionell${MIG_FUSS} · Quelle: `,
+        t: `Artificial Analysis Intelligence Index v5 · Stand ${AA_STAND} · Tempo = Ø Output-Tokens/s des Anbieter-Endpunkts, den AA misst, über alle Lastprofile und samt Wartezeit bis zum ersten Token (AA-Methodik seit 03.11.2026) · ohne Messwert fehlen: ${AA_NO_TPS.join(", ")} · je Modell die beste Effort-Stufe · Index ≥ ${AA_FLOOR} · Quadranten redaktionell${MIG_FUSS} · Quelle: `,
       },
     ],
     attribution: AA_ATTRIBUTION,
@@ -386,7 +390,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         (p) => `${p.tps} tok/s (${dez1(p.y)})`,
       ),
       {
-        t: ". Das Tempo hängt am Endpunkt und an der Tageszeit — es ist ein Median, keine Zusage.",
+        t: ". Das Tempo hängt am Endpunkt und an der Tageszeit — es ist ein Mittelwert, keine Zusage.",
       },
     ],
     ariaIntro:
@@ -422,15 +426,16 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
       // Unter allen Punkten (tiefster 1200) und links der Quadranten-Überschrift
-      // „Geldverbrennung“: per Gitter aus yMin/yMax × Knoten × Ziel gesucht, kein
-      // Label, kein Marker und keine Überschrift unter einem Schaft (09.11.2026).
-      // Der alte Knoten bei 8 $ lag mit der gestauchten Skala (yMax 1470) auf
-      // gpt-6-sol, bei 10 $ stünde der Schaft „Beliebter“ auf claude-opus-5 und
-      // claude-opus-4.8; 15 $ liegt zwischen 11,25 $ und 20 $ frei. yMin 1115:
-      // bei 1125 ragte die Spitze von „Billiger“ unter den Plot.
-      hubX: (s) => s.px(15),
-      hubY: (s) => s.py(1140),
-      target: (s) => ({ x: s.px(2), y: s.py(1160) }),
+      // „Geldverbrennung“, ohne dass sich die Beschriftungen der Pfeile berühren:
+      // Gitter über yMin × Knoten × Ziel (09.11.2026), mit Kasten-Test gegen Marker
+      // und Überschriften und einem Textmodell für „Billiger“ gegen die Diagonale.
+      // Die Diagonale braucht mindestens ≈ 8° Neigung, sonst liegt ihr Text über
+      // „Billiger“ (bei 1140/1160 gemessen: Überdeckung); so steil passt sie nur in
+      // ein Band unter den Punkten, deshalb yMin 1010 statt 1115. Gemessen in
+      // Chromium, Firefox und WebKit, hell und dunkel: 4 px Luft zwischen beiden Texten.
+      hubX: (s) => s.px(16),
+      hubY: (s) => s.py(1048),
+      target: (s) => ({ x: s.px(2), y: s.py(1154) }),
     },
     axisTitle: `Listenpreis je 1M Token (USD, ${DA_MIX_TEXT} gemischt, log. Skala) — DesignArena-Elo`,
     xText: usdT,

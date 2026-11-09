@@ -55,14 +55,25 @@
 // keine Messung — die Punkte stehen hohl und gestrichelt („≈“), der Tooltip sagt
 // „aus v4 umgerechnet“, und `V4_MIGRATION` hält die Güte des Fits fest.
 
-import raw from "../data/artificialanalysis/board-20261102-11d0cd5a.json";
+//
+// Tempo seit 03.11.2026
+// ---------------------
+// AA misst Tempo seit der Methodik 3.0.0 anders (`fetch.ts`, Kopf): `outputSpeed`
+// ist der Durchschnitt aller Lastprofile über 5 Tage, Ende zu Ende gemessen,
+// also samt Zeit bis zum ersten Token; vorher hieß das Feld
+// `medianOutputTokensPerSecond` und war der Median des 10k-Token-Profils über
+// 72 Stunden. Jeder Snapshot trägt genau eines der beiden (`tpsOf`). Werte
+// der alten Methodik kommen nie neben solche der neuen: umgerechnete v4-Zeilen,
+// die im aktuellen Stand fehlen, haben deshalb kein Tempo (`migrateV4`).
+
+import raw from "../data/artificialanalysis/board-20261109-cfee77fd.json";
 import rawV4 from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const AA_BOARD = "board-20261102-11d0cd5a.json";
+export const AA_BOARD = "board-20261109-cfee77fd.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const AA_STAND = "02.11.2026";
+export const AA_STAND = "09.11.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
 export const USD_EUR = 0.876;
@@ -78,11 +89,23 @@ export interface Row {
   deprecated: boolean | null;
   modelCreatorName: string | null;
   intelligenceIndex: number | null;
-  intelligenceIndexIsEstimated: boolean | null;
+  /** Von AA geschätzter Index; seit 09.11.2026 führt die Seite das Feld nicht mehr. */
+  intelligenceIndexIsEstimated?: boolean | null;
   intelligenceIndexCostPerTask: number | null;
-  medianOutputTokensPerSecond: number | null;
+  /** Tempo ab 03.11.2026 (Methodik 3.0.0) — siehe Kopf. */
+  outputSpeed?: number | null;
+  /** Tempo bis 02.11.2026 (alte Methodik) — siehe Kopf. */
+  medianOutputTokensPerSecond?: number | null;
   /** Index und Kosten aus v4 umgerechnet, nicht von AA in v5 gemessen. */
   migrated?: true;
+}
+
+/** Output-Tokens/s einer Zeile, aus dem Feld, das ihr Snapshot trägt. */
+export function tpsOf(r: Row): number | null {
+  if (typeof r.outputSpeed === "number") return r.outputSpeed;
+  if (typeof r.medianOutputTokensPerSecond === "number")
+    return r.medianOutputTokensPerSecond;
+  return null;
 }
 
 /** Eine gemessene Konfiguration (Modell × Effort-Stufe) mit Rohwerten. */
@@ -284,8 +307,15 @@ export function migrateV4(
       ? um(o, r, r.deprecated)
       : r;
   });
+  // Fehlt die Zeile im aktuellen Stand, gäbe es nur ein v4-Tempo der alten
+  // Methodik — das bleibt weg (Kopf, „Tempo seit 03.11.2026“).
+  const ohneTempo = (o: Row): Row => ({
+    ...o,
+    outputSpeed: null,
+    medianOutputTokensPerSecond: null,
+  });
   for (const o of v4)
-    if (!neu.has(o.slug) && kandidat(o)) rows.push(um(o, o, true));
+    if (!neu.has(o.slug) && kandidat(o)) rows.push(um(o, ohneTempo(o), true));
   return { rows, migration };
 }
 
@@ -330,10 +360,7 @@ export const configsOf = (rows: readonly Row[]): AaCfg[] =>
         creator: r.modelCreatorName ?? "",
         index: r.intelligenceIndex,
         usd: r.intelligenceIndexCostPerTask,
-        tps:
-          typeof r.medianOutputTokensPerSecond === "number"
-            ? r.medianOutputTokensPerSecond
-            : null,
+        tps: tpsOf(r),
         ...(r.migrated ? { migrated: true as const } : {}),
       },
     ];

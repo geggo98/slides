@@ -78,9 +78,16 @@ describe("Extras", () => {
   });
 
   it("zählt, was die Folie in den Notizen und im ⓘ verspricht", () => {
-    expect(PRODUCT_FAMILIES.size).toBe(96);
-    expect(AA_EXTRAS_COST.length).toBe(32);
-    expect(AA_EXTRAS_SPEED.length).toBe(50);
+    // 89 statt 96 seit 09.11.2026: sieben Familien standen nur in den 67
+    // entfallenen Windsurf-Einträgen (gpt-5.3-codex-spark, grok-code-fast-1,
+    // inkling, penguin, swe-1.7-lightning, xai-grok-3, xai-grok-3-mini).
+    expect(PRODUCT_FAMILIES.size).toBe(89);
+    // 31 statt 32 und 7 statt 8: inkling (nur Windsurf, entfallen) hatte
+    // Kosten- und Tempowert.
+    expect(AA_EXTRAS_COST.length).toBe(31);
+    // Seit 09.11.2026 nur noch einstellig statt 50: Modelle, die nur der
+    // v4-Stand kennt, haben kein Tempo mehr (alte AA-Methodik, `aaData.ts`).
+    expect(AA_EXTRAS_SPEED.length).toBe(7);
   });
 
   for (const [view, kurat, extras] of [
@@ -186,11 +193,13 @@ describe("Front je Produkt", () => {
     expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
   });
 
-  it("Tempo: JetBrains AI hat vier Sprossen, Gemini 3.7 Flash vorn", () => {
+  it("Tempo: JetBrains AI hat zwei Sprossen, Sonnet 5.5 vorn", () => {
+    // Bis 02.11.2026 vier Sprossen mit gemini-3.7-flash vorn; das kannte nur
+    // der v4-Stand und hat seit 09.11. kein Tempo mehr.
     const f = front("aa-speed", "jetbrains-ai");
-    expect(f[0]).toBe("gemini-3.7-flash");
+    expect(f[0]).toBe("claude-sonnet-5.5");
     expect(f.at(-1)).toBe("claude-opus-5.5");
-    expect(f.length).toBe(4);
+    expect(f.length).toBe(2);
   });
 
   it("hält die v4-Reihenfolge im eigenen Haus: glm-5.3-flash steigt nicht über das gemessene glm-5.3", () => {
@@ -238,7 +247,6 @@ describe("Front je Produkt", () => {
 
   it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
     expect(front("aa-speed", "junie")).toStrictEqual([
-      "gemini-3.1-pro",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);

@@ -1217,6 +1217,8 @@ export type Lab =
   | "MiniMax"
   | "StepFun"
   | "InclusionAI"
+  | "Tencent"
+  | "Thinking Machines"
   | "Cursor"
   | "Andere";
 
@@ -1237,6 +1239,9 @@ const LAB_PREFIXES: ReadonlyArray<readonly [string, Lab]> = [
   ["minimax", "MiniMax"],
   ["step-", "StepFun"],
   ["ling-", "InclusionAI"],
+  // Seit AA 09.11.2026 im Chart; Lab laut `modelCreatorName` dort.
+  ["tencent-", "Tencent"],
+  ["inkling", "Thinking Machines"],
   ["qwen", "Alibaba"],
   ["composer-", "Cursor"],
 ];

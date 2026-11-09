@@ -182,7 +182,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
   });
 });
 
-// Alle 379 Katalognamen mit ihrem Schlüssel, einmal von Hand durchgesehen. Ein
+// Alle 377 Katalognamen mit ihrem Schlüssel, einmal von Hand durchgesehen. Ein
 // Unterschied zeigt genau, welcher Name jetzt woanders landet — bei einer
 // Änderung der Normalisierung oder eines neuen Abrufs bewusst neu erzeugen.
 describe("Golden: Katalogname → Schlüssel", () => {
@@ -204,8 +204,8 @@ describe("Golden: Katalogname → Schlüssel", () => {
   it("kollabiert nirgends zwei Namen, die sich in mehr als Konfigurationswörtern unterscheiden", () => {
     // Hilfsprobe: je Produkt gilt, dass ein Schlüssel höchstens Namen vereint,
     // deren Kleinbuchstaben-Anfang (bis zur ersten Ziffer nach dem Familienwort)
-    // übereinstimmt. Sichtbar wird es an den Zahlen: Windsurf hat 325 Namen und
-    // 74 Familien, weil jede Effort-Stufe ein Eintrag ist.
+    // übereinstimmt. Sichtbar wird es an den Zahlen: Windsurf hat 259 Namen und
+    // 53 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
     expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
     expect(catalogKeys("junie").size).toBe(13);

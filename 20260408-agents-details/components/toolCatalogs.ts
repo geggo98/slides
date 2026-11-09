@@ -11,7 +11,7 @@
 import cursor from "../data/toolcatalogs/cursor-20261028-b34fbe3e.json";
 import jetbrains from "../data/toolcatalogs/jetbrains-ai-20261028-7c050e8d.json";
 import junie from "../data/toolcatalogs/junie.json";
-import windsurf from "../data/toolcatalogs/windsurf-20261109-b341efe5.json";
+import windsurf from "../data/toolcatalogs/windsurf-20261109-45f625c0.json";
 
 export type CatalogId = "cursor" | "windsurf" | "jetbrains-ai" | "junie";
 
@@ -40,8 +40,7 @@ export const CATALOGS: Readonly<Record<CatalogId, ToolCatalog>> = {
   },
   windsurf: {
     id: "windsurf",
-    // `fetch.ts --manual` stellt „manuell: “ vor die URL; angezeigt wird die URL.
-    source: windsurf.source.replace(/^manuell: /, ""),
+    source: windsurf.source,
     retrieved: "2026-11-09",
     models: windsurf.models,
   },

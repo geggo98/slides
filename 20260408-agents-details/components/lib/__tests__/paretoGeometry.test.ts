@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   collisions,
   layoutLabels,
+  LEADER_CLEAR_DOM,
+  LEADER_CLEAR_DOM_EST,
   markerBoxes,
   type Obstacle,
 } from "../../labelLayout";
@@ -172,6 +174,8 @@ describe("chartGeometry — Standard = bisherige Pipeline", () => {
           story: (p) => p.story === true,
           presets: true,
           pos,
+          domClear: LEADER_CLEAR_DOM,
+          domClearEst: LEADER_CLEAR_DOM_EST,
         });
         const obstacles: Obstacle[] = [
           ...quadrantBoxes(V.scale, undefined, [...V.quadrants]),

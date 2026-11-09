@@ -163,7 +163,7 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(27);
+    expect(AA_COST.length).toBe(29);
     const v5 = JSON.parse(
       readFileSync(
         join(import.meta.dirname, "../../../data/artificialanalysis", AA_BOARD),
@@ -208,7 +208,7 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019", "mistral-large-4"]);
+    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -217,9 +217,13 @@ describe("aaData — die beiden Punktmengen", () => {
       const c = AA_CFGS.find((q) => q.label === p.label)!;
       expect(p.x).toBeCloseTo(1000 / c.tps!, 2);
     }
-    const flash = AA_SPEED.find((p) => p.label === "gemini-3.8-flash")!;
+    // Seit 09.11.2026 (neue AA-Tempo-Methodik) ist gemini-3.8-flash mit 112
+    // tok/s knapp langsamer als claude-opus-5.5 mit 114; das Paar ist deshalb
+    // Haiku gegen Opus aus derselben Familie.
+    const haiku = AA_SPEED.find((p) => p.label === "claude-haiku-5.5")!;
     const opus = AA_SPEED.find((p) => p.label === "claude-opus-5.5")!;
-    expect(flash.x).toBeLessThan(opus.x);
+    expect(haiku.tps!).toBeGreaterThan(opus.tps!);
+    expect(haiku.x).toBeLessThan(opus.x);
   });
 
   it("hat die Fronten, die die Speaker Notes nennen", () => {
@@ -235,9 +239,7 @@ describe("aaData — die beiden Punktmengen", () => {
     ]);
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
       "claude-haiku-5.5",
-      "muse-wonder",
       "claude-sonnet-5.5",
-      "gpt-6.1-sol",
       "claude-opus-5.5",
       "gemini-4-carbon",
     ]);

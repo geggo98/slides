@@ -6,7 +6,14 @@
 //
 // Aufruf
 // ------
-//   bun run 20260408-agents-details/data/toolcatalogs/fetch.ts
+//   bun run 20260408-agents-details/data/toolcatalogs/fetch.ts [tool]
+//   bun run 20260408-agents-details/data/toolcatalogs/fetch.ts --dry-run [tool]
+//
+// Ohne `tool` alle drei Quellen, mit `tool` (`cursor`, `windsurf`,
+// `jetbrains-ai`) nur diese — die Index-Zeilen der anderen bleiben unberührt.
+// `--dry-run` holt und prüft wie ein echter Lauf, schreibt aber nichts und
+// nennt je Quelle die Labels, die gegenüber dem letzten Archiv neu sind oder
+// fehlen.
 //
 // Warum Rohseiten und nicht die HTML-Ansicht
 // ------------------------------------------
@@ -17,9 +24,12 @@
 //
 //   Cursor        https://cursor.com/docs/models-and-pricing.md
 //                 Markdown-Tabellen; Spalte 1 ist `Name` oder `[Name](url)`.
-//   Windsurf      https://docs.devin.ai/desktop/models.md
-//                 MDX mit `export const modelCostData = [ … ]` (JSON), je Tarif
-//                 und je Effort-Stufe ein Eintrag; wir nehmen den Pro-Tarif.
+//   Windsurf      https://docs.devin.ai/desktop/models (HTML, nicht `.md`)
+//                 Die Tabelle füllt erst der Browser, aus dem Feld
+//                 `modelCostData` im eingebetteten MDX-Quelltext. Je Tarif und
+//                 je Effort-Stufe ein Eintrag; wir nehmen den Pro-Tarif und
+//                 blenden aus, was die Seite selbst ausblendet. `models.md`
+//                 liefert seit 28.10.2026 nur leere Tabellen (`<tbody />`).
 //   JetBrains AI  https://www.jetbrains.com/help/ai-assistant/supported-llms.html
 //                 Zwei HTML-Tabellen: die erste die aktiven Modelle des
 //                 JetBrains-AI-Abos, die zweite die Historie mit Status.
@@ -27,9 +37,9 @@
 // Junie hat keine maschinenlesbare Liste und steht von Hand in `junie.json`
 // (mit Beleg je Eintrag), nicht hier.
 //
-// Fällt eine Quelle aus (Windsurf/Devin Desktop liefert seit Ende Oktober 2026
-// seine Tabellen leer aus und füllt sie erst im Browser), wird von Hand
-// recherchiert und die Liste mit Belegen archiviert:
+// Fällt eine Quelle aus (so Windsurf vom 28.10. bis 09.11.2026, solange der
+// Parser `models.md` las), wird von Hand recherchiert und die Liste mit
+// Belegen archiviert:
 //
 //   bun run 20260408-agents-details/data/toolcatalogs/fetch.ts \
 //     --manual windsurf <liste.json>
@@ -41,8 +51,23 @@
 //
 // Jeder Abruf wird gegen eine Mindestzahl geprüft, bevor etwas geschrieben wird:
 // eine Seite, die ihre Tabelle nicht mehr ausliefert, meldet sonst „0 Modelle“
-// und sieht aus wie ein leerer Katalog. Schlüssel des Archivs ist der INHALT
-// (sha256), nicht das Datum.
+// und sieht aus wie ein leerer Katalog. Zweite Schranke: mindestens 80 % der
+// Einträge des letzten Archivs, die dort einen eigenen Beleg haben. Einträge
+// einer `--manual`-Liste mit dem Beleg „übernommen aus …“ zählen nicht mit —
+// sie stehen dort, weil keine Entfernung belegt ist, nicht weil die Seite sie
+// zeigt. Ein Archiv aus einem Abruf hat keine solchen Einträge; dort ist die
+// Basis jeder Eintrag (Windsurf 09.11.2026: ⌈0,8 × 259⌉ = 208).
+// Schlüssel des Archivs ist der INHALT (sha256), nicht das Datum: ein Abruf,
+// der dieselben Modelle liefert, erzeugt dieselbe Datei und hängt nur einen
+// `seen`-Zeitstempel an. Eine `--manual`-Liste hat dagegen einen eigenen
+// Inhalt (Belege, `manuell:`), und der nächste Abruf legt danach immer eine
+// neue Datei an, auch wenn sich am Katalog nichts geändert hat.
+//
+// Windsurf: Seit 09.11.2026 gilt die Tabelle der Seite als Entfernungsbeleg.
+// Was dort fehlt, fällt aus dem Archiv (Entscheidung des Nutzers; die Seite
+// datiert ihren Stand: „as of November 5, 2026“). Für Cursor und JetBrains AI
+// bleibt es bei der alten Regel: Muss von Hand recherchiert werden, bleiben
+// Modelle im Archiv, bis eine Entfernung belegt ist.
 
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -79,7 +104,7 @@ export const MIN_MODELS: Record<ToolKey, number> = {
 
 export const SOURCES: Record<ToolKey, string> = {
   cursor: "https://cursor.com/docs/models-and-pricing.md",
-  windsurf: "https://docs.devin.ai/desktop/models.md",
+  windsurf: "https://docs.devin.ai/desktop/models",
   "jetbrains-ai":
     "https://www.jetbrains.com/help/ai-assistant/supported-llms.html",
 };
@@ -130,36 +155,99 @@ export function parseCursor(md: string): CatalogModel[] {
 // Windsurf
 // ---------------------------------------------------------------------------
 
-/** Schneidet `[ … ]` ab `start` (auf der `[`) mit Blick auf Strings aus. */
+/**
+ * Schneidet ein JS-Array-Literal `[ … ]` ab `start` (auf der `[`) aus und macht
+ * JSON daraus. Das kompilierte MDX schreibt Werte als Template-Strings
+ * (`` `TEAMS_TIER_PRO` ``) und Zahlen ohne führende Null (`.15`); beides wird
+ * hier übersetzt. Strings werden beim Klammerzählen übersprungen, damit ein `]`
+ * in einem Label das Feld nicht beendet.
+ */
 function feld(s: string, start: number): string {
+  let out = "";
   let tiefe = 0;
-  let inStr = false;
   for (let i = start; i < s.length; i++) {
-    const c = s[i];
-    if (inStr) {
-      if (c === "\\") i++;
-      else if (c === '"') inStr = false;
-    } else if (c === '"') inStr = true;
-    else if (c === "[") tiefe++;
-    else if (c === "]" && --tiefe === 0) return s.slice(start, i + 1);
+    const c = s[i]!;
+    if (c === '"') {
+      let j = i + 1;
+      while (j < s.length && s[j] !== '"') j += s[j] === "\\" ? 2 : 1;
+      out += s.slice(i, j + 1);
+      i = j;
+    } else if (c === "`") {
+      let j = i + 1;
+      let roh = "";
+      while (j < s.length && s[j] !== "`") {
+        if (s[j] === "$" && s[j + 1] === "{")
+          throw new Error("modelCostData: Template mit ${…} — kein Literal");
+        if (s[j] === "\\") roh += s[++j];
+        else roh += s[j];
+        j++;
+      }
+      out += JSON.stringify(roh);
+      i = j;
+    } else if (
+      c === "." &&
+      ":,[-".includes(out.at(-1) ?? "") &&
+      /\d/.test(s[i + 1] ?? "")
+    ) {
+      out += "0.";
+    } else {
+      out += c;
+      if (c === "[") tiefe++;
+      else if (c === "]" && --tiefe === 0) return out;
+    }
   }
   throw new Error("modelCostData ohne Ende");
 }
 
 /**
- * Eintrag je `label` im Pro-Tarif. Der Enterprise-Tarif führt weniger Modelle
- * (253 statt 269 am 29.09.2026); wer im Pro-Tarif wählen kann, hat das Modell.
+ * Der Quelltext, in dem `modelCostData` steht. Die HTML-Seite trägt das
+ * kompilierte MDX als JSON-String (`"compiledSource":"…"`) — erst dekodieren,
+ * dann ist es JS. Die frühere `models.md` trug das Feld direkt als JSON.
  */
-export function parseWindsurf(md: string): CatalogModel[] {
-  const a = md.indexOf("modelCostData = [");
-  if (a < 0) throw new Error("modelCostData nicht gefunden");
-  const daten = JSON.parse(feld(md, md.indexOf("[", a))) as {
+function windsurfQuelle(text: string): string {
+  const marke = '"compiledSource":"';
+  for (let a = text.indexOf(marke); a >= 0; a = text.indexOf(marke, a + 1)) {
+    const q = a + marke.length - 1;
+    let e = q + 1;
+    while (e < text.length && text[e] !== '"') e += text[e] === "\\" ? 2 : 1;
+    const js = JSON.parse(text.slice(q, e + 1)) as string;
+    if (/modelCostData\s*=\s*\[/.test(js)) return js;
+  }
+  return text;
+}
+
+/**
+ * Was die Seite selbst ausblendet (`isUserFacing` im Render-Code der Tabelle,
+ * gelesen am 09.11.2026): Anbieter UNSPECIFIED, `[dev]`, „backend only“.
+ */
+const nutzersichtbar = (d: { label: string; model_provider?: string }) =>
+  d.model_provider !== "MODEL_PROVIDER_UNSPECIFIED" &&
+  !d.label.includes("[dev]") &&
+  !d.label.toLowerCase().includes("backend only");
+
+/**
+ * Eintrag je `label` im Pro-Tarif (Reiter „Self-serve“), so wie die Tabelle der
+ * Seite ihn zeigt. Am 29.09.2026 führte der Enterprise-Tarif weniger Modelle
+ * (253 statt 269), am 09.11.2026 dieselben 259; wer im Pro-Tarif wählen kann,
+ * hat das Modell.
+ *
+ * Liest die HTML-Seite (`docs.devin.ai/desktop/models`): Die Tabelle wird im
+ * Browser aus `modelCostData` gefüllt, und das Feld steht im eingebetteten
+ * MDX-Quelltext. `models.md` liefert seit 28.10.2026 nur leere Tabellen. Am
+ * 09.11.2026 ergab dieser Weg dieselben 259 Labels wie das gerenderte DOM
+ * (agent-browser, alle Reiter und Anbieter-Filter durchgeklickt).
+ */
+export function parseWindsurf(text: string): CatalogModel[] {
+  const quelle = windsurfQuelle(text);
+  const a = /modelCostData\s*=\s*\[/.exec(quelle);
+  if (!a) throw new Error("modelCostData nicht gefunden");
+  const daten = JSON.parse(feld(quelle, a.index + a[0].length - 1)) as {
     tier: string;
     label: string;
     model_provider?: string;
   }[];
   const out = daten
-    .filter((d) => d.tier === "TEAMS_TIER_PRO")
+    .filter((d) => d.tier === "TEAMS_TIER_PRO" && nutzersichtbar(d))
     .map((d) => ({
       name: d.label,
       ...(d.model_provider
@@ -213,7 +301,25 @@ const UA = "Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15";
 const VERSUCHE = 4;
 const schlaf = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function hole(tool: ToolKey): Promise<CatalogModel[]> {
+/** Ein Beleg „übernommen aus …“ heißt: nicht auf der Seite gesehen. */
+const übernommen = (m: CatalogModel) =>
+  m.evidence?.some((e) => e.startsWith("übernommen")) ?? false;
+
+/**
+ * Mindestzahl eines Abrufs: die feste Untergrenze, und 80 % der Einträge des
+ * letzten Archivs, die dort einen eigenen Beleg haben. Ein Abruf, der deutlich
+ * weniger findet als zuletzt auf der Seite stand, ist eher ein kaputter Parser
+ * als ein geschrumpfter Katalog — er bricht ab, statt die Liste zu kürzen.
+ */
+export function mindestzahl(
+  tool: ToolKey,
+  vorher: readonly CatalogModel[] | undefined,
+): number {
+  const belegt = (vorher ?? []).filter((m) => !übernommen(m)).length;
+  return Math.max(MIN_MODELS[tool], Math.ceil(0.8 * belegt));
+}
+
+async function hole(tool: ToolKey, min: number): Promise<CatalogModel[]> {
   let letzter = "";
   for (let v = 1; v <= VERSUCHE; v++) {
     try {
@@ -223,8 +329,8 @@ async function hole(tool: ToolKey): Promise<CatalogModel[]> {
       });
       const text = await r.text();
       const models = PARSER[tool](text);
-      if (models.length >= MIN_MODELS[tool]) return models;
-      letzter = `HTTP ${r.status}, ${text.length} Zeichen, ${models.length} Modelle (< ${MIN_MODELS[tool]})`;
+      if (models.length >= min) return models;
+      letzter = `HTTP ${r.status}, ${text.length} Zeichen, ${models.length} Modelle (< ${min})`;
     } catch (e) {
       letzter = String(e);
     }
@@ -303,7 +409,19 @@ function manuell(tool: string, pfad: string): void {
   writeFileSync(INDEX, index.map((e) => JSON.stringify(e)).join("\n") + "\n");
 }
 
-async function main() {
+/** Modelle des letzten Archivs dieses Werkzeugs, falls es eins gibt. */
+function letztesArchiv(
+  index: Eintrag[],
+  tool: ToolKey,
+): { file: string; models: CatalogModel[] } | undefined {
+  const e = index.filter((x) => x.tool === tool).at(-1);
+  if (!e) return undefined;
+  const c = JSON.parse(readFileSync(join(HIER, e.file), "utf8")) as Catalog;
+  return { file: e.file, models: c.models };
+}
+
+async function main(trocken: boolean, nur?: string) {
+  if (nur && !(nur in SOURCES)) throw new Error(`unbekanntes Werkzeug: ${nur}`);
   const index = lesIndex();
   const t = jetzt();
   // Eine Quelle, die scheitert, hält die anderen nicht auf und hinterlässt
@@ -312,17 +430,34 @@ async function main() {
   // Cursor-Datei, aber keinen Index-Eintrag dazu (28.10.2026).
   const fehler: string[] = [];
   for (const tool of Object.keys(SOURCES) as ToolKey[]) {
+    if (nur && tool !== nur) continue;
+    const vorher = letztesArchiv(index, tool);
+    const min = mindestzahl(tool, vorher?.models);
     let models: CatalogModel[];
     try {
-      models = await hole(tool);
+      models = await hole(tool, min);
     } catch (e) {
       fehler.push(`${tool}: ${e instanceof Error ? e.message : String(e)}`);
       console.error(`${tool}: FEHLER — Katalog bleibt auf dem alten Stand`);
       continue;
     }
-    archiviere(index, t, { tool, source: SOURCES[tool], models });
+    if (vorher) {
+      const alt = new Set(vorher.models.map((m) => m.name));
+      const neu = new Set(models.map((m) => m.name));
+      const plus = [...neu].filter((n) => !alt.has(n));
+      const minus = [...alt].filter((n) => !neu.has(n));
+      console.log(
+        `${tool}: ${models.length} Modelle (Schranke ${min}); gegenüber ${vorher.file}: +${plus.length} −${minus.length}`,
+      );
+      if (trocken) {
+        for (const n of plus) console.log(`  + ${n}`);
+        for (const n of minus) console.log(`  − ${n}`);
+      }
+    }
+    if (!trocken) archiviere(index, t, { tool, source: SOURCES[tool], models });
   }
-  writeFileSync(INDEX, index.map((e) => JSON.stringify(e)).join("\n") + "\n");
+  if (!trocken)
+    writeFileSync(INDEX, index.map((e) => JSON.stringify(e)).join("\n") + "\n");
   if (fehler.length) {
     console.error(
       `\n${fehler.length} Quelle(n) gescheitert:\n${fehler.join("\n")}`,
@@ -335,5 +470,8 @@ async function main() {
 if (import.meta.main) {
   const [flag, tool, pfad] = process.argv.slice(2);
   if (flag === "--manual") manuell(tool ?? "", pfad ?? "");
-  else await main();
+  else if (flag === "--dry-run") await main(true, tool);
+  else if (flag && flag in SOURCES) await main(false, flag);
+  else if (flag) throw new Error(`unbekannte Option: ${flag}`);
+  else await main(false);
 }
