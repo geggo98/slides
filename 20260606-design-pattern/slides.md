@@ -5,7 +5,8 @@ title: "Brauchen wir noch Entwurfsmuster? — GoF zwischen Sprachfeature und Arc
 info: |
   Klassische GoF-Muster und ihre modernen Entsprechungen (JVM-Fokus).
   Drei-Schichten-Taxonomie, Builder als Typsystem-Lehrstück, Metaprogramming
-  als Pattern-Substrat — mit einer Pattern × Sprache-Matrix.
+  als Pattern-Substrat, Clean Code durch dieselbe Brille — mit einer
+  Pattern × Sprache-Matrix.
 monaco: true
 mdc: true
 transition: slide-left
@@ -42,6 +43,7 @@ hideInToc: true
 - **Drei Schichten, nicht drei GoF-Familien.** Schicht 1 (Sprachdefizit-Notlösungen) wird durch Features ersetzt; Schicht 2 (Strukturmuster) bleibt mit leichterer Implementierung; Schicht 3 (Architektur/DDD) ist unberührt. Wer das nicht trennt, irrt in beide Richtungen.
 - **Builder ist der Lehrfall für Typsystem-Grenzen.** Geplante Java-null-Safety erzwingt Pflichtfelder **nicht** zur Compile-Zeit. Compile-zeit-sicher ist nur der Staged Builder — oder named/default args, die das Muster ganz auflösen.
 - **Metaprogramming ist das Substrat hinter „Proxy & Spring-Magie“.** Dynamische Proxies _implementieren_ Proxy (statt es zu ersetzen) und subsumieren Decorator; Spring AOP industrialisiert das — mit dokumentierten Failure Modes.
+- **Clean Code schichtet sich genauso.** Formatter und Typsystem übernehmen Formatierung und null-Regeln; SOLID bleibt; Kommentare und TDD sind umstritten.
 
 ---
 hideInToc: true
@@ -173,7 +175,7 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Lese-Anleitung: vier Felder & vier Status-Labels
+# Lese-Anleitung: vier Felder & Status-Labels
 
 <div class="grid grid-cols-2 gap-8 mt-4">
 <div>
@@ -196,6 +198,7 @@ Code in den Tabs: anklickbare **Annotationen** mit JLS-/JEP-Bezügen.
 - **[KONZEPT]** Idee bleibt, GoF-Implementierung veraltet
 - **[RELEVANT]** weiterhin idiomatisch
 - **[SPRACHABH.]** sprachabhängig
+- **[UMSTRITTEN]** Regel selbst strittig (nur Abschnitt 7)
 
 <div class="text-xs opacity-60 mt-3">In der Schluss-Matrix verdichtet zu: weiterhin relevant · moderner Ersatz · trifft nicht zu.</div>
 
@@ -813,17 +816,223 @@ hideInToc: true
 
 ---
 layout: section
+routeAlias: clean-code
 ---
 
-# 7. Meta-Analyse & Schluss
+# 7. Clean Code durch die Drei-Schichten-Brille
 
-„GoF zielt auf alte Java/C++-Codebasen“ — teilweise korrekt, aber zu pauschal
+Dieselbe Frage an ein anderes Buch: was die Sprache übernimmt, was bleibt
+
+<!--
+- Bisher ging es um GoF. Jetzt stellen wir dieselbe Frage an Robert C. Martins _Clean Code_.
+- Ergebnis vorweg: Die Regeln passen in dieselben drei Schichten. Dazu kommt ein neues Label: [UMSTRITTEN].
+-->
 
 ---
 hideInToc: true
 ---
 
-# Fazit: „GoF zielt auf alte Java/C++-Codebasen“?
+# Clean Code 2008 → 2025
+
+<div class="grid grid-cols-2 gap-6 mt-4">
+<div>
+
+### 1. Auflage · 2008
+
+- Pearson, 1.8.2008, 464 Seiten
+- Fallstudien in Java (JUnit, SerialDate), in Kap. 17 ein eigener Heuristik-Block „Java“
+- Schwerpunkt Code: Namen, Funktionen, Kommentare, Formatierung (Kap. 2–5)
+- Architektur nur am Rand: „Systems“ (Kap. 11)
+
+</div>
+<div>
+
+### 2. Auflage · 2025
+
+- 8.10.2025, 672 Seiten, laut Verlag „a comprehensive rewrite“
+- sieben Sprachen: Java, JavaScript, Go, Python, Clojure, C#, C
+- vier Teile: Code · Design · Architecture · Craftsmanship
+- eigene Kapitel zu SOLID, Clean Architecture und KI
+- Anhang „The Clean Code Debate“ mit John Ousterhout
+
+</div>
+</div>
+
+<div class="mt-4 text-sm">
+
+> „… while I disagree with your conclusions above, I have integrated several of your better ideas, as well as this entire document, into the second edition of _Clean Code_.“
+
+<div class="text-xs opacity-60">Martin an Ousterhout, Schlusswort ihres Dialogs „A Philosophy of Software Design vs Clean Code“ (September 2024 bis Februar 2025)</div>
+
+</div>
+
+<!--
+- Die 2. Auflage verschiebt das Gewicht selbst: Zwei von vier Teilen heißen Design und Architecture. Das sind Schicht 2 und 3.
+- Neue Kapitel: SOLID (Kap. 19), Component Principles (Kap. 20), The Clean Architecture (Kap. 27), „AIs, LLMs, and God Knows What“ (Kap. 17).
+- Der Dialog mit Ousterhout steht als Anhang im Buch: Method Length, Comments, Test-Driven Development. Martin räumt also selbst Teile ein.
+- Einschränkung: Die 2. Auflage ist nur über Inhaltsverzeichnis und Volltextsuche geprüft (O'Reilly, 29.10.2026). Die Abschnitte „Don't Return Null“ und „Use Unchecked Exceptions“ stehen dort nicht mehr; „Prefer Exceptions to Returning Error Codes“ steht dort in Kap. 8.
+- Kapitelnummern im Abschnitt meinen die 1. Auflage. In der 2. Auflage ist Formatting Kap. 6, „Objects and Data Structures“ mit Data/Object Antisymmetry und Switch Statements Kap. 12.
+-->
+
+---
+hideInToc: true
+---
+
+# Regeln × Schicht
+
+<div class="text-xs mt-2 [&_td]:!py-0.5 [&_th]:!py-0.5">
+
+| Status           | Regel (1. Aufl. 2008)                               | Schicht | heute                        | Beleg                                                          |
+| ---------------- | --------------------------------------------------- | ------- | ---------------------------- | -------------------------------------------------------------- |
+| **[ERSETZT]**    | Formatting (Kap. 5)                                 | 1       | gofmt, Prettier              | qntm: „reduces to a single sentence“                           |
+| **[ERSETZT]**    | „Don't Return Null“ / „Don't Pass Null“ (S. 110 f.) | 1       | Kotlin-Nullability, JSpecify | Typprüfung statt Disziplin                                     |
+| **[ERSETZT]**    | „Use Unchecked Exceptions“ (S. 106)                 | 1       | Kotlin: alles unchecked      | Kotlin-Doku                                                    |
+| **[ERSETZT]**    | wenige Funktionsargumente (Kap. 3)                  | 1       | Named/Default Args, Records  | → Sonderfall Builder                                           |
+| **[RELEVANT]**   | Namen, keine Seiteneffekte, CQS                     | 2       | gelten unverändert           | qntm: „reasonable entry-level advice“                          |
+| **[RELEVANT]**   | Boundaries (Kap. 8)                                 | 2       | Fremdcode kapseln            | = GoF-Adapter                                                  |
+| **[RELEVANT]**   | Classes, Systems (Kap. 10–11)                       | 3       | SOLID, Clean Architecture    | Inhaltsverzeichnis 2. Aufl.                                    |
+| **[UMSTRITTEN]** | Funktionen „two, three, or four lines long“         | 2       | Java: „under 24 lines“       | Chowdhury et al. 2022                                          |
+| **[UMSTRITTEN]** | Kommentare (Kap. 4), TDD (Kap. 9)                   | –       | Ousterhout widerspricht      | „5-10x more lines of comments“ · „TDD discourages good design“ |
+| **[UMSTRITTEN]** | Polymorphie statt `switch` (Kap. 3)                 | 1       | sealed + Pattern Matching    | Muratori: bis „nearly 15x faster“                              |
+
+</div>
+
+<!--
+- Wie bei GoF: Schicht 1 übernehmen Formatter, Typsystem und Sprache. Schicht 2 und 3 bleiben. Neu ist [UMSTRITTEN]: Dort steht die Regel selbst in Frage.
+- Vier Regeln setzen heute Formatter, Typsystem oder Sprache durch. Wer sie im Code-Review prüft, macht Handarbeit.
+- Boundaries ist der GoF-Adapter unter anderem Namen.
+- Unit-Tests sind nicht strittig. Ousterhout und Martin: „We agree that unit tests are an essential element in software development.“ Strittig ist TDD als Designmethode.
+- Die „two, three, or four lines“ zitiert Ousterhout aus Clean Code. Die Studie von Chowdhury, Uddin und Holmes wertet 785.000 Java-Methoden aus und empfiehlt unter 24 Zeilen.
+- Muratoris 15x gilt für die Lookup-Tabelle im erweiterten Benchmark. Die switch-Variante war dort fast 2x schneller als die polymorphe.
+- Die drei umstrittenen Zeilen behandeln die nächsten zwei Folien: erst Polymorphie statt switch, dann Ousterhout gegen Martin.
+-->
+
+---
+hideInToc: true
+---
+
+# Lehrfall: Polymorphie statt switch
+
+<div class="text-sm">
+
+Der Abschnitt „Data/Object Anti-Symmetry“ in Kap. 6 (1. Aufl.) beschreibt das **Expression Problem**, also dieselbe Achse wie beim Visitor-Lehrfall. Martin schreibt dazu an Muratori:
+
+> „OO (Operand Primal) is a great way to add types to existing functions without changing those functions. Procedural (Operation Primal) is a great way to add new functions to existing types without changing those types.“
+
+</div>
+
+<div class="grid grid-cols-2 gap-6 mt-3 text-sm">
+<div>
+
+### Muratori: der Preis in Takten
+
+Benchmark in C++, Fläche von Kreis, Dreieck, Rechteck und Quadrat:
+
+- `switch` statt virtueller Methode: **1,5×** schneller, mit einer zweiten Eigenschaft knapp **2×**
+- Koeffiziententabelle statt Hierarchie: **10×**, danach knapp **15×**
+
+> „I think switch statements are great!“
+
+</div>
+<div>
+
+### Martin: der Preis in Arbeitszeit
+
+> „It is economically better for most organizations to conserve programmer cycles than computer cycles.“
+
+- Ein neuer Typ ist eine neue Unterklasse. Niemand muss alle `switch`-Stellen suchen.
+- Zum Vorwurf, er lehre Performance kaum: „Frankly, I think that's a fair criticism.“
+
+</div>
+</div>
+
+<div class="mt-3 text-xs opacity-70">
+
+Clean Code bevorzugt 2008 die OO-Seite. Java 21 macht die ADT-Seite idiomatisch: Ein `switch` über einen `sealed`-Typ ohne `default` kompiliert nur, wenn er jeden Untertyp abdeckt. Damit entfällt Martins Suchargument, sein Abhängigkeitsargument bleibt → **[UMSTRITTEN]**, nicht [ERSETZT].
+
+</div>
+
+<!--
+- Kap. 6 der 1. Aufl. („Objects and Data Structures“, in der 2. Aufl. Kap. 12) beschreibt das Expression Problem: Mit OO sind neue Typen billig, mit prozeduralem Code neue Operationen. Der Visitor bewegt sich auf derselben Achse.
+- „Operand/Operation Primal“ sind Muratoris Begriffe. Martin übernimmt sie und verweist auf sein Kap. 6.
+- Clean Code bevorzugt 2008 die OO-Seite. Martin relativiert das selbst mit einem Zitat aus Clean Code: „Sometimes you really do want simple data structures with procedures operating on them.“
+- Zahlen nicht vermischen: 1,5× bzw. knapp 2× gelten für switch gegen virtuelle Methode, 10× bzw. knapp 15× erst für die Tabelle.
+- Martins Gegenrechnung: „The vast majority of software systems require less than 1% of a modern processor’s power.“ Ist die aufgerufene Funktion groß, etwa die Gehaltsberechnung eines Mitarbeiters, fällt der Dispatch kaum ins Gewicht. Beim Shape-Beispiel ist die Funktion klein, das räumt Martin ein.
+- Das „fair criticism“ betrifft Martins Lehre: Performance kommt darin kaum vor. Ein Zugeständnis zu G23 ist es nicht.
+- Martins zweites Argument: Ein switch hat einen hohen Fan-out. Ändert sich ein Modul dahinter, müssen der switch und alles darüber neu kompiliert und deployt werden. Polymorphie kehrt die Abhängigkeit um (Dependency Inversion). Muratori hält dagegen, das sei „the exact same tradeoff again“: Polymorphie verbilligt neue Typen und verteuert neue Operationen.
+- Die 2. Aufl. behandelt den Zielkonflikt ausdrücklich: Kap. 12 hat die Abschnitte „The OO/Procedural Trade-off“ und „But What About Performance?“.
+- sealed löst nur das Suchproblem, nicht das Abhängigkeitsproblem. Mit einem default-Zweig prüft der Compiler die Vollständigkeit nicht mehr.
+-->
+
+---
+hideInToc: true
+---
+
+# Was strittig bleibt: Ousterhout vs. Martin
+
+<div class="grid grid-cols-3 gap-4 mt-4 text-xs">
+<div>
+
+### Länge
+
+**Martin:** „In general I believe in the principle of small well-named methods …“
+
+**Ousterhout:** „… so extreme that it encourages programmers to create teeny-tiny methods …“
+
+**Einigung:** „We both value decomposition, and we both avoid entanglement“
+
+</div>
+<div>
+
+### Kommentare
+
+**Martin** (_Clean Code_, S. 54): „Comments are always failures.“
+
+**Ousterhout:** „I would probably write 5-10x more lines of comments for a given piece of code than you would.“
+
+**Einigung:** „implementation code only needs comments when the code is nonobvious“
+
+</div>
+<div>
+
+### TDD
+
+**Martin:** „The practice of TDD does not discourage me from design; because I value design.“
+
+**Ousterhout:** „TDD discourages good design and can easily lead to very bad code.“
+
+**Einigung:** „unit tests are an essential element in software development“
+
+</div>
+</div>
+
+<div class="mt-4 text-sm">
+
+**Schiedsspruch zur Länge:** Chowdhury, Uddin und Holmes (MSR 2022) werten rund 785 000 Java-Methoden aus 49 Open-Source-Projekten aus: „developers should strive to keep their Java methods under 24 lines in length“. Das liegt nahe an Clean Codes „hardly ever be 20 lines long“ und weit über „two, three, or four lines“. Zugleich zeigt die Studie: Große Methoden aufzuteilen senkt den Wartungsaufwand.
+
+</div>
+
+<!--
+- Quelle ist der schriftliche Dialog zwischen Ousterhout und Martin (September 2024 bis Februar 2025). Ousterhout fasst jedes Thema zusammen, und Martin nennt jede Zusammenfassung „fair“.
+- Länge: Ousterhout kritisiert die Ratschläge zur Methodenlänge als „so extreme“. Martin sieht die 2–4 Zeilen nicht als feste Grenze. Sie stammen aus dem Sparkle-Applet, das er 1999 mit Kent Beck zum Lernen von TDD schrieb. Beide halten fest, dass Clean Code in der 1. Auflage kaum hilft, Über-Zerlegung zu erkennen.
+- Kommentare: Ousterhouts Fazit lautet „Overall, we struggled to find areas of agreement on this topic.“
+- TDD: Gestritten wird über die Disziplin, nicht über Tests. Ousterhout schlägt „bundling“ vor: erst ein größeres Stück Code, dann die Tests dafür.
+- Die Studie stützt beide Seiten zur Hälfte. 24 Zeilen widerlegen 2–4 Zeilen als Norm, aber zerlegte große Methoden brauchen weniger Wartung. Die Autoren raten zum Aufteilen, „even if it increases the overall coupling of a system“.
+-->
+
+---
+layout: section
+---
+
+# 8. Meta-Analyse & Schluss
+
+„GoF zielt auf alte Java/C++<span style="font-feature-settings: 'calt' 0">-</span>Codebasen“ — teilweise korrekt, aber zu pauschal
+
+---
+hideInToc: true
+---
+
+# Fazit: „GoF zielt auf alte Java/C++<span style="font-feature-settings: 'calt' 0">-</span>Codebasen“?
 
 <div class="grid grid-cols-3 gap-6 mt-4">
 <div>
@@ -850,6 +1059,8 @@ hideInToc: true
 
 Nicht „GoF ist tot“, sondern: ein Katalog aus **drei Schichten**. Schicht 1 ersetzt, Schicht 2 leichter, Schicht 3 unberührt.
 
+**Clean Code** schichtet sich genauso: Formatter und Typsystem übernehmen Formatierung und null-Regeln, SOLID bleibt.
+
 Wer die Schichten nicht trennt, irrt in **beide** Richtungen.
 
 </div>
@@ -858,6 +1069,7 @@ Wer die Schichten nicht trennt, irrt in **beide** Richtungen.
 <!--
 - Die These „GoF zielt auf alte Java/C++-Codebasen“ ist halb wahr: Schicht 1 stützt sie (Norvig/Graham/Gamma), Schicht 2/3 widerlegen sie (sprachunabhängige Struktur- und Architekturmuster).
 - Pointe: nicht „tot vs. ewig“, sondern drei Schichten. Wer sie nicht trennt, irrt in beide Richtungen.
+- Clean Code bestätigt das an einem zweiten Buch: Formatierung und null-Regeln übernehmen Werkzeug und Typsystem, Namen und SOLID bleiben. Streitfälle sind Kommentare, TDD und „Polymorphie statt switch“ (Abschnitt 7).
 -->
 
 ---
@@ -872,13 +1084,14 @@ hideInToc: true
 1. **Entlang der drei Schichten lehren** — nicht Creational/Structural/Behavioral. Nur die Schichtung macht die Substitutionsachse sichtbar.
 2. **Pro Muster vier Felder:** Intent → GoF-Java → moderne Entsprechung je Sprache → Status-Label.
 3. **Vier Falsche-Freunde-Boxen** explizit machen.
+4. **Visitor = Lehrstück Expression Problem** — warum „Lambda ersetzt Pattern X“ zu kurz greift; ADTs sind die Antwort.
 
 </div>
 <div>
 
-4. **Visitor = Lehrstück Expression Problem** — warum „Lambda ersetzt Pattern X“ zu kurz greift; ADTs sind die Antwort.
 5. **Builder = Lehrstück Typsystem-Ebenen** — Laufzeit-Check vs. Compile-Zeit-Kodierung vs. Problemauflösung.
 6. **Metaprogramming als eigene Kategorie** — das Spektrum Laufzeit-Proxy → APT → Weaving ordnet die Industrie-Bewegung zu GraalVM/AOT.
+7. **Clean-Code-Regeln wie Muster prüfen** — erst fragen, ob Formatter oder Typsystem die Regel schon durchsetzen.
 
 </div>
 </div>
@@ -893,7 +1106,7 @@ Schwellen, die das Bild kippen: Java „carrier classes“/Record-`with`-Evoluti
 layout: section
 ---
 
-# 8. Pattern × Sprache
+# 9. Pattern × Sprache
 
 Die große Landkarte: weiterhin idiomatisch · moderner Ersatz · trifft nicht zu
 
@@ -1010,6 +1223,37 @@ hideInToc: true
 - Java-Beispiele setzen **Java 21** voraus (sealed ab 17, record ab 16, Pattern Matching final ab 21).
 - Norvigs 16/23 summiert die genannten Kategorien; 7 bleiben auch dynamisch „echte“ Muster.
 - Beispiele sind didaktisch reduziert (Imports, Fehlerbehandlung teils ausgelassen).
+
+</div>
+</div>
+
+---
+hideInToc: true
+---
+
+# Quellen & Grenzen: Clean Code
+
+<div class="grid grid-cols-2 gap-8 mt-4 text-sm">
+<div>
+
+### Quellen
+
+- Martin, _Clean Code_ (2008; 2. Aufl. 2025)
+- Ousterhout/Martin, „A Philosophy of Software Design vs Clean Code“ (2024/25)
+- qntm, „It's probably time to stop recommending Clean Code“ (2020)
+- Muratori, „‚Clean‘ Code, Horrible Performance“ (2023) + Dialog Muratori/Martin
+- Chowdhury/Uddin/Holmes, _An Empirical Study on Maintainable Method Size in Java_ (MSR 2022)
+- Go Proverbs · prettier.io · jspecify.dev
+
+</div>
+<div>
+
+### Grenzen
+
+- **2. Auflage:** geprüft über Inhaltsverzeichnis und Volltextsuche (O'Reilly, 29.10.2026), Fließtext nicht gelesen. Es fehlen die Abschnitte „Don't Return Null“ und „Use Unchecked Exceptions“; die Suche nach „pass null“ ergibt keinen Treffer. Andere Formulierungen schließt das nicht aus.
+- **Kapitelnummern** meinen die 1. Auflage. In der 2. Auflage wechseln sie: Formatting ist Kap. 6, Objects and Data Structures Kap. 12.
+- Zitate stammen aus den Originaltexten, abgerufen am 28.10.2026.
+- Muratoris Messwerte gelten für seinen eigenen Benchmark in C++, nicht für beliebigen Produktivcode.
 
 </div>
 </div>

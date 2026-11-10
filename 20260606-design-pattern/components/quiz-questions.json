@@ -858,6 +858,177 @@
       ]
     },
     {
+      "id": "cleancode-tooling-ersetzt",
+      "question": "Einige Regeln aus Clean Code (2008) setzen heute Formatter, Compiler oder Typsystem durch. Welche Aussagen dazu treffen zu?",
+      "difficulty": "easy",
+      "section": "Clean Code",
+      "explanation": "Clean Code lässt sich in dieselben drei Schichten sortieren wie die GoF-Muster: Formatierung, Null-Rückgaben und Checked Exceptions übernehmen heute Werkzeuge und Sprachen (Schicht 1). Namen und Tests bleiben Handarbeit (Schicht 2), SOLID und Architekturgrenzen bleiben unberührt (Schicht 3).",
+      "options": [
+        {
+          "id": "cleancode-tooling-ersetzt-o1",
+          "text": "Das Kapitel „Formatting“ übernimmt heute ein Formatter wie gofmt, Prettier oder ktfmt.",
+          "verdict": "true",
+          "explanation": "Laut qntm schrumpft das Kapitel heute auf einen Satz: „Pick a sensible standard formatting, configure automated tools to enforce it, and then never think about this topic again.“"
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o2",
+          "text": "In Kotlin setzt das Typsystem die Regel „Don’t return null“ durch.",
+          "verdict": "true",
+          "explanation": "Kotlin unterscheidet `String` und `String?` im Typ. Wer `null` zurückgibt, muss das in der Signatur sagen, und der Compiler zwingt den Aufrufer zur Prüfung."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o3",
+          "text": "Die Regel „Use unchecked exceptions“ ist in Kotlin schon eingebaut.",
+          "verdict": "true",
+          "explanation": "Die Kotlin-Doku sagt: „Kotlin treats all exceptions as unchecked“. Du musst keine Exception fangen oder deklarieren; `@Throws` brauchst Du nur für Aufrufer aus Java, Swift oder Objective-C."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o4",
+          "text": "Formatierungsregeln setzt Du am besten im Code-Review durch.",
+          "verdict": "false",
+          "explanation": "Genau diese Debatte soll der Formatter beenden. Laut Prettier-Doku ist der wichtigste Grund für das Werkzeug, „to stop all the on-going debates over styles“."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o5",
+          "text": "Aussagekräftige Namen wählt heute der Compiler oder der Formatter für Dich.",
+          "verdict": "false",
+          "explanation": "Kein Werkzeug weiß, was eine Variable fachlich bedeutet. Die Namensregeln gehören deshalb zu Schicht 2 und tragen das Label [RELEVANT]."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o6",
+          "text": "Weil Werkzeuge einen Teil übernehmen, ist Clean Code als Ganzes [ERSETZT].",
+          "verdict": "false",
+          "explanation": "Ersetzt sind nur die Regeln aus Schicht 1. Namen, Seiteneffekte und Unit-Tests bleiben [RELEVANT], und SOLID und Architekturgrenzen (Schicht 3) berührt kein Sprachfeature."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o7",
+          "text": "Ob Du Parameter-Objekte statt langer Argumentlisten brauchst, hängt von der Sprache ab.",
+          "verdict": "depends",
+          "explanation": "Mit named/default args (Kotlin, Python) bleibt ein Aufruf mit vielen Parametern lesbar, auch ein Boolean trägt dort seinen Namen. Java fehlen beide, dort bleiben Parameter-Objekte oder Records nötig. Das ist dieselbe Grenze wie beim Builder."
+        },
+        {
+          "id": "cleancode-tooling-ersetzt-o8",
+          "text": "Ob „Don’t return null“ in Deinem Java-Projekt automatisch geprüft wird, hängt vom Build ab.",
+          "verdict": "depends",
+          "explanation": "JSpecify legt nur fest, was die Annotationen bedeuten, „instead of having to decide which tool to please“. Prüfen muss ein Nullness-Checker im Build. Ohne ihn bleibt die Annotation Dokumentation."
+        }
+      ]
+    },
+    {
+      "id": "cleancode-polymorphie-switch",
+      "question": "Clean Code rät, Polymorphie statt if/else und switch zu bevorzugen. Welche Aussagen zu dieser Regel treffen zu?",
+      "difficulty": "medium",
+      "section": "Clean Code",
+      "explanation": "Polymorphie gegen switch ist das Expression Problem aus dem Visitor-Lehrfall: Klassen machen neue Typen billig, ein switch über Daten macht neue Operationen billig. Java 21 macht mit sealed + Pattern Matching die Datenseite idiomatisch.",
+      "options": [
+        {
+          "id": "cleancode-polymorphie-switch-o1",
+          "text": "Clean Code selbst nennt Fälle, in denen ein switch über einfachen Datenstrukturen besser passt.",
+          "verdict": "true",
+          "explanation": "Martin verweist auf ein ganzes Kapitel dazu und zitiert daraus: „Sometimes you really do want simple data structures with procedures operating on them.“"
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o2",
+          "text": "Mit sealed interfaces und Pattern Matching im switch meldet der Java-Compiler fehlende Fälle.",
+          "verdict": "true",
+          "explanation": "Ein switch über einen sealed-Typ muss erschöpfend sein: Kommt ein Untertyp hinzu, zeigt der Compiler jeden switch, der ihn nicht behandelt. Martins Argument „I am not forced to find all the switch statements“ verliert damit an Gewicht."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o3",
+          "text": "Muratori misst an einem typischen Clean-Code-Beispiel: switch statt virtueller Methode ist 1,5× schneller, eine Tabelle 10× und mehr.",
+          "verdict": "true",
+          "explanation": "Muratori nennt „an immediate 1.5x performance increase“ und eine Tabellenversion, die „fully 10x faster or more“ ist. Mit einer zweiten Eigenschaft pro Form wächst der Abstand auf „nearly 15x faster“."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o4",
+          "text": "Martin weist Muratoris Kritik zurück, seine Lehre vernachlässige die Performance.",
+          "verdict": "false",
+          "explanation": "Martin antwortet: „Frankly, I think that's a fair criticism.“ Am Wartungsargument hält er fest: Polymorphie kehrt die Abhängigkeiten um, Änderungen an unteren Modulen erzwingen dann keinen Neubau der höheren."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o5",
+          "text": "Lambdas ersetzen die Regel vollständig, weil jede Operation zur Funktion wird.",
+          "verdict": "false",
+          "explanation": "Ein Lambda deckt eine einzelne Operation ab. Mehrere Operationen über mehrere Typen brauchen Summentypen mit Pattern Matching. Deshalb stuft der Faktencheck im Talk „Visitor ← Lambda“ als größtenteils falsch ein."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o6",
+          "text": "Mit sealed + switch werden neue Typen und neue Operationen gleich billig.",
+          "verdict": "false",
+          "explanation": "sealed + switch bleibt die switch-Seite: Ein neuer Typ heißt weiterhin, jeden switch anzufassen. Eine neue Operation nennt Muratori dort „the exact mirror of the type case“. Der Compiler findet die Stellen, die Arbeit bleibt."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o7",
+          "text": "Ob Polymorphie oder switch besser passt, hängt davon ab, ob eher neue Typen oder neue Operationen hinzukommen.",
+          "verdict": "depends",
+          "explanation": "Martin schreibt selbst: Kennst Du alle Typen und erwartest neue Funktionen darüber, dann „dynamic polymorphism (OO) works against the OCP and switch statements work for it“. Kommen eher neue Typen hinzu, gewinnt die Klassenhierarchie."
+        },
+        {
+          "id": "cleancode-polymorphie-switch-o8",
+          "text": "Ob Muratoris Faktor 1,5× bis 15× in Deinem System zählt, hängt davon ab, wie viel Laufzeit in solchen Schleifen steckt.",
+          "verdict": "depends",
+          "explanation": "Muratori misst einen Benchmark in C++ mit 3 bis 35 Takten pro Form. Tut die aufgerufene Funktion viel Arbeit, fällt der Dispatch laut Martin kaum ins Gewicht. Sein Buch ziele auf „the millisecond side of the problem“."
+        }
+      ]
+    },
+    {
+      "id": "cleancode-methodenlaenge",
+      "question": "Wie kurz sollen Methoden sein? Welche Aussagen zur Debatte zwischen Ousterhout und Martin und zur Empirie treffen zu?",
+      "difficulty": "hard",
+      "section": "Clean Code",
+      "explanation": "Martin empfiehlt sehr kurze Funktionen, Ousterhout warnt vor „over-decomposition“. Im Dialog einigen sich beide, dass Überzerlegung möglich ist, und streiten über die Gewichtung. Die MSR-Studie von 2022 liefert eine Zahl für Java: höchstens 24 SLOC.",
+      "options": [
+        {
+          "id": "cleancode-methodenlaenge-o1",
+          "text": "Ousterhout kritisiert, sehr kleine Methoden hätten flache („shallow“) Interfaces und seien verschränkt.",
+          "verdict": "true",
+          "explanation": "Er schreibt, die Längenregel von Clean Code ermutige zu „teeny-tiny methods that suffer from both shallow interfaces and entanglement“. Verschränkt heißt: Um eine Methode zu verstehen, musst Du auch die andere lesen."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o2",
+          "text": "Ousterhout und Martin sind sich einig, dass Code überzerlegt sein kann. Sie streiten über die Gewichtung.",
+          "verdict": "true",
+          "explanation": "Martin bestätigt Ousterhouts Zusammenfassung: „We both value decomposition, and we both avoid entanglement; but we disagree on the relative weighting of those two values.“"
+        },
+        {
+          "id": "cleancode-methodenlaenge-o3",
+          "text": "Chowdhury, Uddin und Holmes (MSR 2022) raten nach rund 785 000 Java-Methoden zu höchstens 24 SLOC pro Methode.",
+          "verdict": "true",
+          "explanation": "Die Studie folgert: „developers should strive to keep their methods within 24 SLOC“. Eine niedrigere Schwelle sei „less achievable“, eine höhere verursache „significantly higher maintenance effort“."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o4",
+          "text": "Die MSR-Studie bestätigt zwei bis vier Zeilen als optimale Methodenlänge.",
+          "verdict": "false",
+          "explanation": "Die Studie setzt die Schwelle bei 24 SLOC. Eine niedrigere hält sie nur für „less achievable“, nicht für besser. Für zwei bis vier Zeilen liefert sie keinen Beleg."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o5",
+          "text": "Martin bestätigt im Dialog, Clean Code setze zwei bis vier Zeilen als feste Obergrenze.",
+          "verdict": "false",
+          "explanation": "Martin widerspricht: „I don't think it's fair to say that the book sets arbitrary numerical limits.“ Die Funktionen mit zwei bis vier Zeilen stammen laut Martin aus dem Sparkle-Applet, das er 1999 mit Kent Beck schrieb."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o6",
+          "text": "Laut Ousterhout zieht Martins Kriterium „One Thing“ eine klare Grenze gegen Überzerlegung.",
+          "verdict": "false",
+          "explanation": "Ousterhout hält das Kriterium für vage. Die Bedingung, das Extrahierte müsse sich benennen lassen, helfe nicht: „anything can be named“. Ohne Leitplanken führe „One Thing“ zu „over-decomposition“."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o7",
+          "text": "Ob Du eine lange Methode zerlegen solltest, hängt davon ab, ob die Teile einzeln verständlich bleiben.",
+          "verdict": "depends",
+          "explanation": "Springst Du beim Lesen zwischen zwei Methoden hin und her, sind sie laut Ousterhout vermutlich verschränkt und gehören zusammen. Sein Beispiel: Eine thread-sichere Methode holt erst einen Lock und arbeitet dann."
+        },
+        {
+          "id": "cleancode-methodenlaenge-o8",
+          "text": "Ob viele kleine Hilfsmethoden die Wartung erleichtern, hängt davon ab, woran Du Wartung misst.",
+          "verdict": "depends",
+          "explanation": "Die MSR-Studie misst Änderungs- und Fehleranfälligkeit: „A group of small methods, with sum SLOC x, are generally collectively less change- and bug-prone than an individual large method with SLOC x.“ Ousterhout argumentiert über Lesbarkeit."
+        }
+      ]
+    },
+    {
       "id": "transfer-records-value-object",
       "question": "Brücke zum Null-Safety-Talk: Was leisten Records — und was nicht?",
       "difficulty": "medium",
