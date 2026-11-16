@@ -8,10 +8,10 @@
 // die Dateinamen unten nachziehen, `retrieved` setzen — `toolCatalogs.test.ts`
 // hält beides gegen den Index.
 
-import cursor from "../data/toolcatalogs/cursor-20261028-b34fbe3e.json";
+import cursor from "../data/toolcatalogs/cursor-20261116-8e0f7b21.json";
 import jetbrains from "../data/toolcatalogs/jetbrains-ai-20261028-7c050e8d.json";
 import junie from "../data/toolcatalogs/junie.json";
-import windsurf from "../data/toolcatalogs/windsurf-20261109-45f625c0.json";
+import windsurf from "../data/toolcatalogs/windsurf-20261116-1b3506a7.json";
 
 export type CatalogId = "cursor" | "windsurf" | "jetbrains-ai" | "junie";
 
@@ -35,13 +35,13 @@ export const CATALOGS: Readonly<Record<CatalogId, ToolCatalog>> = {
   cursor: {
     id: "cursor",
     source: cursor.source,
-    retrieved: "2026-10-28",
+    retrieved: "2026-11-16",
     models: cursor.models,
   },
   windsurf: {
     id: "windsurf",
     source: windsurf.source,
-    retrieved: "2026-11-09",
+    retrieved: "2026-11-16",
     models: windsurf.models,
   },
   "jetbrains-ai": {

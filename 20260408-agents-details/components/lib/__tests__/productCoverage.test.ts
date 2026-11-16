@@ -67,33 +67,39 @@ describe("coverage", () => {
     // (claude-haiku-4.5, claude-sonnet-4.5, gemini-2.5-pro, gemini-3.1-pro,
     // grok-4.5), Tempo 3 (o3, gemini-3.1-pro, gpt-5.3-codex), DesignArena
     // Preis 11, Zeit 7.
+    // 16.11.2026: Cursor +3 Familien (claude-fable-5.2, gemini-4-carbon,
+    // gemini-4-hydrogen), Windsurf +1 (claude-fable-5.2), Junie +4 (dazu
+    // gpt-6.1-sol). Im AA-Stand 09.11.2026 steht davon nur gemini-4-carbon
+    // (und gpt-6.1-sol); Fable 5.2 und Hydrogen fehlen dort.
     "aa-cost": {
-      cursor: [54, 36],
-      windsurf: [53, 36],
+      cursor: [57, 37],
+      windsurf: [54, 36],
       "jetbrains-ai": [42, 25],
-      junie: [13, 13],
+      junie: [17, 15],
     },
     // Seit 09.11.2026 ohne Tempo für Modelle, die nur der v4-Stand kennt: deren
     // Wert stammt aus der alten AA-Methodik (`aaData.ts`, „Tempo seit 03.11.2026“).
     "aa-speed": {
-      cursor: [54, 15],
-      windsurf: [53, 17],
+      cursor: [57, 16],
+      windsurf: [54, 17],
       "jetbrains-ai": [42, 9],
-      junie: [13, 10],
+      junie: [17, 12],
     },
-    // DesignArena (09.11.2026): Preise hat jedes Modell des Boards, Zeiten nur
-    // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
+    // DesignArena (16.11.2026): Preise hat jedes Modell des Boards, und seit
+    // diesem Stand auch eine Zeit fast jedes (82 von 83; am 09.11.2026 nur 28
+    // ältere). Die Tempoansicht zeigt deshalb fast so viele Modelle wie die
+    // Preisansicht; Junie 17 statt 1.
     "da-cost": {
-      cursor: [54, 39],
-      windsurf: [53, 33],
+      cursor: [57, 42],
+      windsurf: [54, 34],
       "jetbrains-ai": [42, 27],
-      junie: [13, 13],
+      junie: [17, 17],
     },
     "da-speed": {
-      cursor: [54, 17],
-      windsurf: [53, 9],
-      "jetbrains-ai": [42, 11],
-      junie: [13, 1],
+      cursor: [57, 42],
+      windsurf: [54, 33],
+      "jetbrains-ai": [42, 27],
+      junie: [17, 17],
     },
   };
 
@@ -134,12 +140,17 @@ describe("coverage", () => {
   });
 
   it("nennt bei DesignArena, ob das Modell fehlt oder nur seine Zeit", () => {
+    // Seit 16.11.2026 trägt fast jedes DesignArena-Modell eine Zeit; bei
+    // Cursor fehlt keines mehr nur wegen der Zeit (bis 09.11.: Opus 5.5).
     const cur = new Map(
       missingByReason(coverage("cursor", VARIANTS["da-speed"])),
     );
     expect(cur.get("nicht bei DesignArena")).toContain("Composer 2.5");
-    expect(cur.get("keine Zeitangabe bei DesignArena")).toEqual(
-      expect.arrayContaining([expect.stringMatching(/Opus 5\.5/)]),
+    const ws = new Map(
+      missingByReason(coverage("windsurf", VARIANTS["da-speed"])),
+    );
+    expect(ws.get("keine Zeitangabe bei DesignArena")).toEqual(
+      expect.arrayContaining([expect.stringMatching(/DeepSeek V4 Pro/)]),
     );
   });
 });

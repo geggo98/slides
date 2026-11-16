@@ -81,7 +81,9 @@ describe("Extras", () => {
     // 89 statt 96 seit 09.11.2026: sieben Familien standen nur in den 67
     // entfallenen Windsurf-Einträgen (gpt-5.3-codex-spark, grok-code-fast-1,
     // inkling, penguin, swe-1.7-lightning, xai-grok-3, xai-grok-3-mini).
-    expect(PRODUCT_FAMILIES.size).toBe(89);
+    // 92 seit 16.11.2026: claude-fable-5.2 (Cursor, Windsurf, Junie),
+    // gemini-4-carbon (Cursor, Junie) und gemini-4-hydrogen (Cursor, Junie).
+    expect(PRODUCT_FAMILIES.size).toBe(92);
     // 31 statt 32 und 7 statt 8: inkling (nur Windsurf, entfallen) hatte
     // Kosten- und Tempowert.
     expect(AA_EXTRAS_COST.length).toBe(31);
@@ -177,20 +179,25 @@ describe("Front je Produkt", () => {
     ]);
   });
 
-  it("Kosten: Junie führt dieselbe Spitze wie der Markt, Windsurf ebenfalls", () => {
+  it("Kosten: Junie führt seit 16.11. dieselbe Spitze wie der Markt, Windsurf endet mit Opus 5.5", () => {
+    // Seit 16.11.2026 führt Junie gpt-6.1-sol (Landingpage) und
+    // gemini-4-carbon (whats-new 10.11.2026); Carbon ist die Marktspitze.
     expect(front("aa-cost", "junie")).toStrictEqual([
       "gpt-6-luna",
       "gpt-6.1-terra-non-reasoning",
       "gpt-6.1-terra",
+      "gpt-6.1-sol",
       "gpt-6-astra",
-      "claude-opus-5.5",
+      "gemini-4-carbon",
     ]);
     expect(front("aa-cost", "windsurf").at(-1)).toBe("claude-opus-5.5");
   });
 
-  it("Kosten: Cursor endet mit Sonnet 5.5 und Opus 5.5", () => {
+  it("Kosten: Cursor endet seit 16.11. mit gpt-5.6-sol und Gemini 4 Carbon", () => {
+    // Bis 09.11.2026 endete die Leiter mit Sonnet 5.5 und Opus 5.5; seit
+    // 16.11.2026 führt Cursor gemini-4-carbon, das beide dominiert.
     const f = front("aa-cost", "cursor");
-    expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
+    expect(f.slice(-2)).toStrictEqual(["gpt-5.6-sol", "gemini-4-carbon"]);
   });
 
   it("Tempo: JetBrains AI hat zwei Sprossen, Sonnet 5.5 vorn", () => {
@@ -245,10 +252,11 @@ describe("Front je Produkt", () => {
       if (kosten.has(p.label)) expect(p.y, p.label).toBe(kosten.get(p.label));
   });
 
-  it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
+  it("Junie: Tempoleiter mit dem neuesten Claude, seit 16.11. bis Gemini 4 Carbon", () => {
     expect(front("aa-speed", "junie")).toStrictEqual([
       "claude-sonnet-5.5",
       "claude-opus-5.5",
+      "gemini-4-carbon",
     ]);
   });
 });

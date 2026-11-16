@@ -214,9 +214,13 @@ const speedFront = paretoFront(AA_SPEED).front;
 // Dieselbe Bühne wie AA. Kosten: Mischpreis log von 0,15 $ bis 40 $ (am
 // 09.11.2026 0,26 $ bis 20 $), Elo linear von 1115 bis 1470 (Punkte 1200 bis
 // 1459; bis 31.10.2026 reichte 1430, dann kam claude-opus-5.5 (high) mit
-// 1459). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
-// Elo 880 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
-// nur ältere Modelle eine Zeit tragen (`daData.ts`). Unter den Punkten bleibt
+// 1459). Tempo: Sekunden log von 300 s bis 6 000 s (am 16.11.2026 Punkte
+// 445 s bis 3 797 s), Elo wie bei den Kosten 1010 bis 1470. Bis 09.11.2026
+// reichte die Achse von 80 s bis 1 000 s und Elo ab 880: Damals trugen nur
+// ältere Modelle eine Zeit. Seit 16.11.2026 führt DesignArena sie für fast
+// alle Modelle, und die Werte liegen weit höher — bei den 28 Modellen, die
+// in beiden Ständen eine Zeit haben, im Median rund 4-mal so hoch (1,4- bis
+// 75-mal). Einen Grund nennt die Seite nicht. Unter den Punkten bleibt
 // jeweils ein freier Streifen für den Pfeilcluster.
 const DA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
@@ -227,14 +231,14 @@ const DA_COST_SCALE: Scale = makeScale({
 });
 const DA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 1000,
-  xLog: { min: 80 },
-  yMin: 880,
-  yMax: 1300,
+  xMax: 6000,
+  xLog: { min: 300 },
+  yMin: 1010,
+  yMax: 1470,
 });
 const DA_COST_TICKS = [0.2, 0.5, 1, 2, 5, 10, 20];
 /** Sekunden-Positionen, beschriftet in Minuten. */
-const DA_SPEED_TICKS = [120, 180, 300, 480, 720];
+const DA_SPEED_TICKS = [600, 900, 1200, 1800, 2400, 3600];
 
 const usdT = (p: Pt) => `${p.eur} $`;
 const minuten = (s: number) => `${dez1(s / 60)} min`;
@@ -485,9 +489,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     // werden, sonst stünde „2 min“ bei 100 s.
     xTickLabel: (x) =>
       Number.isInteger(x / 60) ? `${x / 60} min` : minuten(x),
-    yTicks: [1000, 1050, 1100, 1150, 1200, 1250],
+    yTicks: [1200, 1250, 1300, 1350, 1400, 1450],
     yTickLabel: String,
-    split: { x: 300, y: 1125 },
+    split: { x: 1200, y: 1275 },
     quadrants: quadrantsWith({
       sweet: "Schnell & beliebt",
       price: "Beliebt, aber langsam",
@@ -500,12 +504,15 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Beliebter",
         better: "Schneller & beliebter",
       },
-      // Ebenso unter allen Punkten (tiefster 1011) und mittig, weil rechts unten
-      // Punkte und die Überschrift „Langsam & unbeliebt“ stehen. yMin 880 statt
-      // 900 und Knoten 910, aus demselben Grund wie bei da-cost.
-      hubX: (s) => s.px(350),
-      hubY: (s) => s.py(910),
-      target: (s) => ({ x: s.px(160), y: s.py(945) }),
+      // Unter allen Punkten (Boden 1200 seit 16.11.2026), Knoten rechts wie bei
+      // da-cost. Gitter über Knoten (350–5000 s × 1030–1100) × Ziel (320–1000 s
+      // × 1080–1190), mit Kasten-Test gegen Marker, Quadranten-Überschriften
+      // und Labels: Es passen nur Knoten bei 3000–5000 s und 1070–1100; links
+      // kreuzt „Schneller & beliebter“ Punkte oder „Schnell, aber unbeliebt“.
+      // Gewählt die Mitte der freien Fläche (16.11.2026).
+      hubX: (s) => s.px(3000),
+      hubY: (s) => s.py(1080),
+      target: (s) => ({ x: s.px(450), y: s.py(1120) }),
     },
     axisTitle:
       "Ø Generierungszeit (log. Skala, links = schneller) — DesignArena-Elo",
@@ -519,26 +526,30 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       {
         t: `DesignArena Overall Agentic · Stand ${DA_STAND} · Tempo = Ø Zeit einer Generierung · `,
       },
-      {
-        t: `${DA_NO_TIME.length} Modelle der Preisansicht ohne Zeitangabe, darunter alle neuen (Hover)`,
-        title: DA_NO_TIME.join(", "),
-      },
+      DA_NO_TIME.length
+        ? {
+            t: `${DA_NO_TIME.length} Modelle der Preisansicht ohne Zeitangabe (Hover)`,
+            title: DA_NO_TIME.join(", "),
+          }
+        : { t: "jedes Modell der Preisansicht hat eine Zeitangabe" },
       {
         t: ` · je Modell die beste Stufe · Elo ≥ ${DA_FLOOR.speed} · Quadranten redaktionell · Quelle: `,
       },
     ],
     attribution: DA_ATTRIBUTION,
     lead: [
-      { t: "Tempo misst DesignArena nur für ältere Modelle:", b: true },
+      { t: "Tempo heißt hier: Ø Zeit einer Generierung.", b: true },
       {
-        t: ` ${DA_NO_TIME.length} der ${DA_COST.length} Modelle der Preisansicht haben keine Zeit, die Spitze fehlt ganz. Was bleibt: `,
+        t: ` ${DA_COST.length - DA_NO_TIME.length} der ${DA_COST.length} Modelle der Preisansicht haben eine. Die Front: `,
       },
       ...leiter(daSpeedFront, (p) => `${minuten(p.x)} (${p.y})`),
-      { t: ". Ein Stand der Generation davor, keine Empfehlung für heute." },
+      {
+        t: ". Seit dem Stand vom 16.11.2026 liegen die Zeiten weit über den früheren; vergleichbar sind nur Werte desselben Stands.",
+      },
     ],
     ariaIntro:
       "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, " +
-      "x-Achse logarithmisch von 80 Sekunden bis 1000 Sekunden, schnellere Modelle stehen links, unterteilt in vier Quadranten. Stand " +
+      "x-Achse logarithmisch von 5 Minuten bis 100 Minuten, schnellere Modelle stehen links, unterteilt in vier Quadranten. Stand " +
       DA_STAND,
     ariaFit:
       "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, x-Achse logarithmisch, schnellere Modelle links, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +

@@ -25,8 +25,10 @@
 //   wie DesignArena selbst rechnet. In USD und NICHT in €: das ist kein
 //   Verbrauch pro Aufgabe wie bei AA, sondern ein Preisschild. Ein Modell, das
 //   doppelt so viele Token braucht, steht hier trotzdem gleich teuer.
-// - Tempo = Ø Zeit einer Generierung in Sekunden. DesignArena führt sie nur für
-//   einen Teil der Modelle, und gerade die neuesten fehlen (`DA_NO_TIME`).
+// - Tempo = Ø Zeit einer Generierung in Sekunden. Bis 09.11.2026 führte
+//   DesignArena sie nur für ältere Modelle; seit 16.11.2026 für fast alle,
+//   mit deutlich höheren Werten (siehe `paretoVariants.ts`, DA-Skalen). Was
+//   fehlt, nennt `DA_NO_TIME`.
 //
 // Auswahlregel
 // ------------
@@ -42,23 +44,27 @@
 // Opus 5.5“ wird `claude-opus-5.5` — dieselbe Schreibweise wie bei AA, damit
 // Labs, Produkt-Presets und Kataloge ohne Sonderweg greifen.
 
-import raw from "../data/designarena/board-20261109-f49471f3.json";
+import raw from "../data/designarena/board-20261116-f6f03785.json";
 import { familyKey } from "./catalogMatch";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const DA_BOARD = "board-20261109-f49471f3.json";
+export const DA_BOARD = "board-20261116-f6f03785.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const DA_STAND = "09.11.2026";
+export const DA_STAND = "16.11.2026";
 export const DA_URL =
   "https://www.designarena.ai/leaderboard?section=overall&board=overall-agentic";
 /**
  * Elo-Böden je Ansicht. Die Kostenansicht hat Preise für alle Modelle; ab 1200
  * stehen dort am 31.10.2026 24 Modelle, etwa so viele wie bei AA (26) — mit
- * 1100 wären es 46 und die Labels unlesbar. Die Tempoansicht hat Zeiten nur
- * für ältere Modelle; mit 1200 blieben zwei Punkte, mit 1000 sind es 28.
+ * 1100 wären es 46 und die Labels unlesbar. Die Tempoansicht hatte bis
+ * 09.11.2026 Zeiten nur für ältere Modelle und deshalb den Boden 1000 (28
+ * Punkte). Seit 16.11.2026 führt DesignArena eine Zeit für 82 von 83 Modellen;
+ * mit 1000 stünden 73 Punkte im Chart und die Front-Labels fänden keinen
+ * Platz (`paretoVariants.test.ts`). Seither gilt derselbe Boden wie bei den
+ * Kosten.
  */
-export const DA_FLOOR = { cost: 1200, speed: 1000 } as const;
+export const DA_FLOOR = { cost: 1200, speed: 1200 } as const;
 /** Gewichte des Mischpreises, wie auf der Seite: 3 Teile Input, 1 Teil Output. */
 export const MIX = { input: 3, output: 1 } as const;
 

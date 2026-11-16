@@ -70,7 +70,8 @@ describe("familyKey — verschiedene Modelle bleiben verschieden", () => {
 
 // Die drei Listen, die am 29.09.2026 von Hand aus den Rohseiten gelesen und von
 // zwei unabhängigen Rechercheuren bestätigt wurden; am 28.10.2026 gegen die
-// neuen Rohseiten nachgeführt (jede Änderung einzeln im Katalog belegt). Der abgeleitete Abgleich
+// neuen Rohseiten nachgeführt (jede Änderung einzeln im Katalog belegt); am
+// 16.11.2026 kam gemini-4-carbon bei Cursor dazu. Der abgeleitete Abgleich
 // muss sie auf dem Label-Raum beider Datenquellen exakt reproduzieren — nicht
 // mehr, nicht weniger. Bricht das, hat sich Normalisierung oder Katalog bewegt.
 describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
@@ -90,6 +91,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gemini-3.7-flash",
       "gemini-3.8-flash",
       "gemini-4-argon",
+      "gemini-4-carbon",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -208,7 +210,7 @@ describe("Golden: Katalogname → Schlüssel", () => {
     // 53 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
     expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
-    expect(catalogKeys("junie").size).toBe(13);
+    expect(catalogKeys("junie").size).toBe(17);
   });
 });
 

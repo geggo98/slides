@@ -1649,10 +1649,12 @@ Punkte für gut das Doppelte. Oben kosten die letzten gut fünf Punkte
 (54,6 → 60,0) gut das Sechsfache — das ist die Eskalations-Frage der Folie.
 
 gemini-4-carbon hat seit 31.10. auch einen Tempo-Wert (am 09.11.
-72 tok/s) und steht damit an der Spitze beider AA-Fronten. Google hat weder Freigabe noch Preis angekündigt (Stand 28.10.2026 nur
-Berichte über einen Testzugang); die oberste Sprosse ist damit eine
-Aussage über AA-Listenpreise, nicht über Buchbarkeit — offen, ob sie in
-NUR_EINGESCHRAENKT gehört, sobald es einen datierten Herstellerbeleg gibt.
+72 tok/s) und steht damit an der Spitze beider AA-Fronten. Eine
+Freigabe durch Google ist nicht nachgeprüft, aber zwei Produkte bieten es
+seit November an: Junie seit 10.11.2026 (Release-Notes „Gemini 4 Carbon
+support“), Cursor laut Modellseite vom 16.11.2026. Deshalb steht es nicht
+in NUR_EINGESCHRAENKT, und die Presets von Cursor und Junie enden jetzt
+mit ihm.
 
 gemini-4-argon (50,4 bei 8,71 €) ist in v5 von gpt-6.1-terra und
 gpt-6.1-sol dominiert und nicht mehr auf der Front. Seine Kosten je
@@ -1678,37 +1680,42 @@ Tempo-Wert fehlt ling-3.1-flash-1019; mistral-large-4 hat wieder einen
 legt die Geschwindigkeit als Halo um die Marker der Kostenansicht.
 Attribution: AA verlangt den Link, er steht in der Fußzeile.
 
-DESIGNARENA (Board „Overall Agentic“, Stand 09.11.2026) ist die zweite
+DESIGNARENA (Board „Overall Agentic“, Stand 16.11.2026) ist die zweite
 Meinung: keine Benchmark-Aufgaben, sondern Blind-Duelle. Menschen sehen
 zwei Ergebnisse derselben Design- bzw. Agentic-Aufgabe (Website, App,
 Spiel) und wählen das bessere; daraus ein Bradley-Terry-Elo, Start 1200,
-346 000 Stimmen. Das misst Gefallen und Gesamteindruck, nicht
+365 000 Stimmen. Das misst Gefallen und Gesamteindruck, nicht
 Korrektheit — wo AA und DesignArena sich einig sind, ist die Aussage
 belastbarer als jede für sich.
 
 Ansicht „Design-Elo × Preis“: x ist der LISTENPREIS je 1M Token, 3 Teile
 Input zu 1 Teil Output gemischt, wie DesignArena selbst rechnet — in USD,
 nicht umgerechnet. Das ist ein Preisschild, kein Verbrauch pro Aufgabe:
-ein gesprächiges Modell steht hier zu billig. Elo ≥ 1200, 27 Modelle.
-Front: minimax-m3.1-flash 0,26 $ (1243) → inkling-2-small 0,48 $ (1272) →
-deepseek-v4.1-flash 0,52 $ (1303) → gpt-6.1-sol 4 $ (1424) →
-claude-opus-5.5 8 $ (1459). Auffällig gegen AA: die billigen chinesischen
-Modelle (MiniMax, DeepSeek) stehen hier weit vorn. An der Spitze liegen
-Opus 5.5 (Stufe high) und GPT-6.1 Sol (max); beide sind seit dem
-31.10. neu auf dem Board, gpt-6-astra (1392) fällt dadurch von der Front.
-deepseek-v4.1-flash hat erst rund 250 Duelle (± 22 Elo), sein Platz ist
-also noch unsicher.
+ein gesprächiges Modell steht hier zu billig. Elo ≥ 1200, 32 Modelle.
+Front: minimax-m3.1-flash 0,26 $ (1249) → inkling-2-small 0,48 $ (1312) →
+qwen4-max 2,25 $ (1361) → gpt-6.1-sol 4 $ (1367) →
+claude-opus-5.5 8 $ (1445). Auffällig gegen AA: die billigen chinesischen
+Modelle (MiniMax, Qwen) stehen hier weit vorn. An der Spitze liegen
+Opus 5.5 (Stufe high) und GPT-6.1 Sol (max). qwen4-max ist seit 16.11.
+neu auf dem Board und verdrängt deepseek-v4.1-flash (1289, erst rund 400
+Duelle) von der Front. gpt-6.1-sol fiel mit mehr als doppelt so vielen
+Duellen von 1424 auf 1367, liegt aber weiter auf der Front. Ebenfalls neu:
+claude-fable-5.2 (1370 bei 16 $), gemini-4-carbon (1303 bei 4 $) und
+gemini-4-hydrogen (1259), alle dominiert.
 
-Ansicht „Design-Elo × Tempo“: Ø Zeit einer Generierung. DesignArena führt
-sie nur für ältere Modelle — 25 der 27 Modelle der Preisansicht haben
-keine, darunter Opus 5.5, GPT-6 und Gemini 4 (Hover in der Fußzeile).
-Deshalb Elo ≥ 1000. Front: grok-4.3 1,9 min (1038) →
-gemini-3.1-pro-preview 3,5 min (1083) → claude-fable-5 4,0 min (1269).
-Ein Stand der Generation davor, keine Empfehlung für heute — so auch
-sagen.
+Ansicht „Design-Elo × Tempo“: Ø Zeit einer Generierung. Seit 16.11.
+führt DesignArena sie für fast jedes Modell —
+0 der 32 Modelle der Preisansicht haben keine. Deshalb gilt jetzt derselbe Boden wie beim
+Preis, Elo ≥ 1200. Front: gpt-6-sol 7,4 min (1215) →
+deepseek-v4.1-flash 9,0 min (1289) → claude-opus-5.5 14,2 min (1445).
+Vorsicht beim Vergleich: Die 28 Modelle, die schon am 09.11. eine Zeit
+hatten, stehen jetzt im Median rund 4-mal so lang da (1,4- bis 75-mal);
+claude-fable-5 etwa 12,2 statt 4,0 min. Einen Grund nennt die Seite
+nicht. Die Zeiten taugen also nur innerhalb dieses Stands, nicht gegen
+frühere Folienstände.
 
-PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge vom 28.10.2026, Windsurf vom
-09.11.2026, Junie vom 02.11.2026, AA-Stand 09.11.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
+PRODUKT-AUSWAHL (Anbieter-Menü; Kataloge von Cursor, Windsurf und Junie vom
+16.11.2026, JetBrains AI vom 28.10.2026, AA-Stand 09.11.2026). Der Zweck: Wer ein Produkt hat, will wissen, welche SEINER
 Modelle sich lohnen und wann es ein strikt besseres gibt. Ein Produkt
 zeigt deshalb alle seine Modelle mit Wert — auch ältere, die AA nicht mehr
 führt — und rechnet die Front nur über diese, selbst wenn andere Produkte
@@ -1720,9 +1727,9 @@ meisten Punkte aus v4 umgerechnet (≈).
 
 Kostenansicht, die vier Produkte:
 - JetBrains AI (25 von 42, vier Sprossen): gpt-5-mini 0,11 € (≈ 7,7) → gpt-6-luna 0,13 € (27,9) → gpt-6.1-sol 1,11 € (54,6) → claude-opus-5.5 8,79 € (59,1). Der Katalog vom 28.10. führt jetzt GPT-6 und Opus 5.5; das Preset reicht damit bis Opus 5.5, dem besten Modell seines Katalogs; die Spitze gemini-4-carbon führt JetBrains nicht.
-- Junie (13 von 13): gpt-6-luna 0,13 € (27,9) → gpt-6.1-terra-non-reasoning 0,20 € (30,5) → gpt-6.1-terra 0,84 € (51,3) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (59,1). Neu belegt sind GPT 6.1 Terra (Release-Notes 28.10.) und Gemini 4 Argon (16.10.); Terra verdrängt gpt-6-sol von der Front.
-- Windsurf (36 von 53): gpt-6-luna 0,13 € (27,9) → gpt-6.1-terra-non-reasoning 0,20 € (30,5) → claude-haiku-5.5 0,36 € (36,5) → gpt-6.1-terra 0,84 € (51,3) → gpt-6.1-sol 1,11 € (54,6) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (59,1). Die Modellseite (Stand 05.11.) führt jetzt GPT-6.1 Sol und Terra, Haiku 5.5 und Sonnet 5.5. Gemessene Sprossen ersetzen damit die drei umgerechneten (gemini-3.7-flash, grok-4.5, gpt-6-sol); die Leiter ist jetzt ganz gemessen. Der Katalog enthält nur noch, was die Seite zeigt (259 Einträge, 53 Familien). 67 ältere Einträge sind entfallen, darunter GPT-4o bis GPT-5.3-Codex, Opus und Sonnet 4.5, Gemini 3.1 Pro und Grok 4.5. Die Leiter ändert das nicht.
-- Cursor (36 von 54): gpt-5-mini 0,11 € (≈ 7,7) → gpt-5.6-luna 0,36 € (≈ 26,9) → claude-haiku-5.5 0,36 € (36,5) → muse-spark-1.3 2,93 € (≈ 41,3) → gpt-5.6-sol 3,60 € (≈ 45,1) → gemini-4-argon 8,71 € (50,4) → claude-sonnet-5.5 8,78 € (54,5) → claude-opus-5.5 8,79 € (59,1). Sonnet 5.5 und Opus 5.5 kosten fast dasselbe, Opus hat 4,6 Punkte mehr. gpt-5.6-luna ist neu auf der Leiter, weil die neu gefittete Umrechnung es knapp unter Haiku 5.5 setzt: rund 0,36 € für beide, Luna ist um Bruchteile eines Cents billiger.
+- Junie (15 von 17): gpt-6-luna 0,13 € (27,9) → gpt-6.1-terra-non-reasoning 0,20 € (30,5) → gpt-6.1-terra 0,84 € (51,3) → gpt-6.1-sol 1,11 € (54,6) → gpt-6-astra 5,47 € (56,9) → gemini-4-carbon 6,79 € (60,0). Seit 16.11. neu belegt: Claude Fable 5.2 (Release-Notes 09.11.), Gemini 4 Carbon (10.11.), Gemini 4 Hydrogen (13.11.) und GPT-6.1 Sol (Landingpage). Junie führt damit dieselbe Spitze wie der Markt; gemini-4-carbon verdrängt Opus 5.5 von der obersten Sprosse, gpt-6.1-sol kommt dazu. Fable 5.2 und Hydrogen fehlen im AA-Stand 09.11.
+- Windsurf (36 von 54): gpt-6-luna 0,13 € (27,9) → gpt-6.1-terra-non-reasoning 0,20 € (30,5) → claude-haiku-5.5 0,36 € (36,5) → gpt-6.1-terra 0,84 € (51,3) → gpt-6.1-sol 1,11 € (54,6) → gpt-6-astra 5,47 € (56,9) → claude-opus-5.5 8,79 € (59,1). Die Modellseite (Stand 05.11.) führt jetzt GPT-6.1 Sol und Terra, Haiku 5.5 und Sonnet 5.5. Gemessene Sprossen ersetzen damit die drei umgerechneten (gemini-3.7-flash, grok-4.5, gpt-6-sol); die Leiter ist jetzt ganz gemessen. Der Katalog enthält nur noch, was die Seite zeigt (259 Einträge, 53 Familien). 67 ältere Einträge sind entfallen, darunter GPT-4o bis GPT-5.3-Codex, Opus und Sonnet 4.5, Gemini 3.1 Pro und Grok 4.5. Die Leiter ändert das nicht. Seit 16.11. führt die Seite Claude Fable 5.2 in zehn Stufen (269 Einträge, 54 Familien); AA misst es im Stand 09.11. noch nicht.
+- Cursor (37 von 57): gpt-5-mini 0,11 € (≈ 7,7) → gpt-5.6-luna 0,36 € (≈ 26,9) → claude-haiku-5.5 0,36 € (36,5) → muse-spark-1.3 2,93 € (≈ 41,3) → gpt-5.6-sol 3,60 € (≈ 45,1) → gemini-4-carbon 6,79 € (60,0). Seit 16.11. führt Cursor Gemini 4 Carbon, Gemini 4 Hydrogen und Claude Fable 5.2. Carbon ist billiger und besser als die bisherigen oberen Sprossen gemini-4-argon, claude-sonnet-5.5 und claude-opus-5.5; die Leiter endet deshalb nach sechs statt acht Sprossen. Fable 5.2 und Hydrogen fehlen im AA-Stand 09.11. gpt-5.6-luna ist neu auf der Leiter, weil die neu gefittete Umrechnung es knapp unter Haiku 5.5 setzt: rund 0,36 € für beide, Luna ist um Bruchteile eines Cents billiger.
 
 Tempoansicht (Leiter jeweils vom langsamsten zum schnellsten). Seit 09.11.
 fehlen hier alle Modelle, die nur der v4-Stand vom 01.10. kennt: Ihr Tempo
@@ -1730,15 +1737,15 @@ stammt aus der alten AA-Methodik und stünde sonst neben den neuen Werten.
 Die Presets zeigen deshalb viel weniger Punkte als bisher, und gemini-3.7-flash
 und gemini-3.1-pro fallen von den Leitern.
 - JetBrains AI (9 von 42): claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5). gpt-6.1-sol fällt heraus: 57 tok/s nach neuer Methodik.
-- Junie (10 von 13): claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5).
-- Cursor (15 von 54): claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5) → claude-haiku-5.5 233 tok/s (36,5) → gemini-3.5-flash-lite 292 tok/s (11,7). muse-wonder (121 tok/s) ist jetzt langsamer als Sonnet 5.5 und fällt heraus.
-- Windsurf (17 von 53): claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5) → claude-haiku-5.5 233 tok/s (36,5). gpt-6.1-sol fällt heraus wie bei JetBrains AI.
+- Junie (12 von 17): gemini-4-carbon 72 tok/s (60,0) → claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5). gemini-4-carbon ist seit 16.11. im Katalog und setzt sich als langsamste, aber beste Sprosse davor.
+- Cursor (16 von 57): gemini-4-carbon 72 tok/s (60,0) → claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5) → claude-haiku-5.5 233 tok/s (36,5) → gemini-3.5-flash-lite 292 tok/s (11,7). muse-wonder (121 tok/s) ist jetzt langsamer als Sonnet 5.5 und fällt heraus. gemini-4-carbon ist seit 16.11. im Katalog und kommt als oberste Sprosse dazu.
+- Windsurf (17 von 54): claude-opus-5.5 114 tok/s (59,1) → claude-sonnet-5.5 151 tok/s (54,5) → claude-haiku-5.5 233 tok/s (36,5). gpt-6.1-sol fällt heraus wie bei JetBrains AI.
 
 Die Frage aus dem Publikum, was mit dem eigenen API-Schlüssel ist: JetBrains
 AI und Junie erlauben BYOK. Dann das Lab des Schlüssels anhaken (OpenAI,
 Anthropic, Google, xAI), bei einem OpenRouter-Schlüssel „Alle“. Die Presets
 zeigen nur, was das JetBrains-Abo mitbringt. Und Junie veröffentlicht keine
-vollständige Modellliste: 13 Modelle sind belegt (Landingpage, datierte
+vollständige Modellliste: 17 Modelle sind belegt (Landingpage, datierte
 Release-Notes), das Produkt selbst zeigt mit /model mehr.
 
 Wenn aus dem Publikum „bei uns ist nur X freigegeben“ kommt: Die Labs
