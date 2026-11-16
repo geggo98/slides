@@ -5,6 +5,7 @@ import {
   feldZaehler,
   parseModels,
   pruefeFelder,
+  vergibSlugs,
 } from "../../../data/artificialanalysis/fetch";
 
 // `fetch.ts` liest die Modell-Liste aus der RSC-Payload der Leaderboard-Seite.
@@ -64,9 +65,134 @@ describe("parseModels", () => {
     ]);
   });
 
+  it("liest die Form vom 16.11.2026: kein `slug`, nur `release.slug` und `suffix`", () => {
+    const neu = (
+      release: string,
+      name: string,
+      suffix: string | null,
+      index: number,
+    ) => ({
+      id: `id-${name}`,
+      release: { slug: release, name: release },
+      name,
+      suffix,
+      deprecated: false,
+      intelligenceIndex: index,
+      intelligenceIndexCostPerTask: 1,
+      outputSpeed: 100,
+    });
+    const body = `22:{"initialModels":${JSON.stringify([
+      neu(
+        "claude-x",
+        "Claude X (Max, Default Fallback)",
+        "Max, Default Fallback",
+        59,
+      ),
+      neu(
+        "claude-x",
+        "Claude X (Low, Default Fallback)",
+        "Low, Default Fallback",
+        35,
+      ),
+      neu("ling-3-1-flash-1001", "Ling 3.1 Flash", null, 20),
+      neu("gem-y", "Gem Y (High)", "High", 50),
+    ])}}`;
+    // „Ling 3.1 Flash“ kennt das Archiv unter einem Slug, der nicht der
+    // Release-Slug ist; „Gem Y (High)“ unter dem Release-Slug selbst.
+    const bekannt = new Map([
+      ["Ling 3.1 Flash", "ling-3-1-flash"],
+      ["Gem Y (High)", "gem-y"],
+    ]);
+    const ms = parseModels(seite(body), bekannt);
+    expect(ms.map((m) => m.slug)).toStrictEqual([
+      "claude-x",
+      "claude-x-low",
+      "gem-y",
+      "ling-3-1-flash",
+    ]);
+    expect(Object.keys(ms[0]!)).toStrictEqual([...FELDER]);
+    // Ohne Archiv: die Regel — Release-Slug für Max und stufenlose Namen,
+    // `-<stufe>` sonst. „Gem Y (High)“ bekommt `gem-y-high`.
+    expect(parseModels(seite(body)).map((m) => m.slug)).toStrictEqual([
+      "claude-x",
+      "claude-x-low",
+      "gem-y-high",
+      "ling-3-1-flash-1001",
+    ]);
+  });
+
   it("gibt ohne Kennzahlen-Liste nichts zurück statt der Stubs", () => {
     const body = `24:{"models":${JSON.stringify([stub("a"), stub("b")])}}`;
     expect(parseModels(seite(body))).toStrictEqual([]);
+  });
+});
+
+describe("vergibSlugs", () => {
+  const rec = (release: string, name: string, suffix: string | null) => ({
+    release: { slug: release },
+    name,
+    suffix,
+  });
+
+  it("behält den Slug aus dem Archiv, auch wenn er von release.slug abweicht", () => {
+    const slugs = vergibSlugs(
+      [rec("nova-2-0-pro-preview", "Nova 2.0 Pro Preview (Low)", "Low")],
+      new Map([["Nova 2.0 Pro Preview (Low)", "nova-2-0-pro-reasoning-low"]]),
+    );
+    expect(slugs).toStrictEqual(["nova-2-0-pro-reasoning-low"]);
+  });
+
+  it("weicht aus, wenn der Release-Slug schon an eine bekannte Stufe vergeben ist", () => {
+    // Argon führte bisher nur die High-Stufe, und der Archiv-Slug dafür ist der
+    // Release-Slug. Kommt die Max-Stufe dazu, darf sie ihn nicht doppelt tragen.
+    const slugs = vergibSlugs(
+      [
+        rec("gem-argon", "Gem Argon (High)", "High"),
+        rec("gem-argon", "Gem Argon (Max)", "Max"),
+      ],
+      new Map([["Gem Argon (High)", "gem-argon"]]),
+    );
+    expect(slugs).toStrictEqual(["gem-argon", "gem-argon-max"]);
+  });
+
+  it("nimmt „Reasoning“ als Hauptfall und hängt „Non-reasoning“ an", () => {
+    const slugs = vergibSlugs(
+      [
+        rec("m", "M (Reasoning)", "Reasoning"),
+        rec("m", "M (Non-reasoning)", "Non-reasoning"),
+      ],
+      new Map(),
+    );
+    expect(slugs).toStrictEqual(["m", "m-non-reasoning"]);
+  });
+
+  it("überspringt Zusätze, die keine Stufe sind", () => {
+    expect(
+      vergibSlugs(
+        [rec("g", "G (Daybreak Blue, max)", "Daybreak Blue, max")],
+        new Map(),
+      ),
+    ).toStrictEqual(["g"]);
+  });
+
+  it("bricht ab statt zu raten: ohne Schlüssel, bei doppeltem Archiv-Slug und ohne freien Slug", () => {
+    expect(() => vergibSlugs([{ name: "X" }], new Map())).toThrow(
+      /ohne slug und ohne release\.slug: X/,
+    );
+    expect(() =>
+      vergibSlugs(
+        [rec("r", "A", null), rec("r", "B", null)],
+        new Map([
+          ["A", "s"],
+          ["B", "s"],
+        ]),
+      ),
+    ).toThrow(/Slug doppelt: s/);
+    // Zwei stufenlose Namen auf demselben Release: der zweite fällt auf den
+    // Slug seines Namens zurück, statt den ersten zu überschreiben.
+    expect(
+      vergibSlugs([rec("r", "Eins", null), rec("r", "Zwei", null)], new Map()),
+    ).toStrictEqual(["r", "zwei"]);
   });
 });
 

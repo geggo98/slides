@@ -66,14 +66,14 @@
 // der alten Methodik kommen nie neben solche der neuen: umgerechnete v4-Zeilen,
 // die im aktuellen Stand fehlen, haben deshalb kein Tempo (`migrateV4`).
 
-import raw from "../data/artificialanalysis/board-20261109-cfee77fd.json";
+import raw from "../data/artificialanalysis/board-20261116-30ad854c.json";
 import rawV4 from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const AA_BOARD = "board-20261109-cfee77fd.json";
+export const AA_BOARD = "board-20261116-30ad854c.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const AA_STAND = "09.11.2026";
+export const AA_STAND = "16.11.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
 export const USD_EUR = 0.876;

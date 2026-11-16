@@ -239,17 +239,17 @@ describe("Hauptfolie (pareto-heute) — Default ohne Überschneidung", () => {
     }
   });
 
-  // Stand 31.10.2026 (aa-cost). Ändert sich die Liste mit einem neuen Board,
+  // Stand 16.11.2026 (aa-cost). Ändert sich die Liste mit einem neuen Board,
   // ist das ein Befund für den PR, kein Fehler: `vitest -u` und hinsehen.
   it("lässt im Default nur diese Punkte namenlos", () => {
     const { layout } = pareto(false);
     expect(layout.dropped).toMatchInlineSnapshot(`
       [
         "deepseek-v4.1-flash-1017",
-        "mimo-v2.6-pro",
         "ling-3.1-flash-1019",
-        "minimax-m3.1-flash",
         "qwen3.8-flash-next",
+        "minimax-m3.1-flash",
+        "mistral-large-4",
       ]
     `);
   });
@@ -260,9 +260,10 @@ describe("Hauptfolie (pareto-heute) — kein Schalter verschiebt ein Label", () 
     const aus = pareto(false);
     const an = pareto(true);
     // Verschiebbar sind die Claude-Punkte; dazu jeder feste Marker, den die
-    // Entzerrung im Overlay mit ausweichen lässt (`yieldFixed`, seit
-    // 31.10.2026: gemini-4-carbon unter claude-opus-5.5). Sein Label wandert
-    // mit dem Marker — das ist die eine dokumentierte Ausnahme.
+    // Entzerrung im Overlay mit ausweichen lässt (`yieldFixed`, bis 09.11.2026:
+    // gemini-4-carbon unter claude-opus-5.5). Sein Label wandert mit dem
+    // Marker — die dokumentierte Ausnahme. Am 16.11.2026 verdeckt kein
+    // Claude-Punkt mehr einen festen (Carbon 4,80 €, Opus ×0,8 = 7,03 €).
     const claude = aus.pts.filter((p) => p.movable).map((p) => p.id);
     expect(claude.length).toBe(4);
     const gewichen = aus.pts
@@ -272,7 +273,7 @@ describe("Hauptfolie (pareto-heute) — kein Schalter verschiebt ein Label", () 
         (id) =>
           JSON.stringify(aus.pos.get(id)) !== JSON.stringify(an.pos.get(id)),
       );
-    expect(gewichen).toStrictEqual(["gemini-4-carbon"]);
+    expect(gewichen).toStrictEqual([]);
     const movable = new Set([...claude, ...gewichen]);
     for (const [id, p] of aus.layout.core) {
       if (movable.has(id)) continue;

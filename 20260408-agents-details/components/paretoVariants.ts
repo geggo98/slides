@@ -140,33 +140,37 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 22 € (am 31.10.2026 kleinster Punkt 0,11 €, größter
-// 9,50 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
-// Index (v5) linear von 22 bis 66 (am 09.11.2026 Punkte 26,1 bis 60,0). Bis
-// 02.11. reichte 64; mit Carbon auf 60,0 und Opus auf 59,1 fand das Label von
-// claude-opus-5.5 darunter keinen Platz mehr (65 reichte nicht, 67 brach das
-// Overlay). Ein yMin > 0 spart die untere Hälfte der Achse, in der kein Modell
-// liegt.
+// Kosten log von 0,08 € bis 40 € (am 16.11.2026 kleinster Punkt 0,11 €, größter
+// 23,25 € mit claude-fable-5.2; bis 09.11. reichte 0,04 € bis 22 €), der
+// Index (v5) linear von 24 bis 68 (am 16.11.2026 Punkte 26,7 bis 64,6). Bis
+// 09.11. lief die Achse von 22 bis 66; Fable 5.2 (64,6) braucht darüber Platz
+// für sein Label. Den unteren Rand hat der 16.11. von 0,04 € auf 0,08 € und
+// von 22 auf 24 gehoben: Unten links drängen sich mimo-v2.6-flash, muse-ember
+// und gpt-6-luna, und gpt-6.1-terra-non-reasoning fand dort keinen Platz mehr
+// (0,04 €: 0 gültige Pfeilpositionen, 0,08 €: 35). Ein yMin > 0 spart die untere
+// Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 22,
-  xLog: { min: 0.04 },
-  yMin: 22,
-  yMax: 66,
+  xMax: 40,
+  xLog: { min: 0.08 },
+  yMin: 24,
+  yMax: 68,
 });
 // x = 1000/tps: am 31.10.2026 4,3 s (235 tok/s) bis 32,4 s (31 tok/s,
 // kimi-k3.1-pro) je 1 000 Tokens; am 09.11.2026 (neue AA-Tempo-Methodik)
-// 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro.
+// 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro. Am 16.11.2026
+// kommt muse-ember mit 2,3 s (439 tok/s) dazu, deshalb beginnt die Achse bei
+// 2 s statt 3 s, und der Index reicht bis 68 (claude-fable-5.2: 64,6).
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
-  xLog: { min: 3 },
+  xLog: { min: 2 },
   yMin: 22,
-  yMax: 62,
+  yMax: 68,
 });
 
-const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10];
+const AA_COST_TICKS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
 const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
 const TPS_TICKS = [300, 200, 100, 60, 40, 30];
@@ -273,6 +277,13 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
+      // 16.11.2026: Mit der Skala 0,08–40 € / 24–68 (Fable 5.2 oben, muse-ember
+      // unten links) passt nur noch ein Knoten rechts der Front in der Mitte:
+      // Gitter 10 × 7 × 5 × 7 über Knoten und Ziel mit denselben Prüfungen wie
+      // die Tests (beide Overlay-Zustände, Layout mit und ohne Kontext, Cluster
+      // ganz im Plot, über keinem Marker): 35 Treffer, alle mit Knoten
+      // (0,5 €, 46) oder (0,5 €, 50). Gewählt (0,5 €, 46) → Ziel (0,13 €, 56).
+      //
       // v5 (31.10.2026): Unter dem Knoten vom 28.10. (3 €, 32) liegen jetzt
       // glm-5.3-flash, deepseek-v4.1-flash-1017, step-5 und ling-3.1-flash-1019,
       // unter dem Schaft „Leistungsfähiger“ kimi-k3.1-pro. Gitter 17 × 11 × 17 × 11
@@ -282,9 +293,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // Terra; frei ist die leere Ecke links über ihr — Knoten (0,33 €, 43),
       // Ziel (0,08 €, 53,5). Dort zeigen die Pfeile in den Bereich, den kein
       // Modell erreicht, und kreuzen die Front nicht.
-      hubX: (s) => s.px(0.33),
-      hubY: (s) => s.py(43),
-      target: (s) => ({ x: s.px(0.08), y: s.py(53.5) }),
+      hubX: (s) => s.px(0.5),
+      hubY: (s) => s.py(46),
+      target: (s) => ({ x: s.px(0.13), y: s.py(56) }),
     },
     axisTitle:
       "Ø Kosten pro Task (EUR, log. Skala) — Artificial Analysis Intelligence Index",
@@ -321,7 +332,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     ],
     ariaIntro:
       "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Kosten pro Task in Euro, " +
-      "x-Achse logarithmisch von 0,04 bis 22 Euro, unterteilt in vier Quadranten: " +
+      "x-Achse logarithmisch von 0,08 bis 40 Euro, unterteilt in vier Quadranten: " +
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand " +
       AA_STAND,
@@ -364,9 +375,14 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // (xMax 40 für kimi-k3.1-pro): Knoten (19,45 s ≈ 51 tok/s, 42) rechts
       // unter der Front, Ziel (16,85 s ≈ 59 tok/s, 52); „Schneller“ endet bei
       // ≈ 9 s, rechts von allen Frontpunkten unter Index 45.
-      hubX: (s) => s.px(19.45),
+      // 16.11.2026: muse-ember (2,3 s) und claude-fable-5.2 (Index 64,6)
+      // brachten die Skala auf 2–40 s und 24–68; der alte Knoten lag unter
+      // muse-wonder und gpt-6.1-sol. Gitter 9 × 7 × 7 × 7 mit denselben
+      // Prüfungen wie die Tests: 21 Treffer, alle mit Knoten bei 30 s (≈ 33
+      // tok/s). Gewählt Knoten (30 s, 42) → Ziel (20 s, 48).
+      hubX: (s) => s.px(30),
       hubY: (s) => s.py(42),
-      target: (s) => ({ x: s.px(16.85), y: s.py(52) }),
+      target: (s) => ({ x: s.px(20), y: s.py(48) }),
     },
     axisTitle:
       "Ø Output-Tokens/s (Ende zu Ende, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",

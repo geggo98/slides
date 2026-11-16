@@ -79,6 +79,19 @@ den Namen der Seite. Tempo und Latenz heißen seit 03.11.2026 `outputSpeed`,
 von 283 Modellen). Ältere Boards tragen noch die alten Namen; `tpsOf` in
 `aaData.ts` liest je Snapshot das Feld, das er hat.
 
+**`slug` und der Abbruch „0 Modelle (< 200)“.** Am 16.11.2026 trugen die
+Datensätze keinen `slug` mehr, nur `release.slug` (geteilt von allen
+Effort-Stufen eines Modells). Der Parser fand 0 Modelle und der Abruf
+scheiterte an der Schranke. Seither vergibt `vergibSlugs()` (`fetch.ts`) den
+Schlüssel: Ein Modell, dessen **Name** in einem archivierten Board steht,
+behält dessen Slug — `migrateV4` und die Labels hängen daran. Nur ein neues
+Modell bekommt einen Slug aus `release.slug` und der Stufe aus `suffix`. Das
+Skript bricht ab, wenn ein Datensatz weder `slug` noch `release.slug` trägt
+oder kein freier Slug zu finden ist. Dann in der Payload nachsehen, wo der
+Schlüssel jetzt steht (`bun run`-Skript mit `payload()` aus `fetch.ts`), und
+den Befund melden; den Parser baut ein Mensch um. Details im Kopf von
+`fetch.ts`, „Seit 16.11.2026“.
+
 **Abbruch `Format geändert? Felder fehlen oder sind zu selten belegt (< 50 %
 des Vorgängers): …`** kommt von `pruefeFelder()`. Es zählt je Feld aus
 `FELDER` die Modelle mit Wert und vergleicht mit dem zuletzt archivierten

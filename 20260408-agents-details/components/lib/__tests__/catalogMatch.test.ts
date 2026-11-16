@@ -71,14 +71,16 @@ describe("familyKey — verschiedene Modelle bleiben verschieden", () => {
 // Die drei Listen, die am 29.09.2026 von Hand aus den Rohseiten gelesen und von
 // zwei unabhängigen Rechercheuren bestätigt wurden; am 28.10.2026 gegen die
 // neuen Rohseiten nachgeführt (jede Änderung einzeln im Katalog belegt); am
-// 16.11.2026 kam gemini-4-carbon bei Cursor dazu. Der abgeleitete Abgleich
+// 16.11.2026 kamen bei Cursor gemini-4-carbon und gemini-4-hydrogen dazu, bei
+// Cursor und Windsurf claude-fable-5.2 (AA führt es seit dann); claude-fable-5.1
+// ist kein Chart-Label mehr. Der abgeleitete Abgleich
 // muss sie auf dem Label-Raum beider Datenquellen exakt reproduzieren — nicht
 // mehr, nicht weniger. Bricht das, hat sich Normalisierung oder Katalog bewegt.
 describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
   const HAND: Partial<Record<CatalogId, string[]>> = {
     cursor: [
       "claude-fable-5",
-      "claude-fable-5.1",
+      "claude-fable-5.2",
       "claude-haiku-5.5",
       "claude-opus-4.8",
       "claude-opus-5",
@@ -92,6 +94,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gemini-3.8-flash",
       "gemini-4-argon",
       "gemini-4-carbon",
+      "gemini-4-hydrogen",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -106,7 +109,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
     ],
     windsurf: [
       "claude-fable-5",
-      "claude-fable-5.1",
+      "claude-fable-5.2",
       "claude-haiku-5.5",
       "claude-opus-4.8",
       "claude-opus-5",
@@ -140,7 +143,6 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
     ],
     "jetbrains-ai": [
       "claude-fable-5",
-      "claude-fable-5.1",
       "claude-opus-4.8",
       "claude-opus-5",
       "claude-opus-5.5",
@@ -175,11 +177,15 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gpt-6-luna",
       "claude-opus-5.5",
       "claude-sonnet-5.5",
-      "claude-fable-5.1",
+      "claude-fable-5.2",
       "gemini-3.8-flash",
       "grok-4.7",
     ])
       expect(j, l).toContain(l);
+    // claude-fable-5.1 ist seit 16.11.2026 kein Chart-Label mehr (AA führt es
+    // nicht mehr in v5), die Kataloge führen es weiter.
+    expect(catalogHas("junie", "claude-fable-5.1")).toBe(true);
+    expect(catalogHas("cursor", "claude-fable-5.1")).toBe(true);
     expect(catalogHas("jetbrains-ai", "gpt-6-astra")).toBe(false);
   });
 });

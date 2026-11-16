@@ -186,8 +186,11 @@ describe("Marker-Entzerrung", () => {
   // Overlay bewegt die Claude-Punkte und nur die festen, die sie verdecken.
   it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich — außer dem, den ein Claude-Punkt verdeckt", () => {
     // Seit 31.10.2026 weicht ein fester Marker mit aus, wenn ein verschiebbarer
-    // ihn verdeckt (`yieldFixed`): claude-opus-5.5 liegt mit Kontingent fast auf
-    // gemini-4-carbon. Jeder andere feste Marker bleibt, wo er war.
+    // ihn verdeckt (`yieldFixed`): bis 09.11.2026 lag claude-opus-5.5 mit
+    // Kontingent fast auf gemini-4-carbon. Am 16.11.2026 kostet Carbon bei AA
+    // 4,80 € statt 6,79 € und Opus mit Kontingent 7,03 €: Kein Claude-Punkt
+    // verdeckt mehr einen festen, die Liste ist leer. Jeder feste Marker bleibt,
+    // wo er war.
     const aus = run(haupt("aa-cost", false)).pos;
     const an = run(haupt("aa-cost", true)).pos;
     const bewegt = VARIANTS["aa-cost"].pts
@@ -197,7 +200,7 @@ describe("Marker-Entzerrung", () => {
           JSON.stringify(an.get(p.label)) !== JSON.stringify(aus.get(p.label)),
       )
       .map((p) => p.label);
-    expect(bewegt).toStrictEqual(["gemini-4-carbon"]);
+    expect(bewegt).toStrictEqual([]);
   });
 
   // `yieldFixed` gilt auch, wenn ein Preset gewählt ist (`chartGeometry`
@@ -317,11 +320,12 @@ describe("Marker-Entzerrung", () => {
         ],
         "Bonus v11-vs-v1": [],
         "Hauptfolie aa-cost": [
-          "claude-fable-5.1",
+          "glm-5.3-flash",
+          "qwen3.8-flash-next",
         ],
         "Hauptfolie aa-cost mit Kontingent": [
-          "claude-opus-5.5",
-          "gemini-4-carbon",
+          "glm-5.3-flash",
+          "qwen3.8-flash-next",
         ],
         "Hauptfolie aa-speed": [],
         "Historie 0710": [],
