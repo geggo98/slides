@@ -66,6 +66,34 @@
 // Vorgänger-Snapshot — so fällt die nächste Umbenennung als Fehler auf und
 // nicht als leere Tempo-Ansicht.
 //
+// Seit 16.11.2026: kein `slug` mehr, nur noch `release.slug`
+// ---------------------------------------------------------
+// Die Datensätze von `initialModels` tragen den Slug der Konfiguration nicht
+// mehr. Es gibt `id` (UUID) und `release: {slug, name}`, und `release.slug`
+// teilt sich jede Effort-Stufe eines Modells (am 16.11.2026: 202 verschiedene
+// bei 290 Einträgen). Der Parser fand deshalb 0 Modelle, der Abruf scheiterte
+// an der Schranke. Der alte Slug war ein interner AA-Name mit eigenen
+// Regeln: `gemini-4-argon` für die High-Stufe, `nova-2-0-lite-reasoning-high`,
+// `ling-3-1-flash` für „Ling 3.1 Flash“ bei Release `ling-3-1-flash-1001`.
+// Eine reine Ableitung aus `release.slug` und Stufe traf am 16.11.2026 nur 215
+// von 275 bekannten Slugs. `slug` bleibt aber der Schlüssel: `migrateV4`
+// (`aaData.ts`) legt v4- und v5-Stand über ihn aufeinander, und die Labels
+// des Charts kommen aus ihm. Deshalb gilt:
+//
+//   1. Ein Modell, dessen NAME schon in einem archivierten Board steht, behält
+//      dessen Slug (der Name ist in beiden Ständen eindeutig; neuestes Board
+//      zuerst). Das ist `bekannt`, aufgebaut in `main()`.
+//   2. Nur ein neues Modell bekommt einen Slug aus `release.slug`: die
+//      Max-Stufe und Modelle ohne Stufe den Release-Slug selbst, jede andere
+//      Stufe `<release>-<stufe>`. Ist der Slug schon vergeben, folgt
+//      `<release>-<stufe>`, dann der Slug des Namens. Gelingt auch das nicht,
+//      bricht der Abruf ab.
+//
+// Das Archiv hängt damit vom Vorgänger ab: Derselbe HTML-Text ergibt mit einem
+// anderen Archiv andere Slugs, und ein Modell behält seinen Slug, auch wenn
+// AA den Release umbenennt. Eine neue Datei bleibt trotzdem Funktion von Seite
+// und Archiv, und `sha256` im Index hält sie fest.
+//
 // Die Website-Nutzungsbedingungen (3.3(b)(vi)) untersagen Skripte, die Daten
 // von der Seite „strip, scrape, or mine“. Das Deck liest trotzdem einmal pro
 // Woche diese eine öffentliche Seite — eine bewusste Entscheidung des
@@ -221,9 +249,14 @@ const entsentinel = (v: unknown): unknown => (v === "$undefined" ? null : v);
  * Namen, sondern nach Inhalt: die Liste mit den meisten Datensätzen, die
  * `intelligenceIndex` tragen.
  */
-export function parseModels(html: string): AaRecord[] {
+export function parseModels(
+  html: string,
+  bekannt: ReadonlyMap<string, string> = new Map(),
+): AaRecord[] {
   const p = payload(html);
-  const listen = [...p.matchAll(/"(?:initialModels|models)":\[\{"slug"/g)].map(
+  // Bis 15.11.2026 begannen die Objekte mit `{"slug"`, seither mit `{"id"`;
+  // gewählt wird ohnehin nach Inhalt (siehe oben), nicht nach dem Anfang.
+  const listen = [...p.matchAll(/"(?:initialModels|models)":\[\{/g)].map(
     (m) =>
       JSON.parse(feld(p, p.indexOf("[", m.index))) as Record<string, unknown>[],
   );
@@ -233,13 +266,73 @@ export function parseModels(html: string): AaRecord[] {
     .filter((l) => mitIndex(l) > 0)
     .sort((a, b) => mitIndex(b) - mitIndex(a))[0];
   if (!voll) return [];
+  const slugs = vergibSlugs(voll, bekannt);
   return voll
-    .map((r) => {
+    .map((r, i) => {
       const o = {} as AaRecord;
       for (const k of FELDER) o[k] = entsentinel(r[k]) ?? null;
+      o.slug = slugs[i]!;
       return o;
     })
     .sort((a, b) => String(a.slug).localeCompare(String(b.slug)));
+}
+
+/** Stufen, die der Slug einer Konfiguration trägt (`aaData.ts`: `EFFORTS`, dazu die Reasoning-Paare). */
+const STUFEN =
+  /^(?:minimal|low|medium|high|xhigh|max|non-reasoning|reasoning)$/;
+
+const slugify = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/**
+ * Ein Slug je Datensatz, in Eingabereihenfolge — Regeln siehe Kopf
+ * („Seit 16.11.2026“). Ein Datensatz mit eigenem `slug` (Form bis 15.11.2026)
+ * behält ihn.
+ */
+export function vergibSlugs(
+  recs: readonly Record<string, unknown>[],
+  bekannt: ReadonlyMap<string, string>,
+): string[] {
+  const belegt = new Set<string>();
+  const slugs: (string | null)[] = recs.map((r) => {
+    const s =
+      typeof r.slug === "string" ? r.slug : bekannt.get(String(r.name ?? ""));
+    if (s === undefined) return null;
+    if (belegt.has(s))
+      throw new Error(`Slug doppelt: ${s} (${String(r.name)})`);
+    belegt.add(s);
+    return s;
+  });
+  return slugs.map((s, i) => {
+    if (s !== null) return s;
+    const r = recs[i]!;
+    const basis = (r.release as { slug?: unknown } | undefined)?.slug;
+    if (typeof basis !== "string" || !basis)
+      throw new Error(
+        `Datensatz ohne slug und ohne release.slug: ${String(r.name)}`,
+      );
+    const stufe = String(r.suffix ?? "")
+      .split(",")
+      .map((t) => t.trim().toLowerCase().replace(/\s+/g, "-"))
+      .find((t) => STUFEN.test(t));
+    const kandidaten = [
+      stufe && stufe !== "max" && stufe !== "reasoning"
+        ? `${basis}-${stufe}`
+        : basis,
+      ...(stufe ? [`${basis}-${stufe}`] : []),
+      slugify(String(r.name ?? "")),
+    ];
+    const frei = kandidaten.find((k) => k && !belegt.has(k));
+    if (!frei)
+      throw new Error(
+        `Kein freier Slug für ${String(r.name)}: ${kandidaten.join(", ")}`,
+      );
+    belegt.add(frei);
+    return frei;
+  });
 }
 
 async function hole(): Promise<string> {
@@ -311,10 +404,22 @@ const lesIndex = (): Eintrag[] => {
 
 const jetzt = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
 
+/** Name → Slug aus allen archivierten Boards; bei Streit gewinnt das neueste. */
+function bekannteSlugs(index: readonly Eintrag[]): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const e of [...index].reverse())
+    for (const r of JSON.parse(
+      readFileSync(join(HIER, e.file), "utf8"),
+    ) as Record<string, unknown>[])
+      if (typeof r.name === "string" && typeof r.slug === "string")
+        if (!m.has(r.name)) m.set(r.name, r.slug);
+  return m;
+}
+
 async function main() {
   const html = await hole();
-  const ms = parseModels(html);
   const index = lesIndex();
+  const ms = parseModels(html, bekannteSlugs(index));
   const letzter = index.at(-1);
   pruefeFelder(
     ms,

@@ -61,12 +61,12 @@ const sources = [
   {
     href: "https://cursor.com/docs/models-and-pricing",
     label: "Cursor: Modelle und Preise",
-    note: "Modell-Liste des Anbieter-Filters, Rohseite samt „Hidden by default“, abgerufen 28.10.2026, unverändert am 31.10.",
+    note: "Modell-Liste des Anbieter-Filters, Rohseite samt „Hidden by default“, abgerufen 16.11.2026 (66 Modelle, neu: Claude Fable 5.2, Gemini 4 Carbon und Hydrogen)",
   },
   {
     href: "https://docs.devin.ai/desktop/models",
     label: "Windsurf: unterstützte Modelle",
-    note: "dito; die Rohseite models.md lässt die Tabelle seit 28.10.2026 leer, Liste deshalb aus den Tabellendaten der HTML-Seite, im Browser gegengeprüft (Stand 05.11.2026, abgerufen 09.11.2026, 259 Modelle, Pro-Tarif). Die Tabelle gilt als vollständig: 67 ältere Einträge früherer Abrufe, die dort fehlen, sind aus dem Filter entfernt; docs.windsurf.com leitet seit der Übernahme hierher",
+    note: "dito; die Rohseite models.md lässt die Tabelle seit 28.10.2026 leer, Liste deshalb aus den Tabellendaten der HTML-Seite, im Browser gegengeprüft (Stand 09.11.2026, abgerufen 16.11.2026, 269 Modelle, Pro-Tarif). Die Tabelle gilt als vollständig: 67 ältere Einträge früherer Abrufe, die dort fehlen, sind aus dem Filter entfernt; docs.windsurf.com leitet seit der Übernahme hierher",
   },
   {
     href: "https://www.jetbrains.com/help/ai-assistant/supported-llms.html",
@@ -81,7 +81,7 @@ const sources = [
   {
     href: "https://junie.jetbrains.com/whats-new",
     label: "Junie: What's new",
-    note: "datierte Modell-Neuzugänge (04.09., 22.09., 29.09., 16.10., 28.10.2026)",
+    note: "datierte Modell-Neuzugänge (04.09., 22.09., 29.09., 16.10., 28.10., 09.11., 10.11., 13.11.2026)",
   },
   {
     href: "https://news.ycombinator.com/item?id=49528037",
@@ -169,7 +169,7 @@ const caveats = [
   },
   {
     lead: "Artificial-Analysis-Ansichten:",
-    text: "Nur auf der Folie „Welches Modell wofür?“, Menü „Ansicht“, beim Öffnen Intelligenz × Kosten. Der Intelligence Index mischt Wissen, Logik und Agenten-Aufgaben und misst kein Coding-Agenten-Verhalten wie DeepSWE; „Kosten pro Task“ heißt dort Ø Kosten eines Index-Durchlaufs (Listenpreis × Tokenverbrauch, USD, hier zu 0,876 €), kein SWE-Task — die €-Werte sind mit denen der DeepSWE-Historie nicht vergleichbar. DeepSWE selbst steht dort nicht mehr: Das Board wird seit September 2026 nicht mehr gepflegt. AA führt jede Effort-Stufe als eigenen Eintrag; das Chart nimmt je Modell die mit dem höchsten Index, bei Gleichstand die billigere, und zeigt 29 Modelle mit Index ≥ 25 (die Seite trägt 283 Einträge, 93 aktive mit Kosten; 28 weitere aus v4 umgerechnet). Seit Ende Oktober 2026 rechnet AA mit Intelligence Index v5 und misst nur einen Teil der Modelle neu. Wo ein v5-Wert fehlt, kommen Index und Kosten aus dem letzten v4-Stand (01.10.2026), umgerechnet über ein Potenzgesetz, das aus den Modellen mit Werten in beiden Ständen gefittet ist — eine Näherung für die Präsentation, keine Messung: hohl und gestrichelt, die typische Abweichung steht im Tooltip. v4- und v5-Zahlen sind sonst nicht vergleichbar. Der Index steht auf eine Nachkommastelle, weil auf ganze Punkte gerundet viele Modelle gleichauf lägen. Tempo = Ø Output-Tokens/s über alle Lastprofile, die AA misst, Ende zu Ende samt Wartezeit bis zum ersten Token. So rechnet AA seit 03.11.2026; vorher war es der Median eines Profils mit 10 000 Input-Tokens, und die neuen Werte liegen typisch rund 20 % darunter. Modelle ohne Tempo-Wert fehlen in der Tempo-Ansicht und haben in der Kostenansicht keinen Halo. Die Tempo-Ansicht rechnet intern mit der Zeit je 1 000 Tokens, damit die Front-Logik unverändert bleibt; die Achse trägt tok/s, schnell links. Der Kontingent-Schalter gilt dort mit ×0,8 (dauerhaft +25 % seit 14.09.). Der Anbieter-Filter gilt in beiden Ansichten mit derselben Katalogliste je Werkzeug (Stand 28.10.2026, Windsurf 09.11.2026, Junie 02.11.2026); ein Modell, das ein Werkzeug nicht führt, fehlt dort in jeder Ansicht.",
+    text: "Nur auf der Folie „Welches Modell wofür?“, Menü „Ansicht“, beim Öffnen Intelligenz × Kosten. Der Intelligence Index mischt Wissen, Logik und Agenten-Aufgaben und misst kein Coding-Agenten-Verhalten wie DeepSWE; „Kosten pro Task“ heißt dort Ø Kosten eines Index-Durchlaufs (Listenpreis × Tokenverbrauch, USD, hier zu 0,876 €), kein SWE-Task — die €-Werte sind mit denen der DeepSWE-Historie nicht vergleichbar. DeepSWE selbst steht dort nicht mehr: Das Board wird seit September 2026 nicht mehr gepflegt. AA führt jede Effort-Stufe als eigenen Eintrag; das Chart nimmt je Modell die mit dem höchsten Index, bei Gleichstand die billigere, und zeigt 31 Modelle mit Index ≥ 25 (die Seite trägt 290 Einträge, 105 aktive mit Kosten; 25 weitere aus v4 umgerechnet). Seit Ende Oktober 2026 rechnet AA mit Intelligence Index v5 und misst nur einen Teil der Modelle neu. Wo ein v5-Wert fehlt, kommen Index und Kosten aus dem letzten v4-Stand (01.10.2026), umgerechnet über ein Potenzgesetz, das aus den Modellen mit Werten in beiden Ständen gefittet ist — eine Näherung für die Präsentation, keine Messung: hohl und gestrichelt, die typische Abweichung steht im Tooltip. v4- und v5-Zahlen sind sonst nicht vergleichbar. Der Index steht auf eine Nachkommastelle, weil auf ganze Punkte gerundet viele Modelle gleichauf lägen. Tempo = Ø Output-Tokens/s über alle Lastprofile, die AA misst, Ende zu Ende samt Wartezeit bis zum ersten Token. So rechnet AA seit 03.11.2026; vorher war es der Median eines Profils mit 10 000 Input-Tokens, und die neuen Werte liegen typisch rund 20 % darunter. Modelle ohne Tempo-Wert fehlen in der Tempo-Ansicht und haben in der Kostenansicht keinen Halo. Die Tempo-Ansicht rechnet intern mit der Zeit je 1 000 Tokens, damit die Front-Logik unverändert bleibt; die Achse trägt tok/s, schnell links. Der Kontingent-Schalter gilt dort mit ×0,8 (dauerhaft +25 % seit 14.09.). Der Anbieter-Filter gilt in beiden Ansichten mit derselben Katalogliste je Werkzeug (Stand 16.11.2026, JetBrains AI 28.10.2026); ein Modell, das ein Werkzeug nicht führt, fehlt dort in jeder Ansicht.",
   },
   {
     lead: "Board-Default:",
@@ -177,7 +177,7 @@ const caveats = [
   },
   {
     lead: "Ältere Modelle bei AA:",
-    text: "Ein Produkt bringt Modelle mit, die das aktuelle Feld nicht zeigt. Je Modellfamilie und Ansicht gilt die beste Konfiguration: gemessen vor geschätzt, dann höchster Index, dann billiger bzw. schneller — sonst hätte ein Label in zwei Ansichten zwei verschiedene Werte. Kein von AA geschätzter Index hat einen Kostenwert (0 von 483). AA liefert abgekündigte Modelle nicht mehr aus; ihre Werte sind der v4-Stand vom 01.10.2026, auf v5 umgerechnet, und können veraltet sein. In der Tempoansicht fehlen sie: AA misst Tempo seit 03.11.2026 anders, und ein v4-Tempo stünde neben Werten der neuen Methodik. Der Punkt ist die höchste Effort-Stufe der Familie; ein Produkt bietet nicht immer alle an (Windsurf führt jede einzeln).",
+    text: "Ein Produkt bringt Modelle mit, die das aktuelle Feld nicht zeigt. Je Modellfamilie und Ansicht gilt die beste Konfiguration: gemessen vor geschätzt, dann höchster Index, dann billiger bzw. schneller — sonst hätte ein Label in zwei Ansichten zwei verschiedene Werte. Kein von AA geschätzter Index hat einen Kostenwert (0 von 480). AA liefert abgekündigte Modelle nicht mehr aus; ihre Werte sind der v4-Stand vom 01.10.2026, auf v5 umgerechnet, und können veraltet sein. In der Tempoansicht fehlen sie: AA misst Tempo seit 03.11.2026 anders, und ein v4-Tempo stünde neben Werten der neuen Methodik. Der Punkt ist die höchste Effort-Stufe der Familie; ein Produkt bietet nicht immer alle an (Windsurf führt jede einzeln).",
   },
   {
     lead: "Anbieter-Filter und Produkte:",

@@ -145,7 +145,7 @@ describe("mindestzahl", () => {
     const w = CATALOGS.windsurf.models;
     expect(w.some((x) => x.evidence)).toBe(false);
     expect(mindestzahl("windsurf", w)).toBe(Math.ceil(0.8 * w.length));
-    expect(mindestzahl("windsurf", w)).toBe(208); // ⌈0,8 × 259⌉
+    expect(mindestzahl("windsurf", w)).toBe(216); // ⌈0,8 × 269⌉, seit 16.11.2026
   });
 });
 

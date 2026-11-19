@@ -67,33 +67,42 @@ describe("coverage", () => {
     // (claude-haiku-4.5, claude-sonnet-4.5, gemini-2.5-pro, gemini-3.1-pro,
     // grok-4.5), Tempo 3 (o3, gemini-3.1-pro, gpt-5.3-codex), DesignArena
     // Preis 11, Zeit 7.
+    // 16.11.2026: Cursor +3 Familien (claude-fable-5.2, gemini-4-carbon,
+    // gemini-4-hydrogen), Windsurf +1 (claude-fable-5.2), Junie +4 (dazu
+    // gpt-6.1-sol). Seit dem AA-Stand 16.11.2026 misst AA auch claude-fable-5.2
+    // und gemini-4-hydrogen: Cursor zeichnet 39 statt 37, Windsurf 37 statt 36,
+    // Junie alle 17. Im Tempo-Chart fehlt nur Junies gpt-6-astra-Verwandtschaft
+    // nicht mehr; claude-fable-5.1 fiel aus dem v5-Stand und zählt bei
+    // JetBrains AI (Kosten, Tempo) nicht mehr als gezeichnet.
     "aa-cost": {
-      cursor: [54, 36],
-      windsurf: [53, 36],
+      cursor: [57, 39],
+      windsurf: [54, 37],
       "jetbrains-ai": [42, 25],
-      junie: [13, 13],
+      junie: [17, 17],
     },
     // Seit 09.11.2026 ohne Tempo für Modelle, die nur der v4-Stand kennt: deren
     // Wert stammt aus der alten AA-Methodik (`aaData.ts`, „Tempo seit 03.11.2026“).
     "aa-speed": {
-      cursor: [54, 15],
-      windsurf: [53, 17],
-      "jetbrains-ai": [42, 9],
-      junie: [13, 10],
+      cursor: [57, 17],
+      windsurf: [54, 17],
+      "jetbrains-ai": [42, 8],
+      junie: [17, 13],
     },
-    // DesignArena (09.11.2026): Preise hat jedes Modell des Boards, Zeiten nur
-    // ältere — Junie zeigt in der Tempoansicht deshalb ein einziges Modell.
+    // DesignArena (16.11.2026): Preise hat jedes Modell des Boards, und seit
+    // diesem Stand auch eine Zeit fast jedes (82 von 83; am 09.11.2026 nur 28
+    // ältere). Die Tempoansicht zeigt deshalb fast so viele Modelle wie die
+    // Preisansicht; Junie 17 statt 1.
     "da-cost": {
-      cursor: [54, 39],
-      windsurf: [53, 33],
+      cursor: [57, 42],
+      windsurf: [54, 34],
       "jetbrains-ai": [42, 27],
-      junie: [13, 13],
+      junie: [17, 17],
     },
     "da-speed": {
-      cursor: [54, 17],
-      windsurf: [53, 9],
-      "jetbrains-ai": [42, 11],
-      junie: [13, 1],
+      cursor: [57, 42],
+      windsurf: [54, 33],
+      "jetbrains-ai": [42, 27],
+      junie: [17, 17],
     },
   };
 
@@ -134,12 +143,17 @@ describe("coverage", () => {
   });
 
   it("nennt bei DesignArena, ob das Modell fehlt oder nur seine Zeit", () => {
+    // Seit 16.11.2026 trägt fast jedes DesignArena-Modell eine Zeit; bei
+    // Cursor fehlt keines mehr nur wegen der Zeit (bis 09.11.: Opus 5.5).
     const cur = new Map(
       missingByReason(coverage("cursor", VARIANTS["da-speed"])),
     );
     expect(cur.get("nicht bei DesignArena")).toContain("Composer 2.5");
-    expect(cur.get("keine Zeitangabe bei DesignArena")).toEqual(
-      expect.arrayContaining([expect.stringMatching(/Opus 5\.5/)]),
+    const ws = new Map(
+      missingByReason(coverage("windsurf", VARIANTS["da-speed"])),
+    );
+    expect(ws.get("keine Zeitangabe bei DesignArena")).toEqual(
+      expect.arrayContaining([expect.stringMatching(/DeepSeek V4 Pro/)]),
     );
   });
 });
@@ -183,7 +197,7 @@ describe("Texte für eine Auswahl", () => {
 
   it("der Absatz nennt die berechnete Leiter des Produkts, billigste zuerst, und die Zahlen", () => {
     const t = text(leadFor(cost, jb));
-    expect(t).toContain("gpt-5-mini 0,11 € (≈ 7,7) → gpt-6-luna 0,13 € (27,9)");
+    expect(t).toContain("gpt-5-mini 0,11 € (≈ 8,1) → gpt-6-luna 0,13 € (27,9)");
     expect(t).toContain("claude-opus-5.5 8,79 € (59,1)");
     expect(t).toContain("JetBrains AI: 4 von 25 auf der Front, die übrigen 21");
   });
@@ -199,12 +213,13 @@ describe("Texte für eine Auswahl", () => {
     const t = text(leadFor(V, { ...s, front }));
     expect(t).toContain("Wo Du wartest");
     // neun Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
+    // Stand 16.11.2026; die Auswahl sind die ersten neun Modelle mit Tempo.
     expect(t).toContain(
-      "muse-wonder 121 tok/s → step-5 135 tok/s → deepseek-v4.1-flash-1017 145 tok/s",
+      "claude-opus-5.5 116 tok/s → muse-wonder 118 tok/s → step-5 124 tok/s",
     );
     expect(t).not.toContain("(≈");
-    expect(t.indexOf("gemini-3.8-flash")).toBeGreaterThan(-1);
-    expect(t.indexOf("gemini-3.8-flash")).toBeLessThan(
+    expect(t.indexOf("gemini-4-hydrogen")).toBeGreaterThan(-1);
+    expect(t.indexOf("gemini-4-hydrogen")).toBeLessThan(
       t.indexOf("claude-haiku-5.5"),
     );
   });

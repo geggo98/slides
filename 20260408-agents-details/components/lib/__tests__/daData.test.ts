@@ -170,12 +170,12 @@ describe("daData — Modelle und Stufen", () => {
 
 // Die Fronten, die Lead-Text und Sprechernotizen nennen. Bewegt sich eine mit
 // einem neuen Snapshot, muss der Text nach (Runbook, Schritt 5).
-describe("daData — Fronten (Stand 09.11.2026)", () => {
+describe("daData — Fronten (Stand 16.11.2026)", () => {
   it("Preisansicht", () => {
     expect(paretoFront(DA_COST).front.map((p) => p.label)).toStrictEqual([
       "minimax-m3.1-flash",
       "inkling-2-small",
-      "deepseek-v4.1-flash",
+      "qwen4-max",
       "gpt-6.1-sol",
       "claude-opus-5.5",
     ]);
@@ -183,9 +183,9 @@ describe("daData — Fronten (Stand 09.11.2026)", () => {
 
   it("Tempoansicht", () => {
     expect(paretoFront(DA_SPEED).front.map((p) => p.label)).toStrictEqual([
-      "grok-4.3",
-      "gemini-3.1-pro-preview",
-      "claude-fable-5",
+      "gpt-6-sol",
+      "deepseek-v4.1-flash",
+      "claude-opus-5.5",
     ]);
   });
 
@@ -227,11 +227,12 @@ describe("daData — Fronten (Stand 09.11.2026)", () => {
   it("die Tempo-Ticks sprechen von Minuten, schnell links", () => {
     const V = VARIANTS["da-speed"];
     expect(V.xTicks.map(V.xTickLabel)).toStrictEqual([
-      "2 min",
-      "3 min",
-      "5 min",
-      "8 min",
-      "12 min",
+      "10 min",
+      "15 min",
+      "20 min",
+      "30 min",
+      "40 min",
+      "60 min",
     ]);
   });
 });

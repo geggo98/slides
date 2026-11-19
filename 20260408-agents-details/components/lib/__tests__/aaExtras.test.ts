@@ -81,10 +81,14 @@ describe("Extras", () => {
     // 89 statt 96 seit 09.11.2026: sieben Familien standen nur in den 67
     // entfallenen Windsurf-Einträgen (gpt-5.3-codex-spark, grok-code-fast-1,
     // inkling, penguin, swe-1.7-lightning, xai-grok-3, xai-grok-3-mini).
-    expect(PRODUCT_FAMILIES.size).toBe(89);
+    // 92 seit 16.11.2026: claude-fable-5.2 (Cursor, Windsurf, Junie),
+    // gemini-4-carbon (Cursor, Junie) und gemini-4-hydrogen (Cursor, Junie).
+    expect(PRODUCT_FAMILIES.size).toBe(92);
     // 31 statt 32 und 7 statt 8: inkling (nur Windsurf, entfallen) hatte
     // Kosten- und Tempowert.
-    expect(AA_EXTRAS_COST.length).toBe(31);
+    // 32 seit 16.11.2026: claude-fable-5.1 fiel aus dem v5-Stand und steht nur
+    // noch als umgerechneter v4-Wert unter den Extras.
+    expect(AA_EXTRAS_COST.length).toBe(32);
     // Seit 09.11.2026 nur noch einstellig statt 50: Modelle, die nur der
     // v4-Stand kennt, haben kein Tempo mehr (alte AA-Methodik, `aaData.ts`).
     expect(AA_EXTRAS_SPEED.length).toBe(7);
@@ -177,20 +181,27 @@ describe("Front je Produkt", () => {
     ]);
   });
 
-  it("Kosten: Junie führt dieselbe Spitze wie der Markt, Windsurf ebenfalls", () => {
+  it("Kosten: Junie führt seit 16.11. die Spitze des Markts, Windsurf endet ebenfalls mit Fable 5.2", () => {
+    // Junie führt seit 16.11.2026 gpt-6.1-sol (Landingpage), gemini-4-carbon
+    // (whats-new 10.11.2026) und claude-fable-5.2 (09.11.). Carbon (4,80 €)
+    // verdrängt gpt-6-astra (5,47 €, 56,9), Fable 5.2 steht oben.
     expect(front("aa-cost", "junie")).toStrictEqual([
       "gpt-6-luna",
       "gpt-6.1-terra-non-reasoning",
       "gpt-6.1-terra",
-      "gpt-6-astra",
-      "claude-opus-5.5",
+      "gpt-6.1-sol",
+      "gemini-4-carbon",
+      "claude-fable-5.2",
     ]);
-    expect(front("aa-cost", "windsurf").at(-1)).toBe("claude-opus-5.5");
+    expect(front("aa-cost", "windsurf").at(-1)).toBe("claude-fable-5.2");
   });
 
-  it("Kosten: Cursor endet mit Sonnet 5.5 und Opus 5.5", () => {
+  it("Kosten: Cursor endet seit 16.11. mit Gemini 4 Carbon und Fable 5.2", () => {
+    // Bis 09.11.2026 endete die Leiter mit Sonnet 5.5 und Opus 5.5; seit
+    // 16.11.2026 führt Cursor gemini-4-carbon (dominiert beide) und
+    // claude-fable-5.2 (64,6 bei 23,25 €).
     const f = front("aa-cost", "cursor");
-    expect(f.slice(-2)).toStrictEqual(["claude-sonnet-5.5", "claude-opus-5.5"]);
+    expect(f.slice(-2)).toStrictEqual(["gemini-4-carbon", "claude-fable-5.2"]);
   });
 
   it("Tempo: JetBrains AI hat zwei Sprossen, Sonnet 5.5 vorn", () => {
@@ -245,10 +256,14 @@ describe("Front je Produkt", () => {
       if (kosten.has(p.label)) expect(p.y, p.label).toBe(kosten.get(p.label));
   });
 
-  it("Junie steht in beiden Ansichten auf der Front mit dem neuesten Claude", () => {
+  it("Junie: Tempoleiter mit dem neuesten Claude, seit 16.11. mit Hydrogen vorn und Fable 5.2 oben", () => {
+    // gemini-4-carbon (62 tok/s) steht hinter claude-fable-5.2 (109 tok/s,
+    // 64,6) nicht mehr auf der Leiter.
     expect(front("aa-speed", "junie")).toStrictEqual([
+      "gemini-4-hydrogen",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
+      "claude-fable-5.2",
     ]);
   });
 });

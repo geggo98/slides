@@ -66,14 +66,14 @@
 // der alten Methodik kommen nie neben solche der neuen: umgerechnete v4-Zeilen,
 // die im aktuellen Stand fehlen, haben deshalb kein Tempo (`migrateV4`).
 
-import raw from "../data/artificialanalysis/board-20261109-cfee77fd.json";
+import raw from "../data/artificialanalysis/board-20261116-30ad854c.json";
 import rawV4 from "../data/artificialanalysis/board-20261001-ae520e03.json";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const AA_BOARD = "board-20261109-cfee77fd.json";
+export const AA_BOARD = "board-20261116-30ad854c.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const AA_STAND = "09.11.2026";
+export const AA_STAND = "16.11.2026";
 export const AA_URL = "https://artificialanalysis.ai/leaderboards/models";
 /** Wie bei DeepSWE: ein fester Kurs (Stand 21.07.2026), keine Kursbewegung. */
 export const USD_EUR = 0.876;
@@ -403,11 +403,22 @@ const sub = (c: AaCfg, eur: number) =>
   c.creator === "Anthropic" ? r2(eur * SUB_FACTOR) : undefined;
 
 /** Variante `aa-cost`: x = €/Task. */
+/**
+ * Punkte der Kostenansicht, die ihr Label behalten, obwohl sie auf keiner
+ * Front stehen (Rang 1 im Platzierer, `story`). gemini-4-argon: Die Notizen
+ * erzählen seine Geschichte (Programm „Fairwind“, verdoppelte Kosten). Bis
+ * 09.11.2026 stand es auf der Cursor-Front und hatte damit Rang 0; seit
+ * Cursor gemini-4-carbon führt (Katalog 16.11.2026), fiel sein Label beim
+ * Einschalten des Kontingent-Overlays weg (`labelLayout.test.ts`).
+ */
+const AA_STORY: ReadonlySet<string> = new Set(["gemini-4-argon"]);
+
 export const AA_COST: Pt[] = AA_CFGS.map((c) => {
   const eur = r2(c.usd * USD_EUR);
   return P(c.label, eur, idx(c), {
     sub: sub(c, eur),
     tps: c.tps !== null ? Math.round(c.tps) : undefined,
+    story: AA_STORY.has(c.label) || undefined,
     ...umgerechnet(c),
   });
 }).sort((a, b) => a.x - b.x);

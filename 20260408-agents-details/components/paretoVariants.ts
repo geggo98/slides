@@ -140,33 +140,37 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 
 // --- AA-Skalen -------------------------------------------------------------
 // Dieselbe Bühne wie die Historien-Folie (932 × 306), nur andere Achsen:
-// Kosten log von 0,04 € bis 22 € (am 31.10.2026 kleinster Punkt 0,11 €, größter
-// 9,50 €; der Rand rechts gibt den Labels von Carbon und Opus Platz), der
-// Index (v5) linear von 22 bis 66 (am 09.11.2026 Punkte 26,1 bis 60,0). Bis
-// 02.11. reichte 64; mit Carbon auf 60,0 und Opus auf 59,1 fand das Label von
-// claude-opus-5.5 darunter keinen Platz mehr (65 reichte nicht, 67 brach das
-// Overlay). Ein yMin > 0 spart die untere Hälfte der Achse, in der kein Modell
-// liegt.
+// Kosten log von 0,08 € bis 40 € (am 16.11.2026 kleinster Punkt 0,11 €, größter
+// 23,25 € mit claude-fable-5.2; bis 09.11. reichte 0,04 € bis 22 €), der
+// Index (v5) linear von 24 bis 68 (am 16.11.2026 Punkte 26,7 bis 64,6). Bis
+// 09.11. lief die Achse von 22 bis 66; Fable 5.2 (64,6) braucht darüber Platz
+// für sein Label. Den unteren Rand hat der 16.11. von 0,04 € auf 0,08 € und
+// von 22 auf 24 gehoben: Unten links drängen sich mimo-v2.6-flash, muse-ember
+// und gpt-6-luna, und gpt-6.1-terra-non-reasoning fand dort keinen Platz mehr
+// (0,04 €: 0 gültige Pfeilpositionen, 0,08 €: 35). Ein yMin > 0 spart die untere
+// Hälfte der Achse, in der kein Modell liegt.
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 22,
-  xLog: { min: 0.04 },
-  yMin: 22,
-  yMax: 66,
+  xMax: 40,
+  xLog: { min: 0.08 },
+  yMin: 24,
+  yMax: 68,
 });
 // x = 1000/tps: am 31.10.2026 4,3 s (235 tok/s) bis 32,4 s (31 tok/s,
 // kimi-k3.1-pro) je 1 000 Tokens; am 09.11.2026 (neue AA-Tempo-Methodik)
-// 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro.
+// 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro. Am 16.11.2026
+// kommt muse-ember mit 2,3 s (439 tok/s) dazu, deshalb beginnt die Achse bei
+// 2 s statt 3 s, und der Index reicht bis 68 (claude-fable-5.2: 64,6).
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
-  xLog: { min: 3 },
+  xLog: { min: 2 },
   yMin: 22,
-  yMax: 62,
+  yMax: 68,
 });
 
-const AA_COST_TICKS = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10];
+const AA_COST_TICKS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
 const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
 const TPS_TICKS = [300, 200, 100, 60, 40, 30];
@@ -214,9 +218,13 @@ const speedFront = paretoFront(AA_SPEED).front;
 // Dieselbe Bühne wie AA. Kosten: Mischpreis log von 0,15 $ bis 40 $ (am
 // 09.11.2026 0,26 $ bis 20 $), Elo linear von 1115 bis 1470 (Punkte 1200 bis
 // 1459; bis 31.10.2026 reichte 1430, dann kam claude-opus-5.5 (high) mit
-// 1459). Tempo: Sekunden log von 80 s bis 1 000 s (Punkte 112 s bis 772 s),
-// Elo 880 bis 1300 (Punkte 1011 bis 1271) — der Boden liegt dort tiefer, weil
-// nur ältere Modelle eine Zeit tragen (`daData.ts`). Unter den Punkten bleibt
+// 1459). Tempo: Sekunden log von 300 s bis 6 000 s (am 16.11.2026 Punkte
+// 445 s bis 3 797 s), Elo wie bei den Kosten 1010 bis 1470. Bis 09.11.2026
+// reichte die Achse von 80 s bis 1 000 s und Elo ab 880: Damals trugen nur
+// ältere Modelle eine Zeit. Seit 16.11.2026 führt DesignArena sie für fast
+// alle Modelle, und die Werte liegen weit höher — bei den 28 Modellen, die
+// in beiden Ständen eine Zeit haben, im Median rund 4-mal so hoch (1,4- bis
+// 75-mal). Einen Grund nennt die Seite nicht. Unter den Punkten bleibt
 // jeweils ein freier Streifen für den Pfeilcluster.
 const DA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
@@ -227,14 +235,14 @@ const DA_COST_SCALE: Scale = makeScale({
 });
 const DA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 1000,
-  xLog: { min: 80 },
-  yMin: 880,
-  yMax: 1300,
+  xMax: 6000,
+  xLog: { min: 300 },
+  yMin: 1010,
+  yMax: 1470,
 });
 const DA_COST_TICKS = [0.2, 0.5, 1, 2, 5, 10, 20];
 /** Sekunden-Positionen, beschriftet in Minuten. */
-const DA_SPEED_TICKS = [120, 180, 300, 480, 720];
+const DA_SPEED_TICKS = [600, 900, 1200, 1800, 2400, 3600];
 
 const usdT = (p: Pt) => `${p.eur} $`;
 const minuten = (s: number) => `${dez1(s / 60)} min`;
@@ -269,6 +277,13 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Leistungsfähiger",
         better: "Besseres Preis-Leistungs-Verhältnis",
       },
+      // 16.11.2026: Mit der Skala 0,08–40 € / 24–68 (Fable 5.2 oben, muse-ember
+      // unten links) passt nur noch ein Knoten rechts der Front in der Mitte:
+      // Gitter 10 × 7 × 5 × 7 über Knoten und Ziel mit denselben Prüfungen wie
+      // die Tests (beide Overlay-Zustände, Layout mit und ohne Kontext, Cluster
+      // ganz im Plot, über keinem Marker): 35 Treffer, alle mit Knoten
+      // (0,5 €, 46) oder (0,5 €, 50). Gewählt (0,5 €, 46) → Ziel (0,13 €, 56).
+      //
       // v5 (31.10.2026): Unter dem Knoten vom 28.10. (3 €, 32) liegen jetzt
       // glm-5.3-flash, deepseek-v4.1-flash-1017, step-5 und ling-3.1-flash-1019,
       // unter dem Schaft „Leistungsfähiger“ kimi-k3.1-pro. Gitter 17 × 11 × 17 × 11
@@ -278,9 +293,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // Terra; frei ist die leere Ecke links über ihr — Knoten (0,33 €, 43),
       // Ziel (0,08 €, 53,5). Dort zeigen die Pfeile in den Bereich, den kein
       // Modell erreicht, und kreuzen die Front nicht.
-      hubX: (s) => s.px(0.33),
-      hubY: (s) => s.py(43),
-      target: (s) => ({ x: s.px(0.08), y: s.py(53.5) }),
+      hubX: (s) => s.px(0.5),
+      hubY: (s) => s.py(46),
+      target: (s) => ({ x: s.px(0.13), y: s.py(56) }),
     },
     axisTitle:
       "Ø Kosten pro Task (EUR, log. Skala) — Artificial Analysis Intelligence Index",
@@ -317,7 +332,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     ],
     ariaIntro:
       "Streudiagramm Artificial-Analysis-Intelligence-Index gegen Kosten pro Task in Euro, " +
-      "x-Achse logarithmisch von 0,04 bis 22 Euro, unterteilt in vier Quadranten: " +
+      "x-Achse logarithmisch von 0,08 bis 40 Euro, unterteilt in vier Quadranten: " +
       "Sweet Spot (billig und stark), Leistung um jeden Preis (teuer und stark), Budget-Ecke " +
       "(billig und schwach), Geldverbrennung (teuer und schwach). Stand " +
       AA_STAND,
@@ -360,9 +375,14 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // (xMax 40 für kimi-k3.1-pro): Knoten (19,45 s ≈ 51 tok/s, 42) rechts
       // unter der Front, Ziel (16,85 s ≈ 59 tok/s, 52); „Schneller“ endet bei
       // ≈ 9 s, rechts von allen Frontpunkten unter Index 45.
-      hubX: (s) => s.px(19.45),
+      // 16.11.2026: muse-ember (2,3 s) und claude-fable-5.2 (Index 64,6)
+      // brachten die Skala auf 2–40 s und 24–68; der alte Knoten lag unter
+      // muse-wonder und gpt-6.1-sol. Gitter 9 × 7 × 7 × 7 mit denselben
+      // Prüfungen wie die Tests: 21 Treffer, alle mit Knoten bei 30 s (≈ 33
+      // tok/s). Gewählt Knoten (30 s, 42) → Ziel (20 s, 48).
+      hubX: (s) => s.px(30),
       hubY: (s) => s.py(42),
-      target: (s) => ({ x: s.px(16.85), y: s.py(52) }),
+      target: (s) => ({ x: s.px(20), y: s.py(48) }),
     },
     axisTitle:
       "Ø Output-Tokens/s (Ende zu Ende, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",
@@ -485,9 +505,9 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     // werden, sonst stünde „2 min“ bei 100 s.
     xTickLabel: (x) =>
       Number.isInteger(x / 60) ? `${x / 60} min` : minuten(x),
-    yTicks: [1000, 1050, 1100, 1150, 1200, 1250],
+    yTicks: [1200, 1250, 1300, 1350, 1400, 1450],
     yTickLabel: String,
-    split: { x: 300, y: 1125 },
+    split: { x: 1200, y: 1275 },
     quadrants: quadrantsWith({
       sweet: "Schnell & beliebt",
       price: "Beliebt, aber langsam",
@@ -500,12 +520,15 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
         stronger: "Beliebter",
         better: "Schneller & beliebter",
       },
-      // Ebenso unter allen Punkten (tiefster 1011) und mittig, weil rechts unten
-      // Punkte und die Überschrift „Langsam & unbeliebt“ stehen. yMin 880 statt
-      // 900 und Knoten 910, aus demselben Grund wie bei da-cost.
-      hubX: (s) => s.px(350),
-      hubY: (s) => s.py(910),
-      target: (s) => ({ x: s.px(160), y: s.py(945) }),
+      // Unter allen Punkten (Boden 1200 seit 16.11.2026), Knoten rechts wie bei
+      // da-cost. Gitter über Knoten (350–5000 s × 1030–1100) × Ziel (320–1000 s
+      // × 1080–1190), mit Kasten-Test gegen Marker, Quadranten-Überschriften
+      // und Labels: Es passen nur Knoten bei 3000–5000 s und 1070–1100; links
+      // kreuzt „Schneller & beliebter“ Punkte oder „Schnell, aber unbeliebt“.
+      // Gewählt die Mitte der freien Fläche (16.11.2026).
+      hubX: (s) => s.px(3000),
+      hubY: (s) => s.py(1080),
+      target: (s) => ({ x: s.px(450), y: s.py(1120) }),
     },
     axisTitle:
       "Ø Generierungszeit (log. Skala, links = schneller) — DesignArena-Elo",
@@ -519,26 +542,30 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       {
         t: `DesignArena Overall Agentic · Stand ${DA_STAND} · Tempo = Ø Zeit einer Generierung · `,
       },
-      {
-        t: `${DA_NO_TIME.length} Modelle der Preisansicht ohne Zeitangabe, darunter alle neuen (Hover)`,
-        title: DA_NO_TIME.join(", "),
-      },
+      DA_NO_TIME.length
+        ? {
+            t: `${DA_NO_TIME.length} Modelle der Preisansicht ohne Zeitangabe (Hover)`,
+            title: DA_NO_TIME.join(", "),
+          }
+        : { t: "jedes Modell der Preisansicht hat eine Zeitangabe" },
       {
         t: ` · je Modell die beste Stufe · Elo ≥ ${DA_FLOOR.speed} · Quadranten redaktionell · Quelle: `,
       },
     ],
     attribution: DA_ATTRIBUTION,
     lead: [
-      { t: "Tempo misst DesignArena nur für ältere Modelle:", b: true },
+      { t: "Tempo heißt hier: Ø Zeit einer Generierung.", b: true },
       {
-        t: ` ${DA_NO_TIME.length} der ${DA_COST.length} Modelle der Preisansicht haben keine Zeit, die Spitze fehlt ganz. Was bleibt: `,
+        t: ` ${DA_COST.length - DA_NO_TIME.length} der ${DA_COST.length} Modelle der Preisansicht haben eine. Die Front: `,
       },
       ...leiter(daSpeedFront, (p) => `${minuten(p.x)} (${p.y})`),
-      { t: ". Ein Stand der Generation davor, keine Empfehlung für heute." },
+      {
+        t: ". Seit dem Stand vom 16.11.2026 liegen die Zeiten weit über den früheren; vergleichbar sind nur Werte desselben Stands.",
+      },
     ],
     ariaIntro:
       "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, " +
-      "x-Achse logarithmisch von 80 Sekunden bis 1000 Sekunden, schnellere Modelle stehen links, unterteilt in vier Quadranten. Stand " +
+      "x-Achse logarithmisch von 5 Minuten bis 100 Minuten, schnellere Modelle stehen links, unterteilt in vier Quadranten. Stand " +
       DA_STAND,
     ariaFit:
       "Streudiagramm DesignArena-Elo gegen durchschnittliche Generierungszeit, x-Achse logarithmisch, schnellere Modelle links, Achsen an die Auswahl angepasst, die Quadranten-Linien liegen auf dem Median der Auswahl. Stand " +

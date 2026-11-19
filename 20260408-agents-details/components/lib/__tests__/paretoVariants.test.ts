@@ -163,7 +163,7 @@ describe("aaData — die beiden Punktmengen", () => {
 
   it("liegt über dem Boden und zählt so viele Modelle, wie die Quellen-Notiz nennt", () => {
     for (const c of AA_CFGS) expect(c.index).toBeGreaterThanOrEqual(AA_FLOOR);
-    expect(AA_COST.length).toBe(29);
+    expect(AA_COST.length).toBe(31);
     const v5 = JSON.parse(
       readFileSync(
         join(import.meta.dirname, "../../../data/artificialanalysis", AA_BOARD),
@@ -180,8 +180,8 @@ describe("aaData — die beiden Punktmengen", () => {
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „273 Einträge, 74 aktive mit Kosten; 38 weitere aus v4
-    // umgerechnet“ und „27 Modelle“.
+    // Die Notiz nennt „290 Einträge, 105 aktive mit Kosten; 25 weitere aus v4
+    // umgerechnet“ und „31 Modelle“ (Stand 16.11.2026).
     expect(src).toContain(
       `${v5.length} Einträge, ${gemessen} aktive mit Kosten; ${umgerechnet} weitere aus v4 umgerechnet`,
     );
@@ -208,7 +208,8 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
+    // qwen4-max (neu am 16.11.2026) trägt noch keinen Tempo-Wert bei AA.
+    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019", "qwen4-max"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -227,21 +228,27 @@ describe("aaData — die beiden Punktmengen", () => {
   });
 
   it("hat die Fronten, die die Speaker Notes nennen", () => {
+    // Stand 16.11.2026: muse-ember (neu, 36,0 bei 0,12 €) verdrängt gpt-6-luna
+    // und gpt-6.1-terra-non-reasoning, claude-fable-5.2 (neu, 64,6) steht oben.
     expect(paretoFront(AA_COST).front.map((p) => p.label)).toStrictEqual([
       "mimo-v2.6-flash",
-      "gpt-6-luna",
-      "gpt-6.1-terra-non-reasoning",
+      "muse-ember",
       "claude-haiku-5.5",
       "gpt-6.1-terra",
       "gpt-6.1-sol",
-      "gpt-6-astra",
       "gemini-4-carbon",
+      "claude-fable-5.2",
     ]);
+    // Tempo: muse-ember (439 tok/s) und gemini-4-hydrogen (neu, 173 tok/s bei
+    // 53,9) sind dazugekommen; gemini-4-carbon (62 tok/s) steht hinter
+    // claude-fable-5.2 (109 tok/s, 64,6) nicht mehr auf der Front.
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
+      "muse-ember",
       "claude-haiku-5.5",
+      "gemini-4-hydrogen",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
-      "gemini-4-carbon",
+      "claude-fable-5.2",
     ]);
     // Auf beiden Fronten nur gemessene v5-Werte, keine aus v4 umgerechneten.
     for (const p of [
@@ -444,14 +451,15 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
     expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
     // JetBrains AI führt seit dem Katalog vom 28.10. auch GPT-6 und Opus 5.5
-    // des aktuellen Felds.
+    // des aktuellen Felds. claude-fable-5.1 fehlt seit 16.11.2026: AA führt es
+    // nicht mehr in v5 (am 09.11. gemessen mit 49,2), es steht nur noch als
+    // umgerechneter v4-Wert unter den Extras des Presets.
     expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([
       "gpt-6-luna",
       "gpt-6.1-sol",
       "gemini-3.8-flash",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
-      "claude-fable-5.1",
     ]);
   });
 });
