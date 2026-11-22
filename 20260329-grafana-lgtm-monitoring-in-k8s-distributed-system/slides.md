@@ -1805,7 +1805,7 @@ LGTM beobachtet die **Plattform**, Sentry die **Applikation aus Entwicklersicht*
 <SentryCompare />
 
 <div class="text-slate-500" style="margin-top: 0.4em; font-size: 0.65em;">
-Stand 10/2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ (App-Ebene, kein OTLP-Ingest) · Self-Hosted-Anforderungen laut getsentry/self-hosted
+Stand 10/2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ (App-Ebene, kein OTLP-Ingest) · Self-Hosted-Anforderungen laut getsentry/self-hosted · Burn-Rate-Alerting im Detail: <Link to="mwmbr-alerting">Bonus MWMBR</Link>
 </div>
 
 <!--
@@ -1814,7 +1814,10 @@ Stand 10/2026 · Sentry Logs GA seit 09/2025 · „Application Metrics“ (App-E
   (Metriken, SLOs, Cluster).
 - Klick-Demo 1: Sentry × „Metriken & SLO/Burn-Rate“ — Custom-Metrics-Beta
   10/2024 eingestellt, neue Application Metrics (App-Ebene), kein
-  OTLP-Metrics-Ingest, kein natives Burn-Rate-Alerting.
+  OTLP-Metrics-Ingest, kein natives Burn-Rate-Alerting. Der Grund steht
+  im Anhang „Bonus: Multi-Window, Multi-Burn-Rate Alerting“ (Link in der
+  Fußzeile): Ein Sentry-Monitor hat ein Fenster von höchstens 1 Tag und
+  lässt sich nicht per AND mit einem zweiten verknüpfen.
 - Klick-Demo 2: Sentry × „K8s“ — sentry-kubernetes (Beta) macht aus
   K8s-Events Sentry-Errors, mehr nicht.
 -->
@@ -1839,7 +1842,7 @@ hideInToc: true
 **Faustregel:** LGTM alarmiert auf Symptom und SLO; Sentry gruppiert die Ursache im Code und hängt das Ticket dran.
 
 <div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
-Burn-Rate-Policy zum Ausprobieren: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref>
+Burn-Rate-Policy zum Ausprobieren: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref> · Wie die Policy rechnet und wer sie liefert: <Link to="mwmbr-alerting">Bonus MWMBR</Link>
 </div>
 
 <!--
@@ -1850,6 +1853,276 @@ Burn-Rate-Policy zum Ausprobieren: <TalkXref slug="20260711-sre-simulations" anc
   Lane der Policy (Burn 1× über 3 Tage).
 - Deep-Link öffnet die BurnRateSim aus dem SRE-Sim-Deck — dort zeigen,
   wann die Aufgabe-Lane feuert.
+- Der zweite Link springt in den folgenden Anhang: Burn-Rate-Rechnung,
+  Fenster-Geometrie und die Einordnung Grafana, Sentry, Zusatzsystem.
+-->
+
+---
+layout: section
+routeAlias: mwmbr-alerting
+---
+
+# Bonus: Multi-Window, Multi-Burn-Rate Alerting
+
+SLO-Alarme nach dem SRE Workbook — und was Grafana, Sentry oder ein Zusatzsystem davon liefern
+
+<!--
+- Anschluss an die Sentry-Sektion: Dort hieß es „kein natives
+  Burn-Rate-Alerting“. Dieser Anhang zeigt, was Burn-Rate-Alerting ist
+  und warum Sentry es nicht abbilden kann.
+- Abkürzung MWMBR = Multi-Window, Multi-Burn-Rate: mehrere Schwellen
+  (Burn Rates), jede über zwei Fenster geprüft.
+- Faktenstand aller Folien dieser Sektion: 22.11.2026, Primärquellen roh
+  gelesen (sre.google, grafana.com/docs, docs.sentry.io, getsentry/sentry).
+-->
+
+---
+hideInToc: true
+routeAlias: mwmbr-idee
+---
+
+# Burn Rate: wie schnell das Fehlerbudget schwindet
+
+<style>
+.mwmbr-idee table {
+  font-size: 0.8em;
+}
+.mwmbr-idee table td,
+.mwmbr-idee table th {
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+.mwmbr-idee p,
+.mwmbr-idee li {
+  font-size: 0.9em;
+}
+</style>
+
+<div class="mwmbr-idee">
+
+**Burn Rate = Fehlerquote / (1 − SLO).** Bei einem SLO von 99,9 % über 30 Tage verbrauchen 0,1 % Fehler das Budget genau in 30 Tagen: Burn 1. Ein Schwellwert auf die Fehlerquote allein feuert bei jedem kurzen Ausreißer oder verschläft den langsamen Verbrauch.
+
+| Stufe  | Langes Fenster | Kurzes Fenster | Burn θ | Budget verbraucht, wenn der Alarm feuert | Budget leer nach |
+| ------ | -------------- | -------------- | ------ | ---------------------------------------- | ---------------- |
+| Alarm  | 1 h            | 5 min          | 14,4   | 2 %                                      | 50 h             |
+| Alarm  | 6 h            | 30 min         | 6      | 5 %                                      | 5 d              |
+| Ticket | 24 h           | 2 h            | 3      | 10 %                                     | 10 d             |
+| Ticket | 3 d            | 6 h            | 1      | 10 %                                     | 30 d             |
+
+- **θ = Budgetanteil × 720 h / langes Fenster**, zum Beispiel 2 % × 720 h / 1 h = 14,4
+- **Langes Fenster:** legt fest, wie viel Budget beim Alarm verbraucht ist, und filtert kurze Ausreißer
+- **Kurzes Fenster** (Faustregel 1/12 des langen): prüft, ob das Budget noch brennt, und beendet den Alarm kurz nach der Erholung
+- Ein Alarm feuert nur, wenn **beide** Fenster über θ liegen
+
+</div>
+
+<div class="text-slate-500" style="margin-top: 0.4em; font-size: 0.62em;">
+Google SRE Workbook, Kap. 5 „Alerting on SLOs“: Table 5-8 nennt die Zeilen 14,4 / 6 / 1; die Bedingung 3× (24 h / 2 h) steht nur im PromQL-Beispiel desselben Kapitels · „Budget leer nach“ = 30 d / θ · abgerufen 22.11.2026
+</div>
+
+<!--
+- Burn Rate in einem Satz (SRE Workbook): „how fast, relative to the SLO, the
+  service consumes the error budget“. Burn 1 = Budget hält genau die
+  Periode. Burn 1000 bei 99,9 % = Totalausfall, Budget leer nach 43 min.
+- Herleitung der Schwellen vorrechnen: 2 % · 720 / 1 = 14,4;
+  5 % · 720 / 6 = 6; 10 % · 720 / 24 = 3; 10 % · 720 / 72 = 1.
+- Alarm oder Ticket (SRE Workbook): Leert die Störung das Budget in Stunden
+  oder wenigen Tagen, wird jemand geweckt. Sonst reicht ein Ticket für
+  den nächsten Arbeitstag.
+- Vierte Zeile: Table 5-8 hat nur drei Zeilen. Die 3×-Bedingung steht im
+  PromQL-Beispiel; Sloth, Grafana SLO und SoundCloud nutzen alle vier.
+- 1/12 ist eine Faustregel des SRE Workbooks („a good guideline“), dort
+  nicht hergeleitet.
+- Grenzen nennen, falls gefragt: Bei 10 Requests pro Stunde ergibt ein
+  einzelner Fehler Burn 100 und verbraucht 13,9 % des Budgets (das
+  SRE Workbook druckt hier irrtümlich „1,000x“). Bei SLO 90 % erreicht ein
+  Totalausfall nur Burn 10, die 14,4×-Stufe kann nie feuern.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: mwmbr-explorer
+---
+
+# Zwei Fenster, eine Schwelle — Interaktiv
+
+<MwmbrExplorer />
+
+<div class="sim-xref">
+
+Simulation mit Quiz und Reglern: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref>
+
+</div>
+
+<!--
+- Aufbau: oben die Fehlerquote des Szenarios, darunter für die gewählte
+  Regel die Burn Rate im langen und im kurzen Fenster gegen θ, unten je
+  Regel die Zeitleiste „feuert / feuert nicht“. Rechts der Zustand am
+  Zeitzeiger: beide Fenster, UND-Gatter, Budgetverbrauch, Alarm oder Ticket.
+- Die Komponente zeigt die drei Regeln aus Table 5-8 (14,4 / 6 / 1).
+- Ablauf 1, Szenario „Kurzer Spike“ (15 % Fehler für 10 min), Schalter „lang ∧ kurz“: Zeitzeiger über den
+  Beginn ziehen. Das kurze Fenster überschreitet θ fast sofort, das lange
+  erst nach einigen Minuten — erst dann feuert die Regel.
+- Ablauf 2, Schalter „nur lang“: Der Alarm bleibt nach Ende der Störung
+  fast eine Stunde stehen, weil die Fehler noch im 1-h-Fenster liegen.
+  SRE-Workbook-Beispiel: 15 % Fehler für 10 min, Reset erst nach etwa 60 min.
+- Ablauf 3, Schalter „nur kurz“: Der Alarm endet schnell, feuert aber
+  schon bei Ausreißern, die kaum Budget kosten.
+- Kernaussage: Das lange Fenster liefert die Präzision, das kurze die
+  kurze Reset-Zeit. Erst das AND liefert beides.
+- Totalausfall bei 99,9 %: Die 14,4×-Regel feuert nach etwa 52 s, die
+  6×-Regel nach 2,2 min, die 1×-Regel nach 4,3 min.
+- Quiz, Regler für SLO und Notfall-Fenster: im SRE-Sim-Deck (Deep-Link).
+-->
+
+---
+hideInToc: true
+routeAlias: mwmbr-promql
+---
+
+# MWMBR als Regel: Mimir-Ruler oder Grafana-managed
+
+<style>
+.mwmbr-rule pre {
+  font-size: 0.74em;
+}
+.mwmbr-rule ul {
+  font-size: 0.72em;
+  margin-top: 0.2em;
+}
+</style>
+
+<div class="mwmbr-rule">
+
+```yaml
+groups:
+  - name: slo-quote-service # SLO 99,9 % → Fehlerbudget 0.001
+    rules:
+      - record: job:slo_errors_per_request:ratio_rate5m # je Fenster eine Recording Rule
+        expr: sum by (job) (rate(slo_errors[5m])) / sum by (job) (rate(slo_requests[5m]))
+      - alert: ErrorBudgetBurn
+        expr: |
+          (   job:slo_errors_per_request:ratio_rate1h  > (14.4 * 0.001)   # langes Fenster
+          and job:slo_errors_per_request:ratio_rate5m  > (14.4 * 0.001) ) # kurzes Fenster
+          or
+          (   job:slo_errors_per_request:ratio_rate6h  > (6 * 0.001)
+          and job:slo_errors_per_request:ratio_rate30m > (6 * 0.001) )
+        labels:
+          severity: alarm # zweite Regel mit severity: ticket für 3× (24h/2h) und 1× (3d/6h)
+```
+
+- **Kein `for`:** Das SRE Workbook rät davon ab. Ein `for: 1h` meldet einen Totalausfall erst, wenn 140 % des Budgets verbraucht sind; das kurze Fenster ersetzt die Wartezeit.
+- **Grafana-managed:** je Fenster eine Query, dann Reduce und ein Math-Ausdruck wie `$A > 0.0144 && $B > 0.0144`. Das Fenster bestimmt der Range-Selektor in PromQL, nicht der Zeitbereich der Oberfläche.
+- **Generieren statt schreiben:** Sloth erzeugt die vier SRE-Workbook-Bedingungen. Pyrra rechnet mit 14 / 7 / 2 / 1 über 28 Tage und setzt `for`. Grafana SLO (Cloud) legt je SLO 10 bis 12 Recording Rules an.
+
+</div>
+
+<!--
+- Der Ausdruck folgt dem PromQL-Beispiel des SRE Workbooks (Ansatz 6): zwei
+  Paare aus langem und kurzem Fenster, im Paar per `and`, die Paare per
+  `or`. Die Ticket-Regel hat denselben Aufbau mit 24h/2h (3×) und 3d/6h (1×).
+- 14.4 * 0.001: Schwelle θ mal Fehlerbudget. Für ein anderes SLO ändert
+  sich nur der zweite Faktor, etwa 0.005 bei 99,5 %.
+- Recording Rules: vier für die Alarm-Regel (5m, 30m, 1h, 6h), sieben mit
+  allen vier Bedingungen (dazu 2h, 24h, 3d). Jede trägt die Labels der
+  Gruppierung, die Kardinalität multipliziert sich.
+- Warum kein `for`: Bei Flattern setzt sich der Timer zurück, der Alarm
+  feuert dann nie (SRE Workbook, Ansatz 3). Pyrra und SoundCloud setzen
+  trotzdem ein `for`, das ist eine bewusste Abweichung.
+- Grafana-managed: Quelle ist der Grafana-Blog „How to implement
+  multi-window, multi-burn-rate alerts with Grafana Cloud“ (2025).
+- Ohne Inhibition schickt ein Totalausfall mehrere Notifications, weil
+  alle Stufen feuern. Inhibition für Grafana-managed Alerts gibt es erst
+  ab Grafana 13 und nur per API; davor braucht sie einen externen
+  Alertmanager.
+- 28 statt 30 Tage: Sloths 28-d-Katalog rechnet mit 13,44 / 5,6 / 2,8 /
+  0,93. Ob Grafana SLO (Default 28 d) die Faktoren skaliert, sagt die
+  Doku nicht.
+-->
+
+---
+clicks: false
+hideInToc: true
+routeAlias: alerting-einordnung
+---
+
+# Wer alarmiert was? Grafana, Sentry, Zusatzsystem
+
+<AlertingScope />
+
+<div class="text-slate-500" style="margin-top: 0.4em; font-size: 0.62em;">
+Sentry „Monitors & Alerts“: GA seit 07.05.2026 · Quellen: grafana.com/docs, docs.sentry.io, getsentry/sentry (Code und Issue #126639)
+</div>
+
+<!--
+- Zwei Tabs: „Wer übernimmt was?“ (Matrix Grafana · Sentry ·
+  Zusatzsystem) und „Wann ist ein Zusatzsystem nötig?“ (zwölf Auslöser). Zellen und Auslöser sind klickbar.
+- Klick-Demo 1: Sentry × „Zwei Fenster per AND“. Ein Monitor wertet ein
+  Aggregat über ein Fenster aus, höchstens 1 Tag. Monitore lassen sich
+  nicht per AND verknüpfen. Damit ist MWMBR in Sentry ausgeschlossen,
+  ebenso ein Budget über 28 oder 30 Tage.
+- Klick-Demo 2: Grafana × „Routing & Inhibition“. Notification Policies
+  ja, Inhibition für Grafana-managed Alerts erst ab Grafana 13, nur per API.
+- Klick-Demo 3: Grafana × „On-Call & Eskalation“. Grafana Alerting kennt
+  keine Rotation. Grafana Cloud IRM ist ein kostenpflichtiges Add-on,
+  OnCall OSS ist seit 24.03.2026 archiviert.
+- Sentrys Stärken liegen woanders: Issue-Gruppierung, Regressionen pro
+  Release, Crash-free-Rate (Fenster ab 1 h), Uptime und Cron.
+- „nicht geprüft“ und „Einschätzung“ in den Detailtexten sind ernst
+  gemeint: Dort fehlt eine wörtliche Primärquelle.
+-->
+
+---
+hideInToc: true
+routeAlias: alerting-zusatzsystem
+---
+
+# Wann ein Zusatzsystem nötig ist
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 0.8em 0; font-size: 0.82em;">
+<Callout tone="danger">
+<h4 style="color: #ef4444; margin: 0 0 8px;">Immer: Dead Man's Switch</h4>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Läuft LGTM im überwachten Cluster, fällt es mit ihm aus. Ein Watchdog-Alert (<code>vector(1)</code>) sendet dauernd an einen Empfänger <b>außerhalb</b> von Cluster, Cloud-Account und Alerting-Stack. Bleibt das Signal aus, alarmiert der Empfänger.</p>
+</Callout>
+<Callout tone="warning">
+<h4 style="color: #f59e0b; margin: 0 0 8px;">Ab Rufbereitschaft: Alarmierungs-System</h4>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Dienstplan, Quittierung und Eskalation per Telefon oder SMS liefern weder Grafana Alerting noch Sentry. Optionen: Grafana Cloud IRM, PagerDuty, incident.io. Grafana OnCall OSS ist seit 24.03.2026 archiviert.</p>
+</Callout>
+<Callout tone="info">
+<h4 style="color: #3b82f6; margin: 0 0 8px;">Erst bei Größe</h4>
+<p class="text-slate-500 dark:text-slate-400" style="margin: 0;">Korrelation derselben Störung aus mehreren Quellen, eine SLO-Plattform für viele SLOs, ein auditierbares Incident-Register (DORA; Versicherungsvermittler, die KMU sind, sind ausgenommen) und eine extern gehostete Statusseite.</p>
+</Callout>
+</div>
+
+**Faustregel:** Grafana alarmiert auf SLO-Burn, Infrastruktur und Business-Schwellen. Sentry alarmiert auf neue Exceptions, Regressionen pro Release, Crash-free-Rate, Uptime und Cron. Ein Zusatzsystem braucht es, sobald ein Mensch nachts zuverlässig geweckt werden muss — und für den Fall, dass das Monitoring selbst ausfällt.
+
+<div class="text-slate-500" style="margin-top: 0.6em; font-size: 0.7em;">
+Die Policy als Simulation mit Quiz: <TalkXref slug="20260711-sre-simulations" anchor="slo-burn-rate">SRE-Simulationen — SLO-Burn-Rate</TalkXref> · Alle zwölf Auslöser: <Link to="alerting-einordnung">Tab „Wann ist ein Zusatzsystem nötig?“ der vorigen Folie</Link>
+</div>
+
+<!--
+- Dead Man's Switch: Muster aus kube-prometheus (Watchdog-Regel
+  `expr: vector(1)`). Empfänger zum Beispiel IRM-Heartbeat,
+  Healthchecks.io oder Dead Man's Snitch. Auch das SaaS-Alarmierungs-System fällt aus:
+  Grafana IRM hat am 05.06.2026 etwa 5,4 Stunden lang nicht alarmiert.
+  Deshalb den Heartbeat bei einem anderen Anbieter halten.
+- Alarmierungs-System: Alertmanager kennt Zeitfenster, aber keine Rotation. Eine neue
+  IRM-Integration hat zunächst keine Escalation Chain, man muss sie
+  anhängen. Für ein einzelnes Team gibt es kostenlose Pläne (PagerDuty
+  Free: 5 Nutzer, 1 Schedule; incident.io Basic). Sentry leitet an
+  PagerDuty oder Opsgenie weiter; Opsgenie endet am 05.04.2027.
+- Erst bei Größe: Korrelation über Quellen etwa mit Keep (Open Source)
+  oder im Alarmierungs-System. Eine SLO-Plattform lohnt sich erst bei vielen SLOs über
+  mehrere Datenquellen (Nobl9 Teams: 14.950 $ pro Jahr für 50 SLO Units).
+- DORA: Die KMU-Ausnahme gilt nur für Versicherungsvermittler, andere
+  Finanzunternehmen fallen unabhängig von der Größe unter DORA.
+  KMU-Schwelle unter 250 Personen und höchstens 50 Mio. € Umsatz
+  oder 43 Mio. € Bilanzsumme. Darüber verlangt DORA ein Register aller
+  IKT-Vorfälle mit Klassifizierung und Meldung (Art. 17 bis 19).
+- Für unseren Kontext (ein Team, ein Cluster): MWMBR in Mimir, Sentry
+  für die Applikationssicht, ein externer Heartbeat. Ein Alarmierungs-System
+  kommt hinzu, sobald es eine Rufbereitschaft gibt.
 -->
 
 ---
@@ -1859,7 +2132,7 @@ hideInToc: true
 
 # Danke
 
-Quellen: Google SRE Book · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs · Grafana Pyroscope Docs · Sentry Docs · Strathern (1997) · Manheim & Garrabrant (2018) · Taleb (2012) · Darwin Gödel Machine (2025)
+Quellen: Google SRE Book · Google SRE Workbook, Kap. 5 „Alerting on SLOs“ · Brendan Gregg (USE) · Tom Wilkie (RED) · Grafana Docs (Alerting, SLO, IRM) · Grafana Pyroscope Docs · Sentry Docs (Monitors & Alerts) · Sloth · Pyrra · Strathern (1997) · Manheim & Garrabrant (2018) · Taleb (2012) · Darwin Gödel Machine (2025)
 
 Alle Simulationen zum Ausprobieren: <TalkXref slug="20260711-sre-simulations">SRE-Simulationen — Komplexe Systeme interaktiv</TalkXref>
 
