@@ -1,0 +1,86 @@
+{
+  "arms": {
+    "F": {
+      "short": "Neu schreiben",
+      "tag": "",
+      "long": "Neu schreiben, offen: Das Modell schreibt die ganze Liste neu, vereinfacht sie und lässt Überflüssiges weg. Keine Auflage, Auslöser und Token zu erhalten."
+    },
+    "C": {
+      "short": "Neu mit Auflage",
+      "tag": "",
+      "long": "Neu schreiben mit Auflage: wie „Neu schreiben“, aber Auslöser (womit der Code endet) und Token jeder Regel, die die Ausgabe ändert, müssen wörtlich bleiben. Streichen darf das Modell nur Duplikate und Regeln ohne Wirkung auf die Ausgabe."
+    },
+    "D": {
+      "short": "Nur Änderungen",
+      "tag": "",
+      "long": "Nur Änderungen: Das Modell schreibt die Liste nicht neu, sondern liefert ein JSON mit remove, reword und add. Ein Skript wendet die Änderungen an; nicht genannte Regeln bleiben wörtlich."
+    },
+    "N": {
+      "short": "Abschreiben",
+      "tag": "Kontrolle",
+      "long": "Abschreiben (Kontrolle): Das Modell gibt die Liste unverändert wieder, nur ohne den Fülltext. Zeigt, wie viel Verlust schon das bloße Weiterreichen kostet."
+    }
+  },
+  "chains": {
+    "luna": {
+      "F": {
+        "00": "fällt auf 0 von 4, am Ende 2 von 4",
+        "01": "schwankt, am Ende 3 von 4",
+        "02": "ab Runde 1 ohne Gebote",
+        "03": "ab Runde 4 bei 0 von 4",
+        "04": "erst stabil, am Ende 1 von 4",
+        "05": "sinkt stetig auf 1 von 4",
+        "06": "schwankt, am Ende 4 von 4",
+        "07": "fast stabil, am Ende 4 von 4",
+        "08": "ab Runde 4 bei 0 von 4",
+        "09": "ab Runde 2 bei 0 von 4"
+      },
+      "C": {
+        "00": "schwankt, am Ende 2 von 4",
+        "01": "ab Runde 2 bei 1 von 4",
+        "02": "sinkt auf 1 von 4",
+        "03": "sinkt, am Ende 2 von 4",
+        "04": "bricht sofort ein, 1 von 4",
+        "05": "stabil, 4 von 4",
+        "06": "schwankt, am Ende 1 von 4",
+        "07": "fast stabil, 3 von 4",
+        "08": "Gebot B gestrichen, 0 von 4",
+        "09": "stabil, 4 von 4"
+      },
+      "D": {
+        "00": "ab Runde 3 ohne Gebote",
+        "01": "ab Runde 1 ohne Gebote",
+        "02": "ab Runde 1 ohne Gebote",
+        "03": "ab Runde 2 leere Liste",
+        "04": "ab Runde 3 ohne Gebote",
+        "05": "ab Runde 2 ohne Gebote",
+        "06": "ab Runde 2 ohne Gebote",
+        "07": "ab Runde 4 ohne Gebote",
+        "08": "ab Runde 2 ohne Gebote",
+        "09": "ab Runde 6 ohne Gebote"
+      },
+      "N": {
+        "00": "Kopie, immer 4 von 4",
+        "01": "Kopie, 3 von 4 in Runde 2+4",
+        "02": "Kopie, 3 von 4 in Runde 2+6",
+        "03": "Kopie, 3 von 4 in Runde 2+4",
+        "04": "Kopie, 3 von 4 in Runde 2+4",
+        "05": "Kopie, 3 von 4 in Runde 4",
+        "06": "Kopie, 3 von 4 in Runde 1",
+        "07": "Kopie, 3 von 4 in Runde 2",
+        "08": "Kopie, 3 von 4 in Runde 4",
+        "09": "Kopie, 3 von 4 in Runde 2"
+      }
+    },
+    "terra": {
+      "F": {
+        "00": "15 Regeln, 17 von 17",
+        "01": "16 Regeln, am Ende 16 von 17",
+        "02": "16 Regeln, 17 von 17",
+        "03": "16 Regeln, 17 von 17",
+        "04": "zwischendurch 12 Regeln",
+        "05": "17 Regeln, 17 von 17"
+      }
+    }
+  }
+}

@@ -287,8 +287,7 @@ hideInToc: true
 
 # Ein Bugfix, Token für Token
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Zwei Dateien lesen, Bug fixen — der Context wächst mit **jeder** Iteration, wird komplett neu mitgeschickt und komplett neu **als Input abgerechnet**.
 
 </div>
@@ -365,13 +364,44 @@ hideInToc: true
 <ToolDefinitions />
 
 ---
+clicks: 2
+hideInToc: true
+---
+
+# Der User wartet, die Tools antworten
+
+<div class="text-sm opacity-70 mb-1">
+
+Eine Frage, vier Requests: Jedes Tool-Ergebnis startet die nächste Runde, ohne den User.
+
+</div>
+
+<ToolLoop :clicks="$clicks" />
+
+<!--
+Gleiches Szenario und gleiche Zahlen wie auf der Folie „Ein Bugfix, Token für Token“. Der schraffierte tools-Marker ist nicht maßstäblich: Keine Quelle der Folien trennt das tools-Array vom System-Prompt (4.000 Tokens); die Größen folgen auf den nächsten Folien (MCP: 17K–126K). Dateinamen und Tool-Parameter sind Beispiele, die IDs `toolu_01` bis `toolu_03` sind gekürzt.
+
+Ablauf: Klick 1 schickt die Frage ab und spielt die vier Requests ab. Klick 2 zeigt die Kosten. Ein Klick auf ein Kästchen zeigt unten, was an dieser Stelle übertragen wird.
+
+Das Tool antwortet nicht dem Modell. Das Harness führt das Tool aus und schickt das Ergebnis im nächsten Request mit, als `tool_result`-Block in einer Nachricht der Rolle `user`. Deshalb steht im Detail-Kasten „Tool → Harness“ und nicht „Tool → Modell“. Die Schleife endet, wenn die Antwort keinen `tool_use`-Block mehr enthält.
+
+Quellen, alle abgerufen am 22.11.2026:
+
+- Schleife mit `tool_use` und `tool_result`, Ergebnis in einer `user`-Nachricht: <https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls> („Add a `user` message with one `tool_result` block for each `tool_use` block“) und <https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works> („Repeat from step 2 while `stop_reason` is `"tool_use"`“).
+- Endpunkt `POST /v1/messages`: <https://platform.claude.com/docs/en/api/messages/create>
+- `tools`-Array mit `name`, `description` und `input_schema`: <https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools>
+- Claude-Code-Tools `Read` (`file_path`) und `Edit` (`file_path`, `old_string`, `new_string`): <https://code.claude.com/docs/en/tools-reference> und <https://code.claude.com/docs/en/agent-sdk/typescript> (Typen `FileReadInput` und `FileEditInput`).
+- Namensschema `mcp__<server>__<tool>` für MCP-Tools in Claude Code: <https://code.claude.com/docs/en/permissions> („To match one tool, write its full name, `mcp__<server>__<tool>`“).
+- GitHub-MCP-Tool `get_file_contents` mit `owner` und `repo` (Pflicht) und `path`: README von <https://github.com/github/github-mcp-server>. Der Servername `github` im Beispiel ist der Name, unter dem der Server in Claude Code eingetragen ist.
+-->
+
+---
 hideInToc: true
 ---
 
 # Wie viele Tools braucht ein Agent?
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Pi's 4 Tools (Read/Write/Edit/Bash) genügen — weil das Modell weiß, was `rg`, `find`, `curl` tut.
 
 </div>
@@ -384,8 +414,7 @@ hideInToc: true
 
 # Tool-Selection-Accuracy
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** löst das — mehr dazu am Ende dieses Kapitels.
 
 </div>
@@ -399,8 +428,7 @@ hideInToc: true
 
 # MCP Token-Bloat
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 MCP-Server saugen **17K–126K Tokens**, bevor der erste Tool-Call passiert — die Tool-Definitionen werden bei **jedem** Request neu injiziert. Praxis-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
@@ -414,8 +442,7 @@ routeAlias: token-oekonomie
 
 # Skills vs MCP: Faktor 40–1100×
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Skills: ~50 Tokens Frontmatter pro Skill. MCP: volle Tool-Definitionen bei jedem Request. Skills in der Praxis: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
@@ -428,8 +455,7 @@ hideInToc: true
 
 # MCP Token-Bloat: Wer löst das Problem?
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Nur 2 von 6 Agents haben automatisches Lazy-Loading. Die meisten setzen auf manuelles Filtern — oder ignorieren das Problem.
 
 </div>
@@ -442,8 +468,7 @@ hideInToc: true
 
 # Claude Code ToolSearch: Stand der Technik
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Seit v2.1.7 (Jan 2026): Aktiviert automatisch wenn MCP-Tools >10% des Context belegen. Seit v2.1.69: auch System-Tools deferred.
 
 </div>
@@ -549,6 +574,14 @@ Re-inject kürzlich gelesene Dateien (≤5K/Datei). Budget auf 50K zurück.
 </div>
 
 ---
+src: ./pages/context-rot-forschung.md
+---
+
+---
+src: ./pages/context-rot-luna.md
+---
+
+---
 layout: section
 ---
 
@@ -586,7 +619,7 @@ hideInToc: true
 
 ### Claude Code: AgentTool
 
-- **Tiefe 1** — Subagents spawnen keine eigenen Subagents
+- **Tiefe:** bis 3 Ebenen unter der Hauptsitzung (früher nur 1)
 - Jeder startet mit **frischer Conversation** (kein Parent-History)
 - Lädt eigenes System-Prompt und CLAUDE.md
 - Nur das **finale Summary** geht zurück an den Parent
@@ -648,8 +681,7 @@ hideInToc: true
 
 # Memory: Einfach schlägt komplex
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, hohe Effektivität).
 
 </div>
@@ -707,8 +739,7 @@ routeAlias: opusplan
 
 # `opusplan`: Opus plant, Sonnet führt aus
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Ein Modell-Alias in Claude Code — teure Intelligenz für den Plan, günstige Ausführung für den Rest.
 
 </div>
@@ -755,8 +786,7 @@ routeAlias: opusplan-wechsel
 
 # `opusplan`: Ersparnis & Break-even in Euro
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Die Behauptung der letzten Folie nachgerechnet — Median-Defaults aus 57 echten Opus→Sonnet-Sessions (30.08.–29.09.2026).
 
 </div>
@@ -1106,8 +1136,7 @@ clicks: 2
 
 # Codex: Ersparnis & Break-even in Euro
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Dieselbe Rechnung wie bei `opusplan` — gleiches Szenario, gleiche Regler (sie sind gekoppelt), nur der Effort wechselt statt des Modells.
 
 </div>
@@ -1329,8 +1358,7 @@ routeAlias: rewind-fork
 
 # Rewind & Fork: die billigen Operationen
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Einen Pfad verlassen oder verzweigen — ohne den Prefix neu zu bauen.
 
 </div>
@@ -1429,8 +1457,7 @@ routeAlias: cache-modi
 
 # Claude Code CLI: Drei Modi, drei Cache-Profile
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Derselbe Harness, drei Cache-Charakteristiken — wer das ignoriert, zahlt schnell 10×.
 
 </div>
@@ -1917,8 +1944,7 @@ clicks: 3
 
 # GPT-6 Astra: Die Effort-Falle
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Ein Modell, fünf Preise — und ein Preis, der sich seit dem Start schon
 verschoben hat, bevor auch nur ein zweites GPT-6-Modell auf dem Board
 gelandet ist.
@@ -2239,7 +2265,7 @@ Vom Token zum Retry: **Kosten entstehen multiplikativ.**
 </div>
 
 ---
-clicks: 6
+clicks: 7
 hideInToc: true
 routeAlias: fuenf-schleifen
 ---
@@ -2254,15 +2280,62 @@ Autonomie-Primitive (`/goal`, `/loop`): <TalkXref slug="20260327-ai-agents" anch
 
 </div>
 
+<!--
+Klick 0 bis 6 wie bisher: fünf Schleifen von innen nach außen, dann Formel und
+Merksatz. Wer die Workflow-Schicht nicht zeigen will, springt nach Klick 6 mit
+Pfeil-nach-unten direkt zur nächsten Folie. Pfeil-nach-rechts zeigt Klick 7.
+
+Klick 7, optional: die Workflow-Schicht (Stand 22.11.2026). Der Agent startet
+selbst Subagenten, etwa über ein Workflow-Tool oder das Agent-Tool. Jeder
+Subagent fährt eine eigene Agent-Schleife mit eigenem Kontextfenster und lädt
+System-Prompt, Tools und CLAUDE.md neu. Das ist der Bootstrap-Context.
+
+Warum sitzt die Schicht zwischen /goal und Agent-Loop? Der Agent löst den
+Fan-out selbst mitten in einem Turn aus, deshalb multiplizieren ihn Turns, Runs
+und Versuche. Und jeder Subagent durchläuft einen ganzen Agent-Loop, deshalb
+liegt die Schicht außen um den Agent-Loop. Sie ist gestrichelt, weil sie ein
+Zusatz ist: Die fünf Kernschleifen bleiben fünf. Genau genommen ist es
+Rekursion. Subagenten dürfen in Claude Code selbst wieder Subagenten starten,
+standardmäßig bis drei Ebenen unter der Hauptsitzung.
+
+Die drei Zahlen der Belegzeile:
+- 3–10× mehr Token als ein Einzelagent bei gleicher Aufgabe: Anthropic,
+  23.01.2026, interne Tests ohne veröffentlichte Methode. Die einzige
+  Herstellerzahl mit der Baseline „Einzelagent“.
+- ≈ 7× einer normalen Sitzung: Claude-Code-Doku zu Agent Teams, nur im Plan
+  Mode und ohne Angabe der Teamgröße. Agent Teams sind nicht dasselbe wie
+  Subagenten.
+- 94 % der Subagenten-Token sind erneut gelesener Kontext: Messung einer
+  Einzelperson über 858 Läufe (genau 94,4 %). Das sind Cache-Reads, sie kosten
+  ca. ein Zehntel des Input-Preises. Token sind hier also nicht gleich Kosten.
+
+Ehrlich bleiben: Kein Hersteller nennt einen Faktor für Subagenten in
+Coding-Agenten. Die oft zitierten 15× vergleichen mit einem Chat, nicht mit
+einem Einzelagenten. Unabhängige Messungen reichen von ca. 0,1× bis gut 6×: In
+einem Preprint brauchen 3 von 6 Frameworks (50 %) weniger Token als der
+Einzelagent. Die Architektur entscheidet, die Agentenzahl allein nicht. Details
+stehen hinter „Quellen ⓘ“.
+
+Hebel, in dieser Reihenfolge:
+1. Fan-out nur, wo Teilaufgaben unabhängig sind. Anthropic selbst: Coding hat
+   weniger wirklich parallelisierbare Aufgaben als Recherche.
+2. Kleines Modell für Subagenten. In einer Messung über 1 674 Sitzungen erbten
+   85 % der Subagenten das Hauptmodell, obwohl die meisten nur suchten.
+3. Knappe Rückgabe: Der Hauptagent zahlt jede Summary in jedem Folge-Request.
+4. Obergrenze setzen. Claude Code erlaubt standardmäßig 16 Workflow-Agenten
+   gleichzeitig und 1 000 je Lauf und warnt ab 25 Agenten oder 1,5 Mio. Token.
+5. Bootstrap klein halten, damit der Cache greift: Jeder Subagent liest ihn bei
+   jedem Turn neu.
+-->
+
 ---
 hideInToc: true
 ---
 
 # Die Rechnung: multiplikativ, nicht additiv
 
-<div class="text-sm opacity-70 mb-2">
-
-Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (Input $3/MTok · Cache-Write $3,75 · Cache-Read $0,30).
+<div class="text-sm opacity-70 mb-1">
+Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (Input $3/MTok · Cache-Write $3,75 · Cache-Read $0,30). Ohne Subagenten gerechnet: Fan-out käme als weiterer Faktor dazu.
 
 </div>
 
@@ -2313,6 +2386,14 @@ Output-Dimension bewusst weggelassen — die steckt in Kap. 2
 -->
 
 ---
+src: ./pages/erosion-forschung.md
+---
+
+---
+src: ./pages/erosion-luna.md
+---
+
+---
 layout: section
 ---
 
@@ -2345,8 +2426,7 @@ hideInToc: true
 
 # Source Leak: Codebase-Größen
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 <span v-click.hide>Balken zeigen die größten Module im Claude-Code-Leak.</span>
 <span v-after>Violette Linie = Pi's gesamte Codebase (~3K Zeilen). Claude Code's Bash-Security allein ist 3× so groß.</span>
 
@@ -2366,8 +2446,7 @@ hideInToc: true
 
 # Taxonomie: Brand-Verwirrung
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 "Gemini" ist 6 Produkte. "Codex" ist 7 Dinge. "Pi" ist 3 völlig verschiedene Produkte mit identischem Namen.
 
 </div>
@@ -2380,8 +2459,7 @@ hideInToc: true
 
 # Architektur-Radar
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Sechs Harnesses, sechs Philosophien. Klick in der Legende zum Ein-/Ausblenden. Höher ≠ besser.
 
 </div>
@@ -2395,8 +2473,7 @@ routeAlias: api-grenze
 
 # Gemessen an der API-Grenze: Claude Code vs. OpenCode
 
-<div class="text-sm opacity-70 mb-2">
-
+<div class="text-sm opacity-70 mb-1">
 Logging-Proxy zwischen Harness und Model-Endpoint (Systima, 07/2026) — exakte Payloads + Usage-Blöcke, 273 hash-verkettete Records.
 
 </div>
