@@ -288,6 +288,7 @@ hideInToc: true
 # Ein Bugfix, Token für Token
 
 <div class="text-sm opacity-70 mb-1">
+
 Zwei Dateien lesen, Bug fixen — der Context wächst mit **jeder** Iteration, wird komplett neu mitgeschickt und komplett neu **als Input abgerechnet**.
 
 </div>
@@ -415,6 +416,7 @@ hideInToc: true
 # Tool-Selection-Accuracy
 
 <div class="text-sm opacity-70 mb-1">
+
 Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** löst das — mehr dazu am Ende dieses Kapitels.
 
 </div>
@@ -429,6 +431,7 @@ hideInToc: true
 # MCP Token-Bloat
 
 <div class="text-sm opacity-70 mb-1">
+
 MCP-Server saugen **17K–126K Tokens**, bevor der erste Tool-Call passiert — die Tool-Definitionen werden bei **jedem** Request neu injiziert. Praxis-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
