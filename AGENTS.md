@@ -376,11 +376,38 @@ recalled. Two habits, both learned the hard way on the model-routing slides:
 Date every list you write down (`retrieved: "YYYY-MM-DD"`), and say what the
 source does not tell you.
 
-## Slide Text
+## Which Model Does What on Slides
 
-Write slide text — headings, body copy, speaker notes and the info texts inside
-components — with Opus, and apply the `technical-writing` skill. This holds for
-subagents that produce slide text too: set `model: opus` on them.
+This rule applies to every deck in this repo, existing and future, not only to
+the monitoring deck.
+
+| Work                                                                                                                                          | Model                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Slide text: headings, body copy, speaker notes, and every string inside a component (labels, tooltips, info popovers, matrix cells, captions) | Opus (`model: opus`), with the `technical-writing` skill |
+| Slide design: layout, visual composition, the look of a slide                                                                                 | Fable (`model: fable`)                                   |
+| Design of interactive parts, illustrations and complex animations: explorables, simulators, diagrams, SVG or canvas visuals, transitions      | Fable (`model: fable`)                                   |
+
+The table holds for subagents too: set `model` explicitly on each one.
+
+**Fable designs, Opus writes the strings in that design.** Fable builds the
+component with placeholders or bare structure, and Opus writes or replaces the
+strings. Alternatively, Opus writes the text first and the brief passes it to
+Fable.
+
+- **Origin:** user request of 22.11.2026: "folientext bitte mit opus, folien
+  design mit fable. entwurf von interaktiven teilen, illustrationen oder
+  komplexe animationen bitte auch mit fable." Earlier that day the user had
+  asked for Fable on all slides and illustrations, then narrowed it to this
+  split. The user stated that it applies to the whole project.
+- **Rationale:** the `technical-writing` skill, section "Which Model Writes":
+  Fable 5.1 and 5.2 do not write text that people read.
+- **Limits:** code that implements a finished design (Vue, CSS, TypeScript
+  logic, tests) is not covered; it follows the global fallback
+  `model-selection.md`. Data and labels without prose (IDs, units) are not text
+  that people read. The global fallback otherwise requires approval for Fable
+  per workflow. The user set this rule as standing for all decks, so it is that
+  approval for the design work named in the table, and in this repo it replaces
+  the per-workflow approval for that work. It does not extend to other tasks.
 
 ## Tooling Preferences
 
