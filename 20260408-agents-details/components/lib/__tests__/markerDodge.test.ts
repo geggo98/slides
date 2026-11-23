@@ -187,10 +187,11 @@ describe("Marker-Entzerrung", () => {
   it("lässt auf der Hauptfolie die festen Marker unter beiden Overlay-Zuständen gleich — außer dem, den ein Claude-Punkt verdeckt", () => {
     // Seit 31.10.2026 weicht ein fester Marker mit aus, wenn ein verschiebbarer
     // ihn verdeckt (`yieldFixed`): bis 09.11.2026 lag claude-opus-5.5 mit
-    // Kontingent fast auf gemini-4-carbon. Am 16.11.2026 kostet Carbon bei AA
-    // 4,80 € statt 6,79 € und Opus mit Kontingent 7,03 €: Kein Claude-Punkt
-    // verdeckt mehr einen festen, die Liste ist leer. Jeder feste Marker bleibt,
-    // wo er war.
+    // Kontingent fast auf gemini-4-carbon. Am 16.11.2026 kostete Carbon bei AA
+    // 4,80 € statt 6,79 €, die Liste war leer. Seit 23.11.2026 steht Carbon
+    // wieder bei 6,79 € (Listenpreis 4/20 statt 2/10 USD), Opus mit
+    // Kontingent bei 7,03 €: Carbon weicht wieder aus. Jeder andere feste
+    // Marker bleibt, wo er war.
     const aus = run(haupt("aa-cost", false)).pos;
     const an = run(haupt("aa-cost", true)).pos;
     const bewegt = VARIANTS["aa-cost"].pts
@@ -200,7 +201,7 @@ describe("Marker-Entzerrung", () => {
           JSON.stringify(an.get(p.label)) !== JSON.stringify(aus.get(p.label)),
       )
       .map((p) => p.label);
-    expect(bewegt).toStrictEqual([]);
+    expect(bewegt).toStrictEqual(["gemini-4-carbon"]);
   });
 
   // `yieldFixed` gilt auch, wenn ein Preset gewählt ist (`chartGeometry`
@@ -324,10 +325,20 @@ describe("Marker-Entzerrung", () => {
           "qwen3.8-flash-next",
         ],
         "Hauptfolie aa-cost mit Kontingent": [
+          "claude-opus-5.5",
+          "gemini-4-carbon",
           "glm-5.3-flash",
           "qwen3.8-flash-next",
         ],
-        "Hauptfolie aa-speed": [],
+        "Hauptfolie aa-speed": [
+          "claude-sonnet-5.5",
+          "gemini-4-hydrogen",
+          "glm-5.3",
+          "gpt-6.1-terra-non-reasoning",
+          "mimo-v2.6-flash",
+          "qwen3.8-2.4t",
+          "qwen3.8-flash-next",
+        ],
         "Historie 0710": [],
         "Historie 0722": [
           "gpt-5.6-terra",

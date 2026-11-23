@@ -180,8 +180,8 @@ describe("aaData — die beiden Punktmengen", () => {
       join(import.meta.dirname, "../..", "ModelRoutingSources.vue"),
       "utf8",
     );
-    // Die Notiz nennt „290 Einträge, 105 aktive mit Kosten; 25 weitere aus v4
-    // umgerechnet“ und „31 Modelle“ (Stand 16.11.2026).
+    // Die Notiz nennt „289 Einträge, 110 aktive mit Kosten; 24 weitere aus v4
+    // umgerechnet“ und „31 Modelle“ (Stand 23.11.2026).
     expect(src).toContain(
       `${v5.length} Einträge, ${gemessen} aktive mit Kosten; ${umgerechnet} weitere aus v4 umgerechnet`,
     );
@@ -189,8 +189,9 @@ describe("aaData — die beiden Punktmengen", () => {
   });
 
   it("rechnet USD zum festen Kurs in € um", () => {
-    const c = AA_CFGS.find((x) => x.model === "gpt-6-astra")!;
-    const p = AA_COST.find((x) => x.label === "gpt-6-astra")!;
+    // Seit 23.11.2026 gpt-6.2-astra: AA führt gpt-6-astra nicht mehr.
+    const c = AA_CFGS.find((x) => x.model === "gpt-6-2-astra")!;
+    const p = AA_COST.find((x) => x.label === "gpt-6.2-astra")!;
     expect(p.x).toBeCloseTo(c.usd * USD_EUR, 2);
     expect(p.y).toBeCloseTo(c.index, 1);
   });
@@ -208,8 +209,9 @@ describe("aaData — die beiden Punktmengen", () => {
       (l) => !AA_SPEED.some((p) => p.label === l),
     );
     expect(fehlt.sort()).toStrictEqual([...AA_NO_TPS].sort());
-    // qwen4-max (neu am 16.11.2026) trägt noch keinen Tempo-Wert bei AA.
-    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019", "qwen4-max"]);
+    // qwen4-max (neu am 16.11.2026) hat seit 23.11.2026 einen Tempo-Wert
+    // (64 tok/s).
+    expect(AA_NO_TPS).toStrictEqual(["ling-3.1-flash-1019"]);
   });
 
   it("nimmt für die Tempo-Achse die Zeit je 1 000 Tokens: schnell heißt kleines x", () => {
@@ -228,20 +230,20 @@ describe("aaData — die beiden Punktmengen", () => {
   });
 
   it("hat die Fronten, die die Speaker Notes nennen", () => {
-    // Stand 16.11.2026: muse-ember (neu, 36,0 bei 0,12 €) verdrängt gpt-6-luna
-    // und gpt-6.1-terra-non-reasoning, claude-fable-5.2 (neu, 64,6) steht oben.
+    // Stand 23.11.2026: gpt-6.2-sol (neu, 57,3 bei 0,89 €) ersetzt gpt-6.1-sol,
+    // das AA nicht mehr führt; gpt-6.2-astra (neu, 62,1 bei 3,50 €) verdrängt
+    // gemini-4-carbon (60,0, wieder 6,79 € statt 4,80 €).
     expect(paretoFront(AA_COST).front.map((p) => p.label)).toStrictEqual([
       "mimo-v2.6-flash",
       "muse-ember",
       "claude-haiku-5.5",
       "gpt-6.1-terra",
-      "gpt-6.1-sol",
-      "gemini-4-carbon",
+      "gpt-6.2-sol",
+      "gpt-6.2-astra",
       "claude-fable-5.2",
     ]);
-    // Tempo: muse-ember (439 tok/s) und gemini-4-hydrogen (neu, 173 tok/s bei
-    // 53,9) sind dazugekommen; gemini-4-carbon (62 tok/s) steht hinter
-    // claude-fable-5.2 (109 tok/s, 64,6) nicht mehr auf der Front.
+    // Tempo: dieselbe Front wie am 16.11.2026 (muse-ember 443 tok/s,
+    // gemini-4-hydrogen jetzt 157 statt 173 tok/s).
     expect(paretoFront(AA_SPEED).front.map((p) => p.label)).toStrictEqual([
       "muse-ember",
       "claude-haiku-5.5",
@@ -444,20 +446,21 @@ describe("Werkzeug-Kataloge in den AA-Ansichten", () => {
   // Ein Katalog je Werkzeug, für beide Datenquellen: was Windsurf führt, gilt
   // in jeder Ansicht.
   it("liest dieselbe Liste wie die Historien-Folie", () => {
+    // Seit 23.11.2026 führt AA gemini-3.8-flash und gpt-6-astra nicht mehr;
+    // die Kataloge führen sie weiter, im Preset stehen sie unter den Extras.
     expect(toolHas("windsurf", "gemini-3.8-flash")).toBe(true);
-    expect(presetModels("windsurf", AA_COST)).toContain("gemini-3.8-flash");
-    expect(presetModels("windsurf", AA_COST)).toContain("gpt-6-astra");
+    expect(presetModels("windsurf", AA_COST)).toContain("gemini-4-neon");
+    expect(presetModels("windsurf", AA_COST)).toContain("gpt-6.1-terra");
     expect(presetModels("windsurf", AA_COST)).not.toContain("muse-wonder");
     expect(presetModels("cursor", AA_COST)).toContain("claude-sonnet-5.5");
-    expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6-astra");
+    expect(presetModels("cursor", AA_COST)).not.toContain("gpt-6.2-astra");
     // JetBrains AI führt seit dem Katalog vom 28.10. auch GPT-6 und Opus 5.5
     // des aktuellen Felds. claude-fable-5.1 fehlt seit 16.11.2026: AA führt es
     // nicht mehr in v5 (am 09.11. gemessen mit 49,2), es steht nur noch als
-    // umgerechneter v4-Wert unter den Extras des Presets.
+    // umgerechneter v4-Wert unter den Extras des Presets. Seit 23.11.2026
+    // ebenso gpt-6.1-sol und gemini-3.8-flash (AA führt beide nicht mehr).
     expect(presetModels("jetbrains-ai", AA_COST)).toStrictEqual([
       "gpt-6-luna",
-      "gpt-6.1-sol",
-      "gemini-3.8-flash",
       "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);

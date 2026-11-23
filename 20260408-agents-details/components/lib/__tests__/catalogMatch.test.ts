@@ -77,6 +77,9 @@ describe("familyKey — verschiedene Modelle bleiben verschieden", () => {
 // muss sie auf dem Label-Raum beider Datenquellen exakt reproduzieren — nicht
 // mehr, nicht weniger. Bricht das, hat sich Normalisierung oder Katalog bewegt.
 describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
+  // 23.11.2026: gemini-4-neon (neu bei AA) steht in Cursor und Windsurf.
+  // gpt-6.1-sol ist kein Chart-Label mehr: AA hat es aus dem Board genommen,
+  // es kommt nur noch als umgerechneter v4-Wert über die Extras ins Preset.
   const HAND: Partial<Record<CatalogId, string[]>> = {
     cursor: [
       "claude-fable-5",
@@ -95,6 +98,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gemini-4-argon",
       "gemini-4-carbon",
       "gemini-4-hydrogen",
+      "gemini-4-neon",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -124,6 +128,7 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gemini-3.7-flash",
       "gemini-3.8-flash",
       "gemini-4-argon",
+      "gemini-4-neon",
       "glm-5.2",
       "glm-5.3",
       "glm-5.3-flash",
@@ -133,7 +138,6 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gpt-5.6-terra",
       "gpt-6-astra",
       "gpt-6-luna",
-      "gpt-6.1-sol",
       "gpt-6.1-terra",
       "gpt-6.1-terra-non-reasoning",
       "grok-4.6",
@@ -156,7 +160,6 @@ describe("Katalog ↔ Chart-Labels — die geprüften Listen", () => {
       "gpt-5.6-sol",
       "gpt-5.6-terra",
       "gpt-6-luna",
-      "gpt-6.1-sol",
     ],
   };
   const labels = [...new Set([...CURRENT, ...AA_COST].map((p) => p.label))];
@@ -216,7 +219,8 @@ describe("Golden: Katalogname → Schlüssel", () => {
     // 53 Familien, weil jede Effort-Stufe ein Eintrag ist.
     expect(catalogKeys("windsurf").size).toBeLessThan(80);
     expect(catalogKeys("jetbrains-ai").size).toBe(42); // jedes Modell einzeln
-    expect(catalogKeys("junie").size).toBe(17);
+    // 20 seit 23.11.2026: GPT 6.2 Astra, GPT 6.2 Sol, Gemini 4 Neon (whats-new).
+    expect(catalogKeys("junie").size).toBe(20);
   });
 });
 

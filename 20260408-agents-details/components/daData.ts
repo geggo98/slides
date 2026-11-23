@@ -44,14 +44,14 @@
 // Opus 5.5“ wird `claude-opus-5.5` — dieselbe Schreibweise wie bei AA, damit
 // Labs, Produkt-Presets und Kataloge ohne Sonderweg greifen.
 
-import raw from "../data/designarena/board-20261116-f6f03785.json";
+import raw from "../data/designarena/board-20261123-a38e3896.json";
 import { familyKey } from "./catalogMatch";
 import { P, type Pt } from "./paretoData";
 
 /** Dateiname des Snapshots oben im Import; der Test hält beide gleich. */
-export const DA_BOARD = "board-20261116-f6f03785.json";
+export const DA_BOARD = "board-20261123-a38e3896.json";
 /** Abrufdatum dieses Snapshots (`fetched_at` in `index.ndjson`), TT.MM.JJJJ. */
-export const DA_STAND = "16.11.2026";
+export const DA_STAND = "23.11.2026";
 export const DA_URL =
   "https://www.designarena.ai/leaderboard?section=overall&board=overall-agentic";
 /**

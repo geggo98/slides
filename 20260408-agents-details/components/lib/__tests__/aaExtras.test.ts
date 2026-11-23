@@ -83,12 +83,17 @@ describe("Extras", () => {
     // inkling, penguin, swe-1.7-lightning, xai-grok-3, xai-grok-3-mini).
     // 92 seit 16.11.2026: claude-fable-5.2 (Cursor, Windsurf, Junie),
     // gemini-4-carbon (Cursor, Junie) und gemini-4-hydrogen (Cursor, Junie).
-    expect(PRODUCT_FAMILIES.size).toBe(92);
+    // 95 seit 23.11.2026: gemini-4-neon (Cursor, Windsurf, Junie), gpt-6.2-astra
+    // und gpt-6.2-sol (Junie).
+    expect(PRODUCT_FAMILIES.size).toBe(95);
     // 31 statt 32 und 7 statt 8: inkling (nur Windsurf, entfallen) hatte
     // Kosten- und Tempowert.
     // 32 seit 16.11.2026: claude-fable-5.1 fiel aus dem v5-Stand und steht nur
     // noch als umgerechneter v4-Wert unter den Extras.
-    expect(AA_EXTRAS_COST.length).toBe(32);
+    // 35 seit 23.11.2026: AA führt gpt-6-astra, gpt-6.1-sol und
+    // gemini-3.8-flash nicht mehr; sie stehen als umgerechnete v4-Werte unter
+    // den Extras.
+    expect(AA_EXTRAS_COST.length).toBe(35);
     // Seit 09.11.2026 nur noch einstellig statt 50: Modelle, die nur der
     // v4-Stand kennt, haben kein Tempo mehr (alte AA-Methodik, `aaData.ts`).
     expect(AA_EXTRAS_SPEED.length).toBe(7);
@@ -173,35 +178,42 @@ describe("Front je Produkt", () => {
   };
 
   it("Kosten: JetBrains AI führt seit 28.10. GPT-6 und Opus 5.5 bis zur Spitze", () => {
+    // Seit 23.11.2026 misst AA gpt-6.1-sol nicht mehr (am 16.11. 54,6 bei
+    // 1,11 €); im Preset steht es umgerechnet aus v4 (≈ 39,8 bei 1,37 €). Damit
+    // kommt claude-sonnet-5.5 (54,5 bei 8,78 €, einen Cent unter Opus 5.5)
+    // auf die Leiter.
     expect(front("aa-cost", "jetbrains-ai")).toStrictEqual([
       "gpt-5-mini",
       "gpt-6-luna",
       "gpt-6.1-sol",
+      "claude-sonnet-5.5",
       "claude-opus-5.5",
     ]);
   });
 
   it("Kosten: Junie führt seit 16.11. die Spitze des Markts, Windsurf endet ebenfalls mit Fable 5.2", () => {
-    // Junie führt seit 16.11.2026 gpt-6.1-sol (Landingpage), gemini-4-carbon
-    // (whats-new 10.11.2026) und claude-fable-5.2 (09.11.). Carbon (4,80 €)
-    // verdrängt gpt-6-astra (5,47 €, 56,9), Fable 5.2 steht oben.
+    // Junie führt seit 23.11.2026 auch gpt-6.2-sol und gpt-6.2-astra
+    // (whats-new 18.11.2026). Beide stehen wie in der Marktfront über
+    // gpt-6.1-terra; gpt-6.2-astra (3,50 €, 62,1) verdrängt gemini-4-carbon
+    // (6,79 €, 60,0), Fable 5.2 steht oben.
     expect(front("aa-cost", "junie")).toStrictEqual([
       "gpt-6-luna",
       "gpt-6.1-terra-non-reasoning",
       "gpt-6.1-terra",
-      "gpt-6.1-sol",
-      "gemini-4-carbon",
+      "gpt-6.2-sol",
+      "gpt-6.2-astra",
       "claude-fable-5.2",
     ]);
     expect(front("aa-cost", "windsurf").at(-1)).toBe("claude-fable-5.2");
   });
 
-  it("Kosten: Cursor endet seit 16.11. mit Gemini 4 Carbon und Fable 5.2", () => {
-    // Bis 09.11.2026 endete die Leiter mit Sonnet 5.5 und Opus 5.5; seit
-    // 16.11.2026 führt Cursor gemini-4-carbon (dominiert beide) und
-    // claude-fable-5.2 (64,6 bei 23,25 €).
+  it("Kosten: Cursor endet seit 23.11. mit Gemini 4 Neon und Fable 5.2", () => {
+    // Bis 09.11.2026 endete die Leiter mit Sonnet 5.5 und Opus 5.5, am
+    // 16.11.2026 mit gemini-4-carbon und claude-fable-5.2. Seit 23.11.2026
+    // führt Cursor gemini-4-neon (61,4 bei 5,65 €), es verdrängt Carbon
+    // (60,0 bei 6,79 €).
     const f = front("aa-cost", "cursor");
-    expect(f.slice(-2)).toStrictEqual(["gemini-4-carbon", "claude-fable-5.2"]);
+    expect(f.slice(-2)).toStrictEqual(["gemini-4-neon", "claude-fable-5.2"]);
   });
 
   it("Tempo: JetBrains AI hat zwei Sprossen, Sonnet 5.5 vorn", () => {
