@@ -691,6 +691,14 @@ Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, ho
 
 <MemoryScatter />
 
+<!--
+Die Punkte in diesem Diagramm sind meine eigene Einschätzung. Ich habe sie für die erste Fassung am 08.04.2026 vergeben, ohne Quelle, und ein Protokoll dazu gibt es nicht mehr. Am 23.11.2026 habe ich sie gegen die Literatur geprüft. Belegen ließen sie sich nicht, denn keine Quelle bewertet die acht Ansätze auf einer gemeinsamen Skala.
+
+Vier Werte widersprechen den Belegen. Skills haben bei mir Effektivität 9, aber in der Eval von Vercel kamen sie auf höchstens 79 %, AGENTS.md auf 100 %. Die Aider Repo Map steht bei Kosten 3, die Prism-Studie misst 13 % Mehrkosten gegenüber dem Lauf ohne Memory. Mem0 steht bei Kosten 6, war in SWE-ContextBench aber billiger als ohne Kontext: 0,62 $ gegen 0,79 $ je Aufgabe, also ca. 78 %. Und für CLAUDE.md mit Effektivität 8 misst die ETH-Studie keinen allgemeinen Gewinn, dafür im Mittel über 20 % Mehrkosten.
+
+Die Kernaussage hält nur in schwächerer Form: Komplexe Memory-Systeme haben sich bei Coding-Aufgaben bisher nicht ausgezahlt. In VibeMemBench lagen 11 von 12 Paarungen (ca. 92 %) nicht über dem Lauf ohne Memory. Eine allgemeine Regel ist „einfach schlägt komplex“ trotzdem nicht, denn Supermemory, Prism und die Embedding-Suche von Cursor zeigen Gewinne. Die Werte habe ich bewusst unverändert gelassen, bis ich sie neu bewerte.
+-->
+
 ---
 layout: section
 routeAlias: caching
