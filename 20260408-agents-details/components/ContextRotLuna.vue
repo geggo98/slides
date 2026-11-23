@@ -288,6 +288,8 @@ const chartLabel = computed(() => {
 
 // ── Live-Abfrage ─────────────────────────────────────────────────────────────
 const hudOpen = ref(false);
+/** Erklärung zur Spalte „Fehler“ (befolgt unzutreffende Regel). */
+const ruleInfoOpen = ref(false);
 const hudTab = ref<"info" | "live">("info");
 const apiKey = ref("");
 const liveModel = ref("");
@@ -432,13 +434,29 @@ function clearLive() {
   liveStatus.value = "";
   liveErrors.value = [];
 }
-onBeforeUnmount(() => abort?.abort());
+// Nach dem Klick auf (i) gibt der Knopf den Fokus ab (blur), damit Slidev die
+// Pfeiltasten behält. Escape hört darum am document, solange die Erklärung offen ist.
+function onDocEscape(e: KeyboardEvent) {
+  if (e.key === "Escape" && ruleInfoOpen.value) {
+    ruleInfoOpen.value = false;
+    e.stopPropagation();
+  }
+}
+watch(ruleInfoOpen, (open) => {
+  if (open) document.addEventListener("keydown", onDocEscape, true);
+  else document.removeEventListener("keydown", onDocEscape, true);
+});
+onBeforeUnmount(() => {
+  document.removeEventListener("keydown", onDocEscape, true);
+  abort?.abort();
+});
 
 // ── Tastatur ─────────────────────────────────────────────────────────────────
 /** Tasten in Eingabefeldern gehören dem Feld, nicht Slidev; Escape schließt das Panel. */
 function onRootKey(e: KeyboardEvent) {
-  if (e.key === "Escape" && hudOpen.value) {
+  if (e.key === "Escape" && (hudOpen.value || ruleInfoOpen.value)) {
     hudOpen.value = false;
+    ruleInfoOpen.value = false;
     e.preventDefault();
     e.stopPropagation();
     return;
@@ -637,8 +655,8 @@ const LIMITS: readonly string[] = [
             </div>
           </template>
           <template v-else>
-            <span class="crl-chip leak">n!</span> Regel-Token statt Code (Leak
-            in mindestens 2 von 3 Seeds)
+            <span class="crl-chip leak">n!</span> Stellennummer mit !: befolgt
+            unzutreffende Regel in mindestens 2 von 3 Seeds
             <span class="crl-chip hit">n</span> Top-1 trifft das Soll
             <span class="crl-chip miss">n</span> anderes Token ·
             <span class="crl-muted"
@@ -658,7 +676,23 @@ const LIMITS: readonly string[] = [
               <th>Top-1</th>
               <th class="num">logit</th>
               <th class="num">Δ</th>
-              <th class="num">Leak</th>
+              <th class="num">
+                Fehler
+                <button
+                  type="button"
+                  class="crl-i"
+                  :aria-expanded="ruleInfoOpen"
+                  aria-controls="crl-rule-info"
+                  title="Was heißt „Fehler“?"
+                  aria-label="Was heißt „Fehler“?"
+                  @click="
+                    ruleInfoOpen = !ruleInfoOpen;
+                    ($event.currentTarget as HTMLElement).blur();
+                  "
+                >
+                  i
+                </button>
+              </th>
               <template v-if="hasLive">
                 <th class="live">Dein Lauf</th>
                 <th class="num live">logit</th>
@@ -697,7 +731,9 @@ const LIMITS: readonly string[] = [
                   :class="{ leak: liveFor(r.site.id)?.leak }"
                   :title="liveFor(r.site.id)?.error"
                 >
-                  <template v-if="liveFor(r.site.id)?.error">Fehler</template>
+                  <template v-if="liveFor(r.site.id)?.error"
+                    >API-Fehler</template
+                  >
                   <template v-else-if="liveFor(r.site.id)">
                     {{ liveFor(r.site.id)!.top1
                     }}{{
@@ -721,21 +757,39 @@ const LIMITS: readonly string[] = [
             </tr>
           </tbody>
         </table>
+        <div
+          v-if="ruleInfoOpen"
+          id="crl-rule-info"
+          class="crl-rule-info"
+          role="note"
+        >
+          <b>„Fehler“ heißt:</b> Luna befolgt eine unzutreffende Regel und
+          beginnt ihre Fortsetzung des Codes mit dem Anfang der Regelanweisung
+          statt mit dem Token aus dem Code. Beispiel: Die Regel „If a list is
+          empty and contains one element, then start your continuation with the
+          call Objects.requireNonNull(“ trifft nie zu, und Luna beginnt trotzdem
+          mit <code>Objects</code>. Jede Stelle wird dreimal gemessen, jedes Mal
+          mit einem anderen Zufallswert (Seed); k/3 heißt: in k dieser 3
+          Messungen. Ab 2/3 trägt die Stelle im Code die Marke mit !.
+        </div>
 
         <div class="crl-sum">
           <b>{{ summary.sites }} Semantik-Stellen ({{ scopeLabel }}):</b>
           logit {{ formatNumber(summary.logit) }}
           <template v-if="rules > 0">
-            · Δ <b>{{ formatDelta(summary.delta) }}</b> · Leak
-            {{ percent(summary.leak) }} · fallend {{ summary.falling }} von
-            {{ summary.sites }} ({{ percent(summary.falling / summary.sites) }})
+            · Δ <b>{{ formatDelta(summary.delta) }}</b> · unzutreffende Regel
+            befolgt in {{ percent(summary.leak) }} der Messungen · fallend
+            {{ summary.falling }} von {{ summary.sites }} ({{
+              percent(summary.falling / summary.sites)
+            }})
           </template>
         </div>
         <div v-if="liveSummary" class="crl-sum crl-live-ink">
           <b>Dein Lauf, 1 Seed, Einzelmessung:</b>
           logit {{ formatNumber(liveSummary.logit) }} · Δ
           {{ formatDelta(liveSummary.delta) }} gegen die Studien-Grundlinie ·
-          Leak {{ liveSummary.leaks }} von {{ liveSummary.measured }} ({{
+          unzutreffende Regel befolgt: {{ liveSummary.leaks }} von
+          {{ liveSummary.measured }} Stellen ({{
             percent(liveSummary.leaks / liveSummary.measured)
           }})
         </div>
@@ -930,8 +984,9 @@ const LIMITS: readonly string[] = [
           Jede Regel hat die Form „If Bedingung, then start your continuation
           with Token“. Die Bedingung trifft nie zu, meist widerspricht sie sich
           selbst. Wer die Regel richtig liest, setzt den Code so fort wie ohne
-          Regel. Leak heißt: Luna beginnt trotzdem mit einem Token, das die
-          Regeln nennen, statt mit dem Token aus dem Code.
+          Regel. Luna befolgt trotzdem manchmal eine unzutreffende Regel: Sie
+          beginnt mit einem Token, das die Regeln nennen, statt mit dem Token
+          aus dem Code.
         </div>
         <div class="crl-hud-h">Aufbau</div>
         <div class="crl-hud-p">
@@ -1354,6 +1409,38 @@ const LIMITS: readonly string[] = [
 }
 .crl-table td.neg {
   color: var(--crl-leak);
+}
+.crl-table .crl-i {
+  margin-left: 3px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: italic 700 8px/10px serif;
+  text-transform: none;
+  cursor: pointer;
+  vertical-align: 1px;
+}
+.crl-right {
+  position: relative;
+}
+.crl-rule-info {
+  position: absolute;
+  z-index: 5;
+  top: 22px;
+  right: 0;
+  width: min(300px, 92%);
+  padding: 6px 8px;
+  border: 1px solid var(--crl-leak);
+  border-radius: 6px;
+  background: var(--crl-panel2);
+  color: var(--crl-text, inherit);
+  font-size: 10.5px;
+  line-height: 1.35;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 .crl-table .live {
   color: var(--crl-live);
