@@ -167,7 +167,7 @@ const caveats = [
   },
   {
     lead: "Eigenes Experiment:",
-    text: "Sicherheit am ersten Token einer Java-Vervollständigung, nicht Richtigkeit. Der relevante Code steht immer direkt vor der Messstelle, eine Suche im Fülltext ist nicht nötig. Fülltext bis 128k Tokens nur bei Luna, ein Request je Stelle. Die −0,96 logit gelten für eine Regel mit widersprüchlicher Bedingung (Studie 7, 3 Seeds).",
+    text: "Sicherheit am ersten Token einer Java-Vervollständigung, nicht Richtigkeit. Der relevante Code steht immer direkt vor der Messstelle, eine Suche im Fülltext ist nicht nötig. Fülltext bis 128k Tokens nur bei Luna, ein Request je Stelle. Die −0,96 logit gelten für eine Regel mit widersprüchlicher Bedingung (eigene Experimente, 3 Seeds).",
   },
 ];
 </script>

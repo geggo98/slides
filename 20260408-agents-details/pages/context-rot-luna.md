@@ -8,7 +8,7 @@ routeAlias: context-rot-luna
 <ContextRotLuna />
 
 <!--
-Die Folie davor hat gezeigt, was die Literatur zu Context Rot belegt. Hier steht unser eigener Versuch, Studie 7 mit 7 560 Antworten. Stand: 22.11.2026. Alles, was man ohne Zutun sieht, ist vorberechnet. Die Folie schickt keine Anfrage.
+Die Folie davor hat gezeigt, was die Literatur zu Context Rot belegt. Hier stehen unsere eigenen Experimente mit 7 560 Antworten, Daten vom 22.11.2026. Alles, was man ohne Zutun sieht, ist vorberechnet. Die Folie schickt keine Anfrage.
 
 Der Aufbau ist derselbe wie bei der Kontext-Hygiene: Der Prompt endet mitten in einer Java-Datei, an einer der zehn nummerierten Marken. Wir messen das erste Token, mit dem das Modell fortsetzt, und wie sicher es dabei ist. Das Maß ist der logit der Wahrscheinlichkeit p des wahrscheinlichsten Tokens: der natürliche Logarithmus der Chance p / (1 − p), also Top-1 gegen alle anderen Tokens. Höher heißt sicherer. Ein logit weniger heißt: Diese Chance fällt um den Faktor e, rund 2,7. Die 0,96 logit der ersten Regel entsprechen dem Faktor 2,6, die 1,62 bei zehn Regeln dem Faktor 5,1. Das ist ein geometrisches Mittel über die Stellen. Als Beispiel: von p = 0,90 auf p ≈ 0,78. Luna ist das billigste Modell der drei (`gpt-5.6-luna`).
 

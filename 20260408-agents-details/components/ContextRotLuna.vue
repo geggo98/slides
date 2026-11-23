@@ -350,7 +350,7 @@ const hasAnyLive = computed(() => Object.keys(live).length > 0);
 const costLine = computed(() => {
   const per = study.notes.cost.luna.perCondition[cond.value]!;
   const n = rows.value.length;
-  return `${n} Anfragen, rund ${formatUsd(estimateCostUsd(study, cond.value, n))} (Luna mit Flex, gemessen in Studie 7; ohne Flex etwa das Doppelte, Preise über OpenRouter nicht geprüft). Dauer in der Studie: im Mittel ${formatNumber(per.latencyMsMean / 1000, 1)} s je Anfrage, höchstens ${formatNumber(per.latencyMsMax / 1000, 1)} s.`;
+  return `${n} Anfragen, rund ${formatUsd(estimateCostUsd(study, cond.value, n))} (Luna mit Flex, gemessen in den eigenen Experimenten; ohne Flex etwa das Doppelte, Preise über OpenRouter nicht geprüft). Dauer in der Studie: im Mittel ${formatNumber(per.latencyMsMean / 1000, 1)} s je Anfrage, höchstens ${formatNumber(per.latencyMsMax / 1000, 1)} s.`;
 });
 
 async function runLive() {
@@ -496,7 +496,7 @@ const LIMITS: readonly string[] = [
   "Gemessen ist nur das erste Token der Fortsetzung. Ob Luna danach eine Regel befolgt, ist nicht gemessen.",
   "Die Regeln stammen aus wenigen Vorlagen. Echte Regeldateien klingen anders.",
   "Ein Korpus: Java, zwei Fachgebiete (Lager und Spesen), 40 Stellen. Jede Stelle lief je Bedingung und Seed einmal.",
-  `Rauschen: Dieselbe Eingabe zweimal gemessen ergibt bei Luna Zellmittel, die im Mittel ${formatNumber(NOISE)} logit auseinanderliegen (Studie 6). Einzelne Stellen sind deshalb grob.`,
+  `Rauschen: Dieselbe Eingabe zweimal gemessen ergibt bei Luna Zellmittel, die im Mittel ${formatNumber(NOISE)} logit auseinanderliegen (eigene Experimente). Einzelne Stellen sind deshalb grob.`,
   "Die Werte je Fachgebiet und Variante (9 Semantik-Stellen) weichen vom Gesamtwert des Diagramms ab, bei Luna um bis zu rund 0,66 logit.",
   "Terra und Sol liegen ohne Regeln in D0 nahe der Obergrenze 6,91. Ein Anstieg ist dort kaum messbar, ein Abfall schon.",
   "Positivkontrolle: Eine Regel, die immer zutrifft, befolgte Luna an ca. 87 % der Messungen, knapp unter der vorab gesetzten Schwelle von 90 %.",
@@ -787,8 +787,8 @@ const LIMITS: readonly string[] = [
         <div v-if="liveSummary" class="crl-sum crl-live-ink">
           <b>Dein Lauf, 1 Seed, Einzelmessung:</b>
           logit {{ formatNumber(liveSummary.logit) }} · Δ
-          {{ formatDelta(liveSummary.delta) }} gegen die Studien-Grundlinie ·
-          unzutreffende Regel befolgt: {{ liveSummary.leaks }} von
+          {{ formatDelta(liveSummary.delta) }} gegen die Grundlinie der
+          Experimente · unzutreffende Regel befolgt: {{ liveSummary.leaks }} von
           {{ liveSummary.measured }} Stellen ({{
             percent(liveSummary.leaks / liveSummary.measured)
           }})
@@ -820,7 +820,7 @@ const LIMITS: readonly string[] = [
             :height="y(-NOISE) - y(NOISE)"
           />
           <text class="lbl noise-lbl" :x="CHART.w - 8" :y="y(NOISE) + 9">
-            Rauschen ±{{ formatNumber(NOISE) }} (Studie 6)
+            Rauschen ±{{ formatNumber(NOISE) }} (eigene Experimente)
           </text>
           <g v-for="t in TICKS" :key="t">
             <line
@@ -922,7 +922,7 @@ const LIMITS: readonly string[] = [
         Vorlagen · Rauschen {{ formatNumber(NOISE) }} logit
       </span>
       <span>
-        Eigene Studie 7: {{ STUDY_ANSWERS }} Antworten, 3 Seeds · Stand
+        Eigene Experimente: {{ STUDY_ANSWERS }} Antworten, 3 Seeds · Daten vom
         22.11.2026
       </span>
     </div>
@@ -1004,11 +1004,11 @@ const LIMITS: readonly string[] = [
         </ul>
         <div class="crl-hud-h">Quelle</div>
         <div class="crl-hud-p">
-          Eigene Studie 7 „Anzahl oder Inhalt?“ mit
+          Eigene Experimente „Anzahl oder Inhalt?“ mit
           {{ STUDY_ANSWERS }} Antworten; Zahlen aus dem Gesamtbericht der
-          Studien, Teil 1.2, und aus den Rohdaten nachgerechnet. Die Kontrollen
-          mit Richtlinien und Fakten stammen aus derselben Studie. Stand
-          22.11.2026.
+          Experimente, Teil 1.2, und aus den Rohdaten nachgerechnet. Die
+          Kontrollen mit Richtlinien und Fakten stammen aus denselben
+          Experimenten. Daten vom 22.11.2026.
         </div>
       </div>
 
