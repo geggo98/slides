@@ -257,7 +257,7 @@ hideInToc: true
 </div>
 </div>
 
-<div class="mt-4 p-3 border-1.5 border-amber-500 rounded-lg text-sm" style="background: rgba(245,158,11,0.08)">
+<div class="mt-3 px-3 py-2 border-1.5 border-amber-500 rounded-lg text-sm [&>p]:!my-0" style="background: rgba(245,158,11,0.08)">
 
 **Die Ausnahme beweist es:** Gemini 3 Pro staffelt oberhalb 200K Context ($2→$4 Input, $12→$18 Output). Anthropics 1M-Beta nahm 2×/1,5× — seit Opus 4.7/Sonnet 4.6 ist 1M flat. Gestaffelt wird, **weil** die Hardware-Kosten mit der Kontextlänge real steigen.
 
