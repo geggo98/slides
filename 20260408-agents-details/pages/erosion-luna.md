@@ -8,7 +8,7 @@ routeAlias: erosion-luna
 <ErosionChain />
 
 <!--
-Die Folie davor zeigt, was die Forschung über Erosion weiß. Hier kommt ein eigener Versuch dazu, Studie 9. Stand: 22.11.2026. Die Folie zeigt aufgezeichnete Daten und ruft kein Modell auf.
+Die Folie davor zeigt, was die Forschung über Erosion weiß. Hier kommen eigene Experimente dazu, Daten vom 22.11.2026. Die Folie zeigt aufgezeichnete Daten und ruft kein Modell auf.
 
 Der Aufbau: Eine Regelliste mit 20 Regeln für eine Code-Vervollständigung. Vier davon sind Gebote der Form „endet der Code auf X, beginne mit Token T“, jedes in zwei Formulierungen. Dazu kommen 12 allgemeine Richtlinien. Zum Beispiel Gebot D: Nach `new` beginne mit `static`. Das Modell bekommt die Liste mit frischem Fülltext zwischen den Regeln und soll sie umschreiben und vereinfachen. Das wiederholen wir sechsmal, das ist eine Kette. Danach testen wir das Modell mit seiner eigenen Liste: Mit welchem Token beginnt es an einer Stelle, an der ein Gebot greift?
 
@@ -22,13 +22,13 @@ Die Stichworte in der Kettenauswahl: „x von 4“ heißt, an so vielen der vier
 
 Diese Kette habe ich nachträglich als Beispiel ausgewählt. Sie ist die erste der zehn Ketten und nicht nach dem Ergebnis gewählt. Einen Verlust zeigen 8 von 10 Ketten (80 %). Rechts steht das Mittel über alle zehn: Die Befolgung fällt von 0,92 am Start auf 0,38 nach Runde 6. Den größten Teil verliert Luna schon in Runde 1. Der Anteil „da, nicht befolgt“ steigt von 0,44 nach Runde 1 auf 0,65 nach Runde 6.
 
-Jetzt Terra wählen: Terra kürzt die Liste auch, auf 16 Regeln mit 7,9 Wörtern je Regel statt 11. Es behält aber Auslöser und Token, und es verliert höchstens 0,01. Die Erosion hängt also stark vom Modell ab.
+Jetzt Terra wählen: Terra kürzt die Liste auch, auf 16 Regeln mit 7,9 Wörtern je Regel statt 11. Es behält aber Auslöser und Token, und es verliert höchstens 0,01. Gegen diesen einfachen Versuch ist Terra also robust. Ob Terra in komplexeren Szenarien erodiert, habe ich aus Kostengründen nicht getestet. In diesem Versuch hängt die Erosion stark vom Modell ab.
 
 Der Auftrag „Nur Änderungen“ ist der Versuch einer Abhilfe: Das Modell liefert nur die Änderungen, ein Skript wendet sie an. Das ähnelt den inkrementellen Updates aus der ACE-Arbeit, ist aber stark vereinfacht. Bei Luna half es nicht: Nach Runde 6 steht in keiner der 10 Ketten noch ein Gebot. Eine Kette strich in Runde 2 alle 13 übrigen Regeln. ACE ist damit weder reproduziert noch widerlegt, dort arbeiten getrennte Rollen an anderen Inhalten.
 
 Die Grenzen sind eng. Luna hat nur 4 testbare Stellen von 18, rund 22 %, und nur für zwei der vier Gebote. Die Stellen sind danach ausgewählt, dass Luna die Originalliste dort befolgt; der Verlust ist deshalb eher überschätzt. Gemessen ist nur das erste Token. Die Regeln stammen aus Vorlagen. Dasselbe Modell schreibt um und wird getestet. Es sind zwei Modelle eines Herstellers.
 
-Unten steht meine Schlussfolgerung. Sie ist eine Empfehlung und kein Ergebnis der Studie: Doku, auch Regeln, sollte schreiben, wer an der Quelle sitzt. Aktuell ist das der Mensch. Und: Keine Doku ist besser als falsche Doku. Dafür sprechen drei Dinge. Erstens Studie 9: Schon das Umschreiben kostet Luna die Befolgung. Zweitens eine Arbeit zu Kontextdateien wie AGENTS.md: LLM-erzeugte Dateien senken den Erfolg leicht, um 0,5 und 2 %, von Entwicklern geschriebene heben ihn um 2,4 %. Beides ist nicht signifikant; nur im direkten Vergleich liegen die Entwickler-Dateien vorn. Drittens die Forschung: Veraltete Regeldateien überstimmen den Code, das stand auf der Folie davor. Und in einer Arbeit von 2024 schadet falsche Doku dem Codeverständnis, fehlende kaum; gemessen an GPT-3.5 und GPT-4.
+Unten steht meine Schlussfolgerung. Sie ist eine Empfehlung und kein Ergebnis der Experimente: Doku, auch Regeln, sollte schreiben, wer an der Quelle sitzt. Aktuell ist das der Mensch. Und: Keine Doku ist besser als falsche Doku. Dafür sprechen drei Dinge. Erstens die eigenen Experimente: Schon das Umschreiben kostet Luna die Befolgung. Zweitens eine Arbeit zu Kontextdateien wie AGENTS.md: LLM-erzeugte Dateien senken den Erfolg leicht, um 0,5 und 2 %, von Entwicklern geschriebene heben ihn um 2,4 %. Beides ist nicht signifikant; nur im direkten Vergleich liegen die Entwickler-Dateien vorn. Drittens die Forschung: Veraltete Regeldateien überstimmen den Code, das stand auf der Folie davor. Und in einer Arbeit von 2024 schadet falsche Doku dem Codeverständnis, fehlende kaum; gemessen an GPT-3.5 und GPT-4.
 
-Die Gegenseite gehört dazu. Ein Entwurf vom Agenten ist sinnvoll, wenn ein Mensch an der Quelle sitzt, ihn prüft und freigibt. Terra zeigte keinen Verlust. Und keine Arbeit misst, ob der Autor „an der Quelle sitzt“. Die Quellen und alle Einschränkungen stehen hinter dem Info-Knopf.
+Die Gegenseite gehört dazu. Ein Entwurf vom Agenten ist sinnvoll, wenn ein Mensch an der Quelle sitzt, ihn prüft und freigibt. Terra blieb in diesem einfachen Versuch stabil; komplexere Szenarien habe ich aus Kostengründen nicht getestet. Und keine Arbeit misst, ob der Autor „an der Quelle sitzt“. Die Quellen und alle Einschränkungen stehen hinter dem Info-Knopf.
 -->

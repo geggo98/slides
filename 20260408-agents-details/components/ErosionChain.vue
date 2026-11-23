@@ -323,7 +323,7 @@ const sources = [
 
 const caveats = [
   {
-    lead: "Eigene Studie 9, aufgezeichnet:",
+    lead: "Eigene Experimente, aufgezeichnet:",
     text: `Luna ist ${data.source.models.luna}, Terra ${data.source.models.terra}. Jedes Modell schreibt seine eigene Liste um und wird danach mit ihr getestet. Zwischen den Regeln steht in jeder Runde frischer Fülltext. Die Originalliste (auf der Folie „Start“) hat 20 Regeln: vier Gebote in je zwei Formulierungen und 12 allgemeine Richtlinien. Die Folie ruft kein Modell auf.`,
   },
   {
@@ -707,7 +707,7 @@ const caveats = [
         <div class="ec-card-h">Begründung</div>
         <ul>
           <li>
-            <b>Studie 9:</b> Umschreiben kostet Luna die Befolgung:
+            <b>Eigene Experimente:</b> Umschreiben kostet Luna die Befolgung:
             {{ ARM_SHORT("F") }} {{ lunaErosion("F") }}, {{ ARM_SHORT("C") }}
             {{ lunaErosion("C") }}, {{ ARM_SHORT("D") }} {{ lunaErosion("D") }}.
           </li>
@@ -731,13 +731,14 @@ const caveats = [
             Quelle sitzt und freigibt.
           </li>
           <li>
-            Terra erodiert nicht (Verlust höchstens {{ terraWorst }}). ACE ist
+            Terra hält diesem einfachen Versuch stand (Verlust höchstens
+            {{ terraWorst }}); komplexere Fälle sind nicht getestet. ACE ist
             weder reproduziert noch widerlegt.
           </li>
           <li>
-            Kleine Studie: nur {{ lunaSites }} Luna-Stellen testbar, ausgewählt
-            nach Befolgung der Originalliste; nur erstes Token; Regeln aus
-            Vorlagen; dasselbe Modell schreibt um und wird getestet.
+            Kleiner Versuch: nur {{ lunaSites }} Luna-Stellen testbar,
+            ausgewählt nach Befolgung der Originalliste; nur erstes Token;
+            Regeln aus Vorlagen; dasselbe Modell schreibt um und wird getestet.
           </li>
         </ul>
       </div>
@@ -745,8 +746,8 @@ const caveats = [
 
     <div class="ec-foot">
       <span
-        >Eigene Studie 9: Das Modell schreibt seine Regelliste sechsmal um ·
-        aufgezeichnete Daten, kein Live-Aufruf · Stand 22.11.2026</span
+        >Eigene Experimente: Das Modell schreibt seine Regelliste sechsmal um ·
+        aufgezeichnete Daten, kein Live-Aufruf · Daten vom 22.11.2026</span
       >
       <button
         class="ec-ib"
@@ -759,7 +760,7 @@ const caveats = [
 
     <SourcesPopover
       :open="sourcesOpen"
-      scope="Gilt für die Folie Luna schreibt die Regeln um. Messwerte: eigene Studie 9, aufgezeichnet. Fremde Arbeiten: Faktencheck vom 22.11.2026."
+      scope="Gilt für die Folie Luna schreibt die Regeln um. Messwerte: eigene Experimente, aufgezeichnet, Daten vom 22.11.2026. Fremde Arbeiten: Faktencheck vom 22.11.2026."
       :sources="sources"
       :caveats="caveats"
       @close="sourcesOpen = false"
