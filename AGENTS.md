@@ -31,7 +31,7 @@ commit fails right after cloning.
 
 ```yaml
 devenv:
-  url: github:cachix/devenv/v2.2.2?dir=src/modules
+  url: github:cachix/devenv/v2.4.0?dir=src/modules
 ```
 
 Without that entry devenv injects `github:cachix/devenv?dir=src/modules` — no

@@ -40,7 +40,7 @@ jobs:
       # not a from-source Rust build.
       - name: Install devenv
         shell: bash
-        run: nix profile add "github:cachix/devenv/b8030c58deafc013fc51791377fe8fea4dadcb00#devenv" # v2.2.2
+        run: nix profile add "github:cachix/devenv/b904dcb51fe48c30db250038241507f60752f222#devenv" # v2.4.0
 
       # Warn-only for now: a type error shows up as an annotation on the run
       # but does not stop the deploy. Drop `continue-on-error` to make it a gate.
