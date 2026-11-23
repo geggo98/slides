@@ -1,5 +1,6 @@
 {
   "header": "Monthly payroll in euro cents: gross pay by contract and employment status, minus income tax and further deductions, gives each employee's net pay.",
+  "headerDetail": "Contract types are salary, hourly wage with overtime premium, and mini-job; status is active, on leave or left. Tax classes carry allowances, and income tax is progressive. Net pay is gross by status minus tax and deductions; advance payments and status changes are handled too.",
   "levels": {
     "S1": [
       {

@@ -1,5 +1,6 @@
 {
   "header": "Prices tickets for one performance and runs its ticket sale from announcement through sellout or cancellation.",
+  "headerDetail": "Seat categories: standing, row seating, lounge. Pricing rules: early-bird discount, surcharge at high occupancy. Also models promo codes and a seat quota. Order price derives from category price, pricing rule, seat count and a capped service fee. Status: announced, on sale, sold out, cancelled.",
   "levels": {
     "S1": [
       {

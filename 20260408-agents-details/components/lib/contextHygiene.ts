@@ -57,6 +57,8 @@ export interface Scenario {
   summary: string;
   /** Wofür die Datei fachlich da ist; steht über jeder Stufe. Für die Folie geschrieben. */
   header?: string;
+  /** Fachliche Einzelheiten zur Kopfzeile; steht direkt darunter. Für die Folie geschrieben. */
+  headerDetail?: string;
   /** Kommentare der Studie (S0k = D0k), nur diese werden live mitgesendet. */
   comments: CommentBlock[];
   levels: Record<string, Level>;
@@ -212,7 +214,7 @@ export function measuredComments(
 
 /**
  * Kommentarblöcke zum Anzeigen, oder `null`. Vorn steht die Kopfzeile, die sagt,
- * wofür die Datei fachlich da ist. Danach folgen auf S0/D0–D4 die Kommentare der
+ * wofür die Datei fachlich da ist, samt Zusatz mit den Einzelheiten. Danach folgen auf S0/D0–D4 die Kommentare der
  * Studie und auf S1–S6 die für die Folie geschriebenen (die Zeilen ändern sich
  * dort, S0 passt nicht mehr).
  */
@@ -225,7 +227,15 @@ export function commentZones(
     : (scenario.levels[level]?.comments ?? null);
   if (!body) return null;
   const head: CommentBlock[] = scenario.header
-    ? [{ beforeLine: 0, lines: [`// ${scenario.header}`] }]
+    ? [
+        {
+          beforeLine: 0,
+          lines: [
+            `// ${scenario.header}`,
+            ...(scenario.headerDetail ? [`// ${scenario.headerDetail}`] : []),
+          ],
+        },
+      ]
     : [];
   return [...head, ...body];
 }

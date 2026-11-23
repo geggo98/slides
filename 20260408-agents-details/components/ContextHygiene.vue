@@ -118,6 +118,17 @@ const selected = computed<Site | null>(
   () => sites.value.find((s) => s.id === selectedId.value) ?? null,
 );
 const numberOf = (s: Site): number => sites.value.indexOf(s) + 1;
+/** Welches Modell die gezeigten Werte liefert; folgt der Modellwahl. */
+const modelLine = computed(() => {
+  const m = boxModel.value;
+  const name = modelName(m);
+  const id = (MODELS as readonly string[]).includes(m)
+    ? study.value?.routes[m as (typeof MODELS)[number]]
+    : undefined;
+  return id
+    ? TEXTS.modelLine.replace("{name}", name).replace("{id}", id)
+    : TEXTS.modelLineLive.replace("{name}", name);
+});
 const zones = computed(() =>
   scenario.value ? commentZones(scenario.value, levelName.value) : null,
 );
@@ -1129,7 +1140,7 @@ const pct = (p: number | null | undefined): string =>
 
           <template v-else>
             <p class="ch-muted">{{ TEXTS.pickHint }}</p>
-            <p class="ch-summary">{{ scenario?.summary }}</p>
+            <p class="ch-summary">{{ modelLine }}</p>
             <ul class="ch-sites">
               <li v-for="s in sites" :key="s.id">
                 <button type="button" @click="select(s.id)">

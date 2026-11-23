@@ -33,6 +33,9 @@ export const TEXTS = {
     S5: "Dazu kommen technische statt fachlicher Namen.",
     S6: "Dazu kommen falsche Namen. Die Sicherheit sinkt noch einmal.",
   } as Record<string, string>,
+  /** Zeile unter dem Editor: Modell, dessen Werte gerade zu sehen sind. `{name}`, `{id}`: Studienmodell; `modelLineLive`: live abgefragtes Modell */
+  modelLine: "Gemessene Werte: {name} ({id})",
+  modelLineLive: "Gemessene Werte: {name}, soeben live abgefragt",
   /** Legende der Färbung: Überschrift (max. 40 Zeichen) und Satz zur Doppelkodierung (Rand/Zeichen, nicht nur Farbe; max. 110 Zeichen) */
   legendTitle: "Färbung nach P(top1)",
   legendNote:
@@ -45,7 +48,7 @@ export const TEXTS = {
     "P(top1) ist die Wahrscheinlichkeit des besten Tokens. Je näher an 1, desto sicherer das Modell.",
   /** Info-Dialog im HUD (Knopf (i)) */
   info: {
-    title: "Studie: Kontext-Hygiene",
+    title: "Experiment: Kontext-Hygiene",
     question:
       "Sinkt die Sicherheit beim nächsten Token, wenn der Code Schritt für Schritt schlechter wird?",
     flow: [
@@ -75,10 +78,11 @@ export const TEXTS = {
       "Eine KI schrieb den Korpus; Autor und Prüfer kannten die Hypothese.",
     ],
     commentEmojiInfo:
-      "🚫🤖 markiert Kommentare für Menschen. Die Kommentare auf S0 und D0–D4 stammen aus der Studie. Kopfzeile und Kommentare auf S1–S6 stehen nur auf der Folie: Keine Messung nutzte sie, und „Live abfragen“ sendet sie nie mit.",
+      "🚫🤖 markiert Kommentare für Menschen. Die Kommentare auf S0 und D0–D4 waren Teil der Messung. Kopfzeile und Kommentare auf S1–S6 stehen nur auf der Folie: Keine Messung nutzte sie, und „Live abfragen“ sendet sie nie mit.",
     missInfo:
       "Oberste Zeile rot mit ✗: Der beste Vorschlag des Modells ist nicht das erwartete Token. Blau mit ✓: Er ist es.",
-    source: "Studie 3, Daten vom 06.–08.11.2026, Bericht `REPORT.md`.",
+    source:
+      "Eigene Experimente, Daten vom 06.–08.11.2026. Den Bericht gibt es auf Nachfrage.",
   },
   /** HUD „Live abfragen“ */
   live: {

@@ -140,10 +140,13 @@ describe("Kommentare", () => {
   it("Kopfzeile steht ganz oben und fachlich sinnvoll auf jeder Stufe", () => {
     for (const [name, sc] of Object.entries(data.scenarios)) {
       expect(sc.header, name).toBeTruthy();
+      expect(sc.headerDetail, name).toBeTruthy();
       for (const level of [...LADDERS.dose, ...LADDERS.steps]) {
         const zones = commentZones(sc, level)!;
         expect(zones[0]!.beforeLine, `${name}/${level}`).toBe(0);
-        expect(commentProse(zones[0]!).join(" "), name).toBe(sc.header);
+        expect(commentProse(zones[0]!).join(" "), name).toBe(
+          `${sc.header} ${sc.headerDetail}`,
+        );
       }
     }
   });

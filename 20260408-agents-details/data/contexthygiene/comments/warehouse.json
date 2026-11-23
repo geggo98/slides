@@ -1,5 +1,6 @@
 {
   "header": "Warehouse stock: decides how many pieces may be picked, how long picking takes, and how many whole packs to reorder.",
+  "headerDetail": "Items carry a pack size; stock tracks reserved pieces and a status (sufficient, low, blocked). Picking time depends on handling: normal, chilled or hazardous goods. Low stock is picked in whole packs only, blocked stock not at all.",
   "levels": {
     "S1": [
       {

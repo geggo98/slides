@@ -6,13 +6,14 @@
 // Zuschauer aber wenig Zeit zum Lesen und müssen dem Ablauf schnell folgen. Darum
 // gibt es zusätzlich
 //   - je Fachgebiet eine Kopfzeile, die fachlich sagt, wofür die Datei da ist
-//     (`scenario.header`, steht über jeder Stufe), und
+//     (`scenario.header`, steht über jeder Stufe), samt einem Zusatz mit den
+//     fachlichen Einzelheiten (`scenario.headerDetail`, steht direkt darunter), und
 //   - Kommentare für S1–S6 (`levels[Sx].comments`), sinngemäß die von S0 und dort,
 //     wo die Struktur sich geändert hat, neu gesetzt.
 // Nichts davon wurde gemessen. Live gesendet wird weiterhin nur `scenario.comments`.
 //
 // Quelle: `comments/<fachgebiet>.json`
-//   { "header": "…",
+//   { "header": "…", "headerDetail": "…",
 //     "levels": { "S1": [ { "before": "final class Price {", "text": "…" }, … ], … } }
 // `before` ist der Text der Codezeile (ohne Einrückung), über der der Kommentar steht.
 // Kommt die Zeile mehrfach vor, wählt `nth` (ab 1) das Vorkommen.
@@ -35,6 +36,7 @@ export interface AuthoredTarget {
   levels: Record<string, { code: string; comments?: CommentBlock[] }>;
   comments: CommentBlock[];
   header?: string;
+  headerDetail?: string;
 }
 interface AuthoredBlock {
   before: string;
@@ -43,12 +45,14 @@ interface AuthoredBlock {
 }
 interface AuthoredFile {
   header: string;
+  headerDetail: string;
   levels: Record<string, AuthoredBlock[]>;
 }
 
 export const AUTHORED_LEVELS = ["S1", "S2", "S3", "S4", "S5", "S6"];
 /** Länger liest niemand auf der Folie. */
 export const MAX_HEADER = 200;
+export const MAX_HEADER_DETAIL = 300;
 export const MAX_TEXT = 150;
 /** Anteil der S0-Kommentare, den jede Stufe mindestens erreicht. */
 const MIN_SHARE = 0.7;
@@ -76,6 +80,14 @@ export function applyAuthored(
         `${name}: header hat ${authored.header.length} Zeichen (max. ${MAX_HEADER})`,
       );
     sc.header = authored.header;
+
+    if (!authored.headerDetail?.trim())
+      problems.push(`${name}: headerDetail fehlt`);
+    else if (authored.headerDetail.length > MAX_HEADER_DETAIL)
+      problems.push(
+        `${name}: headerDetail hat ${authored.headerDetail.length} Zeichen (max. ${MAX_HEADER_DETAIL})`,
+      );
+    sc.headerDetail = authored.headerDetail;
 
     for (const level of Object.keys(authored.levels ?? {})) {
       if (!AUTHORED_LEVELS.includes(level))

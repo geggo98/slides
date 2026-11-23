@@ -1,5 +1,6 @@
 {
   "header": "Bills car rentals: rent with weekly discount and season factor, extra kilometres, insurance and damage share. Tracks each rental from reservation to return or cancellation.",
+  "headerDetail": "Models vehicle classes, insurance types, rental period, odometer reading and drivers. A rental moves from reserved via handed over to returned or cancelled. The invoice adds rent with weekly discount and season factor, extra kilometres and the insurance premium.",
   "levels": {
     "S1": [
       {

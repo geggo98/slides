@@ -1,5 +1,6 @@
 {
   "header": "Computes parking fees for stays and tracks which car occupies which spot. The fee depends on stay length, tariff, spot kind and season ticket.",
+  "headerDetail": "Stays are counted in minutes under day and night tariffs. Spot kinds include EV charging and disabled parking; season tickets grant free minutes. The fee charges each started hour at the hourly rate up to a daily cap, then applies a surcharge or discount by spot kind.",
   "levels": {
     "S1": [
       {

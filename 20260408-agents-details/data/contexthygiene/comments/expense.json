@@ -1,5 +1,6 @@
 {
   "header": "Computes how much of an employee's travel expenses the company refunds per receipt, and runs the expense claim through approval to payment.",
+  "headerDetail": "Each receipt is rated by category (meals, lodging, mileage, entertainment) against caps and percentage rates. Expired receipts count zero, and the advance is deducted from the total. Approval goes from draft via submitted to approved or rejected, with a four-eyes check and signing limits.",
   "levels": {
     "S1": [
       {

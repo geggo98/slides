@@ -19,7 +19,7 @@
 // - `comments`: die Kommentarzeilen der Ansicht „S0 + Kommentare“ (`S0k`,
 //   gleich `D0k`). Jeder Block steht VOR einer Codezeile (`beforeLine`, 0-basiert,
 //   gezählt im Code ohne Kommentare). Nicht Teil der Studie, nie gemessen.
-// - `header` und `levels[S1–S6].comments`: für die Folie geschrieben, siehe `comments.ts`.
+// - `header`, `headerDetail` und `levels[S1–S6].comments`: für die Folie geschrieben, siehe `comments.ts`.
 //
 // Was geprüft wird (das Skript bricht sonst ab)
 // ---------------------------------------------
