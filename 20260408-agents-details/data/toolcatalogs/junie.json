@@ -1,7 +1,7 @@
 {
   "tool": "junie",
   "source": "https://junie.jetbrains.com/",
-  "retrieved": "2026-11-16",
+  "retrieved": "2026-11-23",
   "note": "Von Hand geführt: Junie veröffentlicht keine vollständige Modellliste („works with any model you choose“; die Auswahl hängt vom Abo ab, `/model` zeigt sie; mit BYOK nur Modelle des jeweiligen Anbieters). Belegt sind die Modelle der Landingpage („Top performing models supported“) und die datierten Einträge unter /whats-new. Die Liste ist eine Untergrenze, keine Aufzählung.",
   "models": [
     {
@@ -97,6 +97,24 @@
     {
       "name": "GPT-6.1 Sol",
       "evidence": ["landing: Top performing models supported (GPT-6.1 SOL)"]
+    },
+    {
+      "name": "GPT 6.2 Astra",
+      "evidence": [
+        "whats-new 18.11.2026 (Release 26.11.2 (4100.8)): GPT 6.2 Astra and GPT 6.2 Sol support"
+      ]
+    },
+    {
+      "name": "GPT 6.2 Sol",
+      "evidence": [
+        "whats-new 18.11.2026 (Release 26.11.2 (4100.8)): GPT 6.2 Astra and GPT 6.2 Sol support"
+      ]
+    },
+    {
+      "name": "Gemini 4 Neon",
+      "evidence": [
+        "whats-new 19.11.2026 (Release 26.11.2 (4100.10)): Gemini 4 Neon support"
+      ]
     }
   ]
 }

@@ -149,29 +149,49 @@ const dez1 = (v: number) => v.toFixed(1).replace(".", ",");
 // und gpt-6-luna, und gpt-6.1-terra-non-reasoning fand dort keinen Platz mehr
 // (0,04 €: 0 gültige Pfeilpositionen, 0,08 €: 35). Ein yMin > 0 spart die untere
 // Hälfte der Achse, in der kein Modell liegt.
+// 23.11.2026: yMax 69 statt 68. claude-sonnet-5.5 steht seit diesem Stand auf
+// der JetBrains-Front (Rang 0) und belegt mit seinem Label den Platz, an den
+// claude-fable-5.2 bisher seine Führungslinie legte; links neben Fable steht
+// das Label von gemini-4-neon (neu). Bei 68 lag Fables Label unter der
+// Überschrift „Leistung um jeden Preis“ und fand keinen Platz, bei 69 steht
+// es mit einer langen Führungslinie (≈ 185 px) links über gemini-4-neon —
+// im Browser ansehen. 70 nimmt claude-haiku-5.5 den Platz, 71 und 72
+// gpt-6.1-terra-non-reasoning (Gitter über yMax × Pfeilknoten × Ziel, siehe
+// `arrows` der Kostenansicht).
 const AA_BASE = { W: 932, L: 46, R: 10, T: 10, H: 306, B: 33 } as const;
 const AA_COST_SCALE: Scale = makeScale({
   ...AA_BASE,
   xMax: 40,
   xLog: { min: 0.08 },
   yMin: 24,
-  yMax: 68,
+  yMax: 69,
 });
 // x = 1000/tps: am 31.10.2026 4,3 s (235 tok/s) bis 32,4 s (31 tok/s,
 // kimi-k3.1-pro) je 1 000 Tokens; am 09.11.2026 (neue AA-Tempo-Methodik)
 // 4,3 s (233 tok/s) bis 31,6 s (32 tok/s), wieder kimi-k3.1-pro. Am 16.11.2026
 // kommt muse-ember mit 2,3 s (439 tok/s) dazu, deshalb beginnt die Achse bei
 // 2 s statt 3 s, und der Index reicht bis 68 (claude-fable-5.2: 64,6).
+// 23.11.2026: 2,15–34 s und Index 18–74. Mit den neuen Tempowerten liegen
+// gemini-4-hydrogen (157 tok/s) und claude-sonnet-5.5 (152 tok/s) bei Index
+// ≈ 54 fast aufeinander, dazu ein Knäuel aus glm-5.3, gpt-6.1-terra-non-
+// reasoning und qwen3.8-flash-next um 30. Auf der alten Skala (2–40 s, 22–68)
+// braucht die Entzerrung sechs Durchgänge, der Test erlaubt fünf. Gitter
+// yMin 14–25 × yMax 66–80 × xMax 33–60 × xMin 1,5–2,2: Fünf oder weniger
+// gibt es erst ab einer Indexspanne von 56 und xMax ≤ 38. Gewählt die
+// kleinste Spanne mit zwei Durchgängen und allen Prüfungen der Tests:
+// 18–74, xMax 34 (kimi-k3.1-pro: 30,7 s), xMin 2,15 (muse-ember: 2,26 s).
 const AA_SPEED_SCALE: Scale = makeScale({
   ...AA_BASE,
-  xMax: 40,
-  xLog: { min: 2 },
-  yMin: 22,
-  yMax: 68,
+  xMax: 34,
+  xLog: { min: 2.15 },
+  yMin: 18,
+  yMax: 74,
 });
 
 const AA_COST_TICKS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20];
 const AA_Y_TICKS = [25, 30, 35, 40, 45, 50, 55, 60];
+/** Tempoansicht: Skala 18–74, die Ticks decken sie bis 70 ab. */
+const AA_SPEED_Y_TICKS = [20, ...AA_Y_TICKS, 65, 70];
 /** tok/s-Ticks von schnell nach langsam — in x-Koordinaten 1000/t. */
 const TPS_TICKS = [300, 200, 100, 60, 40, 30];
 
@@ -293,8 +313,14 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // Terra; frei ist die leere Ecke links über ihr — Knoten (0,33 €, 43),
       // Ziel (0,08 €, 53,5). Dort zeigen die Pfeile in den Bereich, den kein
       // Modell erreicht, und kreuzen die Front nicht.
+      //
+      // 23.11.2026, Skala bis 69: Gitter yMax 68–72 × Knoten (0,3–0,8 € ×
+      // 42–50) × Ziel (0,10–0,16 € × 52–60), dieselben Prüfungen wie die
+      // Tests (dazu die von `labelLayout.test.ts`): 90 Treffer, alle mit yMax
+      // 69 und Knoten (0,5 € oder 0,6 €, 48 oder 50), jedes Ziel. Gewählt
+      // Knoten (0,5 €, 48), Ziel unverändert.
       hubX: (s) => s.px(0.5),
-      hubY: (s) => s.py(46),
+      hubY: (s) => s.py(48),
       target: (s) => ({ x: s.px(0.13), y: s.py(56) }),
     },
     axisTitle:
@@ -355,7 +381,7 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
     scale: AA_SPEED_SCALE,
     xTicks: TPS_TICKS.map((t) => 1000 / t),
     xTickLabel: (x) => String(Math.round(1000 / x)),
-    yTicks: AA_Y_TICKS,
+    yTicks: AA_SPEED_Y_TICKS,
     yTickLabel: String,
     split: { x: 1000 / 100, y: 45 },
     quadrants: quadrantsWith({
@@ -380,9 +406,18 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // muse-wonder und gpt-6.1-sol. Gitter 9 × 7 × 7 × 7 mit denselben
       // Prüfungen wie die Tests: 21 Treffer, alle mit Knoten bei 30 s (≈ 33
       // tok/s). Gewählt Knoten (30 s, 42) → Ziel (20 s, 48).
-      hubX: (s) => s.px(30),
-      hubY: (s) => s.py(42),
-      target: (s) => ({ x: s.px(20), y: s.py(48) }),
+      // 23.11.2026: Unter diesem Knoten liegen jetzt qwen4-max (neu mit Tempo,
+      // 64 tok/s) und kimi-k3.1-pro. Gitter Knoten (4–35 s × 26–46) × Ziel
+      // (0,5–0,8 × Knoten-x, +4 bis +10 Punkte): 33 Treffer, 32 davon mit
+      // Knoten bei 5 s (≈ 200 tok/s) und Index 42–46, dazu (35 s, 38) am
+      // rechten Rand. Verfeinert (4,2–6 s × 40–48): frei sind 4,8–5,6 s bei
+      // 42–48. Gewählt die Mitte, Knoten (5 s, 45) → Ziel (3 s, 51): Die
+      // Pfeile zeigen in die leere Ecke links oben, wie in der Kostenansicht.
+      // Gesucht auf der alten Skala, auf der neuen (18–74, 2,15–34 s) mit
+      // denselben Prüfungen nachgeprüft.
+      hubX: (s) => s.px(5),
+      hubY: (s) => s.py(45),
+      target: (s) => ({ x: s.px(3), y: s.py(51) }),
     },
     axisTitle:
       "Ø Output-Tokens/s (Ende zu Ende, log. Skala, links = schneller) — Artificial Analysis Intelligence Index",
@@ -453,9 +488,14 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // „Billiger“ (bei 1140/1160 gemessen: Überdeckung); so steil passt sie nur in
       // ein Band unter den Punkten, deshalb yMin 1010 statt 1115. Gemessen in
       // Chromium, Firefox und WebKit, hell und dunkel: 4 px Luft zwischen beiden Texten.
+      // 23.11.2026: glm-5.2 (1201) liegt erstmals über dem Boden, bei 2,15 $
+      // direkt unter der Diagonale zum Ziel (2 $, 1154). Gitter Ziel (1–4 $ ×
+      // 1100–1185) beim alten Knoten: 21 Treffer. Gewählt (2,5 $, 1154) — die
+      // Diagonale steigt damit mit 11,8° statt 10,5°, also steiler als die
+      // 8°, unter denen ihr Text „Billiger“ berührt.
       hubX: (s) => s.px(16),
       hubY: (s) => s.py(1048),
-      target: (s) => ({ x: s.px(2), y: s.py(1154) }),
+      target: (s) => ({ x: s.px(2.5), y: s.py(1154) }),
     },
     axisTitle: `Listenpreis je 1M Token (USD, ${DA_MIX_TEXT} gemischt, log. Skala) — DesignArena-Elo`,
     xText: usdT,
@@ -526,8 +566,13 @@ export const VARIANTS: Record<VariantId, ParetoVariant> = {
       // und Labels: Es passen nur Knoten bei 3000–5000 s und 1070–1100; links
       // kreuzt „Schneller & beliebter“ Punkte oder „Schnell, aber unbeliebt“.
       // Gewählt die Mitte der freien Fläche (16.11.2026).
-      hubX: (s) => s.px(3000),
-      hubY: (s) => s.py(1080),
+      // 23.11.2026: glm-5.2 (1201, 46 min) liegt jetzt über dem Boden, direkt
+      // unter „Beliebter“ am Knoten 3000 s. Gitter Knoten (2000–5500 s ×
+      // 1030–1100) × Ziel (320–1000 s × 1080–1190): frei sind 2000–2400 s bei
+      // 1040–1060 und 3500–5500 s bei 1080–1100. Gewählt die Mitte des
+      // größeren Felds, Knoten (4500 s, 1090), Ziel unverändert.
+      hubX: (s) => s.px(4500),
+      hubY: (s) => s.py(1090),
       target: (s) => ({ x: s.px(450), y: s.py(1120) }),
     },
     axisTitle:

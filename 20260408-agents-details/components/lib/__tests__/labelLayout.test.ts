@@ -262,8 +262,9 @@ describe("Hauptfolie (pareto-heute) — kein Schalter verschiebt ein Label", () 
     // Verschiebbar sind die Claude-Punkte; dazu jeder feste Marker, den die
     // Entzerrung im Overlay mit ausweichen lässt (`yieldFixed`, bis 09.11.2026:
     // gemini-4-carbon unter claude-opus-5.5). Sein Label wandert mit dem
-    // Marker — die dokumentierte Ausnahme. Am 16.11.2026 verdeckt kein
-    // Claude-Punkt mehr einen festen (Carbon 4,80 €, Opus ×0,8 = 7,03 €).
+    // Marker — die dokumentierte Ausnahme. Am 16.11.2026 verdeckte kein
+    // Claude-Punkt einen festen (Carbon 4,80 €); seit 23.11.2026 steht Carbon
+    // wieder bei 6,79 €, Opus ×0,8 bei 7,03 €.
     const claude = aus.pts.filter((p) => p.movable).map((p) => p.id);
     expect(claude.length).toBe(4);
     const gewichen = aus.pts
@@ -273,7 +274,7 @@ describe("Hauptfolie (pareto-heute) — kein Schalter verschiebt ein Label", () 
         (id) =>
           JSON.stringify(aus.pos.get(id)) !== JSON.stringify(an.pos.get(id)),
       );
-    expect(gewichen).toStrictEqual([]);
+    expect(gewichen).toStrictEqual(["gemini-4-carbon"]);
     const movable = new Set([...claude, ...gewichen]);
     for (const [id, p] of aus.layout.core) {
       if (movable.has(id)) continue;

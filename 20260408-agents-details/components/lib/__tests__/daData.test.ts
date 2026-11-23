@@ -170,9 +170,12 @@ describe("daData — Modelle und Stufen", () => {
 
 // Die Fronten, die Lead-Text und Sprechernotizen nennen. Bewegt sich eine mit
 // einem neuen Snapshot, muss der Text nach (Runbook, Schritt 5).
-describe("daData — Fronten (Stand 16.11.2026)", () => {
+describe("daData — Fronten (Stand 23.11.2026)", () => {
   it("Preisansicht", () => {
+    // 23.11.2026: glm-5.3-flash ist neu auf dem Board (1235 bei 0,24 $, rund
+    // 290 Duelle) und steht unten vor minimax-m3.1-flash.
     expect(paretoFront(DA_COST).front.map((p) => p.label)).toStrictEqual([
+      "glm-5.3-flash",
       "minimax-m3.1-flash",
       "inkling-2-small",
       "qwen4-max",

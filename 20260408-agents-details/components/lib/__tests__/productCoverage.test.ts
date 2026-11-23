@@ -74,35 +74,43 @@ describe("coverage", () => {
     // Junie alle 17. Im Tempo-Chart fehlt nur Junies gpt-6-astra-Verwandtschaft
     // nicht mehr; claude-fable-5.1 fiel aus dem v5-Stand und zählt bei
     // JetBrains AI (Kosten, Tempo) nicht mehr als gezeichnet.
+    // 23.11.2026: Cursor und Windsurf +1 Familie (gemini-4-neon), Junie +3
+    // (dazu gpt-6.2-astra und gpt-6.2-sol); AA misst alle drei. Im Tempo-Chart
+    // fallen gemini-3.8-flash, gpt-6-astra und gpt-6.1-sol heraus: AA führt sie
+    // nicht mehr, umgerechnete v4-Zeilen tragen kein Tempo.
     "aa-cost": {
-      cursor: [57, 39],
-      windsurf: [54, 37],
+      cursor: [58, 40],
+      windsurf: [55, 38],
       "jetbrains-ai": [42, 25],
-      junie: [17, 17],
+      junie: [20, 20],
     },
     // Seit 09.11.2026 ohne Tempo für Modelle, die nur der v4-Stand kennt: deren
     // Wert stammt aus der alten AA-Methodik (`aaData.ts`, „Tempo seit 03.11.2026“).
     "aa-speed": {
-      cursor: [57, 17],
-      windsurf: [54, 17],
-      "jetbrains-ai": [42, 8],
-      junie: [17, 13],
+      cursor: [58, 17],
+      windsurf: [55, 15],
+      "jetbrains-ai": [42, 6],
+      junie: [20, 13],
     },
     // DesignArena (16.11.2026): Preise hat jedes Modell des Boards, und seit
     // diesem Stand auch eine Zeit fast jedes (82 von 83; am 09.11.2026 nur 28
     // ältere). Die Tempoansicht zeigt deshalb fast so viele Modelle wie die
     // Preisansicht; Junie 17 statt 1.
+    // 23.11.2026: neu bei DesignArena claude-haiku-5.5 und glm-5.3-flash
+    // (Cursor, Windsurf) sowie nemotron-3-ultra (Windsurf); Junie führt jetzt
+    // gpt-6.2-astra und gpt-6.2-sol, beide auf dem Board. gemini-4-neon führt
+    // DesignArena noch nicht: Junie 19 von 20.
     "da-cost": {
-      cursor: [57, 42],
-      windsurf: [54, 34],
+      cursor: [58, 44],
+      windsurf: [55, 37],
       "jetbrains-ai": [42, 27],
-      junie: [17, 17],
+      junie: [20, 19],
     },
     "da-speed": {
-      cursor: [57, 42],
-      windsurf: [54, 33],
+      cursor: [58, 44],
+      windsurf: [55, 36],
       "jetbrains-ai": [42, 27],
-      junie: [17, 17],
+      junie: [20, 19],
     },
   };
 
@@ -174,8 +182,9 @@ describe("summarize", () => {
     expect(s.isDefault).toBe(false);
     expect(s.tool?.id).toBe("jetbrains-ai");
     expect(s.base.length).toBe(25);
-    expect(s.front.length).toBe(4);
-    expect(s.dominated).toBe(21);
+    // 23.11.2026: claude-sonnet-5.5 kommt als fünfte Sprosse dazu (aaExtras).
+    expect(s.front.length).toBe(5);
+    expect(s.dominated).toBe(20);
     expect(s.coverage?.plotted).toBe(25);
   });
 
@@ -197,9 +206,11 @@ describe("Texte für eine Auswahl", () => {
 
   it("der Absatz nennt die berechnete Leiter des Produkts, billigste zuerst, und die Zahlen", () => {
     const t = text(leadFor(cost, jb));
-    expect(t).toContain("gpt-5-mini 0,11 € (≈ 8,1) → gpt-6-luna 0,13 € (27,9)");
+    // 23.11.2026: gpt-5-mini 0,12 € statt 0,11 € — der Kostenfit der
+    // v4-Umrechnung ist mit dem neuen Stand neu bestimmt.
+    expect(t).toContain("gpt-5-mini 0,12 € (≈ 8,1) → gpt-6-luna 0,13 € (27,9)");
     expect(t).toContain("claude-opus-5.5 8,79 € (59,1)");
-    expect(t).toContain("JetBrains AI: 4 von 25 auf der Front, die übrigen 21");
+    expect(t).toContain("JetBrains AI: 5 von 25 auf der Front, die übrigen 20");
   });
 
   it("die Tempo-Ansicht beginnt beim Langsamsten und kennzeichnet geschätzte Werte", () => {
@@ -213,9 +224,9 @@ describe("Texte für eine Auswahl", () => {
     const t = text(leadFor(V, { ...s, front }));
     expect(t).toContain("Wo Du wartest");
     // neun Sprossen: kompakt, ohne Scores (sonst läuft die Folie über)
-    // Stand 16.11.2026; die Auswahl sind die ersten neun Modelle mit Tempo.
+    // Stand 23.11.2026; die Auswahl sind die ersten neun Modelle mit Tempo.
     expect(t).toContain(
-      "claude-opus-5.5 116 tok/s → muse-wonder 118 tok/s → step-5 124 tok/s",
+      "claude-opus-5.5 115 tok/s → minimax-m3.1-flash 127 tok/s → claude-sonnet-5.5 152 tok/s",
     );
     expect(t).not.toContain("(≈");
     expect(t.indexOf("gemini-4-hydrogen")).toBeGreaterThan(-1);
