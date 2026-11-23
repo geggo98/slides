@@ -5,11 +5,12 @@
  * aus) antworten sofort, und jedes Tool-Ergebnis löst den nächsten Request
  * aus — ohne den User. Entwurf: Spec und Prototyp ToolLoop (mock.html).
  *
- * Klicks (`clicks: 2`): 0 Ruhezustand · 1 der Klick ist das „Senden“ des
- * Users und startet den Autoplay der Ereignisse 1–12 · 2 Kostenansicht
- * (Balken in drei Segmente, tools-Marker gerahmt, Fazit).
- * Rückwärts, Einsprung in die Folie und prefers-reduced-motion zeigen den
- * Endzustand sofort. Kein globaler Tastatur-Handler: Pfeiltasten und Leertaste
+ * Klicks (`clicks: 13`, `CLICKS` in toolLoopLogic): 0 Ruhezustand · 1 der Klick
+ * ist das „Senden“ des Users · 2–12 je ein Ereignis weiter · 13 Kostenansicht
+ * (Balken in drei Segmente, tools-Marker gerahmt, Fazit). Die Folie spielt
+ * nie von selbst ab; der ▶-Knopf der Leiste spielt auf Wunsch automatisch.
+ * Rückwärtsklicken und Einsprung in die Folie zeigen den Zustand des
+ * Klickstands. Kein globaler Tastatur-Handler: Pfeiltasten und Leertaste
  * bleiben bei Slidev.
  *
  * Zahlen: die ROWS aus TokenAccumulation.vue, Summe der Balken 53.850. Der
@@ -18,7 +19,6 @@
  */
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { onSlideLeave, useDarkMode, useIsSlideActive } from "@slidev/client";
-import { usePrefersReducedMotion } from "@shared/components/brainless/lib/usePrefersReducedMotion";
 import { getCatColors } from "./simulationData";
 import {
   CALLS,
@@ -44,7 +44,6 @@ import {
 const props = withDefaults(defineProps<{ clicks?: number }>(), { clicks: 0 });
 
 const { isDark } = useDarkMode();
-const reduced = usePrefersReducedMotion();
 
 // ── Farben: Kategorien aus getCatColors, Rest wie TokenAccumulation ───────
 const vars = computed(() => {
@@ -86,7 +85,7 @@ const vars = computed(() => {
 });
 
 // ── Zustand ─────────────────────────────────────────────────────────────
-const init = viewForClicks(props.clicks, null, false);
+const init = viewForClicks(props.clicks);
 const ev = ref(init.ev);
 const cost = ref(init.cost);
 const playing = ref(false);
@@ -135,23 +134,22 @@ function pick(i: number) {
   inspect.value = inspect.value === i ? null : i;
 }
 
-function applyClicks(c: number, prev: number | null) {
+function applyClicks(c: number) {
   stop();
   inspect.value = null;
-  const v = viewForClicks(c, prev, reduced.value);
+  const v = viewForClicks(c);
   cost.value = v.cost;
   ev.value = v.ev;
-  if (v.autoplay) play();
 }
 watch(
   () => props.clicks,
-  (c, p) => applyClicks(c, p),
+  (c) => applyClicks(c),
 );
 // Bewusst `watch` auf useIsSlideActive statt onSlideEnter (siehe
-// CodexEffortTui): so läuft beim Betreten nur der Endzustand, nie Autoplay.
+// CodexEffortTui): beim Betreten gilt der Klickstand, ein laufender ▶-Lauf endet.
 const active = useIsSlideActive();
 watch(active, (a) => {
-  if (a) applyClicks(props.clicks, null);
+  if (a) applyClicks(props.clicks);
 });
 onSlideLeave(stop);
 onBeforeUnmount(stop);

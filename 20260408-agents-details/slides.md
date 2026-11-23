@@ -365,7 +365,7 @@ hideInToc: true
 <ToolDefinitions />
 
 ---
-clicks: 2
+clicks: 13
 hideInToc: true
 ---
 
@@ -382,7 +382,7 @@ Eine Frage, vier Requests: Jedes Tool-Ergebnis startet die nächste Runde, ohne 
 <!--
 Gleiches Szenario und gleiche Zahlen wie auf der Folie „Ein Bugfix, Token für Token“. Der schraffierte tools-Marker ist nicht maßstäblich: Keine Quelle der Folien trennt das tools-Array vom System-Prompt (4.000 Tokens); die Größen folgen auf den nächsten Folien (MCP: 17K–126K). Dateinamen und Tool-Parameter sind Beispiele, die IDs `toolu_01` bis `toolu_03` sind gekürzt.
 
-Ablauf: Klick 1 schickt die Frage ab und spielt die vier Requests ab. Klick 2 zeigt die Kosten. Ein Klick auf ein Kästchen zeigt unten, was an dieser Stelle übertragen wird.
+Ablauf: Jeder Klick schaltet genau ein Ereignis weiter, nichts läuft von selbst ab. Die zwölf Ereignisse kommen in dieser Reihenfolge: die Frage, Request 1, Tool-Aufruf, Tool-Ergebnis, Request 2, Tool-Aufruf, Tool-Ergebnis, Request 3, Tool-Aufruf, Tool-Ergebnis, Request 4 und die Antwort. Klick 13 zeigt die Kosten. Der ▶-Knopf in der Leiste der Komponente spielt auf Wunsch automatisch weiter, etwa beim Nachlesen. Ein Klick auf ein Kästchen zeigt unten, was an dieser Stelle übertragen wird.
 
 Das Tool antwortet nicht dem Modell. Das Harness führt das Tool aus und schickt das Ergebnis im nächsten Request mit, als `tool_result`-Block in einer Nachricht der Rolle `user`. Deshalb steht im Detail-Kasten „Tool → Harness“ und nicht „Tool → Modell“. Die Schleife endet, wenn die Antwort keinen `tool_use`-Block mehr enthält.
 

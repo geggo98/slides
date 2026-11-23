@@ -1,8 +1,10 @@
 // Die erwarteten Zahlen stammen aus dem Entwurf (Spec ToolLoop, Abschnitt 3
 // und 6) und von der Folie „Ein Bugfix, Token für Token“, nicht aus der
 // Ausgabe des geprüften Codes.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  CLICKS,
   EVENTS,
   LAST,
   evIndex,
@@ -57,42 +59,42 @@ describe("Zähler", () => {
 
 describe("Klick-Übergänge", () => {
   it("Klick 0: Ruhezustand", () => {
-    expect(viewForClicks(0, 1, false)).toEqual({
-      ev: 0,
-      cost: false,
-      autoplay: false,
-    });
+    expect(viewForClicks(0)).toEqual({ ev: 0, cost: false });
   });
 
-  it("Klick 1 vorwärts von 0: Autoplay, außer bei reduzierter Bewegung", () => {
-    expect(viewForClicks(1, 0, false)).toEqual({
-      ev: 0,
-      cost: false,
-      autoplay: true,
-    });
-    expect(viewForClicks(1, 0, true)).toEqual({
-      ev: LAST,
-      cost: false,
-      autoplay: false,
-    });
+  it("Klick 1 bis LAST: je ein Ereignis weiter, ohne Kosten", () => {
+    for (let c = 1; c <= LAST; c++) {
+      expect(viewForClicks(c), `Klick ${c}`).toEqual({ ev: c, cost: false });
+    }
   });
 
-  it("Klick 1 rückwärts von 2 oder beim Eintritt: Endzustand ohne Kosten", () => {
-    expect(viewForClicks(1, 2, false)).toEqual({
-      ev: LAST,
-      cost: false,
-      autoplay: false,
-    });
-    expect(viewForClicks(1, null, false).autoplay).toBe(false);
+  it("Klick LAST + 1: Kostenansicht im Endzustand", () => {
+    expect(viewForClicks(LAST + 1)).toEqual({ ev: LAST, cost: true });
   });
 
-  it("Klick 2: Kostenansicht, auch beim Sprung von 0", () => {
-    expect(viewForClicks(2, 1, false)).toEqual({
-      ev: LAST,
-      cost: true,
-      autoplay: false,
-    });
-    expect(viewForClicks(2, 0, false).autoplay).toBe(false);
+  it("CLICKS ist LAST + 1 und stimmt mit `clicks:` der Folie überein", () => {
+    expect(CLICKS).toBe(LAST + 1);
+    const md = readFileSync(
+      new URL("../../../slides.md", import.meta.url),
+      "utf8",
+    );
+    // matches:  clicks: 13\nhideInToc: true\n---\n\n# Der User wartet, die Tools antworten
+    const m =
+      /clicks:\s*(?<n>\d+)\s*\n(?:[\w-]+:.*\n)*---\s*\n\s*# Der User wartet, die Tools antworten/.exec(
+        md,
+      );
+    expect(m, "Folie nicht gefunden").not.toBeNull();
+    expect(Number(m!.groups!.n)).toBe(CLICKS);
+  });
+
+  it("hängt nur vom Klickstand ab: vorwärts und rückwärts gleich", () => {
+    const forward = Array.from({ length: CLICKS + 1 }, (_, c) =>
+      viewForClicks(c),
+    );
+    const backward = Array.from({ length: CLICKS + 1 }, (_, i) =>
+      viewForClicks(CLICKS - i),
+    ).reverse();
+    expect(backward).toEqual(forward);
   });
 });
 

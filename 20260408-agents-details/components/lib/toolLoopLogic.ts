@@ -126,27 +126,21 @@ export const fmt = (n: number) => n.toLocaleString("de-DE");
 export interface ViewState {
   ev: number;
   cost: boolean;
-  /** Autoplay ab Ereignis 1 starten */
-  autoplay: boolean;
 }
 
+/** Slidev-Klicks der Folie: je einer pro Ereignis 1–LAST, dazu einer für die Kosten. */
+export const CLICKS = LAST + 1;
+
 /**
- * Klick 0: Ruhezustand. Klick 1: „Senden“, Autoplay (vorwärts von 0 aus),
- * sonst Endzustand. Klick 2: Kostenansicht. Bei reduzierter Bewegung gibt es
- * nie Autoplay.
+ * Klick 0: Ruhezustand. Klick 1 bis LAST: je ein Ereignis weiter (Klick 1 ist
+ * das „Senden“ des Users). Klick LAST + 1: Kostenansicht. Die Ansicht hängt nur
+ * vom Klickstand ab, deshalb zeigen Rückwärtsklicks und der Einsprung in die
+ * Folie denselben Zustand wie das Vorwärtsklicken.
  */
-export function viewForClicks(
-  clicks: number,
-  prev: number | null,
-  reduced: boolean,
-): ViewState {
-  if (clicks <= 0) return { ev: 0, cost: false, autoplay: false };
-  if (clicks === 1) {
-    const forward = prev !== null && prev < 1;
-    if (forward && !reduced) return { ev: 0, cost: false, autoplay: true };
-    return { ev: LAST, cost: false, autoplay: false };
-  }
-  return { ev: LAST, cost: true, autoplay: false };
+export function viewForClicks(clicks: number): ViewState {
+  if (clicks <= 0) return { ev: 0, cost: false };
+  if (clicks <= LAST) return { ev: clicks, cost: false };
+  return { ev: LAST, cost: true };
 }
 
 // ── Textbausteine ────────────────────────────────────────────────────────
