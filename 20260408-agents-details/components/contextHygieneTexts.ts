@@ -42,7 +42,7 @@ export const TEXTS = {
     "Rand und Zeichen tragen dieselbe Information wie die Farbe. So bleibt sie auch ohne Farbsehen lesbar.",
   /** Hinweis in der Infospalte, solange keine Stelle gewählt ist, max. 90 Zeichen */
   pickHint:
-    "Eine nummerierte Stelle anklicken: Top-5-Tokens und die Wahl der Modelle.",
+    "Nummerierte Stelle anklicken. Die Schalter darüber wechseln zwischen Luna, Sol, Terra.",
   /** Kurzer Satz neben der Completion-Box, was P(top1) bedeutet, max. 110 Zeichen */
   probHint:
     "P(top1) ist die Wahrscheinlichkeit des besten Tokens. Je näher an 1, desto sicherer das Modell.",

@@ -191,6 +191,11 @@ interface Shown {
 const live = reactive<Record<string, Record<string, Shown>>>({});
 const liveOrder = ref<string[]>([]);
 const allModels = computed<string[]>(() => [...MODELS, ...liveOrder.value]);
+/** Modellwahl in der Übersicht; Fokus abgeben, damit ArrowLeft/Right weiter blättern. */
+function pickModel(e: MouseEvent, m: string) {
+  boxModel.value = m;
+  (e.currentTarget as HTMLElement).blur();
+}
 const liveKey = (sc: string, lv: string, id: string, withComments: boolean) =>
   `${sc}|${lv}|${id}|${withComments ? "c" : ""}`;
 
@@ -1140,6 +1145,18 @@ const pct = (p: number | null | undefined): string =>
 
           <template v-else>
             <p class="ch-muted">{{ TEXTS.pickHint }}</p>
+            <div class="ch-pick" role="group" aria-label="Modell wählen">
+              <button
+                v-for="m in allModels"
+                :key="m"
+                type="button"
+                :class="{ on: m === boxModel }"
+                :aria-pressed="m === boxModel"
+                @click="pickModel($event, m)"
+              >
+                {{ modelName(m) }}
+              </button>
+            </div>
             <p class="ch-summary">{{ modelLine }}</p>
             <ul class="ch-sites">
               <li v-for="s in sites" :key="s.id">
@@ -1531,6 +1548,28 @@ const pct = (p: number | null | undefined): string =>
 }
 .ch-gold {
   margin: 2px 0 6px;
+}
+.ch-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 4px 0;
+}
+.ch-pick button {
+  font:
+    11px/1.2 system-ui,
+    sans-serif;
+  color: var(--ch-text);
+  background: transparent;
+  border: 1px solid var(--ch-line);
+  border-radius: 5px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.ch-pick button.on {
+  background: var(--ch-accent-bg);
+  border-color: var(--ch-accent);
+  font-weight: 700;
 }
 .ch-summary {
   margin: 6px 0;
