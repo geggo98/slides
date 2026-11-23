@@ -21,7 +21,7 @@ import {
   type Presence,
   type Study9,
   type TestSite,
-} from "../erosionChain";
+} from "../erosionChainLogic";
 
 const data = study as unknown as Study9;
 

@@ -28,7 +28,7 @@ import {
 import { useDarkMode, useIsSlideActive } from "@slidev/client";
 import Callout from "@shared/components/Callout.vue";
 import raw from "../data/contextrot/study7-luna.json";
-import { ENDPOINT, isHit, keyType } from "./lib/contextHygiene";
+import { ENDPOINT, isHit, keyType } from "./lib/contextHygieneLogic";
 import { sliceRuns, toRuns, type Run } from "./lib/codeRuns";
 import {
   DEFAULT_LUNA,

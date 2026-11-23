@@ -6,7 +6,7 @@
 // den testbaren Stellen. Die Folie ruft kein Modell auf. Alle Messwerte kommen
 // aus data/erosion/study9-chain.json (gebaut von data/erosion/build.ts, dort
 // gegen den Bericht der Studie geprüft); die Rechenhilfen stehen in
-// lib/erosionChain.ts.
+// lib/erosionChainLogic.ts.
 //
 // Fest im Text stehen nur die Zahlen der fremden Arbeiten. Sie stammen aus dem
 // Faktencheck vom 22.11.2026 (Belegzeilen aus den Primärquellen):
@@ -35,7 +35,7 @@ import {
   type Arm,
   type ModelId,
   type Study9,
-} from "./lib/erosionChain";
+} from "./lib/erosionChainLogic";
 
 const data = study as unknown as Study9;
 const ex = data.example;

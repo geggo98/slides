@@ -2,7 +2,7 @@
 // stammen aus Studie 3 und liegen in `data/contexthygiene/study3.json`.
 //
 // `measure()` und `isHit()` sind aus `viz/template.html` der Studie portiert
-// (dort wiederum aus `analyze.py`). `contextHygiene.test.ts` hält sie gegen alle
+// (dort wiederum aus `analyze.py`). `contextHygieneLogic.test.ts` hält sie gegen alle
 // gespeicherten Messwerte, damit die Folie dieselben Zahlen zeigt wie der Bericht.
 
 export type Model = "luna" | "sol" | "terra";
@@ -148,7 +148,7 @@ export interface Bucket {
  * Vier Stufen von unsicher (Orange) zu sicher (Blau). Orange gegen Blau liegt
  * auf der Achse, die bei Rot-Grün-Schwäche (Protanopie, Deuteranopie) erhalten
  * bleibt. Dazu trägt jede Stufe eine zweite Kodierung (Rand, Zeichen), und
- * `contextHygiene.test.ts` prüft Abstand unter Farbsehschwäche und Kontrast.
+ * `contextHygieneLogic.test.ts` prüft Abstand unter Farbsehschwäche und Kontrast.
  */
 export const BUCKETS: readonly Bucket[] = [
   {

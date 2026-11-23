@@ -12,9 +12,9 @@
 //   Versand und Wartezeit kommen als Funktionen herein, damit die Tests ohne
 //   Netz und ohne Uhr laufen.
 //
-// Metrik (`norm`, `isHit`) wie in `contextHygiene.ts`; die Leak-Regel ist aus
+// Metrik (`norm`, `isHit`) wie in `contextHygieneLogic.ts`; die Leak-Regel ist aus
 // `build.ts` übernommen.
-import { isHit, norm } from "./contextHygiene";
+import { isHit, norm } from "./contextHygieneLogic";
 
 // --- Daten -----------------------------------------------------------------
 

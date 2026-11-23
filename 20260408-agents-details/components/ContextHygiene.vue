@@ -6,7 +6,7 @@
 // Info-Dialog und Live-Abfrage liegen hinter dem 🛠️-HUD.
 //
 // Daten: `data/contexthygiene/study3.json` (erzeugt von `build.ts`), erst beim
-// Mount per `import()` geladen. Logik und Färbung: `lib/contextHygiene.ts`.
+// Mount per `import()` geladen. Logik und Färbung: `lib/contextHygieneLogic.ts`.
 // Texte: `contextHygieneTexts.ts`.
 //
 // Monaco-Besonderheiten, die hier eine Rolle spielen:
@@ -58,7 +58,7 @@ import {
   type Site,
   type Study3,
   type TopList,
-} from "./lib/contextHygiene";
+} from "./lib/contextHygieneLogic";
 import { TEXTS } from "./contextHygieneTexts";
 
 // ── Hilfen ───────────────────────────────────────────────────────────────────

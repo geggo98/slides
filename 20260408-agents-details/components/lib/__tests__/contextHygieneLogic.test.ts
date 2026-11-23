@@ -21,7 +21,7 @@ import {
   measure,
   pBucket,
   type Study3,
-} from "../contextHygiene";
+} from "../contextHygieneLogic";
 import {
   contrastRatio,
   deltaE,
