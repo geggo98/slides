@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useDarkMode } from "@slidev/client";
 import EChartWrapper from "./EChartWrapper.vue";
 import { getAxis, getTooltip, resolveColor } from "./chartConfig";
 import { MEMORY_APPROACHES } from "./chartData";
+import SourcesPopover from "./SourcesPopover.vue";
+import {
+  line as sourceLine,
+  scope as sourceScope,
+  sources,
+  caveats,
+} from "./memoryScatterSources";
 
 const { isDark } = useDarkMode();
+const sourcesOpen = ref(false);
+function openSources(e: MouseEvent) {
+  (e.currentTarget as HTMLElement).blur();
+  sourcesOpen.value = true;
+}
 
 const option = computed(() => ({
   tooltip: {
@@ -91,5 +103,43 @@ const option = computed(() => ({
 </script>
 
 <template>
-  <EChartWrapper :option="option" :height="420" />
+  <EChartWrapper :option="option" :height="380" />
+  <div class="ms-foot">
+    <span>{{ sourceLine }}</span>
+    <button
+      class="ms-ib"
+      aria-label="Quellen und Einschränkungen anzeigen"
+      @click="openSources"
+    >
+      ⓘ Quellen
+    </button>
+  </div>
+  <SourcesPopover
+    :open="sourcesOpen"
+    :scope="sourceScope"
+    :sources="sources"
+    :caveats="caveats"
+    @close="sourcesOpen = false"
+  />
 </template>
+
+<style scoped>
+.ms-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.75;
+}
+.ms-ib {
+  flex: none;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  padding: 1px 8px;
+  cursor: pointer;
+}
+</style>
