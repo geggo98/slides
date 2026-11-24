@@ -260,12 +260,22 @@ export interface MemoryApproach {
   color: ThemedColor;
 }
 
+// Einschätzung auf Skalen von 1–10, keine Messung. Erste Fassung vom
+// 08.04.2026 (Commit 1884bf8) ohne Quelle; am 24.11.2026 gegen die Literatur
+// korrigiert, Belege und Grenzen in memoryScatterSources.ts (retrieved
+// 2026-11-23). Geändert am 24.11.2026:
+//   CLAUDE.md / AGENTS.md  y 8 → 6, Kosten 5 → 6 (ETH: kein allgemeiner Gewinn, über 20 % Mehrkosten)
+//   Skills                 y 9 → 5 (Vercel: höchstens 79 %, AGENTS.md 100 %)
+//   Aider Repo Map         Kosten 3 → 4 (Prism: 13 % über dem Lauf ohne Memory)
+//   Mem0                   Kosten 6 → 4 (SWE-ContextBench: 0,62 $ gegen 0,79 $ je Aufgabe)
+// Ohne jede Messung unverändert: MEMORY.md (Auto), Session Persistence,
+// MemGPT / Letta (auf Code), Aider Repo Map (Effektivität).
 export const MEMORY_APPROACHES: MemoryApproach[] = [
   {
     name: "CLAUDE.md / AGENTS.md",
     x: 1,
-    y: 8,
-    size: 5,
+    y: 6,
+    size: 6,
     color: { light: "#ca8a04", dark: "#facc15" },
   },
   {
@@ -278,7 +288,7 @@ export const MEMORY_APPROACHES: MemoryApproach[] = [
   {
     name: "Skills (Progressive)",
     x: 3,
-    y: 9,
+    y: 5,
     size: 1,
     color: { light: "#16a34a", dark: "#4ade80" },
   },
@@ -286,7 +296,7 @@ export const MEMORY_APPROACHES: MemoryApproach[] = [
     name: "Aider Repo Map",
     x: 4,
     y: 8,
-    size: 3,
+    size: 4,
     color: { light: "#7c3aed", dark: "#a78bfa" },
   },
   {
@@ -307,7 +317,7 @@ export const MEMORY_APPROACHES: MemoryApproach[] = [
     name: "Mem0 (Vector+Graph)",
     x: 7,
     y: 5,
-    size: 6,
+    size: 4,
     color: { light: "#db2777", dark: "#f472b6" },
   },
   {

@@ -682,21 +682,21 @@ hideInToc: true
 hideInToc: true
 ---
 
-# Memory: Einfach schlägt komplex
+# Memory: Kein Ansatz gewinnt klar
 
 <div class="text-sm opacity-70 mb-1">
-Bubble-Größe = Token-Kosten. Sweet Spot: oben links (niedrige Komplexität, hohe Effektivität).
+Bubble-Größe = Token-Kosten. Sweet Spot: oben links. Den höchsten Punkt (Aider Repo Map) hat niemand gemessen.
 
 </div>
 
 <MemoryScatter />
 
 <!--
-Die Punkte in diesem Diagramm sind meine eigene Einschätzung. Ich habe sie für die erste Fassung am 08.04.2026 vergeben, ohne Quelle, und ein Protokoll dazu gibt es nicht mehr. Am 23.11.2026 habe ich sie gegen die Literatur geprüft. Belegen ließen sie sich nicht, denn keine Quelle bewertet die acht Ansätze auf einer gemeinsamen Skala.
+Die Punkte in diesem Diagramm sind meine eigene Einschätzung, keine Messung. Ich habe sie am 08.04.2026 für die erste Fassung vergeben, ohne Quelle. Am 24.11.2026 habe ich sie an der Literatur geprüft. Keine Quelle bewertet die acht Ansätze auf einer gemeinsamen Skala, aber einzelne Studien widersprechen einzelnen Werten.
 
-Vier Werte widersprechen den Belegen. Skills haben bei mir Effektivität 9, aber in der Eval von Vercel kamen sie auf höchstens 79 %, AGENTS.md auf 100 %. Die Aider Repo Map steht bei Kosten 3, die Prism-Studie misst 13 % Mehrkosten gegenüber dem Lauf ohne Memory. Mem0 steht bei Kosten 6, war in SWE-ContextBench aber billiger als ohne Kontext: 0,62 $ gegen 0,79 $ je Aufgabe, also ca. 78 %. Und für CLAUDE.md mit Effektivität 8 misst die ETH-Studie keinen allgemeinen Gewinn, dafür im Mittel über 20 % Mehrkosten.
+Vier Werte habe ich deshalb geändert. CLAUDE.md und AGENTS.md: Effektivität von 8 auf 6, Kosten von 5 auf 6, denn die ETH-Studie misst keinen allgemeinen Gewinn und im Mittel über 20 % Mehrkosten. Skills: Effektivität von 9 auf 5, denn in der Eval von Vercel kamen sie auf höchstens 79 %, AGENTS.md auf 100 %. Aider Repo Map: Kosten von 3 auf 4, denn Prism misst 13 % Mehrkosten gegenüber dem Lauf ohne Memory. Mem0: Kosten von 6 auf 4, denn in SWE-ContextBench kostete es 0,62 $ je Aufgabe, der Lauf ohne Kontext 0,79 $, also ca. 78 %.
 
-Die Kernaussage hält nur in schwächerer Form: Komplexe Memory-Systeme haben sich bei Coding-Aufgaben bisher nicht ausgezahlt. In VibeMemBench lagen 11 von 12 Paarungen (ca. 92 %) nicht über dem Lauf ohne Memory. Eine allgemeine Regel ist „einfach schlägt komplex“ trotzdem nicht, denn Supermemory, Prism und die Embedding-Suche von Cursor zeigen Gewinne. Die Werte habe ich bewusst unverändert gelassen, bis ich sie neu bewerte.
+Die Belege tragen eine Aussage: Komplexe Memory-Systeme haben sich auf Coding-Aufgaben bisher nicht ausgezahlt. In VibeMemBench lagen 11 von 12 Paarungen (ca. 92 %) nicht über dem Lauf ohne Memory. „Einfach schlägt komplex“ tragen sie nicht, denn Supermemory, Prism und die Embedding-Suche von Cursor zeigen Gewinne, und auch einfache Kontextdateien bringen keinen allgemeinen Gewinn. Vier Werte hat niemand gemessen: MEMORY.md, Session Persistence, MemGPT auf Code und die Effektivität der Aider Repo Map. Auch der höchste Punkt im Diagramm, die Aider Repo Map mit Effektivität 8, ist also ungemessen.
 -->
 
 ---
@@ -2634,9 +2634,9 @@ Der Kern ist trivial — ~10 Zeilen Pseudocode. Kein Classifier, kein Router, ke
 
 MCP-Server kosten 17K–126K Tokens pro Request. Skills lösen das mit Faktor 40–1100×. Beim Cache zählen **Request-Anzahl und Prefix-Stabilität** mehr als die Baseline-Größe — und Kosten sind **multiplikativ**: je weiter außen die Schleife, desto größer der Hebel.
 
-### 3. Einfach schlägt komplex
+### 3. Komplex heißt nicht besser
 
-4 Tools und <1K System-Prompt (Pi) konkurrieren mit 19+ Tools und 9.700 Zeilen Security (Claude Code). CLAUDE.md schlägt Vector-Datenbanken.
+4 Tools und <1K System-Prompt (Pi) konkurrieren mit 19+ Tools und 9.700 Zeilen Security (Claude Code). Memory-Systeme wie Mem0 schlagen auf Code bisher den Lauf ohne Memory nicht.
 
 ### 4. Der Wert steckt im Modell
 
