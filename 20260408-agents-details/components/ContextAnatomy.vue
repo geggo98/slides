@@ -66,7 +66,11 @@ const ROWS: Row[] = [
     ann: "wächst mit jeder Iteration",
     kind: "grow",
   },
-  { label: "Memory (MEMORY.md)", ann: "max 200 Zeilen", kind: "neutral" },
+  {
+    label: "Memory (MEMORY.md)",
+    ann: "lädt ≤200 Zeilen / 25 KB",
+    kind: "neutral",
+  },
   { label: "User-Message", ann: "ganz am Ende", kind: "neutral" },
 ];
 </script>

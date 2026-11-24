@@ -51,7 +51,9 @@ export const HARNESSES: Harness[] = [
     // handlers): 11 Kern-Tools + 5 standardmäßig aktive Multi-Agent-Tools;
     // mit 3 MCP-Ressourcen-Tools 19. Konfigurationsabhängig.
     tools: 16,
-    values: [4, 8, 8, 7, 5, 10, 0],
+    // MCP 8 → 7 (Stand 24.11.2026): `codex mcp-server` entfernt, Codex ist
+    // nur noch MCP-Client (learn.chatgpt.com/docs/mcp-server.md).
+    values: [4, 8, 7, 7, 5, 10, 0],
     desc: "Solides OSS, OS-native Sandboxing (Seatbelt/bwrap), OpenAI-fokussiert.",
   },
   {
@@ -63,7 +65,9 @@ export const HARNESSES: Harness[] = [
     // der Standardkonfiguration, 17 immer registriert, bis 27 mit
     // Plan-Modus, Todos und Tracker.
     tools: 20,
-    values: [7, 10, 8, 4, 1, 10, 0],
+    // Subagents 4 → 7 (Stand 24.11.2026): lokale Subagents standardmäßig an
+    // (abschaltbar per experimental.enableAgents=false), Remote per A2A.
+    values: [7, 10, 8, 7, 1, 10, 0],
     desc: "Breitestes Sandboxing (Docker/gVisor/Podman), 1M Context-Window.",
   },
   {
@@ -93,7 +97,11 @@ export const HARNESSES: Harness[] = [
     color: AGENT_COLORS.cursor,
     oss: false,
     lang: "(IDE)",
-    tools: 8,
+    // Stand 24.11.2026: cursor.com/docs/agent/overview.md nennt unter
+    // „Tools“ 9 Kategorien (Search, Web, Fetch Rules, Read, Edit, Shell,
+    // Browser, Image generation, Ask questions); die Zahl einzelner Tools
+    // veröffentlicht Cursor nicht.
+    tools: 9,
     values: [6, 5, 7, 10, 7, 0, 10],
     desc: "Einzige IDE mit Cursor-exklusiven Modellen (Composer, Tab).",
   },
@@ -114,13 +122,20 @@ export const MCP_DATA = [
   { name: "Jira", tokens: 17000 },
   { name: "Slack", tokens: 21000 },
   { name: "GitHub (35 Tools)", tokens: 26000 },
-  { name: "MySQL (106 Tools)", tokens: 54600 },
+  // neverinfamous/mysql-mcp, Stand 12/2025 (MCP-Issue #1978: „106 tools
+  // sends ~207KB (~54,600 tokens)“). Neuere Versionen: v2.0.0 191 Tools,
+  // v5.x ca. 242; dafür gibt es keine gemessene Tokenzahl. Geprüft 24.11.2026.
+  { name: "MySQL (106 Tools, 12/2025)", tokens: 54600 },
   // Drittschätzung ohne offengelegte Methode (dev.to/kenimo49, 05/2026:
   // „GitHub (full) | 93 | ~55,000“). Eine tiktoken-Zählung (o200k_base,
   // policylayer.com/token-cost/github) ergibt für 86 Tools 14.406 Tokens.
   // Geprüft 24.11.2026.
   { name: "GitHub (93 Tools, Schätzung)", tokens: 55000 },
-  { name: "MCP Docker (135 Tools)", tokens: 126000 },
+  // Docker MCP Gateway (Eintrag MCP_DOCKER, bündelt mehrere Server).
+  // Einzelbericht, /doctor in Claude Code 2.0.50, 24.11.2025
+  // (anthropics/claude-code#12241: „MCP_DOCKER: 135 tools (~125,964
+  // tokens)“). Das Gateway bietet inzwischen Dynamic MCP (mcp-find/mcp-add).
+  { name: "Docker-Gateway (135 Tools)", tokens: 126000 },
 ];
 
 // ── MCP Optimization Strategies ────────────────────────────────────────────
@@ -141,8 +156,11 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
     lazyLoading: "auto",
     allowDeny: true,
     hardLimit: null,
-    measuredReduction: 90,
-    approach: "Deferred Tools + BM25/Regex (ToolSearch)",
+    // Stand 24.11.2026: Herstellerangabe „over 85 percent“,
+    // platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool.md.
+    // BM25/Regex sind nur die zwei Varianten des API-Tools.
+    measuredReduction: 85,
+    approach: "Deferred Tools + ToolSearch (on demand)",
   },
   {
     agent: "Cursor",
@@ -150,6 +168,9 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
     lazyLoading: "file",
     allowDeny: true,
     hardLimit: "40/80",
+    // Stand 24.11.2026: −46,9 % Gesamt-Tokens des Agents in Läufen mit
+    // MCP-Aufruf (A/B-Test), keine Schema-Tokens;
+    // cursor.com/blog/dynamic-context-discovery (06.01.2026).
     measuredReduction: 47,
     approach: "Schemas auf Disk, on-demand lesen",
   },
@@ -216,7 +237,7 @@ export const TOOLSEARCH_STATS: ToolSearchStat[] = [
   {
     value: "49% → 74%",
     label: "Opus 4 Accuracy",
-    desc: "Tool-Selection bei 50+ Tools — weniger im Kontext = bessere Auswahl.",
+    desc: "MCP-Evals mit großen Tool-Bibliotheken — weniger im Kontext = bessere Auswahl.",
   },
   {
     // Stand 24.11.2026: code.claude.com/docs/en/agent-sdk/tool-search.md
@@ -380,14 +401,14 @@ export const TREEMAP_DATA = [
     name: "Codex",
     itemStyle: { color: "#10b981" },
     children: [
-      { name: "code-davinci-002\n(2021, deprecated!)", value: 3 },
+      { name: "code-davinci-002\n(2022, abgeschaltet 2023)", value: 3 },
       { name: "codex-1\n(Modell)", value: 5 },
       // Stand 24.11.2026 (developers.openai.com: deprecations, codex/models).
       { name: "codex-mini\n(abgeschaltet 02/2026)", value: 4 },
       { name: "GPT-5.3-Codex\n(Modell, deprecated)", value: 6 },
       { name: "Codex CLI\n(Open-Source)", value: 9 },
-      { name: "Codex Web\n(chatgpt.com/codex)", value: 6 },
-      { name: "Codex App\n(Desktop)", value: 5 },
+      { name: "Codex Cloud\n(früher Codex Web)", value: 6 },
+      { name: "Codex in der\nChatGPT-Desktop-App", value: 5 },
     ],
   },
   {
@@ -410,7 +431,7 @@ export const TREEMAP_DATA = [
       { name: "Cursor IDE\n(VS Code Fork)", value: 9 },
       { name: "Cursor Agent\n(Mode)", value: 8 },
       { name: "Cursor CLI\n(Headless)", value: 5 },
-      { name: "Background Agents\n(Cloud)", value: 7 },
+      { name: "Cloud Agents\n(früher Background Agents)", value: 7 },
       { name: "Composer\n(Cursor-exklusiv)", value: 8 },
       { name: "Cursor Tab\n(Cursor-exklusiv)", value: 6 },
     ],
@@ -420,9 +441,9 @@ export const TREEMAP_DATA = [
     itemStyle: { color: "#a78bfa" },
     children: [
       { name: "Inflection Pi\n(Chatbot — ANDERES Produkt!)", value: 4 },
-      { name: "Pi Framework\n(pi-mono SDK)", value: 7 },
+      { name: "Pi SDK\n(earendil-works/pi)", value: 7 },
       { name: "Pi Coding Agent\n(Harness)", value: 8 },
-      { name: "shittycodingagent.ai\n(Landing-Page)", value: 3 },
+      { name: "pi.dev\n(Landing-Page)", value: 3 },
     ],
   },
 ];
@@ -470,9 +491,9 @@ export const LEAK_STATS: LeakStat[] = [
     pi: "0 — kein Sandbox",
   },
   {
-    value: "22",
-    label: "Security Validators",
-    desc: "Für Bash-Command-Validierung",
+    value: "23",
+    label: "Security Checks",
+    desc: "Nacheinander auf jeden Bash-Befehl",
     pi: "0",
   },
   {

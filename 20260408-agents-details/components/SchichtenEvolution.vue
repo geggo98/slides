@@ -2,7 +2,7 @@
 const rows = [
   {
     system: "AutoGPT",
-    year: "April 2023",
+    year: "März 2023",
     mod: "Plan, Memory",
     mech: "GPT-4-Loop · Vector-DB",
     gate: { label: "Keines", cls: "none" },
@@ -54,7 +54,7 @@ const rows = [
     mod: "Ziel-Algorithmen (nicht Agent selbst)",
     mech: "Gemini-Ensemble · MAP-Elites · Evaluators",
     gate: { label: "Offline · Benchmark", cls: "offline" },
-    status: "Borg +0,7% · Matrix-Mul 4×4 in 48 muls",
+    status: "Borg +0,7% · 4×4-Matrix komplex: 48 muls",
   },
   {
     system: "Hermes Agent",
@@ -71,7 +71,7 @@ const rows = [
 <template>
   <div class="evo-panel">
     <p class="s-kicker">04 · Evolution im Detail</p>
-    <h3 class="s-h">Sieben Systeme, <em>zwei Achsen.</em></h3>
+    <h3 class="s-h">Acht Systeme, <em>zwei Achsen.</em></h3>
     <p class="s-lead">
       <em>Was wird modifiziert?</em> (Prompts → Memory → Skills → Code) und
       <em>wie streng ist das Gate?</em> (none → sandbox → PR → offline).
@@ -130,10 +130,11 @@ const rows = [
       <p>
         Der Agent schreibt sich
         <strong class="accent-evolution">Markdown-Prozeduren</strong>, nicht
-        seinen Python-Code. Skills entstehen nach komplexen Tasks (typisch ≥5
-        Tool-Calls), landen in <code>~/.hermes/skills/</code>, werden bei
-        erneuter Nutzung verfeinert. Optimierte Skills aus dem Schwester-Repo
-        kommen nur per PR mit Review; Prompt- und Code-Evolution ist geplant.
+        seinen Python-Code. Skills entstehen nach nicht-trivialen Workflows,
+        Fehlerpfaden oder Korrekturen, landen in <code>~/.hermes/skills/</code>,
+        werden bei erneuter Nutzung verfeinert. Optimierte Skills aus dem
+        Schwester-Repo kommen nur per PR mit Review; Prompt- und Code-Evolution
+        ist geplant.
       </p>
     </div>
   </div>

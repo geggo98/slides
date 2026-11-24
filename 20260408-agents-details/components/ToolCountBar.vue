@@ -53,6 +53,7 @@ const option = computed(() => ({
   <EChartWrapper :option="option" :height="280" />
   <div class="text-xs opacity-60 mt-1">
     Eingebaute Tools laut Doku bzw. Quellcode, Stand 24.11.2026;
-    konfigurationsabhängig, bei Claude Code viele nur unter Bedingungen.
+    konfigurationsabhängig, bei Claude Code oft nur unter Bedingungen; Cursor:
+    Tool-Kategorien der Doku.
   </div>
 </template>

@@ -48,7 +48,7 @@ const providers = [
     }
   }
 }`,
-    note: "Wrapper mit function-Objekt. strict: true erzwingt das Schema per Constrained Decoding.",
+    note: "Chat Completions: Wrapper mit function-Objekt; Responses API: flach. strict: true erzwingt das Schema per Constrained Decoding.",
   },
   {
     name: "Google Gemini",

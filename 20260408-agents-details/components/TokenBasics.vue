@@ -80,8 +80,8 @@ const P = computed(() => {
         <span :class="{ faint: !hiSym }"
           >Auch <b>Leerzeichen</b> & <b>Klammern</b> sind eigene Tokens.</span
         >
-        Der Tokenizer legt sie <b>vorab nach Häufigkeit</b> fest — ~100.000 im
-        Vokabular, nicht emergent.
+        Der Tokenizer legt sie <b>vorab nach Häufigkeit</b> fest — 100.000 bis
+        200.000 im Vokabular, nicht emergent.
       </p>
     </div>
 

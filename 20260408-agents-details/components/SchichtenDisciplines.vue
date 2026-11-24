@@ -83,7 +83,7 @@
             Agent = Applikation.
           </p>
           <p>
-            LangChains <code>deepagents-cli</code>: Platz 30 → 5 auf Terminal
+            LangChains <code>deepagents-cli</code>: Top 30 → Top 5 auf Terminal
             Bench 2.0
             <strong style="color: var(--s-harness)">ohne Modellwechsel</strong>.
           </p>

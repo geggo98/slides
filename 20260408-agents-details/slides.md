@@ -75,11 +75,21 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-70">
 
-- Die Loop terminiert, wenn das Modell **keinen Tool-Call** mehr ausgibt
+- Die Loop endet regulär, wenn das Modell **keinen Tool-Call** mehr ausgibt
 - Bei Claude Code heißt diese Loop `queryLoop()` (`src/query.ts`)
 - Der Harness muss nur die Infrastruktur bereitstellen — das Modell orchestriert
 
 </div>
+
+<!--
+Regulär endet die Loop, wenn das Modell keinen Tool-Call mehr ausgibt
+(Agent-SDK-Doku: „Turns continue until Claude produces output with no tool
+calls, at which point the loop ends“). Vorzeitig beenden sie Turn- und
+Budget-Limits, Stop-Hooks, ein Abbruch durch den User oder ein Fehler.
+`queryLoop()` kennt dafür zehn Terminal-Gründe, darunter `max_turns` und
+`stop_hook_prevented` (inoffizielle Analyse des geleakten Codes).
+Quelle: https://code.claude.com/docs/en/agent-sdk/agent-loop.md, geprüft 24.11.2026.
+-->
 
 ---
 hideInToc: true
@@ -116,12 +126,19 @@ Gibt dem Modell Tools und führt den Agent-Loop aus.
 
 Höhere Abstraktionsebene (LangChain, CrewAI).
 
-Anthropic warnt: _"Frameworks create extra layers that obscure prompts and responses."_
+Anthropic warnt: Frameworks verdecken oft die eigentlichen Prompts und Antworten.
 
 **Trend: verliert an Relevanz.**
 
 </div>
 </div>
+
+<!--
+Framework-Warnung als Paraphrase. Wörtlich, über Frameworks: „However, they
+often create extra layers of abstraction that can obscure the underlying
+prompts and responses, making them harder to debug.“
+Quelle: Anthropic, „Building effective agents“, geprüft 24.11.2026.
+-->
 
 ---
 hideInToc: true
@@ -141,7 +158,7 @@ hideInToc: true
 <div class="text-lg opacity-80 mt-4">
 
 **31. März 2026:** Eine 59,8-MB-Source-Map landet versehentlich in npm —<br/>
-**512K Zeilen** Claude-Code-TypeScript, deobfusziert.
+**512K Zeilen** Claude-Code-TypeScript, im Klartext.
 
 </div>
 
@@ -167,6 +184,13 @@ hideInToc: true
 # Was ist ein Token?
 
 <TokenBasics :clicks="$clicks" />
+
+<!--
+Stand 24.11.2026. Vokabulargröße je nach Modell: OpenAI cl100k_base rund
+100.000, o200k_base rund 200.000 (tiktoken, openai_public.py); Llama 3.1
+128.256, DeepSeek-V3 129.280, Qwen3 151.936 (vocab_size in config.json auf
+Hugging Face).
+-->
 
 ---
 hideInToc: true
@@ -363,6 +387,11 @@ Stand 24.11.2026.
   entfernt). Viele davon nur bedingt verfügbar: Glob und Grep fehlen
   standardmäßig auf macOS, Linux und WSL, TodoWrite ist standardmäßig aus,
   andere lädt ToolSearch erst bei Bedarf.
+- Codex CLI: ~16 Tool-Handler im Quellcode (rust-v0.172.0). Welche davon
+  das Modell sieht, hängt von Konfiguration und Feature-Flags ab: ein Test
+  in openai/codex (prompt_caching.rs) erwartet 7 bis 8 Tools, darunter
+  exec_command, write_stdin, apply_patch, view_image, request_user_input,
+  web_search und tool_search, update_plan nur optional.
 - Gemini CLI: 19 Standard-Tools laut docs/reference/tools.md, ohne die sechs
   experimentellen tracker_*-Tools.
 - Tool Search: In Claude Code für MCP-Tools Standard; zum Sitzungsstart laden
@@ -382,6 +411,10 @@ hideInToc: true
 
 <!--
 Stand 24.11.2026.
+- OpenAI: Das Beispiel zeigt das Format der Chat Completions API. Die
+  empfohlene Responses API nimmt ein flaches Objekt ohne `function`-Hülle:
+  `{"type": "function", "name": …, "description": …, "parameters": {…},
+  "strict": true}` (developers.openai.com, Function Calling).
 - Strict Mode ist kein Alleinstellungsmerkmal von OpenAI mehr: Anthropic
   erzwingt mit `strict: true` das Schema per Grammar-Constrained Sampling,
   verfügbar auf jedem Modell (platform.claude.com, strict-tool-use).
@@ -445,7 +478,7 @@ hideInToc: true
 
 <div class="text-sm opacity-70 mb-1">
 
-Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** löst das — mehr dazu am Ende dieses Kapitels.
+Ab etwa 30–50 Tools wählt Claude schlechter. Anthropic's **Tool Search Tool** hebt die Trefferquote deutlich — mehr dazu am Ende dieses Kapitels.
 
 </div>
 
@@ -453,6 +486,8 @@ Zu viele Tools = schlechtere Auswahl. Anthropic's **Tool Search Tool** löst das
 
 <!--
 Die Markierung bei 49 % stammt aus Anthropics internen MCP-Evaluationen mit „large tool libraries“; eine Tool-Zahl nennt die Quelle nicht. Opus 4 stieg mit Tool Search von 49 % auf 74 %, Opus 4.5 von 79,5 % auf 88,1 %. Quelle: <https://www.anthropic.com/engineering/advanced-tool-use>, geprüft 24.11.2026.
+
+Die Schwelle 30–50 Tools nennt die Tool-Search-Doku: „Claude's ability to pick the right tool degrades once you exceed 30–50 available tools.“ Quelle: <https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool.md>, geprüft 24.11.2026. Tool Search löst das Problem nicht vollständig, es verbessert die Auswahl.
 -->
 
 ---
@@ -464,7 +499,7 @@ hideInToc: true
 
 <div class="text-sm opacity-70 mb-1">
 
-MCP-Server kosten geschätzt **17K–126K Tokens** — ohne Tool Search bei **jedem** Request. Claude Code lädt Definitionen standardmäßig erst bei Bedarf. Praxis-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
+MCP-Server kosten geschätzt **17K–126K Tokens** (Spitze: Gateway für mehrere Server) — ohne Tool Search bei **jedem** Request. Claude Code lädt Definitionen standardmäßig erst bei Bedarf. Praxis-Sicht: <TalkXref slug="20260327-ai-agents">Coding-Agents im Alltag</TalkXref>.
 
 </div>
 
@@ -474,6 +509,10 @@ MCP-Server kosten geschätzt **17K–126K Tokens** — ohne Tool Search bei **je
 Ohne Tool Search schickt der Client die vollständigen Tool-Definitionen bei jedem Request mit. Claude Code hat Tool Search standardmäßig an: Zu Sessionbeginn lädt es nur Tool-Namen und Server-Instructions und holt Definitionen bei Bedarf nach. Vorab laden alle Tools nur mit `ENABLE_TOOL_SEARCH=false`, `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`, HIPAA-Konfiguration, Azure-Foundry-Deployments und Modellen vor Opus 4 bzw. Sonnet 4. Quelle: <https://code.claude.com/docs/en/mcp.md>, geprüft 24.11.2026.
 
 Der Balken „GitHub (93 Tools)“ mit ~55.000 Tokens ist eine Drittschätzung ohne offengelegte Methode (<https://dev.to/kenimo49/your-mcp-server-eats-55000-tokens-before-your-agent-says-a-word-i-measured-the-real-cost-19l8>). Eine tiktoken-Zählung (o200k_base) ergibt für 86 Tools 14.406 Tokens (<https://policylayer.com/token-cost/github>). Die beiden GitHub-Balken stammen aus unterschiedlichen Quellen und Methoden.
+
+Der Höchstwert 126K stammt nicht von einem einzelnen Server, sondern vom Docker MCP Gateway (Eintrag `MCP_DOCKER`), das mehrere Server bündelt: 135 Tools, ~125.964 Tokens laut `/doctor` in Claude Code 2.0.50, Einzelbericht vom 24.11.2025 (<https://github.com/anthropics/claude-code/issues/12241>). Das Gateway bietet inzwischen Dynamic MCP (`mcp-find`/`mcp-add`) und holt Server erst bei Bedarf in die Sitzung.
+
+MySQL: neverinfamous/mysql-mcp mit 106 Tools, Stand 12/2025 (<https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1978>). Neuere Versionen haben mehr Tools, v2.0.0 191 und v5.x laut Changelog etwa 242; für sie gibt es keine gemessene Tokenzahl.
 
 Kosten nach Klick: $5/MTok Input für Claude Opus 4.6, ohne Prompt Caching. Mit Cache-Hit kostet Input $0,50/MTok, 126K Tokens also ≈ $0,06 statt $0,63 pro Request. Quelle: <https://platform.claude.com/docs/en/about-claude/pricing.md>, geprüft 24.11.2026.
 -->
@@ -523,6 +562,11 @@ in einem Katalog und laufen über execute; codemode: false schaltet pro Server
 zurück. Pi: MCP seit Ende September 2026 im Kern (Ankündigung 29.09.2026),
 Codemode lädt automatisch, sobald MCP konfiguriert ist. Gemini CLI: nur
 includeTools/excludeTools.
+Reduktion: Claude Code „über 85 %“ laut Anthropic-Doku (Tool Search Tool);
+BM25 und Regex sind die beiden Varianten des API-Tools. Cursor: −46,9 %
+Gesamt-Tokens des Agents in Läufen mit MCP-Aufruf, A/B-Test, hohe Varianz je
+nach Zahl installierter MCPs (Cursor-Blog, 06.01.2026). Das misst keine
+Schema-Tokens und ist mit dem Claude-Code-Wert nicht direkt vergleichbar.
 -->
 
 ---
@@ -540,7 +584,7 @@ Standardmäßig sind alle MCP-Tools deferred; die 10-%-Schwelle (seit v2.1.7) gi
 
 <div class="mt-4 text-sm opacity-60">
 
-Drittanbieter: Atlassian **mcp-compressor** (97% Reduktion, 2–3 Meta-Tools) · Speakeasy Dynamic Toolsets (100×) · ToolHive MCP Optimizer (85%).
+Drittanbieter: Atlassian **mcp-compressor** (bis 97% Reduktion, 2–3 Meta-Tools) · Speakeasy Dynamic Toolsets (bis 160×) · ToolHive MCP Optimizer (bis 85%).
 
 </div>
 
@@ -554,7 +598,11 @@ Wann der Standard wechselte, nennt das Changelog nicht. Auch selten genutzte
 Built-ins wie WebSearch und WebFetch sind deferred; Kern-Tools wie Bash, Read
 und Edit laden immer vorab. 85 % Reduktion: Anthropic-Beispiel ~77K → ~8,7K
 Tokens; das Tool Search Tool selbst kostet ~500 Tokens (API). Accuracy-Zahlen (49→74 %, 79,5→88,1 %) aus Anthropics Tool-Search-
-Ankündigung. Drittanbieter-Werte aus den jeweiligen Projekt-READMEs.
+Ankündigung (interne MCP-Evaluationen, Nov. 2025). Drittanbieter-Werte sind
+Obergrenzen der Hersteller: mcp-compressor 70–97 % je nach Stufe (Standard
+„Medium“ 81 %, 97 % nur „Max“; Atlassian-Blog, 30.03.2026). Speakeasy: bis
+160×, im Mittel 91–97 % weniger Input-Tokens; „100x“ ist nur die
+Blog-Überschrift. ToolHive: 60–85 % pro Request (Stacklok-Doku, 09.03.2026).
 -->
 
 ---
@@ -628,7 +676,7 @@ Lokales Trimmen alter Tool-Outputs
 
 ### AutoCompact
 
-Bei ~92-98% Füllstand: **20K-Token Summary**
+Bei ~97 % (967K/1M): **Summary ≤20K Tokens**
 
 13K Buffer (Quellcode v2.1.88). Schwelle per `/autocompact` einstellbar. Circuit-Breaker nach 3 Fehlversuchen.
 
@@ -639,7 +687,7 @@ Bei ~92-98% Füllstand: **20K-Token Summary**
 
 Gesamte Conversation komprimieren
 
-Re-inject kürzlich gelesene Dateien (≤5K/Datei). Budget auf 50K zurück.
+Liest bis zu 5 zuletzt geänderte Dateien neu; über 5K Tokens nur als Pfad.
 
 </div>
 </div>
@@ -651,7 +699,9 @@ Re-inject kürzlich gelesene Dateien (≤5K/Datei). Budget auf 50K zurück.
 </div>
 
 <!--
-Stand 24.11.2026. AutoCompact: Den 13K-Buffer nennt die Doku nicht; er stammt aus Analysen des geleakten Quellcodes (v2.1.88, März 2026: AUTOCOMPACT_BUFFER_TOKENS = 13_000). Laut Doku kompaktieren 1M-Modelle bei ~967K (~97%); einstellbar per `/autocompact`, autoCompactWindow oder CLAUDE_CODE_AUTO_COMPACT_WINDOW (https://code.claude.com/docs/en/model-config.md).
+Stand 24.11.2026. AutoCompact: Den 13K-Buffer nennt die Doku nicht; er stammt aus Analysen des geleakten Quellcodes (v2.1.88, März 2026: AUTOCOMPACT_BUFFER_TOKENS = 13_000). Laut Doku kompaktieren 1M-Modelle bei ~967K (~97%); einstellbar per `/autocompact`, autoCompactWindow oder CLAUDE_CODE_AUTO_COMPACT_WINDOW (https://code.claude.com/docs/en/model-config.md). Bei 200K-Window nennt der Quellcode-Leak ~167K (~83 %). Die 20K sind laut Leak die Output-Reserve für die Summary, kein fester Umfang; das Doku-Beispiel hat 1.725 Tokens (https://code.claude.com/docs/en/context-window.md).
+
+Full Compact: Claude Code liest danach bis zu fünf gelesene oder bearbeitete Dateien neu ein, die zuletzt geänderten zuerst; eine Datei über 5.000 Tokens kommt nur als Pfadverweis zurück. Skill-Bodies kommen mit höchstens 5.000 Tokens je Skill und 25.000 insgesamt zurück (context-window.md). Ein Gesamtbudget von 50K für die Dateien nennt nur der Quellcode-Leak, nicht die Doku.
 
 Pi: reserveTokens 16384, keepRecentTokens 20k, Auto-Compaction per Default an, abschaltbar mit "enabled": false (https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/docs/compaction.md).
 -->
@@ -681,7 +731,7 @@ hideInToc: true
 | **Claude Code** | OS-native      | Seatbelt (macOS), bubblewrap (Linux/WSL2). **Default aus.** Netz nur per Domain-Allowlist. |
 | **Codex CLI**   | OS-native      | Seatbelt (macOS), Bubblewrap+seccomp (Linux). Netzwerk default aus.                        |
 | **Gemini CLI**  | Multi-Strategy | Docker, Podman, gVisor, LXC/LXD + OS-native. Per-Tool-Isolation.                           |
-| **Pi**          | **Keines**     | _"Halbherzige Guardrails sind Theater. Lauf in einem Container."_                          |
+| **Pi**          | **Keines**     | Guardrails anderer Agents seien meist Security-Theater; besser in einem Container laufen.  |
 
 <div class="mt-4 text-sm opacity-60">
 
@@ -693,6 +743,8 @@ Konfigurations- und Permission-Sicht: <TalkXref slug="20260327-ai-agents">Coding
 
 <!--
 Stand 24.11.2026. Claude Codes Sandbox erzwingt das Betriebssystem: Seatbelt auf macOS, bubblewrap und socat auf Linux/WSL2. Sie ist standardmäßig aus und wird per `/sandbox` bzw. sandbox.enabled eingeschaltet. Netzwerk läuft über einen lokalen Proxy, der jeden Host gegen die Domain-Allowlist prüft; die ist anfangs leer (https://code.claude.com/docs/en/sandboxing.md). Die AST-Prüfung ist davon unabhängig: Sie entscheidet über Permissions, nicht über Isolation.
+
+Pi: Die Zeile paraphrasiert Mario Zechner, 30.11.2025. Wörtlich: "If you look at the security measures in other coding agents, they're mostly security theater" und "If you're uncomfortable with full access, run pi inside a container or use a different tool if you need (faux) guardrails" (https://mariozechner.at/posts/2025-11-30-pi-coding-agent/).
 -->
 
 ---
@@ -711,7 +763,7 @@ hideInToc: true
 - Lädt eigenes System-Prompt und CLAUDE.md
 - Nur das **finale Summary** geht zurück an den Parent
 - Modi: Standard, Worktree-Isolation, Fork (Default seit v2.1.232; aus: `CLAUDE_CODE_FORK_SUBAGENT=0`)
-- **Gemessen:** Fan-out auf 2 Subagents = 121K → **513K Tokens (4,2×)** — jeder liest seinen Bootstrap bei jedem Turn neu
+- **Gemessen:** Fan-out auf 2 Subagents = 121K → **513K Input-Tokens (4,2×)** — jeder liest seinen Bootstrap bei jedem Turn neu
 
 </div>
 <div>
@@ -737,6 +789,8 @@ Orchestrierung im Alltag: <TalkXref slug="20260327-ai-agents">Coding-Agents im A
 
 <!--
 Tiefe: bis 3 Ebenen unter der Hauptsitzung. Ohne Fork startet ein Subagent mit frischer Conversation ohne Parent-History; ein Fork erbt sie. Fork-Mode ist im Terminal seit v2.1.232 Default, überall (auch -p, SDK) seit v2.1.302; abschalten mit CLAUDE_CODE_FORK_SUBAGENT=0.
+
+Fan-out 4,2×: Systima, „Claude Code Is Way More Token-Hungry Than OpenCode“ (12.07.2026), Claude Code 2.1.207, Sonnet 4.5, ein Lauf; gezählt sind Input-Tokens (121.000 direkt gegen 513.000 mit zwei Subagents). Die Folgestudie „The Subagent Tax“ (22.07.2026) misst 2,6× (Opus) bis 5,9× (Fable 5) Input-Tokens, und in keinem Fall waren die Subagents schneller. Quellen: systima.ai/blog/claude-code-vs-opencode-token-overhead, systima.ai/blog/subagent-tax
 -->
 
 ---
@@ -750,7 +804,7 @@ hideInToc: true
 | Claude Code | `CLAUDE.md` (sonst `AGENTS.md`) | Managed → `~/.claude/` → Projekt (+ `.local.md`) → Subdirs |
 | Codex CLI   | `AGENTS.md`                     | Global → Repo → Subfolder                                  |
 | Gemini CLI  | `GEMINI.md`                     | `~/.gemini/` → Projekt → Subdirs                           |
-| Pi          | `AGENTS.md` + `SYSTEM.md`       | Projekt-Kontext + System-Prompt-Modifier                   |
+| Pi          | `AGENTS.md` + `SYSTEM.md`       | Global → Eltern-Dirs → CWD; `SYSTEM.md` ersetzt den Prompt |
 
 <div class="mt-4">
 
@@ -762,12 +816,14 @@ hideInToc: true
 
 <div class="mt-4 text-sm opacity-60">
 
-**AGENTS.md** wird zum Cross-Tool-Standard — Linux Foundation, 60.000+ Open-Source-Repos. Aber: Claude Code liest es erst seit v2.1.277, standardmäßig **nur ohne** `CLAUDE.md`. Eine 72-KB-Datei kostet **~20K Tokens pro Request** (Kapitel 8).
+**AGENTS.md** wird Cross-Tool-Standard (Linux Foundation, 60.000+ Repos); Claude Code liest es nur ohne `CLAUDE.md`.
 
 </div>
 
 <!--
-Claude Code liest AGENTS.md erst seit v2.1.277 und standardmäßig nur, wenn keine CLAUDE.md vorliegt. Liegen beide vor, bleibt AGENTS.md still außen vor. Die ~20K Tokens pro Request für eine 72-KB-Datei stammen aus der Messung in Kapitel 8.
+Claude Code liest AGENTS.md erst seit v2.1.277 und standardmäßig nur, wenn keine CLAUDE.md vorliegt. Liegen beide vor, bleibt AGENTS.md still außen vor. Die ~20K Tokens pro Request für eine 72-KB-Datei stammen aus der Messung in Kapitel 8 (Systima, Juli 2026): Claude Code und OpenCode legten je gut 20.000 Tokens pro Request zu. Codex ist nicht gemessen; es kappt AGENTS.md standardmäßig bei 32 KiB.
+
+Pi (configuration.md, earendil-works/pi, abgerufen 24.11.2026): Kontextdateien `AGENTS.md` oder `CLAUDE.md` lädt Pi aus dem Agent-Verzeichnis (global), den Eltern-Verzeichnissen und dem CWD; je Verzeichnis zählt nur eine, `CLAUDE.md` greift nur ohne `AGENTS.md`. `SYSTEM.md` ersetzt den System-Prompt, `APPEND_SYSTEM.md` ergänzt ihn; die Projektdatei unter `.pi/` geht der globalen vor.
 -->
 
 ---
@@ -1486,14 +1542,14 @@ Einen Pfad verlassen oder verzweigen — ohne den Prefix neu zu bauen.
 - Gleicher Prozess, gleicher Prefix ⇒ der erste Request der Verzweigung **liest aus dem Cache**
 - `--fork-session` startet dagegen einen **neuen Prozess**: frischer Git-Snapshot, der Prefix kann kippen
 - Praxis: zwei Ansätze aus demselben Kontext, statt zweimal zu erklären
-- Nicht der **Fork-Subagent** der <Link to="cache-modi">nächsten Folie</Link> — gleiche Idee, andere Ebene
+- Nicht verwechseln: `/fork` kopiert in eine **Hintergrund-Session**, `/subtask` startet den **Fork-Subagent** der <Link to="cache-modi">nächsten Folie</Link>
 
 </div>
 </div>
 
 <div class="mt-3 text-sm opacity-60">
 
-**Codex**: `Esc Esc` editiert die vorige Nachricht und **forkt** den Chat, `/fork` und `codex fork` verzweigen eine Session — ein Code-Restore wie das Checkpointing fehlt ([#11626](https://github.com/openai/codex/issues/11626), [#12558](https://github.com/openai/codex/issues/12558)).
+**Codex**: `Esc Esc` editiert die vorige Nachricht und **forkt** den Chat, `/fork` und `codex fork` verzweigen eine Session — ein Code-Restore wie das Checkpointing fehlt ([#11626](https://github.com/openai/codex/issues/11626), offen).
 
 </div>
 
@@ -1531,8 +1587,13 @@ Start passt (Branch + letzte Commits stecken im System-Prompt).
 Abgrenzung zur nächsten Folie: dort der Fork-SUBAGENT
 (Default seit v2.1.232; /subtask startet ihn von Hand) — ein Kind-Agent
 erbt den Parent-Prefix.
-Hier verzweigt die eigene Session. Gleiche Idee, andere Ebene; das ist
-die einzige Stelle im Deck, wo „Fork" zweierlei heißt.
+Hier verzweigt die eigene Session. Gleiche Idee, andere Ebene.
+„Fork" heißt in Claude Code dreierlei: --fork-session (neuer Prozess),
+/fork (kopiert die Konversation in eine Hintergrund-Session, man arbeitet
+im Original weiter; der Cache des Originals bleibt erhalten; bei
+abgeschalteter Agent View startet /fork stattdessen einen Fork-Subagent)
+und der Fork-Subagent selbst (/subtask, CLAUDE_CODE_FORK_SUBAGENT).
+Quelle: code.claude.com/docs/en/commands, geprüft 24.11.2026.
 
 Summarize from/up to here: praktisch top („die verbose Debug-Strecke ab
 hier zusammenfassen, die Anfangsinstruktionen behalten"), cache-seitig
@@ -1554,7 +1615,9 @@ previous point in conversation, preserving the original transcript" und
 message and fork the chat from that point", dazu das Subcommand
 `codex fork`. Ein Checkpoint-Restore für Code ist dort nicht
 dokumentiert; die Slash-Command-Liste bewegt sich schnell, vor dem Talk
-erneut gegenchecken.
+erneut gegenchecken. Issue #11626 ist offen (Stand 24.11.2026); #12558
+wurde am 23.02.2026 als Duplikat davon geschlossen, Status „completed“
+heißt dort also nicht, dass das Feature kam.
 -->
 
 ---
@@ -1576,9 +1639,9 @@ Derselbe Harness, drei Cache-Charakteristiken — wer sie kennt, zahlt den Prefi
 
 **TTL: 1 h** (2× Write) im Abo-Kontingent — Pro/Max/Team/Enterprise · **5 min** bei API-Key & Usage-Credits.
 
-Server-controlled — März-2026-Regression drückte 1h → 5m für viele Nutzer (#46829, ~17–25% Mehrkosten).
+Ab März 2026 fielen manche Abos auf 5 min zurück: Client-Bugs plus Server-Experimente (#46829, ein Reporter: ~17 % Mehrkosten).
 
-Seit **v2.1.108** explizit via `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHING_5M`.
+Wählbar per `promptCacheTtl` (ab v2.1.242); global weiter `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHING_5M`.
 
 </div>
 <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -1589,7 +1652,7 @@ Seit **v2.1.108** explizit via `ENABLE_PROMPT_CACHING_1H` / `FORCE_PROMPT_CACHIN
 
 Lange Tool-Calls oder verspätete Permission-Prompts → Cache verfällt → voller Cache-Write.
 
-**Fork-Mode** (Default seit **v2.1.232**; aus: `CLAUDE_CODE_FORK_SUBAGENT=0`): Kind erbt Parent-Prefix → ~**90% Discount** bei parallelen Subagents.
+**Fork-Mode** (Default seit **v2.1.232**; aus: `CLAUDE_CODE_FORK_SUBAGENT=0`): Kind erbt Parent-Prefix → **90–97,5 % Discount** (modellabhängig) bei parallelen Subagents.
 
 </div>
 <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -1616,8 +1679,28 @@ Kontingent (nicht nur Max), 5 min für API-Key/Usage-Credits/Cloud —
 und für Subagents, Workflows und Compaction immer, sofern nicht per
 subagentPromptCacheTtl umgestellt.
 
-Quellen: 1h→5m-Regression #46829; ENABLE_PROMPT_CACHING_1H /
-FORCE_PROMPT_CACHING_5M seit v2.1.108. Fork-Mode: v2.1.117 Opt-in mit
+März-2026-Regression (#46829, geschlossen als not_planned): ab ca.
+6.–8. März fielen manche Abo-Nutzer im Haupt-Loop auf 5 min. Ursachen:
+ein Fallback bei abgeschalteter Telemetrie (behoben in v2.1.108), ein
+Latch im Overage-Zustand (laut Support-Antwort behoben in v2.1.90) und
+serverseitige TTL-Experimente; Subagenten bleiben bewusst auf 5 min.
+Die Mehrkosten (~17 % gesamt, ~26 % im März) hat ein einzelner Reporter
+auf zwei Rechnern gemessen.
+
+TTL selbst wählen (Stand 24.11.2026): Hauptkonversation per
+promptCacheTtl bzw. CLAUDE_CODE_PROMPT_CACHE_TTL, alles andere per
+subagentPromptCacheTtl bzw. CLAUDE_CODE_SUBAGENT_PROMPT_CACHE_TTL, je 5m
+oder 1h, ab v2.1.242 laut Doku (der CHANGELOG führt es unter 2.1.243).
+ENABLE_PROMPT_CACHING_1H / FORCE_PROMPT_CACHING_5M (seit v2.1.108)
+gelten weiter für beide Töpfe; FORCE_PROMPT_CACHING_5M hat Vorrang vor
+allem.
+
+Fork-Discount je Modell (platform.claude.com/docs/en/about-claude/pricing,
+24.11.2026): Cache-Hit 0,1× Basis-Input (Standard, 90 %), 0,05× bei
+Opus 5.5 und Sonnet 5.5 (95 %), 0,025× bei Fable/Mythos 5.1 und 5.2
+(97,5 %).
+
+Fork-Mode: v2.1.117 Opt-in mit
 CLAUDE_CODE_FORK_SUBAGENT=1 (in -p/SDK ab v2.1.121), Default interaktiv
 seit v2.1.232, in -p/SDK/Desktop/VS Code seit v2.1.302; abschalten mit
 =0, /subtask startet einen Fork von Hand (seit v2.1.212).
@@ -1669,7 +1752,7 @@ routeAlias: cache-hygiene
 
 **Rechenbeispiel** — 10K-Tok-Systemprompt, 500 Anfragen/h:
 
-ohne Cache **$15,00** → mit Cache **$1,53** → + Batch **$0,77**
+ohne Cache **$15,00** → mit Cache **$1,53** → + Batch **$0,77** (bei 100 % Treffern)
 
 </div>
 
@@ -1695,6 +1778,12 @@ dominierte, Kosten rund 10×; behoben mit PR #20597 (19.02.2026), der die
 IDs in den User-Kontext verschob. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discount
 (0,30 × 0,5 = 0,15 $/MTok). Rechenbeispiel mit Sonnet-4.6-Preisen: 500×10K×$3,00
 = $15,00 ungecacht; 1×10K×$3,75 + 499×10K×$0,30 = $1,53 mit Cache; +Batch $0,77.
+Die $0,77 setzen 100 % Cache-Treffer voraus. Im Batch gibt es den Cache
+nur best-effort; die Batch-Doku nennt typisch 30–98 % Treffer
+(platform.claude.com/docs/en/build-with-claude/batch-processing,
+24.11.2026). Mit 5-min-Cache wären das ≈ $0,92 (98 %) bis ≈ $6,79 (30 %).
+Die Doku empfiehlt für Batches mit gemeinsamem Kontext den 1h-Cache; mit
+1h-Write (2×) kostet der 100-%-Fall $0,78 statt $0,77.
 -->
 
 ---
@@ -2496,7 +2585,7 @@ hideInToc: true
 # Die Rechnung: multiplikativ, nicht additiv
 
 <div class="text-sm opacity-70 mb-1">
-Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (Input $3/MTok · Cache-Write $3,75 · Cache-Read $0,30). Ohne Subagenten gerechnet: Fan-out käme als weiterer Faktor dazu.
+Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (Vorgängermodell; Input $3/MTok · Cache-Write $3,75 · Cache-Read $0,30). Ohne Subagenten gerechnet: Fan-out käme als weiterer Faktor dazu.
 
 </div>
 
@@ -2506,7 +2595,7 @@ Modellrechnung: Ticket-Bot via `/loop`, ein 8-h-Arbeitstag, Sonnet-4.6-Preise (I
 ### 😤 Naiv
 
 - **2 Versuche** — unklare Aufgabe, erstes Ergebnis verworfen
-- **× 8 Runs** — 1-h-Intervall, TTL 5 min ⇒ jeder Run cache-kalt
+- **× 8 Runs** — 1-h-Intervall, API-Key-TTL 5 min ⇒ jeder Run cache-kalt
 - **× 20 Turns** — vages Ziel, kein Abbruchkriterium
 - **× Ø 40K Tokens** — ungepflegter Context
 
@@ -2542,6 +2631,15 @@ Modellrechnung (Input-Tokens, Output der Einfachheit halber ignoriert):
   → 2,4 × (0,85 × 0,30 + 0,15 × 3,75) = 2,4 × 0,8175 = $1,96/Tag.
 - Verhältnis: 38,40 / 1,96 ≈ 19,6 → „Faktor ~20ד.
 Preise: Sonnet 4.6, siehe Kap. 6 (KV-Cache: 90% Discount).
+Sonnet 4.6 ist das Vorgängermodell. Mit Sonnet 5.5 ($2 / Cache-Write
+$2,50 / Cache-Read $0,10, Stand 24.11.2026): naiv 12,8 × $2 ≈ $26/Tag,
+optimiert 2,4 × (0,85 × 0,10 + 0,15 × 2,50) ≈ $1,10/Tag, Faktor ≈ 23.
+Der neuere Tokenizer erzeugt für denselben Text etwa 30 % mehr Token;
+beide Beträge steigen dann auf ≈ $33 und ≈ $1,44, der Faktor bleibt.
+TTL: Der Default von 5 min gilt per API-Key, Usage-Credits und Cloud.
+Im Abo (im Kontingent) bekommt die Hauptkonversation 1 h; bei
+1-h-Intervall bleibt der Cache dann eher warm, ebenso per API-Key mit
+promptCacheTtl: 1h (ab v2.1.242).
 Output-Dimension bewusst weggelassen — die steckt in Kap. 2
 („Hardware vs. Preisliste" + Bugfix-Abrechnung).
 -->
@@ -2580,6 +2678,8 @@ Quelle: Claude-Code-Source-Map-Leak vom 31.03.2026 (cli.js.map, 59,8 MB,
 Community-Analyse des Leaks. 40+ Tools laut VentureBeat (02.04.2026).
 9.707 Zeilen = bashParser.ts + ast.ts + bashSecurity.ts (Sabrina Ramonov);
 die Validierung allein, bashSecurity.ts, hat 2.592 Zeilen.
+23 Checks = BASH_SECURITY_CHECK_IDS 1–23 in bashSecurity.ts
+(4 earlyValidators + 19 validators); VentureBeat: „23 sequential checks“.
 Pi-Vergleichswerte: eigene Zählung im Repo earendil-works/pi, Commit
 957f21c (letzter vor dem 01.04.2026), packages/coding-agent/src ohne Tests:
 41.404 Zeilen in 124 Dateien. Heute (24.11.2026): 79.010 in 266 Dateien.
@@ -2694,8 +2794,9 @@ OpenCode 1.17.18, claude-sonnet-4-5 gepinnt; reduzierte Matrix auf Fable 5.
   drei Harnesse statt Sonnet/Fable über zwei) — 13,7× Claude Code gegen
   Pi (27.011 gegen 1.972 Token, gemittelt über je 630 Versuche), aus
   23 Werkzeugen und 76.995 Zeichen Tool-Schema gegen 4 Werkzeuge und
-  2.873 Zeichen. Codex' eigener Aufschlag gegen Pi (2,4×) sitzt dagegen
-  in den Instruktionen (23.502 Zeichen), nicht im Werkzeug-Schema —
+  2.873 Zeichen. Codex' eigener Aufschlag gegen Pi (5,7×: 11.308 gegen
+  1.972 Token) sitzt dagegen vor allem in den Instruktionen (23.502
+  gegen 2.547 Zeichen, 9,2×) —
   Claude Code und Codex zahlen den Aufpreis an verschiedenen Stellen.
   Zwei Messungen, dieselbe Richtung, macht den Befund robuster als eine
   allein.
@@ -2711,9 +2812,19 @@ hideInToc: true
 
 <div class="mt-3 text-xs opacity-60">
 
-**OpenCode** (sst/opencode) ist TypeScript — in Go geschrieben ist Charm **Crush** (Fork-Linie des Prototyps). · **Gemini CLI** wird ab 2026-06-18 schrittweise von Antigravity abgelöst (<TalkXref slug="20260327-ai-agents">Details im Agents-Talk</TalkXref>). Stand: 29.04.2026, MCP, Subagents, Sandboxing, Memory, Context: 24.11.2026.
+**Gemini CLI** → Antigravity ab 2026-06-18 (<TalkXref slug="20260327-ai-agents">Agents-Talk</TalkXref>). Stand: 29.04., teils 24.11.2026.
 
 </div>
+
+<!--
+OpenCode (anomalyco/opencode) ist TypeScript; in Go geschrieben ist Charm Crush (Fork-Linie des Prototyps).
+
+Gemini CLI wird ab 2026-06-18 schrittweise von Antigravity abgelöst; Details im Agents-Talk.
+
+Stand der Tabelle: 29.04.2026; die Zeilen MCP, Subagents, Sandboxing, Memory und Context: 24.11.2026.
+
+Cursor-Subagents: ja, parallel, bis Tiefe 2.
+-->
 
 ---
 layout: center
@@ -2776,7 +2887,7 @@ Ohne Tool Search kosten MCP-Server 17K–126K Tokens pro Request, Skills ~10–2
 
 ### 3. Komplex heißt nicht besser
 
-4 Tools und <1K System-Prompt (Pi) konkurrieren mit 52 Tools und 9.707 Zeilen Bash-Prüfung (Claude Code). Memory-Systeme wie Mem0 schlagen auf Code bisher den Lauf ohne Memory nicht.
+4 Tools und <1K System-Prompt (Pi) konkurrieren mit 27 Tools und 9.707 Zeilen Bash-Prüfung (Claude Code). Memory-Systeme wie Mem0 schlagen auf Code bisher den Lauf ohne Memory nicht.
 
 ### 4. Der Wert steckt im Modell
 
@@ -2786,6 +2897,8 @@ RL-trainierte Modelle haben das Orchestrierungs-Wissen internalisiert; die Harne
 
 <!--
 Zu 2: Beim Cache zählen Request-Anzahl und Prefix-Stabilität mehr als die Baseline-Größe. Kosten sind multiplikativ: je weiter außen die Schleife, desto größer der Hebel.
+
+Zu 3: 27 Tools im tools-Array jedes Requests, gemessen von Systima an Claude Code 2.1.207 (Juli 2026). Die Tools-Referenz führt rund 50 eingebaute Tools, darunter viele nur unter Bedingungen (Glob/Grep fehlen standardmäßig auf macOS/Linux/WSL, PowerShell nur unter Windows). Stand 24.11.2026.
 -->
 
 ---
@@ -2813,6 +2926,21 @@ hideInToc: true
 # Vier Schichten. Ein Spektrum.
 
 <EngineeringSchichten />
+
+<!--
+Belege, Stand 24.11.2026:
+- LangChain, Blog vom 17.02.2026: deepagents-cli von knapp außerhalb der
+  Top 30 in die Top 5 auf Terminal Bench 2.0, 52,8 → 66,5 %; nur der
+  Harness geändert, Modell fest (gpt-5.2-codex).
+- AutoGPT: Repo angelegt 16.03.2023, Release 30.03.2023; der Hype kam im
+  April.
+- AlphaEvolve: 48 skalare Multiplikationen für komplexwertige
+  4×4-Matrizen.
+- Hermes (v0.23.4): keine feste Schwelle von 5 Tool-Calls mehr. Zusätzlich
+  prüft eine Background Review nach dem Turn, ob ein Skill entstehen soll;
+  standardmäßig alle 10 Tool-Calling-Iterationen
+  (`skills.creation_nudge_interval`).
+-->
 
 ---
 hideInToc: true
@@ -2889,7 +3017,7 @@ hideInToc: true
 </div>
 <div>
 
-- Mario Zechner — **Pi** (`pi-mono`)
+- Mario Zechner — **Pi** (`earendil-works/pi`)
 - Boris Cherny — **Claude Code**
 - Claude Code Source-Leak — `cli.js.map`, 31.03.2026
 - Claude Code Docs — _Prompt-Caching_, _Checkpointing_, _Manage sessions_ · `code.claude.com/docs`

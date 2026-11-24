@@ -53,7 +53,7 @@ const rows = [
     gemini: "Lokal + A2A",
     pi: "Nein",
     opencode: "@general",
-    cursor: "Bis 8 parallel",
+    cursor: "Parallel, Tiefe 2",
   },
   {
     feature: "Sandboxing",
@@ -70,7 +70,7 @@ const rows = [
     codex: "AGENTS.md",
     gemini: "GEMINI.md",
     pi: "AGENTS.md",
-    opencode: "Rules",
+    opencode: "AGENTS.md, sonst CLAUDE.md",
     cursor: ".cursor/rules, AGENTS.md",
   },
   {
@@ -92,7 +92,7 @@ const rows = [
     cursor: "Provider-abh.",
   },
   {
-    feature: "System-Prompt",
+    feature: "Systemprompt",
     cc: "Multi-K Tok.",
     codex: "Mittel",
     gemini: "Mittel",

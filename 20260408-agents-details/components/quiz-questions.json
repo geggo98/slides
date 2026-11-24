@@ -19,7 +19,7 @@
           "id": "loop-grundprinzip-o1",
           "text": "Die Loop terminiert, wenn das Modell keinen Tool-Call mehr ausgibt — das Modell entscheidet, wann es fertig ist.",
           "verdict": "true",
-          "explanation": "Es gibt kein externes Abbruchkriterium: Sobald die Antwort keinen Tool-Call mehr enthaelt, endet der Durchlauf."
+          "explanation": "Im Normalfall endet der Durchlauf, sobald die Antwort keinen Tool-Call mehr enthaelt. Turn-Limits, Stop-Hooks, Abbruch und Fehler beenden ihn vorzeitig."
         },
         {
           "id": "loop-grundprinzip-o2",
@@ -43,7 +43,7 @@
           "id": "loop-grundprinzip-o5",
           "text": "Die Loop endet nach einer fest konfigurierten Anzahl von Iterationen.",
           "verdict": "false",
-          "explanation": "Es gibt keine feste Iterationszahl — die Schleife laeuft, bis das Modell von sich aus keinen Tool-Call mehr produziert."
+          "explanation": "Ein Turn-Limit wie `max_turns` ist nur eine Obergrenze — regulaer laeuft die Schleife, bis das Modell keinen Tool-Call mehr produziert."
         },
         {
           "id": "loop-grundprinzip-o6",
@@ -112,7 +112,7 @@
           "id": "tool-search-mechanik-o7",
           "text": "Drittanbieter-Optimierer erreichen alle dieselbe Reduktion.",
           "verdict": "depends",
-          "explanation": "Die Werte streuen stark — mcp-compressor meldet 97 % Reduktion, Speakeasy 100×, ToolHive 85 %; die Ersparnis haengt von Optimizer und Server ab."
+          "explanation": "Die Werte streuen stark — mcp-compressor meldet bis 97 % Reduktion, Speakeasy bis 160×, ToolHive bis 85 %; die Ersparnis haengt von Optimizer und Server ab."
         }
       ]
     },
@@ -235,7 +235,7 @@
       "question": "Welche Aussagen zu Claude Codes Compaction-Strategien treffen zu?",
       "difficulty": "medium",
       "section": "Context & Token-Ökonomie",
-      "explanation": "Claude Code nutzt drei Strategien: MicroCompact (lokales Trimmen, 0 API-Calls), AutoCompact (bei ~92–98 % Fuellstand eine 20K-Token-Summary mit 13K Buffer und Circuit-Breaker nach 3 Fehlversuchen) und Full Compact (alles komprimieren, Dateien re-injizieren, Budget zurueck auf 50K).",
+      "explanation": "Claude Code nutzt drei Strategien: MicroCompact (lokales Trimmen, 0 API-Calls), AutoCompact (bei 1M-Modellen per Default bei ~967K, also ~97 %, eine Summary mit bis zu 20K Tokens, 13K Buffer und Circuit-Breaker nach 3 Fehlversuchen) und Full Compact (alles komprimieren, bis zu 5 zuletzt geaenderte Dateien neu einlesen).",
       "options": [
         {
           "id": "compaction-strategien-o0",
@@ -245,15 +245,15 @@
         },
         {
           "id": "compaction-strategien-o1",
-          "text": "AutoCompact erzeugt bei ~92–98 % Fuellstand eine 20K-Token-Summary; 13K Buffer sind reserviert.",
+          "text": "AutoCompact erzeugt bei 1M-Modellen per Default bei ~967K Tokens eine Summary; 13K Buffer sind reserviert.",
           "verdict": "true",
-          "explanation": "Bei hohem Fuellstand fasst AutoCompact die Conversation in einer 20K-Token-Summary zusammen und haelt dafuer 13K Buffer frei (laut Quellcode v2.1.88)."
+          "explanation": "Laut Doku kompaktieren 1M-Modelle bei ~967K (~97 %). Fuer die Summary reserviert der Quellcode bis zu 20K Output-Tokens und haelt 13K Buffer frei (v2.1.88); echte Summaries sind meist viel kleiner."
         },
         {
           "id": "compaction-strategien-o2",
-          "text": "Full Compact komprimiert die gesamte Conversation, re-injiziert kuerzlich gelesene Dateien (≤5K pro Datei) und bringt das Budget auf 50K zurueck.",
+          "text": "Full Compact komprimiert die gesamte Conversation und liest bis zu 5 zuletzt geaenderte Dateien neu ein; eine Datei ueber 5K Tokens kommt nur als Pfad zurueck.",
           "verdict": "true",
-          "explanation": "Full Compact ist die gruendlichste Stufe: alles komprimieren, relevante Dateien begrenzt wieder einspielen, Budget zuruecksetzen."
+          "explanation": "Full Compact ist die gruendlichste Stufe: alles komprimieren, dann die zuletzt geaenderten Dateien begrenzt wieder einspielen. Skills kommen mit hoechstens 5K je Skill und 25K insgesamt zurueck."
         },
         {
           "id": "compaction-strategien-o3",
@@ -277,7 +277,7 @@
           "id": "compaction-strategien-o6",
           "text": "AutoCompact springt zuverlaessig beim immer gleichen Fuellstand an.",
           "verdict": "depends",
-          "explanation": "Der Trigger ist ein Bereich (~92–98 %) und per `/autocompact` einstellbar — auf einen exakten Schwellwert solltest Du Dich nicht verlassen."
+          "explanation": "Der Trigger haengt vom Modell ab (1M: ~967K, 200K laut Quellcode-Leak ~167K) und ist per `/autocompact` einstellbar — auf einen exakten Schwellwert solltest Du Dich nicht verlassen."
         },
         {
           "id": "compaction-strategien-o7",
@@ -634,13 +634,13 @@
       "question": "Sandboxing im Vergleich: Welche Aussagen stimmen?",
       "difficulty": "medium",
       "section": "Architektur & Memory",
-      "explanation": "Claude Code sandboxt OS-native (Seatbelt bzw. bubblewrap, standardmaessig aus) und prueft Bash-Befehle zusaetzlich AST-basiert mit Tree-sitter (22 Validators, 9.707 Zeilen, Deny → Ask → Allow), Codex CLI setzt auf OS-native Sandboxes, Gemini CLI auf Multi-Strategy-Container — und Pi verzichtet bewusst komplett und verweist auf Container.",
+      "explanation": "Claude Code sandboxt OS-native (Seatbelt bzw. bubblewrap, standardmaessig aus) und prueft Bash-Befehle zusaetzlich AST-basiert mit Tree-sitter (23 Security-Checks, 9.707 Zeilen, Deny → Ask → Allow), Codex CLI setzt auf OS-native Sandboxes, Gemini CLI auf Multi-Strategy-Container — und Pi verzichtet bewusst komplett und verweist auf Container.",
       "options": [
         {
           "id": "sandboxing-vergleich-o0",
-          "text": "Claude Code sandboxt OS-native und prueft Bash-Befehle zusaetzlich per AST: Tree-sitter, 22 Validators, Deny → Ask → Allow.",
+          "text": "Claude Code sandboxt OS-native und prueft Bash-Befehle zusaetzlich per AST: Tree-sitter, 23 Security-Checks, Deny → Ask → Allow.",
           "verdict": "true",
-          "explanation": "Die Sandbox ist OS-native: Seatbelt auf macOS, bubblewrap auf Linux/WSL2, standardmaessig aus. Die AST-Pruefung (Tree-sitter, 22 Validators, 9.707 Zeilen) entscheidet ueber Permissions, nicht ueber Isolation."
+          "explanation": "Die Sandbox ist OS-native: Seatbelt auf macOS, bubblewrap auf Linux/WSL2, standardmaessig aus. Die AST-Pruefung (Tree-sitter, 23 Security-Checks, 9.707 Zeilen) entscheidet ueber Permissions, nicht ueber Isolation."
         },
         {
           "id": "sandboxing-vergleich-o1",
@@ -650,7 +650,7 @@
         },
         {
           "id": "sandboxing-vergleich-o2",
-          "text": "Pi verzichtet bewusst: „Halbherzige Guardrails sind Theater. Lauf in einem Container.“",
+          "text": "Pi verzichtet bewusst: Die Guardrails anderer Agents seien meist Security-Theater; wer volle Rechte scheut, soll Pi in einem Container laufen lassen.",
           "verdict": "true",
           "explanation": "Pis Position ist radikal: Statt taeuschbarer In-Process-Checks soll die Isolation komplett von aussen kommen."
         },
@@ -929,7 +929,7 @@
         },
         {
           "id": "transfer-fork-parallelisierung-o1",
-          "text": "Fork-Mode liefert den Gegenmechanismus: Kinder erben den Parent-Prefix → ~90 % Discount bei parallelen Subagents.",
+          "text": "Fork-Mode liefert den Gegenmechanismus: Kinder erben den Parent-Prefix → 90–97,5 % Discount (modellabhängig) bei parallelen Subagents.",
           "verdict": "true",
           "explanation": "Der geerbte Prefix wird als Cache-Read abgerechnet — deshalb gilt der Kostenmultiplikator seither nur noch abgeschwaecht."
         },
@@ -943,7 +943,7 @@
           "id": "transfer-fork-parallelisierung-o3",
           "text": "Seit Fork-Mode gilt der Kostenmultiplikator unveraendert in voller Hoehe.",
           "verdict": "false",
-          "explanation": "Der Companion-Talk sagt es selbst: Seit Fork-Mode gilt der Multiplikator nur noch abgeschwaecht (~90 % Discount)."
+          "explanation": "Der Companion-Talk sagt es selbst: Seit Fork-Mode gilt der Multiplikator nur noch abgeschwaecht (90–97,5 % Discount)."
         },
         {
           "id": "transfer-fork-parallelisierung-o4",
@@ -1033,11 +1033,11 @@
       "question": "Im Talk „Anatomie Autonomer Agenten“ läuft ein Dauerläufer per „/loop 1h Lies und befolge runbooks/ticket-test-runbook.md“. Was folgt daraus im Fünf-Schleifen-Modell für die Kosten?",
       "difficulty": "hard",
       "section": "transfer",
-      "explanation": "Ein 1-Stunden-Intervall liegt weit über der Default-Cache-TTL von 5 Minuten — jeder Run dieses Dauerläufers startet also cache-kalt, und die Run-Zahl der /loop-Ebene multipliziert alle inneren Schleifen mit vollem Input-Preis.",
+      "explanation": "Ein 1-Stunden-Intervall liegt weit über der Cache-TTL von 5 Minuten, dem Default per API-Key — jeder Run dieses Dauerläufers startet also cache-kalt, und die Run-Zahl der /loop-Ebene multipliziert alle inneren Schleifen mit vollem Input-Preis.",
       "options": [
         {
           "id": "transfer-dauerlaeufer-cache-kalt-o0",
-          "text": "Mit 1 Stunde Intervall liegt jeder Run weit über der Cache-TTL von 5 Minuten — der Bot startet jedes Mal cache-kalt und zahlt vollen Input-Preis.",
+          "text": "Mit 1 Stunde Intervall liegt jeder Run weit über der Cache-TTL von 5 Minuten (API-Key-Default) — der Bot startet jedes Mal cache-kalt und zahlt vollen Input-Preis.",
           "verdict": "true",
           "explanation": "Genau das ist der TTL-Fallstrick der /loop-Ebene: 60 Minuten Pause lassen jeden gecachten Prefix ablaufen, bevor der nächste Run ihn lesen könnte."
         },

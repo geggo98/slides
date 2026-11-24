@@ -50,9 +50,9 @@ const events = [
   },
   {
     tag: "harness",
-    date: "März 2026",
+    date: "Februar 2026",
     title: "LangChain · Deep Agents Harness Engineering",
-    actor: "// Terminal Bench 2.0: Platz 30 → Platz 5 ohne Modellwechsel",
+    actor: "// Terminal Bench 2.0: Top 30 → Top 5 ohne Modellwechsel",
   },
   {
     tag: "evolution",
@@ -66,7 +66,7 @@ const events = [
 <template>
   <div class="timeline-panel">
     <p class="s-kicker">02 · Zeitachse</p>
-    <h3 class="s-h">Fünfeinhalb Jahre, <em>drei Verschiebungen.</em></h3>
+    <h3 class="s-h">Knapp sechs Jahre, <em>drei Verschiebungen.</em></h3>
     <p class="s-lead">
       Von GPT-3 zum selbstverbessernden Agenten. Jede Schicht folgt einem
       Muster: empirischer Schmerzpunkt, Begriffsprägung, Industrie-Adoption.
