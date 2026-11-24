@@ -66,7 +66,7 @@ export const TEXTS = {
   "step.final": "Modell antwortet dem User",
   "step.count": "Schritt {i}/{n}",
   "presenter.notes":
-    "Gleiches Szenario und gleiche Zahlen wie auf der Folie „Ein Bugfix, Token für Token“. Der schraffierte tools-Marker ist nicht maßstäblich: Keine Quelle der Folien trennt das tools-Array vom System-Prompt (4.000 Tokens); die Größen folgen auf den nächsten Folien (MCP: 17K–126K). Dateinamen und Tool-Parameter sind Beispiele. Die Quellen zu tool_use/tool_result, Rolle user, POST /v1/messages, den Claude-Code-Tools Read/Edit und mcp__github__get_file_contents stehen mit URL und Abrufdatum 22.11.2026 in den Sprechernotizen der Folie (slides.md).",
+    "Gleiches Szenario und gleiche Zahlen wie auf der Folie „Ein Bugfix, Token für Token“. Der schraffierte tools-Marker ist nicht maßstäblich: Keine Quelle der Folien trennt das tools-Array vom System-Prompt (4.000 Tokens); die Größen folgen auf den nächsten Folien (MCP ohne Tool Search: 17K–126K). Dateinamen und Tool-Parameter sind Beispiele. Die Quellen zu tool_use/tool_result, Rolle user, POST /v1/messages, den Claude-Code-Tools Read/Edit und mcp__github__get_file_contents stehen mit URL und Abrufdatum 22.11.2026 in den Sprechernotizen der Folie (slides.md).",
 } as const;
 
 export type TextKey = keyof typeof TEXTS;

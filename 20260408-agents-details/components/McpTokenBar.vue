@@ -9,7 +9,9 @@ const { isDark } = useDarkMode();
 const nav = useNav();
 const showCost = computed(() => nav.clicks.value >= 1);
 
-// Claude Opus 4.6 (1M context): $5 / MTok input
+// Claude Opus 4.6 (1M context): $5 / MTok input ohne Prompt Caching;
+// Cache-Hit $0.50 / MTok (platform.claude.com/docs/en/about-claude/pricing.md,
+// geprüft 24.11.2026).
 const PRICE_PER_MTOK = 5.0;
 const MODEL_LABEL = "Claude Opus 4.6 (1M)";
 
@@ -46,7 +48,7 @@ const option = computed(() => ({
         showCost.value ? formatCost(v) : v / 1000 + "K",
     },
     name: showCost.value
-      ? `Kosten / Request (${MODEL_LABEL}, $${PRICE_PER_MTOK}/MTok)`
+      ? `Kosten / Request (${MODEL_LABEL}, $${PRICE_PER_MTOK}/MTok, ohne Caching)`
       : undefined,
     nameTextStyle: {
       color: isDark.value ? "#8a8a9a" : "#71717a",

@@ -4,7 +4,8 @@ import { useDarkMode } from "@slidev/client";
 import { useDeckPalette } from "./palette";
 
 // Grafik 2 der Geschwister-Grafiken "Layered Stack Card":
-// Request-Prefix von oben (stabil, global gecacht) nach unten (volatil).
+// Request-Prefix von oben (stabil, über Turns gecacht) nach unten (volatil).
+// Caches sind je Organisation getrennt, nie global (Stand 24.11.2026).
 // Gleiche Zeilen-Bausteine und Kategorie-Töne wie ContextAnatomy.vue
 // (Violett = stabil/gecacht, Amber = wächst, Grau = session-spezifisch),
 // plus die CACHE BOUNDARY als grün gestrichelte Trennlinie — der Held.
@@ -46,7 +47,7 @@ interface Row {
 }
 
 const ABOVE: Row[] = [
-  { label: "tools-Array", ann: "stabil, global gecacht", kind: "frozen" },
+  { label: "tools-Array", ann: "stabil, über Turns gecacht", kind: "frozen" },
   {
     label: "System-Prompt (statisch)",
     ann: "Verhaltensregeln",

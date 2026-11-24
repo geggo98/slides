@@ -69,9 +69,10 @@ const option = computed(() => ({
         data: showPiLine.value
           ? [
               {
-                xAxis: 3000,
+                // Pi packages/agent/src, Commit 957f21c (01.04.2026): 1.859 Zeilen.
+                xAxis: 1859,
                 label: {
-                  formatter: "Pi (gesamt) ~3K",
+                  formatter: "Pi-Agent-Kern ~1,9K",
                   color: isDark.value ? "#a78bfa" : "#7c3aed",
                   position: "insideStartTop",
                   fontSize: 12,

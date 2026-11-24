@@ -59,9 +59,9 @@ const rows = [
   {
     system: "Hermes Agent",
     year: "Februar 2026 · Nous Research",
-    mod: "Skills, Memory-Files · Prompts/Tools (Schwester-Repo)",
+    mod: "Skills, Memory-Files · Schwester-Repo: Skills (Prompts/Tools geplant)",
     mech: "skill_manage · FTS5 · Honcho · DSPy+GEPA",
-    gate: { label: "PR-Gate + Sandbox", cls: "pr" },
+    gate: { label: "PR-Review · opt. Write-Approval", cls: "pr" },
     status: "Pragmatisches Self-Improvement-Light · Produktionstauglich",
     highlight: true,
   },
@@ -132,8 +132,8 @@ const rows = [
         <strong class="accent-evolution">Markdown-Prozeduren</strong>, nicht
         seinen Python-Code. Skills entstehen nach komplexen Tasks (typisch ≥5
         Tool-Calls), landen in <code>~/.hermes/skills/</code>, werden bei
-        erneuter Nutzung verfeinert. Radikale Code-Modifikation durchläuft
-        PR-Gate plus menschliches Review.
+        erneuter Nutzung verfeinert. Optimierte Skills aus dem Schwester-Repo
+        kommen nur per PR mit Review; Prompt- und Code-Evolution ist geplant.
       </p>
     </div>
   </div>

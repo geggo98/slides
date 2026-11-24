@@ -69,7 +69,7 @@ const option = computed(() => ({
           {
             yAxis: 49,
             label: {
-              formatter: "Opus 4 mit allen Tools: 49%",
+              formatter: "Opus 4 ohne Tool Search: 49% (mit: 74%)",
               color: isDark.value ? "#fb923c" : "#c2410c",
               fontSize: 10,
             },

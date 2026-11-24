@@ -35,7 +35,10 @@ export const HARNESSES: Harness[] = [
     color: AGENT_COLORS.claudeCode,
     oss: false,
     lang: "TypeScript",
-    tools: 19,
+    // Stand 24.11.2026: code.claude.com/docs/en/tools-reference.md listet
+    // 53 Tools, TaskOutput seit v2.1.277 entfernt → 52; viele nur unter
+    // Bedingungen (Glob/Grep z. B. auf macOS/Linux standardmäßig nicht da).
+    tools: 52,
     values: [9, 9, 10, 9, 1, 0, 0],
     desc: "Feature-reichster proprietärer Harness, Anthropic-only.",
   },
@@ -44,7 +47,10 @@ export const HARNESSES: Harness[] = [
     color: AGENT_COLORS.codex,
     oss: true,
     lang: "Rust",
-    tools: 6,
+    // Stand 24.11.2026, Quellcode rust-v0.172.0 (codex-rs/core/src/tools/
+    // handlers): 11 Kern-Tools + 5 standardmäßig aktive Multi-Agent-Tools;
+    // mit 3 MCP-Ressourcen-Tools 19. Konfigurationsabhängig.
+    tools: 16,
     values: [4, 8, 8, 7, 5, 10, 0],
     desc: "Solides OSS, OS-native Sandboxing (Seatbelt/bwrap), OpenAI-fokussiert.",
   },
@@ -53,7 +59,10 @@ export const HARNESSES: Harness[] = [
     color: AGENT_COLORS.gemini,
     oss: true,
     lang: "TypeScript",
-    tools: 12,
+    // Stand 24.11.2026, packages/core (tool-names.ts, config.ts): ca. 20 in
+    // der Standardkonfiguration, 17 immer registriert, bis 27 mit
+    // Plan-Modus, Todos und Tracker.
+    tools: 20,
     values: [7, 10, 8, 4, 1, 10, 0],
     desc: "Breitestes Sandboxing (Docker/gVisor/Podman), 1M Context-Window.",
   },
@@ -63,15 +72,19 @@ export const HARNESSES: Harness[] = [
     oss: true,
     lang: "TypeScript",
     tools: 4,
-    values: [3, 1, 0, 0, 10, 10, 0],
-    desc: "Radikaler Minimalismus: 4 Tools, kein MCP, kein Sandbox, 15+ Provider.",
+    // MCP 0 → 8 (Stand 24.11.2026): Pi bindet MCP-Server seit 09/2026 ein
+    // (stdio, Streamable HTTP; packages/coding-agent/docs/mcp.md).
+    values: [3, 1, 8, 0, 10, 10, 0],
+    desc: "Radikaler Minimalismus: 4 Tools, MCP seit 09/2026, kein Sandbox, 15+ Provider.",
   },
   {
     name: "OpenCode",
     color: AGENT_COLORS.opencode,
     oss: true,
     lang: "TypeScript",
-    tools: 9,
+    // Stand 24.11.2026: opencode.ai/docs/tools dokumentiert 16 eingebaute
+    // Tools; der Quellcode enthält weitere.
+    tools: 16,
     values: [6, 6, 8, 6, 9, 10, 0],
     desc: "Multi-Provider Open-Source-Klon, ähnlich Claude Code in Features.",
   },
@@ -102,7 +115,11 @@ export const MCP_DATA = [
   { name: "Slack", tokens: 21000 },
   { name: "GitHub (35 Tools)", tokens: 26000 },
   { name: "MySQL (106 Tools)", tokens: 54600 },
-  { name: "GitHub (93 Tools, alle)", tokens: 55000 },
+  // Drittschätzung ohne offengelegte Methode (dev.to/kenimo49, 05/2026:
+  // „GitHub (full) | 93 | ~55,000“). Eine tiktoken-Zählung (o200k_base,
+  // policylayer.com/token-cost/github) ergibt für 86 Tools 14.406 Tokens.
+  // Geprüft 24.11.2026.
+  { name: "GitHub (93 Tools, Schätzung)", tokens: 55000 },
   { name: "MCP Docker (135 Tools)", tokens: 126000 },
 ];
 
@@ -139,11 +156,12 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   {
     agent: "Codex CLI",
     color: AGENT_COLORS.codex,
-    lazyLoading: "none",
+    // Stand 24.11.2026: Tool Search Standard seit rust-v0.142.2 (25.06.2026).
+    lazyLoading: "auto",
     allowDeny: true,
     hardLimit: null,
     measuredReduction: null,
-    approach: "Manuelles Allow/Deny (TOML)",
+    approach: "Tool Search (Standard seit v0.142.2), enabled/disabled_tools",
   },
   {
     agent: "Gemini CLI",
@@ -157,20 +175,25 @@ export const MCP_OPT_STRATEGIES: McpOptStrategy[] = [
   {
     agent: "OpenCode",
     color: AGENT_COLORS.opencode,
-    lazyLoading: "none",
+    // Stand 24.11.2026: Code Mode ist Standard (opencode.ai/docs/mcp-servers).
+    lazyLoading: "auto",
     allowDeny: true,
     hardLimit: null,
     measuredReduction: null,
-    approach: "Re-fetch bei jedem Call (kein Cache!)",
+    approach: "Code Mode (Standard): Tool-Katalog, Aufruf über execute",
   },
   {
     agent: "Pi",
     color: AGENT_COLORS.pi,
-    lazyLoading: "n/a",
+    // Stand 24.11.2026: MCP im Kern seit Ende 09/2026; Codemode lädt
+    // automatisch mit MCP (earendil.com/posts/you-said-no-mcp). allowDeny
+    // ist unbelegt (Badge „Nein“ ungeprüft).
+    lazyLoading: "auto",
     allowDeny: false,
     hardLimit: null,
     measuredReduction: null,
-    approach: "Kein MCP-Support",
+    approach:
+      "MCP im Kern, Codemode (JS-Sandbox), Tools als deferred konfigurierbar",
   },
 ];
 
@@ -184,9 +207,10 @@ export interface ToolSearchStat {
 
 export const TOOLSEARCH_STATS: ToolSearchStat[] = [
   {
-    value: "85–95%",
+    // Stand 24.11.2026: anthropic.com/engineering/advanced-tool-use
+    value: "~85%",
     label: "Token-Reduktion",
-    desc: "Schema-Tokens pro Request. Nur ~968 Tokens für ToolSearch-Tool selbst.",
+    desc: "Schema-Tokens pro Request (Anthropic-Beispiel: ~77K → ~8,7K). Das Tool Search Tool selbst kostet ~500 Tokens (API).",
     highlight: true,
   },
   {
@@ -195,9 +219,10 @@ export const TOOLSEARCH_STATS: ToolSearchStat[] = [
     desc: "Tool-Selection bei 50+ Tools — weniger im Kontext = bessere Auswahl.",
   },
   {
-    value: "v2.1.69+",
-    label: "System-Tool-Deferral",
-    desc: "Auch Built-in-Tools (Bash, Read, Edit, ...) hinter ToolSearch deferred. ~14K Tokens gespart.",
+    // Stand 24.11.2026: code.claude.com/docs/en/agent-sdk/tool-search.md
+    value: "Built-ins",
+    label: "Teilweise deferred",
+    desc: "Selten genutzte Built-in-Tools (z. B. WebSearch, WebFetch) liegen hinter ToolSearch; Kern-Tools wie Bash, Read und Edit laden immer vorab.",
   },
   {
     value: "79,5% → 88,1%",
@@ -209,8 +234,13 @@ export const TOOLSEARCH_STATS: ToolSearchStat[] = [
 // ── Skills vs MCP ───────────────────────────────────────────────────────────
 export const SKILLS_VS_MCP = {
   categories: ["1", "5", "10", "20", "50"],
-  skills: [50, 250, 500, 1000, 2500],
-  mcp: [30000, 150000, 300000, 600000, 1500000],
+  // Stand 24.11.2026. Skill: ~100 Tokens Frontmatter (name + description),
+  // platform.claude.com/docs/en/agents-and-tools/agent-skills/overview.
+  // MCP-Server: ~11K Tokens Tool-Definitionen (Anthropic-Beispiel 5 Server
+  // ≈ 55K; Spanne ~1K–26K), anthropic.com/engineering/advanced-tool-use.
+  // Gilt nur ohne Tool Search.
+  skills: [100, 500, 1000, 2000, 5000],
+  mcp: [11000, 55000, 110000, 220000, 550000],
 };
 
 // ── Cache Pricing ───────────────────────────────────────────────────────────
@@ -335,11 +365,14 @@ export const TREEMAP_DATA = [
     name: "Gemini",
     itemStyle: { color: "#60a5fa" },
     children: [
-      { name: "Modell-Familie\n(1.0→3.1)", value: 8 },
+      // Stand 24.11.2026: Gemini 4 laut ai.google.dev/gemini-api/docs/models;
+      // Abo-Namen laut gemini.google/subscriptions; CLI und Code Assist für
+      // Free/AI Pro/Ultra seit 18.06.2026 abgeschaltet (Nachfolger: Antigravity).
+      { name: "Modell-Familie\n(1.0→4)", value: 8 },
       { name: "Chatbot\n(gemini.google.com)", value: 5 },
-      { name: "Gemini Advanced\n(Subscription)", value: 4 },
-      { name: "Gemini CLI\n(Coding-Harness)", value: 9 },
-      { name: "Code Assist\n(IDE-Plugin)", value: 6 },
+      { name: "Abo\n(Google AI Plus/Pro/Ultra)", value: 4 },
+      { name: "Gemini CLI\n(nur noch Enterprise)", value: 9 },
+      { name: "Code Assist\n(IDE, nur Enterprise)", value: 6 },
       { name: "Gemini API\n(AI Studio/Vertex)", value: 7 },
     ],
   },
@@ -349,8 +382,9 @@ export const TREEMAP_DATA = [
     children: [
       { name: "code-davinci-002\n(2021, deprecated!)", value: 3 },
       { name: "codex-1\n(Modell)", value: 5 },
-      { name: "codex-mini\n(Modell)", value: 4 },
-      { name: "GPT-5.3-Codex\n(Modell)", value: 6 },
+      // Stand 24.11.2026 (developers.openai.com: deprecations, codex/models).
+      { name: "codex-mini\n(abgeschaltet 02/2026)", value: 4 },
+      { name: "GPT-5.3-Codex\n(Modell, deprecated)", value: 6 },
       { name: "Codex CLI\n(Open-Source)", value: 9 },
       { name: "Codex Web\n(chatgpt.com/codex)", value: 6 },
       { name: "Codex App\n(Desktop)", value: 5 },
@@ -360,12 +394,13 @@ export const TREEMAP_DATA = [
     name: "Claude",
     itemStyle: { color: "#fb923c" },
     children: [
-      { name: "Modelle\n(Opus/Sonnet/Haiku)", value: 9 },
+      // Stand 24.11.2026 (claude.com/pricing, claude.com/product/cowork).
+      { name: "Modelle\n(Mythos/Fable/Opus/Sonnet/Haiku)", value: 9 },
       { name: "claude.ai\n(Chat-UI)", value: 7 },
       { name: "Claude Code\n(CLI-Harness)", value: 9 },
       { name: "Claude API\n(platform.claude.com)", value: 8 },
-      { name: "Subscriptions\n(Pro/Max/Team)", value: 6 },
-      { name: "Claude Cowork\n(GUI Preview)", value: 4 },
+      { name: "Subscriptions\n(Pro/Max/Ultra/Team/Ent.)", value: 6 },
+      { name: "Claude Cowork\n(jetzt Teil von Claude)", value: 4 },
     ],
   },
   {
@@ -405,7 +440,9 @@ export const LEAK_STATS: LeakStat[] = [
     value: "512K",
     label: "Zeilen TypeScript",
     desc: "Im Source-Map vom 31. März 2026",
-    pi: "~3.000 Zeilen",
+    // Pi: packages/coding-agent/src ohne Tests, Commit 957f21c (01.04.2026):
+    // 41.404 Zeilen in 124 Dateien. Stand Ende März 2026, geprüft 24.11.2026.
+    pi: "~41.000 Zeilen",
   },
   {
     value: "59,8 MB",
@@ -417,18 +454,19 @@ export const LEAK_STATS: LeakStat[] = [
     value: "~1.900",
     label: "Dateien",
     desc: "Im deobfuskierten Repository",
-    pi: "~30 Dateien",
+    pi: "124 Dateien",
   },
   {
-    value: "19+",
+    // VentureBeat, 02.04.2026: „orchestrates 40-plus tools“; geprüft 24.11.2026.
+    value: "40+",
     label: "Tools registriert",
     desc: "Read, Write, Edit, Bash, Glob, Grep, Task, …",
     pi: "4 (Read/Write/Edit/Bash)",
   },
   {
     value: "9.707",
-    label: "Zeilen Bash-Security",
-    desc: "Über 3 Dateien, Tree-sitter AST-Parser",
+    label: "Zeilen Bash-Parser + Validierung",
+    desc: "3 Dateien; bashSecurity.ts allein 2.592",
     pi: "0 — kein Sandbox",
   },
   {
@@ -463,14 +501,16 @@ export interface ModuleSize {
 }
 
 export const MODULE_SIZES: ModuleSize[] = [
-  { name: "Bash Security", lines: 9707 },
-  { name: "Tool Definitions", lines: 4500 },
-  { name: "Permission System", lines: 3200 },
-  { name: "Streaming Parser", lines: 2800 },
-  { name: "KAIROS Daemon", lines: 2400 },
-  { name: "AutoCompact Logic", lines: 1800 },
-  { name: "MCP Client", lines: 1500 },
-  { name: "Subagent (Task)", lines: 1200 },
+  // Eigene Zählung, Stand 24.11.2026: Mirror github.com/Tinkeringg-Lab/claude-code
+  // (Leak 2.1.88, 31.03.2026), nur .ts/.tsx, wc -l. Bash = bashParser.ts +
+  // ast.ts + bashSecurity.ts (Sabrina Ramonov, 02.04.2026). src/tools/ gesamt
+  // (50.828) fehlt bewusst: es enthält AgentTool und bashSecurity.ts. KAIROS ist
+  // ein Feature-Flag in 61 Dateien, kein Modul.
+  { name: "MCP (services/mcp)", lines: 12310 },
+  { name: "Bash Parser + Security", lines: 9707 },
+  { name: "Permissions", lines: 9409 },
+  { name: "Subagent (AgentTool)", lines: 6782 },
+  { name: "Compaction", lines: 3960 },
 ];
 
 // ── Systima-Messung an der API-Grenze (Claude Code vs. OpenCode) ────────────

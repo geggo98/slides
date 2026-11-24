@@ -10,7 +10,7 @@ const events = [
     tag: "prompt",
     date: "Januar 2022",
     title: "Chain-of-Thought (Wei et al.)",
-    actor: "„Let's think step by step\" · Prompt-Hype beginnt",
+    actor: "Few-Shot-Beispiele mit Rechenweg · Prompt-Hype beginnt",
   },
   {
     tag: "prompt",
@@ -38,9 +38,9 @@ const events = [
   },
   {
     tag: "harness",
-    date: "Februar 2026",
+    date: "11. Februar 2026",
     title: "OpenAI Codex-Team · Harness Engineering Report",
-    actor: "// 1M+ LoC ohne manuellen Code · „it's all about the harness\"",
+    actor: "// ~1 Mio. Zeilen Code, 0 Zeilen von Hand geschrieben",
   },
   {
     tag: "harness",

@@ -48,7 +48,7 @@ interface Row {
 const ROWS: Row[] = [
   {
     label: "Tool-Definitionen",
-    ann: "Request-Prefix, 19+ Tools",
+    ann: "Request-Prefix, ≤52 Tools",
     kind: "cool",
   },
   {
@@ -58,8 +58,8 @@ const ROWS: Row[] = [
   },
   {
     label: "MCP-Tool-Definitionen",
-    ann: "17K–126K pro Server!",
-    kind: "alert",
+    ann: "Default: nur Namen (Tool Search)",
+    kind: "neutral",
   },
   {
     label: "Conversation-History",

@@ -174,7 +174,7 @@ export const STEPS: SimStep[] = [
   },
   {
     title: "Harness scannt verfügbare Skills",
-    desc: "Progressive Disclosure: Aus jeder SKILL.md wird NUR der YAML-Frontmatter geladen (~50 Tokens pro Skill). Die Skill-Inhalte bleiben auf der Disk — werden erst nachgeladen wenn das Modell den Skill aktiv nutzen will.",
+    desc: "Progressive Disclosure: Aus jeder SKILL.md wird NUR der YAML-Frontmatter geladen (~100 Tokens pro Skill). Die Skill-Inhalte bleiben auf der Disk — werden erst nachgeladen wenn das Modell den Skill aktiv nutzen will.",
     nodes: ["harness", "skill"],
     edges: ["h-skill"],
   },
@@ -186,7 +186,7 @@ export const STEPS: SimStep[] = [
   },
   {
     title: "Harness verbindet sich mit MCP-Servern",
-    desc: "Für jeden konfigurierten MCP-Server wird ein Subprocess gespawnt. Das initialize-Handshake liefert die kompletten Tool-Definitionen — bei GitHub-MCP allein 26K–55K Tokens. Diese landen ALLE im System-Prompt jedes Requests.",
+    desc: "Für jeden konfigurierten MCP-Server wird ein Subprocess gespawnt. Das initialize-Handshake liefert die kompletten Tool-Definitionen — bei GitHub-MCP allein 26K–55K Tokens. Tool Search (Default) lädt davon nur Namen vorab.",
     nodes: ["harness", "mcp"],
     edges: ["h-mcp"],
   },
@@ -305,12 +305,12 @@ AGENTS.md ist der provider-agnostische Standard (Linux Foundation, 60.000+ Repos
     body: `YAML-Frontmatter + Markdown + optionale Scripts.
 
 PROGRESSIVE DISCLOSURE:
-1. Startup: nur Frontmatter (~50 Tokens pro Skill)
+1. Startup: nur Frontmatter (~100 Tokens pro Skill)
 2. On-Demand: volle SKILL.md wenn relevant
 3. Deep-Dive: Referenzierte Files später
 4. Code-Execution: Scripts in Sandbox
 
-1 Skill ≈ 50 Tokens vs 1 MCP-Server ≈ 2.000–55.000+ Tokens (Faktor 40–1100×).`,
+1 Skill ≈ 100 Tokens vs 1 MCP-Server ohne Tool Search ≈ 1K–26K (Faktor 10–260×).`,
   },
   memory: {
     title: "MEMORY.md (Auto Memory)",
@@ -320,19 +320,19 @@ Limit: 200 Zeilen / 25 KB. AUTO DREAM: Hintergrund-Subagent konsolidiert periodi
   },
   tools: {
     title: "Local Tools",
-    body: `Im Harness-Process: Read, Write, Edit, Bash, Glob, Grep, Task (Subagent), etc. 19+ bei Claude Code.
+    body: `Im Harness-Process: Read, Write, Edit, Bash, Glob, Grep, Task (Subagent), etc. 52 bei Claude Code.
 
 Tool-Definitionen als JSON-Schema im "tools"-API-Parameter → Input-Tokens.
 
-PERMISSIONS: Deny → Ask → Allow. Bash: tree-sitter-WASM AST-Parser, 22 Validators, ~9.700 Zeilen Security.`,
+PERMISSIONS: Deny → Ask → Allow. Bash: tree-sitter-WASM AST-Parser, 22 Validators, ~9.700 Zeilen Prüfung.`,
   },
   mcp: {
     title: "MCP-Server",
     body: `Model Context Protocol: JSON-RPC 2.0 (stdio, SSE, HTTP).
 
-DAS TOKEN-PROBLEM:
+OHNE TOOL SEARCH:
 • GitHub MCP (35 Tools): ~26.000 Tokens
-• GitHub MCP (93 Tools): ~55.000 Tokens
+• GitHub MCP (93 Tools): ~55.000 (Schätzung)
 • MySQL MCP (106 Tools): ~54.600 Tokens
 • Docker MCP (135 Tools): ~126.000 Tokens
 

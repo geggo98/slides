@@ -13,7 +13,7 @@
           "id": "loop-grundprinzip-o0",
           "text": "Der Kern ist eine While-Schleife: LLM aufrufen, Tool-Calls erkennen, ausfuehren, Ergebnis zurueckfuettern, wiederholen.",
           "verdict": "true",
-          "explanation": "Genau dieses Grundprinzip teilen alle modernen Coding-Agents — vom 4-Tool-Pi bis zu Claude Code mit 19+ Tools."
+          "explanation": "Genau dieses Grundprinzip teilen alle modernen Coding-Agents — vom 4-Tool-Pi bis zu Claude Code mit 52 Tools (Stand 24.11.2026)."
         },
         {
           "id": "loop-grundprinzip-o1",
@@ -23,15 +23,15 @@
         },
         {
           "id": "loop-grundprinzip-o2",
-          "text": "Bei Claude Code heisst diese Master-Loop intern `nO`.",
+          "text": "Bei Claude Code heisst diese Loop im Quellcode `queryLoop()`.",
           "verdict": "true",
-          "explanation": "Trotz des riesigen Drumherums bleibt der Kern aus dem Talk eine einzelne, intern `nO` genannte Master-Loop."
+          "explanation": "Trotz des riesigen Drumherums bleibt der Kern eine einzelne Loop: `queryLoop()` in `src/query.ts`, laut Source-Map-Leak vom 31.03.2026."
         },
         {
           "id": "loop-grundprinzip-o3",
           "text": "Ein vorgeschalteter Classifier routet jede Anfrage zuerst an ein passendes Spezialmodul.",
           "verdict": "false",
-          "explanation": "Im Loop-Kern gibt es weder Classifier noch Router noch State-Machine — das Modell orchestriert selbst, ohne Vorab-Routing."
+          "explanation": "Im Loop-Kern steuern weder Router noch Classifier den Ablauf — das Modell orchestriert selbst, ohne Vorab-Routing. Der Classifier im Auto-Modus prueft nur, ob eine Aktion erlaubt ist."
         },
         {
           "id": "loop-grundprinzip-o4",
@@ -64,7 +64,7 @@
       "question": "Was weisst Du ueber Tool Search und On-Demand-Loading von Tool-Definitionen?",
       "difficulty": "medium",
       "section": "Agent-Loop & Tool-Use",
-      "explanation": "Anthropics Tool Search Tool (Jan 2026) laedt Tool-Definitionen erst bei Bedarf; in Claude Code ist es seit v2.1.7 enthalten und aktiviert sich automatisch, sobald MCP-Tools mehr als 10 % des Context belegen.",
+      "explanation": "Anthropics Tool Search Tool (Jan 2026) laedt Tool-Definitionen erst bei Bedarf; in Claude Code stellt es heute standardmaessig alle MCP-Tools zurueck; die 10-%-Schwelle (seit v2.1.7) gilt nur noch mit ENABLE_TOOL_SEARCH=auto.",
       "options": [
         {
           "id": "tool-search-mechanik-o0",
@@ -74,15 +74,15 @@
         },
         {
           "id": "tool-search-mechanik-o1",
-          "text": "In Claude Code aktiviert sich ToolSearch seit v2.1.7 automatisch, wenn MCP-Tools mehr als 10 % des Context belegen.",
+          "text": "Claude Code stellt MCP-Tools heute standardmaessig zurueck und laedt sie bei Bedarf.",
           "verdict": "true",
-          "explanation": "Die 10-%-Schwelle ist der automatische Trigger — unterhalb davon bleibt alles wie gehabt vorgeladen."
+          "explanation": "Ab v2.1.7 griff das erst ab 10 % Context-Anteil; diese Schwelle gilt heute nur noch mit ENABLE_TOOL_SEARCH=auto."
         },
         {
           "id": "tool-search-mechanik-o2",
-          "text": "Seit v2.1.69 werden auch System-Tools deferred.",
+          "text": "Kern-Tools wie Bash, Read und Edit laden auch mit ToolSearch immer vorab.",
           "verdict": "true",
-          "explanation": "Das Deferral wurde mit v2.1.69 von den MCP-Tools auf die eingebauten System-Tools ausgeweitet."
+          "explanation": "Deferred sind nur selten genutzte Built-ins wie WebSearch und WebFetch; die Kern-Tools stehen von Anfang an im Context."
         },
         {
           "id": "tool-search-mechanik-o3",
@@ -106,7 +106,7 @@
           "id": "tool-search-mechanik-o6",
           "text": "Mit ToolSearch ist manuelles Aufraeumen der MCP-Server ueberfluessig.",
           "verdict": "depends",
-          "explanation": "In Claude Code hilft es ab der 10-%-Schwelle automatisch — aber nur 2 von 6 Agents haben automatisches Lazy-Loading, in den uebrigen bleibt manuelles Filtern noetig."
+          "explanation": "5 von 6 Agents (83 %) laden MCP-Tools inzwischen automatisch nach Bedarf; nur in Gemini CLI bleibt manuelles Filtern noetig."
         },
         {
           "id": "tool-search-mechanik-o7",
@@ -121,31 +121,31 @@
       "question": "Warum verursachen MCP-Server Token-Bloat?",
       "difficulty": "easy",
       "section": "Context & Token-Ökonomie",
-      "explanation": "MCP-Server saugen 17K–126K Tokens, bevor der erste Tool-Call ueberhaupt passiert — weil ihre Tool-Definitionen bei jedem Request neu in den Request-Prefix injiziert werden und als Input-Tokens zaehlen.",
+      "explanation": "MCP-Server kosten geschaetzt 17K–126K Tokens, bevor der erste Tool-Call passiert — ohne Tool Search stehen ihre Tool-Definitionen in jedem Request und zaehlen als Input-Tokens. Claude Code laedt sie standardmaessig erst bei Bedarf.",
       "options": [
         {
           "id": "mcp-token-bloat-o0",
-          "text": "Tool-Definitionen werden bei jedem Request in den Request-Prefix injiziert und zaehlen als Input-Tokens.",
+          "text": "Ohne Tool Search werden Tool-Definitionen bei jedem Request in den Request-Prefix injiziert und zaehlen als Input-Tokens.",
           "verdict": "true",
           "explanation": "Jeder API-Call traegt das volle `tools`-Array — die Definitionen werden bei jeder Loop-Iteration erneut bezahlt."
         },
         {
           "id": "mcp-token-bloat-o1",
-          "text": "MCP-Server saugen 17K–126K Tokens, bevor der erste Tool-Call ueberhaupt passiert.",
+          "text": "Ohne Tool Search kosten MCP-Server 17K–126K Tokens, bevor der erste Tool-Call passiert.",
           "verdict": "true",
-          "explanation": "Allein die Tool-Schemata eines Servers belegen diesen Bereich — noch bevor irgendein Tool benutzt wurde."
+          "explanation": "Allein die Tool-Schemata eines Servers belegen geschaetzt diesen Bereich, wenn sie vorab geladen werden — noch bevor irgendein Tool benutzt wurde."
         },
         {
           "id": "mcp-token-bloat-o2",
           "text": "Genau diese Re-Injektion bei jedem Request ist der direkte Grund fuer MCP-Token-Bloat.",
           "verdict": "true",
-          "explanation": "Der Bloat entsteht nicht durch die Tool-Nutzung, sondern durch das permanente Mitschleppen der vollen Definitionen in jedem Request."
+          "explanation": "Der Bloat entsteht nicht durch die Tool-Nutzung, sondern durch das Mitschleppen der vollen Definitionen in jedem Request — genau das vermeidet Tool Search."
         },
         {
           "id": "mcp-token-bloat-o3",
           "text": "MCP-Tokens fallen nur einmalig bei der Registrierung des Servers an.",
           "verdict": "false",
-          "explanation": "Es gibt keine Einmal-Registrierung beim Modell — die Definitionen laufen bei jedem einzelnen Request erneut als Input durch."
+          "explanation": "Es gibt keine Einmal-Registrierung beim Modell — geladene Definitionen laufen bei jedem einzelnen Request erneut als Input durch."
         },
         {
           "id": "mcp-token-bloat-o4",
@@ -178,19 +178,19 @@
       "question": "Skills vs. MCP: Welche Aussagen zur Token-Ersparnis stimmen?",
       "difficulty": "medium",
       "section": "Context & Token-Ökonomie",
-      "explanation": "Skills sparen via Progressive Disclosure den Faktor 40–1100× gegenueber vollen MCP-Tool-Definitionen: Ruhend kostet ein Skill nur ~50 Tokens Frontmatter, der Inhalt wird erst bei tatsaechlicher Nutzung geladen.",
+      "explanation": "Skills sparen via Progressive Disclosure den Faktor 10–260× gegenueber vollen MCP-Tool-Definitionen ohne Tool Search: Ruhend kostet ein Skill nur ~100 Tokens Frontmatter, der Inhalt wird erst bei tatsaechlicher Nutzung geladen.",
       "options": [
         {
           "id": "skills-progressive-disclosure-o0",
-          "text": "Skills sparen via Progressive Disclosure den Faktor 40–1100× gegenueber vollen MCP-Tool-Definitionen.",
+          "text": "Skills sparen via Progressive Disclosure den Faktor 10–260× gegenueber vollen MCP-Tool-Definitionen.",
           "verdict": "true",
           "explanation": "Weil nur das Frontmatter permanent im Context liegt, faellt der Token-Fussabdruck um Groessenordnungen kleiner aus als bei vollen MCP-Schemata."
         },
         {
           "id": "skills-progressive-disclosure-o1",
-          "text": "Ein ruhender Skill kostet nur ~50 Tokens Frontmatter pro Request.",
+          "text": "Ein ruhender Skill kostet nur ~100 Tokens Frontmatter pro Request.",
           "verdict": "true",
-          "explanation": "Solange der Skill nicht genutzt wird, zahlt der Context nur die kurze Frontmatter-Beschreibung von rund 50 Tokens."
+          "explanation": "Solange der Skill nicht genutzt wird, zahlt der Context nur die kurze Frontmatter-Beschreibung (name und description) von rund 100 Tokens."
         },
         {
           "id": "skills-progressive-disclosure-o2",
@@ -202,11 +202,11 @@
           "id": "skills-progressive-disclosure-o3",
           "text": "Skills und MCP kosten pro Request ungefaehr gleich viel.",
           "verdict": "false",
-          "explanation": "Der Unterschied liegt beim Faktor 40–1100× — ~50 Tokens Frontmatter gegen bis zu 126K Tokens voller Definitionen sind keine Gleichheit."
+          "explanation": "Der Unterschied liegt beim Faktor 10–260× — ~100 Tokens Frontmatter gegen ~1K–26K Tokens Definitionen pro Server sind keine Gleichheit."
         },
         {
           "id": "skills-progressive-disclosure-o4",
-          "text": "Der Faktor 40–1100 beschreibt die Geschwindigkeit, nicht die Token-Menge.",
+          "text": "Der Faktor 10–260 beschreibt die Geschwindigkeit, nicht die Token-Menge.",
           "verdict": "false",
           "explanation": "Der Faktor bezieht sich auf eingesparte Tokens durch Progressive Disclosure, nicht auf Laufzeit oder Latenz."
         },
@@ -218,9 +218,9 @@
         },
         {
           "id": "skills-progressive-disclosure-o6",
-          "text": "Die Ersparnis liegt in der Praxis immer am oberen Ende, also bei ~1000×.",
+          "text": "Die Ersparnis liegt in der Praxis immer am oberen Ende, also bei ~260×.",
           "verdict": "depends",
-          "explanation": "Die Spanne 40–1100× ist ein Bereich — wo Dein Fall landet, haengt vom konkreten Server und Skill ab; viele reale Messungen liegen deutlich unter dem Maximum."
+          "explanation": "Die Spanne 10–260× ist ein Bereich — wo Dein Fall landet, haengt vom konkreten Server ab; typische Server liegen bei wenigen Tausend Tokens, also deutlich unter dem Maximum."
         },
         {
           "id": "skills-progressive-disclosure-o7",
@@ -247,7 +247,7 @@
           "id": "compaction-strategien-o1",
           "text": "AutoCompact erzeugt bei ~92–98 % Fuellstand eine 20K-Token-Summary; 13K Buffer sind reserviert.",
           "verdict": "true",
-          "explanation": "Bei hohem Fuellstand fasst AutoCompact die Conversation in einer 20K-Token-Summary zusammen und haelt dafuer 13K Buffer frei."
+          "explanation": "Bei hohem Fuellstand fasst AutoCompact die Conversation in einer 20K-Token-Summary zusammen und haelt dafuer 13K Buffer frei (laut Quellcode v2.1.88)."
         },
         {
           "id": "compaction-strategien-o2",
@@ -257,9 +257,9 @@
         },
         {
           "id": "compaction-strategien-o3",
-          "text": "Pi kompaktiert automatisch und sogar aggressiver als Claude Code.",
+          "text": "Pi kennt nur manuelles `/compact`, kein automatisches Kompaktieren.",
           "verdict": "false",
-          "explanation": "Pi hat bewusst gar kein automatisches Kompaktieren — es setzt auf tree-structured Sessions und manuelles `/compact`."
+          "explanation": "Pi kompaktiert standardmaessig automatisch, sobald nur noch 16.384 Tokens frei sind; die letzten ~20K Tokens bleiben woertlich. `/compact` gibt es zusaetzlich."
         },
         {
           "id": "compaction-strategien-o4",
@@ -277,13 +277,13 @@
           "id": "compaction-strategien-o6",
           "text": "AutoCompact springt zuverlaessig beim immer gleichen Fuellstand an.",
           "verdict": "depends",
-          "explanation": "Der Trigger ist ein Bereich (~92–98 %), kein fixer Punkt — auf einen exakten Schwellwert solltest Du Dich nicht verlassen."
+          "explanation": "Der Trigger ist ein Bereich (~92–98 %) und per `/autocompact` einstellbar — auf einen exakten Schwellwert solltest Du Dich nicht verlassen."
         },
         {
           "id": "compaction-strategien-o7",
-          "text": "Manuelles `/compact` wie bei Pi ist dem automatischen Kompaktieren unterlegen.",
+          "text": "Manuelles `/compact` ist dem automatischen Kompaktieren unterlegen.",
           "verdict": "depends",
-          "explanation": "Automatik ist bequemer, aber Pi setzt bewusst auf Kontrolle und tree-structured Sessions — welcher Ansatz besser passt, haengt von Deinem Workflow ab."
+          "explanation": "Automatik ist bequemer, manuell bestimmst Du den Zeitpunkt selbst — Pi bietet beides. Welcher Weg besser passt, haengt von Deinem Workflow ab."
         }
       ]
     },
@@ -292,7 +292,7 @@
       "question": "System-Prompts im Vergleich: Welche Aussagen stimmen?",
       "difficulty": "medium",
       "section": "Context & Token-Ökonomie",
-      "explanation": "Pi kommt mit unter 1.000 Tokens System-Prompt aus, Claude Code liegt im Multi-K-Bereich und steuert die Modell-Ausgaben mit expliziten Wortlimits — A/B-Tests zeigten dadurch ~1,2 % Token-Reduktion.",
+      "explanation": "Pi kommt mit unter 1.000 Tokens System-Prompt aus, Claude Code liegt im Multi-K-Bereich. Explizite Wortlimits fuer die Modell-Ausgaben nahm Anthropic im April 2026 nach vier Tagen zurueck: eine Evaluation zeigte 3 % Verlust bei Opus 4.6 und 4.7.",
       "options": [
         {
           "id": "system-prompt-groessen-o0",
@@ -302,15 +302,15 @@
         },
         {
           "id": "system-prompt-groessen-o1",
-          "text": "Claude Code verordnet dem Modell ≤25 Woerter zwischen Tool-Calls und ≤100 Woerter in finalen Antworten.",
+          "text": "Claude Code verordnete dem Modell im April 2026 kurz ≤25 Woerter zwischen Tool-Calls und ≤100 Woerter in finalen Antworten.",
           "verdict": "true",
-          "explanation": "Diese expliziten Wortlimits stehen im System-Prompt und druecken die Output-Tokens des Modells."
+          "explanation": "Die Zeile kam am 16.04.2026 mit Opus 4.7 in den System-Prompt und flog am 20.04.2026 wieder raus (Anthropic-Postmortem vom 23.04.2026)."
         },
         {
           "id": "system-prompt-groessen-o2",
-          "text": "A/B-Tests zeigten ~1,2 % Token-Reduktion durch explizite Wortzahlen.",
-          "verdict": "true",
-          "explanation": "Konkrete Zahlenangaben im Prompt brachten messbar ~1,2 % weniger Tokens als vage Formulierungen."
+          "text": "A/B-Tests belegten, dass die Wortlimits ohne Nebenwirkung Tokens sparen.",
+          "verdict": "false",
+          "explanation": "Von A/B-Tests berichtet Anthropic nichts. Das Postmortem nennt eine Evaluation mit 3 % Verlust bei Opus 4.6 und 4.7 — deshalb wurde die Zeile zurueckgenommen."
         },
         {
           "id": "system-prompt-groessen-o3",
@@ -326,9 +326,9 @@
         },
         {
           "id": "system-prompt-groessen-o5",
-          "text": "Die A/B-Tests zeigten ~12 % Token-Reduktion.",
+          "text": "Die Wortlimits gelten in Claude Code bis heute.",
           "verdict": "false",
-          "explanation": "Es waren ~1,2 % — eine Groessenordnung weniger; der Effekt ist real, aber pro Request klein."
+          "explanation": "Anthropic nahm die Zeile am 20.04.2026 zurueck, vier Tage nach der Einfuehrung."
         },
         {
           "id": "system-prompt-groessen-o6",
@@ -338,9 +338,9 @@
         },
         {
           "id": "system-prompt-groessen-o7",
-          "text": "~1,2 % Token-Reduktion sind die Muehe nicht wert.",
+          "text": "Harte Wortlimits im System-Prompt lohnen sich.",
           "verdict": "depends",
-          "explanation": "Pro Request winzig — ueber Millionen Requests und global gecachte Prompts summiert sich derselbe Prozentsatz aber zu erheblichen Betraegen."
+          "explanation": "Sie druecken die Output-Tokens, koennen aber die Qualitaet kosten: Claude Codes Limit brachte in einer Evaluation 3 % Verlust bei Opus 4.6 und 4.7."
         }
       ]
     },
@@ -391,7 +391,7 @@
           "id": "kv-cache-grundlagen-o6",
           "text": "Caching lohnt sich immer.",
           "verdict": "depends",
-          "explanation": "Der Write kostet 1,25× — die Rechnung geht nur auf, wenn der Prefix innerhalb der TTL wiederverwendet wird; isolierte `claude -p`-Aufrufe ohne `--resume` haben gar keinen Treffer."
+          "explanation": "Der Write kostet 1,25× — die Rechnung geht nur auf, wenn der Prefix innerhalb der TTL wiederverwendet wird; liegt die Pause zwischen zwei Requests über der TTL, gibt es keinen Treffer."
         },
         {
           "id": "kv-cache-grundlagen-o7",
@@ -469,7 +469,7 @@
           "id": "session-resume-problem-o0",
           "text": "Ein Resume nach 6 Minuten bedeutet einen vollen Cache-Write, weil die Default-TTL von 5 Minuten abgelaufen ist.",
           "verdict": "true",
-          "explanation": "Nach Ablauf der TTL existiert der Cache-Eintrag nicht mehr — die komplette History muss neu geschrieben und voll bezahlt werden."
+          "explanation": "Nach Ablauf der TTL existiert der Cache-Eintrag nicht mehr — die komplette History muss neu geschrieben und voll bezahlt werden. Das gilt für die API-Default-TTL; im Abo-Kontingent fordert Claude Code 1 h an."
         },
         {
           "id": "session-resume-problem-o1",
@@ -505,7 +505,7 @@
           "id": "session-resume-problem-o6",
           "text": "`--resume` innerhalb der TTL rettet den Cache-Discount.",
           "verdict": "depends",
-          "explanation": "Grundsaetzlich ja, der On-Disk-Prefix wird reaktiviert — in der Praxis muss der Prefix aber exakt matchen und Bug #42338 darf nicht zuschlagen."
+          "explanation": "Grundsaetzlich ja, der unveränderte Prefix wird aus dem Cache gelesen — in der Praxis muss der Prefix aber exakt matchen und Bug #42338 darf nicht zuschlagen."
         },
         {
           "id": "session-resume-problem-o7",
@@ -520,25 +520,25 @@
       "question": "Claude Code CLI: drei Modi, drei Cache-Profile — welche Aussagen stimmen?",
       "difficulty": "hard",
       "section": "Cache & Sessions",
-      "explanation": "Derselbe Harness hat drei Cache-Charakteristiken: interaktiv 1 h TTL auf Max bzw. 5 min auf Pro/API, Background-Subagents fix 5 min, und `claude -p` hat zwischen Aufrufen gar keinen Cache — wer das ignoriert, zahlt schnell das Zehnfache.",
+      "explanation": "Derselbe Harness hat drei Cache-Charakteristiken: interaktiv und per `-p` 1 h TTL im Abo-Kontingent bzw. 5 min per API-Key, Background-Subagents standardmäßig 5 min, und getrennte `claude -p`-Aufrufe im selben Verzeichnis teilen den gecachten Prefix.",
       "options": [
         {
           "id": "drei-cache-profile-o0",
-          "text": "Interaktiv (`claude`): TTL 1 h (2× Write-Kosten) auf Max, 5 min auf Pro/API.",
+          "text": "Interaktiv (`claude`): TTL 1 h (2× Write-Kosten) im Abo-Kontingent, 5 min per API-Key.",
           "verdict": "true",
-          "explanation": "Das interaktive Cache-Profil haengt vom Plan ab — Max bekommt die lange TTL, Pro und API die kurze."
+          "explanation": "Das interaktive Cache-Profil hängt am Abrechnungsweg, nicht am Tarif: Jedes Abo bekommt im Kontingent die lange TTL, API-Key und Usage-Credits die kurze."
         },
         {
           "id": "drei-cache-profile-o1",
-          "text": "Background-Subagents: TTL 5 min — fix; lange Tool-Calls oder verspaetete Permission-Prompts lassen den Cache verfallen.",
+          "text": "Background-Subagents: TTL standardmäßig 5 min, auch im Abo; lange Tool-Calls oder verspätete Permission-Prompts lassen den Cache verfallen.",
           "verdict": "true",
-          "explanation": "Die feste 5-Minuten-TTL macht Background-Subagents anfaellig: Dauert ein Tool-Call zu lange, folgt der volle Cache-Write."
+          "explanation": "Die 5-Minuten-TTL macht Background-Subagents anfällig: Dauert ein Tool-Call zu lange, folgt der volle Cache-Write. Ab v2.1.242 hebt `subagentPromptCacheTtl` sie auf 1 h."
         },
         {
           "id": "drei-cache-profile-o2",
-          "text": "Pipe (`claude -p`): kein Cache zwischen Aufrufen; `--resume` oder `--continue` reaktiviert den On-Disk-Prefix innerhalb der TTL.",
+          "text": "Pipe (`claude -p`): getrennte Aufrufe im selben Verzeichnis teilen den gecachten Prefix aus System-Prompt, Tools und Projektkontext.",
           "verdict": "true",
-          "explanation": "Getrennte `-p`-Aufrufe starten kalt — nur das explizite Fortsetzen einer Session innerhalb der TTL stellt den Cache-Bezug wieder her."
+          "explanation": "Parallele Aufrufe bauen denselben Prefix und lesen gegenseitig aus dem Cache; nacheinander gestartete nur, wenn der Git-Status-Snapshot beim Start gleich ist. Neu aufgebaut wird nur der Gesprächsteil."
         },
         {
           "id": "drei-cache-profile-o3",
@@ -548,9 +548,9 @@
         },
         {
           "id": "drei-cache-profile-o4",
-          "text": "`claude -p` cached automatisch zwischen getrennten Aufrufen.",
+          "text": "Für `claude -p` gilt immer die 5-Minuten-TTL, auch im Abo.",
           "verdict": "false",
-          "explanation": "Ohne `--resume`/`--continue` gibt es zwischen Pipe-Aufrufen keinen Cache — jeder Aufruf zahlt den vollen Prefix neu."
+          "explanation": "`-p`-Läufe zählen zum Topf „Main conversation“ und bekommen dieselbe TTL wie interaktive Turns: 1 h im Abo-Kontingent, 5 min mit API-Key, Usage-Credits oder Cloud-Provider."
         },
         {
           "id": "drei-cache-profile-o5",
@@ -568,7 +568,7 @@
           "id": "drei-cache-profile-o7",
           "text": "Ein Wrapper, der `claude -p` in einer Schleife aufruft, ist ein Kostenproblem.",
           "verdict": "depends",
-          "explanation": "Ohne `--resume` ja — OpenClaw #19989 dokumentiert 10× Kosten durch staendig invalidierten Cache; mit `--resume` innerhalb der TTL ist das Muster unkritisch."
+          "explanation": "Laufen die Aufrufe im selben Verzeichnis, teilen sie den Prefix; nacheinander nur bei gleichem Git-Status-Snapshot beim Start. Ändert sich der Snapshot zwischen den Aufrufen oder liegt die Pause über der TTL, baut jeder Aufruf den Prefix neu."
         }
       ]
     },
@@ -577,7 +577,7 @@
       "question": "Memory-Systeme der Agents: Welche Aussagen stimmen?",
       "difficulty": "easy",
       "section": "Architektur & Memory",
-      "explanation": "Claude Code nutzt CLAUDE.md, Codex AGENTS.md, Gemini CLI GEMINI.md und Pi AGENTS.md plus SYSTEM.md — am Ende gewann ueberall die simple, automatisch in den Context gelesene Datei gegen komplexe Memory-Architekturen.",
+      "explanation": "Claude Code nutzt CLAUDE.md (sonst AGENTS.md), Codex AGENTS.md, Gemini CLI GEMINI.md und Pi AGENTS.md plus SYSTEM.md — am Ende gewann ueberall die simple, automatisch in den Context gelesene Datei gegen komplexe Memory-Architekturen.",
       "options": [
         {
           "id": "memory-dateien-o0",
@@ -600,8 +600,8 @@
         {
           "id": "memory-dateien-o3",
           "text": "Claude Code liest AGENTS.md nativ.",
-          "verdict": "false",
-          "explanation": "Claude Code liest nativ nur CLAUDE.md — AGENTS.md kommt nur ueber einen @AGENTS.md-Import oder einen Symlink in den Context."
+          "verdict": "depends",
+          "explanation": "Seit v2.1.277 ja, standardmaessig aber nur, wenn im Arbeitsverzeichnis und darueber kein CLAUDE.md oder CLAUDE.local.md liegt. Beide liest es erst mit der Einstellung „Project instructions“ = claude-md-and-agents-md; Version 2.1.207 ignorierte AGENTS.md noch ganz."
         },
         {
           "id": "memory-dateien-o4",
@@ -619,11 +619,11 @@
           "id": "memory-dateien-o6",
           "text": "Fuer ein neues Projekt ist AGENTS.md der richtige Default.",
           "verdict": "depends",
-          "explanation": "Fuer Multi-Tool-Teams klar ja — arbeitet Dein Team ausschliesslich mit Claude Code, brauchst Du zusaetzlich den Import-Trick oder Symlink, sonst bleibt die Datei wirkungslos."
+          "explanation": "Fuer Multi-Tool-Teams klar ja — Claude Code liest sie seit v2.1.277, standardmaessig aber nur ohne CLAUDE.md; liegen beide vor, braucht es einen @AGENTS.md-Import oder die passende Einstellung."
         },
         {
           "id": "memory-dateien-o7",
-          "text": "Die volle CLAUDE.md-Hierarchie (global → Projekt → Subdirs → .local.md) solltest Du immer ausreizen.",
+          "text": "Die volle CLAUDE.md-Hierarchie (Managed → global → Projekt → Subdirs) solltest Du immer ausreizen.",
           "verdict": "depends",
           "explanation": "In grossen Repos mit unterschiedlichen Bereichen wertvoll — in kleinen Projekten Overkill, denn jede geladene Instruktionsdatei kostet bei Sessionstart Context."
         }
@@ -634,13 +634,13 @@
       "question": "Sandboxing im Vergleich: Welche Aussagen stimmen?",
       "difficulty": "medium",
       "section": "Architektur & Memory",
-      "explanation": "Claude Code validiert AST-basiert mit Tree-sitter (22 Validators, 9.707 Zeilen, Deny → Ask → Allow), Codex CLI setzt auf OS-native Sandboxes, Gemini CLI auf Multi-Strategy-Container — und Pi verzichtet bewusst komplett und verweist auf Container.",
+      "explanation": "Claude Code sandboxt OS-native (Seatbelt bzw. bubblewrap, standardmaessig aus) und prueft Bash-Befehle zusaetzlich AST-basiert mit Tree-sitter (22 Validators, 9.707 Zeilen, Deny → Ask → Allow), Codex CLI setzt auf OS-native Sandboxes, Gemini CLI auf Multi-Strategy-Container — und Pi verzichtet bewusst komplett und verweist auf Container.",
       "options": [
         {
           "id": "sandboxing-vergleich-o0",
-          "text": "Claude Code arbeitet AST-basiert: Tree-sitter-WASM-Parser, 22 Validators, 9.707 Zeilen, Deny → Ask → Allow.",
+          "text": "Claude Code sandboxt OS-native und prueft Bash-Befehle zusaetzlich per AST: Tree-sitter, 22 Validators, Deny → Ask → Allow.",
           "verdict": "true",
-          "explanation": "Claude Code parst Shell-Kommandos in einen AST und jagt sie durch 22 Validators — fast 10.000 Zeilen Code nur fuer diese Schicht."
+          "explanation": "Die Sandbox ist OS-native: Seatbelt auf macOS, bubblewrap auf Linux/WSL2, standardmaessig aus. Die AST-Pruefung (Tree-sitter, 22 Validators, 9.707 Zeilen) entscheidet ueber Permissions, nicht ueber Isolation."
         },
         {
           "id": "sandboxing-vergleich-o1",
@@ -670,13 +670,13 @@
           "id": "sandboxing-vergleich-o5",
           "text": "Pi hat die aufwendigste Sandbox im Vergleich.",
           "verdict": "false",
-          "explanation": "Pi hat gar keine — die aufwendigste In-Process-Validierung hat Claude Code mit 9.707 Zeilen."
+          "explanation": "Pi hat gar keine — die aufwendigste In-Process-Prüfung hat Claude Code mit 9.707 Zeilen Bash-Parser und Validierung."
         },
         {
           "id": "sandboxing-vergleich-o6",
           "text": "AST-Validierung ist OS-Sandboxing ueberlegen.",
           "verdict": "depends",
-          "explanation": "Die AST-Analyse versteht Kommandos feiner, OS-Sandboxes ziehen haertere Grenzen — es sind verschiedene Bedrohungsmodelle mit verschiedenen Garantien."
+          "explanation": "Die AST-Analyse versteht Kommandos feiner, OS-Sandboxes ziehen haertere Grenzen — es sind verschiedene Bedrohungsmodelle mit verschiedenen Garantien. Claude Code kombiniert beides."
         },
         {
           "id": "sandboxing-vergleich-o7",
@@ -691,31 +691,31 @@
       "question": "Claude Code Subagents (AgentTool): Welche Aussagen stimmen?",
       "difficulty": "medium",
       "section": "Architektur & Memory",
-      "explanation": "Subagents haben Tiefe 1, starten mit frischer Conversation ohne Parent-History, laden eigenes System-Prompt plus CLAUDE.md, und nur das finale Summary geht zurueck an den Parent — Pi lehnt Subagents bewusst komplett ab.",
+      "explanation": "Subagents verschachteln sich bis 3 Ebenen tief, starten ohne Fork mit frischer Conversation ohne Parent-History, laden eigenes System-Prompt plus CLAUDE.md, und nur das finale Summary geht zurueck an den Parent — Pi lehnt Subagents bewusst komplett ab.",
       "options": [
         {
           "id": "subagents-mechanik-o0",
-          "text": "Tiefe 1 — Subagents spawnen keine eigenen Subagents.",
+          "text": "Subagents können eigene Subagents starten — bis 3 Ebenen unter der Hauptsitzung.",
           "verdict": "true",
-          "explanation": "Die Verschachtelung ist hart auf eine Ebene begrenzt, um unkontrollierte Agent-Kaskaden zu verhindern."
+          "explanation": "Früher war nach einer Ebene Schluss; heute begrenzt Claude Code die Verschachtelung auf 3 Ebenen, um unkontrollierte Agent-Kaskaden zu verhindern."
         },
         {
           "id": "subagents-mechanik-o1",
-          "text": "Jeder Subagent startet mit frischer Conversation ohne Parent-History; nur das finale Summary geht zurueck an den Parent.",
+          "text": "Ein Subagent ohne Fork startet mit frischer Conversation ohne Parent-History; nur das finale Summary geht zurueck an den Parent.",
           "verdict": "true",
           "explanation": "Genau diese Isolation macht Subagents zum Werkzeug gegen volle Kontextfenster — der Parent sieht nur das Endergebnis."
         },
         {
           "id": "subagents-mechanik-o2",
-          "text": "Pi hat bewusst keine Subagents — Zechner nennt Multi-Subagent-Spawning ein Anti-Pattern.",
+          "text": "Pi hat bewusst keine Subagents — Zechner nennt paralleles Multi-Subagent-Spawning ein Anti-Pattern.",
           "verdict": "true",
-          "explanation": "Zechner formuliert es drastisch: Multi-Subagent-Spawning funktioniert nur, wenn Dir egal ist, ob die Codebase zu Muell verkommt — er empfiehlt stattdessen pi-Instanzen via tmux."
+          "explanation": "Zechner formuliert es drastisch: mehrere Subagents, die parallel Features implementieren, funktionieren nur, wenn Dir egal ist, ob die Codebase zu Muell verkommt — er empfiehlt stattdessen pi-Instanzen via tmux."
         },
         {
           "id": "subagents-mechanik-o3",
           "text": "Subagents erben die komplette Parent-History.",
-          "verdict": "false",
-          "explanation": "Der Standard-Subagent startet mit frischer Conversation — nur der opt-in Fork-Mode laesst Kinder den Parent-Prefix erben."
+          "verdict": "depends",
+          "explanation": "Nur ein Fork erbt die Parent-Conversation; ein normaler Subagent startet frisch. Der Fork-Modus ist im Terminal seit v2.1.232 und ueberall seit v2.1.302 standardmaessig an."
         },
         {
           "id": "subagents-mechanik-o4",
@@ -733,7 +733,7 @@
           "id": "subagents-mechanik-o6",
           "text": "Subagents loesen Context-Window-Probleme.",
           "verdict": "depends",
-          "explanation": "Auslagern in ein frisches Fenster entlastet den Parent — aber ohne Fork-Mode kostet jedes Kind ein volles eigenes Kontextfenster; der Nutzen haengt am Kosten-Setup."
+          "explanation": "Auslagern in ein eigenes Fenster entlastet den Parent — aber jedes Kind kostet ein eigenes Kontextfenster; nur ein Fork liest den Parent-Prefix günstig aus dem Cache. Der Nutzen hängt am Kosten-Setup."
         },
         {
           "id": "subagents-mechanik-o7",
@@ -862,7 +862,7 @@
       "question": "Skills vs. MCP — wie passen Token-Mechanik (dieser Talk) und Praxisregel (Companion-Talk) zusammen?",
       "difficulty": "medium",
       "section": "transfer",
-      "explanation": "Dieser Talk liefert den Mechanismus (MCP-Definitionen werden bei jedem Request voll injiziert, ruhende Skills kosten ~50 Tokens Frontmatter), der Companion-Talk die Primitive und die Praxisregel: MCP sparsam einsetzen, Token-Kosten monitoren, aktiv genutzte Server nicht disconnecten.",
+      "explanation": "Dieser Talk liefert den Mechanismus (MCP-Definitionen werden ohne Tool Search bei jedem Request voll injiziert, ruhende Skills kosten ~100 Tokens Frontmatter), der Companion-Talk die Primitive und die Praxisregel: MCP sparsam einsetzen, Token-Kosten monitoren, aktiv genutzte Server nicht disconnecten.",
       "options": [
         {
           "id": "transfer-skills-mcp-token-o0",
@@ -872,15 +872,15 @@
         },
         {
           "id": "transfer-skills-mcp-token-o1",
-          "text": "Die Mechanik aus diesem Talk erklaert den Unterschied: MCP-Definitionen werden bei jedem Request voll injiziert, ruhende Skills kosten nur ~50 Tokens Frontmatter.",
+          "text": "Die Mechanik aus diesem Talk erklaert den Unterschied: MCP-Definitionen werden ohne Tool Search bei jedem Request voll injiziert, ruhende Skills kosten nur ~100 Tokens Frontmatter.",
           "verdict": "true",
-          "explanation": "Progressive Disclosure gegen permanente Voll-Injektion — daraus entsteht der Faktor 40–1100× zugunsten der Skills."
+          "explanation": "Progressive Disclosure gegen permanente Voll-Injektion — daraus entsteht der Faktor 10–260× zugunsten der Skills."
         },
         {
           "id": "transfer-skills-mcp-token-o2",
           "text": "Daraus folgt die Companion-Regel: MCP sparsam einsetzen und die Token-Kosten monitoren.",
           "verdict": "true",
-          "explanation": "Weil jeder Server 17K–126K Tokens pro Request kostet, ist Monitoring die logische Konsequenz aus der Mechanik."
+          "explanation": "Weil Server ohne Tool Search geschätzt 17K–126K Tokens pro Request kosten, ist Monitoring die logische Konsequenz aus der Mechanik."
         },
         {
           "id": "transfer-skills-mcp-token-o3",
@@ -910,7 +910,7 @@
           "id": "transfer-skills-mcp-token-o7",
           "text": "ToolSearch macht die Skills-vs-MCP-Abwaegung obsolet.",
           "verdict": "depends",
-          "explanation": "Lazy-Loading entschaerft den MCP-Bloat ab >10 % Context-Anteil — aber nur 2 von 6 Agents haben so etwas automatisch, in den anderen bleibt die Abwaegung voll relevant."
+          "explanation": "Lazy-Loading entschaerft den MCP-Bloat — 5 von 6 Agents (83 %) haben es inzwischen automatisch; in Gemini CLI bleibt die Abwaegung voll relevant."
         }
       ]
     },
@@ -976,7 +976,7 @@
       "question": "Der Loop ist ~10 Zeilen Pseudocode — warum ist der Harness trotzdem der schwere Teil?",
       "difficulty": "hard",
       "section": "transfer",
-      "explanation": "Der Loop-Kern ist trivial, weil die Orchestrierungs-Intelligenz im RL-trainierten Modell steckt — die echte Harness-Arbeit ist messbar (9.707 Zeilen AST-Sandbox, drei Compaction-Stufen, Cache-Profile) und wird im Companion-Talk durch deterministische Hooks als Quality Gates ergaenzt.",
+      "explanation": "Der Loop-Kern ist trivial, weil die Orchestrierungs-Intelligenz im RL-trainierten Modell steckt — die echte Harness-Arbeit ist messbar (9.707 Zeilen AST-Pruefung, drei Compaction-Stufen, Cache-Profile) und wird im Companion-Talk durch deterministische Hooks als Quality Gates ergaenzt.",
       "options": [
         {
           "id": "transfer-loop-harness-o0",
@@ -986,7 +986,7 @@
         },
         {
           "id": "transfer-loop-harness-o1",
-          "text": "Die schwere Harness-Arbeit ist messbar: 9.707 Zeilen AST-Sandbox, drei Compaction-Stufen, Cache-Profile pro Modus.",
+          "text": "Die schwere Harness-Arbeit ist messbar: 9.707 Zeilen AST-Pruefung, drei Compaction-Stufen, Cache-Profile pro Modus.",
           "verdict": "true",
           "explanation": "Sicherheit, Context- und Kosten-Management machen den Grossteil der 512K Zeilen aus — nicht die Schleife selbst."
         },
@@ -1012,7 +1012,7 @@
           "id": "transfer-loop-harness-o5",
           "text": "Weil der Loop ueberall gleich ist, sind alle Harnesses funktional gleichwertig.",
           "verdict": "false",
-          "explanation": "3K Zeilen (Pi) gegen 512K Zeilen (Claude Code) erzaehlen eine andere Geschichte — die Differenz liegt komplett in der Harness-Ausstattung."
+          "explanation": "~41K Zeilen (Pi) gegen 512K Zeilen (Claude Code) erzaehlen eine andere Geschichte — die Differenz liegt komplett in der Harness-Ausstattung."
         },
         {
           "id": "transfer-loop-harness-o6",

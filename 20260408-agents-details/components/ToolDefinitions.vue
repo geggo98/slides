@@ -33,7 +33,7 @@ const providers = [
     "properties": { ... }
   }
 }`,
-    note: "Top-Level tools-Param. JSON-Schema 2020-12. Parallele Tool-Calls per Default.",
+    note: "Top-Level tools-Param. Parallele Tool-Calls per Default. strict: true erzwingt das Schema per Constrained Sampling.",
   },
   {
     name: "OpenAI",
@@ -48,7 +48,7 @@ const providers = [
     }
   }
 }`,
-    note: "Wrapper mit function-Objekt. Strict Mode garantiert Schema via Constrained Decoding.",
+    note: "Wrapper mit function-Objekt. strict: true erzwingt das Schema per Constrained Decoding.",
   },
   {
     name: "Google Gemini",
@@ -62,7 +62,7 @@ const providers = [
     }
   }]
 }`,
-    note: "OpenAPI-Subset (kein default, oneOf etc.). Echte Einschränkung bei komplexen Schemas.",
+    note: "OpenAPI-Subset: kein oneOf, default wird ignoriert. Im Modus any können sehr große, tief verschachtelte Schemas scheitern.",
   },
 ];
 </script>

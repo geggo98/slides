@@ -31,8 +31,8 @@
           </p>
           <p>
             Anthropic: Prompt Engineering ist nicht tot, sondern
-            <strong style="color: var(--s-prompt)">echte Teilmenge</strong>
-            von Context Engineering.
+            <strong style="color: var(--s-prompt)">Baustein</strong>
+            innerhalb von Context Engineering.
           </p>
         </div>
       </article>

@@ -22,7 +22,7 @@ const option = computed(() => ({
         .join("<br/>"),
   },
   legend: {
-    data: ["Skills (Progressive)", "MCP-Server (Static)"],
+    data: ["Skills (Progressive)", "MCP-Server (ohne Tool Search)"],
     textStyle: { color: isDark.value ? "#c8c8d0" : "#3f3f46" },
     top: 0,
   },
@@ -62,7 +62,7 @@ const option = computed(() => ({
       symbolSize: 8,
     },
     {
-      name: "MCP-Server (Static)",
+      name: "MCP-Server (ohne Tool Search)",
       type: "line",
       data: SKILLS_VS_MCP.mcp,
       itemStyle: { color: isDark.value ? "#f472b6" : "#db2777" },
