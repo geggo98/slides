@@ -749,6 +749,7 @@ const caveats = [
         >Eigene Experimente: Das Modell schreibt seine Regelliste sechsmal um ·
         aufgezeichnete Daten, kein Live-Aufruf · Daten vom 22.11.2026</span
       >
+      <Link to="erosion-luna-live">Live nachstellen →</Link>
       <button
         class="ec-ib"
         aria-label="Quellen und Einschränkungen anzeigen"

@@ -1,0 +1,129 @@
+{
+  "source": "Nachbau ohne Originalcode",
+  "note": "Fülltext für den Live-Nachbau der Erosions-Kette (Folie erosion-luna-live). Er ersetzt den Korpus aus Studie 9, der hier nicht vorliegt: Die Stücke sind kürzer und anders als das Original (Prosa, Mathematik, Apache-Code, fremder Java-Code, je rund 250 Tokens); der Nachbau hat nur Prosa, Mathematik und eigenen Java-Code. Zahlen aus dem Nachbau sind deshalb nicht direkt mit den aufgezeichneten vergleichbar.",
+  "provenance": "Alle Stücke sind für dieses Repository neu geschrieben, ohne Vorlage und ohne kopierten Fremdtext oder Fremdcode. Sie nennen keine realen Personen, Produkte oder Organisationen. Der Java-Code ist eigener, frei erfundener Beispielcode ohne Bezug zu den Regeln der Studie.",
+  "corpus": {
+    "pieces": [
+      {
+        "id": "prose-01",
+        "kind": "prose",
+        "text": "The harbour town of Velmora sits at the mouth of a slow brown river, and for most of the year the morning fog hides the far bank completely. Fishers leave before dawn, guided by the sound of the bell buoy, and return when the fog has thinned into a pale haze. The market opens as soon as the first boats are tied up. Buyers walk along the quay and judge the catch by smell and by the clarity of the eyes. A good morning ends with empty crates stacked beside the net sheds, and the gulls, who have waited all day, finally get what the buyers left behind. Older residents say the fog is the only reliable clock the town has ever had."
+      },
+      {
+        "id": "prose-02",
+        "kind": "prose",
+        "text": "Bread baked with a long, cool rise tastes different from bread made in a hurry. The dough has time to develop small amounts of acid, and the crust takes on a deeper colour in the oven. Bakers who work this way mix their dough in the evening, leave it in a cold room overnight, and shape it before sunrise. The method asks for patience but very little effort. Most of the work is done by the yeast, which keeps feeding slowly on the flour while everyone sleeps. The result is a loaf with an open crumb, a thin crackling crust and a faint sweetness that no quick recipe can copy."
+      },
+      {
+        "id": "prose-03",
+        "kind": "prose",
+        "text": "A lighthouse keeper's log from the last century lists the weather, the ships that passed and the state of the lamp. Most entries are only a line long. Some days record nothing but the wind direction. On rare occasions the keeper adds a remark about a stranded bird, a broken window or a visit from the supply boat. Read together, the entries form a quiet picture of a life organised around one task: keeping a light burning through every night of the year. There is no drama in the pages, and that absence is exactly what makes the collection worth reading."
+      },
+      {
+        "id": "prose-04",
+        "kind": "prose",
+        "text": "Glaciers move because their own weight makes the lower layers of ice deform slowly, like very stiff dough. The speed is usually a few centimetres per day, but surging glaciers can move a hundred times faster for a short period. Meltwater at the base acts as a lubricant and lets the whole mass slide over the bedrock. Where the ice passes over a ridge, deep cracks open at the surface. These crevasses are covered by fresh snow in winter, which makes them hard to see. Researchers who work on glaciers therefore travel roped together and probe the snow ahead of them with long poles."
+      },
+      {
+        "id": "prose-05",
+        "kind": "prose",
+        "text": "Walking the old canal path takes about two hours from the lock keeper's cottage to the stone bridge. The path is flat and well drained, and in spring the banks are crowded with yellow flowers. Herons stand at the edge of the water and ignore passers-by. Every few hundred metres a small wooden bench faces the water, each one donated in memory of someone who liked the walk. Halfway along there is a kiosk that sells tea and plain biscuits, open on weekends only. Most walkers turn around at the bridge, but the path continues for another day's march through quiet farmland."
+      },
+      {
+        "id": "prose-06",
+        "kind": "prose",
+        "text": "A well-run library does not simply store books; it organises attention. The shelves are arranged so that related subjects sit close together, and the catalogue offers several routes to the same item. Readers who arrive with a vague question often leave with three books they did not know existed. Staff spend much of their time on invisible work: repairing spines, replacing worn labels, moving collections that have outgrown their rooms. The reading room itself is kept quiet on purpose. Silence here is not a rule for its own sake but a shared agreement that everyone in the room is trying to think."
+      },
+      {
+        "id": "prose-07",
+        "kind": "prose",
+        "text": "Weather stations at remote mountain passes record temperature, pressure and wind speed every ten minutes. The instruments are powered by a small solar panel and a battery that must survive months of freezing nights. Ice forms on the wind sensor, and every few weeks someone has to climb up and clear it by hand. In between, the data travels over a radio link to a valley station and from there to the forecasters. A single missing station can leave a gap of many kilometres in the map, so the crews treat each repair trip as urgent, even when the sky looks calm."
+      },
+      {
+        "id": "prose-08",
+        "kind": "prose",
+        "text": "Copper pans conduct heat so evenly that a sauce can be taken from a rolling simmer to a gentle warmth within seconds of moving the pan. That responsiveness is the reason professional kitchens kept them long after cheaper metals appeared. The price is upkeep. Copper darkens with use and must be polished, and the inside of the pan needs a thin lining of tin or steel to keep acidic food from reacting with the metal. A cook who owns a good copper pan usually owns only one or two, and uses them for the dishes where timing matters most."
+      },
+      {
+        "id": "math-01",
+        "kind": "math",
+        "text": "Claim: the sum of the first n odd numbers equals n squared. Proof by induction. For n = 1 the sum is 1, and 1 squared is 1. Assume the claim holds for some n, so that 1 + 3 + ... + (2n - 1) = n^2. Adding the next odd number, 2n + 1, gives n^2 + 2n + 1, which is (n + 1)^2. The claim therefore holds for n + 1. By the principle of induction it holds for every positive integer n. A picture helps: each new odd number adds an L-shaped border of unit squares to a growing square, and the border around a square of side n always contains exactly 2n + 1 unit squares."
+      },
+      {
+        "id": "math-02",
+        "kind": "math",
+        "text": "Let a, b and c be the side lengths of a triangle with c the longest side. The triangle is right-angled exactly when a^2 + b^2 = c^2. If a^2 + b^2 is larger than c^2, the angle opposite c is acute; if it is smaller, the angle is obtuse. This follows from the law of cosines, c^2 = a^2 + b^2 - 2ab cos(C), because the sign of the term 2ab cos(C) is the sign of cos(C). Example: sides 5, 6 and 8 give 25 + 36 = 61, which is smaller than 64, so the largest angle is obtuse. Sides 6, 7 and 8 give 85 > 64, so the triangle is acute."
+      },
+      {
+        "id": "math-03",
+        "kind": "math",
+        "text": "The geometric series 1 + r + r^2 + ... + r^(n-1) has the closed form (1 - r^n) / (1 - r) for every r different from 1. To see this, call the sum S and multiply by r. Then rS = r + r^2 + ... + r^n. Subtracting the two lines cancels everything except the first and last term, leaving S - rS = 1 - r^n. Dividing both sides by 1 - r gives the formula. If the absolute value of r is smaller than 1, the term r^n tends to zero as n grows, so the infinite series converges to 1 / (1 - r). For r = 1/2 the sum is 2."
+      },
+      {
+        "id": "math-04",
+        "kind": "math",
+        "text": "Definition: a function f from the integers to the integers is called periodic with period p, where p is a positive integer, if f(x + p) = f(x) for every integer x. The smallest such p is the fundamental period. Example: f(x) = x mod 6 has fundamental period 6, while g(x) = (x mod 6) mod 3 has fundamental period 3, even though 6 is also a period of g. Fact: every period is a multiple of the fundamental period. Proof sketch: if q is a period and p the fundamental period, write q = kp + r with 0 <= r < p. Then f(x + r) = f(x), so r is a period smaller than p unless r = 0."
+      },
+      {
+        "id": "math-05",
+        "kind": "math",
+        "text": "Consider the quadratic equation x^2 - 5x + 6 = 0. The discriminant is b^2 - 4ac = 25 - 24 = 1, which is positive, so there are two distinct real roots. The formula x = (5 plus or minus 1) / 2 gives x = 3 and x = 2. Check: 3 + 2 = 5, which equals the negated coefficient of x, and 3 * 2 = 6, which equals the constant term. These two relations, known as Vieta's formulas, hold for every monic quadratic and often allow the roots to be found by inspection, without computing the discriminant at all."
+      },
+      {
+        "id": "math-06",
+        "kind": "math",
+        "text": "A permutation of n distinct objects is an ordering of all of them. There are n! such orderings, where n! = n * (n - 1) * ... * 2 * 1. Reason: the first position can be filled in n ways, the second in n - 1 ways because one object is already used, and so on. If only k of the n objects are placed, the count is n! / (n - k)!. If the order of the k chosen objects does not matter, divide by k! and obtain the binomial coefficient C(n, k). For n = 5 and k = 2 this gives 120 / 6 = 20 ordered pairs and 20 / 2 = 10 unordered pairs."
+      },
+      {
+        "id": "math-07",
+        "kind": "math",
+        "text": "The arithmetic mean of two positive numbers a and b is at least as large as their geometric mean: (a + b) / 2 >= sqrt(ab). Proof: the square of any real number is non-negative, so (sqrt(a) - sqrt(b))^2 >= 0. Expanding gives a - 2 sqrt(ab) + b >= 0, which rearranges to the claim. Equality holds exactly when a = b. Application: among all rectangles with a fixed perimeter, the square has the largest area, because the side lengths a and b with a + b fixed make the product ab largest when a = b."
+      },
+      {
+        "id": "math-08",
+        "kind": "math",
+        "text": "Let A be the 2 by 2 matrix with rows (2, 1) and (1, 2). Its characteristic polynomial is (2 - t)^2 - 1 = t^2 - 4t + 3, which factors as (t - 1)(t - 3). The eigenvalues are therefore 1 and 3. For t = 3 the equation (A - 3I)v = 0 reduces to -v1 + v2 = 0, so v = (1, 1) is an eigenvector. For t = 1 it reduces to v1 + v2 = 0, giving v = (1, -1). The two eigenvectors are orthogonal, as expected for a symmetric matrix, and the trace 4 and determinant 3 equal the sum and the product of the eigenvalues."
+      },
+      {
+        "id": "java-01",
+        "kind": "java",
+        "text": "import java.util.ArrayDeque;\nimport java.util.Deque;\n\n/** A bounded history of text lines; the oldest line is dropped when full. */\nfinal class LineHistory {\n    private final Deque<String> lines = new ArrayDeque<>();\n    private final int capacity;\n\n    LineHistory(int capacity) {\n        if (capacity < 1) {\n            throw new IllegalArgumentException(\"capacity must be positive\");\n        }\n        this.capacity = capacity;\n    }\n\n    void add(String line) {\n        if (lines.size() == capacity) {\n            lines.removeFirst();\n        }\n        lines.addLast(line);\n    }\n\n    String latest() {\n        return lines.isEmpty() ? \"\" : lines.peekLast();\n    }\n\n    int size() {\n        return lines.size();\n    }\n}"
+      },
+      {
+        "id": "java-02",
+        "kind": "java",
+        "text": "import java.util.ArrayList;\nimport java.util.List;\n\n/** Splits a text into words and keeps their order. */\nfinal class WordSplitter {\n    static List<String> split(String text) {\n        List<String> words = new ArrayList<>();\n        StringBuilder current = new StringBuilder();\n        for (int i = 0; i < text.length(); i++) {\n            char c = text.charAt(i);\n            if (Character.isLetterOrDigit(c)) {\n                current.append(c);\n            } else if (current.length() > 0) {\n                words.add(current.toString());\n                current.setLength(0);\n            }\n        }\n        if (current.length() > 0) {\n            words.add(current.toString());\n        }\n        return words;\n    }\n}"
+      },
+      {
+        "id": "java-03",
+        "kind": "java",
+        "text": "/** Immutable two-dimensional point with a few helpers. */\nrecord Point(double x, double y) {\n    static final Point ORIGIN = new Point(0, 0);\n\n    Point translate(double dx, double dy) {\n        return new Point(x + dx, y + dy);\n    }\n\n    double distanceTo(Point other) {\n        double dx = x - other.x;\n        double dy = y - other.y;\n        return Math.sqrt(dx * dx + dy * dy);\n    }\n\n    Point midpointTo(Point other) {\n        return new Point((x + other.x) / 2, (y + other.y) / 2);\n    }\n\n    boolean isOrigin() {\n        return x == 0 && y == 0;\n    }\n}"
+      },
+      {
+        "id": "java-04",
+        "kind": "java",
+        "text": "import java.util.HashMap;\nimport java.util.Map;\n\n/** Counts how often each key was seen. */\nfinal class Counter<K> {\n    private final Map<K, Integer> counts = new HashMap<>();\n\n    void increment(K key) {\n        counts.merge(key, 1, Integer::sum);\n    }\n\n    int get(K key) {\n        return counts.getOrDefault(key, 0);\n    }\n\n    K mostFrequent() {\n        K best = null;\n        int bestCount = 0;\n        for (Map.Entry<K, Integer> e : counts.entrySet()) {\n            if (e.getValue() > bestCount) {\n                best = e.getKey();\n                bestCount = e.getValue();\n            }\n        }\n        return best;\n    }\n}"
+      },
+      {
+        "id": "java-05",
+        "kind": "java",
+        "text": "/** Converts between temperature scales. */\nfinal class Temperature {\n    private final double kelvin;\n\n    private Temperature(double kelvin) {\n        this.kelvin = kelvin;\n    }\n\n    static Temperature ofCelsius(double celsius) {\n        return new Temperature(celsius + 273.15);\n    }\n\n    static Temperature ofFahrenheit(double fahrenheit) {\n        return ofCelsius((fahrenheit - 32) * 5 / 9);\n    }\n\n    double toCelsius() {\n        return kelvin - 273.15;\n    }\n\n    double toFahrenheit() {\n        return toCelsius() * 9 / 5 + 32;\n    }\n\n    boolean isBelowFreezing() {\n        return toCelsius() < 0;\n    }\n}"
+      },
+      {
+        "id": "java-06",
+        "kind": "java",
+        "text": "import java.util.Arrays;\n\n/** Computes simple statistics over an array of measurements. */\nfinal class Statistics {\n    static double mean(double[] values) {\n        double sum = 0;\n        for (double v : values) {\n            sum += v;\n        }\n        return values.length == 0 ? Double.NaN : sum / values.length;\n    }\n\n    static double median(double[] values) {\n        if (values.length == 0) {\n            return Double.NaN;\n        }\n        double[] sorted = values.clone();\n        Arrays.sort(sorted);\n        int mid = sorted.length / 2;\n        if (sorted.length % 2 == 1) {\n            return sorted[mid];\n        }\n        return (sorted[mid - 1] + sorted[mid]) / 2;\n    }\n}"
+      },
+      {
+        "id": "java-07",
+        "kind": "java",
+        "text": "import java.util.Iterator;\nimport java.util.NoSuchElementException;\n\n/** An iterator over the integers from start (inclusive) to end (exclusive). */\nfinal class IntRange implements Iterable<Integer> {\n    private final int start;\n    private final int end;\n\n    IntRange(int start, int end) {\n        this.start = start;\n        this.end = end;\n    }\n\n    @Override\n    public Iterator<Integer> iterator() {\n        return new Iterator<>() {\n            private int next = start;\n\n            @Override\n            public boolean hasNext() {\n                return next < end;\n            }\n\n            @Override\n            public Integer next() {\n                if (!hasNext()) {\n                    throw new NoSuchElementException();\n                }\n                return next++;\n            }\n        };\n    }\n}"
+      },
+      {
+        "id": "java-08",
+        "kind": "java",
+        "text": "import java.util.ArrayList;\nimport java.util.List;\n\n/** A small stack of undo steps; each step is a label. */\nfinal class UndoStack {\n    private final List<String> steps = new ArrayList<>();\n    private int cursor = 0;\n\n    void push(String label) {\n        while (steps.size() > cursor) {\n            steps.remove(steps.size() - 1);\n        }\n        steps.add(label);\n        cursor++;\n    }\n\n    boolean canUndo() {\n        return cursor > 0;\n    }\n\n    boolean canRedo() {\n        return cursor < steps.size();\n    }\n\n    String undo() {\n        return steps.get(--cursor);\n    }\n\n    String redo() {\n        return steps.get(cursor++);\n    }\n}"
+      }
+    ]
+  }
+}
