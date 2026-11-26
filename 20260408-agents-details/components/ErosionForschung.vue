@@ -202,8 +202,9 @@ const caveats = [
             die früheren Tests besteht: <b>+2,7</b> Punkte (arXiv 2610.14768)
           </li>
           <li>
-            Zurückgesetzte PRs: Codex <b>6,1 %</b>, Menschen <b>11,5 %</b>,
-            Devin <b>14,5 %</b> (arXiv 2609.17598, Daten bis 07/2025)
+            Nach dem Merge zurückgenommene PRs (Revert): Codex <b>6,1 %</b>,
+            Menschen <b>11,5 %</b>, Devin <b>14,5 %</b> (arXiv 2609.17598, Daten
+            bis 07/2025)
           </li>
         </ul>
       </div>
