@@ -1715,7 +1715,7 @@ interaktiv: 1 h im Abo, 5 min per API-Key. Geteilt wird der Prefix;
 neu gebaut wird der Gesprächsteil. Doku: „Sessions you run in parallel in the same directory
 build matching prefixes and can read each other's cache." Sequenziell nur
 bei gleichem Git-Status-Snapshot beim Start. Die frühere Behauptung
-„kein Cache zwischen -p-Aufrufen" samt Beleg OpenClaw #19989 ist
+„kein Cache zwischen -p-Aufrufen" samt Beleg OpenClaw #19989 (https://github.com/openclaw/openclaw/issues/19989) ist
 gestrichen: das Issue betrifft keine -p-Wrapper, sondern volatile IDs im
 System-Prompt (siehe nächste Folie). Cache-Defaults werden serverseitig
 ohne Changelog umgeschaltet — vor jedem Talk gegenchecken. Stand
@@ -1777,10 +1777,13 @@ Quelle: Stefan Wintermeyer, „KI-Kosten reduzieren: Prompt-Caching" (iX/heise
 24.11.2026): 5.x-Modelle (Opus 5/5.5, Sonnet 5.5, Haiku 5.5, Fable) 512;
 Sonnet 4.6 und Opus 4.8 1.024; Opus 4.7 2.048; Opus 4.5/4.6 und Haiku 4.5
 4.096 Token. Auf Amazon Bedrock gilt für Opus 4.7 weiterhin 4.096.
-Beispiel zu Regel 1: OpenClaw #19989 — Version 2026.2.15 schrieb
-message_id, reply_to_id und sender_id in den System-Prompt, cacheWrite
-dominierte, Kosten rund 10×; behoben mit PR #20597 (19.02.2026), der die
-IDs in den User-Kontext verschob. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discount
+Beispiel zu Regel 1: OpenClaw #19989 (Issue vom 18.02.2026) — ab Version
+2026.2.17 (2026.2.15 war unauffällig) standen message_id, reply_to_id und
+sender_id im System-Prompt (Commit bed8e7abe laut PR), cacheWrite
+dominierte, Kosten rund 10× (Titel des Issues); behoben mit PR #20597
+(gemergt 19.02.2026, „Closes #19989“), der die IDs in den User-Kontext
+verschob. Repo: github.com/openclaw/openclaw, Nummern am 26.11.2026 per
+GitHub-API geprüft. Batch: −50% auf In+Out, stapelt multiplikativ mit dem Cache-Read-Discount
 (0,30 × 0,5 = 0,15 $/MTok). Rechenbeispiel mit Sonnet-4.6-Preisen: 500×10K×$3,00
 = $15,00 ungecacht; 1×10K×$3,75 + 499×10K×$0,30 = $1,53 mit Cache; +Batch $0,77.
 Die $0,77 setzen 100 % Cache-Treffer voraus. Im Batch gibt es den Cache
@@ -1829,7 +1832,9 @@ Quellen (abgerufen 26.11.2026, wo nicht anders vermerkt):
 - https://code.claude.com/docs/en/skills — `/batch` als Bundled Skill
 - https://docs.openrewrite.org/concepts-and-explanations/recipes — OpenRewrite-Recipes
 - https://platform.claude.com/docs/en/build-with-claude/prompt-caching — Min-Längen des Caches (abgerufen 24.11.2026)
-- https://heise.de/-11335003 — Wintermeyer, „KI-Kosten reduzieren: Prompt-Caching“, iX/heise 2026 (Abrufdatum nicht dokumentiert)
+- https://www.heise.de/ratgeber/KI-Kosten-reduzieren-Wie-man-mit-Prompt-Caching-messbar-Token-sparen-kann-11335003.html — Wintermeyer, „KI-Kosten reduzieren: Wie man mit Prompt-Caching messbar Token sparen kann“, iX Magazin, 24.06.2026 (Kurzlink https://www.heise.de/-11335003; Bezahlartikel, gelesen als gespeicherte Druckversion vom 26.11.2026)
+- https://github.com/openclaw/openclaw/issues/19989 — OpenClaw #19989, „Prompt cache constantly invalidated“ (abgerufen 26.11.2026)
+- https://github.com/openclaw/openclaw/pull/20597 — OpenClaw PR #20597, „restore prompt cache stability by moving per-turn ids to user context“, gemergt 19.02.2026 (abgerufen 26.11.2026)
 -->
 
 ---
