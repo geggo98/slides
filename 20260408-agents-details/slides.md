@@ -1727,7 +1727,7 @@ hideInToc: true
 routeAlias: cache-hygiene
 ---
 
-# Cache-Hygiene & Batch-Modus
+# Cache-Hygiene & Batch
 
 <div class="grid grid-cols-2 gap-6 text-sm">
 <div>
@@ -1742,23 +1742,28 @@ routeAlias: cache-hygiene
 </div>
 <div>
 
-### Batch-Modus: nochmal −50 %
+### Zwei Dinge heißen Batch
 
-- Bis **100K Anfragen**, Antwort **≤ 24 h**, 256 MB/Batch
-- Rabatt **stapelt multiplikativ** mit dem Cache → Cache-Read nur noch **0,15 $/MTok**
-- Ideal für **autonome Hintergrund-Agenten** — nicht für interaktiv/zeitkritisch
+- **Message Batches API** (API und SDKs): **−50 %**, meist < 1 h, max. 24 h; **stapelt mit dem Cache**
+- **`/batch` in Claude Code**: 5–30 Subagents in eigenen Worktrees, je ein PR. **Parallel, nicht billiger.**
 
-<div class="mt-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg text-xs">
+<div class="text-xs mt-1">
+
+**Spartipp:** Mechanisches zuerst mit <TalkXref slug="20260522-open-rewrite">OpenRewrite</TalkXref> (keine Tokens), den Rest mit `/batch`.
+
+</div>
+
+<div class="mt-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-xs">
 
 **Rechenbeispiel** — 10K-Tok-Systemprompt, 500 Anfragen/h:
 
-ohne Cache **$15,00** → mit Cache **$1,53** → + Batch **$0,77** (bei 100 % Treffern)
+ohne Cache **$15,00** → mit Cache **$1,53** → + API-Batch **$0,77** (bei 100 % Treffern)
 
 </div>
 
 <div class="mt-2 text-xs opacity-60">
 
-Praxis: autonome Dauerläufer in <TalkXref slug="20260707-anatomy-of-autonomous-agents">Anatomie Autonomer Agenten</TalkXref>.
+Praxis: autonome Dauerläufer in <TalkXref slug="20260707-anatomy-of-autonomous-agents">Anatomie Autonomer Agenten</TalkXref> · Quellen → Notiz
 
 </div>
 
@@ -1784,6 +1789,149 @@ nur best-effort; die Batch-Doku nennt typisch 30–98 % Treffer
 24.11.2026). Mit 5-min-Cache wären das ≈ $0,92 (98 %) bis ≈ $6,79 (30 %).
 Die Doku empfiehlt für Batches mit gemeinsamem Kontext den 1h-Cache; mit
 1h-Write (2×) kostet der 100-%-Fall $0,78 statt $0,77.
+
+Auf der Folie gekürzt: Batches API bis 100K Requests oder 256 MB je
+Batch; `/batch` ist ein Bundled Skill, startet je Einheit einen
+Hintergrund-Subagent, der implementiert, testet und einen PR öffnet.
+OpenRewrite-Recipes laufen als Programm, ohne Modell.
+
+Zwei Dinge heißen „Batch“, und sie werden oft verwechselt. Die Message
+Batches API ist ein Endpunkt der Claude-API, erreichbar über die API und
+die SDKs. Laut Doku: „All usage is charged at 50 percent of the standard
+API prices“ (Opus 5.5: $2/$10 je MTok statt $4/$20). Limits: „either
+100,000 Message requests or 256 MB in size, whichever is reached first“;
+„most batches completing within 1 hour“, Ablauf nach 24 h, Ergebnisse
+29 Tage abrufbar. Stapeln mit dem Cache: „The pricing discounts from
+prompt caching and Message Batches can stack“, Cache-Treffer aber nur
+„on a best-effort basis“. Der Rabatt passt zu autonomen
+Hintergrund-Agenten, nicht zu interaktiver oder zeitkritischer Arbeit.
+
+`/batch` ist dagegen ein Bundled Skill in Claude Code und hat mit der
+Batches API nichts zu tun. Laut Befehlsreferenz „decomposes the work into
+5 to 30 independent units, and presents a plan. Once approved, spawns one
+background subagent per unit in an isolated worktree. Each subagent
+implements its unit, runs tests, and opens a PR or reports what
+happened.“ Braucht ein Git-Repository oder einen WorktreeCreate-Hook;
+außerhalb von Git ab v2.1.281. Es sind normale Subagent-Läufe zu normalen
+Preisen: schneller durch Parallelität, nicht billiger.
+
+Spartipp: OpenRewrite-Recipes sind Programmcode. Laut Doku „a recipe
+delegates to a visitor which handles the LST traversal and manipulation“;
+es läuft kein Modell, also fallen keine Tokens an. Das gilt für klassische
+Recipes; der OpenRewrite-Talk beschreibt auch „Generative Recipes“ mit
+LLM-Call im Inneren (20260522-open-rewrite/openrewrite-report.md). Wie viele
+Tokens der Umweg spart, beziffert keine Quelle; deshalb keine Zahl.
+
+Quellen (abgerufen 26.11.2026, wo nicht anders vermerkt):
+
+- https://platform.claude.com/docs/en/build-with-claude/batch-processing — Message Batches API: −50 %, Laufzeit, Limits, Stapeln mit dem Cache, 30–98 % Treffer
+- https://code.claude.com/docs/en/commands — `/batch`, Zeile „/batch“ der Befehlsreferenz
+- https://code.claude.com/docs/en/skills — `/batch` als Bundled Skill
+- https://docs.openrewrite.org/concepts-and-explanations/recipes — OpenRewrite-Recipes
+- https://platform.claude.com/docs/en/build-with-claude/prompt-caching — Min-Längen des Caches (abgerufen 24.11.2026)
+- https://heise.de/-11335003 — Wintermeyer, „KI-Kosten reduzieren: Prompt-Caching“, iX/heise 2026 (Abrufdatum nicht dokumentiert)
+-->
+
+---
+hideInToc: true
+routeAlias: code-mode
+---
+
+# Code Mode: Tool-Calls in einem Skript
+
+<div class="text-sm">
+
+Claude schreibt **JavaScript**, das mehrere Tool-Calls in einem Schritt ausführt: Befehle laufen parallel, ein Ergebnis wird zur Eingabe des nächsten Calls. Nur der Rückgabewert geht an Claude zurück. Beispiel aus der Doku, ein Retry-Limit anheben:
+
+```js
+const files = await $`rg -l "function retryPolicy" src`.text();
+const target = files.trim().split("\n")[0];
+await edit(target, "maxAttempts: 3", "maxAttempts: 5");
+({ edited: target, tests: $`npm test -- retryPolicy`.nothrow() });
+```
+
+<div class="grid grid-cols-2 gap-6 mt-2">
+<div>
+
+**Hilft bei vielen zusammenhängenden Tool-Calls**
+
+- dieselbe Änderung in vielen Dateien
+- Suchtreffer filtern, bevor Claude sie liest
+- unabhängige Befehle gleichzeitig
+
+</div>
+<div>
+
+**Grenzen** (ab v2.1.323)
+
+- experimentell, aus per Default
+- nur interaktiv im Terminal
+- Auto-Mode prüft das Skript, nicht jeden Call
+- Warten bricht nach 10 min ab
+
+</div>
+</div>
+
+<div class="mt-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-xs">
+
+**API-Batch:** Rabatt gegen Wartezeit · **`/batch`:** parallele Subagents, nicht billiger · **Code Mode:** ein Skript statt vieler Modell-Runden
+
+</div>
+
+<div class="mt-1 text-xs opacity-60">
+
+Quellen: code.claude.com/docs/en/code-mode · Changelog 2.1.323 (12.11.2026)
+
+</div>
+
+</div>
+
+<!--
+Code Mode ist experimentell und aus per Default. Einschalten mit der
+Umgebungsvariable CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1, in der Shell
+oder in ~/.claude/settings.json; in Projekt-Settings ignoriert Claude
+Code die Variable. Eingeführt mit v2.1.323 am 12.11.2026 (Changelog:
+„Added Code Mode, an experimental opt-in in which Claude writes
+JavaScript to call its tools“).
+
+Voraussetzungen laut Doku: Modelle Opus 5.5, Sonnet 5.5, Haiku 5.5 oder
+Fable 5.2; nur eine interaktive claude-Sitzung im Terminal, nicht das
+VS-Code-Panel, nicht die Desktop-App, keine Cloud-Sessions. Eine
+Code-Mode-Sitzung lässt sich nur mit eingeschaltetem Code Mode fortsetzen.
+
+Rechte: Im Auto-Mode prüft der Classifier „each piece of code before it
+runs, not each tool call“. Werte, die erst zur Laufzeit entstehen (etwa
+ein Pfad aus einem Suchtreffer), sieht er nicht; deshalb bleiben deny-
+und ask-Regeln und PreToolUse-Hooks wichtig. In den anderen Modi fragt
+Claude Code weiter bei jedem Tool-Call, der dort eine Rückfrage auslöst.
+
+Laufzeit: Wartet Claude auf das Skript, bricht es nach zehn Minuten ab.
+Im Hintergrund (Sitzung in auto oder bypassPermissions gestartet) läuft
+es bis zu zwei Stunden.
+
+Abgrenzung: Die Message Batches API gibt 50 % Rabatt gegen Wartezeit
+(meist unter 1 h, spätestens 24 h). `/batch` startet parallele Subagents
+in eigenen Worktrees zu normalen Preisen; das Mechanische vorher mit
+OpenRewrite erledigen (vorige Folie). Code Mode bündelt Tool-Calls einer
+Sitzung in einem Skript.
+
+Eigene Vermutung, ohne Quelle: Weniger Modell-Runden bedeuten auch
+weniger Cache-Reads des Prefix, weil jede Runde den ganzen Kontext neu
+liest. Keine der Quellen beziffert das, und gemessen haben wir es nicht.
+
+Hintergrund: Ken Huangs Artikel vom 21.11.2026 deckt sich in der frei
+lesbaren Einleitung mit der Doku (v2.1.323, vier Modelle, nur Terminal).
+Der Rest steht hinter einer Paywall und ist nicht geprüft; nichts davon
+steht auf der Folie.
+
+Quellen (abgerufen 26.11.2026):
+
+- https://code.claude.com/docs/en/code-mode — Funktionsweise, Beispielskript, Einsatz, Grenzen, Voraussetzungen
+- https://code.claude.com/docs/en/changelog — Eintrag 2.1.323 vom 12.11.2026: Code Mode eingeführt
+- https://platform.claude.com/docs/en/build-with-claude/batch-processing — Message Batches API (Abgrenzung)
+- https://code.claude.com/docs/en/commands — `/batch` (Abgrenzung)
+- https://code.claude.com/docs/en/skills — `/batch` als Bundled Skill (Abgrenzung)
+- https://kenhuangus.substack.com/p/claude-codes-code-mode-batches-tool — Hintergrund: nur die Einleitung ist frei lesbar, der Rest steht hinter einer Paywall und ist nicht geprüft
 -->
 
 ---
