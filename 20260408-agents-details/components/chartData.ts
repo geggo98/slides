@@ -389,12 +389,31 @@ export const TREEMAP_DATA = [
       // Stand 24.11.2026: Gemini 4 laut ai.google.dev/gemini-api/docs/models;
       // Abo-Namen laut gemini.google/subscriptions; CLI und Code Assist für
       // Free/AI Pro/Ultra seit 18.06.2026 abgeschaltet (Nachfolger: Antigravity).
+      // Code Assist: „New Gemini Code Assist subscriptions are no longer
+      // available for purchase.“ (cloud.google.com/gemini/docs/codeassist/overview,
+      // Last updated 2026-11-10); bestehende Lizenzen laufen weiter.
       { name: "Modell-Familie\n(1.0→4)", value: 8 },
       { name: "Chatbot\n(gemini.google.com)", value: 5 },
-      { name: "Abo\n(Google AI Plus/Pro/Ultra)", value: 4 },
-      { name: "Gemini CLI\n(nur noch Enterprise)", value: 9 },
-      { name: "Code Assist\n(IDE, nur Enterprise)", value: 6 },
+      { name: "Abo\n(AI Plus/Pro/Ultra)", value: 4 },
+      { name: "Gemini CLI\n(nur noch Enterprise)", value: 7 },
+      { name: "Code Assist\n(IDE, kein Neukauf)", value: 4 },
       { name: "Gemini API\n(AI Studio/Vertex)", value: 7 },
+    ],
+  },
+  {
+    name: "Antigravity",
+    itemStyle: { color: "#eab308" },
+    children: [
+      // Stand 27.11.2026: fünf Produkte laut Menü auf antigravity.google
+      // („Antigravity App / Extensions / CLI / IDE / SDK“), Versionen laut
+      // antigravity.google/docs/changelog. Der gleichnamige Managed Agent der
+      // Gemini API (ai.google.dev/gemini-api/docs/agents) ist bewusst keine
+      // Zelle: er ist eine Funktion der Gemini API, siehe Sprechernotiz.
+      { name: "App\n(Agent-Zentrale)", value: 6 },
+      { name: "CLI agy\n(statt Gemini CLI)", value: 6 },
+      { name: "IDE\n(VS-Code-Fork)", value: 5 },
+      { name: "Extensions\n(für 7 Editoren)", value: 5 },
+      { name: "SDK\n(Python)", value: 4 },
     ],
   },
   {

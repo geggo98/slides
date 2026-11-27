@@ -2883,11 +2883,40 @@ hideInToc: true
 # Taxonomie: Brand-Verwirrung
 
 <div class="text-sm opacity-70 mb-1">
-"Gemini" ist 6 Produkte. "Codex" ist 7 Dinge. "Pi" ist 3 völlig verschiedene Produkte mit identischem Namen.
+„Gemini“ ist 6 Produkte, „Antigravity“ 5 weitere, „Codex“ 7 Dinge. „Pi“ ist 3 verschiedene Produkte mit einem Namen.
 
 </div>
 
 <TaxonomyTreemap />
+
+<!--
+Stand 27.11.2026.
+
+Google hat jetzt zwei Marken für dieselbe Aufgabe. Gemini CLI und Gemini Code Assist
+bekommen seit 18.06.2026 keine Anfragen mehr von Free-, AI-Pro- und AI-Ultra-Nutzern;
+der Nachfolger heißt Antigravity. Gemini CLI läuft nur noch mit Code-Assist-Lizenzen
+(Standard/Enterprise) und bezahlten API-Keys. Neue Code-Assist-Abos verkauft Google
+nicht mehr; bestehende laufen weiter.
+
+Antigravity umfasst fünf Produkte mit eigenen Versionsnummern:
+- App: Desktop-Zentrale für mehrere Agenten parallel, kein Editor (v2.35.2, 25.11.2026)
+- CLI `agy`: in Go geschrieben, Nachfolger der Gemini CLI (v1.5.16, 24.11.2026)
+- IDE: VS-Code-Fork, wird weiter gepflegt (v2.8.0, 19.11.2026)
+- Extensions für sieben Editoren, von VS Code bis Xcode (v1.13.0, 16.11.2026)
+- SDK für Python (v0.1.24, 16.11.2026)
+
+Und es gibt ein sechstes Ding mit dem Namen: In der Gemini API heißt ein Managed Agent
+„Antigravity agent“, in Public Preview. Er ist kein Download, sondern ein Agent-Typ in
+einer Linux-Sandbox bei Google. Auf der Folie steckt er in der Zelle „Gemini API“.
+
+Quellen, abgerufen am 27.11.2026:
+- https://antigravity.google/ (Produktmenü)
+- https://antigravity.google/docs/changelog (Versionen und Daten)
+- https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/ (19.05.2026)
+- https://github.com/google-gemini/gemini-cli (README: „Enterprise Code Assist only“)
+- https://cloud.google.com/gemini/docs/codeassist/overview (Stand 10.11.2026: kein Neuverkauf)
+- https://ai.google.dev/gemini-api/docs/agents (Managed Agents, Public Preview)
+-->
 
 ---
 hideInToc: true
