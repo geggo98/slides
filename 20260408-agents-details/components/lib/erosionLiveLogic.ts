@@ -1,14 +1,20 @@
-// Reine Logik des Live-Nachbaus der Erosions-Kette (Folie `erosion-luna-live`).
+// Reine Logik des Live-Nachlaufs der Erosions-Kette (Folie `erosion-luna-live`).
 // Die Folie `erosion-luna` zeigt aufgezeichnete Daten aus Studie 9; hier läuft
 // eine einzelne Kette mit dem eigenen Key des Vortragenden nach.
 //
-// WICHTIG: Das ist ein Nachbau. Der Originalcode der Studie (`run.py`, Korpus)
-// liegt nicht vor. Alles, was davon abhängt, steht an zwei Stellen und lässt
-// sich später austauschen:
-// - der Fülltext-Korpus in `data/erosion/study9-live.json`,
-// - der Antwort-Parser `parseRewrite` (wie aus der Antwort die neue Liste wird)
-//   samt den Request-Bodies (`rewriteBody`, `testBody`).
-// Prompts und Parameter folgen `spec` aus `data/erosion/study9-chain.json`.
+// Die Datei ist eine Portierung des Original-Runners (`study9/run.py` im
+// Repository context-rot-experiments, Commit 7e5e7c7): `parse_list`,
+// `apply_delta`, `render_numbered`, `compact_message`, `test_message`,
+// `build_body` und die Systemprompts. Goldene Tests
+// (`__tests__/erosionLiveGolden.test.ts`) halten sie Byte für Byte an den
+// Ausgaben des Originals. Der Fülltext ist der Original-Korpus
+// (`data/erosion/study9-live.json`, Herkunft in `LIVE_CORPUS_NOTICE.md`).
+//
+// Bewusster Unterschied zum Original: Die Ziehung des Fülltexts nutzt einen
+// eigenen Zufallszähler (mulberry32), nicht den Mersenne-Twister von Python mit
+// dem Seed `sha256("<Kette>:<Runde>")`. Die Regel der Ziehung ist dieselbe
+// (Arten wechseln sich ab, Startart zufällig, Stücke mit Zurücklegen), die
+// gezogenen Stücke sind es nicht.
 //
 // Wie `contextRotLive.ts` hat die Datei keine Browser-Abhängigkeit: Versand und
 // Wartezeit kommen als Funktionen herein, damit die Tests ohne Netz und ohne
@@ -17,13 +23,11 @@ import study9 from "../../data/erosion/study9-chain.json";
 import {
   RETRY_BASE_MS,
   errorHint,
-  liveBody,
   redactKeys,
   runJobs,
   type LiveJob,
   type LiveResult,
   type Provider,
-  type RequestSpec,
 } from "./contextRotLive";
 import {
   BEHAVIOUR_IDS,
@@ -65,7 +69,18 @@ export const ROUNDS = 6;
 
 /** Erster Seed des Umschreibens; Runde r nutzt `1000 + r`. */
 const REWRITE_SEED = 1000;
-const REWRITE_MAX_TOKENS = 1500;
+/** Seed der Tests. */
+const TEST_SEED = 1000;
+/** `MAX_OUT` des Originals: höchstens so viele Ausgabe-Tokens beim Umschreiben. */
+const MAX_OUT = 1500;
+
+/** Eine Regel der Kette: feste Id (`R01`) und Text, wie in `s9_state.items`. */
+export type Item = [id: string, text: string];
+
+/** `initial_items()` des Originals: die Originalliste O mit den Ids `R01` … */
+export const INITIAL_ITEMS: readonly Item[] = ORIGINAL_ITEMS.map(
+  (text, i): Item => [`R${String(i + 1).padStart(2, "0")}`, text],
+);
 
 export interface LiveSite {
   id: string;
@@ -94,14 +109,36 @@ export const LIVE_SITES: readonly LiveSite[] = Object.keys(
 
 const pad2 = (n: number): string => String(n).padStart(2, "0");
 
+/** Whitespace im Sinne von Python (`str.strip`, `\s` in `re`); JS' `\s` weicht ab. */
+const WS =
+  "\\t\\n\\v\\f\\r\\x1c-\\x1f \\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000";
+const STRIP_RE = new RegExp(`^[${WS}]+|[${WS}]+$`, "g");
+const RSTRIP_RE = new RegExp(`[${WS}]+$`);
+const pyStrip = (s: string): string => s.replace(STRIP_RE, "");
+const pyRstrip = (s: string): string => s.replace(RSTRIP_RE, "");
+/** `str.splitlines()` trennt an mehr als `\\n`. */
+const pySplitlines = (s: string): string[] =>
+  s.split(/\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]/);
+
 /**
- * Prompt zum Umschreiben nach `spec.round.userTemplate`: Anweisung des Arms,
- * dann n + 1 Fülltext-Stücke im Wechsel mit den n Regeln. Arm D nummeriert die
- * Regeln als `R01: …`, die anderen als `1. …`.
+ * `render_numbered`: Regeln als `1. Text`, je Zeile eine; ohne Regeln
+ * `(no rules)`. Die Ids (`R01`) erscheinen hier nicht.
+ */
+export function renderNumbered(items: readonly Item[]): string {
+  return items.length
+    ? items.map(([, text], i) => `${i + 1}. ${text}`).join("\n")
+    : "(no rules)";
+}
+
+/**
+ * `compact_message`: Anweisung des Arms, dann n + 1 Fülltext-Stücke im Wechsel
+ * mit den n Regeln. Arm D schreibt die Regeln als `R01: …` mit ihrer festen Id,
+ * die anderen als `1. …`. Jedes Stück steht in `[reference material]` …
+ * `[end of reference material]`, rechts von Leerraum befreit (`rstrip`).
  */
 export function roundPrompt(
   arm: Arm,
-  items: readonly string[],
+  items: readonly Item[],
   pieces: readonly string[],
 ): string {
   if (pieces.length !== items.length + 1) {
@@ -110,11 +147,11 @@ export function roundPrompt(
     );
   }
   const block = (p: string) =>
-    `[reference material]\n${p}\n[end of reference material]`;
+    `[reference material]\n${pyRstrip(p)}\n[end of reference material]`;
   const parts: string[] = [block(pieces[0]!)];
-  items.forEach((text, i) => {
-    parts.push(arm === "D" ? `R${pad2(i + 1)}: ${text}` : `${i + 1}. ${text}`);
-    parts.push(block(pieces[i + 1]!));
+  items.forEach(([id, text], k) => {
+    parts.push(arm === "D" ? `${id}: ${text}` : `${k + 1}. ${text}`);
+    parts.push(block(pieces[k + 1]!));
   });
   return (
     `# Task\n${SPEC.arms[arm].instruction}\n\n# Rules with reference material\n\n` +
@@ -123,15 +160,12 @@ export function roundPrompt(
 }
 
 /**
- * Prompt zum Testen nach `spec.test.userTemplate`. Eine leere Liste erscheint
- * als `(no rules)`; der Code-Zaun bleibt offen, der Prompt endet am Cursor.
- * Mit Funktionen verkettet statt `String.replace`, weil Code `$&` enthalten darf.
+ * `test_message`: Regeln und Code. Der Code-Zaun bleibt offen, der Prompt endet
+ * am Cursor. Mit Funktionen verkettet statt `String.replace`, weil Code `$&`
+ * enthalten darf.
  */
-export function testPrompt(items: readonly string[], prefix: string): string {
-  const rules = items.length
-    ? items.map((t, i) => `${i + 1}. ${t}`).join("\n")
-    : "(no rules)";
-  return `# Task\n${SPEC.test.TASK_RULES}\n\n# Rules\n${rules}\n\n# Source file\n\`\`\`java\n${prefix}`;
+export function testPrompt(items: readonly Item[], prefix: string): string {
+  return `# Task\n${SPEC.test.TASK_RULES}\n\n# Rules\n${renderNumbered(items)}\n\n# Source file\n\`\`\`java\n${prefix}`;
 }
 
 // --- Request-Bodies --------------------------------------------------------
@@ -141,9 +175,47 @@ export interface BodyOptions {
 }
 
 /**
- * Body des Umschreibens: Seed `1000 + Runde`, höchstens 1 500 Ausgabe-Tokens,
- * Reasoning aus. OpenRouter kennt Flex und `seed` in dieser Form nicht.
+ * `R.build_body` des Original-Runners. OpenAI: `max_completion_tokens`, `seed`,
+ * `reasoning_effort: none`, bei Flex `service_tier`. OpenRouter-Zweig nach dem
+ * allgemeinen Pfad des Originals (ohne die Anbieter-Zuordnung je Modell, die der
+ * Runner aus seiner Routentabelle nahm).
  */
+function buildBody(
+  provider: Provider,
+  model: string,
+  system: string,
+  user: string,
+  seed: number,
+  maxTokens: number,
+  wantLogprobs: boolean,
+  opts: BodyOptions,
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    model,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  };
+  if (provider === "openai") {
+    body.max_completion_tokens = maxTokens;
+    body.seed = seed;
+    body.reasoning_effort = "none";
+    if (opts.flex) body.service_tier = "flex";
+  } else {
+    body.max_tokens = maxTokens;
+    body.usage = { include: true };
+    body.reasoning = { enabled: false };
+    body.provider = { require_parameters: wantLogprobs };
+  }
+  if (wantLogprobs) {
+    body.logprobs = true;
+    body.top_logprobs = 5;
+  }
+  return body;
+}
+
+/** Body des Umschreibens: Seed `1000 + Runde`, höchstens 1 500 Ausgabe-Tokens, ohne Logprobs. */
 export function rewriteBody(
   provider: Provider,
   model: string,
@@ -151,38 +223,35 @@ export function rewriteBody(
   round: number,
   opts: BodyOptions,
 ): Record<string, unknown> {
-  const body: Record<string, unknown> = {
+  return buildBody(
+    provider,
     model,
-    messages: [
-      { role: "system", content: SPEC.round.systemPrompt },
-      { role: "user", content: user },
-    ],
-  };
-  if (provider === "openai") {
-    body.max_completion_tokens = REWRITE_MAX_TOKENS;
-    body.seed = REWRITE_SEED + round;
-    body.reasoning_effort = "none";
-    if (opts.flex) body.service_tier = "flex";
-  } else {
-    body.max_tokens = REWRITE_MAX_TOKENS;
-    body.provider = { require_parameters: true };
-    body.reasoning = { enabled: false };
-  }
-  return body;
+    SPEC.round.systemPrompt,
+    user,
+    REWRITE_SEED + round,
+    MAX_OUT,
+    false,
+    opts,
+  );
 }
 
-/** Body des Tests: 4 Ausgabe-Tokens, Top-5-Logprobs, Seed 1000 (wie `liveBody`). */
+/** Body des Tests: 4 Ausgabe-Tokens, Top-5-Logprobs, Seed 1000. */
 export function testBody(
   provider: Provider,
   model: string,
   user: string,
   opts: BodyOptions,
 ): Record<string, unknown> {
-  const req = { systemPrompt: SPEC.test.systemPrompt } as RequestSpec;
-  return liveBody(provider, model, req, user, {
-    noReasoning: true,
-    flex: opts.flex,
-  });
+  return buildBody(
+    provider,
+    model,
+    SPEC.test.systemPrompt,
+    user,
+    TEST_SEED,
+    4,
+    true,
+    opts,
+  );
 }
 
 // --- Antwort des Umschreibens ----------------------------------------------
@@ -229,137 +298,217 @@ export function parseRewriteResponse(
     };
   }
   const choice = json.choices?.[0];
-  const content = choice?.message?.content;
+  if (!choice) return { error: "keine Textantwort in der Antwort des Modells" };
+  // Das Original liest `content or ""`: eine Antwort ohne Text gilt als leerer Text.
+  const content = choice?.message?.content ?? "";
   if (typeof content !== "string") {
     return { error: "keine Textantwort in der Antwort des Modells" };
   }
   return { text: content, truncated: choice?.finish_reason === "length" };
 }
 
-// --- Parser des Umschreibens -----------------------------------------------
+// --- Parser des Umschreibens (portiert aus run.py) --------------------------
 
 export interface ParseOutcome {
-  /** Die Liste nach der Runde; bei `ok = false` die vorige. */
-  items: string[];
+  /** Die Liste nach der Runde. */
+  items: Item[];
+  /** `ok = 0` im Original: die Antwort war nicht wie verlangt lesbar. */
   ok: boolean;
-  /** Was auffiel; leer, wenn alles glatt lief. */
+  /** Was auffiel; leer, wenn alles glatt lief (wie `s9_state.note`). */
   note: string;
 }
 
-const keep = (prev: readonly string[], note: string): ParseOutcome => ({
-  items: [...prev],
-  ok: false,
-  note,
-});
+const FENCE_RE = new RegExp(`^\`\`\`[a-z]*\\n|\\n\`\`\`[${WS}]*$`, "g");
+const stripFence = (text: string): string => text.replace(FENCE_RE, "");
 
-/** Nummerierte Liste lesen (Arme F, C und N). */
-function parseNumbered(raw: string, prev: readonly string[]): ParseOutcome {
-  const items: string[] = [];
-  for (const line of raw.split("\n")) {
-    if (/^\s*```/.test(line)) continue;
-    // matches:  "3. If the cursor is directly after a dot, start with var."  ->  "If the cursor ..."
-    //           "3) Prefer immutable objects."                              ->  "Prefer immutable objects."
-    const m = /^\s*\d+[.)]\s+(?<text>\S.*)$/.exec(line);
-    if (m?.groups) items.push(m.groups.text!.trim());
-    else if (items.length && /^\s+\S/.test(line)) {
-      // eingerückte Fortsetzungszeile einer umgebrochenen Regel
-      items[items.length - 1] += ` ${line.trim()}`;
+// matches:  "3. If the cursor is directly after a dot, ..."  ->  "If the cursor ..."
+//           "- Prefer immutable objects."                    ->  "Prefer immutable objects."
+const ITEM_RE = new RegExp(
+  `^[${WS}]*(?:\\p{Nd}+[.)]|[-*])[${WS}]+(.*[^${WS}])[${WS}]*$`,
+  "u",
+);
+
+/**
+ * `parse_list`: nummerierte oder mit `-`/`*` aufgezählte Liste lesen (Arme F, C,
+ * N). Zeilen ohne Marke gehören zur vorigen Regel. Fehlt jede Marke, werden die
+ * nicht leeren Zeilen zu Regeln und `ok` ist `false`; die vorige Liste bleibt
+ * NICHT erhalten. Die Ids werden neu als `R01` … vergeben.
+ */
+function parseList(text: string): ParseOutcome {
+  const lines = pySplitlines(stripFence(pyStrip(text)));
+  const groups: string[][] = [];
+  let cur: string[] | null = null;
+  for (const line of lines) {
+    const m = ITEM_RE.exec(line);
+    if (m) {
+      cur = [m[1]!];
+      groups.push(cur);
+    } else if (pyStrip(line) && cur !== null) {
+      cur.push(pyStrip(line));
     }
   }
-  if (!items.length) return keep(prev, "keine nummerierte Liste gefunden");
-  return { items, ok: true, note: "" };
+  if (groups.length) {
+    return {
+      items: groups.map((c, i): Item => [`R${pad2(i + 1)}`, c.join(" ")]),
+      ok: true,
+      note: "",
+    };
+  }
+  const nonEmpty = lines.map(pyStrip).filter((l) => l);
+  return {
+    items: nonEmpty.map((l, i): Item => [`R${pad2(i + 1)}`, l]),
+    ok: false,
+    note: "",
+  };
 }
 
-/** JSON-Änderungen auf die `R01`-Zeilen anwenden (Arm D). */
-function parseChanges(raw: string, prev: readonly string[]): ParseOutcome {
-  const from = raw.indexOf("{");
-  const to = raw.lastIndexOf("}");
-  if (from < 0 || to < from) return keep(prev, "kein JSON-Objekt gefunden");
-  let obj: unknown;
+/** Python-`repr` eines JSON-Werts, für den Hinweistext `unknown ids [...]`. */
+function pyRepr(v: unknown): string {
+  if (typeof v === "string") {
+    const q = v.includes("'") && !v.includes('"') ? '"' : "'";
+    let out = "";
+    for (const ch of v) {
+      const c = ch.codePointAt(0)!;
+      if (ch === "\\") out += "\\\\";
+      else if (ch === q) out += `\\${q}`;
+      else if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else if (c < 0x20 || c === 0x7f)
+        out += `\\x${c.toString(16).padStart(2, "0")}`;
+      else out += ch;
+    }
+    return `${q}${out}${q}`;
+  }
+  if (v === null) return "None";
+  if (v === true) return "True";
+  if (v === false) return "False";
+  if (Array.isArray(v)) return `[${v.map(pyRepr).join(", ")}]`;
+  if (typeof v === "object") {
+    return `{${Object.entries(v as Record<string, unknown>)
+      .map(([k, x]) => `${pyRepr(k)}: ${pyRepr(x)}`)
+      .join(", ")}}`;
+  }
+  return String(v);
+}
+/** Python-`str` eines JSON-Werts. */
+const pyStr = (v: unknown): string => (typeof v === "string" ? v : pyRepr(v));
+/** Python-Wahrheitswert eines JSON-Werts (`x or default`). */
+const pyTruthy = (v: unknown): boolean =>
+  !(
+    v === undefined || // fehlender Schlüssel: `ops.get(k)` ist `None`
+    v === null ||
+    v === false ||
+    v === 0 ||
+    v === "" ||
+    (Array.isArray(v) && v.length === 0) ||
+    (typeof v === "object" &&
+      v !== null &&
+      !Array.isArray(v) &&
+      Object.keys(v).length === 0)
+  );
+
+/**
+ * `apply_delta` (Arm D): JSON `{remove, reword, add}` auf die festen Ids
+ * anwenden. Unlesbares JSON lässt die Liste unverändert (`ok = false`, Hinweis
+ * `unreadable json`). Unbekannte Ids werden ignoriert und in `note` genannt.
+ * Neue Regeln bekommen `max(Id) + 1`, gezählt vor dem Entfernen.
+ */
+function applyDelta(items: readonly Item[], text: string): ParseOutcome {
+  const unreadable = (): ParseOutcome => ({
+    items: items.map((it): Item => [...it]),
+    ok: false,
+    note: "unreadable json",
+  });
+  const body = stripFence(pyStrip(text));
+  let remove: unknown[];
+  let reword: Record<string, unknown>;
+  let add: unknown[];
   try {
-    obj = JSON.parse(raw.slice(from, to + 1));
-  } catch (e) {
-    return keep(prev, `JSON nicht lesbar: ${(e as Error).message}`);
-  }
-  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
-    return keep(prev, "JSON ist kein Objekt");
-  }
-  const o = obj as Record<string, unknown>;
-  if (!("remove" in o || "reword" in o || "add" in o)) {
-    return keep(prev, "Objekt ohne die Felder remove, reword oder add");
-  }
-  const unknown: string[] = [];
-  /** `R07` oder `r7` -> Index 6; `null` bei unbekannter Nummer. */
-  const indexOf = (id: string): number | null => {
-    const m = /^R0*(?<n>\d+)$/i.exec(id.trim());
-    const n = m?.groups ? Number(m.groups.n) : NaN;
-    return n >= 1 && n <= prev.length ? n - 1 : null;
-  };
-  const texts = [...prev];
-  const gone = new Set<number>();
-  const reword = o.reword;
-  if (typeof reword === "object" && reword !== null && !Array.isArray(reword)) {
-    for (const [id, text] of Object.entries(reword)) {
-      if (typeof text !== "string" || !text.trim()) continue;
-      const i = indexOf(id);
-      if (i === null) unknown.push(id);
-      else texts[i] = text.trim();
+    const from = body.indexOf("{");
+    const to = body.lastIndexOf("}");
+    if (from < 0 || to < 0) throw new Error("no braces");
+    const ops = JSON.parse(body.slice(from, to + 1)) as Record<string, unknown>;
+    const pick = (k: string, empty: unknown): unknown =>
+      pyTruthy(ops[k]) ? ops[k] : empty;
+    const r = pick("remove", []);
+    const w = pick("reword", {});
+    const a = pick("add", []);
+    if (
+      !(
+        Array.isArray(r) &&
+        typeof w === "object" &&
+        w !== null &&
+        !Array.isArray(w) &&
+        Array.isArray(a)
+      )
+    ) {
+      throw new Error("wrong types");
     }
+    [remove, reword, add] = [r, w as Record<string, unknown>, a];
+  } catch {
+    return unreadable();
   }
-  if (Array.isArray(o.remove)) {
-    for (const id of o.remove) {
-      if (typeof id !== "string") continue;
-      const i = indexOf(id);
-      if (i === null) unknown.push(id);
-      else gone.add(i);
-    }
-  }
-  const items = texts.filter((_, i) => !gone.has(i));
-  if (Array.isArray(o.add)) {
-    for (const t of o.add) {
-      if (typeof t === "string" && t.trim()) items.push(t.trim());
-    }
-  }
+  const ids = new Set(items.map(([id]) => id));
+  const unknown = [...remove, ...Object.keys(reword)].filter(
+    (i) => !(typeof i === "string" && ids.has(i)),
+  );
+  const gone = new Set(remove.map(pyStr));
+  const out: Item[] = items
+    .filter(([id]) => !gone.has(id))
+    .map(
+      ([id, t]): Item => [
+        id,
+        Object.hasOwn(reword, id) ? pyStr(reword[id]) : t,
+      ],
+    );
+  let next =
+    Math.max(
+      ...items.map(([id]) => {
+        const n = Number(id.slice(1));
+        if (!Number.isInteger(n)) throw new Error(`Id ${id} ohne Nummer`);
+        return n;
+      }),
+      0,
+    ) + 1;
+  for (const t of add) out.push([`R${pad2(next++)}`, pyStr(t)]);
   return {
-    items,
+    items: out,
     ok: true,
-    note: unknown.length
-      ? `unbekannte Nummer ${unknown.join(", ")} ignoriert`
-      : "",
+    note: unknown.length ? `unknown ids ${pyRepr(unknown)}` : "",
   };
 }
 
 /**
- * Aus der Rohantwort die Liste nach der Runde. F, C und N lesen die
- * nummerierte Liste; D wendet `{remove, reword, add}` auf die Zeilen
- * `R01: …` der Liste vor der Runde an. Ist die Antwort nicht lesbar, bleibt
- * die vorige Liste und `ok` ist `false`.
- *
- * NACHBAU: der Parser der Studie ist nicht verfügbar; unbekannte `R`-Nummern
- * werden hier ignoriert und in `note` genannt.
+ * Aus der Rohantwort die Liste nach der Runde: Arm D wendet `{remove, reword,
+ * add}` auf die Liste vor der Runde an (`apply_delta`), die anderen lesen eine
+ * Liste (`parse_list`).
  */
 export function parseRewrite(
   arm: Arm,
   raw: string,
-  prev: readonly string[],
+  prev: readonly Item[],
 ): ParseOutcome {
-  if (!raw.trim()) return keep(prev, "leere Antwort");
-  return arm === "D" ? parseChanges(raw, prev) : parseNumbered(raw, prev);
+  return arm === "D" ? applyDelta(prev, raw) : parseList(raw);
 }
 
 // --- Fülltext ziehen -------------------------------------------------------
 
-export type PieceKind = "prose" | "math" | "java";
-export interface Piece {
-  id: string;
-  kind: PieceKind;
-  text: string;
-}
-export interface Corpus {
-  pieces: Piece[];
-}
+export type PieceKind = "prose" | "math" | "code" | "foreign";
+/** Die vier Arrays des Original-Korpus (`study9/corpus/pieces/*.json`). */
+export type Corpus = Record<PieceKind, string[]>;
 
-const KINDS: readonly PieceKind[] = ["prose", "math", "java"];
+/** Reihenfolge der Arten wie in `filler()` des Originals. */
+const KINDS: readonly PieceKind[] = ["prose", "math", "code", "foreign"];
+
+/**
+ * Lädt den Korpus beim ersten Start. Ein dynamischer Import hält die 450 KB aus
+ * dem Bundle der übrigen Folien heraus; der Browser holt die Datei erst hier.
+ */
+export async function loadCorpus(): Promise<Corpus> {
+  const mod = await import("../../data/erosion/study9-live.json");
+  return mod.default.corpus as Corpus;
+}
 
 /** mulberry32: kleiner, fester PRNG; gleicher Seed, gleiche Folge. */
 function prng(seed: number): () => number {
@@ -374,9 +523,10 @@ function prng(seed: number): () => number {
 }
 
 /**
- * Zieht n + 1 Stücke, Prosa, Mathematik und Code im Wechsel, deterministisch
- * aus Kettenseed und Runde. Je Art wird ohne Zurücklegen gezogen, solange der
- * Korpus reicht; danach wird neu gemischt.
+ * `filler()` des Originals mit eigenem Zufallszähler: n + 1 Stücke. Ein
+ * Zufallsversatz 0 bis 3 wählt die Startart, dann wechseln die Arten
+ * Prosa, Mathematik, Code, fremder Code; jedes Stück wird mit Zurücklegen
+ * gezogen. Zurück kommen die rohen Stücke, `roundPrompt` rahmt sie ein.
  */
 export function drawPieces(
   corpus: Corpus,
@@ -385,30 +535,15 @@ export function drawPieces(
   round: number,
 ): string[] {
   const rand = prng(chainSeed ^ Math.imul(round + 1, 0x9e3779b1));
-  const pools = new Map<PieceKind, { order: string[]; next: number }>();
-  const shuffled = (kind: PieceKind): string[] => {
-    const texts = corpus.pieces
-      .filter((p) => p.kind === kind)
-      .map((p) => p.text);
-    if (!texts.length) {
-      throw new Error(`Korpus enthält keine Stücke der Art ${kind}`);
-    }
-    for (let i = texts.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [texts[i], texts[j]] = [texts[j]!, texts[i]!];
-    }
-    return texts;
-  };
-  const start = Math.floor(rand() * KINDS.length);
+  const offset = Math.floor(rand() * KINDS.length);
   const out: string[] = [];
   for (let i = 0; i <= n; i++) {
-    const kind = KINDS[(start + i) % KINDS.length]!;
-    let pool = pools.get(kind);
-    if (!pool || pool.next >= pool.order.length) {
-      pool = { order: shuffled(kind), next: 0 };
-      pools.set(kind, pool);
+    const kind = KINDS[(i + offset) % KINDS.length]!;
+    const pool = corpus[kind];
+    if (!pool?.length) {
+      throw new Error(`Korpus enthält keine Stücke der Art ${kind}`);
     }
-    out.push(pool.order[pool.next++]!);
+    out.push(pool[Math.floor(rand() * pool.length)]!);
   }
   return out;
 }
@@ -472,7 +607,10 @@ export interface SiteTest {
 export interface RoundEvent {
   /** 0 ist die Originalliste O, ohne Umschreiben. */
   round: number;
+  /** Die Regeltexte der Liste nach der Runde (ohne Ids). */
   items: string[];
+  /** Die Antwort des Umschreibens endete am Token-Limit. */
+  truncated: boolean;
   /** Ergebnis des Parsers; `null` in Runde 0. */
   parse: ParseOutcome | null;
   tests: SiteTest[];
@@ -561,7 +699,7 @@ export async function runChain(opts: ChainOptions): Promise<ChainSummary> {
   }
 
   async function test(
-    items: readonly string[],
+    items: readonly Item[],
   ): Promise<SiteTest[] | ChainSummary> {
     const results = new Map<string, LiveResult>();
     const jobs: LiveJob[] = LIVE_SITES.map((s) => ({
@@ -600,14 +738,17 @@ export async function runChain(opts: ChainOptions): Promise<ChainSummary> {
 
   const report = (
     round: number,
-    items: string[],
+    state: readonly Item[],
     parse: ParseOutcome | null,
     tests: SiteTest[],
+    truncated = false,
   ): void => {
+    const items = state.map(([, text]) => text);
     const present = presentBehaviours(items);
     opts.onRound({
       round,
       items,
+      truncated,
       parse,
       tests,
       present,
@@ -620,7 +761,7 @@ export async function runChain(opts: ChainOptions): Promise<ChainSummary> {
   };
 
   if (opts.signal.aborted) return aborted();
-  let items = [...ORIGINAL_ITEMS];
+  let items: Item[] = INITIAL_ITEMS.map((it): Item => [...it]);
   const first = await test(items);
   if (!Array.isArray(first)) return first;
   report(0, items, null, first);
@@ -633,13 +774,10 @@ export async function runChain(opts: ChainOptions): Promise<ChainSummary> {
       return failed(res.error ?? "keine Antwort");
     }
     const parse = parseRewrite(opts.arm, res.text, items);
-    if (res.truncated && parse.ok) {
-      parse.note = `${parse.note} Antwort am Token-Limit abgeschnitten.`.trim();
-    }
     items = parse.items;
     const tests = await test(items);
     if (!Array.isArray(tests)) return tests;
-    report(round, items, parse, tests);
+    report(round, items, parse, tests, res.truncated === true);
   }
   return sum();
 }

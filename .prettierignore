@@ -9,3 +9,5 @@
 # Von build.ts geschriebene Studiendaten (Folien „Regeln, die nie greifen“ und „Luna schreibt die Regeln um“): eine Zeile je Datei, Prettier würde sie umbrechen.
 20260408-agents-details/data/contextrot/study7-luna.json
 20260408-agents-details/data/erosion/study9-chain.json
+20260408-agents-details/data/erosion/study9-live.json
+20260408-agents-details/data/erosion/golden-live.json

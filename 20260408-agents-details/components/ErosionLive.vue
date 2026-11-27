@@ -1,13 +1,14 @@
 <script setup lang="ts">
 // Folie „Luna schreibt die Regeln um: live“ (pages/erosion-luna-live.md).
 //
-// Live-Nachbau einer einzelnen Kette aus Studie 9, mit dem eigenen OpenAI-Key
+// Live-Lauf einer einzelnen Kette aus Studie 9, mit dem eigenen OpenAI-Key
 // des Vortragenden. Ablauf und Prompts stehen in lib/erosionLiveLogic.ts
 // (Tests daneben); diese Datei ist nur Bedienung und Anzeige.
 //
-// NACHBAU: Der Originalcode der Studie liegt nicht vor. Fülltext
-// (data/erosion/study9-live.json) und Antwort-Parser sind nachgebaut; die
-// Werte sind deshalb nicht direkt mit der Aufzeichnung vergleichbar.
+// Die Logik ist aus dem Original-Runner von Studie 9 portiert, der Fülltext ist
+// der Original-Korpus (data/erosion/study9-live.json, Herkunft und Lizenzen in
+// data/erosion/LIVE_CORPUS_NOTICE.md). Nur die Ziehung nutzt einen eigenen
+// Zufallszähler.
 //
 // Der Key liegt nur in `apiKey` (Speicher dieser Seite). Er wird nicht
 // gespeichert und nicht protokolliert und geht nur an api.openai.com. Jede
@@ -18,7 +19,6 @@
 import { computed, onBeforeUnmount, ref, shallowRef } from "vue";
 import { useDarkMode } from "@slidev/client";
 import study from "../data/erosion/study9-chain.json";
-import live from "../data/erosion/study9-live.json";
 import labels from "../data/erosion/chain-labels.json";
 import SourcesPopover from "./SourcesPopover.vue";
 import { useDeckPalette } from "./palette";
@@ -39,8 +39,8 @@ import {
   ORIGINAL_ITEMS,
   ROUNDS,
   estimateChainCost,
+  loadCorpus,
   runChain,
-  type Corpus,
   type RoundEvent,
 } from "./lib/erosionLiveLogic";
 
@@ -100,7 +100,7 @@ const TEXTS = {
       ? "gleich viele"
       : `${Math.abs(net)} ${net < 0 ? "weniger" : "mehr"}`,
   listEmpty: "Die Liste ist leer: Das Modell hat alle Regeln gestrichen.",
-  parseFailed: "Antwort nicht lesbar, Liste der Vorrunde bleibt:",
+  parseFailed: "Antwort nicht wie verlangt lesbar:",
   parseNote: "Hinweis:",
   testTitle: "Test: erstes Token je Stelle",
   thSite: "Stelle",
@@ -122,7 +122,7 @@ const TEXTS = {
   legendRecorded: (id: string) => `Aufzeichnung ${id}`,
   chartNote:
     "Aufzeichnung nur nach Runde 1, 2, 4 und 6 getestet, live jede Runde.",
-  foot: "Nachbau ohne Originalcode · eine Kette, eine Messung je Stelle · nicht direkt mit der Aufzeichnung vergleichbar",
+  foot: "Code und Fülltext aus Studie 9 · eine Kette, eine Messung je Stelle · nicht direkt mit der Aufzeichnung vergleichbar",
   sourcesButton: "ⓘ Quellen",
   sourcesAria: "Quellen und Einschränkungen anzeigen",
   sourcesScope: "Gilt für die Folie „Luna schreibt die Regeln um: live“.",
@@ -130,6 +130,16 @@ const TEXTS = {
 
 /** Quellen und Einschränkungen des ⓘ-Modals. */
 const SOURCES: readonly { href: string; label: string; note: string }[] = [
+  {
+    href: "https://github.com/geggo98/context-rot-experiments/tree/7e5e7c7/study9",
+    label: "context-rot-experiments, Ordner study9",
+    note: "Code der Studie, Commit 7e5e7c7 vom 26.11.2026 (https://github.com/geggo98/context-rot-experiments). Daraus stammen Prompts, Fülltext-Stücke, Antwort-Parser und Anfrage-Parameter des Live-Laufs",
+  },
+  {
+    href: "https://github.com/geggo98/context-rot-experiments/blob/7e5e7c7/THIRD_PARTY_NOTICES.md",
+    label: "context-rot-experiments: THIRD_PARTY_NOTICES.md",
+    note: "Lizenzen des Fülltexts: Auszüge aus Apache Commons Lang (Apache-2.0), Texte von Project Gutenberg (gemeinfrei), eigener Java-Code des Studienautors (CC0). Hinweise im Deck: data/erosion/LIVE_CORPUS_NOTICE.md",
+  },
   {
     href: "https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create",
     label: "OpenAI API: Create chat completion",
@@ -143,16 +153,16 @@ const SOURCES: readonly { href: string; label: string; note: string }[] = [
 ];
 const CAVEATS: readonly { lead: string; text: string }[] = [
   {
-    lead: "Nachbau ohne Originalcode:",
-    text: "Code und Fülltext von Studie 9 liegen hier nicht vor. Prompts, Originalliste, Teststellen und Parameter stammen aus der Aufzeichnung. Neu gebaut sind der Fülltext und der Parser, der die Antwort des Modells in eine Liste übersetzt. Der Fülltext ist ein eigener, kleinerer Satz aus Prosa, Mathematik und eigenem Java-Code; das Original enthielt zusätzlich Apache-Code und fremden Java-Code. Die Zahlen sind deshalb nicht direkt mit der Aufzeichnung vergleichbar.",
+    lead: "Code der Studie, eigene Ziehung:",
+    text: "Prompts, Fülltext-Stücke, Antwort-Parser und Anfrage-Parameter stammen aus dem Code von Studie 9 (context-rot-experiments, Commit 7e5e7c7 vom 26.11.2026, Ordner study9). Nur die Fülltext-Stücke zieht die Folie mit einem anderen Zufallsgenerator. Eine Live-Kette wiederholt deshalb keine aufgezeichnete Kette, und ihre Zahlen sind nicht direkt mit der Aufzeichnung vergleichbar.",
   },
   {
     lead: "Eine Kette, keine Wiederholung:",
     text: "Ein Lauf ist eine einzelne Kette mit einer Messung je Stelle. Einzelne Ketten streuen stark. In der Aufzeichnung (Luna, Auftrag „Neu schreiben“) verlieren 8 von 10 Ketten (80 %) an den vier testbaren Stellen. Im Mittel über die zehn Ketten fällt die Befolgung von 0,92 am Start auf 0,38 nach Runde 6. Ein einzelner Live-Lauf kann deutlich besser oder schlechter ausgehen.",
   },
   {
-    lead: "Anderer Fülltext, vielleicht anderes Modell:",
-    text: "Der Fülltext wird in jeder Runde neu aus dem eigenen Satz gezogen; ein fester Seed macht die Ziehung wiederholbar. Die Aufzeichnung stammt vom 22.11.2026. Seitdem kann OpenAI das Modell hinter demselben Namen geändert haben.",
+    lead: "Andere Stücke, vielleicht anderes Modell:",
+    text: "Die Fülltext-Stücke werden in jeder Runde neu gezogen; ein fester Seed macht die Ziehung wiederholbar, aber nicht gleich der Studie. Die Studie lief immer mit Flex, live ist Flex wählbar. Die Aufzeichnung stammt vom 22.11.2026. Seitdem kann OpenAI das Modell hinter demselben Namen geändert haben.",
   },
   {
     lead: "Kosten sind geschätzt:",
@@ -164,7 +174,7 @@ const CAVEATS: readonly { lead: string; text: string }[] = [
   },
   {
     lead: "Nicht lesbare Antwort:",
-    text: "Kann der Parser die Antwort nicht lesen, bleibt die Liste der Vorrunde unverändert, und über der Liste steht der Grund. Beim Auftrag „Nur Änderungen“ ignoriert der Parser unbekannte Regelnummern und nennt sie.",
+    text: "Findet der Parser keine Nummern oder Spiegelstriche, wird wie in der Studie jede nicht leere Zeile zu einer Regel, und über der Liste steht ein Hinweis. Beim Auftrag „Nur Änderungen“ bleibt die Liste bei unlesbarem JSON unverändert; unbekannte Regelnummern ignoriert der Parser und nennt sie.",
   },
   {
     lead: "Test nach jeder Runde:",
@@ -172,13 +182,12 @@ const CAVEATS: readonly { lead: string; text: string }[] = [
   },
   {
     lead: "Nur vier Stellen, nur das erste Token:",
-    text: `Getestet werden die vier Stellen, an denen Luna in der Studie die Originalliste befolgt (${LIVE_SITES.map((s) => s.id).join(", ")}), nur für die Gebote B und D. Gemessen ist nur das erste Token. „Gebote da“ heißt: Reguläre Ausdrücke finden Auslöser und Token in einer Regel.`,
+    text: `Getestet werden 4 der 18 Gebotsstellen (ca. 22 %): die, an denen Luna in der Studie die Originalliste befolgt (${LIVE_SITES.map((s) => s.id).join(", ")}), nur für die Gebote B und D. Die zwei Kontrollstellen fehlen. Gemessen ist nur das erste Token. „Gebote da“ heißt: Reguläre Ausdrücke finden Auslöser und Token in einer Regel.`,
   },
 ];
 
 // ── Daten ────────────────────────────────────────────────────────────────
 const data = study as unknown as Study9;
-const corpus = live.corpus as unknown as Corpus;
 const P = useDeckPalette();
 const { isDark } = useDarkMode();
 
@@ -276,6 +285,9 @@ async function start() {
   }, 1000);
   let outcome: Phase = "done";
   try {
+    // Der Korpus (450 KB) lädt erst hier, beim ersten Start; der Browser
+    // hält ihn danach im Modul-Cache.
+    const corpus = await loadCorpus();
     const sum = await runChain({
       provider: "openai",
       model: model.value.trim(),

@@ -32,5 +32,5 @@ Unten steht meine Schlussfolgerung. Sie ist eine Empfehlung und kein Ergebnis de
 
 Die Gegenseite gehört dazu. Ein Entwurf vom Agenten ist sinnvoll, wenn ein Mensch an der Quelle sitzt, ihn prüft und freigibt. Terra blieb in diesem einfachen Versuch stabil; komplexere Szenarien habe ich aus Kostengründen nicht getestet. Und keine Arbeit misst, ob der Autor „an der Quelle sitzt“. Die Quellen und alle Einschränkungen stehen hinter dem Info-Knopf.
 
-Wer es selbst sehen will: Die versteckte Folie danach (Alias `erosion-luna-live`) stellt eine Kette live nach, mit eigenem OpenAI-Key. Sie ist ein Nachbau ohne Originalcode und zeigt nur eine einzelne Kette; ihre Zahlen sind deshalb nicht direkt mit dieser Folie vergleichbar.
+Wer es selbst sehen will: Die versteckte Folie danach (Alias `erosion-luna-live`) stellt eine Kette live nach, mit eigenem OpenAI-Key. Sie nutzt den Code der Studie, zieht den Fülltext aber anders und zeigt nur eine einzelne Kette; ihre Zahlen sind deshalb nicht direkt mit dieser Folie vergleichbar.
 -->

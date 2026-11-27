@@ -8,6 +8,7 @@
 // - Parser: Beispielantworten von Hand, die Erwartung ebenso.
 // - Kosten: 1,1830 $ aus `notes.cost` geteilt durch 64 Ketten (4 Arme mal 16),
 //   von Hand gerechnet.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import chain from "../../../data/erosion/study9-chain.json";
 import live from "../../../data/erosion/study9-live.json";
@@ -15,6 +16,8 @@ import { RETRY_BASE_MS } from "../contextRotLive";
 import {
   drawPieces,
   estimateChainCost,
+  INITIAL_ITEMS,
+  loadCorpus,
   parseRewrite,
   parseRewriteResponse,
   presentBehaviours,
@@ -24,6 +27,7 @@ import {
   testBody,
   testPrompt,
   type Corpus,
+  type Item,
   type RoundEvent,
 } from "../erosionLiveLogic";
 
@@ -33,7 +37,10 @@ const ORIGINAL = spec.original.map((r) => r.text);
 const PREFIX = spec.testablePrefixes as Record<string, string>;
 
 describe("roundPrompt", () => {
-  const items = ["Rule one.", "Rule two."];
+  const items: Item[] = [
+    ["R01", "Rule one."],
+    ["R02", "Rule two."],
+  ];
   const pieces = ["P0", "P1", "P2"];
   const block = (p: string) =>
     `[reference material]\n${p}\n[end of reference material]`;
@@ -64,7 +71,10 @@ describe("roundPrompt", () => {
   });
 
   it("schreibt im Arm D auch die zehnte Regel als R10", () => {
-    const ten = Array.from({ length: 10 }, (_, i) => `r${i}`);
+    const ten = Array.from(
+      { length: 10 },
+      (_, i): Item => [`R${String(i + 1).padStart(2, "0")}`, `r${i}`],
+    );
     const out = roundPrompt(
       "D",
       ten,
@@ -81,7 +91,9 @@ describe("roundPrompt", () => {
   });
 
   it("liest `$&` im Fülltext wörtlich", () => {
-    expect(roundPrompt("F", ["a"], ["x $& y", "z"])).toContain("x $& y");
+    expect(roundPrompt("F", [["R01", "a"]], ["x $& y", "z"])).toContain(
+      "x $& y",
+    );
   });
 });
 
@@ -90,7 +102,15 @@ describe("testPrompt", () => {
     const expected =
       `# Task\n${spec.test.TASK_RULES}\n\n# Rules\n1. Rule one.\n2. Rule two.\n\n` +
       "# Source file\n```java\nint x = ";
-    expect(testPrompt(["Rule one.", "Rule two."], "int x = ")).toBe(expected);
+    expect(
+      testPrompt(
+        [
+          ["R01", "Rule one."],
+          ["R02", "Rule two."],
+        ],
+        "int x = ",
+      ),
+    ).toBe(expected);
   });
 
   it("schreibt bei leerer Liste (no rules)", () => {
@@ -100,7 +120,7 @@ describe("testPrompt", () => {
   });
 
   it("liest `$&` im Code wörtlich", () => {
-    expect(testPrompt(["a"], "x = $& + $1")).toMatch(
+    expect(testPrompt([["R01", "a"]], "x = $& + $1")).toMatch(
       /\n```java\nx = \$& \+ \$1$/,
     );
   });
@@ -146,11 +166,12 @@ describe("Request-Bodies", () => {
       reasoning_effort: "none",
     });
   });
-  it("OpenRouter: max_tokens statt max_completion_tokens, kein Seed", () => {
+  it("OpenRouter: max_tokens statt max_completion_tokens, kein Seed, usage", () => {
     const r = rewriteBody("openrouter", "o/m", "U", 2, opts);
     expect(r).toMatchObject({
       max_tokens: 1500,
       reasoning: { enabled: false },
+      usage: { include: true },
     });
     expect(r).not.toHaveProperty("seed");
     expect(r).not.toHaveProperty("max_completion_tokens");
@@ -162,117 +183,92 @@ describe("Request-Bodies", () => {
   });
 });
 
+// Ausführlicher Abgleich mit dem Original: erosionLiveGolden.test.ts. Hier nur
+// gezielte Fälle mit von Hand gesetzten Erwartungen.
+const mk = (...texts: string[]): Item[] =>
+  texts.map((t, i): Item => [`R${String(i + 1).padStart(2, "0")}`, t]);
+
 describe("parseRewrite, Arme F, C und N", () => {
-  const prev = ["old one", "old two"];
+  const prev = mk("old one", "old two");
   for (const arm of ["F", "C", "N"] as const) {
-    it(`${arm}: liest die nummerierte Liste`, () => {
+    it(`${arm}: liest die nummerierte Liste und vergibt Ids neu`, () => {
       expect(parseRewrite(arm, "1. A\n2. B\n3. C", prev)).toEqual({
-        items: ["A", "B", "C"],
+        items: mk("A", "B", "C"),
         ok: true,
         note: "",
       });
     });
   }
-  it("liest auch `1)` und überspringt Text vor der Liste", () => {
-    const r = parseRewrite("F", "Here is the list:\n\n1) A\n2) B", prev);
-    expect(r.items).toEqual(["A", "B"]);
-    expect(r.ok).toBe(true);
+  it("liest Aufzählungsstriche und Sterne", () => {
+    expect(parseRewrite("F", "- A\n* B", prev).items).toEqual(mk("A", "B"));
   });
-  it("hängt umgebrochene Zeilen an die vorige Regel", () => {
-    const r = parseRewrite("F", "1. A starts\n   and continues\n2. B", prev);
-    expect(r.items).toEqual(["A starts and continues", "B"]);
-  });
-  it("entfernt einen Code-Zaun um die Liste", () => {
-    const r = parseRewrite("F", "```\n1. A\n2. B\n```", prev);
-    expect(r.items).toEqual(["A", "B"]);
-  });
-  it("behält bei leerer Antwort die vorige Liste", () => {
-    for (const raw of ["", "  \n "]) {
-      const r = parseRewrite("F", raw, prev);
-      expect(r).toEqual({ items: prev, ok: false, note: "leere Antwort" });
-    }
-  });
-  it("behält bei Antwort ohne Nummern die vorige Liste", () => {
-    const r = parseRewrite("C", "I cannot do that.", prev);
-    expect(r.items).toEqual(prev);
+  it("fällt ohne Marke auf die nicht leeren Zeilen zurück, mit ok = false", () => {
+    const r = parseRewrite("C", "I cannot do that.\n\nSorry.", prev);
+    expect(r.items).toEqual(mk("I cannot do that.", "Sorry."));
     expect(r.ok).toBe(false);
-    expect(r.note).toContain("keine nummerierte Liste");
   });
-  it("gibt eine Kopie der vorigen Liste zurück, nicht dieselbe", () => {
+  it("macht aus einer leeren Antwort eine leere Liste, nicht die vorige", () => {
     const r = parseRewrite("F", "", prev);
-    expect(r.items).not.toBe(prev);
+    expect(r).toEqual({ items: [], ok: false, note: "" });
   });
 });
 
 describe("parseRewrite, Arm D", () => {
-  const prev = ["a", "b", "c"];
-  it("wendet reword, remove und add an", () => {
+  const prev = mk("a", "b", "c");
+  it("wendet reword, remove und add an; Ids bleiben stabil", () => {
     const raw = '{"remove":["R02"],"reword":{"R01":"A2"},"add":["d"]}';
     expect(parseRewrite("D", raw, prev)).toEqual({
-      items: ["A2", "c", "d"],
+      items: [
+        ["R01", "A2"],
+        ["R03", "c"],
+        ["R04", "d"],
+      ],
       ok: true,
       note: "",
     });
   });
-  it("nummeriert nach der Liste vor der Änderung, nicht fortlaufend nach dem Entfernen", () => {
-    const raw = '{"remove":["R01"],"reword":{"R03":"C2"}}';
-    expect(parseRewrite("D", raw, prev).items).toEqual(["b", "C2"]);
+  it("vergibt neue Ids ab dem größten vorhandenen plus eins", () => {
+    const r = parseRewrite("D", '{"add":["x"]}', [
+      ["R02", "b"],
+      ["R05", "e"],
+    ]);
+    expect(r.items.at(-1)).toEqual(["R06", "x"]);
   });
-  it("liest JSON mit Text drumherum", () => {
-    const raw = 'Sure! {"remove":["R03"]} Hope that helps.';
-    expect(parseRewrite("D", raw, prev)).toMatchObject({
-      items: ["a", "b"],
-      ok: true,
-    });
-  });
-  it("liest JSON im Code-Zaun", () => {
-    const raw = '```json\n{"add":["x"]}\n```';
-    expect(parseRewrite("D", raw, prev).items).toEqual(["a", "b", "c", "x"]);
-  });
-  it("ignoriert unbekannte Nummern und nennt sie", () => {
-    const raw = '{"remove":["R99"],"reword":{"R77":"z","R01":"A2"}}';
-    const r = parseRewrite("D", raw, prev);
-    expect(r.items).toEqual(["A2", "b", "c"]);
+  it("nennt unbekannte Ids im Stil des Originals", () => {
+    const r = parseRewrite(
+      "D",
+      '{"remove":["R99"],"reword":{"R77":"z"}}',
+      prev,
+    );
+    expect(r.items).toEqual(prev);
     expect(r.ok).toBe(true);
-    expect(r.note).toContain("R99");
-    expect(r.note).toContain("R77");
+    expect(r.note).toBe("unknown ids ['R99', 'R77']");
   });
-  it("ignoriert Einträge mit falschem Typ", () => {
-    const raw = '{"remove":[3,"R02"],"reword":{"R01":5},"add":["x",null,""]}';
-    expect(parseRewrite("D", raw, prev).items).toEqual(["a", "c", "x"]);
-  });
-  it("behält die Liste bei leerer Antwort", () => {
-    expect(parseRewrite("D", "", prev)).toEqual({
-      items: prev,
-      ok: false,
-      note: "leere Antwort",
-    });
-  });
-  it("behält die Liste, wenn kein JSON da ist", () => {
-    const r = parseRewrite("D", "I removed the second rule.", prev);
-    expect(r.items).toEqual(prev);
-    expect(r.ok).toBe(false);
-    expect(r.note).toContain("kein JSON-Objekt");
-  });
-  it("behält die Liste bei kaputtem JSON", () => {
-    const r = parseRewrite("D", '{"remove": ["R01"', prev);
-    expect(r.ok).toBe(false);
-    expect(r.items).toEqual(prev);
-    const r2 = parseRewrite("D", '{"remove": ["R01",]}', prev);
-    expect(r2.ok).toBe(false);
-    expect(r2.note).toContain("nicht lesbar");
-  });
-  it("behält die Liste, wenn das Objekt keines der drei Felder hat", () => {
-    for (const raw of ["{}", '{"foo":1}']) {
+  it("behält die Liste bei unlesbarem JSON und setzt ok = false", () => {
+    for (const raw of [
+      "",
+      "no json",
+      '{"remove": ["R01",]}',
+      '{"remove":"R01"}',
+    ]) {
       const r = parseRewrite("D", raw, prev);
-      expect(r.ok, raw).toBe(false);
-      expect(r.items).toEqual(prev);
-      expect(r.note).toContain("remove");
+      expect(r, raw).toEqual({
+        items: prev,
+        ok: false,
+        note: "unreadable json",
+      });
     }
+  });
+  it("gibt eine Kopie der Liste zurück, nicht dieselbe", () => {
+    const r = parseRewrite("D", "x", prev);
+    expect(r.items).not.toBe(prev);
+    expect(r.items[0]).not.toBe(prev[0]);
   });
 });
 
 describe("drawPieces", () => {
+  const KINDS = ["prose", "math", "code", "foreign"] as const;
+  const kindOf = (text: string) => KINDS.find((k) => corpus[k].includes(text));
   it("liefert n + 1 Stücke", () => {
     for (const n of [0, 1, 7, 20]) {
       expect(drawPieces(corpus, n, 5, 1)).toHaveLength(n + 1);
@@ -288,20 +284,33 @@ describe("drawPieces", () => {
     expect(drawPieces(corpus, 20, 42, 2)).not.toEqual(a);
     expect(drawPieces(corpus, 20, 43, 1)).not.toEqual(a);
   });
-  it("wechselt die Art ab: je drei aufeinanderfolgende Stücke tragen alle drei Arten", () => {
-    const kinds = new Map(corpus.pieces.map((p) => [p.text, p.kind]));
-    const drawn = drawPieces(corpus, 20, 9, 4).map((t) => kinds.get(t));
-    for (let i = 0; i + 2 < drawn.length; i++) {
-      expect(new Set(drawn.slice(i, i + 3)).size, `ab Stück ${i}`).toBe(3);
+  it("wechselt die Arten in der Reihenfolge Prosa, Mathematik, Code, fremder Code", () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const kinds = drawPieces(corpus, 12, seed, 1).map(kindOf);
+      const start = KINDS.indexOf(kinds[0]!);
+      expect(kinds, `Seed ${seed}`).toEqual(
+        kinds.map((_, i) => KINDS[(start + i) % 4]),
+      );
     }
   });
-  it("wiederholt kein Stück, solange der Korpus reicht", () => {
-    const d = drawPieces(corpus, 20, 11, 2);
-    expect(new Set(d).size).toBe(d.length);
+  it("wählt die Startart zufällig, alle vier kommen vor", () => {
+    const starts = new Set(
+      Array.from({ length: 40 }, (_, s) =>
+        kindOf(drawPieces(corpus, 0, s, 1)[0]!),
+      ),
+    );
+    expect(starts.size).toBe(4);
   });
-  it("greift bei zu kleinem Korpus wieder auf Stücke zurück, statt zu scheitern", () => {
-    const d = drawPieces(corpus, 40, 1, 1);
-    expect(d).toHaveLength(41);
+  it("zieht mit Zurücklegen, auch aus der kleinen Art", () => {
+    const tiny = { prose: ["p"], math: ["m"], code: ["c"], foreign: ["f"] };
+    expect(drawPieces(tiny, 7, 1, 1)).toHaveLength(8);
+    expect(new Set(drawPieces(tiny, 7, 1, 1)).size).toBeLessThanOrEqual(4);
+  });
+  it("gibt rohe Stücke zurück, ohne Rahmen", () => {
+    for (const t of drawPieces(corpus, 8, 3, 2)) {
+      expect(t).not.toContain("[reference material]");
+      expect(kindOf(t)).toBeDefined();
+    }
   });
   it("verändert den Korpus nicht", () => {
     const before = JSON.stringify(corpus);
@@ -309,22 +318,30 @@ describe("drawPieces", () => {
     expect(JSON.stringify(corpus)).toBe(before);
   });
   it("nennt eine fehlende Art", () => {
-    const only = { pieces: corpus.pieces.filter((p) => p.kind !== "math") };
-    expect(() => drawPieces(only, 3, 1, 1)).toThrow(/math/);
+    const only = { ...corpus, math: [] };
+    expect(() => drawPieces(only, 8, 1, 1)).toThrow(/math/);
   });
 });
 
 describe("Korpus-Datei", () => {
-  it("hat mindestens 8 Stücke je Art, Herkunft und Kennzeichnung", () => {
-    for (const k of ["prose", "math", "java"]) {
-      expect(
-        corpus.pieces.filter((p) => p.kind === k).length,
-      ).toBeGreaterThanOrEqual(8);
-    }
-    expect(live.source).toBe("Nachbau ohne Originalcode");
-    expect(live.provenance.length).toBeGreaterThan(20);
-    expect(new Set(corpus.pieces.map((p) => p.id)).size).toBe(
-      corpus.pieces.length,
+  it("hat die Stückzahlen des Original-Korpus, Herkunft und Lizenz je Art", () => {
+    expect(
+      Object.fromEntries(Object.entries(corpus).map(([k, v]) => [k, v.length])),
+    ).toEqual({ prose: 150, math: 150, code: 150, foreign: 26 });
+    expect(live.licences.code).toContain("Apache-2.0");
+    expect(live.repository).toContain("context-rot-experiments");
+    expect(live.noticeFile).toBe("LIVE_CORPUS_NOTICE.md");
+  });
+  it("lädt sich lazy und liefert dasselbe", async () => {
+    expect(await loadCorpus()).toEqual(corpus);
+  });
+  it("der Hinweis nennt den NOTICE-Text der Apache Software Foundation", () => {
+    const notice = readFileSync(
+      new URL("../../../data/erosion/LIVE_CORPUS_NOTICE.md", import.meta.url),
+      "utf8",
+    );
+    expect(notice).toContain(
+      "This product includes software developed at\nThe Apache Software Foundation (https://www.apache.org/).",
     );
   });
 });
@@ -399,6 +416,14 @@ describe("parseRewriteResponse", () => {
     const r = parseRewriteResponse(200, '{"choices":[]}');
     expect(r.error).toBeTruthy();
     expect(r.text).toBeUndefined();
+  });
+  it('liest eine Antwort mit content null wie das Original (`content or ""`) als leeren Text', () => {
+    const r = parseRewriteResponse(
+      200,
+      '{"choices":[{"message":{"content":null},"finish_reason":"stop"}]}',
+    );
+    expect(r).toMatchObject({ text: "" });
+    expect(r.error).toBeUndefined();
   });
   it("liefert bei leerem Text einen leeren String, keinen Fehler", () => {
     expect(parseRewriteResponse(200, ok(""))).toMatchObject({ text: "" });
@@ -564,12 +589,29 @@ describe("runChain", () => {
     expect(second.split("[reference material]\n").length - 1).toBe(2);
   });
 
-  it("behält bei unlesbarer Antwort die Liste und meldet parse.ok = false", async () => {
+  it("macht bei Antwort ohne Liste die Zeilen zu Regeln und meldet parse.ok = false (wie das Original)", async () => {
     const h = harness(() => ({ status: 200, text: rewriteReply("no list") }));
     await h.run({ rounds: 1 });
     const r1 = h.events[1]!;
-    expect(r1.items).toEqual(ORIGINAL);
+    expect(r1.items).toEqual(["no list"]);
     expect(r1.parse?.ok).toBe(false);
+  });
+
+  it("Arm D: Ids bleiben über Runden stabil, der Prompt der Folgerunde nennt sie", async () => {
+    const h = harness((n) => ({
+      status: 200,
+      text: rewriteReply(
+        n === 1 ? '{"remove":["R01","R02"]}' : '{"reword":{"R03":"x"}}',
+      ),
+    }));
+    await h.run({ arm: "D" });
+    const second = h.calls.filter(
+      (c) => c.body.max_completion_tokens === 1500,
+    )[1]!;
+    const prompt = (second.body.messages as { content: string }[])[1]!.content;
+    expect(prompt).toContain("\n\nR03: ");
+    expect(prompt).not.toContain("\n\nR01: ");
+    expect(h.events[2]!.items[0]).toBe("x");
   });
 
   it("wiederholt bei 429 mit wachsender Pause", async () => {
